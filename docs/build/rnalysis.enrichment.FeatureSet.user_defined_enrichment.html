@@ -4,7 +4,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>rnalysis.enrichment.FeatureSet.user_defined_enrichment &mdash; RNAlysis 3.4.2 documentation</title>
+  <title>rnalysis.enrichment.FeatureSet.user_defined_enrichment &mdash; RNAlysis 3.5.0 documentation</title>
       <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
     <link rel="shortcut icon" href="_static/favicon.ico"/>
@@ -23,7 +23,7 @@
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="rnalysis.enrichment.RankedSet" href="rnalysis.enrichment.RankedSet.html" />
-    <link rel="prev" title="rnalysis.enrichment.FeatureSet.union" href="rnalysis.enrichment.FeatureSet.union.html" /> 
+    <link rel="prev" title="rnalysis.enrichment.FeatureSet.update" href="rnalysis.enrichment.FeatureSet.update.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -74,16 +74,33 @@
 <li class="toctree-l1 current"><a class="reference internal" href="rnalysis.enrichment.html">rnalysis.enrichment</a><ul class="current">
 <li class="toctree-l2 current"><a class="reference internal" href="rnalysis.enrichment.FeatureSet.html">rnalysis.enrichment.FeatureSet</a><ul class="current">
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.FeatureSet.html#rnalysis.enrichment.FeatureSet"><code class="docutils literal notranslate"><span class="pre">FeatureSet</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.FeatureSet.biotypes.html">rnalysis.enrichment.FeatureSet.biotypes</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.FeatureSet.add.html">rnalysis.enrichment.FeatureSet.add</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.FeatureSet.biotypes_from_ref_table.html">rnalysis.enrichment.FeatureSet.biotypes_from_ref_table</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.FeatureSet.change_set_name.html">rnalysis.enrichment.FeatureSet.change_set_name</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.FeatureSet.clear.html">rnalysis.enrichment.FeatureSet.clear</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.FeatureSet.copy.html">rnalysis.enrichment.FeatureSet.copy</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.FeatureSet.difference.html">rnalysis.enrichment.FeatureSet.difference</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.FeatureSet.difference_update.html">rnalysis.enrichment.FeatureSet.difference_update</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.FeatureSet.discard.html">rnalysis.enrichment.FeatureSet.discard</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.FeatureSet.filter_by_attribute.html">rnalysis.enrichment.FeatureSet.filter_by_attribute</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.FeatureSet.filter_by_go_annotations.html">rnalysis.enrichment.FeatureSet.filter_by_go_annotations</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.FeatureSet.filter_by_kegg_annotations.html">rnalysis.enrichment.FeatureSet.filter_by_kegg_annotations</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.FeatureSet.go_enrichment.html">rnalysis.enrichment.FeatureSet.go_enrichment</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.FeatureSet.intersection.html">rnalysis.enrichment.FeatureSet.intersection</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.FeatureSet.intersection_update.html">rnalysis.enrichment.FeatureSet.intersection_update</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.FeatureSet.isdisjoint.html">rnalysis.enrichment.FeatureSet.isdisjoint</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.FeatureSet.issubset.html">rnalysis.enrichment.FeatureSet.issubset</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.FeatureSet.issuperset.html">rnalysis.enrichment.FeatureSet.issuperset</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.FeatureSet.kegg_enrichment.html">rnalysis.enrichment.FeatureSet.kegg_enrichment</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.FeatureSet.non_categorical_enrichment.html">rnalysis.enrichment.FeatureSet.non_categorical_enrichment</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.FeatureSet.pop.html">rnalysis.enrichment.FeatureSet.pop</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.FeatureSet.remove.html">rnalysis.enrichment.FeatureSet.remove</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.FeatureSet.save_txt.html">rnalysis.enrichment.FeatureSet.save_txt</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.FeatureSet.symmetric_difference.html">rnalysis.enrichment.FeatureSet.symmetric_difference</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.FeatureSet.symmetric_difference_update.html">rnalysis.enrichment.FeatureSet.symmetric_difference_update</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.FeatureSet.translate_gene_ids.html">rnalysis.enrichment.FeatureSet.translate_gene_ids</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.FeatureSet.union.html">rnalysis.enrichment.FeatureSet.union</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.FeatureSet.update.html">rnalysis.enrichment.FeatureSet.update</a></li>
 <li class="toctree-l3 current"><a class="current reference internal" href="#">rnalysis.enrichment.FeatureSet.user_defined_enrichment</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#rnalysis.enrichment.FeatureSet.user_defined_enrichment"><code class="docutils literal notranslate"><span class="pre">FeatureSet.user_defined_enrichment()</span></code></a></li>
 </ul>
@@ -155,7 +172,7 @@
 <li><p><strong>return_fig</strong> (<em>bool</em><em> (</em><em>default=False</em><em>)</em>) – if True, returns a matplotlib Figure object in addition to the results DataFrame.</p></li>
 <li><p><strong>plot_horizontal</strong> (<em>bool</em><em> (</em><em>default=True</em><em>)</em>) – if True, results will be plotted with a horizontal bar plot. Otherwise, results         will be plotted with a vertical plot.</p></li>
 <li><p><strong>randomization_reps</strong> (<em>int larger than 0</em><em> (</em><em>default=10000</em><em>)</em>) – if using a randomization test, determine how many randomization repititions to run.         Otherwise, this parameter will not affect the analysis.</p></li>
-<li><p><strong>parallel_backend</strong> (<em>Literal</em><em>[</em><em>PARALLEL_BACKENDS</em><em>] </em><em>(</em><em>default='loky'</em><em>)</em>) – if True, will calculate the statistical tests using parallel processing.         In most cases parallel processing will lead to shorter computation time, but does not affect the results of         the analysis otherwise.</p></li>
+<li><p><strong>parallel_backend</strong> (<em>Literal</em><em>[</em><em>PARALLEL_BACKENDS</em><em>] </em><em>(</em><em>default='loky'</em><em>)</em>) – Determines the babckend used to run the analysis.         if parallel_backend not ‘sequential’, will calculate the statistical tests using parallel processing.         In most cases parallel processing will lead to shorter computation time, but does not affect the results of         the analysis otherwise.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Return type</dt>
@@ -185,7 +202,7 @@
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="rnalysis.enrichment.FeatureSet.union.html" class="btn btn-neutral float-left" title="rnalysis.enrichment.FeatureSet.union" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="rnalysis.enrichment.FeatureSet.update.html" class="btn btn-neutral float-left" title="rnalysis.enrichment.FeatureSet.update" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
         <a href="rnalysis.enrichment.RankedSet.html" class="btn btn-neutral float-right" title="rnalysis.enrichment.RankedSet" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 

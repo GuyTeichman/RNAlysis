@@ -1,12 +1,13 @@
-import itertools
 import inspect
+import itertools
+import typing
+import warnings
 from functools import lru_cache
 from typing import Union, Callable, Tuple
-import warnings
 
+import joblib
 import numpy as np
 import pandas as pd
-import joblib
 from scipy.special import comb
 from sklearn.preprocessing import PowerTransformer, StandardScaler
 from tqdm.auto import tqdm
@@ -179,3 +180,17 @@ def mix_colors(*colors: Tuple[float, float, float]):
     mix_color = multiplier * np.sum(colors, axis=0)
     mix_color = np.min([mix_color, [1.0, 1.0, 1.0]], 0)
     return mix_color
+
+
+def sum_intervals_inclusive(intervals: typing.List[typing.Tuple[int, int]]) -> int:
+    sorted_intervals = sorted(intervals)
+    total = 0
+    prev_interval = (-np.inf, -np.inf)
+    for i in range(len(sorted_intervals)):
+        this_interval = sorted_intervals[i]
+        if this_interval[0] <= prev_interval[1]:
+            this_interval = (prev_interval[1] + 1, this_interval[1])
+        total += this_interval[1] - this_interval[0] + 1
+        prev_interval = this_interval
+
+    return total

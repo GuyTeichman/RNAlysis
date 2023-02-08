@@ -1,6 +1,32 @@
 =======
 History
 =======
+
+3.5.0 (2023-02-??)
+------------------
+
+Added
+*******
+* Added differential expression analysis with the Limma-Voom pipelines (CountFilter.differential_expression_limma_voom)
+* You can now select which databases to display in the right-click quick-search menu, using the settings menu.
+* Gene sets now support some basic operations (filtering, gene ID translating, etc) through the graphical interface.
+* enrichment.FeatureSet and enrichment.RankedSet now support some filtering operations from the filtering module (such as filtering by user-defined attributes, GO terms, or KEGG pathways).
+* Added reads-per-kilobase-million (RPKM) and transcripts-per-million (TPM) normalization methods (CountFilter.normalize_to_rpkm() and CountFilter.normalize_to_tpm()).
+
+Changed
+********
+* Classes enrichment.FeatureSet and enrichment.RankedSet now inherit from Python base-class set, and can be interacted with like other Python sets. The old API and attributes of these classes were maintained as they were.
+* Improved documentation for some functions.
+* Function selection tooltips should now display information more clearly.
+* Pipelines that contain consecutive clustering/splitting functions will now return their outputs in a clearer format.
+* Enrichment bar-plots should now adjust the x-axis limits more tightly to fit the displayed data.
+* Improved clarity of automatic titles in enrichment plots.
+* Download/update speed of tutorial videos has improved significantly.
+
+Fixed
+******
+* Fixed bug where Pipelines would not always properly run 'translate_gene_ids'
+
 3.4.2 (2023-02-01)
 ------------------
 This version introduces minor bug fixes.
@@ -27,6 +53,7 @@ Added
 * Added bowtie2 alignment to the fastq module.
 * Added FeatureCounts feature-counting to the fastq module.
 * You can now choose whether or not to discard genes from enrichment analysis if they have no annotations associated with them.
+* When right-clicking on a specific cell in a table or line in a gene set view, a context menu will open, allowing you to copy the associated value, or look it up in one of few common biology databases.
 * Added sections to the programmatic user guide about the `fastq` module.
 
 Changed

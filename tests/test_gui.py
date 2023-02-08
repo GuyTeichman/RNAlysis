@@ -1392,7 +1392,7 @@ def test_FilterTabPage_apply_function(qtbot, filtertabpage_with_undo_stack):
     qtbot.mouseClick(window.stack.currentWidget().parameter_widgets['opposite'].switch, LEFT_CLICK)
     qtbot.mouseClick(window.stack.currentWidget().parameter_widgets['inplace'].switch, LEFT_CLICK)
     with qtbot.waitSignal(window.filterObjectCreated, timeout=10000) as blocker:
-        qtbot.mouseClick(window.basic_widgets['apply_button'], LEFT_CLICK)
+        qtbot.mouseClick(window.apply_button, LEFT_CLICK)
     assert blocker.args[0] == truth
     assert window.obj() == orig
 
@@ -1424,7 +1424,7 @@ def test_FilterTabPage_apply_split_clustering_function(qtbot, monkeypatch, count
     qtbot.mouseClick(window.stack.currentWidget().parameter_widgets['random_seed'].checkbox, LEFT_CLICK)
     with qtbot.waitSignals([window.filterObjectCreated, window.filterObjectCreated, window.filterObjectCreated],
                            timeout=15000) as blocker:
-        qtbot.mouseClick(window.basic_widgets['apply_button'], LEFT_CLICK)
+        qtbot.mouseClick(window.apply_button, LEFT_CLICK)
 
     res = sorted([sig.args[0] for sig in blocker.all_signals_and_args], key=lambda obj: sorted(obj.df.index)[0])
     for i in range(3):
@@ -1443,7 +1443,7 @@ def test_FilterTabPage_apply_function_inplace(qtbot, filtertabpage_with_undo_sta
     window.stack.currentWidget().parameter_widgets['alpha'].clear()
     qtbot.keyClicks(window.stack.currentWidget().parameter_widgets['alpha'], '0.01')
     qtbot.mouseClick(window.stack.currentWidget().parameter_widgets['opposite'].switch, LEFT_CLICK)
-    qtbot.mouseClick(window.basic_widgets['apply_button'], LEFT_CLICK)
+    qtbot.mouseClick(window.apply_button, LEFT_CLICK)
     assert window.obj() == truth
 
 
@@ -1456,7 +1456,7 @@ def test_FilterTabPage_undo_function(qtbot, filtertabpage_with_undo_stack):
     window.stack.currentWidget().parameter_widgets['alpha'].clear()
     qtbot.keyClicks(window.stack.currentWidget().parameter_widgets['alpha'], '0.01')
     qtbot.mouseClick(window.stack.currentWidget().parameter_widgets['opposite'].switch, LEFT_CLICK)
-    qtbot.mouseClick(window.basic_widgets['apply_button'], LEFT_CLICK)
+    qtbot.mouseClick(window.apply_button, LEFT_CLICK)
     assert window.obj() == truth
 
     stack.undo()
@@ -1572,8 +1572,8 @@ def test_SetTabPage_from_set(qtbot):
     window.update_gene_set(obj)
 
     assert not window.is_empty()
-    assert window.obj() == obj
-    assert window.obj_type() == set
+    assert window.obj().gene_set == obj
+    assert window.obj_type() == enrichment.FeatureSet
     assert window.name == set_name
 
 
@@ -1672,7 +1672,7 @@ def test_SetTabPage_view_full_set(qtbot):
 
     view = window.overview_widgets['full_table_view'].data_view
     genes_in_view = {view.item(i).text() for i in range(view.count())}
-    assert genes_in_view == window.obj()
+    assert genes_in_view == window.obj().gene_set
 
 
 @pytest.mark.parametrize('exc_params', [None, ['self', 'other']])
@@ -1725,7 +1725,7 @@ def test_CreatePipelineWindow_add_function(qtbot, monkeypatch):
     qtbot.mouseClick(window.stack_buttons[0], LEFT_CLICK)
     qtbot.keyClicks(window.stack.currentWidget().func_combo,
                     filtering.DESeqFilter.split_fold_change_direction.readable_name)
-    qtbot.mouseClick(window.basic_widgets['apply_button'], LEFT_CLICK)
+    qtbot.mouseClick(window.apply_button, LEFT_CLICK)
 
     assert window.pipeline == pipeline_truth
 
@@ -1744,7 +1744,7 @@ def test_CreatePipelineWindow_remove_function(qtbot, monkeypatch):
     qtbot.mouseClick(window.stack_buttons[0], LEFT_CLICK)
     qtbot.keyClicks(window.stack.currentWidget().func_combo,
                     filtering.DESeqFilter.split_fold_change_direction.readable_name)
-    qtbot.mouseClick(window.basic_widgets['apply_button'], LEFT_CLICK)
+    qtbot.mouseClick(window.apply_button, LEFT_CLICK)
 
     assert len(window.pipeline) == 1
 
@@ -1774,7 +1774,7 @@ def test_CreatePipelineWindow_add_function_with_args(qtbot, monkeypatch):
     window.stack.currentWidget().parameter_widgets['alpha'].clear()
     qtbot.keyClicks(window.stack.currentWidget().parameter_widgets['alpha'], '0.01')
     qtbot.mouseClick(window.stack.currentWidget().parameter_widgets['opposite'].switch, LEFT_CLICK)
-    qtbot.mouseClick(window.basic_widgets['apply_button'], LEFT_CLICK)
+    qtbot.mouseClick(window.apply_button, LEFT_CLICK)
     assert window.pipeline == pipeline_truth
 
     # add a second function
@@ -1782,7 +1782,7 @@ def test_CreatePipelineWindow_add_function_with_args(qtbot, monkeypatch):
 
     window.stack.currentWidget().func_combo.setCurrentText(
         filtering.DESeqFilter.split_fold_change_direction.readable_name)
-    qtbot.mouseClick(window.basic_widgets['apply_button'], LEFT_CLICK)
+    qtbot.mouseClick(window.apply_button, LEFT_CLICK)
     assert window.pipeline == pipeline_truth
 
 
@@ -1801,7 +1801,7 @@ def test_CreatePipelineWindow_save_pipeline(qtbot, monkeypatch):
 
     qtbot.mouseClick(window.stack_buttons[2], LEFT_CLICK)
     qtbot.keyClicks(window.stack.currentWidget().func_combo, filtering.Filter.describe.readable_name)
-    qtbot.mouseClick(window.basic_widgets['apply_button'], LEFT_CLICK)
+    qtbot.mouseClick(window.apply_button, LEFT_CLICK)
 
     with qtbot.waitSignal(window.pipelineSaved) as blocker:
         qtbot.mouseClick(window.overview_widgets['save_button'], LEFT_CLICK)
@@ -1824,7 +1824,7 @@ def test_CreatePipelineWindow_export_pipeline(qtbot, monkeypatch):
 
     qtbot.mouseClick(window.stack_buttons[2], LEFT_CLICK)
     qtbot.keyClicks(window.stack.currentWidget().func_combo, filtering.Filter.describe.readable_name)
-    qtbot.mouseClick(window.basic_widgets['apply_button'], LEFT_CLICK)
+    qtbot.mouseClick(window.apply_button, LEFT_CLICK)
 
     with qtbot.waitSignal(window.pipelineExported) as blocker:
         qtbot.mouseClick(window.overview_widgets['export_button'], LEFT_CLICK)
@@ -2228,7 +2228,8 @@ def test_MainWindow_import_multiple_gene_sets(qtbot, main_window_with_tabs, monk
         else:
             df = io.load_csv(filename, index_col=0)
             truth_set = set(df.index)
-        truth.append(truth_set)
+        truth_featureset = enrichment.FeatureSet(truth_set, Path(filename).stem)
+        truth.append(truth_featureset)
 
     def mock_get_files(*args, **kwargs):
         return filenames
@@ -2247,10 +2248,10 @@ def test_MainWindow_import_multiple_gene_sets(qtbot, main_window_with_tabs, monk
 def test_MainWindow_import_gene_set(qtbot, main_window_with_tabs, monkeypatch, filename):
     if filename.endswith('.txt'):
         with open(filename) as f:
-            truth_set = set(f.read().split())
+            truth_set = enrichment.FeatureSet(set(f.read().split()), Path(filename).stem)
     else:
         df = io.load_csv(filename, index_col=0)
-        truth_set = set(df.index)
+        truth_set = enrichment.FeatureSet(set(df.index), Path(filename).stem)
 
     def mock_get_file(*args, **kwargs):
         return filename, '.csv'
@@ -2320,15 +2321,16 @@ def test_MainWindow_get_available_objects(qtbot, use_temp_settings_file, main_wi
                   'counted': filtering.CountFilter('tests/test_files/counted.tsv'),
                   'counted_6cols': filtering.Filter('tests/test_files/counted_6cols.csv'),
                   'test_deseq': filtering.DESeqFilter('tests/test_files/test_deseq.csv'),
-                  'majority_vote_intersection output': {'WBGene00007069', 'WBGene00007064', 'WBGene00007063',
-                                                        'WBGene00007074', 'WBGene00077502',
-                                                        'WBGene00007076', 'WBGene00044951', 'WBGene00007067',
-                                                        'WBGene00044022', 'WBGene00043990',
-                                                        'WBGene00077504', 'WBGene00007066', 'WBGene00043987',
-                                                        'WBGene00014997', 'WBGene00043989',
-                                                        'WBGene00007071', 'WBGene00007075', 'WBGene00007078',
-                                                        'WBGene00007079', 'WBGene00007077',
-                                                        'WBGene00077503', 'WBGene00043988'}}
+                  'majority_vote_intersection output': enrichment.FeatureSet(
+                      {'WBGene00007069', 'WBGene00007064', 'WBGene00007063',
+                       'WBGene00007074', 'WBGene00077502',
+                       'WBGene00007076', 'WBGene00044951', 'WBGene00007067',
+                       'WBGene00044022', 'WBGene00043990',
+                       'WBGene00077504', 'WBGene00007066', 'WBGene00043987',
+                       'WBGene00014997', 'WBGene00043989',
+                       'WBGene00007071', 'WBGene00007075', 'WBGene00007078',
+                       'WBGene00007079', 'WBGene00007077',
+                       'WBGene00077503', 'WBGene00043988'}, 'majority_vote_intersection output')}
     objs_truth['my table'].fname = Path('my table')
     objs_truth['counted'].fname = Path('counted')
     objs_truth['counted_6cols'].fname = Path('counted_6cols')
@@ -2400,7 +2402,8 @@ def test_MainWindow_save_session(qtbot, use_temp_settings_file, main_window, mon
     session_fname = 'session filename.rnal'
     n_files = main_window.tabs.count()
     n_pipelines = len(main_window.pipelines)
-    item_types_truth = [filtering.FoldChangeFilter, filtering.CountFilter, filtering.Filter, filtering.DESeqFilter, set]
+    item_types_truth = [filtering.FoldChangeFilter, filtering.CountFilter, filtering.Filter, filtering.DESeqFilter,
+                        enrichment.FeatureSet]
     item_properties_truth = [{'numerator_name': 'a', 'denominator_name': 'b'}, {'is_normalized': False}, {},
                              {'log2fc_col': 'log2FoldChange', 'padj_col': 'padj'}, {}]
     pipeline_names_truth = ['New Pipeline', 'Other Pipeline']
@@ -2442,11 +2445,12 @@ def test_MainWindow_load_session(qtbot, use_temp_settings_file, main_window, mon
                   filtering.CountFilter('tests/test_files/counted.tsv'),
                   filtering.Filter('tests/test_files/counted_6cols.csv'),
                   filtering.DESeqFilter('tests/test_files/test_deseq.csv'),
-                  {'WBGene00007069', 'WBGene00007064', 'WBGene00007063', 'WBGene00007074', 'WBGene00077502',
-                   'WBGene00007076', 'WBGene00044951', 'WBGene00007067', 'WBGene00044022', 'WBGene00043990',
-                   'WBGene00077504', 'WBGene00007066', 'WBGene00043987', 'WBGene00014997', 'WBGene00043989',
-                   'WBGene00007071', 'WBGene00007075', 'WBGene00007078', 'WBGene00007079', 'WBGene00007077',
-                   'WBGene00077503', 'WBGene00043988'}]
+                  enrichment.FeatureSet(
+                      {'WBGene00007069', 'WBGene00007064', 'WBGene00007063', 'WBGene00007074', 'WBGene00077502',
+                       'WBGene00007076', 'WBGene00044951', 'WBGene00007067', 'WBGene00044022', 'WBGene00043990',
+                       'WBGene00077504', 'WBGene00007066', 'WBGene00043987', 'WBGene00014997', 'WBGene00043989',
+                       'WBGene00007071', 'WBGene00007075', 'WBGene00007078', 'WBGene00007079', 'WBGene00007077',
+                       'WBGene00077503', 'WBGene00043988'}, 'majority_vote_intersection output')]
     objs_truth[0].fname = Path('my table')
     objs_truth[1].fname = Path('counted')
     objs_truth[2].fname = Path('counted_6cols')

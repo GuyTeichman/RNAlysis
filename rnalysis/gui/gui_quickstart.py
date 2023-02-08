@@ -1,6 +1,8 @@
-from PyQt5 import QtCore, QtWidgets, QtGui
-from rnalysis.utils import settings, io
 from pathlib import Path
+
+from PyQt5 import QtCore, QtWidgets, QtGui
+
+from rnalysis.utils import settings, io
 
 
 class QuickStartWizard(QtWidgets.QWizard):
@@ -14,6 +16,7 @@ class QuickStartWizard(QtWidgets.QWizard):
         "Work on multiple tables at the same time",
         "Different types of tables offer different ways to filter and analyze your data",
         "Create and save graphs",
+        "Quickly look-up genes in your database of choice",
         "Sort your tabs and change their icons",
         "Restore tabs you closed",
         "Import lists of genes as Gene Sets",
@@ -22,7 +25,8 @@ class QuickStartWizard(QtWidgets.QWizard):
         "Perform enrichment analysis on your tables and gene sets",
         "Create Pipelines to streamline your data analysis",
         "Apply Pipelines to one or more of your tables",
-        "Export and share Pipelines to make your analysis more reproducible")
+        "Export and share Pipelines to make your analysis more reproducible",
+        "Interface with other bioinformatic tools")
 
     CONTENTS = (
         "Choose a file from your computer, and click 'start' to load it into <i>RNAlysis</i>. ",
@@ -52,6 +56,10 @@ class QuickStartWizard(QtWidgets.QWizard):
         "Some functions can generate graphs of your data. "
         "You can resize those graphs, and save them to your computer in multiple file formats. ",
 
+        "Easily get information about your genes with a right-click. "
+        "Select from a range of databases such as NCBI Genes, UniProtKB and others, "
+        "which can be configured from the settings menu. ",
+
         "To help organize your workspace, you can sort tabs by "
         "right-clicking a tab and choosing a sorting method. "
         "You can also change specific tabs' colors, to help you differentiate them. ",
@@ -79,6 +87,9 @@ class QuickStartWizard(QtWidgets.QWizard):
 
         "Pipelines you export can be imported from any computer, and can be shared with others "
         "to help make your analysis easier to understand and more reproducible.",
+
+        "<i>RNAlysis</i> offers a graphic interface for many bioinformatic tools. "
+        "Analyze your data at any stage - adapter trimming, alignment, feature counting, or differential expression. ",
     )
 
     VIDEO_FILES = (
@@ -91,6 +102,7 @@ class QuickStartWizard(QtWidgets.QWizard):
         'new_tab.webp',
         'table_types.webp',
         'generate_graphs.webp',
+        'quick_search.webp',
         'sort_tabs.webp',
         'restore_tabs.webp',
         'import_gene_sets.webp',
@@ -99,7 +111,8 @@ class QuickStartWizard(QtWidgets.QWizard):
         'enrichment_analysis.webp',
         'create_pipeline.webp',
         'apply_pipeline.webp',
-        'export_pipeline.webp'
+        'export_pipeline.webp',
+        'external_windows.webp',
     )
 
     def __init__(self, parent=None):

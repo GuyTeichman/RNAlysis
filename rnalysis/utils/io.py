@@ -1,10 +1,11 @@
+import asyncio
 import concurrent.futures
 import functools
 import gzip
+import hashlib
 import inspect
 import json
 import os
-import platform
 import queue
 import re
 import shlex
@@ -15,13 +16,15 @@ import typing
 import warnings
 from datetime import date, datetime
 from functools import lru_cache
-from io import BytesIO, StringIO
+from io import StringIO
 from itertools import chain
 from pathlib import Path
 from sys import executable
 from typing import List, Set, Union, Iterable, Tuple, Dict, Any, Callable
 from urllib.parse import urlparse, parse_qs, urlencode
 
+import aiohttp
+import aiolimiter
 import appdirs
 import numpy as np
 import pandas as pd
@@ -1271,19 +1274,86 @@ def save_gene_set(gene_set: set, path):
             [f"{item}\n" if (i + 1) < len(gene_set) else f"{item}" for i, item in enumerate(gene_set)])
 
 
-def get_gui_videos(video_paths: Tuple[str, ...]):
+def calculate_checksum(filename: Union[str, Path]):
+    assert Path(filename).exists(), f"file '{filename}' does not exist!"
+    with open(filename, 'rb') as file_to_check:
+        # read contents of the file
+        data = file_to_check.read()
+        # pipe contents of the file through
+        md5_checksum = hashlib.md5(data).hexdigest()
+        return md5_checksum
+
+
+async def get_video_remote_checksum(video_name: str, session, semaphore, limiter):
+    url = 'https://github.com/GuyTeichman/RNAlysis/blob/master/rnalysis/gui/videos/checksums/' \
+          f'{Path(video_name).stem}.txt'
+    await semaphore.acquire()
+    async with limiter:
+        async with session.get(url, params=dict(raw='True')) as response:
+            content = await response.text()
+            semaphore.release()
+            return content
+
+
+async def download_video(video_path: Path, session, semaphore, limiter) -> None:
+    content = await _get_video_content(video_path, session, semaphore, limiter)
+    await _write_video_to_file(video_path, content)
+
+
+async def _get_video_content(video_path: Path, session, semaphore, limiter) -> bytes:
+    url = 'https://github.com/GuyTeichman/RNAlysis/blob/master/rnalysis/gui/videos/' + video_path.name
+    await semaphore.acquire()
+    async with limiter:
+        async with session.get(url, params=dict(raw='True')) as response:
+            content = await response.read()
+            semaphore.release()
+            return content
+
+
+async def _write_video_to_file(video_path: Path, content: bytes) -> None:
+    with open(video_path, 'wb') as file:
+        file.write(content)
+
+
+async def get_gui_videos(video_filenames: Tuple[str, ...]):
     video_dir_pth = get_tutorial_videos_dir()
     if not video_dir_pth.exists():
         video_dir_pth.mkdir(parents=True)
-    for i, vid in enumerate(video_paths):
-        yield i
-        this_vid_pth = video_dir_pth.joinpath(vid)
-        if not this_vid_pth.exists():
-            req = requests.get('https://github.com/GuyTeichman/RNAlysis/blob/master/rnalysis/gui/videos/' + vid,
-                               params=dict(raw=True))
-            content = BytesIO(req.content)
-            with open(this_vid_pth, 'wb') as file:
-                file.write(content.getbuffer())
+
+    videos_to_download = []
+    local_checksums = []
+    remote_checksums = []
+    i = 0
+    try:
+        semaphore = asyncio.Semaphore(value=10)
+        limiter = aiolimiter.AsyncLimiter(10, 1)
+        async with aiohttp.ClientSession() as session:
+            for video_name in video_filenames:
+                this_video_path = video_dir_pth.joinpath(video_name)
+                if this_video_path.exists():
+                    remote_checksums.append(get_video_remote_checksum(video_name, session, semaphore, limiter))
+                    local_checksums.append(calculate_checksum(this_video_path))
+                else:
+                    videos_to_download.append(this_video_path)
+
+            for this_local, this_remote in zip(local_checksums, await asyncio.gather(*remote_checksums)):
+                if this_local == this_remote:
+                    yield i
+                    i += 1
+                else:
+                    this_video_path = video_dir_pth.joinpath(video_name)
+                    videos_to_download.append(this_video_path)
+
+            tasks = []
+            for this_video_path in videos_to_download:
+                tasks.append(download_video(this_video_path, session, semaphore, limiter))
+            for task in tasks:
+                yield i
+                i += 1
+                await asyncio.gather(task)
+
+    except aiohttp.ClientConnectorError:
+        pass
 
 
 def run_r_script(script_path: Union[str, Path], r_installation_folder: Union[str, Path, Literal['auto']] = 'auto'):
@@ -1361,56 +1431,6 @@ def update_rnalysis():
     run_subprocess([executable, '-m', 'pip', 'install', '--upgrade', 'RNAlysis[all]'])
 
 
-def map_gene_to_attr(gtf_path: Union[str, Path], attribute: str, feature_type: str, use_name: bool, use_version: bool,
-                     split_ids: bool):
-    assert feature_type in {'gene', 'transcript'}, f"Invalid feature_type: '{feature_type}'"
-
-    mapping = {}
-    with open(gtf_path, errors="ignore") as f:
-        for line in f.readlines():
-            if len(line) == 0 or line[0] == '#':
-                continue
-            line_split = line.strip().split('\t')
-            attributes = line_split[8]
-            attributes_dict = parsing.parse_gtf_attributes(attributes)
-            if attribute not in attributes_dict:
-                continue
-
-            feature_name = None
-            if feature_type == 'gene':
-                feature_id = attributes_dict['gene_id'].split(".")[0] if split_ids else attributes_dict['gene_id']
-                if use_version:
-                    feature_id += '.' + attributes_dict['gene_version']
-
-                if use_name:
-                    if 'gene_name' in attributes_dict:
-                        feature_name = attributes_dict['gene_name']
-                    elif 'name' in attributes_dict:
-                        feature_name = attributes_dict['name']
-                    else:
-                        continue
-
-            else:
-                feature_id = attributes_dict['transcript_id'].split(".")[0] if split_ids else attributes_dict[
-                    'transcript_id']
-                if use_version:
-                    feature_id += '.' + attributes_dict['transcript_version']
-
-                if use_name:
-                    if 'gene_name' in attributes_dict:
-                        feature_name = attributes_dict['transcript_name']
-                    elif 'name' in attributes_dict:
-                        feature_name = attributes_dict['name']
-                    else:
-                        continue
-
-            if feature_id in mapping:
-                continue
-            mapping[feature_name if use_name else feature_id] = attributes_dict[attribute]
-
-    return mapping
-
-
 def get_method_docstring(method: Union[str, Callable], obj: object = None) -> Tuple[str, dict]:
     try:
         if isinstance(method, str):
@@ -1421,40 +1441,6 @@ def get_method_docstring(method: Union[str, Callable], obj: object = None) -> Tu
         return parsing.parse_docstring(raw_docstring)
     except AttributeError:
         return '', {}
-
-
-def map_transcripts_to_genes(gtf_path: Union[str, Path], use_name: bool = False, use_version: bool = True,
-                             split_ids: bool = True):
-    mapping = {}
-    with open(gtf_path, errors="ignore") as f:
-        for line in f.readlines():
-            if len(line) == 0 or line[0] == '#':
-                continue
-            line_split = line.strip().split('\t')
-            if line_split[2] == 'transcript':
-                attributes = line_split[8]
-                attributes_dict = parsing.parse_gtf_attributes(attributes)
-                if 'transcript_id' not in attributes_dict or 'gene_id' not in attributes_dict:
-                    continue
-
-                transcript_id = attributes_dict['transcript_id'].split(".")[0] if split_ids else attributes_dict[
-                    'transcript_id']
-                gene_id = attributes_dict['gene_id'].split(".")[0] if split_ids else attributes_dict['gene_id']
-                if use_version:
-                    if 'transcript_version' in attributes_dict and 'gene_version' in attributes_dict:
-                        transcript_id += '.' + attributes_dict['transcript_version']
-                        gene_id += '.' + attributes_dict['gene_version']
-                gene_name = None
-                if use_name:
-                    if 'gene_name' not in attributes_dict:
-                        continue
-                    gene_name = attributes_dict['gene_name']
-
-                if transcript_id in mapping:
-                    continue
-
-                mapping[transcript_id] = gene_name if use_name else gene_id
-    return mapping
 
 
 def generate_base_call(command: str, installation_folder: Union[str, Path, Literal['auto']],

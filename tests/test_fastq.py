@@ -439,7 +439,8 @@ def test_trim_adapters_single_end():
         with gzip.open(truth_path) as truth, gzip.open(out_path) as out:
             assert truth.read() == out.read()
     finally:
-        Path(out_path).unlink()
+        if Path(out_path).exists():
+            Path(out_path).unlink()
         for file in Path(out_dir).iterdir():
             if file.is_file() and file.suffix == '.log':
                 file.unlink()
@@ -463,9 +464,9 @@ def test_trim_adapters_paired_end():
         with gzip.open(truth2_path) as truth, gzip.open(out2_path) as out:
             assert truth.read() == out.read()
     finally:
-
-        Path(out1_path).unlink()
-        Path(out2_path).unlink()
+        for pth in [out1_path, out2_path]:
+            if Path(pth).exists():
+                Path(pth).unlink()
         for file in Path(out_dir).iterdir():
             if file.is_file() and file.suffix == '.log':
                 file.unlink()

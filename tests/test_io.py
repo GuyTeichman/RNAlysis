@@ -790,36 +790,6 @@ def test_kegg_annotation_iterator_get_taxon_tree_cached(monkeypatch):
     assert KEGGAnnotationIterator._get_taxon_tree() == truth
 
 
-def test_get_gui_videos(monkeypatch):
-    mock_dir = Path('tests/.pytest_cache/video_test_cache')
-    video_files = ('first_vid.webp', 'second_vid.webp', 'third_vid.webp')
-    visited = []
-
-    def mock_get(url, params):
-        base_url = 'https://github.com/GuyTeichman/RNAlysis/blob/master/rnalysis/gui/videos/'
-        assert url.startswith(base_url)
-        visited.append(url.split(base_url)[1])
-        return MockResponse(content='content')
-
-    monkeypatch.setattr(requests, 'get', mock_get)
-    monkeypatch.setattr(rnalysis.utils.io, 'get_tutorial_videos_dir',
-                        lambda: mock_dir)
-
-    try:
-        list(get_gui_videos(video_files))
-        assert sorted(visited) == ['first_vid.webp', 'second_vid.webp', 'third_vid.webp']
-        assert mock_dir.exists()
-        file_count = 0
-        for file in mock_dir.iterdir():
-            assert file.name in visited
-            with open(file) as f:
-                assert f.read() == 'content'
-            file_count += 1
-        assert file_count == len(video_files)
-    finally:
-        shutil.rmtree(mock_dir, ignore_errors=True)
-
-
 class MockProcess:
     def __init__(self, returncode: int):
         self.stdout = [b'things', b'to', b'print']
@@ -874,51 +844,3 @@ def test_is_rnalysis_outdated(monkeypatch, this_version, response, expected):
     monkeypatch.setattr(requests, 'get', lambda *args, **kwargs: response)
     monkeypatch.setattr(rnalysis.utils.io, '__version__', this_version)
     assert is_rnalysis_outdated() == expected
-
-
-@pytest.mark.parametrize('feature_type,truth', [
-    ('gene', {
-        'ENSG00000168671': 'protein_coding',
-        'ENSG00000249641': 'antisense_RNA',
-        'ENSG00000123364': 'protein_coding',
-        'ENSG00000123407': 'protein_coding',
-        'ENSG00000123388': 'protein_coding',
-        'ENSG00000180818': 'protein_coding',
-        'ENSG00000197757': 'protein_coding',
-        'ENSG00000180806': 'protein_coding',
-        'ENSG00000037965': 'protein_coding',
-        'ENSG00000198353': 'protein_coding',
-        'ENSG00000172789': 'other'}),
-    ('transcript', {
-        "ENST00000282507": "protein_coding",
-        "ENST00000513300": "protein_coding",
-        "ENST00000504685": "nonsense_mediated_decay",
-        "ENST00000504954": "processed_transcript",
-        "ENST00000515131": "protein_coding",
-        "ENST00000512916": "antisense_RNA",
-        "ENST00000243056": "protein_coding",
-        "ENST00000243103": "protein_coding",
-        "ENST00000546378": "protein_coding",
-        "ENST00000243082": "protein_coding",
-        "ENST00000515593": "protein_coding",
-        "ENST00000303460": "protein_coding",
-        "ENST00000511575": "processed_transcript",
-        "ENST00000514415": "processed_transcript",
-        "ENST00000504315": "protein_coding",
-        "ENST00000509328": "protein_coding",
-        "ENST00000394331": "protein_coding",
-        "ENST00000243108": "protein_coding",
-        "ENST00000513413": "processed_transcript",
-        "ENST00000504557": "processed_transcript",
-        "ENST00000508190": "protein_coding",
-        "ENST00000303450": "protein_coding",
-        "ENST00000040584": "protein_coding",
-        "ENST00000303406": "protein_coding",
-        "ENST00000507650": "processed_transcript",
-        "ENST00000430889": "protein_coding",
-        "ENST00000312492": "other", })
-])
-def test_map_gene_to_attr(feature_type, truth):
-    gtf_path = 'tests/test_files/kallisto_tests/transcripts.gtf'
-    res = map_gene_to_attr(gtf_path, feature_type + '_biotype', feature_type, False, False, False)
-    assert res == truth

@@ -38,10 +38,10 @@ from datetime import datetime
 
 from rnalysis import __version__
 from rnalysis.utils import clustering, io, parsing, generic, ontology, settings, validation, differential_expression, \
-    param_typing
+    param_typing, genome_annotation
 
 from rnalysis.utils.param_typing import BIOTYPES, BIOTYPE_ATTRIBUTE_NAMES, GO_EVIDENCE_TYPES, GO_QUALIFIERS, \
-    DEFAULT_ORGANISMS, PARALLEL_BACKENDS, get_gene_id_types, PositiveInt, NonNegativeInt
+    DEFAULT_ORGANISMS, PARALLEL_BACKENDS, LEGAL_GENE_LENGTH_METHODS, get_gene_id_types, PositiveInt, NonNegativeInt
 
 
 def readable_name(name: str):
@@ -181,9 +181,11 @@ class Filter:
         :return: If inplace is False, returns a new instance of the Filter object.
 
         """
+        legal_operations = {'filter': 'Filtering', 'normalize': 'Normalization', 'sort': 'Sorting',
+                            'transform': 'Transformation', 'translate': 'Translation'}
         assert isinstance(inplace, bool), "'inplace' must be True or False!"
         assert isinstance(opposite, bool), "'opposite' must be True or False!"
-        assert printout_operation.lower() in ['filter', 'normalize', 'sort', 'transform', 'translate'], \
+        assert printout_operation.lower() in legal_operations, \
             f"Invalid input for variable 'printout_operation': {printout_operation}"
         # when user requests the opposite of a filter, return the Set Difference between the filtering result and self
         if opposite:
@@ -196,49 +198,24 @@ class Filter:
         # generate printout for user ("Filtered X features, leaving Y... filtered inplace/not inplace")
         printout = ''
         if printout_operation.lower() == 'filter':
-            printout += f"Filtered {self.df.shape[0] - new_df.shape[0]} features, leaving {new_df.shape[0]} " \
-                        f"of the original {self.df.shape[0]} features. "
+            printout += f"Filtered {self.shape[0] - new_df.shape[0]} features, leaving {new_df.shape[0]} " \
+                        f"of the original {self.shape[0]} features. "
         elif printout_operation.lower() == 'translate':
             printout += f"Translated the gene IDs of {new_df.shape[0]} features. "
             if self.shape[0] != new_df.shape[0]:
-                printout += f"Filtered {self.df.shape[0] - new_df.shape[0]} unmapped features, " \
-                            f"leaving {new_df.shape[0]} of the original {self.df.shape[0]} features. "
+                printout += f"Filtered {self.shape[0] - new_df.shape[0]} unmapped features, " \
+                            f"leaving {new_df.shape[0]} of the original {self.shape[0]} features. "
 
         else:
-            if printout_operation.lower() == 'normalize':
-                printout += "Normalized the values of"
-            elif printout_operation.lower() == 'sort':
-                printout += "Sorted"
-            elif printout_operation.lower() == 'transform':
-                printout += "Transformed"
-
-            printout += f" {new_df.shape[0]} features. "
-        # if inplace, modify the df, fname and shape properties of self
+            printout += f'{printout_operation.capitalize().rstrip("e")}ed {new_df.shape[0]} features. '
+        # if inplace, modify the df, fname and other attributes of self
         if inplace:
-            if printout_operation.lower() == 'filter':
-                printout += 'Filtered'
-            elif printout_operation.lower() == 'normalize':
-                printout += 'Normalized'
-            elif printout_operation.lower() == 'sort':
-                printout += 'Sorted'
-            elif printout_operation.lower() == 'transform':
-                printout += 'Transformed'
-            elif printout_operation.lower() == 'translate':
-                printout += 'Translated'
-            printout += ' inplace.'
+            printout += f'{printout_operation.capitalize().rstrip("e")}ed inplace.'
             print(printout)
             self._update(df=new_df, fname=new_fname, **filter_update_kwargs)
         # if not inplace, copy self, modify the df/fname properties of the copy, and return it
         else:
-            if printout_operation.lower() == 'filter':
-                printout += 'Filtering'
-            elif printout_operation.lower() == 'normalize':
-                printout += 'Normalization'
-            elif printout_operation.lower() == 'sort':
-                printout += 'Sorting'
-            elif printout_operation.lower() == 'transform':
-                printout += 'Transformation'
-            printout += ' result saved to new object.'
+            printout += f'{legal_operations[printout_operation]} result saved to new object.'
             print(printout)
             new_obj = self.__copy__()
             new_obj._update(df=new_df, fname=new_fname, **filter_update_kwargs)
@@ -507,8 +484,8 @@ class Filter:
                 for use_version in [True, False]:
                     for split_ids in [True, False]:
                         try:
-                            mapping = io.map_gene_to_attr(gtf_path, attribute_name, feature_type, use_name, use_version,
-                                                          split_ids)
+                            mapping = genome_annotation.map_gene_to_attr(gtf_path, attribute_name, feature_type,
+                                                                         use_name, use_version, split_ids)
                         except KeyError:
                             continue
                         pbar.update(1)
@@ -643,6 +620,68 @@ class Filter:
                                  excluded_qualifiers: Union[
                                      Literal[GO_QUALIFIERS], Iterable[Literal[GO_QUALIFIERS]]] = 'not',
                                  opposite: bool = False, inplace: bool = True):
+        """
+        Filters genes according to GO annotations, keeping only genes that are annotated with a specific GO term. \
+        When multiple GO terms are given, filtering can be done in 'union' mode \
+        (where genes that belong to at least one GO term are not filtered out), or in 'intersection' mode \
+        (where only genes that belong to ALL GO terms are not filtered out).
+
+        :param go_ids:
+        :type go_ids: str or list of str
+        :type mode: 'union' or 'intersection'.
+        :param mode: If 'union', filters out every genomic feature that does not belong to one or more \
+        of the indicated attributes. If 'intersection', \
+        filters out every genomic feature that does not belong to ALL of the indicated attributes.
+        param organism: organism name or NCBI taxon ID for which the function will fetch GO annotations.
+        :type organism: str or int
+        :param gene_id_type: the identifier type of the genes/features in the FeatureSet object \
+        (for example: 'UniProtKB', 'WormBase', 'RNACentral', 'Entrez Gene ID'). \
+        If the annotations fetched from the KEGG server do not match your gene_id_type, RNAlysis will attempt to map \
+        the annotations' gene IDs to your identifier type. \
+        For a full list of legal 'gene_id_type' names, see the UniProt website: \
+        https://www.uniprot.org/help/api_idmapping
+        :type gene_id_type: str or 'auto' (default='auto')
+        :param propagate_annotations: determines the propagation method of GO annotations. \
+        'no' does not propagate annotations at all; 'classic' propagates all annotations up to the DAG tree's root; \
+        'elim' terminates propagation at nodes which show significant enrichment; 'weight' performs propagation in a \
+        weighted manner based on the significance of children nodes relatively to their parents; and 'allm' uses a \
+        combination of all proopagation methods. To read more about the propagation methods, \
+        see Alexa et al: https://pubmed.ncbi.nlm.nih.gov/16606683/
+        :type propagate_annotations: 'classic', 'elim', 'weight', 'all.m', or 'no' (default='elim')
+        :param evidence_types: only annotations with the specified evidence types will be included in the analysis. \
+        For a full list of legal evidence codes and evidence code categories see the GO Consortium website: \
+        http://geneontology.org/docs/guide-go-evidence-codes/
+        :type evidence_types: str, Iterable of str, 'experimental', 'phylogenetic' ,'computational', 'author', \
+        'curator', 'electronic', or 'any' (default='any')
+        :param excluded_evidence_types: annotations with the specified evidence types will be \
+        excluded from the analysis. \
+        For a full list of legal evidence codes and evidence code categories see the GO Consortium website: \
+        http://geneontology.org/docs/guide-go-evidence-codes/
+        :type excluded_evidence_types: str, Iterable of str, 'experimental', 'phylogenetic' ,'computational', \
+        'author', 'curator', 'electronic', or None (default=None)
+        :param databases: only annotations from the specified databases will be included in the analysis. \
+        For a full list of legal databases see the GO Consortium website:
+        http://amigo.geneontology.org/xrefs
+        :type databases: str, Iterable of str, or 'any' (default)
+        :param excluded_databases: annotations from the specified databases will be excluded from the analysis. \
+        For a full list of legal databases see the GO Consortium website:
+        http://amigo.geneontology.org/xrefs
+        :type excluded_databases: str, Iterable of str, or None (default)
+        :param qualifiers: only annotations with the speficied qualifiers will be included in the analysis. \
+        Legal qualifiers are 'not', 'contributes_to', and/or 'colocalizes_with'.
+        :type qualifiers: str, Iterable of str, or 'any' (default)
+        :param excluded_qualifiers: annotations with the speficied qualifiers will be excluded from the analysis. \
+        Legal qualifiers are 'not', 'contributes_to', and/or 'colocalizes_with'.
+        :type excluded_qualifiers: str, Iterable of str, or None (default='not')
+        :type opposite: bool (default=False)
+        :param opposite: If True, the output of the filtering will be the OPPOSITE of the specified \
+        (instead of filtering out X, the function will filter out anything BUT X). \
+        If False (default), the function will filter as expected.
+        :type inplace: bool (default=True)
+        :param inplace: If True (default), filtering will be applied to the current FeatureSet object. If False, \
+        the function will return a new FeatureSet instance and the current instance will not be affected.
+        :return: If 'inplace' is False, returns a new, filtered instance of the FeatureSet object.
+        """
         suffix = '_filtGO'
         go_ids = parsing.data_to_set(go_ids)
         # make sure 'mode' is legal
@@ -1596,10 +1635,10 @@ class Filter:
         # sort the DataFrame by the specified column/columns, in the specified order
         self._sort(by=by, ascending=ascending, na_position=na_position, inplace=True)
         # keep only the top n values in the DataFrame after the sort (or the top len(self) items, if n>len(self))
-        if n > self.df.shape[0]:
-            warnings.warn(f'Current number of rows {self.df.shape[0]} is smaller than the specified n={n}. '
-                          f'Therefore output Filter object will only have {self.df.shape[0]} rows. ')
-        new_df = self.df.iloc[0:min(n, self.df.shape[0])]
+        if n > self.shape[0]:
+            warnings.warn(f'Current number of rows {self.shape[0]} is smaller than the specified n={n}. '
+                          f'Therefore output Filter object will only have {self.shape[0]} rows. ')
+        new_df = self.df.iloc[0:min(n, self.shape[0])]
         return self._inplace(new_df, opposite, inplace, suffix)
 
     @staticmethod
@@ -1990,7 +2029,7 @@ class FoldChangeFilter(Filter):
         # calculate observed and expected mean fold-change, and the set size (n)
         obs_fc = self.df.mean(axis=0)
         exp_fc = ref.df.mean()
-        n = self.df.shape[0]
+        n = self.shape[0]
         # set random seed if requested
         if random_seed is not None:
             assert isinstance(random_seed, int) and random_seed >= 0, f"random_seed must be a non-negative integer. " \
@@ -2216,13 +2255,13 @@ class DESeqFilter(Filter):
         return type(self).from_dataframe(self.df, self.fname, self.log2fc_col, self.padj_col, suppress_warnings=True)
 
     def _assert_padj_col(self):
-        if self.padj_col not in self.df.columns:
+        if self.padj_col not in self.columns:
             raise KeyError(f"A column with adjusted p-values under the name padj_col='{self.padj_col}' "
                            f"could not be found. Try setting a different value for the parameter 'padj_col' "
                            f"when creating the DESeqFilter object.")
 
     def _assert_log2fc_col(self):
-        if self.log2fc_col not in self.df.columns:
+        if self.log2fc_col not in self.columns:
             raise KeyError(f"A column with log2 fold change values under the name log2fc_col='{self.log2fc_col}' "
                            f"could not be found. Try setting a different value for the parameter 'log2fc_col' "
                            f"when creating the DESeqFilter object.")
@@ -2488,7 +2527,7 @@ class CountFilter(Filter):
         if len(self._numeric_columns) < len(self.columns):
             warnings.warn(f"The following columns in the CountFilter are not numeric, and will therefore be ignored "
                           f"when running some CountFilter-specific functions: "
-                          f"{set(self.df.columns).difference(self._numeric_columns)}")
+                          f"{set(self.columns).difference(self._numeric_columns)}")
 
     @classmethod
     def from_dataframe(cls, df: pd.DataFrame, name: Union[str, Path], is_normalized: bool = False,
@@ -2535,6 +2574,85 @@ class CountFilter(Filter):
                           f'Appending the remaining {n_cols % multiplier} as an inncomplete triplicate.')
         return triplicate
 
+    @readable_name('Run Limma-Voom differential expression')
+    def differential_expression_limma_voom(self, design_matrix: Union[str, Path],
+                                           comparisons: Iterable[Tuple[str, str, str]],
+                                           r_installation_folder: Union[str, Path, Literal['auto']] = 'auto',
+                                           output_folder: Union[str, Path, None] = None
+                                           ) -> Tuple['DESeqFilter', ...]:
+        """
+        Run differential expression analysis on the count matrix using the \
+        `Limma-Voom <https://doi.org/10.1186/gb-2014-15-2-r29>`_ pipeline. \
+        The count matrix you are analyzing should be normalized (typically to Reads Per Million). \
+        The analysis will be based on a design matrix supplied by the user. \
+        The design matrix should contain at least two columns: the first column contains all the sample names, \
+        and each of the following columns contains an experimental design factor (e.g. 'condition', 'replicate', etc). \
+        (see the User Guide and Tutorial for a complete example). \
+        The analysis formula will contain all the factors in the design matrix. \
+        To run this function, a version of R must be installed.
+
+        :param design_matrix: path to a csv file containing the experiment's design matrix. \
+        The design matrix should contain at least two columns: the first column contains all the sample names, \
+        and each of the following columns contains an experimental design factor (e.g. 'condition', 'replicate', etc). \
+        (see the User Guide and Tutorial for a complete example). \
+        The analysis formula will contain all the factors in the design matrix.
+        :type design_matrix: str or Path
+        :param comparisons: specifies what comparisons to build results tables out of. \
+        each individual comparison should be a tuple with exactly three elements: \
+        the name of a factor in the design formula, the name of the numerator level for the fold change, \
+        and the name of the denominator level for the fold change.
+        :type comparisons: Iterable of tuple(factor, numerator_value, denominator_value)
+        :param r_installation_folder: Path to the installation folder of R. For example: \
+        'C:/Program Files/R/R-4.2.1'
+        :type r_installation_folder: str, Path, or 'auto' (default='auto')
+        :param output_folder: Path to a folder in which the analysis results, \
+        as well as the log files and R script used to generate them, will be saved. \
+        if output_folder is None, the results will not be saved to a specified directory.
+        :type output_folder: str, Path, or None
+        :return: a tuple of DESeqFilter objects, one for each comparison
+        """
+        if output_folder is not None:
+            output_folder = Path(output_folder)
+            assert output_folder.exists(), f'Output folder does not exist!'
+
+        self._validate_is_normalized(expect_normalized=True)
+        data_path = io.get_todays_cache_dir().joinpath(self.fname.name)
+        design_mat_path = None
+        i = 0
+        while design_mat_path is None or design_mat_path.exists():
+            design_mat_path = io.get_todays_cache_dir().joinpath(f'design_mat_{i}.csv')
+            i += 1
+
+        if not io.get_todays_cache_dir().exists():
+            io.get_todays_cache_dir().mkdir(parents=True)
+        io.save_csv(self.df.round(), data_path)
+        # use Pandas to automatically detect file delimiter type, then export it as a CSV file.
+        design_mat_df = io.load_csv(design_matrix, index_col=0)
+        assert design_mat_df.shape[0] == self.shape[1], f"The number of items in the design matrix " \
+                                                        f"({design_mat_df.shape[0]}) does not match the number of " \
+                                                        f"columns in the count matrix ({self.shape[1]})."
+        assert sorted(design_mat_df.index) == sorted(self.columns), f"The sample names in the design matrix do not " \
+                                                                    f"match the sample names in the count matrix: " \
+                                                                    f"{sorted(design_mat_df.index)} != " \
+                                                                    f"{sorted(self.columns)}"
+
+        io.save_csv(design_mat_df, design_mat_path)
+
+        r_output_dir = differential_expression.run_limma_analysis(data_path, design_mat_path, comparisons,
+                                                                  r_installation_folder)
+        outputs = []
+        for item in r_output_dir.iterdir():
+            if not item.is_file():
+                continue
+            if item.suffix == '.csv':
+                outputs.append(DESeqFilter(item, log2fc_col='logFC', padj_col='adj.P.Val'))
+
+            if output_folder is not None:
+                with open(item) as infile, open(output_folder.joinpath(item.name), 'w') as outfile:
+                    outfile.write(infile.read())
+
+        return parsing.data_to_tuple(outputs)
+
     @readable_name('Run DESeq2 differential expression')
     def differential_expression_deseq2(self, design_matrix: Union[str, Path],
                                        comparisons: Iterable[Tuple[str, str, str]],
@@ -2542,15 +2660,21 @@ class CountFilter(Filter):
                                        output_folder: Union[str, Path, None] = None
                                        ) -> Tuple['DESeqFilter', ...]:
         """
-        Run differential expression analysis on the count matrix using the DESeq2 algorithm. \
+        Run differential expression analysis on the count matrix using the \
+        `DESeq2 <https://doi.org/10.1186/s13059-014-0550-8>`_ algorithm. \
+        The count matrix you are analyzing should be unnormalized (meaning, raw read counts). \
         The analysis will be based on a design matrix supplied by the user. \
         The design matrix should contain at least two columns: the first column contains all the sample names, \
         and each of the following columns contains an experimental design factor (e.g. 'condition', 'replicate', etc). \
-        (see User Guide for a complete example). \
+        (see the User Guide and Tutorial for a complete example). \
         The analysis formula will contain all the factors in the design matrix. \
         To run this function, a version of R must be installed.
 
-        :param design_matrix: path to a csv file containing the experiment's design matrix.
+        :param design_matrix: path to a csv file containing the experiment's design matrix. \
+        The design matrix should contain at least two columns: the first column contains all the sample names, \
+        and each of the following columns contains an experimental design factor (e.g. 'condition', 'replicate', etc). \
+        (see the User Guide and Tutorial for a complete example). \
+        The analysis formula will contain all the factors in the design matrix.
         :type design_matrix: str or Path
         :param comparisons: specifies what comparisons to build results tables out of. \
         each individual comparison should be a tuple with exactly three elements: \
@@ -2874,7 +2998,7 @@ class CountFilter(Filter):
             >>> from rnalysis import filtering
             >>> c = filtering.CountFilter("tests/test_files/counted.csv")
             >>> c.normalize_to_rpm_htseqcount("tests/test_files/uncounted.csv")
-            Normalized the values of 22 features. Normalized inplace.
+           Normalized 22 features. Normalized inplace.
 
         """
         suffix = '_normtoRPMhtseqcount'
@@ -2910,7 +3034,7 @@ class CountFilter(Filter):
             >>> from rnalysis import filtering
             >>> c = filtering.CountFilter("tests/test_files/counted.csv")
             >>> c.normalize_to_rpm()
-            Normalized the values of 22 features. Normalized inplace.
+           Normalized 22 features. Normalized inplace.
 
         """
         suffix = '_normtoRPM'
@@ -2920,6 +3044,92 @@ class CountFilter(Filter):
             if column in numeric_cols:
                 norm_factor = new_df[column].sum() / (10 ** 6)
                 new_df[column] /= norm_factor
+        return self._inplace(new_df, opposite=False, inplace=inplace, suffix=suffix, printout_operation='normalize',
+                             _is_normalized=True)
+
+    @readable_name('Normalize to reads-per-kilobase-million (RPKM)')
+    def normalize_to_rpkm(self, gtf_file: Union[str, Path], feature_type: Literal['gene', 'transcript'] = 'gene',
+                          method: Literal[LEGAL_GENE_LENGTH_METHODS] = 'mean', inplace: bool = True):
+        """
+        Normalizes the count matrix to Reads Per Kilobase Million (RPKM). \
+        Divides each column in the count matrix by (total reads)*(gene length / 1000)*10^-6. \
+
+
+       :param gtf_file: Path to a GTF/GFF3 annotation file. This file will be used to determine the length of each \
+        gene/transcript. The gene/transcript names in this annotation file should match the ones in count matrix.
+        :type gtf_file: str or Path
+        :param feature_type: the type of features in your count matrix. if feature_type is 'transcript', \
+        lengths will be calculated per-transcript, and the 'method' parameter is ignored. \
+        Otherwise, lengths will be aggregated per gene according to the method specified in the 'method' parameter.
+        :type feature_type: 'gene' or 'transcript' (default='gene')
+        :param method: if feature_type='gene', this determines the aggregation method to calculate gene lengths. \
+        'mean', 'median', 'min', and 'max' will calculate the \
+        mean/median/min/max of all transcripts' lengths of the given gene. \
+        'geometric_mean' will calculate the goemetric mean of all transcripts' lengths of the given gene. \
+        'merged_exons' will calculate the total lengths of all exons of a gene across all of its transcripts, \
+        while counting overlapping exons/regions exactly once.
+        :type method: 'mean', 'median', 'min', 'max', 'geometric_mean', or 'merged_exons' (deafult='mean')
+        :type inplace: bool (default=True)
+        :param inplace: If True (default), filtering will be applied to the current CountFilter object. If False, \
+        the function will return a new CountFilter instance and the current instance will not be affected.
+        :return: If inplace is False, returns a new instance of the Filter object.
+        """
+        suffix = f"_normtoRPKM{method.replace('_', '')}"
+        gene_lengths_kbp = pd.Series(
+            genome_annotation.get_genomic_feature_lengths(gtf_file, feature_type, method)) / 1000
+        new_df = self.df.copy()
+        numeric_cols = self._numeric_columns
+        for column in new_df.columns:
+            if column in numeric_cols:
+                scaling_factor = new_df[column].sum() / (10 ** 6)
+                new_df[column] /= scaling_factor
+        new_df[numeric_cols] = new_df[numeric_cols].div(gene_lengths_kbp, axis='rows')
+        new_df = new_df.dropna(axis=0)
+        return self._inplace(new_df, opposite=False, inplace=inplace, suffix=suffix, printout_operation='normalize',
+                             _is_normalized=True)
+
+    @readable_name('Normalize to transcripts-per-million (TPM)')
+    def normalize_to_tpm(self, gtf_file: Union[str, Path], feature_type: Literal['gene', 'transcript'] = 'gene',
+                         method: Literal[LEGAL_GENE_LENGTH_METHODS] = 'mean', inplace: bool = True):
+        """
+        Normalizes the count matrix to Transcripts Per Million (TPM). \
+        First, normalizes each gene to Reads Per Kilobase (RPK) \
+        by dividing each gene in the count matrix by its length in Kbp (gene length / 1000). \
+        Then, divides each column in the RPK matrix by (total RPK in column)*10^-6. \
+        This calculation is similar to that of Reads Per Kilobase Million (RPKM), but in the opposite order: \
+        the "per million" normalization factors are calculated **after** normalizing to gene lengths, not before.
+
+       :param gtf_file: Path to a GTF/GFF3 annotation file. This file will be used to determine the length of each \
+        gene/transcript. The gene/transcript names in this annotation file should match the ones in count matrix.
+        :type gtf_file: str or Path
+        :param feature_type: the type of features in your count matrix. if feature_type is 'transcript', \
+        lengths will be calculated per-transcript, and the 'method' parameter is ignored. \
+        Otherwise, lengths will be aggregated per gene according to the method specified in the 'method' parameter.
+        :type feature_type: 'gene' or 'transcript' (default='gene')
+        :param method: if feature_type='gene', this determines the aggregation method to calculate gene lengths. \
+        'mean', 'median', 'min', and 'max' will calculate the \
+        mean/median/min/max of all transcripts' lengths of the given gene. \
+        'geometric_mean' will calculate the goemetric mean of all transcripts' lengths of the given gene. \
+        'merged_exons' will calculate the total lengths of all exons of a gene across all of its transcripts, \
+        while counting overlapping exons/regions exactly once.
+        :type method: 'mean', 'median', 'min', 'max', 'geometric_mean', or 'merged_exons' (deafult='mean')
+        :type inplace: bool (default=True)
+        :param inplace: If True (default), filtering will be applied to the current CountFilter object. If False, \
+        the function will return a new CountFilter instance and the current instance will not be affected.
+        :return: If inplace is False, returns a new instance of the Filter object.
+        """
+        suffix = f"_normtoTPM{method.replace('_', '')}"
+        gene_lengths_kbp = pd.Series(
+            genome_annotation.get_genomic_feature_lengths(gtf_file, feature_type, method)) / 1000
+        new_df = self.df.copy()
+        numeric_cols = self._numeric_columns
+        new_df[numeric_cols] = new_df[numeric_cols].div(gene_lengths_kbp, axis='rows')
+        new_df = new_df.dropna(axis=0)
+
+        for column in new_df.columns:
+            if column in numeric_cols:
+                scaling_factor = new_df[column].sum() / (10 ** 6)
+                new_df[column] /= scaling_factor
         return self._inplace(new_df, opposite=False, inplace=inplace, suffix=suffix, printout_operation='normalize',
                              _is_normalized=True)
 
@@ -2946,7 +3156,7 @@ class CountFilter(Filter):
             >>> from rnalysis import filtering
             >>> c = filtering.CountFilter("tests/test_files/counted.csv")
             >>> c.normalize_to_quantile(0.75)
-            Normalized the values of 22 features. Normalized inplace.
+           Normalized 22 features. Normalized inplace.
         """
         suffix = f'_normto{quantile}quantile'
         data = self.df[self._numeric_columns]
@@ -3001,7 +3211,7 @@ class CountFilter(Filter):
             >>> from rnalysis import filtering
             >>> c = filtering.CountFilter("tests/test_files/counted.csv")
             >>> c.normalize_tmm()
-            Normalized the values of 22 features. Normalized inplace.
+           Normalized 22 features. Normalized inplace.
         """
         assert 0 <= log_ratio_trim < 0.5, f"'log_ratio_trim' must be a value in the range 0 <= log_ratio_trim < 5"
         assert 0 <= sum_trim < 0.5, f"'sum_trim' must be a value in the range 0 <= sum_trim < 5"
@@ -3063,7 +3273,7 @@ class CountFilter(Filter):
             >>> from rnalysis import filtering
             >>> c = filtering.CountFilter("tests/test_files/counted.csv")
             >>> c.normalize_rle()
-            Normalized the values of 22 features. Normalized inplace.
+           Normalized 22 features. Normalized inplace.
         """
         suffix = f'_normRLE'
         data = self.df[self._numeric_columns].dropna(axis=0)
@@ -3108,7 +3318,7 @@ class CountFilter(Filter):
             >>> from rnalysis import filtering
             >>> c = filtering.CountFilter("tests/test_files/counted.csv")
             >>> c.normalize_median_of_ratios([['cond1','cond2'],['cond3','cond4']])
-            Normalized the values of 22 features. Normalized inplace.
+           Normalized 22 features. Normalized inplace.
         """
         flat_grouping = parsing.flatten(sample_grouping)
         assert len(flat_grouping) >= len(self._numeric_columns), f"'sample_grouping' must include all columns. " \
@@ -3161,7 +3371,7 @@ class CountFilter(Filter):
             >>> from rnalysis import filtering
             >>> c = filtering.CountFilter("tests/test_files/counted.csv")
             >>> c.normalize_with_scaling_factors("tests/test_files/scaling_factors.csv")
-            Normalized the values of 22 features. Normalized inplace.
+           Normalized 22 features. Normalized inplace.
 
         """
         suffix = '_normwithscalingfactors'
@@ -3381,7 +3591,7 @@ class CountFilter(Filter):
                      plot_style: Literal['all', 'std_area', 'std_bar'] = 'all',
                      split_plots: bool = False, max_n_clusters_estimate: Union[PositiveInt, Literal['auto']] = 'auto',
                      parallel_backend: Literal[PARALLEL_BACKENDS] = 'loky',
-                     gui_mode: bool = False) -> Union[Tuple['CountFilter'], Tuple[Tuple['CountFilter']]]:
+                     gui_mode: bool = False) -> Union[Tuple['CountFilter', ...], Tuple[Tuple['CountFilter', ...], ...]]:
         """
         Clusters the features in the CountFilter object using the K-means clustering algorithm, \
         and then splits those features into multiple non-overlapping CountFilter objects, \
@@ -3409,6 +3619,11 @@ class CountFilter(Filter):
         number of clusters using the Silhouette or Gap Statistic methods. If `max_n_clusters_estimate`='default', \
         an appropriate value will be picked automatically.
         :type max_n_clusters_estimate: int or 'auto' (default='auto')
+        :type parallel_backend: Literal[PARALLEL_BACKENDS] (default='loky')
+        :param parallel_backend: Determines the babckend used to run the analysis. \
+        if parallel_backend not 'sequential', will calculate the statistical tests using parallel processing. \
+        In most cases parallel processing will lead to shorter computation time, but does not affect the results of \
+        the analysis otherwise.
         :return: if `n_clusters` is an int, returns a tuple of `n_clusters` CountFilter objects, \
         each corresponding to a discovered cluster. \
         If `n_clusters` is a list, returns one tuple of CountFilter objects per value in `n_clusters`.
@@ -3456,13 +3671,13 @@ class CountFilter(Filter):
             filt_obj_tuples.append(
                 tuple([self._inplace(self.df.loc[clusterer.labels_ == i], opposite=False, inplace=False,
                                      suffix=f'_kmeanscluster{i + 1}') for i in range(clusterer.n_clusters_)]))
-        # if only a single K was calculated, don't return it as a list of length
-        return_val = filt_obj_tuples[0] if len(filt_obj_tuples) == 1 else filt_obj_tuples
+        # if only a single K was calculated, don't return it as a tuple of length 1
+        return_val = filt_obj_tuples[0] if len(filt_obj_tuples) == 1 else parsing.data_to_tuple(filt_obj_tuples)
         return (return_val, runner) if gui_mode else return_val
 
     @readable_name('Hierarchical clustering')
-    def split_hierarchical(self, n_clusters: Union[PositiveInt, List[PositiveInt],
-    Literal['gap', 'silhouette', 'distance']],
+    def split_hierarchical(self, n_clusters: Union[
+        PositiveInt, List[PositiveInt], Literal['gap', 'silhouette', 'distance']],
                            metric: Literal['Euclidean', 'Cosine', 'Pearson', 'Spearman', 'Manhattan',
                            'L1', 'L2', 'Jackknife', 'YS1', 'YR1', 'Sharpened_Cosine'] = 'Euclidean',
                            linkage: Literal['Single', 'Average', 'Complete', 'Ward'] = 'Average',
@@ -3470,7 +3685,8 @@ class CountFilter(Filter):
                            plot_style: Literal['all', 'std_area', 'std_bar'] = 'all', split_plots: bool = False,
                            max_n_clusters_estimate: Union[PositiveInt, Literal['auto']] = 'auto',
                            parallel_backend: Literal[PARALLEL_BACKENDS] = 'loky',
-                           gui_mode: bool = False) -> Union[Tuple['CountFilter'], Tuple[Tuple['CountFilter']]]:
+                           gui_mode: bool = False
+                           ) -> Union[Tuple['CountFilter', ...], Tuple[Tuple['CountFilter', ...], ...]]:
         """
         Clusters the features in the CountFilter object using the Hierarchical clustering algorithm, \
         and then splits those features into multiple non-overlapping CountFilter objects, \
@@ -3501,6 +3717,11 @@ class CountFilter(Filter):
         number of clusters using the Silhouette or Gap Statistic methods. If `max_n_clusters_estimate`='default', \
         an appropriate value will be picked automatically.
         :type max_n_clusters_estimate: int or 'auto' (default='auto')
+        :type parallel_backend: Literal[PARALLEL_BACKENDS] (default='loky')
+        :param parallel_backend: Determines the babckend used to run the analysis. \
+        if parallel_backend not 'sequential', will calculate the statistical tests using parallel processing. \
+        In most cases parallel processing will lead to shorter computation time, but does not affect the results of \
+        the analysis otherwise.
         :return: if `n_clusters` is an int, returns a tuple of `n_clusters` CountFilter objects, \
         each corresponding to a discovered cluster. \
         If `n_clusters` is a list, returns one tuple of CountFilter objects per value in `n_clusters`.
@@ -3548,8 +3769,8 @@ class CountFilter(Filter):
             filt_obj_tuples.append(
                 tuple([self._inplace(self.df.loc[clusterer.labels_ == i], opposite=False, inplace=False,
                                      suffix=f'_kmedoidscluster{i + 1}') for i in range(this_n_clusters)]))
-        # if only a single K was calculated, don't return it as a list of length
-        return_val = filt_obj_tuples[0] if len(filt_obj_tuples) == 1 else filt_obj_tuples
+        # if only a single K was calculated, don't return it as a tuple of length 1
+        return_val = filt_obj_tuples[0] if len(filt_obj_tuples) == 1 else parsing.data_to_tuple(filt_obj_tuples)
         return (return_val, runner) if gui_mode else return_val
 
     @readable_name('K-Medoids clustering')
@@ -3561,8 +3782,8 @@ class CountFilter(Filter):
                        power_transform: bool = True,
                        plot_style: Literal['all', 'std_area', 'std_bar'] = 'all', split_plots: bool = False,
                        max_n_clusters_estimate: Union[PositiveInt, Literal['auto']] = 'auto',
-                       parallel_backend: Literal[PARALLEL_BACKENDS] = 'loky',
-                       gui_mode: bool = False) -> Union[Tuple['CountFilter'], Tuple[Tuple['CountFilter']]]:
+                       parallel_backend: Literal[PARALLEL_BACKENDS] = 'loky', gui_mode: bool = False
+                       ) -> Union[Tuple['CountFilter', ...], Tuple[Tuple['CountFilter', ...], ...]]:
         """
         Clusters the features in the CountFilter object using the K-medoids clustering algorithm, \
         and then splits those features into multiple non-overlapping CountFilter objects, \
@@ -3593,6 +3814,11 @@ class CountFilter(Filter):
         number of clusters using the Silhouette or Gap Statistic methods. If `max_n_clusters_estimate`='default', \
         an appropriate value will be picked automatically.
         :type max_n_clusters_estimate: int or 'auto' (default='auto')
+        :type parallel_backend: Literal[PARALLEL_BACKENDS] (default='loky')
+        :param parallel_backend: Determines the babckend used to run the analysis. \
+        if parallel_backend not 'sequential', will calculate the statistical tests using parallel processing. \
+        In most cases parallel processing will lead to shorter computation time, but does not affect the results of \
+        the analysis otherwise.
         :return: if `n_clusters` is an int, returns a tuple of `n_clusters` CountFilter objects, \
         each corresponding to a discovered cluster. \
         If `n_clusters` is a list, returns one tuple of CountFilter objects per value in `n_clusters`.
@@ -3639,8 +3865,8 @@ class CountFilter(Filter):
             filt_obj_tuples.append(
                 tuple([self._inplace(self.df.loc[clusterer.labels_ == i], opposite=False, inplace=False,
                                      suffix=f'_kmedoidscluster{i + 1}') for i in range(clusterer.n_clusters_)]))
-        # if only a single K was calculated, don't return it as a list of length 1
-        return_val = filt_obj_tuples[0] if len(filt_obj_tuples) == 1 else filt_obj_tuples
+        # if only a single K was calculated, don't return it as a tuple of length 1
+        return_val = filt_obj_tuples[0] if len(filt_obj_tuples) == 1 else parsing.data_to_tuple(filt_obj_tuples)
         return (return_val, runner) if gui_mode else return_val
 
     @readable_name('CLICOM (ensemble) clustering')
@@ -3650,7 +3876,7 @@ class CountFilter(Filter):
                      evidence_threshold: param_typing.Fraction = 2 / 3, cluster_unclustered_features: bool = False,
                      min_cluster_size: PositiveInt = 15, plot_style: Literal['all', 'std_area', 'std_bar'] = 'all',
                      split_plots: bool = False, parallel_backend: Literal[PARALLEL_BACKENDS] = 'loky',
-                     gui_mode: bool = False) -> Tuple['CountFilter']:
+                     gui_mode: bool = False) -> Tuple['CountFilter', ...]:
         """
         Clusters the features in the CountFilter object using the modified CLICOM ensemble clustering algorithm \
         `(Mimaroglu and Yagci 2012) <https://doi.org/10.1016/j.eswa.2011.08.059/>`_, \
@@ -3702,6 +3928,11 @@ class CountFilter(Filter):
         :param split_plots: if True, each discovered cluster will be plotted on its own. \
         Otherwise, all clusters will be plotted in the same Figure.
         :type split_plots: bool (default=False)
+        :type parallel_backend: Literal[PARALLEL_BACKENDS] (default='loky')
+        :param parallel_backend: Determines the babckend used to run the analysis. \
+        if parallel_backend not 'sequential', will calculate the statistical tests using parallel processing. \
+        In most cases parallel processing will lead to shorter computation time, but does not affect the results of \
+        the analysis otherwise.
         :return: returns a tuple of CountFilter objects, each corresponding to a discovered cluster.
 
 
@@ -3772,10 +4003,10 @@ class CountFilter(Filter):
                   f"Number of unclustered genes is {unclustered}, "
                   f"which are {100 * (unclustered / len(clusterer.labels_)) :.2f}% of the genes.")
 
-        filt_objs = tuple([self._inplace(self.df.loc[clusterer.labels_ == i], opposite=False, inplace=False,
-                                         suffix=f'_clicomcluster{i + 1}') for i in range(n_clusters)])
+        filt_objs = [self._inplace(self.df.loc[clusterer.labels_ == i], opposite=False, inplace=False,
+                                   suffix=f'_clicomcluster{i + 1}') for i in range(n_clusters)]
 
-        return_val = filt_objs
+        return_val = parsing.data_to_tuple(filt_objs)
         return (return_val, runner) if gui_mode else return_val
 
     @readable_name('HDBSCAN (density) clustering')
@@ -3786,7 +4017,7 @@ class CountFilter(Filter):
                       power_transform: bool = True, plot_style: Literal['all', 'std_area', 'std_bar'] = 'all',
                       split_plots: bool = False, return_probabilities: bool = False,
                       parallel_backend: Literal[PARALLEL_BACKENDS] = 'loky', gui_mode: bool = False
-                      ) -> Union[Tuple['CountFilter'], List[Union[Tuple['CountFilter'], np.ndarray]], None]:
+                      ) -> Union[Tuple['CountFilter', ...], List[Union[Tuple['CountFilter', ...], np.ndarray]], None]:
         """
         Clusters the features in the CountFilter object using the HDBSCAN clustering algorithm, \
         and then splits those features into multiple non-overlapping CountFilter objects, \
@@ -3821,6 +4052,11 @@ class CountFilter(Filter):
         the probability with which each sample is a member of its assigned cluster, \
         in addition to returning the clustering results. Points which were categorized as noise have probability 0.
         :type return_probabilities: bool (default False)
+        :type parallel_backend: Literal[PARALLEL_BACKENDS] (default='loky')
+        :param parallel_backend: Determines the babckend used to run the analysis. \
+        if parallel_backend not 'sequential', will calculate the statistical tests using parallel processing. \
+        In most cases parallel processing will lead to shorter computation time, but does not affect the results of \
+        the analysis otherwise.
         :return: if `return_probabilities` is False, returns a tuple of CountFilter objects, \
         each corresponding to a discovered cluster. \
         Otherswise, returns a tuple of CountFilter objects, and a numpy array containing the probability values.
@@ -3879,8 +4115,9 @@ class CountFilter(Filter):
                   f"Number of unclustered genes is {unclustered}, "
                   f"which are {100 * (unclustered / len(clusterer.labels_)) :.2f}% of the genes.")
 
-        filt_objs = tuple([self._inplace(self.df.loc[clusterer.labels_ == i], opposite=False, inplace=False,
-                                         suffix=f'_hdbscancluster{i + 1}') for i in range(n_clusters)])
+        filt_objs = parsing.data_to_tuple([self._inplace(self.df.loc[clusterer.labels_ == i], opposite=False,
+                                                         inplace=False, suffix=f'_hdbscancluster{i + 1}') for i in
+                                           range(n_clusters)])
 
         # noinspection PyUnboundLocalVariable
         return_val = [filt_objs, probabilities] if return_probabilities else filt_objs
@@ -3933,7 +4170,7 @@ class CountFilter(Filter):
         assert linkage in linkages, f"Invalid linkage {linkage}."
 
         if sample_names == 'all':
-            sample_names = list(self.df.columns)
+            sample_names = list(self.columns)
         print('Calculating clustergram...')
         plt.style.use('seaborn-whitegrid')
         clustergram = sns.clustermap(np.log2(self.df[sample_names] + 1), method=linkage, metric=metric,
@@ -4522,7 +4759,7 @@ class CountFilter(Filter):
             >>> c = filtering.CountFilter.from_folder('tests/test_files/test_count_from_folder')
 
             >>> c = filtering.CountFilter.from_folder('tests/test_files/test_count_from_folder', norm_to_rpm=True) # This will also normalize the CountFilter to reads-per-million (RPM).
-            Normalized the values of 10 features. Normalized inplace.
+           Normalized 10 features. Normalized inplace.
 
             >>> c = filtering.CountFilter.from_folder('tests/test_files/test_count_from_folder', save_csv=True, counted_fname='name_for_reads_csv_file', uncounted_fname='name_for_uncounted_reads_csv_file') # This will also save the counted reads and uncounted reads as separate .csv files
 
@@ -4787,10 +5024,9 @@ class Pipeline:
             kwargs['inplace'] = False
             try:
                 if isinstance(filter_object, tuple):
-                    temp_object = []
-                    for obj in filter_object:
-                        temp_object.append(func(obj, *args, **kwargs))
-                    filter_object = tuple(temp_object)
+                    temp_object = [self._apply_filter_norm_sort(func, this_obj, args, kwargs, inplace)
+                                   for this_obj in filter_object]
+                    filter_object = parsing.data_to_tuple(temp_object)
                 else:
                     filter_object = func(filter_object, *args, **kwargs)
             except (ValueError, AssertionError, TypeError) as e:
@@ -4799,8 +5035,8 @@ class Pipeline:
             kwargs['inplace'] = True
             try:
                 if isinstance(filter_object, tuple):
-                    for obj in filter_object:
-                        func(obj, *args, **kwargs)
+                    _ = [self._apply_filter_norm_sort(func, this_obj, args, kwargs, inplace)
+                         for this_obj in filter_object]
                 else:
                     func(filter_object, *args, **kwargs)
             except (ValueError, AssertionError, TypeError) as e:
@@ -4829,22 +5065,11 @@ class Pipeline:
         """
         try:
             if isinstance(filter_object, tuple):
-                temp_object = []
-                for obj in filter_object:
-                    temp_res = func(obj, *args, **kwargs)
-                    if isinstance(temp_res, tuple):
-                        temp_object.extend(temp_res)
-                    elif isinstance(temp_res, list):
-                        for item in temp_res:
-                            if isinstance(item, tuple):
-                                temp_object.extend(item)
-                            elif item is not None:
-                                other_outputs[f"{func.__name__}_{other_cnt.setdefault(func.__name__, 1)}"] = item
-                                other_cnt[func.__name__] += 1
+                temp_object = [item for item in
+                               [self._apply_split(func, this_obj, args, kwargs, other_outputs, other_cnt) for this_obj
+                                in filter_object] if item is not None]
+                filter_object = parsing.data_to_tuple(temp_object)
 
-                    else:
-                        raise ValueError(f"Unrecognized output type {type(temp_res)} from function {func}:\n{temp_res}")
-                filter_object = tuple(temp_object)
             else:
                 temp_res = func(filter_object, *args, **kwargs)
                 if isinstance(temp_res, tuple):
@@ -4857,14 +5082,16 @@ class Pipeline:
                         elif item is not None:
                             other_outputs[f"{func.__name__}_{other_cnt.setdefault(func.__name__, 1)}"] = item
                             other_cnt[func.__name__] += 1
-                    filter_object = tuple(temp_object)
+                    filter_object = parsing.data_to_tuple(temp_object)
+                else:
+                    raise ValueError(f"Unrecognized output type {type(temp_res)} from function {func}:\n{temp_res}")
         except (ValueError, AssertionError, TypeError) as e:
             raise e.__class__(f"Invalid function signature {self._func_signature(func, args, kwargs)}")
         return filter_object
 
     def _apply_other(self, func: types.FunctionType,
                      filter_object: Union['Filter', 'CountFilter', 'DESeqFilter', 'FoldChangeFilter'],
-                     args: tuple, kwargs: dict, other_outputs: dict, other_cnt: dict):
+                     args: tuple, kwargs: dict, other_outputs: dict, other_cnt: dict, recursive_call: bool = False):
         """
         Apply a non filtering/splitting/normalizing/sorting function.
 
@@ -4882,21 +5109,24 @@ class Pipeline:
         :type other_cnt: dict
         :return: Filter object to which the function was applied.
         """
+        key = f"{func.__name__}_{other_cnt.setdefault(func.__name__, 1)}"
         try:
             if isinstance(filter_object, tuple):
-                tmp_outputs = []
-                for obj in filter_object:
-                    this_output = func(obj, *args, **kwargs)
-                    if this_output is not None:
-                        tmp_outputs.append(this_output)
-                if len(tmp_outputs) > 0:
-                    other_outputs[f"{func.__name__}_{other_cnt.setdefault(func.__name__, 1)}"] = tuple(tmp_outputs)
+                for this_obj in filter_object:
+                    self._apply_other(func, this_obj, args, kwargs, other_outputs, other_cnt, True)
+                if len(other_outputs[key]) > 0 and not recursive_call:
+                    other_outputs[key] = parsing.data_to_tuple(other_outputs[key])
                     other_cnt[func.__name__] += 1
             else:
                 this_output = func(filter_object, *args, **kwargs)
                 if this_output is not None:
-                    other_outputs[f"{func.__name__}_{other_cnt.setdefault(func.__name__, 1)}"] = this_output
-                    other_cnt[func.__name__] += 1
+                    if not recursive_call:
+                        other_outputs[key] = this_output
+                        other_cnt[func.__name__] += 1
+                    else:
+                        if key not in other_outputs:
+                            other_outputs[key] = []
+                        other_outputs[key].append(this_output)
         except (ValueError, AssertionError, TypeError) as e:
             raise e.__class__(f"Invalid function signature {self._func_signature(func, args, kwargs)}")
 
@@ -4952,7 +5182,8 @@ class Pipeline:
         other_cnt = dict()
         # iterate over all functions and arguments
         for func, (args, kwargs) in zip(self.functions, self.params):
-            if 'filter' in func.__name__ or func.__name__.startswith('normalize') or func.__name__ == 'sort':
+            keywords = ['filter', 'normalize', 'sort', 'translate']
+            if any([kw in func.__name__ for kw in keywords]):
                 filter_object = self._apply_filter_norm_sort(func, filter_object, args, kwargs, inplace)
             elif func.__name__.startswith('split'):
                 assert not inplace, f"Cannot apply the split function {self._func_signature(func, args, kwargs)} " \

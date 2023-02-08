@@ -2,6 +2,7 @@ import ast
 import collections
 import functools
 import inspect
+import json
 from pathlib import Path
 from queue import Queue
 from typing import List, Dict, Tuple, Sequence, Iterable, Union, Callable
@@ -13,7 +14,7 @@ from joblib import Parallel, parallel_backend
 from tqdm.auto import tqdm
 from typing_extensions import Literal, get_origin, get_args
 
-from rnalysis.utils import parsing, validation, generic, param_typing
+from rnalysis.utils import parsing, validation, generic, param_typing, settings
 
 EMPTY = inspect._empty
 
@@ -1853,12 +1854,14 @@ def clear_layout(layout, exceptions: set = frozenset()):
 
 
 class ReactiveHeaderView(QtWidgets.QHeaderView):
+    LOOKUP_DATABASES_PATH = Path(__file__).parent.joinpath('../data_files/lookup_databases.json')
     __slots__ = {'context_menu': 'context menu'}
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.setSectionsClickable(True)
         self.context_menu = None
+        self.db_actions = None
 
     def contextMenu(self, value: str):
         self.context_menu = QtWidgets.QMenu(self)
@@ -1866,22 +1869,17 @@ class ReactiveHeaderView(QtWidgets.QHeaderView):
         copy_action.triggered.connect(functools.partial(QtWidgets.QApplication.clipboard().setText, value))
         self.context_menu.addAction(copy_action)
 
-        google_action = QtWidgets.QAction(f'Search "{value}" on Google')
-        google_action.triggered.connect(
-            functools.partial(QtGui.QDesktopServices.openUrl, QtCore.QUrl(f'https://www.google.com/search?q={value}')))
-        self.context_menu.addAction(google_action)
+        with open(self.LOOKUP_DATABASES_PATH) as f:
+            databases = json.load(f)
 
-        uniprot_action = QtWidgets.QAction(f'Search "{value}" on UniProt')
-        uniprot_action.triggered.connect(
-            functools.partial(QtGui.QDesktopServices.openUrl,
-                              QtCore.QUrl(f'https://www.uniprot.org/uniprotkb?query={value}')))
-        self.context_menu.addAction(uniprot_action)
-
-        ncbi_action = QtWidgets.QAction(f'Search "{value}" on NCBI Genes')
-        ncbi_action.triggered.connect(
-            functools.partial(QtGui.QDesktopServices.openUrl,
-                              QtCore.QUrl(f'https://www.ncbi.nlm.nih.gov/gene/?term={value}')))
-        self.context_menu.addAction(ncbi_action)
+        self.db_actions = []
+        for name in settings.get_databases_settings():
+            action = QtWidgets.QAction(f'Search "{value}" on {name}')
+            self.db_actions.append(action)
+            open_url_partial = functools.partial(QtGui.QDesktopServices.openUrl,
+                                                 QtCore.QUrl(f'{databases[name]}{value}'))
+            action.triggered.connect(open_url_partial)
+            self.context_menu.addAction(action)
 
         self.context_menu.exec(QtGui.QCursor.pos())
 
@@ -1900,11 +1898,15 @@ class ReactiveHeaderView(QtWidgets.QHeaderView):
 
 
 class ReactiveListWidget(QtWidgets.QListWidget):
+    LOOKUP_DATABASES_PATH = Path(__file__).parent.joinpath('../data_files/lookup_databases.json')
     __slots__ = {'context_menu': 'context menu'}
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.context_menu = None
+        self.setUniformItemSizes(True)
+        self.setSpacing(2)
+        self.db_actions = None
 
     def contextMenu(self, value: str):
         self.context_menu = QtWidgets.QMenu(self)
@@ -1912,22 +1914,17 @@ class ReactiveListWidget(QtWidgets.QListWidget):
         copy_action.triggered.connect(functools.partial(QtWidgets.QApplication.clipboard().setText, value))
         self.context_menu.addAction(copy_action)
 
-        google_action = QtWidgets.QAction(f'Search "{value}" on Google')
-        google_action.triggered.connect(
-            functools.partial(QtGui.QDesktopServices.openUrl, QtCore.QUrl(f'https://www.google.com/search?q={value}')))
-        self.context_menu.addAction(google_action)
+        with open(self.LOOKUP_DATABASES_PATH) as f:
+            databases = json.load(f)
 
-        uniprot_action = QtWidgets.QAction(f'Search "{value}" on UniProt')
-        uniprot_action.triggered.connect(
-            functools.partial(QtGui.QDesktopServices.openUrl,
-                              QtCore.QUrl(f'https://www.uniprot.org/uniprotkb?query={value}')))
-        self.context_menu.addAction(uniprot_action)
-
-        ncbi_action = QtWidgets.QAction(f'Search "{value}" on NCBI Genes')
-        ncbi_action.triggered.connect(
-            functools.partial(QtGui.QDesktopServices.openUrl,
-                              QtCore.QUrl(f'https://www.ncbi.nlm.nih.gov/gene/?term={value}')))
-        self.context_menu.addAction(ncbi_action)
+        self.db_actions = []
+        for name in settings.get_databases_settings():
+            action = QtWidgets.QAction(f'Search "{value}" on {name}')
+            self.db_actions.append(action)
+            open_url_partial = functools.partial(QtGui.QDesktopServices.openUrl,
+                                                 QtCore.QUrl(f'{databases[name]}{value}'))
+            action.triggered.connect(open_url_partial)
+            self.context_menu.addAction(action)
 
         self.context_menu.exec(QtGui.QCursor.pos())
 

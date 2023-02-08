@@ -1,3 +1,6 @@
+import json
+import shutil
+
 import matplotlib
 import pytest
 
@@ -6,6 +9,16 @@ from rnalysis.filtering import *
 from tests import __attr_ref__, __biotype_ref__
 
 matplotlib.use('Agg')
+
+
+def unlink_tree(dir):
+    for item in Path(dir).iterdir():
+        if 'gitignore' in item.name:
+            continue
+        if item.is_file():
+            item.unlink()
+        else:
+            shutil.rmtree(item)
 
 
 def test_filter_api():
@@ -154,6 +167,54 @@ def test_countfilter_normalize_to_rpm():
     not_inplace = h.normalize_to_rpm(inplace=False)
     assert np.isclose(truth, not_inplace.df).all()
     h.normalize_to_rpm()
+    assert np.isclose(truth, h.df).all()
+
+
+@pytest.mark.parametrize('gtf_path,feature_type,method',
+                         [
+                             ('tests/test_files/test_gtf_wormbase.gtf', 'gene', 'merged_exons'),
+                             ('tests/test_files/test_gff3_wormbase.gff3', 'gene', 'geometric_mean'),
+                             ('tests/test_files/test_gtf_wormbase.gtf', 'transcript', 'mean'),
+                             ('tests/test_files/test_gff3_wormbase.gff3', 'transcript', 'max')
+                         ])
+def test_countfilter_normalize_to_rpkm(monkeypatch, gtf_path, feature_type, method):
+    def mock_get_feature_lengths(this_gtf_path, this_feature_type, this_method):
+        assert this_gtf_path == gtf_path
+        assert this_feature_type == feature_type
+        assert this_method == method
+        with open('tests/test_files/feature_lengths.json') as f:
+            return json.load(f)
+
+    monkeypatch.setattr(genome_annotation, 'get_genomic_feature_lengths', mock_get_feature_lengths)
+    truth = io.load_csv(r"tests/test_files/test_norm_to_rpkm.csv", 0)
+    h = CountFilter("tests/test_files/counted.csv")
+    not_inplace = h.normalize_to_rpkm(gtf_path, feature_type, method, inplace=False)
+    assert np.isclose(truth, not_inplace.df).all()
+    h.normalize_to_rpkm(gtf_path, feature_type, method, )
+    assert np.isclose(truth, h.df).all()
+
+
+@pytest.mark.parametrize('gtf_path,feature_type,method',
+                         [
+                             ('tests/test_files/test_gtf_wormbase.gtf', 'gene', 'merged_exons'),
+                             ('tests/test_files/test_gff3_wormbase.gff3', 'gene', 'geometric_mean'),
+                             ('tests/test_files/test_gtf_wormbase.gtf', 'transcript', 'mean'),
+                             ('tests/test_files/test_gff3_wormbase.gff3', 'transcript', 'max')
+                         ])
+def test_countfilter_normalize_to_tpm(monkeypatch, gtf_path, feature_type, method):
+    def mock_get_feature_lengths(this_gtf_path, this_feature_type, this_method):
+        assert this_gtf_path == gtf_path
+        assert this_feature_type == feature_type
+        assert this_method == method
+        with open('tests/test_files/feature_lengths.json') as f:
+            return json.load(f)
+
+    monkeypatch.setattr(genome_annotation, 'get_genomic_feature_lengths', mock_get_feature_lengths)
+    truth = io.load_csv(r"tests/test_files/test_norm_to_tpm.csv", 0)
+    h = CountFilter("tests/test_files/counted.csv")
+    not_inplace = h.normalize_to_tpm(gtf_path, feature_type, method, inplace=False)
+    assert np.isclose(truth, not_inplace.df).all()
+    h.normalize_to_tpm(gtf_path, feature_type, method)
     assert np.isclose(truth, h.df).all()
 
 
@@ -1449,12 +1510,10 @@ def test_pipeline_apply_to_with_split_function():
     c_pipeline_res = pl_c.apply_to(c, inplace=False)
     c_res = c.filter_top_n(by='cond2', n=2, opposite=True, inplace=False)
     c_res = c_res.split_kmeans(n_clusters=[2, 3, 4], random_seed=42)
-    c_res_cont = []
-    for i in c_res:
-        c_res_cont.extend(i)
-    for i in c_res_cont:
-        i.filter_top_n(by='cond1', n=5)
-    for i, j in zip(c_res_cont, c_pipeline_res):
+    for tpl in c_res:
+        for this_obj in tpl:
+            this_obj.filter_top_n(by='cond1', n=5)
+    for i, j in zip(c_res, c_pipeline_res):
         assert i == j
 
 
@@ -1479,16 +1538,16 @@ def test_pipeline_apply_to_multiple_splits():
     c_res = c.filter_top_n(by='cond2', n=2, opposite=True, inplace=False)
     c_res, prob = c_res.split_hdbscan(min_cluster_size=3, return_probabilities=True)
     c_res_cont = []
-    for i in c_res:
-        c_res_cont.extend(i.split_kmedoids(n_clusters=2, random_seed=42))
+    for this_obj in c_res:
+        c_res_cont.append(this_obj.split_kmedoids(n_clusters=2, random_seed=42))
     c_res_cont_fin = []
-    for i in c_res_cont:
-        c_res_cont_fin.extend(i.split_by_reads(15))
+    for tpl in c_res_cont:
+        c_res_cont_fin.append([])
+        for this_obj in tpl:
+            c_res_cont_fin[-1].append(this_obj.split_by_reads(15))
     assert len(c_pipeline_res) == len(c_res_cont_fin)
     for i, j in zip(c_res_cont_fin, c_pipeline_res):
-        print(i.df)
-        print(j.df)
-        assert i == j
+        assert parsing.data_to_tuple(i) == j
     assert np.all(c_pipeline_dict['split_hdbscan_1'] == prob)
 
 
@@ -1497,11 +1556,11 @@ def test_pipeline_apply_to_filter_normalize_split_plot():
     pl_c = Pipeline('CountFilter')
     pl_c.add_function(CountFilter.normalize_with_scaling_factors, scaling_factor_path)
     pl_c.add_function('biotypes_from_ref_table', ref=__biotype_ref__)
-    pl_c.add_function(CountFilter.filter_top_n, by='cond3rep1', n=5000, opposite=True)
+    pl_c.add_function(CountFilter.filter_top_n, by='cond3rep1', n=1500, opposite=True)
     pl_c.add_function(CountFilter.split_hdbscan, min_cluster_size=40, return_probabilities=True)
     pl_c.add_function(CountFilter.filter_low_reads, threshold=10)
     pl_c.add_function(CountFilter.clustergram)
-    pl_c.add_function(CountFilter.split_kmedoids, n_clusters=[2, 3, 7], random_seed=42, n_init=1)
+    pl_c.add_function(CountFilter.split_kmedoids, n_clusters=[2, 7], random_seed=42, n_init=1, max_iter=100)
     pl_c.add_function(CountFilter.sort, by='cond2rep3')
     pl_c.add_function(CountFilter.biotypes_from_ref_table, 'long', __biotype_ref__)
 
@@ -1510,30 +1569,33 @@ def test_pipeline_apply_to_filter_normalize_split_plot():
     c_dict = dict()
     c.normalize_with_scaling_factors(scaling_factor_path)
     c_dict['biotypes_from_ref_table_1'] = c.biotypes_from_ref_table(ref=__biotype_ref__)
-    c_res = c.filter_top_n(by='cond3rep1', n=5000, opposite=True, inplace=False)
+    c_res = c.filter_top_n(by='cond3rep1', n=1500, opposite=True, inplace=False)
     c_res, prob = c_res.split_hdbscan(min_cluster_size=40, return_probabilities=True)
     c_dict['split_hdbscan_1'] = prob
     for obj in c_res:
         obj.filter_low_reads(threshold=10)
     clustergrams = []
-    for obj in c_res:
+    for i, obj in enumerate(c_res):
         clustergrams.append(obj.clustergram())
     c_dict['clustergram_1'] = tuple(clustergrams)
     c_res_cont = []
     for obj in c_res:
-        k_out = obj.split_kmedoids(n_clusters=[2, 3, 7], n_init=1, random_seed=42)
-        for k in k_out:
-            c_res_cont.extend(k)
-    for obj in c_res_cont:
-        obj.sort(by='cond2rep3')
+        k_out = obj.split_kmedoids(n_clusters=[2, 7], n_init=1, max_iter=100, random_seed=42)
+        c_res_cont.append(k_out)
+    for tpl_outer in c_res_cont:
+        for tpl_inner in tpl_outer:
+            for obj in tpl_inner:
+                obj.sort(by='cond2rep3')
     biotypes = []
-    for obj in c_res_cont:
-        biotypes.append(obj.biotypes_from_ref_table('long', __biotype_ref__))
+    for tpl_outer in c_res_cont:
+        for tpl_inner in tpl_outer:
+            for obj in tpl_inner:
+                biotypes.append(obj.biotypes_from_ref_table('long', __biotype_ref__))
     c_dict['biotypes_from_ref_table_2'] = tuple(biotypes)
 
     assert len(c_res_cont) == len(c_pipeline_res)
     for i, j in zip(c_res_cont, c_pipeline_res):
-        assert i == j
+        assert parsing.data_to_tuple(i) == j
     assert np.all(c_dict.keys() == c_pipeline_dict.keys())
     assert c_dict['biotypes_from_ref_table_1'].equals(c_pipeline_dict['biotypes_from_ref_table_1'])
     assert len(c_dict['clustergram_1']) == len(c_pipeline_dict['clustergram_1'])
@@ -1551,7 +1613,7 @@ def test_split_kmeans_api():
     assert len(res) == 4
     _test_correct_clustering_split(c, res)
     res2 = c.split_kmeans(n_clusters=[2, 3, 7], n_init=1, max_iter=10, random_seed=42, plot_style='std_bar')
-    assert isinstance(res2, list)
+    assert isinstance(res2, tuple)
     assert np.all([isinstance(i, tuple) for i in res2])
     [_test_correct_clustering_split(c, i) for i in res2]
 
@@ -1564,7 +1626,7 @@ def test_split_hierarchical_api():
     assert len(res) == 4
     _test_correct_clustering_split(c, res)
     res2 = c.split_hierarchical([2, 3, 7], metric='Euclidean', linkage='AVERAGE', plot_style='std_bar')
-    assert isinstance(res2, list)
+    assert isinstance(res2, tuple)
     assert np.all([isinstance(i, tuple) for i in res2])
     [_test_correct_clustering_split(c, i) for i in res2]
 
@@ -1579,7 +1641,7 @@ def test_split_hierarchical_api():
 
 
 def test_split_hdbscan_api():
-    c = CountFilter('tests/test_files/big_counted.csv').filter_top_n('cond1rep1',n=2000,inplace=False)
+    c = CountFilter('tests/test_files/big_counted.csv').filter_top_n('cond1rep1', n=2000, inplace=False)
     res = c.split_hdbscan(100)
     _test_correct_clustering_split(c, res, True)
     res2 = c.split_hdbscan(4, 5, 'manhattan', 0.2, 'leaf', plot_style='std_area', return_probabilities=True)
@@ -1611,7 +1673,7 @@ def test_split_kmedoids_api():
     assert len(res) == 4
     _test_correct_clustering_split(c, res)
     res2 = c.split_kmedoids(n_clusters=[2, 3, 7], n_init=1, max_iter=10, random_seed=42, plot_style='std_bar')
-    assert isinstance(res2, list)
+    assert isinstance(res2, tuple)
     assert np.all([isinstance(i, tuple) for i in res2])
     [_test_correct_clustering_split(c, i) for i in res2]
 
@@ -1910,3 +1972,70 @@ def test_drop_columns(pth, cols, truth_pth):
     truth = Filter(truth_pth)
     obj.drop_columns(cols)
     assert obj.df.sort_index().equals(truth.df.sort_index())
+
+
+@pytest.mark.parametrize('comparisons,expected_paths,script_path', [
+    ([('replicate', 'rep2', 'rep3')], ['tests/test_files/deseq2_tests/case1/DESeq2_replicate_rep2_vs_rep3_truth.csv'],
+     'tests/test_files/deseq2_tests/case1/expected_deseq_script_1.R'),
+    ([('condition', 'cond2', 'cond1'), ('condition', 'cond3', 'cond2')],
+     ['tests/test_files/deseq2_tests/case2/DESeq2_condition_cond2_vs_cond1_truth.csv',
+      'tests/test_files/deseq2_tests/case2/DESeq2_condition_cond3_vs_cond2_truth.csv'],
+     'tests/test_files/deseq2_tests/case2/expected_deseq_script_2.R')
+])
+def test_differential_expression_deseq2(monkeypatch, comparisons, expected_paths, script_path):
+    outdir = 'tests/test_files/deseq2_tests/outdir'
+    sample_table_path = 'tests/test_files/test_design_matrix.csv'
+    truth = parsing.data_to_tuple([DESeqFilter(file) for file in expected_paths])
+    c = CountFilter('tests/test_files/big_counted.csv')
+
+    def mock_run_analysis(data_path, design_mat_path, comps, r_installation_folder):
+        assert r_installation_folder == 'auto'
+        assert comps == comparisons
+        assert CountFilter(data_path) == c
+        assert io.load_csv(design_mat_path, 0).equals(io.load_csv(sample_table_path, 0))
+
+        return Path(script_path).parent
+
+    monkeypatch.setattr(differential_expression, 'run_deseq2_analysis', mock_run_analysis)
+    try:
+        res = c.differential_expression_deseq2(sample_table_path, comparisons, output_folder=outdir)
+        assert sorted(res, key=lambda filter_obj: filter_obj.fname.name) == sorted(truth, key=lambda
+            filter_obj: filter_obj.fname.name)
+        with open(Path(outdir).joinpath(Path(script_path).name)) as outfile, open(script_path) as truthfile:
+            assert outfile.read() == truthfile.read()
+    finally:
+        unlink_tree(outdir)
+
+
+@pytest.mark.parametrize('comparisons,expected_paths,script_path', [
+    ([('replicate', 'rep2', 'rep3')], ['tests/test_files/limma_tests/case1/LimmaVoom_replicate_rep2_vs_rep3_truth.csv'],
+     'tests/test_files/limma_tests/case1/expected_limma_script_1.R'),
+    ([('condition', 'cond2', 'cond1'), ('condition', 'cond3', 'cond2')],
+     ['tests/test_files/limma_tests/case2/LimmaVoom_condition_cond2_vs_cond1_truth.csv',
+      'tests/test_files/limma_tests/case2/LimmaVoom_condition_cond3_vs_cond2_truth.csv'],
+     'tests/test_files/limma_tests/case2/expected_limma_script_2.R')
+])
+def test_differential_expression_limma(monkeypatch, comparisons, expected_paths, script_path):
+    outdir = 'tests/test_files/limma_tests/outdir'
+    sample_table_path = 'tests/test_files/test_design_matrix.csv'
+    truth = parsing.data_to_tuple(
+        [DESeqFilter(file, log2fc_col='logFC', padj_col='adj.P.Val') for file in expected_paths])
+    c = CountFilter('tests/test_files/big_counted.csv')
+
+    def mock_run_analysis(data_path, design_mat_path, comps, r_installation_folder):
+        assert r_installation_folder == 'auto'
+        assert comps == comparisons
+        assert CountFilter(data_path) == c
+        assert io.load_csv(design_mat_path, 0).equals(io.load_csv(sample_table_path, 0))
+
+        return Path(script_path).parent
+
+    monkeypatch.setattr(differential_expression, 'run_limma_analysis', mock_run_analysis)
+    try:
+        res = c.differential_expression_limma_voom(sample_table_path, comparisons, output_folder=outdir)
+        assert sorted(res, key=lambda filter_obj: filter_obj.fname.name) == sorted(truth, key=lambda
+            filter_obj: filter_obj.fname.name)
+        with open(Path(outdir).joinpath(Path(script_path).name)) as outfile, open(script_path) as truthfile:
+            assert outfile.read() == truthfile.read()
+    finally:
+        unlink_tree(outdir)

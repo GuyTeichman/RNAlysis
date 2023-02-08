@@ -1,0 +1,15 @@
+{
+    "Google": "https://www.google.com/search?q=",
+    "NCBI Genes": "https://www.ncbi.nlm.nih.gov/gene/?term=",
+    "UniProtKB": "https://www.uniprot.org/uniprotkb?query=",
+    "GeneCards": "https://www.genecards.org/Search/Keyword?queryString=",
+    "EcoCyc": "https://ecocyc.org/ECOLI/substring-search?type=NIL&object=",
+    "FlyBase": "https://flybase.org/search/",
+    "MGI": "https://www.informatics.jax.org/quicksearch/summary?queryType=exactPhrase&query=",
+    "ParaSite": "https://parasite.wormbase.org/Multi/Search/Results?species=all;idx=;site=ensemblunit;q=",
+    "PomBase": "https://www.pombase.org/gene/",
+    "SGD": "https://www.yeastgenome.org/search?q=",
+    "WormBase": "https://wormbase.org/search/gene/",
+    "XenBase": "https://www.xenbase.org/entry/gene/searchGene.do?method=search&minibar=true&searchIn=0&searchType=0&searchValue=",
+    "ZFIN": "https://zfin.org/search?category=&q="
+}

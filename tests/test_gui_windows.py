@@ -203,14 +203,24 @@ def test_SettingsWindow_get_defaults(qtbot, use_temp_settings_file):
     font_truth = 'Arial'
     font_size_truth = '16'
     theme_truth = 'Light'
+    dbs_truth = ['NCBI Genes','ParaSite','ZFIN']
     show_tutorial_truth = False
     attr_truth = os.path.abspath('tests/test_files/counted.tsv')
     biotype_truth = os.path.abspath('tests/test_files/counted.csv')
 
-    settings.set_gui_settings(font_truth, int(font_size_truth), theme_truth.lower(), show_tutorial_truth)
+    settings.set_gui_settings(font_truth, int(font_size_truth), theme_truth.lower(), dbs_truth, show_tutorial_truth)
     settings.set_table_settings(attr_truth, biotype_truth)
 
     qtbot, dialog = widget_setup(qtbot, SettingsWindow)
+
+    dbs_matched = []
+
+    for i in range(dialog.appearance_widgets['databases'].count()):
+        item = dialog.appearance_widgets['databases'].item(i)
+        assert bool(item.checkState()) == (item.text() in dbs_truth)
+        if item.checkState():
+            dbs_matched.append(item.text())
+    assert sorted(dbs_matched) == sorted(dbs_truth)
 
     assert dialog.appearance_widgets['app_font'].currentText() == font_truth
     assert dialog.appearance_widgets['app_font_size'].currentText() == font_size_truth
@@ -238,14 +248,16 @@ def test_SettingsWindow_save_settings(qtbot, monkeypatch, use_temp_settings_file
     font_truth = 'Arial'
     font_size_truth = '16'
     theme_truth = 'Light'
+    dbs_truth = ['NCBI Genes', 'ParaSite', 'ZFIN']
     show_tutorial_truth = False
     attr_truth = os.path.abspath('tests/test_files/counted.tsv')
     biotype_truth = os.path.abspath('tests/test_files/counted.csv')
 
-    def mock_save_gui(font, font_size, theme, show_tutorial):
+    def mock_save_gui(font, font_size, theme, dbs, show_tutorial):
         assert font == font_truth
         assert font_size == int(font_size_truth)
         assert theme == theme_truth.lower()
+        assert dbs == dbs_truth
         assert show_tutorial == show_tutorial_truth
         settings_saved[0] = True
 
@@ -268,6 +280,10 @@ def test_SettingsWindow_save_settings(qtbot, monkeypatch, use_temp_settings_file
     qtbot.keyClicks(dialog.appearance_widgets['app_font_size'], font_size_truth)
     qtbot.keyClicks(dialog.appearance_widgets['app_theme'], theme_truth)
     dialog.appearance_widgets['show_tutorial'].setChecked(False)
+
+    for i in range(dialog.appearance_widgets['databases'].count()):
+        item = dialog.appearance_widgets['databases'].item(i)
+        item.setCheckState(QtCore.Qt.CheckState.Checked if item.text() in dbs_truth else QtCore.Qt.CheckState.Unchecked)
 
     qtbot.keyClicks(dialog.tables_widgets['attr_ref_path'].file_path, attr_truth)
     qtbot.keyClicks(dialog.tables_widgets['biotype_ref_path'].file_path, biotype_truth)

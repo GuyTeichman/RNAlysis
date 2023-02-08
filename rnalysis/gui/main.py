@@ -1,11 +1,11 @@
 from multiprocessing import freeze_support
-
+import asyncio
 from rnalysis.gui import gui
 
 
 def main():
     freeze_support()
-    gui.run()
+    asyncio.run(gui.run())
 
 
 if __name__ == '__main__':

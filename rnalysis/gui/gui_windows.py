@@ -1,5 +1,6 @@
 import functools
 import itertools
+import json
 import traceback
 import warnings
 from pathlib import Path
@@ -443,6 +444,7 @@ class AboutWindow(QtWidgets.QMessageBox):
 
 
 class SettingsWindow(gui_widgets.MinMaxDialog):
+    LOOKUP_DATABASES_PATH = Path(__file__).parent.joinpath('../data_files/lookup_databases.json')
     THEMES = gui_style.get_stylesheet_names()
     FONT_SIZES = [str(i) for i in [6, 7, 8, 9, 10, 11, 12, 14, 16, 18, 20, 22, 24, 28, 32, 36, 48, 72]]
     styleSheetUpdated = QtCore.pyqtSignal()
@@ -484,13 +486,18 @@ class SettingsWindow(gui_widgets.MinMaxDialog):
         super().exec()
 
     def set_choices(self):
-        current_font, current_font_size, current_theme, current_show_tutorial = settings.get_gui_settings()
+        current_font, current_font_size, current_theme, current_dbs, current_show_tutorial = settings.get_gui_settings()
         current_theme = {val: key for key, val in self.THEMES.items()}[current_theme]
 
         self.appearance_widgets['app_theme'].setCurrentText(current_theme)
         self.appearance_widgets['app_font'].setCurrentText(current_font)
         self.appearance_widgets['app_font_size'].setCurrentText(str(current_font_size))
         self.appearance_widgets['show_tutorial'].setChecked(current_show_tutorial)
+
+        for i in range(self.appearance_widgets['databases'].count()):
+            item = self.appearance_widgets['databases'].item(i)
+            if item.text() in current_dbs:
+                item.setCheckState(QtCore.Qt.Checked)
 
         attr_ref_path = settings.get_attr_ref_path('predefined') if settings.is_setting_in_file(
             settings.__attr_file_key__) else 'No file chosen'
@@ -514,6 +521,13 @@ class SettingsWindow(gui_widgets.MinMaxDialog):
         self.appearance_widgets['app_font_size'] = QtWidgets.QComboBox(self.appearance_group)
         self.appearance_widgets['app_font_size'].addItems(self.FONT_SIZES)
 
+        self.appearance_widgets['databases'] = QtWidgets.QListWidget(self)
+        with open(self.LOOKUP_DATABASES_PATH) as f:
+            for key in json.load(f).keys():
+                item = QtWidgets.QListWidgetItem(key)
+                item.setCheckState(QtCore.Qt.Unchecked)
+                self.appearance_widgets['databases'].addItem(item)
+
         self.appearance_widgets['show_tutorial'] = QtWidgets.QCheckBox("Show tutorial page on startup")
 
         for widget_name in ['app_theme', 'app_font', 'app_font_size']:
@@ -526,7 +540,9 @@ class SettingsWindow(gui_widgets.MinMaxDialog):
         self.appearance_grid.addWidget(self.appearance_widgets['app_font'], 1, 1)
         self.appearance_grid.addWidget(QtWidgets.QLabel('Application Font Size'), 2, 0)
         self.appearance_grid.addWidget(self.appearance_widgets['app_font_size'], 2, 1)
-        self.appearance_grid.addWidget(self.appearance_widgets['show_tutorial'], 3, 0, 1, 2)
+        self.appearance_grid.addWidget(QtWidgets.QLabel('Right-click databases'), 3, 0)
+        self.appearance_grid.addWidget(self.appearance_widgets['databases'], 3, 1)
+        self.appearance_grid.addWidget(self.appearance_widgets['show_tutorial'], 4, 0, 1, 2)
 
     def save_settings(self):
         if self.settings_changed:
@@ -535,7 +551,13 @@ class SettingsWindow(gui_widgets.MinMaxDialog):
             font_size = int(self.appearance_widgets['app_font_size'].currentText())
             theme = self.THEMES[self.appearance_widgets['app_theme'].currentText()]
             show_tutorial = self.appearance_widgets['show_tutorial'].isChecked()
-            settings.set_gui_settings(font, font_size, theme, show_tutorial)
+            dbs = []
+            for i in range(self.appearance_widgets['databases'].count()):
+                item = self.appearance_widgets['databases'].item(i)
+                if item.checkState():
+                    dbs.append(item.text())
+
+            settings.set_gui_settings(font, font_size, theme, dbs, show_tutorial)
 
             attr_ref_path = self.tables_widgets['attr_ref_path'].text() if self.tables_widgets[
                 'attr_ref_path'].is_legal else ''
@@ -598,39 +620,39 @@ class SettingsWindow(gui_widgets.MinMaxDialog):
 
 
 class HowToCiteWindow(gui_widgets.MinMaxDialog):
-    CITATION_RNALYSIS = f"""
+    CITATION_RNALYSIS = """
     Teichman, G., Cohen, D., Ganon, O., Dunsky, N., Shani, S., Gingold, H., and Rechavi, O. (2022).
     RNAlysis: analyze your RNA sequencing data without writing a single line of code. BioRxiv 2022.11.25.517851.
     <br>
     <a href=https://doi.org/10.1101/2022.11.25.517851>doi.org/10.1101/2022.11.25.517851</a>
     """
-    CITATION_CUTADAPT = f"""
+    CITATION_CUTADAPT = """
     Martin, M. (2011). Cutadapt removes adapter sequences from high-throughput sequencing reads.
     EMBnet.journal, 17(1), pp. 10-12.
     <br>
     <a href=https://doi.org/10.14806/ej.17.1.200>doi.org/10.14806/ej.17.1.200</a>
     """
-    CITATION_KALLISTO = f"""
+    CITATION_KALLISTO = """
     Bray, N., Pimentel, H., Melsted, P. et al.
     Near-optimal probabilistic RNA-seq quantification.
     Nat Biotechnol 34, 525–527 (2016).
     <br>
     <a href=https://doi.org/10.1038/nbt.3519>doi.org/10.1038/nbt.3519</a>
     """
-    CITATION_DESEQ2 = f"""
+    CITATION_DESEQ2 = """
     Love MI, Huber W, Anders S (2014).
     “Moderated estimation of fold change and dispersion for RNA-seq data with DESeq2.”
     Genome Biology, 15, 550.
     <br>
     <a href=https://doi.org/10.1186/s13059-014-0550-8>doi.org/10.1186/s13059-014-0550-8</a>
     """
-    CITATION_HDBSCAN = f"""
+    CITATION_HDBSCAN = """
     L. McInnes, J. Healy, S. Astels, hdbscan:
     Hierarchical density based clustering In:
     Journal of Open Source Software, The Open Journal, volume 2, number 11. 2017
     <br>
     <a href=https://doi.org/10.1371/journal.pcbi.0030039>doi.org/10.1371/journal.pcbi.0030039</a>"""
-    CITATION_XLMHG = f"""
+    CITATION_XLMHG = """
     <p>
     Eden, E., Lipson, D., Yogev, S., and Yakhini, Z. (2007).
      Discovering Motifs in Ranked Lists of DNA Sequences. PLOS Comput. Biol. 3, e39.
@@ -642,6 +664,7 @@ class HowToCiteWindow(gui_widgets.MinMaxDialog):
     <br>
     <a href=https://doi.org/10.48550/arXiv.1507.07905>doi.org/10.48550/arXiv.1507.07905</a>
     </p>"""
+    CITATION_FILE_PATH = Path(__file__).parent.joinpath('../data_files/tool_citations.json')
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -651,12 +674,16 @@ class HowToCiteWindow(gui_widgets.MinMaxDialog):
                 <br>
                 <img src="{img_path}" width="250"/>"""
         self.label = QtWidgets.QLabel(text)
-        self.rnalysis_cite = gui_widgets.TextWithCopyButton(self.CITATION_RNALYSIS)
-        self.cutadapt_cite = gui_widgets.TextWithCopyButton(self.CITATION_CUTADAPT)
-        self.kallisto_cite = gui_widgets.TextWithCopyButton(self.CITATION_KALLISTO)
-        self.deseq2_cite = gui_widgets.TextWithCopyButton(self.CITATION_DESEQ2)
-        self.hdbscan_cite = gui_widgets.TextWithCopyButton(self.CITATION_HDBSCAN)
-        self.xlmhg_cite = gui_widgets.TextWithCopyButton(self.CITATION_XLMHG)
+
+        self.citation_labels = []
+        self.citations = []
+        with open(self.CITATION_FILE_PATH, encoding='utf-8') as f:
+            citation_dict = json.load(f)
+        for data in citation_dict.values():
+            txt = f"If you use {data['name']} in your research, please cite:"
+            self.citation_labels.append(QtWidgets.QLabel(txt))
+            self.citations.append(gui_widgets.TextWithCopyButton(data['citation']))
+
         self.ok_button = QtWidgets.QPushButton('Close')
 
         self.main_layout = QtWidgets.QVBoxLayout(self)
@@ -676,29 +703,9 @@ class HowToCiteWindow(gui_widgets.MinMaxDialog):
         self.setWindowTitle("How to cite RNAlysis")
         self.layout.addWidget(self.label)
 
-        self.layout.addWidget(QtWidgets.QLabel("If you use <b>RNAlysis</b> in your research, please cite:"))
-        self.layout.addWidget(self.rnalysis_cite)
-
-        self.layout.addWidget(QtWidgets.QLabel(
-            "If you use the <b>CutAdapt</b> adapter trimming tool in your research, please cite:"))
-        self.layout.addWidget(self.cutadapt_cite)
-
-        self.layout.addWidget(QtWidgets.QLabel(
-            "If you use the <b>kallisto</b> RNA sequencing quantification tool in your research, please cite:"))
-        self.layout.addWidget(self.kallisto_cite)
-
-        self.layout.addWidget(
-            QtWidgets.QLabel(
-                "If you use the <b>DESeq2</b> differential expression tool in your research, please cite:"))
-        self.layout.addWidget(self.deseq2_cite)
-
-        self.layout.addWidget(
-            QtWidgets.QLabel("If you use the <b>HDBSCAN</b> clustering feature in your research, please cite:"))
-        self.layout.addWidget(self.hdbscan_cite)
-
-        self.layout.addWidget(QtWidgets.QLabel(
-            "If you use the <b>XL-mHG</b> single-set enrichment test in your research, please cite:"))
-        self.layout.addWidget(self.xlmhg_cite)
+        for label, citation in zip(self.citation_labels, self.citations):
+            self.layout.addWidget(label)
+            self.layout.addWidget(citation)
 
         self.ok_button.clicked.connect(self.close)
         self.layout.addWidget(self.ok_button)
