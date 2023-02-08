@@ -26,6 +26,7 @@ jobs:
                     # Commit message for the created commit.
                     commit_message: Calculate quick-start video checksums
                     file_pattern: 'rnalysis/gui/videos/checksums/*.txt'
+                    branch: master
             -   name: Get latest changelog
                 run: python packaging/parse_changelog.py
             -   name: Create Release
