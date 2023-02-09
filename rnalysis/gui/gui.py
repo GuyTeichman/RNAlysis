@@ -3211,9 +3211,9 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self.quick_start_action = QtWidgets.QAction("&Quick-start guide", self)
         self.quick_start_action.triggered.connect(self.quickstart_window.show)
-        self.user_guide_action = QtWidgets.QAction("&Tutorial", self)
+        self.user_guide_action = QtWidgets.QAction("&User Guide", self)
         self.user_guide_action.triggered.connect(self.open_user_guide)
-        self.tutorial_action = QtWidgets.QAction("&User Guide", self)
+        self.tutorial_action = QtWidgets.QAction("&Tutorial", self)
         self.tutorial_action.triggered.connect(self.open_tutorial)
         self.faq_action = QtWidgets.QAction("&Frequently Asked Questions", self)
         self.faq_action.triggered.connect(self.open_faq)

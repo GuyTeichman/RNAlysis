@@ -2,6 +2,16 @@
 History
 =======
 
+
+3.5.1 (2023-??-??)
+------------------
+This version introduces minor bug fixes.
+
+Fixed
+*****
+* Fixed bug where the User Guide action in the graphical interface would point to the Tutorial, and vice versa.
+
+
 3.5.0 (2023-02-08)
 ------------------
 This version introduces new features such as differential expression analysis with the Limma-Voom pipeline,
