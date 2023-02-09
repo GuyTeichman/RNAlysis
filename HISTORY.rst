@@ -10,7 +10,7 @@ This version introduces minor bug fixes.
 Fixed
 *****
 * Fixed bug where the User Guide action in the graphical interface would point to the Tutorial, and vice versa.
-
+* The X and Y axis labels on volcano plots should now format the 'log' in the label correctly.
 
 3.5.0 (2023-02-08)
 ------------------
