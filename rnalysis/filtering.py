@@ -2459,8 +2459,8 @@ class DESeqFilter(Filter):
         if title == 'auto':
             title = f"Volcano plot of {self.fname.stem}"
         ax.set_title(title, fontsize=title_fontsize)
-        ax.set_xlabel('Log2(fold change)', fontsize=label_fontsize)
-        ax.set_ylabel('-Log10(adj. p-value)', fontsize=label_fontsize)
+        ax.set_xlabel(r"$\log_2$(Fold Change)", fontsize=label_fontsize)
+        ax.set_ylabel(r'-$\log10$(Adj. P-Value)', fontsize=label_fontsize)
         ax.tick_params(axis='both', which='both', labelsize=tick_fontsize)
 
         if log2fc_threshold > 0:
