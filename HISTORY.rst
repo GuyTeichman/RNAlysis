@@ -3,12 +3,13 @@ History
 =======
 
 
-3.5.1 (2023-??-??)
+3.5.1 (2023-02-19)
 ------------------
 This version introduces minor bug fixes.
 
 Fixed
 *****
+* Fixed bug where the *RNAlysis* stand-alone app would sometimes fail to run CutAdapt (thanks to Matthias Wilm).
 * Fixed bug where the User Guide action in the graphical interface would point to the Tutorial, and vice versa.
 * The X and Y axis labels on volcano plots should now format the 'log' in the label correctly.
 
