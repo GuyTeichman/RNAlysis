@@ -120,12 +120,32 @@ If you use the *kallisto* RNA sequencing quantification tool in your research, p
     Nat Biotechnol 34, 525–527 (2016).
     https://doi.org/10.1038/nbt.3519
 
+If yo use the bowtie2 aligner in your research, please cite::
+
+    Langmead, B., and Salzberg, S.L. (2012).
+    Fast gapped-read alignment with Bowtie 2. Nat. Methods 2012 94 9, 357–359.
+    https://doi.org/10.1038/nmeth.1923
+
+
 If you use the *DESeq2* differential expression tool in your research, please cite::
 
     Love MI, Huber W, Anders S (2014).
     “Moderated estimation of fold change and dispersion for RNA-seq data with DESeq2.”
     Genome Biology, 15, 550.
     https://doi.org/10.1186/s13059-014-0550-8
+
+If you use the *Limma-Voom* differential expression pipeline in your research, please cite::
+
+    Ritchie, M.E., Phipson, B., Wu, D., Hu, Y., Law, C.W., Shi, W., and Smyth, G.K. (2015).
+    limma powers differential expression analyses for RNA-sequencing and microarray studies.
+    Nucleic Acids Res. 43, e47–e47.
+    https://doi.org/10.1093/nar/gkv007
+
+    Law, C.W., Chen, Y., Shi, W., and Smyth, G.K. (2014).
+    Voom: Precision weights unlock linear model analysis tools for RNA-seq read counts.
+    Genome Biol. 15, 1–17.
+    https://doi.org/10.1186/gb-2014-15-2-r29
+
 
 If you use the *HDBSCAN* clustering feature in your research, please cite::
 
