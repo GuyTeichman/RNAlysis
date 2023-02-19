@@ -4,6 +4,10 @@ import rnalysis.utils.io
 from rnalysis.utils import io
 from rnalysis.utils.io import *
 from rnalysis.utils.io import _format_ids_iter, _ensmbl_lookup_post_request
+from tests import is_uniprot_available, is_ensembl_available
+
+ENSEMBL_AVAILABLE = is_ensembl_available()
+UNIPROT_AVAILABLE = is_uniprot_available()
 
 
 class MockResponse(object):
@@ -394,6 +398,7 @@ def test_infer_taxon_from_gene_ids_no_species(monkeypatch):
         infer_taxon_from_gene_ids([])
 
 
+@pytest.mark.skipif(not UNIPROT_AVAILABLE, reason='UniProt REST API is not available at the moment')
 def test_map_gene_ids_connectivity():
     ids_uniprot = ['P34544', 'Q27395', 'P12844']
     ids_wormbase = ['WBGene00019883', 'WBGene00023497', 'WBGene00003515']
@@ -432,6 +437,7 @@ def test_map_gene_ids_to_same_set(id_type):
         assert mapper[i] == i
 
 
+@pytest.mark.skipif(not UNIPROT_AVAILABLE, reason='UniProt REST API is not available at the moment')
 @pytest.mark.parametrize('ids,map_from,map_to,req_from,req_to,req_query,txt,truth',
                          [(['P34544', 'Q27395', 'P12844'], 'UniProtKB', 'WormBase', 'ACC', 'WORMBASE_ID',
                            'P34544 Q27395 P12844',

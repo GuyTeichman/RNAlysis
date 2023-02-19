@@ -6,19 +6,13 @@ import sys
 from rnalysis.enrichment import *
 from rnalysis.enrichment import _fetch_sets
 from rnalysis.utils.enrichment_runner import does_python_version_support_single_set
-from tests import __attr_ref__, __biotype_ref__
+from tests import __attr_ref__, __biotype_ref__, is_uniprot_available, is_ensembl_available
 
 matplotlib.use('Agg')
 
 
-def is_ensembl_available():
-    req = requests.get('https://rest.ensembl.org/lookup/id')
-    if str(req.status_code)[0] == '5':
-        return False
-    return True
-
-
 ENSEMBL_AVAILABLE = is_ensembl_available()
+UNIPROT_AVAILABLE = is_uniprot_available()
 
 up_feature_set = {'WBGene00021187', 'WBGene00195184', 'WBGene00012851', 'WBGene00022486', 'WBGene00011964',
                   'WBGene00012848', 'WBGene00020817', 'WBGene00012452', 'WBGene00016635', 'WBGene00044478',
@@ -513,6 +507,7 @@ def test_enrich_single_set_api():
 
 
 @pytest.mark.skipif(not ENSEMBL_AVAILABLE, reason='Ensembl REST API is not available at the moment')
+@pytest.mark.skipif(not UNIPROT_AVAILABLE, reason='UniProt REST API is not available at the moment')
 @pytest.mark.parametrize("organism,propagate_annotations", [('auto', 'classic'), ('caenorhabditis elegans', 'elim')])
 def test_go_enrichment_single_set_api(organism, propagate_annotations):
     genes_ranked = ['WBGene00000019', 'WBGene00000041', 'WBGene00000105', 'WBGene00000106', 'WBGene00000137',
@@ -531,6 +526,7 @@ def test_go_enrichment_single_set_api(organism, propagate_annotations):
 
 
 @pytest.mark.skipif(not ENSEMBL_AVAILABLE, reason='Ensembl REST API is not available at the moment')
+@pytest.mark.skipif(not UNIPROT_AVAILABLE, reason='UniProt REST API is not available at the moment')
 @pytest.mark.parametrize("organism,statistical_test,propagate_annotations,kwargs",
                          [('auto', 'fisher', 'elim', {}),
                           ('caenorhabditis elegans', 'randomization', 'no', dict(randomization_reps=100))])
@@ -597,6 +593,7 @@ def test_fetch_sets_bad_type(objs: dict):
 
 
 @pytest.mark.skipif(not ENSEMBL_AVAILABLE, reason='Ensembl REST API is not available at the moment')
+@pytest.mark.skipif(not UNIPROT_AVAILABLE, reason='UniProt REST API is not available at the moment')
 @pytest.mark.parametrize("organism,statistical_test,kwargs",
                          [('auto', 'hypergeometric', {}),
                           (6239, 'fisher', {}),
@@ -611,6 +608,7 @@ def test_kegg_enrichment_api(organism, statistical_test, kwargs):
 
 
 @pytest.mark.skipif(not ENSEMBL_AVAILABLE, reason='Ensembl REST API is not available at the moment')
+@pytest.mark.skipif(not UNIPROT_AVAILABLE, reason='UniProt REST API is not available at the moment')
 def test_kegg_enrichment_single_list_api():
     genes = ['WBGene00048865', 'WBGene00000864', 'WBGene00000105', 'WBGene00001996', 'WBGene00011910', 'WBGene00268195']
     en = RankedSet(genes, set_name='test_set')
