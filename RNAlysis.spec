@@ -16,6 +16,7 @@ for item in tmp_ret:
     datas.append(item)
 
 hiddenimports += collect_submodules('sklearn')
+hiddenimports += collect_submodules('cutadapt')
 
 with open(Path(get_hook_dirs()[0]).joinpath('hook-pygraphviz.py')) as infile:
     hook_path = Path('hooks')
