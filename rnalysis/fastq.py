@@ -1023,7 +1023,10 @@ def trim_adapters_single_end(fastq_folder: Union[str, Path], output_folder: Unio
                       f"please install python package 'cutadapt' and try again. ")
         return
 
-    call = ['cutadapt']
+    try:
+        call = io.generate_base_call('cutadapt', 'auto')
+    except FileNotFoundError:
+        call = io.generate_base_call('cutadapt', 'Scripts')
 
     for adapter_group, prefix in zip([three_prime_adapters, five_prime_adapters, any_position_adapters],
                                      ['--adapter', '--front', '--anywhere']):
