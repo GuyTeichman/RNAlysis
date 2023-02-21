@@ -445,7 +445,11 @@ def test_map_gene_ids_to_same_set(id_type):
                            {'P34544': 'WBGene00019883', 'Q27395': 'WBGene00023497', 'P12844': 'WBGene00003515'}
                            )])
 def test_map_gene_ids_request(monkeypatch, ids, map_from, map_to, req_from, req_to, req_query, txt, truth):
-    def mock_get(url, params):
+    legal_types = get_legal_gene_id_types()
+
+    def mock_get(url, params=None):
+        if params is None:
+            return
         assert url == 'https://www.uniprot.org/uploadlists/'
         assert params == {'from': req_from,
                           'to': req_to,
@@ -455,6 +459,7 @@ def test_map_gene_ids_request(monkeypatch, ids, map_from, map_to, req_from, req_
         return MockResponse(text=txt)
 
     monkeypatch.setattr(requests, 'get', mock_get)
+    monkeypatch.setattr(rnalysis.utils.io, 'get_legal_gene_id_types', lambda: legal_types)
     res = map_gene_ids(ids, map_from, map_to)
     for gene_id in truth:
         assert res[gene_id] == truth[gene_id]
