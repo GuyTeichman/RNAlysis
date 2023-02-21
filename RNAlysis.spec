@@ -3,6 +3,7 @@ from pathlib import Path
 from PyInstaller.compat import is_darwin
 from PyInstaller.utils.hooks import collect_submodules, collect_data_files
 from _pyinstaller_hooks_contrib.hooks.stdhooks import get_hook_dirs
+import shutil
 
 datas = []
 binaries = []
@@ -17,6 +18,8 @@ for item in tmp_ret:
 
 hiddenimports += collect_submodules('sklearn')
 hiddenimports += collect_submodules('cutadapt')
+
+binaries.append(shutil.which('cutadapt'))
 
 with open(Path(get_hook_dirs()[0]).joinpath('hook-pygraphviz.py')) as infile:
     hook_path = Path('hooks')
