@@ -32,7 +32,7 @@ block_cipher = None
 a = Analysis(
     ['rnalysis_app.py'],
     pathex=[],
-    binaries=[],
+    binaries=binaries,
     datas=datas,
     hiddenimports=hiddenimports,
     hookspath=[hook_path],
