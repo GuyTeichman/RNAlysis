@@ -1143,8 +1143,10 @@ def trim_adapters_paired_end(r1_files: List[Union[str, Path]], r2_files: List[Un
         return
     assert len(r1_files) == len(r2_files), f"Got an uneven number of R1 and R2 files: " \
                                            f"{len(r1_files)} and {len(r2_files)} respectively"
-
-    call = ['cutadapt']
+    try:
+        call = io.generate_base_call('cutadapt', 'auto')
+    except FileNotFoundError:
+        call = io.generate_base_call('cutadapt', 'Scripts')
 
     for r1_group, r2_group, prefix in zip(
         [three_prime_adapters_r1, five_prime_adapters_r1, any_position_adapters_r1],
