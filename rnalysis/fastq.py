@@ -11,7 +11,7 @@ from typing import Union, List, Tuple
 
 import pandas as pd
 from tqdm.auto import tqdm
-
+from cutadapt.__main__ import main as cutadapt_main
 from rnalysis import filtering
 from rnalysis.utils import parsing, io, feature_counting, genome_annotation
 from rnalysis.utils.param_typing import PositiveInt, NonNegativeInt, Fraction, LEGAL_FASTQ_SUFFIXES, \
@@ -1025,8 +1025,10 @@ def trim_adapters_single_end(fastq_folder: Union[str, Path], output_folder: Unio
 
     try:
         call = io.generate_base_call('cutadapt', 'auto')
+        found_cli = True
     except FileNotFoundError:
-        call = io.generate_base_call('cutadapt', 'Scripts')
+        call = []
+        found_cli = False
 
     for adapter_group, prefix in zip([three_prime_adapters, five_prime_adapters, any_position_adapters],
                                      ['--adapter', '--front', '--anywhere']):
@@ -1054,7 +1056,11 @@ def trim_adapters_single_end(fastq_folder: Union[str, Path], output_folder: Unio
         for cutadapt_call in calls:
             infile_stem = parsing.remove_suffixes(Path(cutadapt_call[-1])).stem
             log_filename = Path(output_folder).joinpath(f'cutadapt_log_{infile_stem}.log').absolute().as_posix()
-            io.run_subprocess(cutadapt_call, log_filename=log_filename)
+
+            if found_cli:
+                io.run_subprocess(cutadapt_call, log_filename=log_filename)
+            else:
+                cutadapt_main(cutadapt_call)
             print(f"File saved successfully at {cutadapt_call[-2]}")
             pbar.update(1)
 
@@ -1145,8 +1151,10 @@ def trim_adapters_paired_end(r1_files: List[Union[str, Path]], r2_files: List[Un
                                            f"{len(r1_files)} and {len(r2_files)} respectively"
     try:
         call = io.generate_base_call('cutadapt', 'auto')
+        found_cli = True
     except FileNotFoundError:
-        call = io.generate_base_call('cutadapt', 'Scripts')
+        call = []
+        found_cli = False
 
     for r1_group, r2_group, prefix in zip(
         [three_prime_adapters_r1, five_prime_adapters_r1, any_position_adapters_r1],
@@ -1186,7 +1194,10 @@ def trim_adapters_paired_end(r1_files: List[Union[str, Path]], r2_files: List[Un
             infile2_stem = parsing.remove_suffixes(Path(cutadapt_call[-1])).stem
             log_filename = Path(output_folder).joinpath(
                 f'cutadapt_log_{infile1_stem}_{infile2_stem}.log').absolute().as_posix()
-            io.run_subprocess(cutadapt_call, log_filename=log_filename)
+            if found_cli:
+                io.run_subprocess(cutadapt_call, log_filename=log_filename)
+            else:
+                cutadapt_main(cutadapt_call)
             print(f"Files saved successfully at {cutadapt_call[-2]} and  {cutadapt_call[-1]}")
             pbar.update(1)
 
