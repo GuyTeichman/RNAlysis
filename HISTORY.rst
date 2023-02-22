@@ -3,7 +3,7 @@ History
 =======
 
 
-3.5.1 (2023-02-19)
+3.5.1 (2023-02-22)
 ------------------
 This version introduces minor bug fixes.
 
