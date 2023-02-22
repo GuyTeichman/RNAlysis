@@ -1529,17 +1529,20 @@ class StdOutTextEdit(QtWidgets.QTextEdit):
 
 class WriteStream(QtCore.QObject):
     message = QtCore.pyqtSignal(str)
-    __slots__ = {'queue': 'queue'}
+    __slots__ = {'buffer': 'buffer'}
 
     def __init__(self, q: Queue, parent=None):
         super(WriteStream, self).__init__(parent)
 
-        self.queue = q
+        self.buffer = q
 
     def write(self, text):
-        self.queue.put(text)
+        self.buffer.put(text)
 
     def flush(self):
+        pass
+
+    def close(self):
         pass
 
 
