@@ -7,6 +7,8 @@ import typing_extensions
 
 from rnalysis.utils import io, parsing
 
+K_CRITERIA = ('gap','silhouette')
+
 LEGAL_GENE_LENGTH_METHODS = ('mean', 'median', 'max', 'min', 'geometric_mean', 'merged_exons')
 
 LEGAL_FASTQ_SUFFIXES = ('.fastq', '.fastq.gz', '.fq', '.fq.gz')

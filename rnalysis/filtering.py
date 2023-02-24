@@ -41,7 +41,8 @@ from rnalysis.utils import clustering, io, parsing, generic, ontology, settings,
     param_typing, genome_annotation
 
 from rnalysis.utils.param_typing import BIOTYPES, BIOTYPE_ATTRIBUTE_NAMES, GO_EVIDENCE_TYPES, GO_QUALIFIERS, \
-    DEFAULT_ORGANISMS, PARALLEL_BACKENDS, LEGAL_GENE_LENGTH_METHODS, get_gene_id_types, PositiveInt, NonNegativeInt
+    DEFAULT_ORGANISMS, PARALLEL_BACKENDS, LEGAL_GENE_LENGTH_METHODS, K_CRITERIA, get_gene_id_types, PositiveInt, \
+    NonNegativeInt
 
 
 def readable_name(name: str):
@@ -3585,7 +3586,7 @@ class CountFilter(Filter):
         return self._inplace(new_df, opposite, inplace, suffix)
 
     @readable_name('K-Means clustering')
-    def split_kmeans(self, n_clusters: Union[PositiveInt, List[PositiveInt], Literal['gap', 'silhouette']],
+    def split_kmeans(self, n_clusters: Union[PositiveInt, List[PositiveInt], Literal[K_CRITERIA]],
                      n_init: PositiveInt = 3, max_iter: PositiveInt = 300,
                      random_seed: Union[NonNegativeInt, None] = None, power_transform: bool = True,
                      plot_style: Literal['all', 'std_area', 'std_bar'] = 'all',
@@ -3677,7 +3678,7 @@ class CountFilter(Filter):
 
     @readable_name('Hierarchical clustering')
     def split_hierarchical(self, n_clusters: Union[
-        PositiveInt, List[PositiveInt], Literal['gap', 'silhouette', 'distance']],
+        PositiveInt, List[PositiveInt], Literal[K_CRITERIA + ('distance',)]],
                            metric: Literal['Euclidean', 'Cosine', 'Pearson', 'Spearman', 'Manhattan',
                            'L1', 'L2', 'Jackknife', 'YS1', 'YR1', 'Sharpened_Cosine'] = 'Euclidean',
                            linkage: Literal['Single', 'Average', 'Complete', 'Ward'] = 'Average',
@@ -3774,7 +3775,7 @@ class CountFilter(Filter):
         return (return_val, runner) if gui_mode else return_val
 
     @readable_name('K-Medoids clustering')
-    def split_kmedoids(self, n_clusters: Union[PositiveInt, List[PositiveInt], Literal['gap', 'silhouette']],
+    def split_kmedoids(self, n_clusters: Union[PositiveInt, List[PositiveInt], Literal[K_CRITERIA]],
                        n_init: PositiveInt = 3, max_iter: PositiveInt = 300,
                        random_seed: Union[NonNegativeInt, None] = None,
                        metric: Union[str, Literal['Euclidean', 'Cosine', 'Pearson', 'Spearman', 'Manhattan',
