@@ -496,7 +496,7 @@ def test_ClicomWindow_remove_setup(qtbot, monkeypatch, clicom_window):
 
 def test_ClicomWindow_get_analysis_params(qtbot, clicom_window):
     truth = dict(replicate_grouping='ungrouped', power_transform=[True, False], evidence_threshold=0.35,
-                 cluster_unclustered_features=True,
+                 cluster_unclustered_features=True, parallel_backend='loky',
                  min_cluster_size=15, plot_style='all', split_plots=False)
 
     qtbot.mouseClick(clicom_window.param_widgets['power_transform'].false_button, LEFT_CLICK)
@@ -513,7 +513,8 @@ def test_ClicomWindow_start_analysis(qtbot, clicom_window):
                     dict(method='hierarchical', n_clusters='silhouette', metric='Euclidean', linkage='Average',
                          distance_threshold=None, max_n_clusters_estimate='auto')]
     truth_params = dict(replicate_grouping='ungrouped', power_transform=[True, False], evidence_threshold=0.35,
-                        cluster_unclustered_features=True, min_cluster_size=15, plot_style='all', split_plots=False)
+                        cluster_unclustered_features=True, min_cluster_size=15, plot_style='all', split_plots=False,
+                        parallel_backend='loky')
 
     clicom_window.stack.func_combo.setCurrentText(filtering.CountFilter.split_kmeans.readable_name)
     clicom_window.stack.parameter_widgets['n_clusters'].other.setValue(3)
