@@ -73,6 +73,8 @@
 <li class="toctree-l3"><a class="reference internal" href="#i-want-to-use-a-particular-statistical-method-or-algorithm-available-in-rnalysis-how-do-i-know-exactly-what-it-does-and-how-it-works">I want to use a particular statistical method or algorithm available in <em>RNAlysis</em>. How do I know exactly what it does and how it works?</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#what-file-formats-are-supported-by-rnalysis">What file formats are supported by <em>RNAlysis</em>?</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#what-types-of-tables-can-i-analyze-with-rnalysis">What types of tables can I analyze with <em>RNAlysis</em>?</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#when-trying-to-run-clustering-enrichment-other-functions-in-rnalysis-a-progress-bar-appears-but-nothing-happens-what-can-i-do">When trying to run clustering/enrichment/other functions in <em>RNAlysis</em>, a progress bar appears but nothing happens. What can I do?</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#i-ran-into-a-problem-that-is-not-specified-here-what-can-i-do">I ran into a problem that is not specified here. What can I do?</a></li>
 </ul>
 </li>
 </ul>
@@ -299,6 +301,17 @@ First, open your folder with one of the above programs; and then click “File�
 <p><em>RNAlysis</em> supports any kind of tabular data. However, <em>RNAlysis</em> offers specialized types of functions and analyses for specific types of tables.
 In particular, <em>RNAlysis</em> offers specialized functions for count matrices (raw or normalized), for differential expression tables (preferrably in the DESeq2 format, but other formats are also supported), and for single-column tables with fold-change values.
 To use those specialized functions, you need to specify the type of your table when first loading it into <em>RNAlysis</em>.</p>
+</section>
+<section id="when-trying-to-run-clustering-enrichment-other-functions-in-rnalysis-a-progress-bar-appears-but-nothing-happens-what-can-i-do">
+<h3>When trying to run clustering/enrichment/other functions in <em>RNAlysis</em>, a progress bar appears but nothing happens. What can I do?<a class="headerlink" href="#when-trying-to-run-clustering-enrichment-other-functions-in-rnalysis-a-progress-bar-appears-but-nothing-happens-what-can-i-do" title="Permalink to this heading"></a></h3>
+<p>By default, <em>RNAlysis</em> attempts to run performance-intensive tasks such as clustering and enrichment in parallel processing mode, in order to save time.
+However, some systems or setups don’t support parallel processing very well, and can lead to tasks that never finish running successfully.
+If after waiting a few minutes nothing changes, restart <em>RNAlysis</em>, and then re-run the function in sequential mode.
+The running mode can be changed via the <cite>parallel_backend</cite> parameter of the function, or by setting the <cite>parallel</cite> parameter to False.</p>
+</section>
+<section id="i-ran-into-a-problem-that-is-not-specified-here-what-can-i-do">
+<h3>I ran into a problem that is not specified here. What can I do?<a class="headerlink" href="#i-ran-into-a-problem-that-is-not-specified-here-what-can-i-do" title="Permalink to this heading"></a></h3>
+<p>Please submit a bug report through <a class="reference external" href="https://github.com/GuyTeichman/RNAlysis/issues">GitHub</a>, and we will do our best to help solve your problem.</p>
 </section>
 </section>
 </section>

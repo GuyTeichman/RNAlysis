@@ -67,7 +67,7 @@ Filter out lowly-expressed genes
 We want to filter out the genes that have not been expressed or that have low expression across all samples.
 Lowly-expressed genes can negatively affect our analysis downstream, since the % error in the expression of these genes is relatively high, and these genes are likely to add noise rather than useful signal to our analysis.
 
-In this particular example, we also want to analyze a fairly small gruop of genes. This is because later down the line we will take our data through clustering analysis, and trying to cluster such a large group of genes could take your computer an extremely long time to finish.
+In this particular example, we also want to analyze a fairly small group of genes. This is because later down the line we will take our data through clustering analysis, and trying to cluster such a large group of genes could take your computer an extremely long time to finish.
 Therefore, we are going to filter our table, so that we keep only genes with 50 or more normalized reads in at least 1 experimental condition.
 
 To apply a filtering function to our table, click on the "Filter" tab, and select a function from the drop-down menu that opens:

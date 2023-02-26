@@ -172,3 +172,15 @@ What types of tables can I analyze with *RNAlysis*?
 *RNAlysis* supports any kind of tabular data. However, *RNAlysis* offers specialized types of functions and analyses for specific types of tables.
 In particular, *RNAlysis* offers specialized functions for count matrices (raw or normalized), for differential expression tables (preferrably in the DESeq2 format, but other formats are also supported), and for single-column tables with fold-change values.
 To use those specialized functions, you need to specify the type of your table when first loading it into *RNAlysis*.
+
+
+When trying to run clustering/enrichment/other functions in *RNAlysis*, a progress bar appears but nothing happens. What can I do?
+============================================================================================================================================
+By default, *RNAlysis* attempts to run performance-intensive tasks such as clustering and enrichment in parallel processing mode, in order to save time.
+However, some systems or setups don't support parallel processing very well, and can lead to tasks that never finish running successfully.
+If after waiting a few minutes nothing changes, restart *RNAlysis*, and then re-run the function in sequential mode.
+The running mode can be changed via the `parallel_backend` parameter of the function, or by setting the `parallel` parameter to False.
+
+I ran into a problem that is not specified here. What can I do?
+======================================================================
+Please submit a bug report through `GitHub <https://github.com/GuyTeichman/RNAlysis/issues>`_, and we will do our best to help solve your problem.
