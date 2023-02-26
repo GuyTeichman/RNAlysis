@@ -2316,6 +2316,26 @@ def test_MainWindow_add_pipeline(qtbot, main_window, monkeypatch):
     assert window_opened == [True]
 
 
+def test_MainWindow_apply_function(qtbot, main_window_with_tabs):
+    main_window_with_tabs.choose_tab_by_name('test_deseq')
+    tab = main_window_with_tabs.tabs.currentWidget()
+    orig = filtering.DESeqFilter('tests/test_files/test_deseq.csv')
+
+    truth = tab.obj().filter_significant(0.01, opposite=True, inplace=False)
+    tab.stack_buttons[0].click()
+    tab.stack.currentWidget().func_combo.setCurrentText(filtering.DESeqFilter.filter_significant.readable_name)
+    tab.stack.currentWidget().parameter_widgets['alpha'].clear()
+    qtbot.keyClicks(tab.stack.currentWidget().parameter_widgets['alpha'], '0.01')
+    qtbot.mouseClick(tab.stack.currentWidget().parameter_widgets['opposite'].switch, LEFT_CLICK)
+    qtbot.mouseClick(tab.stack.currentWidget().parameter_widgets['inplace'].switch, LEFT_CLICK)
+    with qtbot.waitSignal(tab.filterObjectCreated, timeout=10000) as blocker:
+        qtbot.mouseClick(tab.apply_button, LEFT_CLICK)
+    assert blocker.args[0] == truth
+    assert np.all(np.isclose(tab.obj().df, orig.df))
+
+    assert main_window_with_tabs.tabs.count() == 6
+
+
 def test_MainWindow_get_available_objects(qtbot, use_temp_settings_file, main_window_with_tabs):
     objs_truth = {'my table': filtering.FoldChangeFilter('tests/test_files/fc_1.csv', 'a', 'b'),
                   'counted': filtering.CountFilter('tests/test_files/counted.tsv'),

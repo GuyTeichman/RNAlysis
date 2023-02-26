@@ -2,6 +2,14 @@
 History
 =======
 
+3.5.2 (2023-02-28)
+------------------
+This version introduces minor bug fixes.
+
+Fixed
+*****
+* Fixed bug where occasionally newly-created tabs would open twice instead of once.
+
 
 3.5.1 (2023-02-22)
 ------------------

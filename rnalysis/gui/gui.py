@@ -2857,7 +2857,6 @@ class MainWindow(QtWidgets.QMainWindow):
             tab = SetTabPage(name, parent=self.tabs, undo_stack=new_undo_stack)
         else:
             tab = FilterTabPage(self.tabs, undo_stack=new_undo_stack)
-            tab.filterObjectCreated.connect(self.new_tab_from_filter_obj)
             tab.startedClustering.connect(self.start_clustering)
             tab.startedJob.connect(self.start_generic_job)
         tab.filterObjectCreated.connect(self.new_tab_from_filter_obj)
