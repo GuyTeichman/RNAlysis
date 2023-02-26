@@ -39,7 +39,7 @@ def test_color_generator():
     gen = color_generator()
     preset_colors = ['tab:blue', 'tab:red', 'tab:green', 'tab:orange', 'tab:purple', 'tab:brown', 'tab:pink',
                      'tab:gray', 'tab:olive', 'tab:cyan', 'gold', 'maroon', 'mediumslateblue', 'fuchsia',
-                     'mediumblue', 'black', 'lawngreen']
+                     'lawngreen', 'moccasin', 'thistle']
     for i in range(150):
         color = next(gen)
         assert color in preset_colors or (isinstance(color, np.ndarray) and len(color) == 3 and
