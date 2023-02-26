@@ -3794,7 +3794,7 @@ def customwarn(message, category, filename, lineno, file=None, line=None):
     sys.stdout.write(warnings.formatwarning(message, category, filename, lineno))
 
 
-async def run():
+async def run():  # pragma: no cover
     # close built-in splash screen in frozen app version of RNAlysis
     if '_PYIBoot_SPLASH' in os.environ and importlib.util.find_spec("pyi_splash"):
         import pyi_splash
