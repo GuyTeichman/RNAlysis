@@ -9,7 +9,7 @@ This version introduces minor bug fixes.
 Fixed
 *****
 * Fixed bug where occasionally newly-created tabs would open twice instead of once.
-
+* Fixed bug where the 'Add Function' button of the Pipeline window would appear in the wrong location.
 
 3.5.1 (2023-02-22)
 ------------------

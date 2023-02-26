@@ -2074,7 +2074,7 @@ class CreatePipelineWindow(gui_widgets.MinMaxDialog, FilterTabPage):
 
         self.apply_button = QtWidgets.QPushButton('Add to Pipeline')
         self.apply_button.clicked.connect(self.apply_function)
-        self.layout.insertWidget(1, self.apply_button)
+        self.layout.insertWidget(2, self.apply_button)
         self.apply_button.setVisible(False)
 
         self.basic_widgets['type_label'] = QtWidgets.QLabel('Choose table type:')
