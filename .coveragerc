@@ -1,6 +1,5 @@
 [run]
 branch = True
-concurrency = multiprocessing
 
 [report]
 exclude_lines =
