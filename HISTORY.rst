@@ -11,6 +11,7 @@ Changed
 * It is now possible to change the parallel backend of performance-intensive functions such as clustering an enrichment analysis in non-standalone versions of RNAlysis.
 * Expanded the Frequently Asked Questions page.
 * Added Perl as a dependency for Windows users on the How to Install page.
+* Automatic row colours in column-picking tables should no longer mismatch with font colors in a way that obscures visibility.
 
 Fixed
 *****

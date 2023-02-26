@@ -114,7 +114,7 @@ def color_generator():
     """
     preset_colors = ['tab:blue', 'tab:red', 'tab:green', 'tab:orange', 'tab:purple', 'tab:brown', 'tab:pink',
                      'tab:gray', 'tab:olive', 'tab:cyan', 'gold', 'maroon', 'mediumslateblue', 'fuchsia',
-                     'mediumblue', 'black', 'lawngreen']
+                     'lawngreen', 'moccasin', 'thistle']
     for color in preset_colors:
         yield color
     while True:
