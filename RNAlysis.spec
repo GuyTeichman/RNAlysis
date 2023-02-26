@@ -46,7 +46,7 @@ pyz = PYZ(a.pure, a.zipped_data, cipher=block_cipher)
 
 if is_darwin:
     exe_contents = (pyz, a.scripts, a.binaries, a.zipfiles, a.datas, [],)
-    exe_kwargs = dict(runtime_tmpdir=None, )
+    exe_kwargs = dict(runtime_tmpdir=None, icon='rnalysis/favicon.icns')
 else:
     splash = Splash('rnalysis/gui/splash.png',
                     binaries=a.binaries,
@@ -55,7 +55,7 @@ else:
                     text_size=12,
                     text_color='black')
     exe_contents = (pyz, splash, a.scripts, [],)
-    exe_kwargs = dict(exclude_binaries=True, )
+    exe_kwargs = dict(exclude_binaries=True, icon='rnalysis/favicon.ico')
 
 exe = EXE(
     *exe_contents,
@@ -66,7 +66,6 @@ exe = EXE(
     strip=False,
     upx=True,
     console=True,
-    icon='rnalysis/favicon.ico',
     disable_windowed_traceback=False,
     argv_emulation=False,
     target_arch=None,
