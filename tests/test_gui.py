@@ -2423,7 +2423,7 @@ def test_MainWindow_save_session(qtbot, use_temp_settings_file, main_window, mon
     n_files = main_window.tabs.count()
     n_pipelines = len(main_window.pipelines)
     item_types_truth = [filtering.FoldChangeFilter, filtering.CountFilter, filtering.Filter, filtering.DESeqFilter,
-                        enrichment.FeatureSet]
+                        set]
     item_properties_truth = [{'numerator_name': 'a', 'denominator_name': 'b'}, {'is_normalized': False}, {},
                              {'log2fc_col': 'log2FoldChange', 'padj_col': 'padj'}, {}]
     pipeline_names_truth = ['New Pipeline', 'Other Pipeline']

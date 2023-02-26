@@ -3567,7 +3567,10 @@ class MainWindow(QtWidgets.QMainWindow):
                 if not tab.is_empty():
                     filenames.append(tab.cache())
                     item_names.append(self.tabs.tabText(ind).rstrip('*'))
-                    item_types.append(tab.obj_type())
+                    if isinstance(tab, SetTabPage):
+                        item_types.append(set)
+                    else:
+                        item_types.append(tab.obj_type())
                     item_properties.append(tab.obj_properties())
 
             pipeline_names = []
