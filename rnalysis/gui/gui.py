@@ -29,6 +29,8 @@ FILTER_OBJ_TYPES = {'Count matrix': filtering.CountFilter, 'Differential express
 FILTER_OBJ_TYPES_INV = {val.__name__: key for key, val in FILTER_OBJ_TYPES.items()}
 INIT_EXCLUDED_PARAMS = {'self', 'fname', 'suppress_warnings'}
 
+FROZEN_ENV = getattr(sys, 'frozen', False) and hasattr(sys, '_MEIPASS')
+
 
 class BarPlotWindow(gui_windows.FuncExternalWindow):
     EXCLUDED_PARAMS = set()
@@ -298,9 +300,11 @@ class LimmaWindow(DiffExpWindow):
 
 
 class ClicomWindow(gui_windows.FuncExternalWindow):
-    EXCLUDED_PARAMS = {'self', 'parameter_dicts', 'gui_mode', 'parallel_backend'}
+    EXCLUDED_PARAMS = {'self', 'parameter_dicts', 'gui_mode'}
     ADDITIONAL_EXCLUDED_PARAMS = {'power_transform', 'plot_style', 'split_plots', 'return_probabilities', 'gui_mode',
                                   'parallel_backend'}
+    if FROZEN_ENV:
+        EXCLUDED_PARAMS.add('parallel_backend')
 
     def __init__(self, funcs: dict, filter_obj: filtering.Filter, parent=None):
         func = filtering.CountFilter.split_clicom
@@ -363,7 +367,9 @@ class ClicomWindow(gui_windows.FuncExternalWindow):
 
 class EnrichmentWindow(gui_widgets.MinMaxDialog):
     EXCLUDED_PARAMS = {'self', 'save_csv', 'fname', 'return_fig', 'biotype', 'background_genes',
-                       'statistical_test', 'parametric_test', 'biotype_ref_path', 'gui_mode', 'parallel_backend'}
+                       'statistical_test', 'parametric_test', 'biotype_ref_path', 'gui_mode'}
+    if FROZEN_ENV:
+        EXCLUDED_PARAMS.add('parallel_backend')
 
     ANALYSIS_TYPES = {'Gene Ontology (GO)': 'go',
                       'Kyoto Encyclopedia of Genes and Genomes (KEGG)': 'kegg',
@@ -1548,7 +1554,10 @@ class SetTabPage(TabPage):
 
 
 class FuncTypeStack(QtWidgets.QWidget):
-    EXCLUDED_PARAMS = {'self', 'backend', 'gui_mode', 'parallel_backend'}
+    EXCLUDED_PARAMS = {'self', 'backend', 'gui_mode'}
+    if FROZEN_ENV:
+        EXCLUDED_PARAMS.add('parallel_backend')
+
     NO_FUNC_CHOSEN_TEXT = "Choose a function..."
     funcSelected = QtCore.pyqtSignal(bool)
     geneSetsRequested = QtCore.pyqtSignal(object)
@@ -1945,7 +1954,8 @@ class FilterTabPage(TabPage):
         # otherwise this could cause issues in Pyinstaller-frozen versions of RNAlysis
         if func_name in self.CLUSTERING_FUNCS:
             kwargs['gui_mode'] = True
-            kwargs['parallel_backend'] = 'multiprocessing'
+            if FROZEN_ENV:
+                kwargs['parallel_backend'] = 'multiprocessing'
             partial = functools.partial(getattr(self.filter_obj, func_name), *args, **kwargs)
             self.startedClustering.emit(partial, func_name, finish_slot)
             return
@@ -3790,7 +3800,8 @@ async def run():
         import pyi_splash
         pyi_splash.close()
     # when using GUI, the joblib parallel backend should always be multiprocessing (since Loky is not supported in freeze mode)
-    parallel_backend('multiprocessing')
+    if FROZEN_ENV:
+        parallel_backend('multiprocessing')
     lockfile = QtCore.QLockFile(QtCore.QDir.tempPath() + '/RNAlysis.lock')
     if lockfile.tryLock(100):
         show_app = True

@@ -2,9 +2,13 @@
 History
 =======
 
-3.5.2 (2023-02-28)
+3.5.2 (2023-02-23)
 ------------------
-This version introduces minor bug fixes.
+This version includes bug fixes for a few quality-of-life issues which were introduced in version RNAlysis 3.5.0.
+
+Changed
+********
+* It is now possible to change the parallel backend of performance-intensive functions such as clustering an enrichment analysis in non-standalone versions of RNAlysis.
 
 Fixed
 *****
