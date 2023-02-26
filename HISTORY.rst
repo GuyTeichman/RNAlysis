@@ -11,6 +11,7 @@ Fixed
 * Fixed bug where occasionally newly-created tabs would open twice instead of once.
 * Fixed bug where the 'Add Function' button of the Pipeline window would appear in the wrong location.
 * Fixed bug where RNAlysis sessions saved after version 3.5.0 which contain gene sets would raise an error when loaded.
+* Fixed typos in the RNAlysis tutorial.
 
 3.5.1 (2023-02-22)
 ------------------
