@@ -68,7 +68,7 @@ you through the process.
 To install the full version of *RNAlysis* (includes additional features that might not work out-of-the-box on all machines),
 you should first install `GraphViz <https://graphviz.org/download/>`_, `R`_, and `kallisto`_.
 
-**On Windows:** you may also need to install `Microsoft Visual C++ 14.0 <https://visualstudio.microsoft.com/visual-cpp-build-tools/>`_ or greater.
+**On Windows:** you may also need to install `Microsoft Visual C++ 14.0 <https://visualstudio.microsoft.com/visual-cpp-build-tools/>`_ or greater, and `Perl <https://strawberryperl.com/>`_.
 
 **On Linux:** you may also need to install **Qt 5 Image Formats** to view tutorial videos from within *RNAlysis*.
 To do so on Debian/ubuntu systems, use the command `sudo apt install qt5-image-formats-plugins`.
