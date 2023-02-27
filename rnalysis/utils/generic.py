@@ -1,5 +1,6 @@
 import inspect
 import itertools
+import math
 import typing
 import warnings
 from functools import lru_cache
@@ -194,3 +195,11 @@ def sum_intervals_inclusive(intervals: typing.List[typing.Tuple[int, int]]) -> i
         prev_interval = this_interval
 
     return total
+
+
+
+def format_time(seconds: float):
+    seconds = int(seconds)
+    n_minutes = seconds // 60
+    n_seconds = seconds % 60
+    return f'{n_minutes:02d}:{n_seconds:02d}'

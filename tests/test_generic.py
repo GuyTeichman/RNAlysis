@@ -127,3 +127,17 @@ def test_get_signature(func, obj, truth):
 def test_sum_intervals_inclusive(intervals, expected):
     res = sum_intervals_inclusive(intervals)
     assert res == expected
+
+
+@pytest.mark.parametrize('seconds,expected', [
+    (13, '00:13'),
+    (0, '00:00'),
+    (59.34, '00:59'),
+    (60.0, '01:00'),
+    (60.2, '01:00'),
+    (192.17, '03:12'),
+    (13 * 60 + 1.5, '13:01'),
+    (100 * 60, '100:00')])
+def test_format_time(seconds, expected):
+    res = format_time(seconds)
+    assert res == expected
