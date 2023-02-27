@@ -1,6 +1,7 @@
 import functools
 import itertools
 import json
+import time
 import traceback
 import warnings
 from pathlib import Path
@@ -882,3 +883,74 @@ class PairedFuncExternalWindow(FuncExternalWindow):
         kwargs['r1_files'] = self.pairs_widgets['r1_list'].get_sorted_names()
         kwargs['r2_files'] = self.pairs_widgets['r2_list'].get_sorted_names()
         return kwargs
+
+
+class StatusBar(QtWidgets.QStatusBar):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.progbar_desc = ''
+        self.progbar_total = 0
+        self.progbar_start_time = 0
+        self.progbar_completed_items = 0
+
+        self.n_tasks_label = QtWidgets.QLabel(self)
+        self.desc_label = QtWidgets.QLabel(self)
+        self.progress_bar = QtWidgets.QProgressBar(self)
+        self.elapsed_label = QtWidgets.QLabel(self)
+        self.remaining_label = QtWidgets.QLabel(self)
+        self.init_ui()
+
+    def init_ui(self):
+        self.addWidget(self.n_tasks_label)
+        self.addWidget(self.desc_label)
+        self.addWidget(self.progress_bar)
+        self.addWidget(self.elapsed_label)
+        self.addWidget(self.remaining_label)
+        self.update_n_tasks(0)
+        self.reset_progress()
+
+    def update_n_tasks(self, n_tasks: int):
+        if n_tasks <= 0:
+            self.n_tasks_label.setVisible(False)
+        else:
+            self.n_tasks_label.setVisible(True)
+            self.n_tasks_label.setText(f'{n_tasks} tasks running... ')
+
+    def update_desc(self, desc: str):
+        self.desc_label.setText(f'{desc}:')
+        self.desc_label.setVisible(True)
+
+    def update_time(self, elapsed_time: float, remaining_time: float):
+        self.elapsed_label.setText(f"{generic.format_time(elapsed_time)} elapsed ")
+        self.remaining_label.setText(f"{generic.format_time(remaining_time)} remaining ")
+        self.elapsed_label.setVisible(True)
+        self.remaining_label.setVisible(True)
+
+    def reset_progress(self):
+        self.desc_label.setVisible(False)
+        self.progress_bar.setVisible(False)
+        self.elapsed_label.setVisible(False)
+        self.remaining_label.setVisible(False)
+
+    def start_progress(self, total: int, description: str):
+        self.progbar_start_time = time.time()
+        self.progbar_total = total
+        self.progbar_completed_items = 0
+
+        self.progress_bar.setMinimum(0)
+        self.progress_bar.setMaximum(total)
+        self.progress_bar.setValue(0)
+        self.update_desc(description)
+        self.progress_bar.setVisible(True)
+
+    def update_bar_total(self, total: int):
+        self.progbar_total = total
+        self.progress_bar.setMaximum(total)
+
+    def move_progress_bar(self, value: int):
+        self.progbar_completed_items += value
+        elapsed_time = time.time() - self.progbar_start_time
+        remaining_time = (elapsed_time / self.progbar_completed_items) * abs(
+            self.progbar_total - self.progbar_completed_items)
+        self.update_time(elapsed_time, remaining_time)
+        self.progress_bar.setValue(self.progbar_completed_items)

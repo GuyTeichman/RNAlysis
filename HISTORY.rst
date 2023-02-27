@@ -2,6 +2,19 @@
 History
 =======
 
+3.6.0 (2023-03-??)
+------------------
+This version introduces improvements to the usability and clarity of the graphic interface,
+new methods for automatic estimation of the number of clusters in a dataset, and batch-effecy adjustment for count data.
+
+Added
+******
+
+Changed
+********
+* Progress bars are now integrated into the main *RNAlysis* window instead of opening as a dialog box.
+* Information about running proccesses and functions is now displayed in the main *RNAlysis* window.
+
 3.5.2 (2023-02-23)
 ------------------
 This version includes bug fixes for a few quality-of-life issues which were introduced in version RNAlysis 3.5.0.

@@ -2634,6 +2634,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.add_tab_button.setToolTip('Add New Tab')
         self.add_tab_button.clicked.connect(functools.partial(self.add_new_tab, name=None))
         self.add_tab_button.setText("+")
+        self.status_bar = gui_windows.StatusBar(self)
         self.error_window = None
 
         self.menu_bar = QtWidgets.QMenuBar(self)
@@ -2672,12 +2673,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.thread_stdout_queue_listener.started.connect(self.stdout_receiver.run)
         self.thread_stdout_queue_listener.start()
 
-        # init progress bar and thread execution attributes
-        self.progress_bar = None
-        self.progbar_desc = ''
-        self.progbar_total = 0
-        self.progbar_start_time = 0
-        self.progbar_completed_items = 0
+        # init thread execution attributes
         self.worker = None
         self.thread = QtCore.QThread()
         self.job_queue = Queue()
@@ -2703,6 +2699,8 @@ class MainWindow(QtWidgets.QMainWindow):
         self.command_history_dock.setWidget(self.undo_view)
         self.command_history_dock.setFloating(False)
         self.addDockWidget(QtCore.Qt.RightDockWidgetArea, self.command_history_dock)
+
+        self.setStatusBar(self.status_bar)
 
         self.tabs.setCornerWidget(self.add_tab_button, QtCore.Qt.TopRightCorner)
         self.setCentralWidget(self.tabs)
@@ -3683,6 +3681,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.jobQueued.emit()
 
     def run_partial(self):
+        self.status_bar.update_n_tasks(self.job_queue.qsize() + ((self.thread is not None) and self.thread.isRunning()))
         # if there are no jobs available, don't proceed
         if self.job_queue.qsize() == 0:
             return
@@ -3701,8 +3700,8 @@ class MainWindow(QtWidgets.QMainWindow):
             self.worker.startProgBar.emit(
                 dict(iter_obj=iter_obj, desc=desc, unit=unit, bar_format=bar_format, total=total))
             obj = gui_widgets.AltTQDM(iter_obj, desc=desc, unit=unit, bar_format=bar_format, total=total)
-            obj.barUpdate.connect(self.move_progress_bar)
-            obj.barFinished.connect(self.end_progress_bar)
+            obj.barUpdate.connect(self.status_bar.move_progress_bar)
+            obj.barFinished.connect(self.status_bar.reset_progress)
             return obj
 
         def alt_parallel(n_jobs: int = -1, desc: str = '', unit: str = '', bar_format: str = '',
@@ -3712,9 +3711,9 @@ class MainWindow(QtWidgets.QMainWindow):
             print(f"{desc}: started" + (f" {total} jobs\r" if isinstance(total, int) else "\r"))
             obj = gui_widgets.AltParallel(n_jobs=n_jobs, desc=desc, unit=unit, bar_format=bar_format,
                                           total=total, **kwargs)
-            obj.barUpdate.connect(self.move_progress_bar)
-            obj.barFinished.connect(self.end_progress_bar)
-            obj.barTotalUpdate.connect(self.update_bar_total)
+            obj.barUpdate.connect(self.status_bar.move_progress_bar)
+            obj.barFinished.connect(self.status_bar.reset_progress)
+            obj.barTotalUpdate.connect(self.status_bar.update_bar_total)
 
             return obj
 
@@ -3746,48 +3745,16 @@ class MainWindow(QtWidgets.QMainWindow):
     def start_progress_bar(self, arg_dict):
         total = arg_dict.get('total', None)
         iter_obj = arg_dict['iter_obj']
-        self.progbar_desc = arg_dict.get('desc', '')
+        progbar_desc = arg_dict.get('desc', '')
         if total is not None:
-            self.progbar_total = total
+            progbar_total = total
         else:
             try:
-                self.progbar_total = len(iter_obj)
+                progbar_total = len(iter_obj)
             except TypeError:
-                self.progbar_total = 2
-        if self.progress_bar is not None:
-            self.progress_bar.close()
+                progbar_total = 2
 
-        self.progress_bar = QtWidgets.QProgressDialog(self.progbar_desc, "Hide", 0, self.progbar_total, self)
-        self.progbar_start_time = time.time()
-        self.progress_bar.setMinimumDuration(0)
-        self.progress_bar.setWindowTitle(self.progbar_desc)
-        self.progress_bar.setValue(0)
-        self.progress_bar.setWindowModality(QtCore.Qt.WindowModal)
-        self.progbar_completed_items = 0
-
-    def move_progress_bar(self, n: int):
-        self.progbar_completed_items += n
-        elapsed_time = time.time() - self.progbar_start_time
-        remaining_time = (elapsed_time / self.progbar_completed_items) * abs(
-            self.progbar_total - self.progbar_completed_items)
-        try:
-            self.progress_bar.setLabelText(self.progbar_desc + '\n' + f"Elapsed time: {elapsed_time:.2f} seconds"
-                                           + '\n' + f"Remaining time: {remaining_time:.2f} seconds")
-            self.progress_bar.setValue(self.progbar_completed_items)
-        except AttributeError:
-            pass
-
-    def update_bar_total(self, n: int):
-        self.progbar_total = n
-        try:
-            self.progress_bar.setMaximum(n)
-        except AttributeError:
-            pass
-
-    def end_progress_bar(self):
-        if self.progress_bar is not None:
-            self.progress_bar.close()
-            self.progress_bar = None
+        self.status_bar.start_progress(progbar_total, progbar_desc)
 
 
 def customwarn(message, category, filename, lineno, file=None, line=None):
