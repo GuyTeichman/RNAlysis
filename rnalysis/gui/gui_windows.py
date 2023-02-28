@@ -925,7 +925,10 @@ class StatusBar(QtWidgets.QStatusBar):
         self.desc_label.setText(f'{desc}:')
         self.desc_label.setVisible(True)
 
-    def update_time(self, elapsed_time: float, remaining_time: float):
+    def update_time(self):
+        elapsed_time = time.time() - self.progbar_start_time
+        remaining_time = (elapsed_time / self.progbar_completed_items) * abs(
+            self.progbar_total - self.progbar_completed_items)
         self.elapsed_label.setText(f"{generic.format_time(elapsed_time)} elapsed ")
         self.remaining_label.setText(f"{generic.format_time(remaining_time)} remaining ")
         self.elapsed_label.setVisible(True)
@@ -954,10 +957,7 @@ class StatusBar(QtWidgets.QStatusBar):
 
     def move_progress_bar(self, value: int):
         self.progbar_completed_items += value
-        elapsed_time = time.time() - self.progbar_start_time
-        remaining_time = (elapsed_time / self.progbar_completed_items) * abs(
-            self.progbar_total - self.progbar_completed_items)
-        self.update_time(elapsed_time, remaining_time)
+        self.update_time()
         self.progress_bar.setValue(self.progbar_completed_items)
 
 
