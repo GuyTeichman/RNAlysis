@@ -2325,6 +2325,7 @@ class MultiOpenWindow(QtWidgets.QDialog):
         super().__init__(parent)
         self.files = files
         self.button_box = QtWidgets.QDialogButtonBox(QtWidgets.QDialogButtonBox.Ok | QtWidgets.QDialogButtonBox.Cancel)
+        self.all_types_combo = QtWidgets.QComboBox(self)
         self.paths = dict()
         self.table_types = dict()
         self.names = dict()
@@ -2350,14 +2351,19 @@ class MultiOpenWindow(QtWidgets.QDialog):
         self.button_box.rejected.connect(self.reject)
         self.setWindowTitle('Choose table types and names')
         self.scroll_layout.addWidget(
-            QtWidgets.QLabel(
-                'Please choose a table type (mandatory) and table name (optional) for each loaded table\n\n'),
-            0, 0, 1, 3)
+            QtWidgets.QLabel('Please choose a table type (mandatory) and table name (optional) '
+                             'for each loaded table\n\n'), 0, 0, 1, 3)
         self.scroll_layout.addWidget(QtWidgets.QLabel('Table paths:'), 1, 0)
         self.scroll_layout.addWidget(QtWidgets.QLabel('Table types:'), 1, 1)
         self.scroll_layout.addWidget(QtWidgets.QLabel('Table names (optional):'), 1, 2)
         self.scroll_layout.addWidget(QtWidgets.QLabel('Additional parameters:'), 1, 3)
-        for i, file in enumerate(self.files):
+        self.scroll_layout.addWidget(self.all_types_combo, 2, 1)
+
+        self.all_types_combo.addItems(list(FILTER_OBJ_TYPES.keys()))
+        self.all_types_combo.setCurrentText('Other')
+        self.all_types_combo.currentTextChanged.connect(self.change_all_table_types)
+
+        for i, file in enumerate(self.files, 3):
             self.paths[file] = gui_widgets.PathLineEdit(file, parent=self)
             self.table_types[file] = QtWidgets.QComboBox(self)
             self.table_types[file].addItems(list(FILTER_OBJ_TYPES.keys()))
@@ -2368,13 +2374,18 @@ class MultiOpenWindow(QtWidgets.QDialog):
             self.table_types[file].currentTextChanged.connect(functools.partial(self.update_args_ui, file))
             self.table_types[file].setCurrentText('Other')
 
-            self.scroll_layout.addWidget(self.paths[file], i + 2, 0)
-            self.scroll_layout.addWidget(self.table_types[file], i + 2, 1)
-            self.scroll_layout.addWidget(self.names[file], i + 2, 2)
-            self.scroll_layout.addWidget(kwargs_widget, i + 2, 3)
+            self.scroll_layout.addWidget(self.paths[file], i, 0)
+            self.scroll_layout.addWidget(self.table_types[file], i, 1)
+            self.scroll_layout.addWidget(self.names[file], i, 2)
+            self.scroll_layout.addWidget(kwargs_widget, i, 3)
         self.main_layout.addWidget(self.button_box)
 
         self.scroll.setMinimumWidth(self.scroll_widget.sizeHint().width() + 150)
+
+    @QtCore.pyqtSlot(str)
+    def change_all_table_types(self, new_type: str):
+        for file in self.files:
+            self.table_types[file].setCurrentText(new_type)
 
     @QtCore.pyqtSlot(str)
     def update_args_ui(self, file: str):
@@ -3755,9 +3766,9 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self._update_queue_window(True)
 
-    def _update_queue_window(self, job_running:bool):
+    def _update_queue_window(self, job_running: bool):
         jobs = [self.worker.partial.func.__name__ + ' (running)'] if job_running else []
-        jobs +=  [item[0].func.__name__ + ' (queued)' for item in self.job_queue.queue]
+        jobs += [item[0].func.__name__ + ' (queued)' for item in self.job_queue.queue]
         self.task_queue_window.update_tasks(jobs)
 
     def start_progress_bar(self, arg_dict):
