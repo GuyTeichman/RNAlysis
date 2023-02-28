@@ -24,6 +24,12 @@ Fixed
 * Fixed bug where the 'Run' button in the Enrichment Analysis window would grey out whenever the enrichment dataset is changed.
 * Fixed bug where the *RNAlysis* stand-alone versions were unable to export Figures in specific formats (e.g. PDF, SVG).
 
+Fixed
+******
+* Fixed bug where importing *RNAlysis* would raise ImportError when cutadapt is not installed.
+* Fixed bug where the 'Run' button in the Enrichment Analysis window would grey out whenever the enrichment dataset is changed.
+* Fixed bug where the *RNAlysis* stand-alone versions were unable to export Figures in specific formats (e.g. PDF, SVG).
+
 3.5.2 (2023-02-23)
 ------------------
 This version includes bug fixes for a few quality-of-life issues which were introduced in version RNAlysis 3.5.0.
