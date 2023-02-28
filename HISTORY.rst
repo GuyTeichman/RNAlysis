@@ -9,6 +9,7 @@ new methods for automatic estimation of the number of clusters in a dataset, and
 
 Added
 ******
+* Added a 'Close all Figures' actions to the 'View' menu of the *RNAlysis* graphic interface.
 
 Changed
 ********

@@ -15,6 +15,7 @@ from queue import Queue
 from typing import List, Tuple, Union, Callable, Type
 
 import matplotlib
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from PyQt5 import QtCore, QtWidgets, QtGui
@@ -3155,6 +3156,9 @@ class MainWindow(QtWidgets.QMainWindow):
         self.close_current_action = QtWidgets.QAction("&Close current tab", self)
         self.close_current_action.triggered.connect(self.close_current_tab)
 
+        self.close_figs_action = QtWidgets.QAction("Close all &Figures")
+        self.close_figs_action.triggered.connect(functools.partial(plt.close,'all'))
+
         self.show_history_action = QtWidgets.QAction("Command &History")
         self.show_history_action.setCheckable(True)
         self.show_history_action.setChecked(True)
@@ -3427,7 +3431,7 @@ class MainWindow(QtWidgets.QMainWindow):
                               self.clear_history_action])
 
         view_menu = self.menu_bar.addMenu("&View")
-        view_menu.addActions([self.show_history_action])
+        view_menu.addActions([self.show_history_action, self.close_figs_action])
 
         fastq_menu = self.menu_bar.addMenu("&FASTQ")
         self.trimming_menu = fastq_menu.addMenu('&Adapter trimming')
