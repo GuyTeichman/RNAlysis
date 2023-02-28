@@ -1,5 +1,4 @@
 # -*- mode: python ; coding: utf-8 -*-
-import shutil
 from pathlib import Path
 
 from PyInstaller.compat import is_darwin
@@ -19,6 +18,9 @@ for item in tmp_ret:
 
 hiddenimports += collect_submodules('sklearn')
 hiddenimports += collect_submodules('cutadapt')
+hiddenimports += ['matplotlib.backends.backend_pdf', 'matplotlib.backends.backend_svg',
+                  'matplotlib.backends.backend_agg', 'matplotlib.backends.backend_pgf',
+                  'matplotlib.backends.backend_ps']
 
 with open(Path(get_hook_dirs()[0]).joinpath('hook-pygraphviz.py')) as infile:
     hook_path = Path('hooks')
