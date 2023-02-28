@@ -542,6 +542,7 @@ class EnrichmentWindow(gui_widgets.MinMaxDialog):
         self.update_plot_ui()
         self.widgets['run_button'].setVisible(True)
         self.widgets['run_button'].setDisabled(True)
+        self._verify_inputs()
 
         if 'help_link' in self.widgets:
             self.scroll_layout.removeWidget(self.widgets['help_link'])
@@ -3754,9 +3755,9 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self._update_queue_window(True)
 
-    def _update_queue_window(self, job_running: bool):
+    def _update_queue_window(self, job_running:bool):
         jobs = [self.worker.partial.func.__name__ + ' (running)'] if job_running else []
-        jobs += [item[0].func.__name__ + ' (queued)' for item in self.job_queue.queue]
+        jobs +=  [item[0].func.__name__ + ' (queued)' for item in self.job_queue.queue]
         self.task_queue_window.update_tasks(jobs)
 
     def start_progress_bar(self, arg_dict):
