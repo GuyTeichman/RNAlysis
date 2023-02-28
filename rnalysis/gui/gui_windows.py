@@ -962,6 +962,8 @@ class StatusBar(QtWidgets.QStatusBar):
 
 
 class TaskQueueWindow(gui_widgets.MinMaxDialog):
+    cancelRequested = QtCore.pyqtSignal(int, str)
+
     def __init__(self, parent=None):
         super().__init__(parent)
         self.tasks = []
@@ -971,9 +973,16 @@ class TaskQueueWindow(gui_widgets.MinMaxDialog):
         self.main_layout.addWidget(self.list)
         self.setWindowTitle('Task queue')
 
+        self.list.itemDeleted.connect(self.request_cancel)
+
     def update_tasks(self, tasks: list):
         if tasks == self.tasks:
             return
         self.tasks = tasks
         self.list.delete_all_quietly()
         self.list.add_items(self.tasks)
+
+    @QtCore.pyqtSlot(int)
+    def request_cancel(self, index: int):
+        name = self.tasks.pop(index)
+        self.cancelRequested.emit(index, name)

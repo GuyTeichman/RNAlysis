@@ -16,6 +16,7 @@ Changed
 ********
 * Progress bars are now integrated into the main *RNAlysis* window instead of opening as a dialog box.
 * Information about running proccesses and functions is now displayed in the main *RNAlysis* window.
+* It is now possible to cancel queued jobs through the *RNAlysis* graphic interface.
 * When loading multiple data tables at the same time, it is now possible to change the table type of all data tables at once, instead of one-by-one.
 
 Fixed

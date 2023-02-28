@@ -2715,6 +2715,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.addDockWidget(QtCore.Qt.RightDockWidgetArea, self.command_history_dock)
 
         self.setStatusBar(self.status_bar)
+        self.task_queue_window.cancelRequested.connect(self.cancel_job)
 
         self.tabs.setCornerWidget(self.add_tab_button, QtCore.Qt.TopRightCorner)
         self.setCentralWidget(self.tabs)
@@ -3699,6 +3700,23 @@ class MainWindow(QtWidgets.QMainWindow):
     def queue_partial(self, partial: Callable, output_slots: Union[Callable, Tuple[Callable, ...], None] = None, *args):
         self.job_queue.put((partial, output_slots, args))
         self.jobQueued.emit()
+
+    @QtCore.pyqtSlot(int, str)
+    def cancel_job(self, index: int, func_name: str):
+        func_name = func_name[0:func_name.find(' ')]
+        if index == 0:
+            QtWidgets.QMessageBox.warning(self, "Can't stop a running job!",
+                                          "<i>RNAlysis</i> can't stop a task that is currently running. ")
+            return
+        print(f'Cancelling job "{func_name}"...')
+        index -= 1
+        modified_queue = parsing.data_to_list(self.job_queue.queue)
+        modified_queue.pop(index)
+        while not self.job_queue.empty():
+            self.job_queue.get()
+        for item in modified_queue:
+            self.job_queue.put(item)
+        self.run_partial()
 
     def run_partial(self):
         job_running = (self.thread is not None) and self.thread.isRunning()
