@@ -3697,6 +3697,7 @@ class MainWindow(QtWidgets.QMainWindow):
         # if there is a job currently running, don't proceed
         if job_running:
             self._update_queue_window()
+            self.status_bar.update_time()
             return
 
         partial, output_slots, args = self.job_queue.get()
