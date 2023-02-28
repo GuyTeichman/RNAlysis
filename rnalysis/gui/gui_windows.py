@@ -927,8 +927,11 @@ class StatusBar(QtWidgets.QStatusBar):
 
     def update_time(self):
         elapsed_time = time.time() - self.progbar_start_time
-        remaining_time = (elapsed_time / self.progbar_completed_items) * abs(
-            self.progbar_total - self.progbar_completed_items)
+        if self.progbar_completed_items == 0:
+            remaining_time = elapsed_time * self.progbar_total
+        else:
+            remaining_time = (elapsed_time / self.progbar_completed_items) * abs(
+                self.progbar_total - self.progbar_completed_items)
         self.elapsed_label.setText(f"{generic.format_time(elapsed_time)} elapsed ")
         self.remaining_label.setText(f"{generic.format_time(remaining_time)} remaining ")
         self.elapsed_label.setVisible(True)
