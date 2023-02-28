@@ -3693,10 +3693,11 @@ class MainWindow(QtWidgets.QMainWindow):
         self.status_bar.update_n_tasks(self.job_queue.qsize() + job_running)
         # if there are no jobs available, don't proceed
         if self.job_queue.qsize() == 0:
+            self._update_queue_window(job_running)
             return
         # if there is a job currently running, don't proceed
         if job_running:
-            self._update_queue_window()
+            self._update_queue_window(job_running)
             self.status_bar.update_time()
             return
 
@@ -3751,11 +3752,12 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self.thread.start()
 
-        self._update_queue_window()
+        self._update_queue_window(True)
 
-    def _update_queue_window(self):
-        self.task_queue_window.update_tasks([self.worker.partial.func.__name__ + ' (running)'] +
-                                            [item[0].func.__name__ + ' (queued)' for item in self.job_queue.queue])
+    def _update_queue_window(self, job_running: bool):
+        jobs = [self.worker.partial.func.__name__ + ' (running)'] if job_running else []
+        jobs += [item[0].func.__name__ + ' (queued)' for item in self.job_queue.queue]
+        self.task_queue_window.update_tasks(jobs)
 
     def start_progress_bar(self, arg_dict):
         total = arg_dict.get('total', None)
