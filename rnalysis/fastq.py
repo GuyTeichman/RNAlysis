@@ -11,7 +11,7 @@ from typing import Union, List, Tuple
 
 import pandas as pd
 from tqdm.auto import tqdm
-from cutadapt.__main__ import main as cutadapt_main
+
 from rnalysis import filtering
 from rnalysis.utils import parsing, io, feature_counting, genome_annotation
 from rnalysis.utils.param_typing import PositiveInt, NonNegativeInt, Fraction, LEGAL_FASTQ_SUFFIXES, \
@@ -23,11 +23,13 @@ except ImportError:
     from typing_extensions import Literal
 try:
     import cutadapt
+    from cutadapt.__main__ import main as cutadapt_main
 
     HAS_CUTADAPT = True
 
 except ImportError:
     HAS_CUTADAPT = False
+    cutadapt_main = lambda x: None
 
 
 def featurecounts_single_end(input_folder: Union[str, Path], output_folder: Union[str, Path, None],
