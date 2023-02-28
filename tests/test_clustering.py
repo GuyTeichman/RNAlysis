@@ -74,7 +74,7 @@ def test_kmedoidsiter_iter():
 ])
 def test_parse_n_clusters(monkeypatch, args, expected):
     data = pd.read_csv('tests/test_files/counted.csv', index_col=0)
-    monkeypatch.setattr(ClusteringRunnerWithNClusters, "silhouette", lambda self: 6)
+    monkeypatch.setattr(ClusteringRunnerWithNClusters, "run_k_criterion", lambda self, *args: 6)
     monkeypatch.setattr(ClusteringRunnerWithNClusters, "gap_statistic", lambda self: 7)
 
     runner = ClusteringRunnerWithNClusters(data, *args)
