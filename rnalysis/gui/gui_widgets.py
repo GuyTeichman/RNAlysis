@@ -674,7 +674,7 @@ class MultipleChoiceList(QtWidgets.QWidget):
 class MultiChoiceListWithDelete(MultipleChoiceList):
     itemDeleted = QtCore.pyqtSignal(int)
 
-    def __init__(self, items: Sequence, icons: Sequence = None, delete_text='delete', parent=None):
+    def __init__(self, items: Sequence, icons: Sequence = None, parent=None, delete_text: str = 'delete'):
         super().__init__(items, icons, parent)
         self.delete_text = delete_text
         self.delete_button = QtWidgets.QPushButton(f'{delete_text.capitalize()} selected')
@@ -812,7 +812,7 @@ class OrderedFileList(MultiChoiceListWithDeleteReorder):
     __slots__ = {'add_files_button': 'add files button'}
 
     def __init__(self, parent=None):
-        super().__init__([], None, parent)
+        super().__init__([], parent=parent)
         self.add_files_button = QtWidgets.QPushButton('Add files...', self)
         self.add_files_button.clicked.connect(self.add_files)
         self.layout.addWidget(self.add_files_button, 0, 1)

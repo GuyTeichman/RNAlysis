@@ -966,7 +966,7 @@ class TaskQueueWindow(gui_widgets.MinMaxDialog):
         super().__init__(parent)
         self.tasks = []
         self.main_layout = QtWidgets.QVBoxLayout(self)
-        self.list = gui_widgets.MultiChoiceListWithDelete(self.tasks, delete_text='cancel', parent=self)
+        self.list = gui_widgets.MultiChoiceListWithDelete(self.tasks, parent=self, delete_text='cancel')
 
         self.main_layout.addWidget(self.list)
         self.setWindowTitle('Task queue')
