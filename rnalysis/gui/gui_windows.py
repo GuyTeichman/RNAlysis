@@ -886,6 +886,8 @@ class PairedFuncExternalWindow(FuncExternalWindow):
 
 
 class StatusBar(QtWidgets.QStatusBar):
+    taskQueueRequested = QtCore.pyqtSignal()
+
     def __init__(self, parent=None):
         super().__init__(parent)
         self.progbar_desc = ''
@@ -893,7 +895,7 @@ class StatusBar(QtWidgets.QStatusBar):
         self.progbar_start_time = 0
         self.progbar_completed_items = 0
 
-        self.n_tasks_label = QtWidgets.QLabel(self)
+        self.n_tasks_button = QtWidgets.QPushButton(self)
         self.desc_label = QtWidgets.QLabel(self)
         self.progress_bar = QtWidgets.QProgressBar(self)
         self.elapsed_label = QtWidgets.QLabel(self)
@@ -901,20 +903,23 @@ class StatusBar(QtWidgets.QStatusBar):
         self.init_ui()
 
     def init_ui(self):
-        self.addWidget(self.n_tasks_label)
+        self.n_tasks_button.clicked.connect(self.taskQueueRequested.emit)
+
+        self.addWidget(self.n_tasks_button)
         self.addWidget(self.desc_label)
         self.addWidget(self.progress_bar)
         self.addWidget(self.elapsed_label)
         self.addWidget(self.remaining_label)
+
         self.update_n_tasks(0)
         self.reset_progress()
 
     def update_n_tasks(self, n_tasks: int):
         if n_tasks <= 0:
-            self.n_tasks_label.setVisible(False)
+            self.n_tasks_button.setVisible(False)
         else:
-            self.n_tasks_label.setVisible(True)
-            self.n_tasks_label.setText(f'{n_tasks} tasks running... ')
+            self.n_tasks_button.setVisible(True)
+            self.n_tasks_button.setText(f'{n_tasks} tasks running... ')
 
     def update_desc(self, desc: str):
         self.desc_label.setText(f'{desc}:')
@@ -954,3 +959,21 @@ class StatusBar(QtWidgets.QStatusBar):
             self.progbar_total - self.progbar_completed_items)
         self.update_time(elapsed_time, remaining_time)
         self.progress_bar.setValue(self.progbar_completed_items)
+
+
+class TaskQueueWindow(gui_widgets.MinMaxDialog):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.tasks = []
+        self.main_layout = QtWidgets.QVBoxLayout(self)
+        self.list = gui_widgets.MultiChoiceListWithDelete(self.tasks, delete_text='cancel', parent=self)
+
+        self.main_layout.addWidget(self.list)
+        self.setWindowTitle('Task queue')
+
+    def update_tasks(self, tasks: list):
+        if tasks == self.tasks:
+            return
+        self.tasks = tasks
+        self.list.delete_all_quietly()
+        self.list.add_items(self.tasks)

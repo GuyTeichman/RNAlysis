@@ -2652,6 +2652,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.cite_window = gui_windows.HowToCiteWindow(self)
         self.enrichment_window = None
         self.enrichment_results = []
+        self.task_queue_window = gui_windows.TaskQueueWindow(self)
         self.external_windows = {}
 
         self.init_ui()
@@ -3157,7 +3158,10 @@ class MainWindow(QtWidgets.QMainWindow):
         self.close_current_action.triggered.connect(self.close_current_tab)
 
         self.close_figs_action = QtWidgets.QAction("Close all &Figures")
-        self.close_figs_action.triggered.connect(functools.partial(plt.close,'all'))
+        self.close_figs_action.triggered.connect(functools.partial(plt.close, 'all'))
+        self.task_queue_action = QtWidgets.QAction("Task &queue")
+        self.task_queue_action.triggered.connect(self.task_queue_window.show)
+        self.status_bar.taskQueueRequested.connect(self.task_queue_action.trigger)
 
         self.show_history_action = QtWidgets.QAction("Command &History")
         self.show_history_action.setCheckable(True)
@@ -3431,7 +3435,7 @@ class MainWindow(QtWidgets.QMainWindow):
                               self.clear_history_action])
 
         view_menu = self.menu_bar.addMenu("&View")
-        view_menu.addActions([self.show_history_action, self.close_figs_action])
+        view_menu.addActions([self.show_history_action, self.task_queue_action, self.close_figs_action])
 
         fastq_menu = self.menu_bar.addMenu("&FASTQ")
         self.trimming_menu = fastq_menu.addMenu('&Adapter trimming')
@@ -3685,16 +3689,16 @@ class MainWindow(QtWidgets.QMainWindow):
         self.jobQueued.emit()
 
     def run_partial(self):
-        self.status_bar.update_n_tasks(self.job_queue.qsize() + ((self.thread is not None) and self.thread.isRunning()))
+        job_running = (self.thread is not None) and self.thread.isRunning()
+        self.status_bar.update_n_tasks(self.job_queue.qsize() + job_running)
         # if there are no jobs available, don't proceed
         if self.job_queue.qsize() == 0:
             return
         # if there is a job currently running, don't proceed
-        try:
-            if (self.thread is not None) and self.thread.isRunning():
-                return
-        except RuntimeError:
-            self.thread = None
+        if job_running:
+            self._update_queue_window()
+            return
+
         partial, output_slots, args = self.job_queue.get()
         # Create a worker object
         self.worker = gui_widgets.Worker(partial, *args)
@@ -3745,6 +3749,12 @@ class MainWindow(QtWidgets.QMainWindow):
         self.worker.finished.connect(self.worker.deleteLater)
 
         self.thread.start()
+
+        self._update_queue_window()
+
+    def _update_queue_window(self):
+        self.task_queue_window.update_tasks([self.worker.partial.func.__name__ + ' (running)'] +
+                                            [item[0].func.__name__ + ' (queued)' for item in self.job_queue.queue])
 
     def start_progress_bar(self, arg_dict):
         total = arg_dict.get('total', None)
