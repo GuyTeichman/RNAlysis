@@ -3599,7 +3599,7 @@ class CountFilter(Filter):
         based on the clustering result.
 
         :param n_clusters: The number of clusters the algorithm will seek.
-        :type n_clusters: int, list of ints, 'gap', or 'slihouette'
+        :type n_clusters: int, list of ints, 'gap', 'silhouette', 'calinski_harabasz', 'davies_bouldin', or 'bic'
         :param random_seed: determines random number generation for centroid initialization. \
         Use an int to make the randomness deterministic.
         :type random_seed: Union[int, None] or None (default=None)
@@ -3616,8 +3616,8 @@ class CountFilter(Filter):
         :param split_plots: if True, each discovered cluster will be plotted on its own. \
         Otherwise, all clusters will be plotted in the same Figure.
         :type split_plots: bool (default=False)
-        :param max_n_clusters_estimate: the maximum number of clusters to test if trying to discover the optimal \
-        number of clusters using the Silhouette or Gap Statistic methods. If `max_n_clusters_estimate`='default', \
+        :param max_n_clusters_estimate: the maximum number of clusters to test if trying to automatically estimate \
+        the optimal number of clusters. If `max_n_clusters_estimate`='default', \
         an appropriate value will be picked automatically.
         :type max_n_clusters_estimate: int or 'auto' (default='auto')
         :type parallel_backend: Literal[PARALLEL_BACKENDS] (default='loky')
@@ -3695,7 +3695,8 @@ class CountFilter(Filter):
 
         :param n_clusters: The number of clusters the algorithm will seek. If set to 'distance', \
         the algorithm will derive the number of clusters from the distance threshold (see 'distance_threshold').
-        :type n_clusters: int, list of ints, 'gap', 'slihouette', or 'distance'
+        :type n_clusters: int, list of ints, 'distance', 'gap', 'silhouette', 'calinski_harabasz', 'davies_bouldin', \
+        or 'bic'
         :param metric: the distance metric used to determine similarity between data points. \
         If linkage is 'ward', only the 'Euclidean' metric is accepted. \
         For a full list of supported distance metrics see the user guide.
@@ -3714,8 +3715,8 @@ class CountFilter(Filter):
         :param split_plots: if True, each discovered cluster will be plotted on its own. \
         Otherwise, all clusters will be plotted in the same Figure.
         :type split_plots: bool (default=False)
-        :param max_n_clusters_estimate: the maximum number of clusters to test if trying to discover the optimal \
-        number of clusters using the Silhouette or Gap Statistic methods. If `max_n_clusters_estimate`='default', \
+        :param max_n_clusters_estimate: the maximum number of clusters to test if trying to automatically estimate \
+        the optimal number of clusters. If `max_n_clusters_estimate`='default', \
         an appropriate value will be picked automatically.
         :type max_n_clusters_estimate: int or 'auto' (default='auto')
         :type parallel_backend: Literal[PARALLEL_BACKENDS] (default='loky')
@@ -3791,7 +3792,7 @@ class CountFilter(Filter):
         based on the clustering result.
 
         :param n_clusters: The number of clusters the algorithm will seek.
-        :type n_clusters: int, list of ints, 'gap', or 'slihouette'
+        :type n_clusters: int, list of ints, 'gap', 'silhouette', 'calinski_harabasz', 'davies_bouldin', or 'bic'
         :param random_seed: determines random number generation for centroid initialization. \
         Use an int to make the randomness deterministic.
         :type random_seed: Union[int, None] or None (default=None)
@@ -3811,8 +3812,8 @@ class CountFilter(Filter):
         :param split_plots: if True, each discovered cluster will be plotted on its own. \
         Otherwise, all clusters will be plotted in the same Figure.
         :type split_plots: bool (default=False)
-        :param max_n_clusters_estimate: the maximum number of clusters to test if trying to discover the optimal \
-        number of clusters using the Silhouette or Gap Statistic methods. If `max_n_clusters_estimate`='default', \
+        :param max_n_clusters_estimate: the maximum number of clusters to test if trying to automatically estimate \
+        the optimal number of clusters. If `max_n_clusters_estimate`='default', \
         an appropriate value will be picked automatically.
         :type max_n_clusters_estimate: int or 'auto' (default='auto')
         :type parallel_backend: Literal[PARALLEL_BACKENDS] (default='loky')
