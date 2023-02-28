@@ -14,7 +14,7 @@ import sklearn.metrics.pairwise as sklearn_pairwise
 from grid_strategy import strategies
 from sklearn.cluster import AgglomerativeClustering, KMeans
 from sklearn.decomposition import PCA
-from sklearn.metrics import pairwise_distances, silhouette_score
+from sklearn.metrics import pairwise_distances, silhouette_score, calinski_harabasz_score, davies_bouldin_score
 from sklearn.utils import parallel_backend as sklearn_parallel_backend
 from sklearn_extra.cluster import KMedoids
 from tqdm.auto import tqdm
@@ -570,6 +570,25 @@ class ClusteringRunner:
 
 
 class ClusteringRunnerWithNClusters(ClusteringRunner, ABC):
+    N_CLUSTERS_METHODS = {
+        'silhouette': {
+            'name': 'Silhouette',
+            'func': silhouette_score,
+            'maximize': True,
+            'range': (-1, 1)},
+        'calinski_harabasz': {
+            'name': 'Calinski-Harabasz',
+            'func': calinski_harabasz_score,
+            'maximize': True},
+        'davies_bouldin': {
+            'name': 'Davies-Bouldin',
+            'func': davies_bouldin_score,
+            'maximize': False},
+        'bic': {
+            'name': 'Bayesian Information Criterion',
+            'func': generic.bic_score,
+            'maximize': False}}
+
     def __init__(self, data: pd.DataFrame, power_transform: bool, n_clusters: Union[int, List[int], str],
                  max_n_clusters_estimate: Union[int, str] = 'auto', plot_style: str = 'none',
                  split_plots: bool = False, metric: Tuple[str, str] = None, parallel_backend='loky'):
@@ -580,8 +599,8 @@ class ClusteringRunnerWithNClusters(ClusteringRunner, ABC):
 
     def parse_n_clusters(self, n_clusters) -> List[int]:
         # get best n_clusters value using gap statistic/silhouette method, if requested by the user
-        if isinstance(n_clusters, str) and n_clusters.lower() == 'silhouette':
-            n_clusters = self.silhouette()
+        if isinstance(n_clusters, str) and n_clusters.lower() in self.N_CLUSTERS_METHODS:
+            n_clusters = self.run_k_criterion(n_clusters.lower())
         elif isinstance(n_clusters, str) and n_clusters.lower() in {'gap', 'gap statistic', 'gap_statistic'}:
             n_clusters = self.gap_statistic()
 
@@ -710,38 +729,57 @@ class ClusteringRunnerWithNClusters(ClusteringRunner, ABC):
         plt.show()
         return fig
 
-    def silhouette(self) -> int:
-        print(f"Estimating the optimal number of clusters using the Silhouette method in range "
-              f"{2}:{self.max_n_clusters_estimate}...")
+    def run_k_criterion(self, method: str) -> int:
+        method_name = self.N_CLUSTERS_METHODS[method]['name']
+        func = self.N_CLUSTERS_METHODS[method]['func']
+        maximize = self.N_CLUSTERS_METHODS[method]['maximize']
+        print(f'Estimating the optimal number of clusters using the {method_name} method in range '
+              f'{2}:{self.max_n_clusters_estimate}...')
         data = self.transform(self.data.values)
-        silhouette_scores = []
+        scores = []
         n_clusters_range = np.arange(2, self.max_n_clusters_estimate + 1)
-        for n_clusters in n_clusters_range:
+        for n_clusters in tqdm(n_clusters_range, unit='K-values',
+                               desc=f'Estimating the optimal number of clusters using the {method_name} method'):
             clusterer = self.clusterer_class(n_clusters=n_clusters, **self.clusterer_kwargs)
-            silhouette_scores.append(silhouette_score(data, clusterer.fit_predict(data)))
-        best_n_clusters = int(n_clusters_range[int(np.argmax(silhouette_scores))])
+            scores.append(func(data, clusterer.fit_predict(data)))
 
-        self.n_clusters_determine_plot = functools.partial(self._plot_silhouette, best_n_clusters, n_clusters_range,
-                                                           silhouette_scores)
-        print(f"Using the Silhouette method, {best_n_clusters} was chosen as the best number of clusters (k).")
+        if maximize:
+            best_n_clusters = int(n_clusters_range[int(np.argmax(scores))])
+        else:
+            best_n_clusters = int(n_clusters_range[int(np.argmin(scores))])
+        self.n_clusters_determine_plot = functools.partial(self._plot_k_criterion_res, best_n_clusters,
+                                                           parsing.data_to_list(n_clusters_range), scores, method)
+        print(f"Using the {method_name} method, {best_n_clusters} was chosen as the best number of clusters (k).")
         return best_n_clusters
 
     @staticmethod
-    def _plot_silhouette(best_n_clusters, n_clusters_range, silhouette_scores):
+    def _plot_k_criterion_res(best_n_clusters: int, n_clusters_range: list, scores: list, method: str):
+        assert method in ClusteringRunnerWithNClusters.N_CLUSTERS_METHODS
         fig = plt.figure(figsize=(7, 9))
         ax = fig.add_subplot(111)
-        ax.plot(n_clusters_range, silhouette_scores, '--o', color='r')
-        ax.set_ylim(-1.0, 1.0)
-        ax.set_title("Silhouette method for estimating optimal number of clusters")
-        ax.set_ylabel('Average silhouette score')
+        ax.plot(n_clusters_range, scores, '--o', color='r')
+
+        method_kwargs = ClusteringRunnerWithNClusters.N_CLUSTERS_METHODS[method]
+        method_name = method_kwargs['name']
+        maximize = method_kwargs['maximize']
+        if 'range' in method_kwargs:
+            ymin, ymax = method_kwargs['range']
+            ax.set_ylim(ymin, ymax)
+            ax.axhline((ymin + ymax) / 2, color='grey', linewidth=2, linestyle='--')
+
+        ax.set_title(f"{method_name} method for estimating optimal number of clusters")
+        ax.set_ylabel(f'{method_name} score')
         ax.set_xlabel("Number of clusters (k)")
-        ax.axhline(0, color='grey', linewidth=2, linestyle='--')
-        ax.annotate(f'Best n_clusters={best_n_clusters}', xy=(best_n_clusters, max(silhouette_scores)),
-                    xytext=(best_n_clusters + 1, 0.75),
-                    arrowprops=dict(facecolor='black', shrink=0.15))
+        arrow_y = scores[n_clusters_range.index(best_n_clusters)]
+        ax.annotate(f'Best n_clusters={best_n_clusters}',
+                    xy=(best_n_clusters, arrow_y), xytext=(75, 20 * (-1 * (not maximize))), textcoords='offset points',
+                    arrowprops=dict(facecolor='black', shrink=0.15), annotation_clip=False)
         ax.set_xticks(n_clusters_range)
-        sns.despine()
-        plt.tight_layout()
+        generic.despine(ax)
+        try:
+            plt.tight_layout()
+        except StopIteration:
+            pass
         return fig
 
 
