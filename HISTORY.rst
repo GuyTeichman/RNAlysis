@@ -16,6 +16,10 @@ Changed
 * Progress bars are now integrated into the main *RNAlysis* window instead of opening as a dialog box.
 * Information about running proccesses and functions is now displayed in the main *RNAlysis* window.
 
+Fixed
+******
+* Fixed bug where importing *RNAlysis* would raise ImportError when cutadapt is not installed.
+
 3.5.2 (2023-02-23)
 ------------------
 This version includes bug fixes for a few quality-of-life issues which were introduced in version RNAlysis 3.5.0.
