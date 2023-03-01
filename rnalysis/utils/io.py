@@ -1362,6 +1362,8 @@ def run_r_script(script_path: Union[str, Path], r_installation_folder: Union[str
     else:
         prefix = f'{Path(r_installation_folder).as_posix()}/bin/Rscript'
     script_path = Path(script_path).as_posix()
+    assert Path(script_path).exists() and Path(
+        script_path).is_file(), f"Could not find the requested R script: {script_path}"
 
     return_code = run_subprocess([prefix, "--help"], False, False)
     if return_code:
