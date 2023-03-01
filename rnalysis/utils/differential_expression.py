@@ -3,7 +3,7 @@ import time
 from pathlib import Path
 from typing import Union, Iterable, Tuple
 
-from rnalysis.utils import io
+from rnalysis.utils import io, generic
 
 try:
     from typing import Literal
@@ -37,14 +37,18 @@ def create_limma_script(data_path: Union[str, Path], design_mat_path: Union[str,
         baselines = {}
         design_mat_df = io.load_csv(design_mat_path, index_col=0)
 
+        factor_names = {}
         factors_str = ''
         for factor in design_mat_df.columns:
+            factor_name = generic.sanitize_variable_name(factor)
+            factor_names[factor] = factor_name
+
             values = sorted(design_mat_df[factor].unique())
             values_str = ', '.join([f'"{val}"' for val in values])
-            factors_str += f'{factor} <- factor(design_matrix${factor}, levels=c({values_str}))\n'
+            factors_str += f'{factor_name} <- factor(design_matrix${factor}, levels=c({values_str}))\n'
             baselines[factor] = values[0]
 
-        formula = "~ " + " + ".join(design_mat_df.columns)
+        formula = "~ " + " + ".join(factor_names.values())
 
         run_template = run_template.replace("$COUNT_MATRIX", Path(data_path).as_posix())
         run_template = run_template.replace("$DESIGN_MATRIX", (Path(design_mat_path).as_posix()))
@@ -54,10 +58,11 @@ def create_limma_script(data_path: Union[str, Path], design_mat_path: Union[str,
         outfile.write(run_template)
 
         for factor, num, denom in comparisons:
-            export_path = cache_dir.joinpath(f"LimmaVoom_{factor}_{num}_vs_{denom}.csv").as_posix()
+            factor_name = factor_names[factor]
+            export_path = cache_dir.joinpath(f"LimmaVoom_{factor_name}_{num}_vs_{denom}.csv").as_posix()
             num_not_baseline = num != baselines[factor]
             denom_not_baseline = denom != baselines[factor]
-            contrast = f'"{(factor + num) * num_not_baseline}{(" - " + factor + denom) * denom_not_baseline}"'
+            contrast = f'"{(factor_name + num) * num_not_baseline}{(" - " + factor + denom) * denom_not_baseline}"'
             this_export = export_template.replace("$CONTRAST", contrast)
             this_export = this_export.replace("$OUTFILE_NAME", export_path)
 
