@@ -14,7 +14,7 @@ def run_featurecounts_analysis(kwargs: dict, output_dir: Path,
 
 
 def install_rsubread(r_installation_folder: Union[str, Path, Literal['auto']] = 'auto'):
-    script_path = Path.joinpath(Path(__file__).parent, '../data_files/r_templates/rsubread_install.R')
+    script_path = Path(__file__).parent.parent.joinpath('data_files/r_templates/rsubread_install.R')
     try:
         io.run_r_script(script_path, r_installation_folder)
     except AssertionError:
@@ -27,7 +27,7 @@ def create_featurecounts_script(kwargs: dict, output_dir: Path):
     save_path = output_dir.joinpath('featurecounts_run.R')
 
     with open(
-        Path.joinpath(Path(__file__).parent, '../data_files/r_templates/rsubread_featurecounts_run_parametric.R')) as f:
+        Path(__file__).parent.parent.joinpath('data_files/r_templates/rsubread_featurecounts_run_parametric.R')) as f:
         run_template = f.read()
 
     with open(save_path, 'w') as outfile:
