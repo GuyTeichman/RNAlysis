@@ -1861,7 +1861,7 @@ def clear_layout(layout, exceptions: set = frozenset()):
 
 
 class ReactiveHeaderView(QtWidgets.QHeaderView):
-    LOOKUP_DATABASES_PATH = Path(__file__).parent.joinpath('../data_files/lookup_databases.json')
+    LOOKUP_DATABASES_PATH = Path(__file__).parent.parent.joinpath('data_files/lookup_databases.json')
     __slots__ = {'context_menu': 'context menu'}
 
     def __init__(self, *args, **kwargs):
@@ -1905,7 +1905,7 @@ class ReactiveHeaderView(QtWidgets.QHeaderView):
 
 
 class ReactiveListWidget(QtWidgets.QListWidget):
-    LOOKUP_DATABASES_PATH = Path(__file__).parent.joinpath('../data_files/lookup_databases.json')
+    LOOKUP_DATABASES_PATH = Path(__file__).parent.parent.joinpath('data_files/lookup_databases.json')
     __slots__ = {'context_menu': 'context menu'}
 
     def __init__(self, *args, **kwargs):

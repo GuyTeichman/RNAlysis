@@ -445,7 +445,7 @@ class AboutWindow(QtWidgets.QMessageBox):
 
 
 class SettingsWindow(gui_widgets.MinMaxDialog):
-    LOOKUP_DATABASES_PATH = Path(__file__).parent.joinpath('../data_files/lookup_databases.json')
+    LOOKUP_DATABASES_PATH = Path(__file__).parent.parent.joinpath('data_files/lookup_databases.json')
     THEMES = gui_style.get_stylesheet_names()
     FONT_SIZES = [str(i) for i in [6, 7, 8, 9, 10, 11, 12, 14, 16, 18, 20, 22, 24, 28, 32, 36, 48, 72]]
     styleSheetUpdated = QtCore.pyqtSignal()
@@ -665,7 +665,7 @@ class HowToCiteWindow(gui_widgets.MinMaxDialog):
     <br>
     <a href=https://doi.org/10.48550/arXiv.1507.07905>doi.org/10.48550/arXiv.1507.07905</a>
     </p>"""
-    CITATION_FILE_PATH = Path(__file__).parent.joinpath('../data_files/tool_citations.json')
+    CITATION_FILE_PATH = Path(__file__).parent.parent.joinpath('data_files/tool_citations.json')
 
     def __init__(self, parent=None):
         super().__init__(parent)
