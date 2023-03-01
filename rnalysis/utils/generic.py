@@ -233,3 +233,21 @@ def format_time(seconds: float):
     n_minutes = seconds // 60
     n_seconds = seconds % 60
     return f'{n_minutes:02d}:{n_seconds:02d}'
+
+
+def sanitize_variable_name(name: str) -> str:
+    """
+    Sanitize a string to turn it into a legal variable name in R/Python.
+    :param name: name to sanitize
+    :type name: str
+    :return: sanitizeed name
+    :rtype: str
+    """
+    new_name = name.rstrip().replace(' ', '_')
+    if new_name[0].isdigit():
+        new_name = 'var_'+new_name
+
+    if not new_name.isalnum():
+        new_name = ''.join([char if char.isalnum() else '_' for char in new_name])
+
+    return new_name

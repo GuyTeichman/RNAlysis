@@ -141,3 +141,19 @@ def test_sum_intervals_inclusive(intervals, expected):
 def test_format_time(seconds, expected):
     res = format_time(seconds)
     assert res == expected
+
+
+@pytest.mark.parametrize('name,expected', [
+    ('aname', 'aname'),
+    ('name123n', 'name123n'),
+    ('camelCase', 'camelCase'),
+    ('snake_case', 'snake_case'),
+    ('name with spaces ', 'name_with_spaces'),
+    ('1name of var', 'var_1name_of_var'),
+    ('12345', 'var_12345'),
+    ('%asdf&sign', '_asdf_sign'),
+    (' ^^more things123 ', '___more_things123')
+])
+def test_sanitize_variable_name(name, expected):
+    res = sanitize_variable_name(name)
+    assert res == expected
