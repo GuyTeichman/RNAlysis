@@ -179,6 +179,7 @@ Contributors
 * `Mintxoklet <https://github.com/Mintxoklet>`_
 * `Bipin Kumar <https://github.com/kbipinkumar>`_
 * Matthias Wilm
+* `sandyl27 <https://github.com/sandyl27>`_
 
 ----
 

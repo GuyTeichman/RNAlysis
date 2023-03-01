@@ -24,8 +24,12 @@ Fixed
 * Fixed bug where importing *RNAlysis* would raise ImportError when cutadapt is not installed.
 * Fixed bug where the 'Run' button in the Enrichment Analysis window would grey out whenever the enrichment dataset is changed.
 * Fixed bug where the *RNAlysis* stand-alone versions were unable to export Figures in specific formats (e.g. PDF, SVG).
-* Fixed bug where functions that depend on R scripts (such as DESeq2 and limma) would sometimes fail to run on MacOS.
+* Fixed bug where functions that depend on R scripts (such as DESeq2 and limma) would sometimes fail to run on MacOS (thanks to Matthias Wilm and `sandyl27 <https://github.com/sandyl27>`_ in `#12 <https://github.com/GuyTeichman/RNAlysis/issues/12>`_).
 * Fixed bug where running limma-voom with a design matrix whose column names contained spaces or special characterse would raise an error.
+
+New Contributors
+*****************
+* `sandyl27`_ in `#12`_
 
 3.5.2 (2023-02-23)
 ------------------
