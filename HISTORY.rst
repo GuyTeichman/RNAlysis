@@ -5,7 +5,7 @@ History
 3.6.0 (2023-03-??)
 ------------------
 This version introduces improvements to the usability and clarity of the graphic interface,
-new methods for automatic estimation of the number of clusters in a dataset, and batch-effecy adjustment for count data.
+and new methods for automatic estimation of the number of clusters in a dataset.
 
 Added
 ******
