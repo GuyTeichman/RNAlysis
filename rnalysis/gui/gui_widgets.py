@@ -872,6 +872,7 @@ class MandatoryComboBox(QtWidgets.QComboBox):
 
 
 class GeneSetComboBox(MandatoryComboBox):
+    IS_SPIN_BOX_LIKE = True
     boxOpened = QtCore.pyqtSignal()
     __slots__ = {'available_objects': 'available gene sets and tables'}
 
