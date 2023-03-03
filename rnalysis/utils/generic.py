@@ -7,8 +7,12 @@ from functools import lru_cache
 from typing import Union, Callable, Tuple
 
 import joblib
+import matplotlib.collections
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+from matplotlib import figure
+from matplotlib.widgets import MultiCursor
 from scipy.special import comb
 from sklearn.preprocessing import PowerTransformer, StandardScaler
 from tqdm.auto import tqdm
@@ -245,9 +249,47 @@ def sanitize_variable_name(name: str) -> str:
     """
     new_name = name.rstrip().replace(' ', '_')
     if new_name[0].isdigit():
-        new_name = 'var_'+new_name
+        new_name = 'var_' + new_name
 
     if not new_name.isalnum():
         new_name = ''.join([char if char.isalnum() else '_' for char in new_name])
 
     return new_name
+
+
+class InteractiveScatterFigure(figure.Figure):
+    def __init__(self, labels: typing.List[str], annotation_fontsize: float = 10, show_cursor: bool = True, *args,
+                 **kwargs):
+        super().__init__(*args, **kwargs)
+        self.ax = self.add_subplot()
+        self.labels = labels
+        self.annotation_fontsize = annotation_fontsize
+        self.is_labeled: typing.Dict[int, plt.Line2D] = {}
+        self.canvas.mpl_connect('pick_event', self.on_pick)
+        if show_cursor:
+            self.cursor = MultiCursor(self.canvas, self.axes, color='k', lw=0.5, horizOn=True, vertOn=True)
+            self.canvas.mpl_connect('axes_leave_event', self.on_exit)
+
+    def on_exit(self, event):
+        self.cursor.clear(event)
+
+    def on_pick(self, event):
+        for this_ind in event.ind:
+            if isinstance(event.artist, matplotlib.collections.PathCollection):
+                data = event.artist.get_offsets().data
+                xdata, ydata = data[:, 0], data[:, 1]
+            elif isinstance(event.artist, plt.Line2D):
+                thisline = event.artist
+                xdata = thisline.get_xdata()
+                ydata = thisline.get_ydata()
+            else:
+                return
+
+            if this_ind in self.is_labeled:
+                ann = self.is_labeled.pop(this_ind)
+                ann.remove()
+            else:
+                self.is_labeled[this_ind] = plt.annotate(self.labels[this_ind],
+                                                         (np.take(xdata, this_ind), np.take(ydata, this_ind)),
+                                                         xytext=(3, 3), textcoords='offset points',
+                                                         fontsize=self.annotation_fontsize)
