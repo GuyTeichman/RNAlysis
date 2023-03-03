@@ -2412,13 +2412,16 @@ class DESeqFilter(Filter):
 
     @readable_name('Volcano plot')
     def volcano_plot(self, alpha: param_typing.Fraction = 0.1, log2fc_threshold: Union[float, None] = 1,
-                     title: Union[str, Literal['auto']] = 'auto', title_fontsize: float = 20,
-                     label_fontsize: float = 16, tick_fontsize: float = 12) -> plt.Figure:
+                     title: Union[str, Literal['auto']] = 'auto', title_fontsize: float = 16,
+                     label_fontsize: float = 16, tick_fontsize: float = 12,
+                     annotation_fontsize: float = 10, point_size: float = 10, opacity: param_typing.Fraction = 0.65,
+                     interactive: bool = True, show_cursor: bool = False) -> plt.Figure:
 
         """
         Plots a volcano plot (log2(fold change) vs -log10(adj. p-value)) of the DESeqFilter object. \
         Significantly upregulated features are colored in red, \
-        and significantly downregulated features are colored in blue.
+        and significantly downregulated features are colored in blue. \
+        If the plot is generated in interactive mode, data points can be labeled by clicking on them.
 
         :type alpha: float between 0 and 1
         :param alpha: the significance threshold to paint data points as significantly up/down-regulated.
@@ -2433,6 +2436,18 @@ class DESeqFilter(Filter):
         :type label_fontsize: float (default=15)
          :param tick_fontsize: determines the font size of the X and Y tick labels.
         :type tick_fontsize: float (default=10)
+        :param annotation_fontsize: determines the font size of the point annotations created in interactive mode.
+        :type annotation_fontsize: float (default=10)
+        :param opacity: float between 0 and 1 (default=0.65)
+        :type opacity: determines the opacity of the points in the scatter plot. 0 indicates completely transparent, \
+        while 1 indicates completely opaque.
+        :param point_size: determines the size of the points in the scatter plot
+        :type point_size: float (default=10)
+        :param interactive: if True, turns on interactive mode. While in interactive mode, you can click on a data \
+        point to label it with its gene name/ID, or click on a labeled data point to unlabel it.
+        :type interactive: bool (default=True)
+        :param show_cursor: if True, show the cursor position on the plot during interactive mode
+        :type show_cursor: bool (default=False)
 
         .. figure:: /figures/volcano.png
            :align:   center
@@ -2450,24 +2465,34 @@ class DESeqFilter(Filter):
             assert isinstance(log2fc_threshold, (int, float)) and log2fc_threshold >= 0, \
                 f"'log2fc_threshold' must be a non-negative number!"
 
-        fig = plt.figure(constrained_layout=True)
-        ax = fig.add_subplot(111)
+        if interactive:
+            fig = plt.figure(constrained_layout=True, FigureClass=generic.InteractiveScatterFigure,
+                             labels=parsing.data_to_tuple(self.df.index), annotation_fontsize=annotation_fontsize,
+                             show_cursor=show_cursor)
+            ax = fig.axes[0]
+            kwargs = {'picker': 5}
+        else:
+            fig = plt.figure(constrained_layout=True)
+            ax = fig.add_subplot(111)
+            kwargs = {}
         colors = pd.Series(index=self.df.index, dtype='float64')
         colors.loc[(self.df[self.padj_col] <= alpha) & (self.df[self.log2fc_col] > log2fc_threshold)] = 'tab:red'
         colors.loc[(self.df[self.padj_col] <= alpha) & (self.df[self.log2fc_col] < -log2fc_threshold)] = 'tab:blue'
         colors.fillna('grey', inplace=True)
-        ax.scatter(self.df[self.log2fc_col], -np.log10(self.df[self.padj_col]), c=colors, s=1)
+        ax.scatter(self.df[self.log2fc_col], -np.log10(self.df[self.padj_col]), c=colors, s=point_size, alpha=opacity,
+                   **kwargs)
         if title == 'auto':
             title = f"Volcano plot of {self.fname.stem}"
         ax.set_title(title, fontsize=title_fontsize)
         ax.set_xlabel(r"$\log_2$(Fold Change)", fontsize=label_fontsize)
-        ax.set_ylabel(r'-$\log10$(Adj. P-Value)', fontsize=label_fontsize)
+        ax.set_ylabel(r'-$\log_{10}$(Adj. P-Value)', fontsize=label_fontsize)
         ax.tick_params(axis='both', which='both', labelsize=tick_fontsize)
 
         if log2fc_threshold > 0:
             ax.axvline(log2fc_threshold, linestyle='--', color='black')
             ax.axvline(-log2fc_threshold, linestyle='--', color='black')
         generic.despine(ax)
+
         plt.show()
         return fig
 
@@ -4418,8 +4443,7 @@ class CountFilter(Filter):
 
     @staticmethod
     def _pca_plot(final_df: pd.DataFrame, pc1_var: float, pc2_var: float, sample_grouping: param_typing.GroupedColumns,
-                  labels: bool,
-                  title: str, title_fontsize: float, label_fontsize: float, tick_fontsize: float):
+                  labels: bool, title: str, title_fontsize: float, label_fontsize: float, tick_fontsize: float):
         """
         Internal method, used to plot the results from CountFilter.pca().
 
@@ -4460,12 +4484,17 @@ class CountFilter(Filter):
     def scatter_sample_vs_sample(self, sample1: param_typing.ColumnNames, sample2: param_typing.ColumnNames,
                                  xlabel: Union[str, Literal['auto']] = 'auto',
                                  ylabel: Union[str, Literal['auto']] = 'auto',
-                                 title: Union[str, Literal['auto']] = 'auto',
-                                 title_fontsize: float = 20, label_fontsize: float = 16, tick_fontsize: float = 12,
-                                 highlight: Union[Sequence[str], None] = None) -> plt.Figure:
+                                 title: Union[str, Literal['auto']] = 'auto', title_fontsize: float = 20,
+                                 label_fontsize: float = 16, tick_fontsize: float = 12, annotation_fontsize: float = 10,
+                                 highlight: Union[Sequence[str], None] = None,
+                                 point_color: param_typing.Color = '#6d7178',
+                                 highlight_color: param_typing.Color = '#00aaff', opacity: param_typing.Fraction = 0.65,
+                                 point_size: float = 10, interactive: bool = True, show_cursor: bool = False
+                                 ) -> plt.Figure:
         """
         Generate a scatter plot where every dot is a feature, the x value is log10 of reads \
-        (counts, RPM, RPKM, TPM, etc) in sample1, the y value is log10 of reads in sample2.
+        (counts, RPM, RPKM, TPM, etc) in sample1, the y value is log10 of reads in sample2. \
+        If the plot is generated in interactive mode, data points can be labeled by clicking on them.
 
         :param sample1: Name of the first sample from the CountFilter object. \
         If sample1 is a list, they will be avarged as replicates.
@@ -4479,15 +4508,32 @@ class CountFilter(Filter):
         :type ylabel: str or 'auto'
         :param title: optional. If not specified, a title will be generated automatically.
         :type title: str or 'auto'
-        :param highlight: If specified, the points in the scatter corresponding to the names/features in 'highlight' \
-        will be highlighted in red.
-        :type highlight: Filter object or iterable of strings
+
         :param title_fontsize: determines the font size of the graph title.
         :type title_fontsize: float (default=30)
         :param label_fontsize: determines the font size of the X and Y axis labels.
         :type label_fontsize: float (default=15)
         :param tick_fontsize: determines the font size of the X and Y tick labels.
         :type tick_fontsize: float (default=10)
+        :param annotation_fontsize: determines the font size of the point annotations created in interactive mode.
+        :type annotation_fontsize: float (default=10)
+        :param highlight: If specified, the points in the scatter corresponding to the names/features in 'highlight' \
+        will be highlighted in red.
+        :type highlight: Filter object or iterable of strings
+        :param point_color: color of the points in the scatter plot.
+        :type point_color: str or tuple of (int, int, int) (default='#6d7178')
+        :param highlight_color: color of the highlighted points in the scatter plot.
+        :type highlight_color: str or tuple of (int, int, int) (default='#00aaff')
+        :param opacity: float between 0 and 1 (default=0.65)
+        :type opacity: determines the opacity of the points in the scatter plot. 0 indicates completely transparent, \
+        while 1 indicates completely opaque.
+        :param point_size: determines the size of the points in the scatter plot
+        :type point_size: float (default=10)
+        :param interactive: if True, turns on interactive mode. While in interactive mode, you can click on a data \
+        point to label it with its gene name/ID, or click on a labeled data point to unlabel it.
+        :type interactive: bool (default=True)
+        :param show_cursor: if True, show the cursor position on the plot during interactive mode
+        :type show_cursor: bool (default=False)
         :return: a matplotlib axis object.
 
         .. figure:: /figures/rpm_vs_rpm.png
@@ -4506,24 +4552,34 @@ class CountFilter(Filter):
         yvals = np.log10(self.df[sample2].values + 1) if isinstance(sample2, str) else np.log10(
             self.df[sample2].mean(axis=1).values + 1)
 
-        plt.style.use('seaborn-whitegrid')
         if xlabel.lower() == 'auto':
-            xlabel = f'log10(reads per million + 1) from {sample1}'
+            xlabel = r'$\log_{10}$(normalized reads + 1) from ' + f'{sample1}'
         if ylabel.lower() == 'auto':
-            ylabel = f'log10(reads per million + 1) from {sample2}'
+            ylabel = r'$\log_{10}$(normalized reads + 1) from ' + f'{sample2}'
         if title.lower() == 'auto':
             title = f'{sample1} vs {sample2}'
-        fig = plt.figure(figsize=(8, 8))
-        ax = fig.add_subplot(1, 1, 1)
+
+        if interactive:
+            fig = plt.figure(figsize=(8, 8), constrained_layout=True, FigureClass=generic.InteractiveScatterFigure,
+                             labels=parsing.data_to_tuple(self.df.index), annotation_fontsize=annotation_fontsize,
+                             show_cursor=show_cursor)
+            ax = fig.axes[0]
+            kwargs = {'picker': 5}
+        else:
+            fig = plt.figure(figsize=(8, 8), constrained_layout=True)
+            ax = fig.add_subplot(1, 1, 1)
+            kwargs = {}
+
+        generic.despine(ax)
         ax.set_xlabel(xlabel, fontsize=label_fontsize)
         ax.set_ylabel(ylabel, fontsize=label_fontsize)
         ax.set_title(title, fontsize=title_fontsize)
-        ax.scatter(xvals, yvals, s=3, c='#6d7178')
         ax.tick_params(axis='both', which='both', labelsize=tick_fontsize)
 
         if highlight is not None:
-            highlight_features = highlight.index_set if issubclass(highlight.__class__,
-                                                                   Filter) else parsing.data_to_set(highlight)
+            highlight_features = highlight.index_set if validation.isinstanceinh(highlight,
+                                                                                 Filter) else parsing.data_to_set(
+                highlight)
             highlight_valid = highlight_features.intersection(self.index_set)
             if len(highlight_valid) < len(highlight_features):
                 warnings.warn(
@@ -4531,12 +4587,20 @@ class CountFilter(Filter):
                     f'{len(highlight_features) - len(highlight_valid)} features are missing from the '
                     f'CountFilter object and will not be highlighted.')
 
-            xvals_highlight = np.log10(self.df.loc[highlight_valid, sample1].values + 1) if \
-                isinstance(sample1, str) else np.log10(self.df.loc[highlight_valid, sample1].mean(axis=1).values + 1)
-            yvals_highlight = np.log10(self.df.loc[highlight_valid, sample2].values + 1) if \
-                isinstance(sample2, str) else np.log10(self.df.loc[highlight_valid, sample2].mean(axis=1).values + 1)
+            colors = pd.Series(index=self.df.index, dtype='float64')
+            colors.loc[parsing.data_to_list(highlight_valid)] = highlight_color
+            colors.fillna(point_color, inplace=True)
+            kwargs['c'] = colors
+        else:
+            kwargs['c'] = point_color
 
-            ax.scatter(xvals_highlight, yvals_highlight, s=3, c=np.array([[0.75, 0.1, 0.1]]))
+        ax.scatter(xvals, yvals, s=point_size, alpha=opacity, **kwargs)
+
+        xlim, ylim = ax.get_xlim(), ax.get_ylim()
+        axis_lims = (min(xlim[0], ylim[0]), max(xlim[1], ylim[1]))
+        ax.set_xlim(axis_lims)
+        ax.set_ylim(axis_lims)
+
         plt.show()
         return fig
 

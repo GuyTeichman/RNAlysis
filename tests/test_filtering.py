@@ -289,10 +289,15 @@ def test_filter_low_reads_reverse():
     assert np.all(h.df == low_truth)
 
 
-def test_deseqfilter_volcano_plot_api():
+@pytest.mark.parametrize('interactive', [True, False])
+@pytest.mark.parametrize('show_cursor', [True, False])
+@pytest.mark.parametrize('title,alpha,log2fc_threshold', [
+    ('auto', 0.05, None),
+    ('title', 0.1, 0),
+    ('title', 0.001, 1)])
+def test_deseqfilter_volcano_plot_api(interactive, show_cursor, title, alpha, log2fc_threshold):
     d = DESeqFilter("tests/test_files/test_deseq.csv")
-    d.volcano_plot()
-    d.volcano_plot(alpha=0.000001)
+    d.volcano_plot(alpha, log2fc_threshold, title, interactive=interactive, show_cursor=show_cursor)
     plt.close('all')
 
 
@@ -346,13 +351,17 @@ def test_countfilter_plot_expression_api():
     plt.close('all')
 
 
-def test_countfilter_scatter_sample_vs_sample_api():
+@pytest.mark.parametrize('highlight',
+                         [None, {'WBGene00007063', 'WBGene00007064'}, DESeqFilter('tests/test_files/test_deseq.csv')])
+@pytest.mark.parametrize('interactive', [True, False])
+@pytest.mark.parametrize('show_cursor', [True, False])
+@pytest.mark.parametrize('s1,s2,xlabel,ylabel,title', [
+    ('cond1', 'cond2', 'auto', 'auto', 'auto'),
+    ('cond3', ['cond2', 'cond1', 'cond4'], 'x', 'y', 'title')])
+def test_countfilter_scatter_sample_vs_sample_api(s1, s2, xlabel, ylabel, title, interactive, show_cursor, highlight):
     c = CountFilter("tests/test_files/counted.csv")
-    c.scatter_sample_vs_sample('cond1', 'cond2')
-    c.scatter_sample_vs_sample('cond3', ['cond2', 'cond1', 'cond4'], highlight={'WBGene00007063', 'WBGene00007064'})
-    d = DESeqFilter('tests/test_files/test_deseq.csv').intersection(c, inplace=True)
-    c.scatter_sample_vs_sample('cond3', ['cond2', 'cond1', 'cond4'], xlabel='label', title='title', ylabel='ylabel',
-                               highlight=d)
+    c.scatter_sample_vs_sample(s1, s2, xlabel, ylabel, title, interactive=interactive, show_cursor=show_cursor,
+                               highlight=highlight)
     plt.close('all')
 
 
