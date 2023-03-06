@@ -3789,7 +3789,7 @@ class MainWindow(QtWidgets.QMainWindow):
         jobs += [item[0].func.__name__ + ' (queued)' for item in self.job_queue.queue]
         self.task_queue_window.update_tasks(jobs)
 
-    def start_progress_bar(self, arg_dict):
+    def start_progress_bar(self, arg_dict): # pragma: no cover
         total = arg_dict.get('total', None)
         iter_obj = arg_dict['iter_obj']
         progbar_desc = arg_dict.get('desc', '')
@@ -3804,7 +3804,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.status_bar.start_progress(progbar_total, progbar_desc)
 
 
-def customwarn(message, category, filename, lineno, file=None, line=None):
+def customwarn(message, category, filename, lineno, file=None, line=None): #pragma: no cover
     sys.stdout.write(warnings.formatwarning(message, category, filename, lineno))
 
 

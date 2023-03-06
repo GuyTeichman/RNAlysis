@@ -2052,7 +2052,8 @@ class FoldChangeFilter(Filter):
 
     @staticmethod
     @generic.numba.jit(nopython=True)
-    def _foldchange_randomization(vals: np.ndarray, reps: PositiveInt, obs_fc: float, exp_fc: float, n: int):
+    def _foldchange_randomization(vals: np.ndarray, reps: PositiveInt, obs_fc: float, exp_fc: float,
+                                  n: int):  # pragma: no cover
         success = 0
         # determine the randomization test's direction (is observed greater/lesser than expected)
         if obs_fc > exp_fc:

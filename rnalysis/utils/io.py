@@ -1274,7 +1274,7 @@ def save_gene_set(gene_set: set, path):
             [f"{item}\n" if (i + 1) < len(gene_set) else f"{item}" for i, item in enumerate(gene_set)])
 
 
-def calculate_checksum(filename: Union[str, Path]):
+def calculate_checksum(filename: Union[str, Path]):  # pragma: no cover
     assert Path(filename).exists(), f"file '{filename}' does not exist!"
     with open(filename, 'rb') as file_to_check:
         # read contents of the file
@@ -1284,7 +1284,7 @@ def calculate_checksum(filename: Union[str, Path]):
         return md5_checksum
 
 
-async def get_video_remote_checksum(video_name: str, session, semaphore, limiter):
+async def get_video_remote_checksum(video_name: str, session, semaphore, limiter):  # pragma: no cover
     url = 'https://github.com/GuyTeichman/RNAlysis/blob/master/rnalysis/gui/videos/checksums/' \
           f'{Path(video_name).stem}.txt'
     await semaphore.acquire()
@@ -1295,12 +1295,12 @@ async def get_video_remote_checksum(video_name: str, session, semaphore, limiter
             return content
 
 
-async def download_video(video_path: Path, session, semaphore, limiter) -> None:
+async def download_video(video_path: Path, session, semaphore, limiter) -> None:  # pragma: no cover
     content = await _get_video_content(video_path, session, semaphore, limiter)
     await _write_video_to_file(video_path, content)
 
 
-async def _get_video_content(video_path: Path, session, semaphore, limiter) -> bytes:
+async def _get_video_content(video_path: Path, session, semaphore, limiter) -> bytes:  # pragma: no cover
     url = 'https://github.com/GuyTeichman/RNAlysis/blob/master/rnalysis/gui/videos/' + video_path.name
     await semaphore.acquire()
     async with limiter:
@@ -1310,12 +1310,12 @@ async def _get_video_content(video_path: Path, session, semaphore, limiter) -> b
             return content
 
 
-async def _write_video_to_file(video_path: Path, content: bytes) -> None:
+async def _write_video_to_file(video_path: Path, content: bytes) -> None:  # pragma: no cover
     with open(video_path, 'wb') as file:
         file.write(content)
 
 
-async def get_gui_videos(video_filenames: Tuple[str, ...]):
+async def get_gui_videos(video_filenames: Tuple[str, ...]):  # pragma: no cover
     video_dir_pth = get_tutorial_videos_dir()
     if not video_dir_pth.exists():
         video_dir_pth.mkdir(parents=True)
