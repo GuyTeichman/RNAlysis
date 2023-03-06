@@ -19,13 +19,13 @@ from tqdm.auto import tqdm
 
 try:
     import numba
-except ImportError:
+except ImportError:  # pragma: no cover
     warnings.warn("RNAlysis can perform faster when package 'numba' is installed. \n"
                   "If you want to improve the performance of slow operations on RNAlysis, "
                   "please install package 'numba'. ")
 
 
-    class numba:
+    class numba:  # pragma: no cover
         @staticmethod
         def jit(*args, **kwargs):
             return lambda f: f

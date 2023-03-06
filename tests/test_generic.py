@@ -157,3 +157,17 @@ def test_format_time(seconds, expected):
 def test_sanitize_variable_name(name, expected):
     res = sanitize_variable_name(name)
     assert res == expected
+
+
+def test_get_method_readable_name():
+    func = lambda x: x + 1
+    func.readable_name = "readable name"
+    assert get_method_readable_name(func) == "readable name"
+
+    def func2(a, b):
+        return a + b
+
+    assert get_method_readable_name(func2) == 'func2'
+
+    func2.readable_name = "readable name"
+    assert get_method_readable_name(func2) == "readable name"
