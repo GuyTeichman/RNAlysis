@@ -11,6 +11,7 @@ from typing import Union, List, Tuple
 
 import pandas as pd
 from tqdm.auto import tqdm
+from typing_extensions import Literal
 
 from rnalysis import filtering
 from rnalysis.utils import parsing, io, feature_counting, genome_annotation
@@ -18,16 +19,12 @@ from rnalysis.utils.param_typing import PositiveInt, NonNegativeInt, Fraction, L
     LEGAL_BOWTIE2_PRESETS, LEGAL_BOWTIE2_MODES, LEGAL_QUAL_SCORE_TYPES
 
 try:
-    from typing import Literal
-except ImportError:
-    from typing_extensions import Literal
-try:
     import cutadapt
     from cutadapt.__main__ import main as cutadapt_main
 
     HAS_CUTADAPT = True
 
-except ImportError:
+except ImportError:  # pragma: no cover
     HAS_CUTADAPT = False
     cutadapt_main = lambda x: None
 
