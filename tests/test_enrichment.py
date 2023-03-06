@@ -1,15 +1,15 @@
-import pytest
 import os
-import requests
-import statsmodels.stats.multitest as multitest
 import sys
+
+import pytest
+import statsmodels.stats.multitest as multitest
+
 from rnalysis.enrichment import *
 from rnalysis.enrichment import _fetch_sets
 from rnalysis.utils.enrichment_runner import does_python_version_support_single_set
 from tests import __attr_ref__, __biotype_ref__, is_uniprot_available, is_ensembl_available
 
 matplotlib.use('Agg')
-
 
 ENSEMBL_AVAILABLE = is_ensembl_available()
 UNIPROT_AVAILABLE = is_uniprot_available()
@@ -508,8 +508,9 @@ def test_enrich_single_set_api():
 
 @pytest.mark.skipif(not ENSEMBL_AVAILABLE, reason='Ensembl REST API is not available at the moment')
 @pytest.mark.skipif(not UNIPROT_AVAILABLE, reason='UniProt REST API is not available at the moment')
+@pytest.mark.parametrize('return_nonsignificant', [True, False])
 @pytest.mark.parametrize("organism,propagate_annotations", [('auto', 'classic'), ('caenorhabditis elegans', 'elim')])
-def test_go_enrichment_single_set_api(organism, propagate_annotations):
+def test_go_enrichment_single_set_api(organism, propagate_annotations, return_nonsignificant):
     genes_ranked = ['WBGene00000019', 'WBGene00000041', 'WBGene00000105', 'WBGene00000106', 'WBGene00000137',
                     'WBGene00001436', 'WBGene00001996', 'WBGene00002074', 'WBGene00003864', 'WBGene00003865',
                     'WBGene00003902', 'WBGene00003915', 'WBGene00000369', 'WBGene00000859', 'WBGene00000860',
@@ -521,7 +522,8 @@ def test_go_enrichment_single_set_api(organism, propagate_annotations):
 
     en = RankedSet(genes_ranked, set_name='test_set')
     _ = en.single_set_go_enrichment(organism, 'WBGene', evidence_types='experimental', databases='WB',
-                                    aspects='biological_process', propagate_annotations=propagate_annotations)
+                                    aspects='biological_process', propagate_annotations=propagate_annotations,
+                                    return_nonsignificant=return_nonsignificant)
     plt.close('all')
 
 
@@ -612,5 +614,5 @@ def test_kegg_enrichment_api(organism, statistical_test, kwargs):
 def test_kegg_enrichment_single_list_api():
     genes = ['WBGene00048865', 'WBGene00000864', 'WBGene00000105', 'WBGene00001996', 'WBGene00011910', 'WBGene00268195']
     en = RankedSet(genes, set_name='test_set')
-    _ = en.single_set_kegg_enrichment(6239, 'WormBase',pathway_graphs_format='pdf')
+    _ = en.single_set_kegg_enrichment(6239, 'WormBase', pathway_graphs_format='pdf')
     plt.close('all')

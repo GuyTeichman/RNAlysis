@@ -334,7 +334,8 @@ class EnrichmentRunner:
 
     @staticmethod
     @generic.numba.jit(nopython=True)
-    def _calc_randomization_pval(n: int, log2fc: float, bg_array: np.ndarray, reps: int, obs_frac: float) -> float:
+    def _calc_randomization_pval(n: int, log2fc: float, bg_array: np.ndarray, reps: int, obs_frac: float
+                                 ) -> float:  # pragma: no cover
         ind_range = np.arange(bg_array.shape[0])
         success = 0
         if log2fc >= 0:
