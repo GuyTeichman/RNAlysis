@@ -269,9 +269,14 @@ class InteractiveScatterFigure(figure.Figure):
         if show_cursor:
             self.cursor = MultiCursor(self.canvas, self.axes, color='k', lw=0.5, horizOn=True, vertOn=True)
             self.canvas.mpl_connect('axes_leave_event', self.on_exit)
+            self.canvas.mpl_connect('motion_notify_event', self.on_move)
 
     def on_exit(self, event):
         self.cursor.clear(event)
+        self.canvas.draw()
+
+    def on_move(self, event):
+        self.canvas.draw()
 
     def on_pick(self, event):
         for this_ind in event.ind:
@@ -293,3 +298,5 @@ class InteractiveScatterFigure(figure.Figure):
                                                          (np.take(xdata, this_ind), np.take(ydata, this_ind)),
                                                          xytext=(3, 3), textcoords='offset points',
                                                          fontsize=self.annotation_fontsize)
+
+            self.canvas.draw()
