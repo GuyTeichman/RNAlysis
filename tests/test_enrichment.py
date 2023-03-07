@@ -618,9 +618,14 @@ def test_kegg_enrichment_single_list_api():
     plt.close('all')
 
 
+@pytest.mark.skipif(not UNIPROT_AVAILABLE, reason='UniProt REST API is not available at the moment')
 def test_kegg_pathway_graph():
     kegg_pathway_graph('cel04020', None, 'WormBase')
     kegg_pathway_graph('cel04020', {'WBGene00004039', 'WBGene00004039'}, 'WormBase')
+
+
+def test_gene_ontology_graph():
+    gene_ontology_graph('biological_process', 'tests/test_files/go_enrichment_runner_sample_results.csv', 'colName')
 
 
 @pytest.mark.parametrize("map_to,map_from,remove_unmapped_genes,expected,expected_name", [
