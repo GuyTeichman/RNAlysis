@@ -2436,6 +2436,26 @@ def test_MainWindow_edit_pipeline(monkeypatch, qtbot, use_temp_settings_file, ma
     main_window.edit_pipeline('p1')
 
 
+def test_MainWindow_clear_cache(monkeypatch, qtbot, use_temp_settings_file, main_window):
+    called = []
+    monkeypatch.setattr(io, 'clear_cache', lambda: called.append(True))
+    main_window.clear_cache()
+    assert called == [True]
+
+
+@pytest.mark.parametrize('state', [True, False])
+def test_MainWindow_toggle_history(state, qtbot, use_temp_settings_file, main_window):
+    main_window.toggle_history_window(state)
+
+
+def test_MainWindow_open_tutorial(qtbot, use_temp_settings_file, main_window):
+    main_window.open_tutorial()
+
+
+def test_MainWindow_open_faq(qtbot, use_temp_settings_file, main_window):
+    main_window.open_faq()
+
+
 def test_MainWindow_save_session(qtbot, use_temp_settings_file, main_window, monkeypatch):
     monkeypatch.setattr(QtWidgets.QFileDialog, 'getOpenFileName',
                         lambda *args, **kwargs: ('tests/test_files/test_session.rnal', '.rnal'))

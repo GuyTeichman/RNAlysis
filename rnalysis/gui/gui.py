@@ -3293,7 +3293,7 @@ class MainWindow(QtWidgets.QMainWindow):
             io.clear_cache()
 
     @QtCore.pyqtSlot()
-    def check_for_updates(self, confirm_updated: bool = True):
+    def check_for_updates(self, confirm_updated: bool = True):  # pragma: no cover
         if io.is_rnalysis_outdated():
             # frozen releases of RNAlysis cannot update using pip. new version must be downloaded manually
             if getattr(sys, 'frozen', False) and hasattr(sys, '_MEIPASS'):
