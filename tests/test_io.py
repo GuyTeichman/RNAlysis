@@ -736,7 +736,8 @@ def test_kegg_annotation_iterator_get_pathway_annotations(monkeypatch):
     kegg.taxon_id = 6239
     kegg.organism_code = 'cel'
     kegg.pathway_names = PATHWAY_NAMES_TRUTH
-    assert {key: [name, ann] for key, name, ann in kegg.get_pathway_annotations()} == truth
+    res = kegg.get_pathway_annotations()
+    assert {key: [name, ann] for key, name, ann in res} == truth
 
 
 def test_kegg_annotation_iterator_get_pathway_annotations_cached():
