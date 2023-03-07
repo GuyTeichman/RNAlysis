@@ -3625,7 +3625,7 @@ class MainWindow(QtWidgets.QMainWindow):
             return dialog.result()
         return None
 
-    def closeEvent(self, event):
+    def closeEvent(self, event):  # pragma: no cover
 
         quit_msg = "Are you sure you want to close <i>RNAlysis</i>?\n" \
                    "All unsaved progress will be lost"
@@ -3718,7 +3718,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self.job_queue.put(item)
         self.run_partial()
 
-    def run_partial(self):
+    def run_partial(self):  # pragma: no cover
         job_running = (self.thread is not None) and self.thread.isRunning()
         self.status_bar.update_n_tasks(self.job_queue.qsize() + job_running)
         # if there are no jobs available, don't proceed
