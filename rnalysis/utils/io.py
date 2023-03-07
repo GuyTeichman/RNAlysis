@@ -421,7 +421,7 @@ class KEGGAnnotationIterator:
                 entries = data.split('ENTRY')[1:]
                 for entry in entries:
                     entry_split = entry.split('\n')
-                    pathway = f'path:{entry_split[0].split()[0]}'
+                    pathway = entry_split[0].split()[0]
                     if pathway not in chunk:
                         print(f'Could not find pathway {pathway} in requested chunk: {chunk}')
                     pathway_name = self.pathway_names[pathway]
