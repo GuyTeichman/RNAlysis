@@ -1613,6 +1613,18 @@ def test_pipeline_apply_to_filter_normalize_split_plot():
         assert i.equals(j)
 
 
+def test_gap_statistic_api():
+    c = CountFilter('tests/test_files/big_counted.csv')
+    res = c.split_kmeans(n_clusters='gap')
+    assert isinstance(res, tuple)
+
+
+def test_silhouette_api():
+    c = CountFilter('tests/test_files/big_counted.csv')
+    res = c.split_kmeans(n_clusters='silhouette')
+    assert isinstance(res, tuple)
+
+
 def test_split_kmeans_api():
     c = CountFilter('tests/test_files/big_counted.csv')
     res = c.split_kmeans(n_clusters=4, n_init=2, max_iter=50)
