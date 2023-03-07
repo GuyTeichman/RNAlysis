@@ -201,7 +201,7 @@ class KEGGPathway:
                 elem_type = element.get('type')
                 # parse element name (KEGG ID)
                 if elem_type == 'compound':
-                    elem_names = re.findall('(?:cpd|gl):[0-9a-zA-Z_]+', element.get('name'))
+                    elem_names = re.findall('(?:cpd|gl):([0-9a-zA-Z_]+)', element.get('name'))
                 elif elem_type == 'ortholog':
                     elem_names = re.findall('ko:[0-9a-zA-Z_]+', element.get('name'))
                 elif elem_type == 'gene':
