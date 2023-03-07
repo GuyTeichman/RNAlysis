@@ -2415,6 +2415,27 @@ def test_MainWindow_choose_tab_by_name(qtbot, use_temp_settings_file, main_windo
         assert main_window_with_tabs.tabs.currentIndex() == truth.index(key)
 
 
+def test_MainWindow_delete_pipeline(qtbot, use_temp_settings_file, main_window, monkeypatch):
+    main_window.pipelines = {'p1': 1, 'p2': 2, 'p3': 3}
+    monkeypatch.setattr(QtWidgets.QInputDialog, 'getItem', lambda *args, **kwargs: ('p2', True))
+    main_window.delete_pipeline()
+    assert main_window.pipelines == {'p1': 1, 'p3': 3}
+
+
+def test_MainWindow_delete_pipeline_no_pipelines(qtbot, use_temp_settings_file, main_window):
+    main_window.delete_pipeline()
+
+
+def test_MainWindow_export_pipeline_no_pipelines(qtbot, use_temp_settings_file, main_window):
+    main_window.export_pipeline()
+
+
+def test_MainWindow_edit_pipeline(monkeypatch, qtbot, use_temp_settings_file, main_window):
+    monkeypatch.setattr(CreatePipelineWindow, 'exec', lambda *args, **kwargs: None)
+    main_window.pipelines = {'p1': filtering.Pipeline()}
+    main_window.edit_pipeline('p1')
+
+
 def test_MainWindow_save_session(qtbot, use_temp_settings_file, main_window, monkeypatch):
     monkeypatch.setattr(QtWidgets.QFileDialog, 'getOpenFileName',
                         lambda *args, **kwargs: ('tests/test_files/test_session.rnal', '.rnal'))

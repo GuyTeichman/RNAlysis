@@ -3086,12 +3086,12 @@ class MainWindow(QtWidgets.QMainWindow):
         gene_set = self.tabs.currentWidget().get_index_string()
         QtWidgets.QApplication.clipboard().setText(gene_set)
 
-    def excepthook(self, exc_type, exc_value, exc_tb):
+    def excepthook(self, exc_type, exc_value, exc_tb):  # pragma: no cover
         sys.__excepthook__(exc_type, exc_value, exc_tb)
         self.error_window = gui_windows.ErrorMessage(exc_type, exc_value, exc_tb, self)
         self.error_window.exec()
 
-    def _get_current_console(self):
+    def _get_current_console(self):  # pragma: no cover
         if self.pipeline_window is not None and self.pipeline_window.isVisible():
             current_console = self.pipeline_window.get_console()
         else:
@@ -3099,7 +3099,7 @@ class MainWindow(QtWidgets.QMainWindow):
         return current_console
 
     @QtCore.pyqtSlot(str)
-    def append_text_to_current_console(self, text: str):
+    def append_text_to_current_console(self, text: str):  # pragma: no cover
         current_console = self._get_current_console()
         current_console.append_text(text)
 
