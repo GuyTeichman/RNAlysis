@@ -85,5 +85,5 @@ if not is_darwin:
         strip=False,
         upx=True,
         upx_exclude=[],
-        name='RNAlysis-3.5.2',
+        name='RNAlysis-3.6.0',
     )
