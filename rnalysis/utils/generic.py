@@ -1,26 +1,31 @@
 import inspect
 import itertools
+import math
 import typing
 import warnings
 from functools import lru_cache
 from typing import Union, Callable, Tuple
 
 import joblib
+import matplotlib.collections
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+from matplotlib import figure
+from matplotlib.widgets import MultiCursor
 from scipy.special import comb
 from sklearn.preprocessing import PowerTransformer, StandardScaler
 from tqdm.auto import tqdm
 
 try:
     import numba
-except ImportError:
+except ImportError:  # pragma: no cover
     warnings.warn("RNAlysis can perform faster when package 'numba' is installed. \n"
                   "If you want to improve the performance of slow operations on RNAlysis, "
                   "please install package 'numba'. ")
 
 
-    class numba:
+    class numba:  # pragma: no cover
         @staticmethod
         def jit(*args, **kwargs):
             return lambda f: f
@@ -194,3 +199,97 @@ def sum_intervals_inclusive(intervals: typing.List[typing.Tuple[int, int]]) -> i
         prev_interval = this_interval
 
     return total
+
+
+def bic_score(X: np.ndarray, labels: np.ndarray):
+    """
+      BIC score for the goodness of fit of clusters.
+      This Python function is translated from the Golang implementation by the author of the paper.
+      The original code is available here:
+      https://github.com/bobhancock/goxmeans/blob/a78e909e374c6f97ddd04a239658c7c5b7365e5c/km.go#L778
+      """
+
+    n_points = len(labels)
+    n_clusters = len(set(labels))
+    n_dimensions = X.shape[1]
+
+    n_parameters = (n_clusters - 1) + (n_dimensions * n_clusters) + 1
+
+    loglikelihood = 0
+    for label_name in set(labels):
+        X_cluster = X[labels == label_name]
+        n_points_cluster = len(X_cluster)
+        centroid = np.mean(X_cluster, axis=0)
+        variance = np.sum((X_cluster - centroid) ** 2) / (len(X_cluster) - 1)
+        loglikelihood += \
+            n_points_cluster * np.log(n_points_cluster) \
+            - n_points_cluster * np.log(n_points) \
+            - n_points_cluster * n_dimensions / 2 * np.log(2 * math.pi * variance) \
+            - (n_points_cluster - 1) / 2
+
+    bic = loglikelihood - (n_parameters / 2) * np.log(n_points)
+
+    return bic
+
+
+def format_time(seconds: float):
+    seconds = int(seconds)
+    n_minutes = seconds // 60
+    n_seconds = seconds % 60
+    return f'{n_minutes:02d}:{n_seconds:02d}'
+
+
+def sanitize_variable_name(name: str) -> str:
+    """
+    Sanitize a string to turn it into a legal variable name in R/Python.
+    :param name: name to sanitize
+    :type name: str
+    :return: sanitizeed name
+    :rtype: str
+    """
+    new_name = name.rstrip().replace(' ', '_')
+    if new_name[0].isdigit():
+        new_name = 'var_' + new_name
+
+    if not new_name.isalnum():
+        new_name = ''.join([char if char.isalnum() else '_' for char in new_name])
+
+    return new_name
+
+
+class InteractiveScatterFigure(figure.Figure):
+    def __init__(self, labels: typing.List[str], annotation_fontsize: float = 10, show_cursor: bool = True, *args,
+                 **kwargs):
+        super().__init__(*args, **kwargs)
+        self.ax = self.add_subplot()
+        self.labels = labels
+        self.annotation_fontsize = annotation_fontsize
+        self.is_labeled: typing.Dict[int, plt.Line2D] = {}
+        self.canvas.mpl_connect('pick_event', self.on_pick)
+        if show_cursor:
+            self.cursor = MultiCursor(self.canvas, self.axes, color='k', lw=0.5, horizOn=True, vertOn=True)
+            self.canvas.mpl_connect('axes_leave_event', self.on_exit)
+
+    def on_exit(self, event):
+        self.cursor.clear(event)
+
+    def on_pick(self, event):
+        for this_ind in event.ind:
+            if isinstance(event.artist, matplotlib.collections.PathCollection):
+                data = event.artist.get_offsets().data
+                xdata, ydata = data[:, 0], data[:, 1]
+            elif isinstance(event.artist, plt.Line2D):
+                thisline = event.artist
+                xdata = thisline.get_xdata()
+                ydata = thisline.get_ydata()
+            else:
+                return
+
+            if this_ind in self.is_labeled:
+                ann = self.is_labeled.pop(this_ind)
+                ann.remove()
+            else:
+                self.is_labeled[this_ind] = plt.annotate(self.labels[this_ind],
+                                                         (np.take(xdata, this_ind), np.take(ydata, this_ind)),
+                                                         xytext=(3, 3), textcoords='offset points',
+                                                         fontsize=self.annotation_fontsize)

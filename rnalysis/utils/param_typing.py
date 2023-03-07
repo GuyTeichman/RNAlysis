@@ -7,7 +7,7 @@ import typing_extensions
 
 from rnalysis.utils import io, parsing
 
-K_CRITERIA = ('gap','silhouette')
+K_CRITERIA = ('gap', 'silhouette', 'calinski_harabasz', 'davies_bouldin', 'bic')
 
 LEGAL_GENE_LENGTH_METHODS = ('mean', 'median', 'max', 'min', 'geometric_mean', 'merged_exons')
 

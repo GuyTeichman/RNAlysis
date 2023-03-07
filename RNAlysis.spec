@@ -1,5 +1,4 @@
 # -*- mode: python ; coding: utf-8 -*-
-import shutil
 from pathlib import Path
 
 from PyInstaller.compat import is_darwin
@@ -19,6 +18,9 @@ for item in tmp_ret:
 
 hiddenimports += collect_submodules('sklearn')
 hiddenimports += collect_submodules('cutadapt')
+hiddenimports += ['matplotlib.backends.backend_pdf', 'matplotlib.backends.backend_svg',
+                  'matplotlib.backends.backend_agg', 'matplotlib.backends.backend_pgf',
+                  'matplotlib.backends.backend_ps']
 
 with open(Path(get_hook_dirs()[0]).joinpath('hook-pygraphviz.py')) as infile:
     hook_path = Path('hooks')
@@ -46,7 +48,7 @@ pyz = PYZ(a.pure, a.zipped_data, cipher=block_cipher)
 
 if is_darwin:
     exe_contents = (pyz, a.scripts, a.binaries, a.zipfiles, a.datas, [],)
-    exe_kwargs = dict(runtime_tmpdir=None, )
+    exe_kwargs = dict(runtime_tmpdir=None, icon='rnalysis/favicon.icns')
 else:
     splash = Splash('rnalysis/gui/splash.png',
                     binaries=a.binaries,
@@ -55,7 +57,7 @@ else:
                     text_size=12,
                     text_color='black')
     exe_contents = (pyz, splash, a.scripts, [],)
-    exe_kwargs = dict(exclude_binaries=True, )
+    exe_kwargs = dict(exclude_binaries=True, icon='rnalysis/favicon.ico')
 
 exe = EXE(
     *exe_contents,
@@ -66,7 +68,6 @@ exe = EXE(
     strip=False,
     upx=True,
     console=True,
-    icon='rnalysis/favicon.ico',
     disable_windowed_traceback=False,
     argv_emulation=False,
     target_arch=None,
@@ -84,5 +85,5 @@ if not is_darwin:
         strip=False,
         upx=True,
         upx_exclude=[],
-        name='RNAlysis-3.5.2',
+        name='RNAlysis-3.6.0',
     )

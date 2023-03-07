@@ -419,11 +419,13 @@ class KEGGAnnotationIterator:
                 prev_time = time.time()
                 data, was_cached = self._kegg_request('get', '+'.join(chunk), self._generate_cached_filename(chunk))
                 entries = data.split('ENTRY')[1:]
-                assert len(entries) == len(chunk)
-                for pathway, entry in zip(chunk, entries):
+                for entry in entries:
+                    entry_split = entry.split('\n')
+                    pathway = entry_split[0].split()[0]
+                    if pathway not in chunk:
+                        print(f'Could not find pathway {pathway} in requested chunk: {chunk}')
                     pathway_name = self.pathway_names[pathway]
                     pathway_annotations[pathway] = set()
-                    entry_split = entry.split('\n')
                     genes_startline = 0
                     genes_endline = 0
                     for i, line in enumerate(entry_split):
@@ -1274,7 +1276,7 @@ def save_gene_set(gene_set: set, path):
             [f"{item}\n" if (i + 1) < len(gene_set) else f"{item}" for i, item in enumerate(gene_set)])
 
 
-def calculate_checksum(filename: Union[str, Path]):
+def calculate_checksum(filename: Union[str, Path]):  # pragma: no cover
     assert Path(filename).exists(), f"file '{filename}' does not exist!"
     with open(filename, 'rb') as file_to_check:
         # read contents of the file
@@ -1284,7 +1286,7 @@ def calculate_checksum(filename: Union[str, Path]):
         return md5_checksum
 
 
-async def get_video_remote_checksum(video_name: str, session, semaphore, limiter):
+async def get_video_remote_checksum(video_name: str, session, semaphore, limiter):  # pragma: no cover
     url = 'https://github.com/GuyTeichman/RNAlysis/blob/master/rnalysis/gui/videos/checksums/' \
           f'{Path(video_name).stem}.txt'
     await semaphore.acquire()
@@ -1295,12 +1297,12 @@ async def get_video_remote_checksum(video_name: str, session, semaphore, limiter
             return content
 
 
-async def download_video(video_path: Path, session, semaphore, limiter) -> None:
+async def download_video(video_path: Path, session, semaphore, limiter) -> None:  # pragma: no cover
     content = await _get_video_content(video_path, session, semaphore, limiter)
     await _write_video_to_file(video_path, content)
 
 
-async def _get_video_content(video_path: Path, session, semaphore, limiter) -> bytes:
+async def _get_video_content(video_path: Path, session, semaphore, limiter) -> bytes:  # pragma: no cover
     url = 'https://github.com/GuyTeichman/RNAlysis/blob/master/rnalysis/gui/videos/' + video_path.name
     await semaphore.acquire()
     async with limiter:
@@ -1310,12 +1312,12 @@ async def _get_video_content(video_path: Path, session, semaphore, limiter) -> b
             return content
 
 
-async def _write_video_to_file(video_path: Path, content: bytes) -> None:
+async def _write_video_to_file(video_path: Path, content: bytes) -> None:  # pragma: no cover
     with open(video_path, 'wb') as file:
         file.write(content)
 
 
-async def get_gui_videos(video_filenames: Tuple[str, ...]):
+async def get_gui_videos(video_filenames: Tuple[str, ...]):  # pragma: no cover
     video_dir_pth = get_tutorial_videos_dir()
     if not video_dir_pth.exists():
         video_dir_pth.mkdir(parents=True)
@@ -1362,6 +1364,8 @@ def run_r_script(script_path: Union[str, Path], r_installation_folder: Union[str
     else:
         prefix = f'{Path(r_installation_folder).as_posix()}/bin/Rscript'
     script_path = Path(script_path).as_posix()
+    assert Path(script_path).exists() and Path(
+        script_path).is_file(), f"Could not find the requested R script: {script_path}"
 
     return_code = run_subprocess([prefix, "--help"], False, False)
     if return_code:

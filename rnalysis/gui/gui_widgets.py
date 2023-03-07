@@ -674,11 +674,12 @@ class MultipleChoiceList(QtWidgets.QWidget):
 class MultiChoiceListWithDelete(MultipleChoiceList):
     itemDeleted = QtCore.pyqtSignal(int)
 
-    def __init__(self, items: Sequence, icons: Sequence = None, parent=None):
+    def __init__(self, items: Sequence, icons: Sequence = None, parent=None, delete_text: str = 'delete'):
         super().__init__(items, icons, parent)
-        self.delete_button = QtWidgets.QPushButton('Delete selected')
+        self.delete_text = delete_text
+        self.delete_button = QtWidgets.QPushButton(f'{delete_text.capitalize()} selected')
         self.delete_button.clicked.connect(self.delete_selected)
-        self.delete_all_button = QtWidgets.QPushButton('Delete all')
+        self.delete_all_button = QtWidgets.QPushButton(f'{delete_text.capitalize()} all')
         self.delete_all_button.clicked.connect(self.delete_all)
 
         self.layout.addWidget(self.delete_button, self.current_layout_row + 1, 1)
@@ -694,15 +695,18 @@ class MultiChoiceListWithDelete(MultipleChoiceList):
             self.itemDeleted.emit(row)
 
     def delete_all(self):
-        accepted = QtWidgets.QMessageBox.question(self, "Delete all items?",
-                                                  "Are you sure you want to delete all items?",
+        accepted = QtWidgets.QMessageBox.question(self, f"{self.delete_text.capitalize()} all items?",
+                                                  f"Are you sure you want to {self.delete_text} all items?",
                                                   QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No)
         if accepted == QtWidgets.QMessageBox.Yes:
             for n_item in reversed(range(len(self.items))):
                 self.itemDeleted.emit(n_item)
-            self.items = []
-            self.list_items = []
-            self.list.clear()
+            self.delete_all_quietly()
+
+    def delete_all_quietly(self):
+        self.items = []
+        self.list_items = []
+        self.list.clear()
 
 
 class MultiChoiceListWithReorder(MultipleChoiceList):
@@ -788,7 +792,7 @@ class MultiChoiceListWithDeleteReorder(MultiChoiceListWithReorder, MultiChoiceLi
     itemDeleted = QtCore.pyqtSignal(int)
 
     def __init__(self, items: Sequence, icons: Sequence = None, parent=None):
-        super().__init__(items, icons, parent)
+        super().__init__(items, icons, parent=parent)
 
 
 class FileListWidgetItem(QtWidgets.QListWidgetItem):
@@ -808,7 +812,7 @@ class OrderedFileList(MultiChoiceListWithDeleteReorder):
     __slots__ = {'add_files_button': 'add files button'}
 
     def __init__(self, parent=None):
-        super().__init__([], None, parent)
+        super().__init__([], parent=parent)
         self.add_files_button = QtWidgets.QPushButton('Add files...', self)
         self.add_files_button.clicked.connect(self.add_files)
         self.layout.addWidget(self.add_files_button, 0, 1)
@@ -868,6 +872,7 @@ class MandatoryComboBox(QtWidgets.QComboBox):
 
 
 class GeneSetComboBox(MandatoryComboBox):
+    IS_SPIN_BOX_LIKE = True
     boxOpened = QtCore.pyqtSignal()
     __slots__ = {'available_objects': 'available gene sets and tables'}
 
@@ -1857,7 +1862,7 @@ def clear_layout(layout, exceptions: set = frozenset()):
 
 
 class ReactiveHeaderView(QtWidgets.QHeaderView):
-    LOOKUP_DATABASES_PATH = Path(__file__).parent.joinpath('../data_files/lookup_databases.json')
+    LOOKUP_DATABASES_PATH = Path(__file__).parent.parent.joinpath('data_files/lookup_databases.json')
     __slots__ = {'context_menu': 'context menu'}
 
     def __init__(self, *args, **kwargs):
@@ -1901,7 +1906,7 @@ class ReactiveHeaderView(QtWidgets.QHeaderView):
 
 
 class ReactiveListWidget(QtWidgets.QListWidget):
-    LOOKUP_DATABASES_PATH = Path(__file__).parent.joinpath('../data_files/lookup_databases.json')
+    LOOKUP_DATABASES_PATH = Path(__file__).parent.parent.joinpath('data_files/lookup_databases.json')
     __slots__ = {'context_menu': 'context menu'}
 
     def __init__(self, *args, **kwargs):

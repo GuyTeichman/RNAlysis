@@ -2,6 +2,43 @@
 History
 =======
 
+3.6.0 (2023-03-07)
+------------------
+This version introduces improvements to the usability and clarity of the graphic interface,
+new methods for automatic estimation of the number of clusters in a dataset,
+and various bug fixes.
+
+Added
+******
+* Added three new methods for automatic estimation of the number of clusters in a dataset: Callinski-Harabasz, Davies-Bouldin, and Bayesian Information Criterieon.
+* Added a 'Close all Figures' actions to the 'View' menu of the *RNAlysis* graphic interface.
+* Added an 'interactive' parameter to Volcano Plots (DESeqFilter.volcano_plot) and 'Scatter Sample Vs Sample' (CountFilter.scatter_sample_vs_sample), allowing user to label data points interactively by clicking on them.
+* Added more optional plotting parameters to Volcano Plots (DESeqFilter.volcano_plot) and 'Scatter Sample Vs Sample' (CountFilter.scatter_sample_vs_sample).
+
+Changed
+********
+* Progress bars are now integrated into the main *RNAlysis* window instead of opening as a dialog box.
+* Information about running proccesses and functions is now displayed in the main *RNAlysis* window.
+* It is now possible to cancel queued jobs through the *RNAlysis* graphic interface.
+* When loading multiple data tables at the same time, it is now possible to change the table type of all data tables at once, instead of one-by-one.
+
+Fixed
+******
+* RNAlysis KEGG enrichment should now match the new KEGG annotation format from March 1st 2023.
+* Fixed bug where importing *RNAlysis* would raise ImportError when cutadapt is not installed.
+* Fixed bug where the 'Run' button in the Enrichment Analysis window would grey out whenever the enrichment dataset is changed.
+* Fixed bug where the *RNAlysis* stand-alone versions were unable to export Figures in specific formats (e.g. PDF, SVG).
+* Fixed bug where functions that depend on R scripts (such as DESeq2 and limma) would sometimes fail to run on MacOS (thanks to Matthias Wilm and `sandyl27 <https://github.com/sandyl27>`_ in `#12 <https://github.com/GuyTeichman/RNAlysis/issues/12>`_).
+* Fixed bug where running limma-voom with a design matrix whose column names contained spaces or special characterse would raise an error.
+* Fixed bug where the 'highlight' parameter of CountFilter.scatter_sample_vs_sample would not work when used through the graphic interface.
+* Fixed bug where enrichment analysis would sometimes fail to run when 'exclude_unannotated_genes' is set to False.
+* Fixed bug where translate_gene_ids() would fail for RankedSet objects.
+* Fixed bug where filtering gene sets by user-defined attributes (FeatureSet.filter_by_attribute()) would occasionally fail to run.
+
+New Contributors
+*****************
+* `sandyl27`_ in `#12`_
+
 3.5.2 (2023-02-23)
 ------------------
 This version includes bug fixes for a few quality-of-life issues which were introduced in version RNAlysis 3.5.0.

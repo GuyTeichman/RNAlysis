@@ -1,6 +1,7 @@
 import functools
 import itertools
 import json
+import time
 import traceback
 import warnings
 from pathlib import Path
@@ -444,7 +445,7 @@ class AboutWindow(QtWidgets.QMessageBox):
 
 
 class SettingsWindow(gui_widgets.MinMaxDialog):
-    LOOKUP_DATABASES_PATH = Path(__file__).parent.joinpath('../data_files/lookup_databases.json')
+    LOOKUP_DATABASES_PATH = Path(__file__).parent.parent.joinpath('data_files/lookup_databases.json')
     THEMES = gui_style.get_stylesheet_names()
     FONT_SIZES = [str(i) for i in [6, 7, 8, 9, 10, 11, 12, 14, 16, 18, 20, 22, 24, 28, 32, 36, 48, 72]]
     styleSheetUpdated = QtCore.pyqtSignal()
@@ -664,7 +665,7 @@ class HowToCiteWindow(gui_widgets.MinMaxDialog):
     <br>
     <a href=https://doi.org/10.48550/arXiv.1507.07905>doi.org/10.48550/arXiv.1507.07905</a>
     </p>"""
-    CITATION_FILE_PATH = Path(__file__).parent.joinpath('../data_files/tool_citations.json')
+    CITATION_FILE_PATH = Path(__file__).parent.parent.joinpath('data_files/tool_citations.json')
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -882,3 +883,109 @@ class PairedFuncExternalWindow(FuncExternalWindow):
         kwargs['r1_files'] = self.pairs_widgets['r1_list'].get_sorted_names()
         kwargs['r2_files'] = self.pairs_widgets['r2_list'].get_sorted_names()
         return kwargs
+
+
+class StatusBar(QtWidgets.QStatusBar):
+    taskQueueRequested = QtCore.pyqtSignal()
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.progbar_desc = ''
+        self.progbar_total = 0
+        self.progbar_start_time = 0
+        self.progbar_completed_items = 0
+
+        self.n_tasks_button = QtWidgets.QPushButton(self)
+        self.desc_label = QtWidgets.QLabel(self)
+        self.progress_bar = QtWidgets.QProgressBar(self)
+        self.elapsed_label = QtWidgets.QLabel(self)
+        self.remaining_label = QtWidgets.QLabel(self)
+        self.init_ui()
+
+    def init_ui(self):
+        self.n_tasks_button.clicked.connect(self.taskQueueRequested.emit)
+
+        self.addWidget(self.n_tasks_button)
+        self.addWidget(self.desc_label)
+        self.addWidget(self.progress_bar)
+        self.addWidget(self.elapsed_label)
+        self.addWidget(self.remaining_label)
+
+        self.update_n_tasks(0)
+        self.reset_progress()
+
+    def update_n_tasks(self, n_tasks: int):
+        if n_tasks <= 0:
+            self.n_tasks_button.setVisible(False)
+        else:
+            self.n_tasks_button.setVisible(True)
+            self.n_tasks_button.setText(f'{n_tasks} tasks running... ')
+
+    def update_desc(self, desc: str):
+        self.desc_label.setText(f'{desc}:')
+        self.desc_label.setVisible(True)
+
+    def update_time(self):
+        elapsed_time = time.time() - self.progbar_start_time
+        if self.progbar_completed_items == 0:
+            remaining_time = elapsed_time * self.progbar_total
+        else:
+            remaining_time = (elapsed_time / self.progbar_completed_items) * abs(
+                self.progbar_total - self.progbar_completed_items)
+        self.elapsed_label.setText(f"{generic.format_time(elapsed_time)} elapsed ")
+        self.remaining_label.setText(f"{generic.format_time(remaining_time)} remaining ")
+        self.elapsed_label.setVisible(True)
+        self.remaining_label.setVisible(True)
+
+    def reset_progress(self):
+        self.desc_label.setVisible(False)
+        self.progress_bar.setVisible(False)
+        self.elapsed_label.setVisible(False)
+        self.remaining_label.setVisible(False)
+
+    def start_progress(self, total: int, description: str):
+        self.progbar_start_time = time.time()
+        self.progbar_total = total
+        self.progbar_completed_items = 0
+
+        self.progress_bar.setMinimum(0)
+        self.progress_bar.setMaximum(total)
+        self.progress_bar.setValue(0)
+        self.update_desc(description)
+        self.progress_bar.setVisible(True)
+
+    def update_bar_total(self, total: int):
+        self.progbar_total = total
+        self.progress_bar.setMaximum(total)
+
+    def move_progress_bar(self, value: int):
+        self.progbar_completed_items += value
+        self.update_time()
+        self.progress_bar.setValue(self.progbar_completed_items)
+
+
+class TaskQueueWindow(gui_widgets.MinMaxDialog):
+    cancelRequested = QtCore.pyqtSignal(int, str)
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.tasks = []
+        self.main_layout = QtWidgets.QVBoxLayout(self)
+        self.list = gui_widgets.MultiChoiceListWithDelete(self.tasks, parent=self, delete_text='cancel')
+
+        self.main_layout.addWidget(self.list)
+        self.setWindowTitle('Task queue')
+
+        self.list.itemDeleted.connect(self.request_cancel)
+
+    def update_tasks(self, tasks: list):
+        if tasks == self.tasks:
+            return
+        self.tasks = tasks
+        self.list.delete_all_quietly()
+        self.list.add_items(self.tasks)
+
+    @QtCore.pyqtSlot(int)
+    def request_cancel(self, index: int):
+        name = self.tasks.pop(index)
+        self.cancelRequested.emit(index, name)

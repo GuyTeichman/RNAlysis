@@ -15,6 +15,7 @@ from queue import Queue
 from typing import List, Tuple, Union, Callable, Type
 
 import matplotlib
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from PyQt5 import QtCore, QtWidgets, QtGui
@@ -541,6 +542,7 @@ class EnrichmentWindow(gui_widgets.MinMaxDialog):
         self.update_plot_ui()
         self.widgets['run_button'].setVisible(True)
         self.widgets['run_button'].setDisabled(True)
+        self._verify_inputs()
 
         if 'help_link' in self.widgets:
             self.scroll_layout.removeWidget(self.widgets['help_link'])
@@ -2323,6 +2325,7 @@ class MultiOpenWindow(QtWidgets.QDialog):
         super().__init__(parent)
         self.files = files
         self.button_box = QtWidgets.QDialogButtonBox(QtWidgets.QDialogButtonBox.Ok | QtWidgets.QDialogButtonBox.Cancel)
+        self.all_types_combo = QtWidgets.QComboBox(self)
         self.paths = dict()
         self.table_types = dict()
         self.names = dict()
@@ -2348,14 +2351,19 @@ class MultiOpenWindow(QtWidgets.QDialog):
         self.button_box.rejected.connect(self.reject)
         self.setWindowTitle('Choose table types and names')
         self.scroll_layout.addWidget(
-            QtWidgets.QLabel(
-                'Please choose a table type (mandatory) and table name (optional) for each loaded table\n\n'),
-            0, 0, 1, 3)
+            QtWidgets.QLabel('Please choose a table type (mandatory) and table name (optional) '
+                             'for each loaded table\n\n'), 0, 0, 1, 3)
         self.scroll_layout.addWidget(QtWidgets.QLabel('Table paths:'), 1, 0)
         self.scroll_layout.addWidget(QtWidgets.QLabel('Table types:'), 1, 1)
         self.scroll_layout.addWidget(QtWidgets.QLabel('Table names (optional):'), 1, 2)
         self.scroll_layout.addWidget(QtWidgets.QLabel('Additional parameters:'), 1, 3)
-        for i, file in enumerate(self.files):
+        self.scroll_layout.addWidget(self.all_types_combo, 2, 1)
+
+        self.all_types_combo.addItems(list(FILTER_OBJ_TYPES.keys()))
+        self.all_types_combo.setCurrentText('Other')
+        self.all_types_combo.currentTextChanged.connect(self.change_all_table_types)
+
+        for i, file in enumerate(self.files, 3):
             self.paths[file] = gui_widgets.PathLineEdit(file, parent=self)
             self.table_types[file] = QtWidgets.QComboBox(self)
             self.table_types[file].addItems(list(FILTER_OBJ_TYPES.keys()))
@@ -2366,13 +2374,18 @@ class MultiOpenWindow(QtWidgets.QDialog):
             self.table_types[file].currentTextChanged.connect(functools.partial(self.update_args_ui, file))
             self.table_types[file].setCurrentText('Other')
 
-            self.scroll_layout.addWidget(self.paths[file], i + 2, 0)
-            self.scroll_layout.addWidget(self.table_types[file], i + 2, 1)
-            self.scroll_layout.addWidget(self.names[file], i + 2, 2)
-            self.scroll_layout.addWidget(kwargs_widget, i + 2, 3)
+            self.scroll_layout.addWidget(self.paths[file], i, 0)
+            self.scroll_layout.addWidget(self.table_types[file], i, 1)
+            self.scroll_layout.addWidget(self.names[file], i, 2)
+            self.scroll_layout.addWidget(kwargs_widget, i, 3)
         self.main_layout.addWidget(self.button_box)
 
         self.scroll.setMinimumWidth(self.scroll_widget.sizeHint().width() + 150)
+
+    @QtCore.pyqtSlot(str)
+    def change_all_table_types(self, new_type: str):
+        for file in self.files:
+            self.table_types[file].setCurrentText(new_type)
 
     @QtCore.pyqtSlot(str)
     def update_args_ui(self, file: str):
@@ -2634,6 +2647,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.add_tab_button.setToolTip('Add New Tab')
         self.add_tab_button.clicked.connect(functools.partial(self.add_new_tab, name=None))
         self.add_tab_button.setText("+")
+        self.status_bar = gui_windows.StatusBar(self)
         self.error_window = None
 
         self.menu_bar = QtWidgets.QMenuBar(self)
@@ -2650,6 +2664,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.cite_window = gui_windows.HowToCiteWindow(self)
         self.enrichment_window = None
         self.enrichment_results = []
+        self.task_queue_window = gui_windows.TaskQueueWindow(self)
         self.external_windows = {}
 
         self.init_ui()
@@ -2672,12 +2687,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.thread_stdout_queue_listener.started.connect(self.stdout_receiver.run)
         self.thread_stdout_queue_listener.start()
 
-        # init progress bar and thread execution attributes
-        self.progress_bar = None
-        self.progbar_desc = ''
-        self.progbar_total = 0
-        self.progbar_start_time = 0
-        self.progbar_completed_items = 0
+        # init thread execution attributes
         self.worker = None
         self.thread = QtCore.QThread()
         self.job_queue = Queue()
@@ -2703,6 +2713,9 @@ class MainWindow(QtWidgets.QMainWindow):
         self.command_history_dock.setWidget(self.undo_view)
         self.command_history_dock.setFloating(False)
         self.addDockWidget(QtCore.Qt.RightDockWidgetArea, self.command_history_dock)
+
+        self.setStatusBar(self.status_bar)
+        self.task_queue_window.cancelRequested.connect(self.cancel_job)
 
         self.tabs.setCornerWidget(self.add_tab_button, QtCore.Qt.TopRightCorner)
         self.setCentralWidget(self.tabs)
@@ -3073,12 +3086,12 @@ class MainWindow(QtWidgets.QMainWindow):
         gene_set = self.tabs.currentWidget().get_index_string()
         QtWidgets.QApplication.clipboard().setText(gene_set)
 
-    def excepthook(self, exc_type, exc_value, exc_tb):
+    def excepthook(self, exc_type, exc_value, exc_tb):  # pragma: no cover
         sys.__excepthook__(exc_type, exc_value, exc_tb)
         self.error_window = gui_windows.ErrorMessage(exc_type, exc_value, exc_tb, self)
         self.error_window.exec()
 
-    def _get_current_console(self):
+    def _get_current_console(self):  # pragma: no cover
         if self.pipeline_window is not None and self.pipeline_window.isVisible():
             current_console = self.pipeline_window.get_console()
         else:
@@ -3086,7 +3099,7 @@ class MainWindow(QtWidgets.QMainWindow):
         return current_console
 
     @QtCore.pyqtSlot(str)
-    def append_text_to_current_console(self, text: str):
+    def append_text_to_current_console(self, text: str):  # pragma: no cover
         current_console = self._get_current_console()
         current_console.append_text(text)
 
@@ -3156,6 +3169,12 @@ class MainWindow(QtWidgets.QMainWindow):
         self.restore_tab_action = self.closed_tabs_stack.createUndoAction(self, 'Restore tab')
         self.close_current_action = QtWidgets.QAction("&Close current tab", self)
         self.close_current_action.triggered.connect(self.close_current_tab)
+
+        self.close_figs_action = QtWidgets.QAction("Close all &Figures")
+        self.close_figs_action.triggered.connect(functools.partial(plt.close, 'all'))
+        self.task_queue_action = QtWidgets.QAction("Task &queue")
+        self.task_queue_action.triggered.connect(self.task_queue_window.show)
+        self.status_bar.taskQueueRequested.connect(self.task_queue_action.trigger)
 
         self.show_history_action = QtWidgets.QAction("Command &History")
         self.show_history_action.setCheckable(True)
@@ -3274,7 +3293,7 @@ class MainWindow(QtWidgets.QMainWindow):
             io.clear_cache()
 
     @QtCore.pyqtSlot()
-    def check_for_updates(self, confirm_updated: bool = True):
+    def check_for_updates(self, confirm_updated: bool = True):  # pragma: no cover
         if io.is_rnalysis_outdated():
             # frozen releases of RNAlysis cannot update using pip. new version must be downloaded manually
             if getattr(sys, 'frozen', False) and hasattr(sys, '_MEIPASS'):
@@ -3429,7 +3448,7 @@ class MainWindow(QtWidgets.QMainWindow):
                               self.clear_history_action])
 
         view_menu = self.menu_bar.addMenu("&View")
-        view_menu.addActions([self.show_history_action])
+        view_menu.addActions([self.show_history_action, self.task_queue_action, self.close_figs_action])
 
         fastq_menu = self.menu_bar.addMenu("&FASTQ")
         self.trimming_menu = fastq_menu.addMenu('&Adapter trimming')
@@ -3606,7 +3625,7 @@ class MainWindow(QtWidgets.QMainWindow):
             return dialog.result()
         return None
 
-    def closeEvent(self, event):
+    def closeEvent(self, event):  # pragma: no cover
 
         quit_msg = "Are you sure you want to close <i>RNAlysis</i>?\n" \
                    "All unsaved progress will be lost"
@@ -3682,16 +3701,36 @@ class MainWindow(QtWidgets.QMainWindow):
         self.job_queue.put((partial, output_slots, args))
         self.jobQueued.emit()
 
-    def run_partial(self):
+    @QtCore.pyqtSlot(int, str)
+    def cancel_job(self, index: int, func_name: str):
+        func_name = func_name[0:func_name.find(' ')]
+        if index == 0:
+            QtWidgets.QMessageBox.warning(self, "Can't stop a running job!",
+                                          "<i>RNAlysis</i> can't stop a task that is currently running. ")
+            return
+        print(f'Cancelling job "{func_name}"...')
+        index -= 1
+        modified_queue = parsing.data_to_list(self.job_queue.queue)
+        modified_queue.pop(index)
+        while not self.job_queue.empty():
+            self.job_queue.get()
+        for item in modified_queue:
+            self.job_queue.put(item)
+        self.run_partial()
+
+    def run_partial(self):  # pragma: no cover
+        job_running = (self.thread is not None) and self.thread.isRunning()
+        self.status_bar.update_n_tasks(self.job_queue.qsize() + job_running)
         # if there are no jobs available, don't proceed
         if self.job_queue.qsize() == 0:
+            self._update_queue_window(job_running)
             return
         # if there is a job currently running, don't proceed
-        try:
-            if (self.thread is not None) and self.thread.isRunning():
-                return
-        except RuntimeError:
-            self.thread = None
+        if job_running:
+            self._update_queue_window(job_running)
+            self.status_bar.update_time()
+            return
+
         partial, output_slots, args = self.job_queue.get()
         # Create a worker object
         self.worker = gui_widgets.Worker(partial, *args)
@@ -3701,8 +3740,8 @@ class MainWindow(QtWidgets.QMainWindow):
             self.worker.startProgBar.emit(
                 dict(iter_obj=iter_obj, desc=desc, unit=unit, bar_format=bar_format, total=total))
             obj = gui_widgets.AltTQDM(iter_obj, desc=desc, unit=unit, bar_format=bar_format, total=total)
-            obj.barUpdate.connect(self.move_progress_bar)
-            obj.barFinished.connect(self.end_progress_bar)
+            obj.barUpdate.connect(self.status_bar.move_progress_bar)
+            obj.barFinished.connect(self.status_bar.reset_progress)
             return obj
 
         def alt_parallel(n_jobs: int = -1, desc: str = '', unit: str = '', bar_format: str = '',
@@ -3712,9 +3751,9 @@ class MainWindow(QtWidgets.QMainWindow):
             print(f"{desc}: started" + (f" {total} jobs\r" if isinstance(total, int) else "\r"))
             obj = gui_widgets.AltParallel(n_jobs=n_jobs, desc=desc, unit=unit, bar_format=bar_format,
                                           total=total, **kwargs)
-            obj.barUpdate.connect(self.move_progress_bar)
-            obj.barFinished.connect(self.end_progress_bar)
-            obj.barTotalUpdate.connect(self.update_bar_total)
+            obj.barUpdate.connect(self.status_bar.move_progress_bar)
+            obj.barFinished.connect(self.status_bar.reset_progress)
+            obj.barTotalUpdate.connect(self.status_bar.update_bar_total)
 
             return obj
 
@@ -3743,58 +3782,33 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self.thread.start()
 
-    def start_progress_bar(self, arg_dict):
+        self._update_queue_window(True)
+
+    def _update_queue_window(self, job_running: bool):
+        jobs = [self.worker.partial.func.__name__ + ' (running)'] if job_running else []
+        jobs += [item[0].func.__name__ + ' (queued)' for item in self.job_queue.queue]
+        self.task_queue_window.update_tasks(jobs)
+
+    def start_progress_bar(self, arg_dict):  # pragma: no cover
         total = arg_dict.get('total', None)
         iter_obj = arg_dict['iter_obj']
-        self.progbar_desc = arg_dict.get('desc', '')
+        progbar_desc = arg_dict.get('desc', '')
         if total is not None:
-            self.progbar_total = total
+            progbar_total = total
         else:
             try:
-                self.progbar_total = len(iter_obj)
+                progbar_total = len(iter_obj)
             except TypeError:
-                self.progbar_total = 2
-        if self.progress_bar is not None:
-            self.progress_bar.close()
+                progbar_total = 2
 
-        self.progress_bar = QtWidgets.QProgressDialog(self.progbar_desc, "Hide", 0, self.progbar_total, self)
-        self.progbar_start_time = time.time()
-        self.progress_bar.setMinimumDuration(0)
-        self.progress_bar.setWindowTitle(self.progbar_desc)
-        self.progress_bar.setValue(0)
-        self.progress_bar.setWindowModality(QtCore.Qt.WindowModal)
-        self.progbar_completed_items = 0
-
-    def move_progress_bar(self, n: int):
-        self.progbar_completed_items += n
-        elapsed_time = time.time() - self.progbar_start_time
-        remaining_time = (elapsed_time / self.progbar_completed_items) * abs(
-            self.progbar_total - self.progbar_completed_items)
-        try:
-            self.progress_bar.setLabelText(self.progbar_desc + '\n' + f"Elapsed time: {elapsed_time:.2f} seconds"
-                                           + '\n' + f"Remaining time: {remaining_time:.2f} seconds")
-            self.progress_bar.setValue(self.progbar_completed_items)
-        except AttributeError:
-            pass
-
-    def update_bar_total(self, n: int):
-        self.progbar_total = n
-        try:
-            self.progress_bar.setMaximum(n)
-        except AttributeError:
-            pass
-
-    def end_progress_bar(self):
-        if self.progress_bar is not None:
-            self.progress_bar.close()
-            self.progress_bar = None
+        self.status_bar.start_progress(progbar_total, progbar_desc)
 
 
-def customwarn(message, category, filename, lineno, file=None, line=None):
+def customwarn(message, category, filename, lineno, file=None, line=None):  # pragma: no cover
     sys.stdout.write(warnings.formatwarning(message, category, filename, lineno))
 
 
-async def run():
+async def run():  # pragma: no cover
     # close built-in splash screen in frozen app version of RNAlysis
     if '_PYIBoot_SPLASH' in os.environ and importlib.util.find_spec("pyi_splash"):
         import pyi_splash

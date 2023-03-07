@@ -62,15 +62,9 @@ This is a rather unsorted list of features that would be nice to have,
 of things that could be improved in the source code, and of possible algorithmic improvements:
 
 * Interactive scatter plots (for example - click on a point to show/hide it's gene/sample name)
-* Right-click on a gene name in a table on the GUI to copy the gene name
-* Draw KEGG pathways following KEGG enrichment
 * Implement the GSEA single-list enrichment algorithm
 * Accept per-gene scaling factors in addition to per-sample scaling factors
 * Distplot for count matrices
-* Implement the Calinsky Criterion for selecting a good number of clusters
-* Batch correction function for count matrices
-* Implement API for Bowtie2
-* Implement API for Subread
 * Support for single-cell transcriptomics analysis
 * Support for ATAC-seq analysis
 * Generate sashimi plots
@@ -79,7 +73,6 @@ of things that could be improved in the source code, and of possible algorithmic
 * Support for additional formats of customized annotations
 * Correlation plots
 * Rank-sum test comparing data from two different columns/tables
-* Toggle option allowing users not to remove un-annotated genes from the background/enrichment sets in Enrichment Analysis
 
 *RNAlysis* Design Philosophy
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

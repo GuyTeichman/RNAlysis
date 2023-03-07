@@ -145,8 +145,6 @@ def test_filter_translate_gene_ids(map_to, map_from, remove_unmapped_genes, expe
     f = Filter('tests/test_files/counted.csv')
 
     res = f.translate_gene_ids(map_to, map_from, remove_unmapped_genes, inplace=False)
-    print(res.df.sort_index(), truth.sort_index())
-
     assert res.df.sort_index().equals(truth.sort_index())
     f.translate_gene_ids(map_to, map_from, remove_unmapped_genes, inplace=True)
     assert f.df.sort_index().equals(truth.sort_index())
@@ -289,10 +287,15 @@ def test_filter_low_reads_reverse():
     assert np.all(h.df == low_truth)
 
 
-def test_deseqfilter_volcano_plot_api():
+@pytest.mark.parametrize('interactive', [True, False])
+@pytest.mark.parametrize('show_cursor', [True, False])
+@pytest.mark.parametrize('title,alpha,log2fc_threshold', [
+    ('auto', 0.05, None),
+    ('title', 0.1, 0),
+    ('title', 0.001, 1)])
+def test_deseqfilter_volcano_plot_api(interactive, show_cursor, title, alpha, log2fc_threshold):
     d = DESeqFilter("tests/test_files/test_deseq.csv")
-    d.volcano_plot()
-    d.volcano_plot(alpha=0.000001)
+    d.volcano_plot(alpha, log2fc_threshold, title, interactive=interactive, show_cursor=show_cursor)
     plt.close('all')
 
 
@@ -346,13 +349,17 @@ def test_countfilter_plot_expression_api():
     plt.close('all')
 
 
-def test_countfilter_scatter_sample_vs_sample_api():
+@pytest.mark.parametrize('highlight',
+                         [None, {'WBGene00007063', 'WBGene00007064'}, DESeqFilter('tests/test_files/test_deseq.csv')])
+@pytest.mark.parametrize('interactive', [True, False])
+@pytest.mark.parametrize('show_cursor', [True, False])
+@pytest.mark.parametrize('s1,s2,xlabel,ylabel,title', [
+    ('cond1', 'cond2', 'auto', 'auto', 'auto'),
+    ('cond3', ['cond2', 'cond1', 'cond4'], 'x', 'y', 'title')])
+def test_countfilter_scatter_sample_vs_sample_api(s1, s2, xlabel, ylabel, title, interactive, show_cursor, highlight):
     c = CountFilter("tests/test_files/counted.csv")
-    c.scatter_sample_vs_sample('cond1', 'cond2')
-    c.scatter_sample_vs_sample('cond3', ['cond2', 'cond1', 'cond4'], highlight={'WBGene00007063', 'WBGene00007064'})
-    d = DESeqFilter('tests/test_files/test_deseq.csv').intersection(c, inplace=True)
-    c.scatter_sample_vs_sample('cond3', ['cond2', 'cond1', 'cond4'], xlabel='label', title='title', ylabel='ylabel',
-                               highlight=d)
+    c.scatter_sample_vs_sample(s1, s2, xlabel, ylabel, title, interactive=interactive, show_cursor=show_cursor,
+                               highlight=highlight)
     plt.close('all')
 
 
@@ -1604,6 +1611,18 @@ def test_pipeline_apply_to_filter_normalize_split_plot():
     assert len(c_dict['biotypes_from_ref_table_2']) == len(c_pipeline_dict['biotypes_from_ref_table_2'])
     for i, j in zip(c_dict['biotypes_from_ref_table_2'], c_pipeline_dict['biotypes_from_ref_table_2']):
         assert i.equals(j)
+
+
+def test_gap_statistic_api():
+    c = CountFilter('tests/test_files/big_counted.csv')
+    res = c.split_kmeans(n_clusters='gap')
+    assert isinstance(res, tuple)
+
+
+def test_silhouette_api():
+    c = CountFilter('tests/test_files/big_counted.csv')
+    res = c.split_kmeans(n_clusters='silhouette')
+    assert isinstance(res, tuple)
 
 
 def test_split_kmeans_api():

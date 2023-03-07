@@ -133,13 +133,13 @@ def test_enrichment_get_attrs_bad_path():
         e.filter_annotations()
 
 
-def _enrichment_get_ref_tests_setup(truth, bg_genes):
+def _enrichment_get_ref_tests_setup(truth, bg_genes, **kwargs):
     genes = {'WBGene00000041', 'WBGene00002074', 'WBGene00000019', 'WBGene00000105', 'WBGene00000106', 'WBGene00199484',
              'WBGene00001436', 'WBGene00000137', 'WBGene00001996', 'WBGene00014208'}
     biotype = bg_genes if isinstance(bg_genes, str) else 'all'
     background = None if isinstance(bg_genes, str) else bg_genes
     e = EnrichmentRunner(genes, 'all', 0.05, __attr_ref__, True, False, '', False, True, 'test_set', False,
-                         'hypergeometric', biotype, background, __biotype_ref__)
+                         'hypergeometric', biotype, background, __biotype_ref__, **kwargs)
     e.fetch_annotations()
     e.fetch_attributes()
     e.get_background_set()
@@ -168,6 +168,14 @@ def test_enrichment_get_ref_custom_background():
                 'WBGene00000369', 'WBGene00000863', 'WBGene00002074', 'WBGene00000041', 'WBGene00199486',
                 'WBGene00000105', 'WBGene00001131'}
     _enrichment_get_ref_tests_setup(truth, bg_genes)
+
+def test_enrichment_get_ref_custom_background_include_unannotated():
+    truth = io.load_csv('tests/test_files/attr_ref_table_for_tests_specified_bg_unannotated.csv', 0)
+    bg_genes = {'WBGene00003902', 'WBGene00000106', 'WBGene00001436', 'WBGene00000864', 'WBGene00011910',
+                'WBGene00000859', 'WBGene00268189', 'WBGene00000865', 'WBGene00003864', 'WBGene00048863',
+                'WBGene00000369', 'WBGene00000863', 'WBGene00002074', 'WBGene00000041', 'WBGene00199486',
+                'WBGene00000105', 'WBGene00001131','gene1','gene2','gene3'}
+    _enrichment_get_ref_tests_setup(truth, bg_genes, exclude_unannotated_genes=False)
 
 
 def test_enrichment_get_ref_custom_background_from_featureset_object():
@@ -1945,3 +1953,16 @@ def test_kegg_enrichment_runner_pathway_plot(single_set, graph_format, monkeypat
     runner.pathway_graphs_format = graph_format
     runner.gene_id_translator = translator_truth
     runner.pathway_plot(pathway_id_truth)
+
+
+@pytest.mark.parametrize('version,expected', [
+    ([3, 8, 1], True),
+    ([3, 8, 0], True),
+    ([2, 7, 5], False),
+    ([3, 7, 5], True),
+    ([3, 9, 0], False),
+    ([3, 11, 0], False)
+])
+def test_does_python_version_support_single_set(monkeypatch, version, expected):
+    monkeypatch.setattr(sys, 'version_info', version)
+    assert does_python_version_support_single_set() == expected

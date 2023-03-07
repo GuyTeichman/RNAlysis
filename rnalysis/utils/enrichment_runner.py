@@ -27,11 +27,12 @@ try:
 
     logging.getLogger('xlmhg').setLevel(50)  # suppress warnings from xlmhg module
     HAS_XLMHG = True
-except ImportError:
+
+except ImportError:  # pragma: no cover
     HAS_XLMHG = False
 
 
-    class xlmhg:
+    class xlmhg:  # pragma: no cover
         class mHGResult:
             pass
 
@@ -200,9 +201,9 @@ class EnrichmentRunner:
         if self.exclude_unannotated_genes:
             self.background_set = self.background_set.intersection(parsing.data_to_set(self.annotation_df.index))
         else:
-            self.background_set = self.background_set.union(parsing.data_to_set(self.annotation_df.index))
             ann_missing = self.background_set.difference(parsing.data_to_set(self.annotation_df.index))
-            self.annotation_df[ann_missing] = np.nan
+            ann_missing_df = pd.DataFrame(index=parsing.data_to_list(ann_missing), columns=self.annotation_df.columns)
+            self.annotation_df = pd.concat([self.annotation_df, ann_missing_df])
 
         if orig_bg_size - len(self.background_set) > 0:
             warning = f"{orig_bg_size - len(self.background_set)} genes out of the requested {orig_bg_size} " \
@@ -333,7 +334,8 @@ class EnrichmentRunner:
 
     @staticmethod
     @generic.numba.jit(nopython=True)
-    def _calc_randomization_pval(n: int, log2fc: float, bg_array: np.ndarray, reps: int, obs_frac: float) -> float:
+    def _calc_randomization_pval(n: int, log2fc: float, bg_array: np.ndarray, reps: int, obs_frac: float
+                                 ) -> float:  # pragma: no cover
         ind_range = np.arange(bg_array.shape[0])
         success = 0
         if log2fc >= 0:

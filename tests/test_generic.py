@@ -127,3 +127,47 @@ def test_get_signature(func, obj, truth):
 def test_sum_intervals_inclusive(intervals, expected):
     res = sum_intervals_inclusive(intervals)
     assert res == expected
+
+
+@pytest.mark.parametrize('seconds,expected', [
+    (13, '00:13'),
+    (0, '00:00'),
+    (59.34, '00:59'),
+    (60.0, '01:00'),
+    (60.2, '01:00'),
+    (192.17, '03:12'),
+    (13 * 60 + 1.5, '13:01'),
+    (100 * 60, '100:00')])
+def test_format_time(seconds, expected):
+    res = format_time(seconds)
+    assert res == expected
+
+
+@pytest.mark.parametrize('name,expected', [
+    ('aname', 'aname'),
+    ('name123n', 'name123n'),
+    ('camelCase', 'camelCase'),
+    ('snake_case', 'snake_case'),
+    ('name with spaces ', 'name_with_spaces'),
+    ('1name of var', 'var_1name_of_var'),
+    ('12345', 'var_12345'),
+    ('%asdf&sign', '_asdf_sign'),
+    (' ^^more things123 ', '___more_things123')
+])
+def test_sanitize_variable_name(name, expected):
+    res = sanitize_variable_name(name)
+    assert res == expected
+
+
+def test_get_method_readable_name():
+    func = lambda x: x + 1
+    func.readable_name = "readable name"
+    assert get_method_readable_name(func) == "readable name"
+
+    def func2(a, b):
+        return a + b
+
+    assert get_method_readable_name(func2) == 'func2'
+
+    func2.readable_name = "readable name"
+    assert get_method_readable_name(func2) == "readable name"

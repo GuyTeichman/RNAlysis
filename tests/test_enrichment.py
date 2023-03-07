@@ -1,15 +1,15 @@
-import pytest
 import os
-import requests
-import statsmodels.stats.multitest as multitest
 import sys
+
+import pytest
+import statsmodels.stats.multitest as multitest
+
 from rnalysis.enrichment import *
 from rnalysis.enrichment import _fetch_sets
 from rnalysis.utils.enrichment_runner import does_python_version_support_single_set
 from tests import __attr_ref__, __biotype_ref__, is_uniprot_available, is_ensembl_available
 
 matplotlib.use('Agg')
-
 
 ENSEMBL_AVAILABLE = is_ensembl_available()
 UNIPROT_AVAILABLE = is_uniprot_available()
@@ -508,8 +508,9 @@ def test_enrich_single_set_api():
 
 @pytest.mark.skipif(not ENSEMBL_AVAILABLE, reason='Ensembl REST API is not available at the moment')
 @pytest.mark.skipif(not UNIPROT_AVAILABLE, reason='UniProt REST API is not available at the moment')
+@pytest.mark.parametrize('return_nonsignificant', [True, False])
 @pytest.mark.parametrize("organism,propagate_annotations", [('auto', 'classic'), ('caenorhabditis elegans', 'elim')])
-def test_go_enrichment_single_set_api(organism, propagate_annotations):
+def test_go_enrichment_single_set_api(organism, propagate_annotations, return_nonsignificant):
     genes_ranked = ['WBGene00000019', 'WBGene00000041', 'WBGene00000105', 'WBGene00000106', 'WBGene00000137',
                     'WBGene00001436', 'WBGene00001996', 'WBGene00002074', 'WBGene00003864', 'WBGene00003865',
                     'WBGene00003902', 'WBGene00003915', 'WBGene00000369', 'WBGene00000859', 'WBGene00000860',
@@ -521,7 +522,8 @@ def test_go_enrichment_single_set_api(organism, propagate_annotations):
 
     en = RankedSet(genes_ranked, set_name='test_set')
     _ = en.single_set_go_enrichment(organism, 'WBGene', evidence_types='experimental', databases='WB',
-                                    aspects='biological_process', propagate_annotations=propagate_annotations)
+                                    aspects='biological_process', propagate_annotations=propagate_annotations,
+                                    return_nonsignificant=return_nonsignificant)
     plt.close('all')
 
 
@@ -612,5 +614,113 @@ def test_kegg_enrichment_api(organism, statistical_test, kwargs):
 def test_kegg_enrichment_single_list_api():
     genes = ['WBGene00048865', 'WBGene00000864', 'WBGene00000105', 'WBGene00001996', 'WBGene00011910', 'WBGene00268195']
     en = RankedSet(genes, set_name='test_set')
-    _ = en.single_set_kegg_enrichment(6239, 'WormBase',pathway_graphs_format='pdf')
+    _ = en.single_set_kegg_enrichment(6239, 'WormBase', pathway_graphs_format='pdf')
     plt.close('all')
+
+
+@pytest.mark.skipif(not UNIPROT_AVAILABLE, reason='UniProt REST API is not available at the moment')
+def test_kegg_pathway_graph():
+    kegg_pathway_graph('cel04020', None, 'WormBase')
+    kegg_pathway_graph('cel04020', {'WBGene00004039', 'WBGene00004039'}, 'WormBase')
+
+
+def test_gene_ontology_graph():
+    gene_ontology_graph('biological_process', 'tests/test_files/go_enrichment_runner_sample_results.csv', 'colName')
+
+
+@pytest.mark.parametrize("map_to,map_from,remove_unmapped_genes,expected,expected_name", [
+    ('UniProtKB AC/ID', 'WormBase', False, 'tests/test_files/counted_translated_with_unmapped.csv',
+     'set_name_translateFromWormBasetoUniProtKBACID'),
+    ('UniProtKB', 'auto', True, 'tests/test_files/counted_translated_remove_unmapped.csv',
+     'set_name_translateFromWormBasetoUniProtKB'),
+])
+def test_translate_gene_ids(map_to, map_from, remove_unmapped_genes, expected, expected_name, monkeypatch):
+    def mock_map_gene_ids(ids, trans_from, trans_to='UniProtKB AC', verbose=True):
+        if trans_from == 'WormBase':
+            return io.GeneIDTranslator(
+                {'WBGene00007063': 'A0A0K3AWR5', 'WBGene00007064': 'A0A2X0T1Z3', 'WBGene00007067': 'D3NQA2',
+                 'WBGene00077503': 'H2L2B5', 'WBGene00007071': 'Q17405', 'WBGene00014997': 'Q7JNR0',
+                 'WBGene00043988': 'A4F2Z7', 'WBGene00043989': 'G5EFZ2', 'WBGene00007075': 'G5EDW3',
+                 'WBGene00007076': 'G5EFZ2'})
+        return io.GeneIDTranslator({})
+
+    monkeypatch.setattr(io, 'map_gene_ids', mock_map_gene_ids)
+    truth = FeatureSet(parsing.data_to_set(io.load_csv(expected, index_col=0).index), set_name=expected_name)
+    s = FeatureSet(
+        {'WBGene00044022', 'WBGene00007075', 'WBGene00007066', 'WBGene00043988', 'WBGene00044951', 'WBGene00077503',
+         'WBGene00007076', 'WBGene00007063', 'WBGene00043990', 'WBGene00007074', 'WBGene00007067', 'WBGene00007079',
+         'WBGene00077502', 'WBGene00077504', 'WBGene00007064', 'WBGene00043989', 'WBGene00007071', 'WBGene00007078',
+         'WBGene00007077', 'WBGene00043987', 'WBGene00007069', 'WBGene00014997'}
+        , 'set_name')
+
+    res = s.translate_gene_ids(map_to, map_from, remove_unmapped_genes, inplace=False)
+    assert res == truth
+    s.translate_gene_ids(map_to, map_from, remove_unmapped_genes, inplace=True)
+    assert s == truth
+
+
+@pytest.mark.parametrize("map_to,map_from,remove_unmapped_genes,expected,expected_name", [
+    ('UniProtKB AC/ID', 'WormBase', False,
+     ['WBGene00044022', 'G5EDW3', 'WBGene00007066', 'Q7JNR0', 'A4F2Z7', 'WBGene00044951', 'A0A0K3AWR5',
+      'WBGene00043990', 'WBGene00007074', 'D3NQA2', 'WBGene00007079', 'WBGene00077502', 'WBGene00077504', 'A0A2X0T1Z3',
+      'G5EFZ2', 'Q17405', 'WBGene00007078', 'WBGene00007077', 'WBGene00043987', 'WBGene00007069', 'H2L2B5']
+     , 'set_name_translateFromWormBasetoUniProtKBACID'),
+    ('UniProtKB', 'auto', True,
+     ['G5EDW3', 'Q7JNR0', 'A4F2Z7', 'A0A0K3AWR5', 'D3NQA2', 'A0A2X0T1Z3', 'G5EFZ2', 'Q17405', 'H2L2B5']
+     , 'set_name_translateFromWormBasetoUniProtKB'),
+])
+def test_translate_gene_ids_rankedset(map_to, map_from, remove_unmapped_genes, expected, expected_name, monkeypatch):
+    def mock_map_gene_ids(ids, trans_from, trans_to='UniProtKB AC', verbose=True):
+        if trans_from == 'WormBase':
+            return io.GeneIDTranslator(
+                {'WBGene00007063': 'A0A0K3AWR5', 'WBGene00007064': 'A0A2X0T1Z3', 'WBGene00007067': 'D3NQA2',
+                 'WBGene00077503': 'H2L2B5', 'WBGene00007071': 'Q17405', 'WBGene00014997': 'Q7JNR0',
+                 'WBGene00043988': 'A4F2Z7', 'WBGene00043989': 'G5EFZ2', 'WBGene00007075': 'G5EDW3',
+                 'WBGene00007076': 'G5EFZ2'})
+        return io.GeneIDTranslator({})
+
+    monkeypatch.setattr(io, 'map_gene_ids', mock_map_gene_ids)
+    truth = RankedSet(expected, set_name=expected_name)
+    s = RankedSet(
+        ['WBGene00044022', 'WBGene00007075', 'WBGene00007066', 'WBGene00014997', 'WBGene00043988', 'WBGene00044951',
+         'WBGene00007063', 'WBGene00043990', 'WBGene00007074', 'WBGene00007067', 'WBGene00007079',
+         'WBGene00077502', 'WBGene00077504', 'WBGene00007064', 'WBGene00043989', 'WBGene00007071', 'WBGene00007078',
+         'WBGene00007077', 'WBGene00043987', 'WBGene00007069', 'WBGene00077503']
+        , 'set_name')
+
+    res = s.translate_gene_ids(map_to, map_from, remove_unmapped_genes, inplace=False)
+    assert res == truth
+    s.translate_gene_ids(map_to, map_from, remove_unmapped_genes, inplace=True)
+    assert s == truth
+
+
+def test_filter_by_attribute():
+    truth = FeatureSet({'WBGene00011910', 'WBGene00000019', 'WBGene00001436'}, 'set_name_filtbyattrattribute1')
+    s = FeatureSet(
+        {'WBGene00000027', 'WBGene00000005', 'WBGene00000017', 'WBGene00000025', 'WBGene00000003', 'WBGene00000019',
+         'WBGene00000026', 'WBGene00000028', 'WBGene00000004', 'WBGene00000024', 'WBGene00000016', 'WBGene00000010',
+         'WBGene00000008', 'WBGene00000009', 'WBGene00000023', 'WBGene00000015', 'WBGene00000006', 'WBGene00000029',
+         'WBGene00000012', 'WBGene00001436', 'WBGene00000022', 'WBGene00000013', 'WBGene00000014', 'WBGene00000002',
+         'WBGene00000007', 'WBGene00000020', 'WBGene00000011', 'WBGene00011910'}
+        , set_name='set_name')
+    s_notinplace = s.filter_by_attribute('attribute1', ref=__attr_ref__, inplace=False)
+    assert s_notinplace == truth
+
+    s.filter_by_attribute('attribute1', ref=__attr_ref__)
+    assert s == truth
+
+
+def test_filter_by_attribute_rankedset():
+    truth = RankedSet(['WBGene00000019', 'WBGene00001436', 'WBGene00011910'], 'set_name_filtbyattrattribute1')
+    s = RankedSet(
+        ['WBGene00000027', 'WBGene00000005', 'WBGene00000017', 'WBGene00000025', 'WBGene00000003', 'WBGene00000019',
+         'WBGene00000026', 'WBGene00000028', 'WBGene00000004', 'WBGene00000024', 'WBGene00000016', 'WBGene00000010',
+         'WBGene00000008', 'WBGene00000009', 'WBGene00000023', 'WBGene00000015', 'WBGene00000006', 'WBGene00000029',
+         'WBGene00000012', 'WBGene00001436', 'WBGene00000022', 'WBGene00000013', 'WBGene00000014', 'WBGene00000002',
+         'WBGene00000007', 'WBGene00000020', 'WBGene00000011', 'WBGene00011910']
+        , set_name='set_name')
+    s_notinplace = s.filter_by_attribute('attribute1', ref=__attr_ref__, inplace=False)
+    assert s_notinplace == truth
+
+    s.filter_by_attribute('attribute1', ref=__attr_ref__)
+    assert s == truth
