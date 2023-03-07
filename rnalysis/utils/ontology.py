@@ -34,7 +34,7 @@ def render_graphviz_plot(graph: graphviz.Digraph, save_path: Union[str, Path], f
 def pipe_graphviz_plot(graph: graphviz.Digraph, file_format: str = 'png'):
     try:
         return graph.pipe(format=file_format)
-    except graphviz.ExecutableNotFound:
+    except graphviz.ExecutableNotFound:  # pragma: no cover
         warnings.warn("'GraphViz' installation not found. If you want to generate Ontology and Pathway Graphs, "
                       "Please install GraphViz and add it to PATH. \n"
                       "See https://graphviz.org/download/ for more information. ")
