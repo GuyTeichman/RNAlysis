@@ -604,12 +604,12 @@ def test_kegg_annotation_iterator_kegg_request_cached(monkeypatch):
     assert KEGGAnnotationIterator._kegg_request('operation', 'argument', 'cached_filename.csv') == (truth, True)
 
 
-PATHWAY_NAMES_TRUTH = {'path:cel00010': 'Glycolysis / Gluconeogenesis - Caenorhabditis elegans (nematode)',
-                       'path:cel00020': 'Citrate cycle (TCA cycle) - Caenorhabditis elegans (nematode)',
-                       'path:cel00030': 'Pentose phosphate pathway - Caenorhabditis elegans (nematode)',
-                       'path:cel00040': 'Pentose and glucuronate interconversions - Caenorhabditis elegans (nematode)',
-                       'path:cel00051': 'Fructose and mannose metabolism - Caenorhabditis elegans (nematode)',
-                       'path:cel00052': 'Galactose metabolism - Caenorhabditis elegans (nematode)', }
+PATHWAY_NAMES_TRUTH = {'cel00010': 'Glycolysis / Gluconeogenesis - Caenorhabditis elegans (nematode)',
+                       'cel00020': 'Citrate cycle (TCA cycle) - Caenorhabditis elegans (nematode)',
+                       'cel00030': 'Pentose phosphate pathway - Caenorhabditis elegans (nematode)',
+                       'cel00040': 'Pentose and glucuronate interconversions - Caenorhabditis elegans (nematode)',
+                       'cel00051': 'Fructose and mannose metabolism - Caenorhabditis elegans (nematode)',
+                       'cel00052': 'Galactose metabolism - Caenorhabditis elegans (nematode)', }
 
 
 def test_kegg_annotation_iterator_get_pathways(monkeypatch):
@@ -706,18 +706,18 @@ def test_kegg_annotation_iterator_get_custom_pathways(monkeypatch):
 
 
 def test_kegg_annotation_iterator_get_pathway_annotations(monkeypatch):
-    truth = {'path:cel00010': ['Glycolysis / Gluconeogenesis - Caenorhabditis elegans (nematode)',
+    truth = {'cel00010': ['Glycolysis / Gluconeogenesis - Caenorhabditis elegans (nematode)',
                                {'cel:CELE_F14B4.2', 'cel:CELE_Y87G2A.8', 'cel:CELE_C50F4.2', 'cel:CELE_Y71H10A.1'}],
-             'path:cel00020': ['Citrate cycle (TCA cycle) - Caenorhabditis elegans (nematode)',
+             'cel00020': ['Citrate cycle (TCA cycle) - Caenorhabditis elegans (nematode)',
                                {'cel:CELE_T20G5.2', 'cel:CELE_B0365.1', 'cel:CELE_D1005.1'}],
-             'path:cel00030': ['Pentose phosphate pathway - Caenorhabditis elegans (nematode)',
+             'cel00030': ['Pentose phosphate pathway - Caenorhabditis elegans (nematode)',
                                {'cel:CELE_Y87G2A.8', 'cel:CELE_B0035.5'}],
-             'path:cel00040': ['Pentose and glucuronate interconversions - Caenorhabditis elegans (nematode)',
+             'cel00040': ['Pentose and glucuronate interconversions - Caenorhabditis elegans (nematode)',
                                {'cel:CELE_Y105E8B.9', 'cel:CELE_B0310.5', 'cel:CELE_T04H1.7', 'cel:CELE_T04H1.8'}],
-             'path:cel00051': ['Fructose and mannose metabolism - Caenorhabditis elegans (nematode)',
+             'cel00051': ['Fructose and mannose metabolism - Caenorhabditis elegans (nematode)',
                                {'cel:CELE_C05C8.7', 'cel:CELE_ZK632.4'}],
-             'path:cel00052': ['Galactose metabolism - Caenorhabditis elegans (nematode)', {'cel:CELE_C01B4.6'}]}
-    args_truth = ['path:cel00010+path:cel00020+path:cel00030', 'path:cel00040+path:cel00051+path:cel00052']
+             'cel00052': ['Galactose metabolism - Caenorhabditis elegans (nematode)', {'cel:CELE_C01B4.6'}]}
+    args_truth = ['cel00010+cel00020+cel00030', 'cel00040+cel00051+cel00052']
 
     def mock_kegg_request(self, operation, arguments, fname):
         assert operation == 'get'
