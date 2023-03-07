@@ -400,7 +400,7 @@ class Filter:
 
         new_df = new_df.set_index(translate_to, drop=True)
 
-        suffix = f'translateFrom{translate_from.replace(" ", "").replace("/", "")}' \
+        suffix = f'_translateFrom{translate_from.replace(" ", "").replace("/", "")}' \
                  f'to{translate_to.replace(" ", "").replace("/", "")}'
         return self._inplace(new_df, False, inplace, suffix, 'translate')
 
