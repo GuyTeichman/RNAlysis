@@ -633,18 +633,18 @@ def test_kegg_annotation_iterator_get_pathways(monkeypatch):
 
 def test_kegg_annotation_iterator_get_compounds(monkeypatch):
     reqs_made = []
-    truth = {'cpd:C00001': 'H2O',
-             'cpd:C00002': 'ATP',
-             'cpd:C00003': 'NAD+',
-             'cpd:C00004': 'NADH',
-             'cpd:C00005': 'NADPH',
-             'cpd:C00006': 'NADP+',
-             'cpd:C00007': 'Oxygen',
-             'cpd:C00008': 'ADP',
-             'cpd:C00009': 'Orthophosphate',
-             'cpd:C00010': 'CoA',
-             'cpd:C00011': 'CO2',
-             'cpd:C00012': 'Peptide', }
+    truth = {'C00001': 'H2O',
+             'C00002': 'ATP',
+             'C00003': 'NAD+',
+             'C00004': 'NADH',
+             'C00005': 'NADPH',
+             'C00006': 'NADP+',
+             'C00007': 'Oxygen',
+             'C00008': 'ADP',
+             'C00009': 'Orthophosphate',
+             'C00010': 'CoA',
+             'C00011': 'CO2',
+             'C00012': 'Peptide', }
 
     def mock_kegg_request(operation, arguments, cached_filename=None):
         assert operation == 'list'
