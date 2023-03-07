@@ -707,15 +707,15 @@ def test_kegg_annotation_iterator_get_custom_pathways(monkeypatch):
 
 def test_kegg_annotation_iterator_get_pathway_annotations(monkeypatch):
     truth = {'cel00010': ['Glycolysis / Gluconeogenesis - Caenorhabditis elegans (nematode)',
-                               {'cel:CELE_F14B4.2', 'cel:CELE_Y87G2A.8', 'cel:CELE_C50F4.2', 'cel:CELE_Y71H10A.1'}],
+                          {'cel:CELE_F14B4.2', 'cel:CELE_Y87G2A.8', 'cel:CELE_C50F4.2', 'cel:CELE_Y71H10A.1'}],
              'cel00020': ['Citrate cycle (TCA cycle) - Caenorhabditis elegans (nematode)',
-                               {'cel:CELE_T20G5.2', 'cel:CELE_B0365.1', 'cel:CELE_D1005.1'}],
+                          {'cel:CELE_T20G5.2', 'cel:CELE_B0365.1', 'cel:CELE_D1005.1'}],
              'cel00030': ['Pentose phosphate pathway - Caenorhabditis elegans (nematode)',
-                               {'cel:CELE_Y87G2A.8', 'cel:CELE_B0035.5'}],
+                          {'cel:CELE_Y87G2A.8', 'cel:CELE_B0035.5'}],
              'cel00040': ['Pentose and glucuronate interconversions - Caenorhabditis elegans (nematode)',
-                               {'cel:CELE_Y105E8B.9', 'cel:CELE_B0310.5', 'cel:CELE_T04H1.7', 'cel:CELE_T04H1.8'}],
+                          {'cel:CELE_Y105E8B.9', 'cel:CELE_B0310.5', 'cel:CELE_T04H1.7', 'cel:CELE_T04H1.8'}],
              'cel00051': ['Fructose and mannose metabolism - Caenorhabditis elegans (nematode)',
-                               {'cel:CELE_C05C8.7', 'cel:CELE_ZK632.4'}],
+                          {'cel:CELE_C05C8.7', 'cel:CELE_ZK632.4'}],
              'cel00052': ['Galactose metabolism - Caenorhabditis elegans (nematode)', {'cel:CELE_C01B4.6'}]}
     args_truth = ['cel00010+cel00020+cel00030', 'cel00040+cel00051+cel00052']
 
@@ -855,3 +855,12 @@ def test_is_rnalysis_outdated(monkeypatch, this_version, response, expected):
     monkeypatch.setattr(requests, 'get', lambda *args, **kwargs: response)
     monkeypatch.setattr(rnalysis.utils.io, '__version__', this_version)
     assert is_rnalysis_outdated() == expected
+
+
+@pytest.mark.parametrize('path,expected', [
+    ('tests/test_files/test_fastqs/outdir/paired_1_trimmed_truth.fastq.gz', 95),
+    ('tests/test_files/test_fastqs/outdir/test_fastq_trimmed_truth.fastq.gz', 7396)
+])
+def test_get_gunzip_size(path, expected):
+    res = get_gunzip_size(path)
+    assert res == expected
