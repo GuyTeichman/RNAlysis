@@ -419,11 +419,13 @@ class KEGGAnnotationIterator:
                 prev_time = time.time()
                 data, was_cached = self._kegg_request('get', '+'.join(chunk), self._generate_cached_filename(chunk))
                 entries = data.split('ENTRY')[1:]
-                assert len(entries) == len(chunk)
-                for pathway, entry in zip(chunk, entries):
+                for entry in entries:
+                    entry_split = entry.split('\n')
+                    pathway = entry_split[0].split()[0]
+                    if pathway not in chunk:
+                        print(f'Could not find pathway {pathway} in requested chunk: {chunk}')
                     pathway_name = self.pathway_names[pathway]
                     pathway_annotations[pathway] = set()
-                    entry_split = entry.split('\n')
                     genes_startline = 0
                     genes_endline = 0
                     for i, line in enumerate(entry_split):
