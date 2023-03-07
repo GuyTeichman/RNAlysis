@@ -618,6 +618,11 @@ def test_kegg_enrichment_single_list_api():
     plt.close('all')
 
 
+def test_kegg_pathway_graph():
+    kegg_pathway_graph('cel04020', None, 'WormBase')
+    kegg_pathway_graph('cel04020', {'WBGene00004039', 'WBGene00004039'}, 'WormBase')
+
+
 @pytest.mark.parametrize("map_to,map_from,remove_unmapped_genes,expected,expected_name", [
     ('UniProtKB AC/ID', 'WormBase', False, 'tests/test_files/counted_translated_with_unmapped.csv',
      'set_name_translateFromWormBasetoUniProtKBACID'),
