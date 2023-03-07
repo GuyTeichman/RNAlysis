@@ -657,3 +657,38 @@ def test_translate_gene_ids(map_to, map_from, remove_unmapped_genes, expected, e
     assert res == truth
     s.translate_gene_ids(map_to, map_from, remove_unmapped_genes, inplace=True)
     assert s == truth
+
+
+@pytest.mark.parametrize("map_to,map_from,remove_unmapped_genes,expected,expected_name", [
+    ('UniProtKB AC/ID', 'WormBase', False,
+     ['WBGene00044022', 'G5EDW3', 'WBGene00007066', 'Q7JNR0', 'A4F2Z7', 'WBGene00044951', 'A0A0K3AWR5',
+      'WBGene00043990', 'WBGene00007074', 'D3NQA2', 'WBGene00007079', 'WBGene00077502', 'WBGene00077504', 'A0A2X0T1Z3',
+      'G5EFZ2', 'Q17405', 'WBGene00007078', 'WBGene00007077', 'WBGene00043987', 'WBGene00007069', 'H2L2B5']
+     , 'set_name_translateFromWormBasetoUniProtKBACID'),
+    ('UniProtKB', 'auto', True,
+     ['G5EDW3', 'Q7JNR0', 'A4F2Z7', 'A0A0K3AWR5', 'D3NQA2', 'A0A2X0T1Z3', 'G5EFZ2', 'Q17405', 'H2L2B5']
+     , 'set_name_translateFromWormBasetoUniProtKB'),
+])
+def test_translate_gene_ids_rankedset(map_to, map_from, remove_unmapped_genes, expected, expected_name, monkeypatch):
+    def mock_map_gene_ids(ids, trans_from, trans_to='UniProtKB AC', verbose=True):
+        if trans_from == 'WormBase':
+            return io.GeneIDTranslator(
+                {'WBGene00007063': 'A0A0K3AWR5', 'WBGene00007064': 'A0A2X0T1Z3', 'WBGene00007067': 'D3NQA2',
+                 'WBGene00077503': 'H2L2B5', 'WBGene00007071': 'Q17405', 'WBGene00014997': 'Q7JNR0',
+                 'WBGene00043988': 'A4F2Z7', 'WBGene00043989': 'G5EFZ2', 'WBGene00007075': 'G5EDW3',
+                 'WBGene00007076': 'G5EFZ2'})
+        return io.GeneIDTranslator({})
+
+    monkeypatch.setattr(io, 'map_gene_ids', mock_map_gene_ids)
+    truth = RankedSet(expected, set_name=expected_name)
+    s = RankedSet(
+        ['WBGene00044022', 'WBGene00007075', 'WBGene00007066', 'WBGene00014997', 'WBGene00043988', 'WBGene00044951',
+         'WBGene00007063', 'WBGene00043990', 'WBGene00007074', 'WBGene00007067', 'WBGene00007079',
+         'WBGene00077502', 'WBGene00077504', 'WBGene00007064', 'WBGene00043989', 'WBGene00007071', 'WBGene00007078',
+         'WBGene00007077', 'WBGene00043987', 'WBGene00007069', 'WBGene00077503']
+        , 'set_name')
+
+    res = s.translate_gene_ids(map_to, map_from, remove_unmapped_genes, inplace=False)
+    assert res == truth
+    s.translate_gene_ids(map_to, map_from, remove_unmapped_genes, inplace=True)
+    assert s == truth

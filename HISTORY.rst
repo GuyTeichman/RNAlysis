@@ -24,6 +24,7 @@ Changed
 
 Fixed
 ******
+* RNAlysis KEGG enrichment should now match the new KEGG annotation format from March 1st 2023.
 * Fixed bug where importing *RNAlysis* would raise ImportError when cutadapt is not installed.
 * Fixed bug where the 'Run' button in the Enrichment Analysis window would grey out whenever the enrichment dataset is changed.
 * Fixed bug where the *RNAlysis* stand-alone versions were unable to export Figures in specific formats (e.g. PDF, SVG).
@@ -31,7 +32,7 @@ Fixed
 * Fixed bug where running limma-voom with a design matrix whose column names contained spaces or special characterse would raise an error.
 * Fixed bug where the 'highlight' parameter of CountFilter.scatter_sample_vs_sample would not work when used through the graphic interface.
 * Fixed bug where enrichment analysis would sometimes fail to run when 'exclude_unannotated_genes' is set to False.
-* RNAlysis KEGG enrichment should now match the new KEGG annotation format from March 1st 2023.
+* Fixed bug where test_translate_gene_ids() would fail for RankedSet objects.
 
 New Contributors
 *****************

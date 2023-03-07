@@ -1046,25 +1046,39 @@ class RankedSet(FeatureSet):
 
         return True
 
+    def _convert_to_filter_obj(self) -> Filter:
+        return Filter.from_dataframe(pd.DataFrame(index=self.ranked_genes), self.set_name)
+
     def _inplace(self, func, func_kwargs, inplace: bool, **update_kwargs):
         """
         Executes the user's choice whether to filter in-place or create a new instance of the FeatureSet object.
         """
-        res = super()._inplace(func, func_kwargs, inplace, **update_kwargs)
+        filter_obj = self._convert_to_filter_obj()
+        applied = func(filter_obj, **func_kwargs, inplace=inplace)
         if inplace:
-            new_ranked = []
-            for item in self.ranked_genes:
-                if item in self.gene_set:
-                    new_ranked.append(item)
-            self.ranked_genes = np.array(new_ranked, dtype='str')
-        # TODO: resolve translate case
+            applied = filter_obj
+
+        new_set = applied.index_set
+        suffix = '_' + applied.fname.stem.split('_')[-1]
+        new_name = self.set_name + suffix
+        new_ranked = []
+        if len(new_set.difference(self.ranked_genes)) > 0:
+            new_ranked = applied.df.index
         else:
-            new_ranked = []
             for item in self.ranked_genes:
-                if item in res.gene_set:
+                if item in new_set:
                     new_ranked.append(item)
-            res.ranked_genes = np.array(new_ranked, dtype='str')
-            return res
+
+        new_ranked = np.array(new_ranked, dtype='str')
+        # if inplace, modify self, name and other properties of self
+        if inplace:
+            self.intersection_update(new_set)
+            self._update(ranked_genes=new_ranked, gene_set=new_set, set_name=new_name, **update_kwargs)
+        # if not inplace, copy self, modify the self, name, and other properties of the copy, and return it
+        else:
+            new_obj = type(self)(new_ranked, new_name)
+            new_obj._update(**update_kwargs)
+            return new_obj
 
     def _set_ops(self, others: Union[set, 'FeatureSet'], op: types.FunctionType):
         warnings.warn("Warning: when performing set operations with RankedSet objects, "
