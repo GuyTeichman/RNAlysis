@@ -303,7 +303,7 @@ class FeatureSet(set):
         the function will return a new Filter instance and the current instance will not be affected.
         :return: If 'inplace' is False, returns a new and filtered instance of the Filter object.
         """
-        kwargs = dict(attributes=attributes, mode=mode, opposite=opposite)
+        kwargs = dict(attributes=attributes, mode=mode, opposite=opposite,ref=ref)
         return self._inplace(Filter.filter_by_attribute, kwargs, inplace)
 
     def change_set_name(self, new_name: str):

@@ -33,6 +33,7 @@ Fixed
 * Fixed bug where the 'highlight' parameter of CountFilter.scatter_sample_vs_sample would not work when used through the graphic interface.
 * Fixed bug where enrichment analysis would sometimes fail to run when 'exclude_unannotated_genes' is set to False.
 * Fixed bug where translate_gene_ids() would fail for RankedSet objects.
+* Fixed bug where filtering gene sets by user-defined attributes (FeatureSet.filter_by_attribute()) would occasionally fail to run.
 
 New Contributors
 *****************

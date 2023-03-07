@@ -692,3 +692,35 @@ def test_translate_gene_ids_rankedset(map_to, map_from, remove_unmapped_genes, e
     assert res == truth
     s.translate_gene_ids(map_to, map_from, remove_unmapped_genes, inplace=True)
     assert s == truth
+
+
+def test_filter_by_attribute():
+    truth = FeatureSet({'WBGene00011910', 'WBGene00000019', 'WBGene00001436'}, 'set_name_filtbyattrattribute1')
+    s = FeatureSet(
+        {'WBGene00000027', 'WBGene00000005', 'WBGene00000017', 'WBGene00000025', 'WBGene00000003', 'WBGene00000019',
+         'WBGene00000026', 'WBGene00000028', 'WBGene00000004', 'WBGene00000024', 'WBGene00000016', 'WBGene00000010',
+         'WBGene00000008', 'WBGene00000009', 'WBGene00000023', 'WBGene00000015', 'WBGene00000006', 'WBGene00000029',
+         'WBGene00000012', 'WBGene00001436', 'WBGene00000022', 'WBGene00000013', 'WBGene00000014', 'WBGene00000002',
+         'WBGene00000007', 'WBGene00000020', 'WBGene00000011', 'WBGene00011910'}
+        , set_name='set_name')
+    s_notinplace = s.filter_by_attribute('attribute1', ref=__attr_ref__, inplace=False)
+    assert s_notinplace == truth
+
+    s.filter_by_attribute('attribute1', ref=__attr_ref__)
+    assert s == truth
+
+
+def test_filter_by_attribute_rankedset():
+    truth = RankedSet(['WBGene00000019', 'WBGene00001436', 'WBGene00011910'], 'set_name_filtbyattrattribute1')
+    s = RankedSet(
+        ['WBGene00000027', 'WBGene00000005', 'WBGene00000017', 'WBGene00000025', 'WBGene00000003', 'WBGene00000019',
+         'WBGene00000026', 'WBGene00000028', 'WBGene00000004', 'WBGene00000024', 'WBGene00000016', 'WBGene00000010',
+         'WBGene00000008', 'WBGene00000009', 'WBGene00000023', 'WBGene00000015', 'WBGene00000006', 'WBGene00000029',
+         'WBGene00000012', 'WBGene00001436', 'WBGene00000022', 'WBGene00000013', 'WBGene00000014', 'WBGene00000002',
+         'WBGene00000007', 'WBGene00000020', 'WBGene00000011', 'WBGene00011910']
+        , set_name='set_name')
+    s_notinplace = s.filter_by_attribute('attribute1', ref=__attr_ref__, inplace=False)
+    assert s_notinplace == truth
+
+    s.filter_by_attribute('attribute1', ref=__attr_ref__)
+    assert s == truth
