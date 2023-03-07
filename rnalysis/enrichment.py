@@ -103,7 +103,7 @@ class FeatureSet(set):
             applied = filter_obj
 
         new_set = applied.index_set
-        suffix = applied.fname.stem.split('_')[-1]
+        suffix = '_' + applied.fname.stem.split('_')[-1]
         new_name = self.set_name + suffix
 
         # if inplace, modify self, name and other properties of self

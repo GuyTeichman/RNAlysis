@@ -145,8 +145,6 @@ def test_filter_translate_gene_ids(map_to, map_from, remove_unmapped_genes, expe
     f = Filter('tests/test_files/counted.csv')
 
     res = f.translate_gene_ids(map_to, map_from, remove_unmapped_genes, inplace=False)
-    print(res.df.sort_index(), truth.sort_index())
-
     assert res.df.sort_index().equals(truth.sort_index())
     f.translate_gene_ids(map_to, map_from, remove_unmapped_genes, inplace=True)
     assert f.df.sort_index().equals(truth.sort_index())
