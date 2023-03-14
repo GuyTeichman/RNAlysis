@@ -2,6 +2,14 @@
 History
 =======
 
+3.6.1 (2023-??-??)
+------------------
+This version introduces minor bug fixes.
+
+Fixed
+******
+* Fixed bug where PCA plots would not display on the stand-alone app unless another visualization function was applied afterwards.
+
 3.6.0 (2023-03-07)
 ------------------
 This version introduces improvements to the usability and clarity of the graphic interface,
