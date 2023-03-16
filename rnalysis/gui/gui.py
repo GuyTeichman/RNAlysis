@@ -1977,10 +1977,16 @@ class FilterTabPage(TabPage):
             self._apply_pipeline(pipeline, inplace=False)
 
     def _apply_pipeline(self, pipeline, inplace: bool):
-        prev_name = self.filter_obj.fname.name
-        result = pipeline.apply_to(self.filter_obj, inplace)
+        job_name = f'Pipeline on {self.get_tab_name()}'
+        partial = functools.partial(pipeline.apply_to, self.filter_obj, inplace)
+        # if not inplace:
+        #     self.startedJob.emit(partial, job_name, None)
+        #     return
+
+        prev_name = self.get_tab_name()
+        result = partial()
         self.update_tab(prev_name != self.filter_obj.fname.name)
-        self.process_outputs(result, f'Pipeline on {self.get_tab_name()}')
+        self.process_outputs(result, job_name)
 
     def get_index_string(self):
         if self.is_empty():
@@ -3733,6 +3739,8 @@ class MainWindow(QtWidgets.QMainWindow):
 
         partial, output_slots, args = self.job_queue.get()
         # Create a worker object
+        if isinstance(self.worker, gui_widgets.Worker):
+            self.worker.deleteLater()
         self.worker = gui_widgets.Worker(partial, *args)
 
         def alt_tqdm(iter_obj: typing.Iterable = None, desc: str = '', unit: str = '', bar_format: str = '',
@@ -3778,7 +3786,6 @@ class MainWindow(QtWidgets.QMainWindow):
                 self.worker.finished.connect(slot)
         self.worker.finished.connect(self.run_partial)
         self.worker.finished.connect(self.thread.quit)
-        self.worker.finished.connect(self.worker.deleteLater)
 
         self.thread.start()
 
