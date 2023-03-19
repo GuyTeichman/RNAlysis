@@ -10,6 +10,7 @@ Fixed
 ******
 * Fixed bug where PCA plots would not display on the stand-alone app unless another visualization function was applied afterwards.
 * Fixed bug where Pipelines that contain specific functions (such as translating gene IDs/filtering biotypes from GTF file) would fail to run through the graphical interface.
+* GO Annotations annotated by ComplexPortal are now supported by RNAlysis.
 
 3.6.0 (2023-03-07)
 ------------------
