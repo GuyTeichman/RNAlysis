@@ -63,6 +63,9 @@ jobs:
             -   name: Install libxml on MacOS
                 if: runner.os == 'macOS'
                 run: brew install libxml2
+            -   name: Export SDKROOT on MacOS
+                if: runner.os == 'macOS'
+                run: export SDKROOT=$(xcrun --sdk macosx --show-sdk-path)
             -   name: Test R installation
                 run: Rscript -e "print('R script ran successfully')"
             -   name: Install kallisto
