@@ -2,7 +2,8 @@ if (("DESeq2" %in% rownames(installed.packages()) == FALSE) || (!require("DESeq2
     install.packages("png")
 
     tryCatch(
-    {install.packages("XML")},
+    {install.packages("XML")
+    require("XML")},
     error = function(e) {
     install.packages("XML", type = "binary")})
 
