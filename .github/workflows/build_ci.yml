@@ -63,6 +63,9 @@ jobs:
             -   name: Install libxml on Windows
                 if: runner.os == 'Windows'
                 run: choco install libxml
+            -   name: Install libxml on MacOS
+                if: runner.os == 'macOS'
+                run: brew install libxml2
             -   name: Test R installation
                 run: Rscript -e "print('R script ran successfully')"
             -   name: Install kallisto
