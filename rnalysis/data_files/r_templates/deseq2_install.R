@@ -1,6 +1,10 @@
 if (("DESeq2" %in% rownames(installed.packages()) == FALSE) || (!require("DESeq2", quietly = TRUE))) {
     install.packages("png")
-    install.packages("XML", type = "binary")
+    tryCatch(
+    {install.packages("XML")},
+    error = function(e) {
+    install.packages("XML", type = "binary")})
+
     if (!require("BiocManager", quietly = TRUE)) {
         install.packages("BiocManager")
         }
