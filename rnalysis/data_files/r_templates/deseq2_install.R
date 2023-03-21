@@ -9,7 +9,13 @@ if (("DESeq2" %in% rownames(installed.packages()) == FALSE) || (!require("DESeq2
     error = function(e) {
     install.packages("XML", type = "binary")})
 
-    install.packages("vctrs")
+    tryCatch(
+    {install.packages("vctrs")
+    require("vctrs")},
+    warning = function(e) {
+    install.packages("vctrs", type = "binary"),
+    error = function(e) {
+    install.packages("vctrs", type = "binary")})
 
     if (!require("BiocManager", quietly = TRUE)) {
         install.packages("BiocManager")
