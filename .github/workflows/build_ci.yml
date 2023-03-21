@@ -62,7 +62,7 @@ jobs:
                 run: choco install openssl
             -   name: Install libxml on Windows
                 if: runner.os == 'Windows'
-                run: choco install libxml2
+                run: choco install libxml
             -   name: Test R installation
                 run: Rscript -e "print('R script ran successfully')"
             -   name: Install kallisto
