@@ -5,7 +5,7 @@ if (("DESeq2" %in% rownames(installed.packages()) == FALSE) || (!require("DESeq2
     {install.packages("XML")
     require("XML")},
     warning = function(e) {
-    install.packages("XML", type = "binary"),
+    install.packages("XML", type = "binary")},
     error = function(e) {
     install.packages("XML", type = "binary")})
 
@@ -13,7 +13,7 @@ if (("DESeq2" %in% rownames(installed.packages()) == FALSE) || (!require("DESeq2
     {install.packages("vctrs")
     require("vctrs")},
     warning = function(e) {
-    install.packages("vctrs", type = "binary"),
+    install.packages("vctrs", type = "binary")},
     error = function(e) {
     install.packages("vctrs", type = "binary")})
 
