@@ -131,7 +131,8 @@ class QuickStartWizard(QtWidgets.QWizard):
 
         self.setWizardStyle(QtWidgets.QWizard.ModernStyle)
         self.setWindowTitle('Welcome to RNAlysis!')
-        self.setPixmap(self.LogoPixmap, QtGui.QPixmap(Path.cwd().parent.parent.joinpath('docs/source/favicon.ico')))
+        self.setPixmap(self.LogoPixmap,
+                       QtGui.QPixmap(Path.cwd().parent.parent.joinpath('docs/source/favicon.ico').as_posix()))
         self.setField('dont_show_again', not settings.get_show_tutorial_settings())
 
     def play_tutorial(self, ind: int):
