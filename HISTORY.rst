@@ -2,6 +2,14 @@
 History
 =======
 
+3.7.0(2023-03-26)
+-----------------
+This version introduces quality-of-life changes to the graphical interface, as well as bug fixes.
+
+Fixed
+*******
+* Fixed bug where the stand-alone Mac version of RNAlysis would sometimes fail to map gene IDs (directly or in enrichment analysis).
+
 3.6.1 (2023-03-22)
 ------------------
 This version introduces minor bug fixes.
