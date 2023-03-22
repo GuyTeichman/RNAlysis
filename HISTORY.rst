@@ -2,9 +2,13 @@
 History
 =======
 
-3.6.1 (2023-??-??)
+3.6.1 (2023-03-22)
 ------------------
 This version introduces minor bug fixes.
+
+Changed
+********
+* DESeq2 automatic installation should now work more reliably.
 
 Fixed
 ******
