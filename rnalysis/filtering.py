@@ -4479,6 +4479,7 @@ class CountFilter(Filter):
                             fontsize=label_fontsize, color=colors[i])
         ax.grid(True)
         ax.tick_params(axis='both', which='both', labelsize=tick_fontsize)
+        plt.show()
         return fig
 
     @readable_name('Scatter plot - sample VS sample')

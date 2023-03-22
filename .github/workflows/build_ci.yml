@@ -50,7 +50,7 @@ jobs:
             -   name: Install R
                 uses: r-lib/actions/setup-r@v2
                 with:
-                    r-version: '4.2.2' # The R version to download (if necessary) and use.
+                    r-version: '4.2.3' # The R version to download (if necessary) and use.
             -   name: Install homebrew on Linux
                 if: runner.os == 'Linux'
                 uses: Homebrew/actions/setup-homebrew@master
@@ -60,6 +60,12 @@ jobs:
             -   name: Install cURL on Windows
                 if: runner.os == 'Windows'
                 run: choco install openssl
+            -   name: Install libxml on MacOS
+                if: runner.os == 'macOS'
+                run: brew install libxml2
+            -   name: Export SDKROOT on MacOS
+                if: runner.os == 'macOS'
+                run: export SDKROOT=$(xcrun --sdk macosx --show-sdk-path)
             -   name: Test R installation
                 run: Rscript -e "print('R script ran successfully')"
             -   name: Install kallisto

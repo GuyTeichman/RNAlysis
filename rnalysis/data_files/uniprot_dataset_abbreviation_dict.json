@@ -11,5 +11,6 @@
     "NCBI": "GeneID",
     "WBGene": "WormBase",
     "WB": "WormBase",
-    "RNAcentral": "Null"
+    "RNAcentral": "Null",
+    "ComplexPortal": "ComplexPortal"
 }
