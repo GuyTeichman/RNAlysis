@@ -168,6 +168,8 @@ class TableColumnGroupPicker(TableColumnPicker):
         self._color_gen = generic.color_generator()
         self.colors = []
         self.reset_button = QtWidgets.QPushButton('Reset')
+        self.save_button = QtWidgets.QPushButton('Export selection')
+        self.load_button = QtWidgets.QPushButton('Import selection')
         super().__init__(text, parent)
 
     def add_columns(self, columns: list):
@@ -189,8 +191,44 @@ class TableColumnGroupPicker(TableColumnPicker):
         self.dialog_table.setColumnCount(3)
         self.dialog_table.setHorizontalHeaderLabels(['Column names', 'Include column?', 'Column group'])
         self.reset_button.clicked.connect(self.reset)
-        self.dialog_layout.addWidget(self.reset_button, 7, 0, 1, 2)
-        self.dialog_layout.addWidget(self.done_button, 8, 0, 1, 2)
+
+        self.save_button.clicked.connect(self.export_selection)
+        self.dialog_layout.addWidget(self.save_button, 7, 0, 1, 2)
+
+        self.load_button.clicked.connect(self.import_selection)
+        self.dialog_layout.addWidget(self.load_button, 8, 0, 1, 2)
+        self.dialog_layout.addWidget(self.reset_button, 9, 0, 1, 2)
+        self.dialog_layout.addWidget(self.done_button, 10, 0, 1, 2)
+
+    def export_selection(self):
+        value = self.value()
+        default_name = 'selection.txt'
+        output_filename, _ = QtWidgets.QFileDialog.getSaveFileName(self, "Export selection",
+                                                                   str(Path.home().joinpath(default_name)),
+                                                                   "Text files (*.txt);;"
+                                                                   "All Files (*)")
+        if output_filename:
+            with open(output_filename, 'w') as f:
+                json.dump(value, f)
+
+    def import_selection(self):
+        input_filename, _ = QtWidgets.QFileDialog.getOpenFileName(self, "Import selection",
+                                                                  str(Path.home()),
+                                                                  "Text files (*.txt);;"
+                                                                  "All Files (*)")
+        if input_filename:
+            with open(input_filename) as f:
+                selection = json.load(f)
+            self.set_selection(selection)
+
+    def set_selection(self, selection: list):
+        self.clear_selection()
+        for group_ind, grp in enumerate(selection):
+            for item in grp:
+                assert item in self.columns, f"Item '{item}' is not a column in this table!"
+                item_ind = self.columns.index(item)
+                self.column_checks[item_ind].setChecked(True)
+                self.column_combos[item_ind].setCurrentText(str(group_ind + 1))
 
     def reset(self):
         self.select_all()

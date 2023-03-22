@@ -6,6 +6,10 @@ History
 -----------------
 This version introduces quality-of-life changes to the graphical interface, as well as bug fixes.
 
+Added
+*******
+* Sample groupings in functions such as PCA, Pair-plot, etc., can now be imported and exported through the graphical interface.
+
 Fixed
 *******
 * Fixed bug where the stand-alone Mac version of RNAlysis would sometimes fail to map gene IDs (directly or in enrichment analysis).
