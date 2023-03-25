@@ -2,7 +2,7 @@
 History
 =======
 
-3.6.1 (2023-03-25)
+3.6.2 (2023-03-25)
 -----------------
 This version introduces quality-of-life changes to the graphical interface, as well as bug fixes.
 
