@@ -7,6 +7,10 @@ History
 ------------------
 This version introduces minor bug fixes.
 
+Added
+*******
+* Added new parameter to Principal Component Analysis (CountFilter.pca) 'proportional_axes', that allows you to make the PCA projection axes proportional to the percentage of variance each PC explains.
+
 Changed
 *******
 * Tables loaded into RNAlysis that use integer-indices will now be converted to use string-indices.
