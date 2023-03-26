@@ -405,8 +405,8 @@ class Filter:
         return self._inplace(new_df, False, inplace, suffix, 'translate')
 
     @readable_name('Filter by percentile')
-    def filter_percentile(self, percentile: param_typing.Fraction, column: str, opposite: bool = False,
-                          inplace: bool = True):
+    def filter_percentile(self, percentile: param_typing.Fraction, column: param_typing.ColumnName,
+                          opposite: bool = False, inplace: bool = True):
 
         """
         Removes all entries above the specified percentile in the specified column. \
@@ -449,7 +449,7 @@ class Filter:
         return self._inplace(new_df, opposite, inplace, suffix)
 
     @readable_name('Split by percentile')
-    def split_by_percentile(self, percentile: param_typing.Fraction, column: str) -> tuple:
+    def split_by_percentile(self, percentile: param_typing.Fraction, column: param_typing.ColumnName) -> tuple:
 
         """
         Splits the features in the Filter object into two non-overlapping Filter objects: \
@@ -1278,7 +1278,8 @@ class Filter:
             return ref_df.set_index('gene', drop=False).loc[self.df.index].groupby('biotype').count()
 
     @readable_name('Filter with a number filter')
-    def number_filters(self, column: str, operator: Literal['greater than', 'equals', 'lesser than'], value: float,
+    def number_filters(self, column: param_typing.ColumnName,
+                       operator: Literal['greater than', 'equals', 'lesser than'], value: float,
                        opposite: bool = False, inplace: bool = True):
 
         """
@@ -1342,7 +1343,8 @@ class Filter:
         return self._inplace(new_df, opposite, inplace, suffix)
 
     @readable_name('Filter with a text filter')
-    def text_filters(self, column: str, operator: Literal['equals', 'contains', 'starts with', 'ends with'], value: str,
+    def text_filters(self, column: param_typing.ColumnName,
+                     operator: Literal['equals', 'contains', 'starts with', 'ends with'], value: str,
                      opposite: bool = False, inplace: bool = True):
 
         """
