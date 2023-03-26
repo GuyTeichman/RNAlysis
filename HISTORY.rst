@@ -3,9 +3,9 @@ History
 =======
 
 
-3.6.3 (2023-??-??)
+3.7.0 (2023-??-??)
 ------------------
-This version introduces minor bug fixes.
+This version introduces new filtering functions, a new optional parameter for Principal Component Analysis, and bug fixes.
 
 Added
 *******
