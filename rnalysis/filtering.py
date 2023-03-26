@@ -2762,7 +2762,7 @@ class CountFilter(Filter):
         return parsing.data_to_tuple(outputs)
 
     @readable_name('Calculate fold change')
-    def fold_change(self, numerator: Union[str, List[str]], denominator: Union[str, List[str]],
+    def fold_change(self, numerator: param_typing.ColumnNames, denominator: param_typing.ColumnNames,
                     numer_name: str = 'default', denom_name: str = 'default') -> 'FoldChangeFilter':
 
         """

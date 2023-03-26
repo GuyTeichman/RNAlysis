@@ -11,6 +11,7 @@ This version introduces minor bug fixes.
 Fixed
 *******
 * Fixed bug where the 'column' parameter of some functions ('Filter by percentile', 'Split by percentile', 'Filter with a number filter', 'Filter with a text filter') would not automatically detect column names in the graphical interface.
+* Fixed bug where the 'numerator' and 'denominator' parameters of of the function 'Calculate fold change' would not automatically detect column names in the graphical interface.
 
 3.6.2 (2023-03-25)
 ------------------
