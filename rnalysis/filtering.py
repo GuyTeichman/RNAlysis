@@ -340,6 +340,32 @@ class Filter:
         """
         return self.df.tail(n)
 
+    @readable_name('Filter rows with duplicate names/IDs')
+    def filter_duplicate_ids(self, keep: Literal['first', 'last', 'neither'] = 'first', opposite: bool = False,
+                             inplace: bool = True):
+        """
+        Filter out rows with duplicate names/IDs (index).
+
+        :param keep: determines which of the duplicates to keep for each group of duplicates. 'first' will keep the \
+        first duplicate found for each group; 'last' will keep the last; \
+        and 'neither' will remove *all* of the values in the group.
+        :type keep: 'first', 'last', or 'neither' (default='first')
+        :type opposite: bool
+        :param opposite: If True, the output of the filtering will be the OPPOSITE of the specified \
+        (instead of filtering out X, the function will filter out anything BUT X). \
+        If False (default), the function will filter as expected.
+        :type inplace: bool (default=True)
+        :param inplace: If True (default), filtering will be applied to the current Filter object. If False, \
+        the function will return a new Filter instance and the current instance will not be affected.
+        :return: If inplace is False, returns a new and filtered instance of the Filter object.
+        """
+        suffix = f'_dropduplicateskeep{keep}'
+        if keep == 'neither':
+            keep = False
+        new_df = self.df[self.df.index.drop_duplicates(keep)]
+        return self._inplace(new_df, opposite, inplace, suffix)
+        pass
+
     @readable_name('Filter specific rows by name')
     def filter_by_row_name(self, row_names: Union[str, List[str]], opposite: bool = False, inplace: bool = True):
         """
