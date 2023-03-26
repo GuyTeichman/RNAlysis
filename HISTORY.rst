@@ -9,6 +9,7 @@ This version introduces minor bug fixes.
 
 Added
 *******
+* Added new filtering function 'Filter specific rows by name' (Filter.filter_by_row_name).
 * Added new parameter to Principal Component Analysis (CountFilter.pca) 'proportional_axes', that allows you to make the PCA projection axes proportional to the percentage of variance each PC explains.
 
 Changed

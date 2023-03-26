@@ -340,6 +340,29 @@ class Filter:
         """
         return self.df.tail(n)
 
+    @readable_name('Filter specific rows by name')
+    def filter_by_row_name(self, row_names: Union[str, List[str]], opposite: bool = False, inplace: bool = True):
+        """
+        Filter out specific rows from the table by their name (index).
+
+        :param row_names: list of row names to be removed from the table.
+        :type row_names: str or list of str
+        :type opposite: bool
+        :param opposite: If True, the output of the filtering will be the OPPOSITE of the specified \
+        (instead of filtering out X, the function will filter out anything BUT X). \
+        If False (default), the function will filter as expected.
+        :type inplace: bool (default=True)
+        :param inplace: If True (default), filtering will be applied to the current Filter object. If False, \
+        the function will return a new Filter instance and the current instance will not be affected.
+        :return: If inplace is False, returns a new and filtered instance of the Filter object.
+        """
+        suffix = '_filterbyrowname'
+        row_names = parsing.data_to_list(row_names)
+        for name in row_names:
+            assert name in self.df.index, f"'{name}' is now a row name in the table!"
+        new_df = self.df.drop(row_names)
+        return self._inplace(new_df, opposite, inplace, suffix)
+
     @readable_name('Drop columns from the table')
     def drop_columns(self, columns: param_typing.ColumnNames, inplace: bool = True):
         """
