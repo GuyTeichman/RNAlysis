@@ -10,6 +10,7 @@ This version introduces minor bug fixes.
 
 Fixed
 *******
+* Fixed bug in the function 'Split into Higly and Lowly expressed genes' (Filter.split_by_reads) where the two resulting tables would be named incorrectly (highly-expressed genes would be labeled 'belowXreads' and vice-versa).
 * Fixed bug where the 'column' parameter of some functions ('Filter by percentile', 'Split by percentile', 'Filter with a number filter', 'Filter with a text filter') would not automatically detect column names in the graphical interface.
 * Fixed bug where the 'numerator' and 'denominator' parameters of of the function 'Calculate fold change' would not automatically detect column names in the graphical interface.
 

@@ -3578,8 +3578,8 @@ class CountFilter(Filter):
                                  self.df.loc[:, self._numeric_columns].iterrows()]]
         low_expr = self.df.loc[[False if max(vals) > threshold else True for gene, vals in
                                 self.df.loc[:, self._numeric_columns].iterrows()]]
-        return self._inplace(high_expr, opposite=False, inplace=False, suffix=f'_below{threshold}reads'), self._inplace(
-            low_expr, opposite=False, inplace=False, suffix=f'_above{threshold}reads')
+        return self._inplace(high_expr, opposite=False, inplace=False, suffix=f'_above{threshold}reads'), self._inplace(
+            low_expr, opposite=False, inplace=False, suffix=f'_below{threshold}reads')
 
     @readable_name('Filter genes with low summized expression across all conditions')
     def filter_by_row_sum(self, threshold: float = 5, opposite: bool = False, inplace: bool = True):
