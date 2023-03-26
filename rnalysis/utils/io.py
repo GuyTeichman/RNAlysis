@@ -245,9 +245,12 @@ def load_csv(filename: Union[str, Path], index_col: int = None, drop_columns: Un
     df = pd.read_csv(filename, **kwargs)
     if squeeze:
         df = df.squeeze("columns")
+
+    if index_col is not None:
+        df.index = df.index.astype('str')
     df.index = [ind.strip() if isinstance(ind, str) else ind for ind in df.index]
     if isinstance(df, pd.DataFrame):
-        df.columns = [col.strip() if isinstance(col, str) else col for col in df.columns]
+        df.columns = [col.strip() if isinstance(col, str) else str(col).strip() for col in df.columns]
 
         for col in df.columns:
             # check if the columns contains string data
