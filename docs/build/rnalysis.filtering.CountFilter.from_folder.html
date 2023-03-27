@@ -4,14 +4,14 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>rnalysis.filtering.CountFilter.from_folder &mdash; RNAlysis 3.6.2 documentation</title>
+  <title>rnalysis.filtering.CountFilter.from_folder_htseqcount &mdash; RNAlysis 3.6.2 documentation</title>
       <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
     <link rel="shortcut icon" href="_static/favicon.ico"/>
   <!--[if lt IE 9]>
     <script src="_static/js/html5shiv.min.js"></script>
   <![endif]-->
-  
+
         <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
         <script src="_static/jquery.js"></script>
         <script src="_static/underscore.js"></script>
@@ -23,10 +23,10 @@
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="rnalysis.filtering.CountFilter.head" href="rnalysis.filtering.CountFilter.head.html" />
-    <link rel="prev" title="rnalysis.filtering.CountFilter.from_dataframe" href="rnalysis.filtering.CountFilter.from_dataframe.html" /> 
+    <link rel="prev" title="rnalysis.filtering.CountFilter.from_dataframe" href="rnalysis.filtering.CountFilter.from_dataframe.html" />
 </head>
 
-<body class="wy-body-for-nav"> 
+<body class="wy-body-for-nav">
   <div class="wy-grid-for-nav">
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
@@ -96,8 +96,8 @@
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.filter_top_n.html">rnalysis.filtering.CountFilter.filter_top_n</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.fold_change.html">rnalysis.filtering.CountFilter.fold_change</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.from_dataframe.html">rnalysis.filtering.CountFilter.from_dataframe</a></li>
-<li class="toctree-l3 current"><a class="current reference internal" href="#">rnalysis.filtering.CountFilter.from_folder</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#rnalysis.filtering.CountFilter.from_folder"><code class="docutils literal notranslate"><span class="pre">CountFilter.from_folder()</span></code></a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">rnalysis.filtering.CountFilter.from_folder_htseqcount</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#rnalysis.filtering.CountFilter.from_folder"><code class="docutils literal notranslate"><span class="pre">CountFilter.from_folder_htseqcount()</span></code></a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.head.html">rnalysis.filtering.CountFilter.head</a></li>
@@ -171,7 +171,7 @@
       <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
           <li><a href="rnalysis.filtering.html">rnalysis.filtering</a> &raquo;</li>
           <li><a href="rnalysis.filtering.CountFilter.html">rnalysis.filtering.CountFilter</a> &raquo;</li>
-      <li>rnalysis.filtering.CountFilter.from_folder</li>
+      <li>rnalysis.filtering.CountFilter.from_folder_htseqcount</li>
       <li class="wy-breadcrumbs-aside">
             <a href="_sources/rnalysis.filtering.CountFilter.from_folder.rst.txt" rel="nofollow"> View page source</a>
       </li>
@@ -180,12 +180,12 @@
 </div>
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
-             
+
   <section id="rnalysis-filtering-countfilter-from-folder">
-<h1>rnalysis.filtering.CountFilter.from_folder<a class="headerlink" href="#rnalysis-filtering-countfilter-from-folder" title="Permalink to this heading"></a></h1>
+<h1>rnalysis.filtering.CountFilter.from_folder_htseqcount<a class="headerlink" href="#rnalysis-filtering-countfilter-from-folder" title="Permalink to this heading"></a></h1>
 <dl class="py method">
 <dt class="sig sig-object py" id="rnalysis.filtering.CountFilter.from_folder">
-<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">CountFilter.</span></span><span class="sig-name descname"><span class="pre">from_folder</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">folder_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">norm_to_rpm</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_csv</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">counted_fname</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">uncounted_fname</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_format</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'.txt'</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="rnalysis.filtering.CountFilter.html#rnalysis.filtering.CountFilter" title="rnalysis.filtering.CountFilter"><span class="pre">CountFilter</span></a></span></span><a class="headerlink" href="#rnalysis.filtering.CountFilter.from_folder" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">CountFilter.</span></span><span class="sig-name descname"><span class="pre">from_folder_htseqcount</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">folder_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">norm_to_rpm</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_csv</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">counted_fname</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">uncounted_fname</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_format</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'.txt'</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="rnalysis.filtering.CountFilter.html#rnalysis.filtering.CountFilter" title="rnalysis.filtering.CountFilter"><span class="pre">CountFilter</span></a></span></span><a class="headerlink" href="#rnalysis.filtering.CountFilter.from_folder" title="Permalink to this definition"></a></dt>
 <dd><p>Iterates over HTSeq count .txt files in a given folder and combines them into a single CountFilter table.         Can also save the count data table and the uncounted data table to .csv files, and normalize the CountFilter         table to reads per million (RPM). Note that the saved data will always be count data, and not normalized data,         regardless if the CountFilter table was normalized or not.</p>
 <dl class="field-list">
 <dt class="field-odd">Parameters</dt>
@@ -203,14 +203,14 @@
 </dd>
 <dt class="field-odd">Examples</dt>
 <dd class="field-odd"><div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">rnalysis</span> <span class="kn">import</span> <span class="n">filtering</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">c</span> <span class="o">=</span> <span class="n">filtering</span><span class="o">.</span><span class="n">CountFilter</span><span class="o">.</span><span class="n">from_folder</span><span class="p">(</span><span class="s1">&#39;tests/test_files/test_count_from_folder&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">c</span> <span class="o">=</span> <span class="n">filtering</span><span class="o">.</span><span class="n">CountFilter</span><span class="o">.</span><span class="n">from_folder_htseqcount</span><span class="p">(</span><span class="s1">&#39;tests/test_files/test_count_from_folder&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">c</span> <span class="o">=</span> <span class="n">filtering</span><span class="o">.</span><span class="n">CountFilter</span><span class="o">.</span><span class="n">from_folder</span><span class="p">(</span><span class="s1">&#39;tests/test_files/test_count_from_folder&#39;</span><span class="p">,</span> <span class="n">norm_to_rpm</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span> <span class="c1"># This will also normalize the CountFilter to reads-per-million (RPM).</span>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">c</span> <span class="o">=</span> <span class="n">filtering</span><span class="o">.</span><span class="n">CountFilter</span><span class="o">.</span><span class="n">from_folder_htseqcount</span><span class="p">(</span><span class="s1">&#39;tests/test_files/test_count_from_folder&#39;</span><span class="p">,</span> <span class="n">norm_to_rpm</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span> <span class="c1"># This will also normalize the CountFilter to reads-per-million (RPM).</span>
 </pre></div>
 </div>
 <p>Normalized 10 features. Normalized inplace.</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">c</span> <span class="o">=</span> <span class="n">filtering</span><span class="o">.</span><span class="n">CountFilter</span><span class="o">.</span><span class="n">from_folder</span><span class="p">(</span><span class="s1">&#39;tests/test_files/test_count_from_folder&#39;</span><span class="p">,</span> <span class="n">save_csv</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">counted_fname</span><span class="o">=</span><span class="s1">&#39;name_for_reads_csv_file&#39;</span><span class="p">,</span> <span class="n">uncounted_fname</span><span class="o">=</span><span class="s1">&#39;name_for_uncounted_reads_csv_file&#39;</span><span class="p">)</span> <span class="c1"># This will also save the counted reads and uncounted reads as separate .csv files</span>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">c</span> <span class="o">=</span> <span class="n">filtering</span><span class="o">.</span><span class="n">CountFilter</span><span class="o">.</span><span class="n">from_folder_htseqcount</span><span class="p">(</span><span class="s1">&#39;tests/test_files/test_count_from_folder&#39;</span><span class="p">,</span> <span class="n">save_csv</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">counted_fname</span><span class="o">=</span><span class="s1">&#39;name_for_reads_csv_file&#39;</span><span class="p">,</span> <span class="n">uncounted_fname</span><span class="o">=</span><span class="s1">&#39;name_for_uncounted_reads_csv_file&#39;</span><span class="p">)</span> <span class="c1"># This will also save the counted reads and uncounted reads as separate .csv files</span>
 </pre></div>
 </div>
 </dd>
@@ -236,7 +236,7 @@
   Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
     <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
     provided by <a href="https://readthedocs.org">Read the Docs</a>.
-   
+
 
 </footer>
         </div>
@@ -247,7 +247,7 @@
       jQuery(function () {
           SphinxRtdTheme.Navigation.enable(true);
       });
-  </script> 
+  </script>
 
 </body>
 </html>

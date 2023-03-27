@@ -2165,7 +2165,6 @@ class FoldChangeFilter(Filter):
         new_df = self.df[self.df <= self.df.quantile(percentile)]
         return self._inplace(new_df, opposite, inplace, suffix)
 
-
     @readable_name('Split by percentile')
     def split_by_percentile(self, percentile: param_typing.Fraction) -> tuple:
         """
@@ -2181,7 +2180,6 @@ class FoldChangeFilter(Filter):
        """
         return self.filter_percentile(percentile=percentile, opposite=False, inplace=False), self.filter_percentile(
             percentile=percentile, opposite=True, inplace=False)
-
 
     @readable_name('Remove rows with missing values')
     def filter_missing_values(self, opposite: bool = False, inplace: bool = True):
@@ -2200,7 +2198,6 @@ class FoldChangeFilter(Filter):
         suffix = '_removemissingvals'
         new_df = self.df.dropna(axis=0, inplace=False)
         return self._inplace(new_df, opposite, inplace, suffix)
-
 
     @readable_name('Filter by absolute log2 fold-change magnitude')
     def filter_abs_log2_fold_change(self, abslog2fc: float = 1, opposite: bool = False, inplace: bool = True):
@@ -2233,7 +2230,6 @@ class FoldChangeFilter(Filter):
         suffix = f"_{abslog2fc}abslog2foldchange"
         new_df = self.df[np.abs(np.log2(self.df)) >= abslog2fc].dropna()
         return self._inplace(new_df, opposite, inplace, suffix)
-
 
     @readable_name('Filter by fold-change direction')
     def filter_fold_change_direction(self, direction: Literal['pos', 'neg'] = 'pos', opposite: bool = False,
@@ -2283,7 +2279,6 @@ class FoldChangeFilter(Filter):
             raise ValueError(
                 "'direction' must be either 'pos' for positive fold-change, or 'neg' for negative fold-change. ")
         return self._inplace(new_df, opposite, inplace, suffix)
-
 
     @readable_name('Split by fold-change direction')
     def split_fold_change_direction(self) -> tuple:
@@ -4938,28 +4933,19 @@ class CountFilter(Filter):
         return ax
 
     @classmethod
-    def from_folder(cls, folder_path: str, norm_to_rpm: bool = False, save_csv: bool = False, counted_fname: str = None,
-                    uncounted_fname: str = None, input_format: str = '.txt') -> 'CountFilter':
+    def from_folder(cls, folder_path: str, save_csv: bool = False, fname: str = None, input_format: str = '.txt'
+                    ) -> 'CountFilter':
         """
-        Iterates over HTSeq count .txt files in a given folder and combines them into a single CountFilter table. \
-        Can also save the count data table and the uncounted data table to .csv files, and normalize the CountFilter \
-        table to reads per million (RPM). Note that the saved data will always be count data, and not normalized data, \
-        regardless if the CountFilter table was normalized or not.
+        Iterates over count .txt files in a given folder and combines them into a single CountFilter table. \
+        Can also save the count data table and the uncounted data table to .csv files.
 
         :param folder_path: str or pathlib.Path. Full path of the folder that contains individual htcount .txt files.
-        :param norm_to_rpm: bool. If True, the CountFilter table will be automatically normalized to reads per \
-        million (RPM). If False (defualt), the CountFilter object will not be normalized, and will instead contain \
-        absolute count data (as in the original htcount .txt files). \
-        Note that if save_csv is True, the saved .csv fill will contain ABSOLUTE COUNT DATA, as in the original \
-        htcount .txt files, and NOT normalized data.
         :param save_csv: bool. If True, the joint DataFrame of count data and uncounted data will be saved \
         to two separate .csv files. The files will be saved in 'folder_path', and named according to the parameters \
         'counted_fname' for the count data, and 'uncounted_fname' for the uncounted data (unaligned, \
         alignment not unique, etc).
-        :param counted_fname: str. Name under which to save the combined count data table. Does not need to include \
+        :param fname: str. Name under which to save the combined count data table. Does not need to include \
         the '.csv' suffix.
-        :param uncounted_fname: counted_fname: str. Name under which to save the combined uncounted data. \
-        Does not need to include the '.csv' suffix.
         :param input_format: the file format of the input files. Default is '.txt'.
         :return: an CountFilter object containing the combined count data from all individual htcount .txt files in the \
         specified folder.
@@ -4968,13 +4954,70 @@ class CountFilter(Filter):
         :Examples:
             >>> from rnalysis import filtering
             >>> c = filtering.CountFilter.from_folder('tests/test_files/test_count_from_folder')
+            """
+        file_suffix = '.csv'
+        if save_csv:
+            assert isinstance(fname, str)
 
-            >>> c = filtering.CountFilter.from_folder('tests/test_files/test_count_from_folder', norm_to_rpm=True) # This will also normalize the CountFilter to reads-per-million (RPM).
-           Normalized 10 features. Normalized inplace.
+            if not fname.endswith(file_suffix):
+                fname += file_suffix
 
-            >>> c = filtering.CountFilter.from_folder('tests/test_files/test_count_from_folder', save_csv=True, counted_fname='name_for_reads_csv_file', uncounted_fname='name_for_uncounted_reads_csv_file') # This will also save the counted reads and uncounted reads as separate .csv files
+            counted_fname = os.path.join(folder_path, fname)
+
+        folder = Path(folder_path)
+        counts = pd.DataFrame()
+        for item in sorted(folder.iterdir()):
+            if item.is_file() and item.suffix == input_format:
+                counts = pd.concat([counts, pd.read_csv(item, sep='\t', index_col=0, names=[item.stem])], axis=1)
+        assert not counts.empty, f"No valid files with the suffix '{input_format}' were found in '{folder_path}'."
+
+        if save_csv:
+            io.save_csv(df=counts, filename=counted_fname)
+
+        fname = counted_fname if save_csv else os.path.join(folder.absolute(), folder.name + file_suffix)
+        count_filter_obj = cls.from_dataframe(counts, Path(fname))
+        return count_filter_obj
+
+    @classmethod
+    def from_folder_htseqcount(cls, folder_path: str, norm_to_rpm: bool = False, save_csv: bool = False,
+                               counted_fname: str = None, uncounted_fname: str = None,
+                               input_format: str = '.txt') -> 'CountFilter':
 
         """
+            Iterates over HTSeq count .txt files in a given folder and combines them into a single CountFilter table. \
+            Can also save the count data table and the uncounted data table to .csv files, and normalize the CountFilter \
+            table to reads per million (RPM). Note that the saved data will always be count data, and not normalized data, \
+            regardless if the CountFilter table was normalized or not.
+
+            :param folder_path: str or pathlib.Path. Full path of the folder that contains individual htcount .txt files.
+            :param norm_to_rpm: bool. If True, the CountFilter table will be automatically normalized to reads per \
+            million (RPM). If False (defualt), the CountFilter object will not be normalized, and will instead contain \
+            absolute count data (as in the original htcount .txt files). \
+            Note that if save_csv is True, the saved .csv fill will contain ABSOLUTE COUNT DATA, as in the original \
+            htcount .txt files, and NOT normalized data.
+            :param save_csv: bool. If True, the joint DataFrame of count data and uncounted data will be saved \
+            to two separate .csv files. The files will be saved in 'folder_path', and named according to the parameters \
+            'counted_fname' for the count data, and 'uncounted_fname' for the uncounted data (unaligned, \
+            alignment not unique, etc).
+            :param counted_fname: str. Name under which to save the combined count data table. Does not need to include \
+            the '.csv' suffix.
+            :param uncounted_fname: counted_fname: str. Name under which to save the combined uncounted data. \
+            Does not need to include the '.csv' suffix.
+            :param input_format: the file format of the input files. Default is '.txt'.
+            :return: an CountFilter object containing the combined count data from all individual htcount .txt files in the \
+            specified folder.
+
+
+            :Examples:
+                >>> from rnalysis import filtering
+                >>> c = filtering.CountFilter.from_folder_htseqcount('tests/test_files/test_count_from_folder')
+
+                >>> c = filtering.CountFilter.from_folder_htseqcount('tests/test_files/test_count_from_folder', norm_to_rpm=True) # This will also normalize the CountFilter to reads-per-million (RPM).
+               Normalized 10 features. Normalized inplace.
+
+                >>> c = filtering.CountFilter.from_folder_htseqcount('tests/test_files/test_count_from_folder', save_csv=True, counted_fname='name_for_reads_csv_file', uncounted_fname='name_for_uncounted_reads_csv_file') # This will also save the counted reads and uncounted reads as separate .csv files
+
+            """
         file_suffix = '.csv'
         if save_csv:
             assert isinstance(counted_fname, str)

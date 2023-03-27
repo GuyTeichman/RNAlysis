@@ -16,6 +16,7 @@ Added
 Changed
 *******
 * Tables loaded into RNAlysis that use integer-indices will now be converted to use string-indices.
+* Refactored CountFilter.from_folder into CountFilter.from_folder_htseqcount, and added a new CountFilter.from_folder method that accepts a folder of count files in any format.
 
 Fixed
 *******
@@ -496,14 +497,14 @@ Added
 
 Changed
 *******
-* Changed argument order and default values in filtering.CountFilter.from_folder().
+* Changed argument order and default values in filtering.CountFilter.from_folder_htseqcount().
 * Changed default title in scatter_sample_vs_sample().
 * Changed default filename in CountFilter.fold_change().
 * Settings are now saved in a .yaml format. Reading and writing of settings have been modified.
 * Changed argument name 'deseq_highlight' to 'highlight' in scatter_sample_vs_sample(). It can now accept any Filter object.
 * Updated documentation and default 'mode' value for FeatureSet.go_enrichment().
 * Updated the signature and function of general.load_csv() to be clearer and more predictable.
-* Changed argument names in CountFilter.from_folder().
+* Changed argument names in CountFilter.from_folder_htseqcount().
 * Modified names and signatures of .csv test files functions to make them more comprehensible.
 * Renamed 'Filter.filter_by_ref_table_attr()' to 'Filter.filter_by_attribute()'.
 * Renamed 'Filter.split_by_ref_table_attr()' to 'Filter.split_by_attribute()'.

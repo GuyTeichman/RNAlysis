@@ -1695,7 +1695,8 @@ class FuncTypeStack(QtWidgets.QWidget):
 
 class FilterTabPage(TabPage):
     EXCLUDED_FUNCS = {'union', 'intersection', 'majority_vote_intersection', 'difference', 'symmetric_difference',
-                      'from_folder', 'save_txt', 'save_csv', 'from_dataframe', 'print_features'}
+                      'from_folder', 'from_folder_htseqcount', 'save_txt', 'save_csv', 'from_dataframe',
+                      'print_features'}
     CLUSTERING_FUNCS = {'split_kmeans': 'K-Means', 'split_kmedoids': 'K-Medoids',
                         'split_hierarchical': 'Hierarchical (Agglomerative)', 'split_hdbscan': 'HDBSCAN',
                         'split_clicom': 'CLICOM (Ensemble)'}
@@ -2917,13 +2918,21 @@ class MainWindow(QtWidgets.QMainWindow):
     def new_table_from_folder(self):
         folder_name = QtWidgets.QFileDialog.getExistingDirectory(self, "Choose directory", str(Path.home()))
         if folder_name:
+            filter_obj = filtering.CountFilter.from_folder(folder_name)
+            if self.tabs.currentWidget().is_empty():
+                self.tabs.removeTab(self.tabs.currentIndex())
+            self.new_tab_from_filter_obj(filter_obj)
+
+    def new_table_from_folder_htseqcount(self):
+        folder_name = QtWidgets.QFileDialog.getExistingDirectory(self, "Choose directory", str(Path.home()))
+        if folder_name:
             normalize_answer = QtWidgets.QMessageBox.question(self, 'Normalize values?',
                                                               "Do you want to normalize your count table to "
                                                               "reads-per-million (RPM)?",
                                                               QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No)
             to_normalize = normalize_answer == QtWidgets.QMessageBox.Yes
 
-            filter_obj = filtering.CountFilter.from_folder(folder_name, norm_to_rpm=to_normalize)
+            filter_obj = filtering.CountFilter.from_folder_htseqcount(folder_name, norm_to_rpm=to_normalize)
             if self.tabs.currentWidget().is_empty():
                 self.tabs.removeTab(self.tabs.currentIndex())
             self.new_tab_from_filter_obj(filter_obj)
@@ -3147,6 +3156,8 @@ class MainWindow(QtWidgets.QMainWindow):
         self.new_table_action.triggered.connect(functools.partial(self.add_new_tab, name=None))
         self.new_table_from_folder_action = QtWidgets.QAction("New table from &folder")
         self.new_table_from_folder_action.triggered.connect(self.new_table_from_folder)
+        self.new_table_from_folder_htseq_action = QtWidgets.QAction("New table from folder (HTSeq-count output)")
+        self.new_table_from_folder_htseq_action.triggered.connect(self.new_table_from_folder_htseqcount)
 
         self.new_multiple_action = QtWidgets.QAction("&Multiple new tables")
         self.new_multiple_action.triggered.connect(self.load_multiple_files)
@@ -3444,7 +3455,8 @@ class MainWindow(QtWidgets.QMainWindow):
         self.setMenuBar(self.menu_bar)
         file_menu = self.menu_bar.addMenu("&File")
         self.new_menu = file_menu.addMenu("&New...")
-        self.new_menu.addActions([self.new_table_action, self.new_multiple_action, self.new_table_from_folder_action])
+        self.new_menu.addActions([self.new_table_action, self.new_multiple_action, self.new_table_from_folder_action,
+                                  self.new_table_from_folder_htseq_action])
         file_menu.addActions(
             [self.save_action, self.load_session_action, self.save_session_action, self.clear_session_action,
              self.clear_cache_action, self.settings_action, self.exit_action])

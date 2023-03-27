@@ -1115,8 +1115,8 @@ def test_count_filter_from_folder():
 
     truth_all_expr = io.load_csv('tests/test_files/test_count_from_folder_all_expr.csv', 0).sort_index()
     truth_all_feature = io.load_csv('tests/test_files/test_count_from_folder_all_feature.csv', 0).sort_index()
-    counts = CountFilter.from_folder('tests/test_files/test_count_from_folder', norm_to_rpm=False, save_csv=True,
-                                     counted_fname=counted_fname, uncounted_fname=uncounted_fname)
+    counts = CountFilter.from_folder_htseqcount('tests/test_files/test_count_from_folder', norm_to_rpm=False, save_csv=True,
+                                                counted_fname=counted_fname, uncounted_fname=uncounted_fname)
 
     try:
         print('counts:')
@@ -1137,8 +1137,8 @@ def test_count_filter_from_folder_save_without_suffix():
     counted_fname = '__allexpr_temporary_testfile.csv'
     uncounted_fname = '__allfeature_temporary_testfile.csv'
     try:
-        _ = CountFilter.from_folder('tests/test_files/test_count_from_folder', norm_to_rpm=False, save_csv=True,
-                                    counted_fname=counted_fname, uncounted_fname=uncounted_fname)
+        _ = CountFilter.from_folder_htseqcount('tests/test_files/test_count_from_folder', norm_to_rpm=False, save_csv=True,
+                                               counted_fname=counted_fname, uncounted_fname=uncounted_fname)
     finally:
         os.remove(f'tests/test_files/test_count_from_folder/{counted_fname}')
         os.remove(f'tests/test_files/test_count_from_folder/{uncounted_fname}')
@@ -1146,7 +1146,7 @@ def test_count_filter_from_folder_save_without_suffix():
 
 def test_count_filter_from_folder_norm():
     truth_norm = io.load_csv('tests/test_files/test_count_from_folder_norm.csv', 0)
-    counts_norm = CountFilter.from_folder('tests/test_files/test_count_from_folder', norm_to_rpm=True, save_csv=False)
+    counts_norm = CountFilter.from_folder_htseqcount('tests/test_files/test_count_from_folder', norm_to_rpm=True, save_csv=False)
     assert np.all(np.isclose(counts_norm.df, truth_norm, atol=0, rtol=0.0001))
 
 

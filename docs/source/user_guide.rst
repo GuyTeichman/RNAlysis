@@ -553,17 +553,17 @@ An HTSeq-count output file would follow the following format:
 | __alignment_not_unique | 100 |
 +------------------------+-----+
 
-When running HTSeq-count on multiple SAM files (which could represent different conditions or replicates), the final output would be a directory of .txt files. *RNAlysis* can parse those .txt files into two `csv` tables: in the first each row is a genomic feature and each column is a condition or replicate (a single .txt file), and in the second each row represents a category of reads not mapped to genomic features (alignment not unique, low alignment quality, etc). This is done with the 'from_folder' function::
+When running HTSeq-count on multiple SAM files (which could represent different conditions or replicates), the final output would be a directory of .txt files. *RNAlysis* can parse those .txt files into two `csv` tables: in the first each row is a genomic feature and each column is a condition or replicate (a single .txt file), and in the second each row represents a category of reads not mapped to genomic features (alignment not unique, low alignment quality, etc). This is done with the 'from_folder_htseqcount' function::
 
-    >>> counts = filtering.CountFilter.from_folder('tests/test_files/test_count_from_folder')
+    >>> counts = filtering.CountFilter.from_folder_htseqcount('tests/test_files/test_count_from_folder')
 
-By deault, 'from_folder' does not save the generated tables as `csv` files. However, you can choose to save them by specifying 'save_csv=True', and specifying their filenames in the arguments 'counted_fname' and 'uncounted_fname'::
+By deault, 'from_folder_htseqcount' does not save the generated tables as `csv` files. However, you can choose to save them by specifying 'save_csv=True', and specifying their filenames in the arguments 'counted_fname' and 'uncounted_fname'::
 
-    >>> counts = filtering.CountFilter.from_folder('tests/test_files/test_count_from_folder', save_csv=True, counted_fname='name_for_reads_csv_file', uncounted_fname='name_for_uncounted_reads_csv_file')
+    >>> counts = filtering.CountFilter.from_folder_htseqcount('tests/test_files/test_count_from_folder', save_csv=True, counted_fname='name_for_reads_csv_file', uncounted_fname='name_for_uncounted_reads_csv_file')
 
 It is also possible to automatically normalize the reads in the new :term:`CountFilter` object to reads per million (RPM) using the unmapped reads data by specifying 'norm_to_rpm=True'::
 
-        >>> counts = filtering.CountFilter.from_folder('tests/test_files/test_count_from_folder', norm_to_rpm=True)
+        >>> counts = filtering.CountFilter.from_folder_htseqcount('tests/test_files/test_count_from_folder', norm_to_rpm=True)
 
 
 Loading from a pre-made `csv` file
@@ -651,7 +651,7 @@ To normalize a :term:`CountFilter` that originated from HTSeq-count to reads per
 | __not_aligned          | 109853  | 277653  | 88653   | 96012   |
 +------------------------+---------+---------+---------+---------+
 
-Such a `csv` table is generated automatically when you create a :term:`CountFilter` object from a folder of text files (CountFilter.from_folder(), see :ref:`from-folder-ref`).
+Such a `csv` table is generated automatically when you create a :term:`CountFilter` object from a folder of text files (CountFilter.from_folder_htseqcount(), see :ref:`from-folder-ref`).
 We would then supply the normalization function with the path to the special counter file::
 
     >>> counts = CountFilter("tests/test_files/counted.csv")

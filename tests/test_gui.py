@@ -2157,7 +2157,7 @@ def test_MainWindow_new_table_from_folder(qtbot, main_window_with_tabs, normaliz
 
     main_window_with_tabs.new_table_from_folder_action.trigger()
     assert main_window_with_tabs.tabs.count() == 6
-    assert main_window_with_tabs.tabs.currentWidget().obj() == filtering.CountFilter.from_folder(dir_path, normalize)
+    assert main_window_with_tabs.tabs.currentWidget().obj() == filtering.CountFilter.from_folder_htseqcount(dir_path, normalize)
 
 
 def test_MainWindow_multiple_new_tables(qtbot, main_window, monkeypatch):

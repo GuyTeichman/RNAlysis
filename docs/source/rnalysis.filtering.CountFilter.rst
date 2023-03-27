@@ -5,17 +5,17 @@
 
 .. autoclass:: CountFilter
 
-   
-   
-   
-    .. automethod:: __init__
-    
-    
 
-   
+
+
+    .. automethod:: __init__
+
+
+
+
 .. autosummary::
     :toctree: .
-    
+
     CountFilter.average_replicate_samples
     CountFilter.biotypes_from_gtf
     CountFilter.biotypes_from_ref_table
@@ -39,7 +39,7 @@
     CountFilter.filter_top_n
     CountFilter.fold_change
     CountFilter.from_dataframe
-    CountFilter.from_folder
+    CountFilter.from_folder_htseqcount
     CountFilter.head
     CountFilter.intersection
     CountFilter.ma_plot
@@ -77,5 +77,4 @@
     CountFilter.translate_gene_ids
     CountFilter.union
     CountFilter.violin_plot
-    
-    
+
