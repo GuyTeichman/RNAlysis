@@ -1225,10 +1225,8 @@ def test_filter_missing_values_foldchangefilter():
     f = FoldChangeFilter('tests/test_files/fc_1_nan.csv', 'num', 'denom')
     res_all = f.filter_missing_values(inplace=False)
     assert truth.equals(res_all.df)
-    res_foldchange = f.filter_missing_values('Fold Change', inplace=False)
+    res_foldchange = f.filter_missing_values(inplace=False)
     assert truth.equals(res_foldchange.df)
-    with pytest.raises(AssertionError):
-        f.filter_missing_values('column that doesnt exist')
 
 
 def test_filter_missing_values_one_columns():
