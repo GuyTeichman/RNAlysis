@@ -2141,7 +2141,7 @@ def test_MainWindow_rename_tab(qtbot, main_window_with_tabs):
 
 
 @pytest.mark.parametrize('normalize', [False, True])
-def test_MainWindow_new_table_from_folder(qtbot, main_window_with_tabs, normalize, monkeypatch):
+def test_MainWindow_new_table_from_folder_htseqcount(qtbot, main_window_with_tabs, normalize, monkeypatch):
     dir_path = 'tests/test_files/test_count_from_folder'
 
     def mock_get_dir(*args, **kwargs):
@@ -2155,9 +2155,22 @@ def test_MainWindow_new_table_from_folder(qtbot, main_window_with_tabs, normaliz
     monkeypatch.setattr(QtWidgets.QFileDialog, 'getExistingDirectory', mock_get_dir)
     monkeypatch.setattr(QtWidgets.QMessageBox, 'question', mock_question)
 
+    main_window_with_tabs.new_table_from_folder_htseq_action.trigger()
+    assert main_window_with_tabs.tabs.count() == 6
+    assert main_window_with_tabs.tabs.currentWidget().obj() == filtering.CountFilter.from_folder_htseqcount(dir_path,
+                                                                                                            normalize)
+
+
+def test_MainWindow_new_table_from_folder(qtbot, main_window_with_tabs, monkeypatch):
+    dir_path = 'tests/test_files/test_count_from_folder'
+
+    def mock_get_dir(*args, **kwargs):
+        return dir_path
+    monkeypatch.setattr(QtWidgets.QFileDialog, 'getExistingDirectory', mock_get_dir)
+
     main_window_with_tabs.new_table_from_folder_action.trigger()
     assert main_window_with_tabs.tabs.count() == 6
-    assert main_window_with_tabs.tabs.currentWidget().obj() == filtering.CountFilter.from_folder_htseqcount(dir_path, normalize)
+    assert main_window_with_tabs.tabs.currentWidget().obj() == filtering.CountFilter.from_folder(dir_path)
 
 
 def test_MainWindow_multiple_new_tables(qtbot, main_window, monkeypatch):
