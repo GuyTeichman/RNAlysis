@@ -3,12 +3,15 @@ if (("DESeq2" %in% rownames(installed.packages()) == FALSE) || (!require("DESeq2
     pgks <- list("XML", "vctrs", "RCurl")
     for (pkg in pgks) {
         tryCatch(
-        {install.packages(pkg)
-        require(pkg)},
-        warning = function(e) {
-        install.packages(pkg, type = "binary")},
-        error = function(e) {
-        install.packages(pkg, type = "binary")})
+            tryCatch(
+            {install.packages(pkg)
+            require(pkg)},
+            warning = function(e) {
+            install.packages(pkg, type = "binary")},
+            error = function(e) {
+            install.packages(pkg, type = "binary")}),
+        error = return(NULL)
+        )
 }
     if (!require("BiocManager", quietly = TRUE)) {
         install.packages("BiocManager")
