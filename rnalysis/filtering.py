@@ -2166,149 +2166,149 @@ class FoldChangeFilter(Filter):
         return self._inplace(new_df, opposite, inplace, suffix)
 
 
-@readable_name('Split by percentile')
-def split_by_percentile(self, percentile: param_typing.Fraction) -> tuple:
-    """
-    Splits the features in the table into two non-overlapping tables: \
-    one containing features below the specified percentile, \
-    and the other containing features about the specified percentile.
+    @readable_name('Split by percentile')
+    def split_by_percentile(self, percentile: param_typing.Fraction) -> tuple:
+        """
+        Splits the features in the table into two non-overlapping tables: \
+        one containing features below the specified percentile, \
+        and the other containing features about the specified percentile.
 
-    :type percentile: float between 0 and 1
-    :param percentile: The percentile that all features above it will be filtered out.
-    :rtype: Tuple[filtering.Filter, filtering.Filter]
-    :return: a tuple of two Filter objects: the first contains all the features below the specified percentile, \
-    and the second contains all the features above and equal to the specified percentile.
-   """
-    return self.filter_percentile(percentile=percentile, opposite=False, inplace=False), self.filter_percentile(
-        percentile=percentile, opposite=True, inplace=False)
-
-
-@readable_name('Remove rows with missing values')
-def filter_missing_values(self, opposite: bool = False, inplace: bool = True):
-    """
-    Remove all rows with missing values.
-
-    :type opposite: bool
-    :param opposite: If True, the output of the filtering will be the OPPOSITE of the specified \
-    (instead of filtering out X, the function will filter out anything BUT X). \
-    If False (default), the function will filter as expected.
-    :type inplace: bool (default=True)
-    :param inplace: If True (default), filtering will be applied to the current Filter object. If False, \
-    the function will return a new Filter instance and the current instance will not be affected.
-    :return: If 'inplace' is False, returns a new instance of the Filter object.
-    """
-    suffix = '_removemissingvals'
-    new_df = self.df.dropna(axis=0, inplace=False)
-    return self._inplace(new_df, opposite, inplace, suffix)
+        :type percentile: float between 0 and 1
+        :param percentile: The percentile that all features above it will be filtered out.
+        :rtype: Tuple[filtering.Filter, filtering.Filter]
+        :return: a tuple of two Filter objects: the first contains all the features below the specified percentile, \
+        and the second contains all the features above and equal to the specified percentile.
+       """
+        return self.filter_percentile(percentile=percentile, opposite=False, inplace=False), self.filter_percentile(
+            percentile=percentile, opposite=True, inplace=False)
 
 
-@readable_name('Filter by absolute log2 fold-change magnitude')
-def filter_abs_log2_fold_change(self, abslog2fc: float = 1, opposite: bool = False, inplace: bool = True):
-    """
-    Filters out all features whose absolute log2 fold change is below the indicated threshold. \
-    For example: if log2fc is 1.0, all features whose log2 fold change is between 1 and -1 (went up less than \
-    two-fold or went down less than two-fold) will be filtered out.
+    @readable_name('Remove rows with missing values')
+    def filter_missing_values(self, opposite: bool = False, inplace: bool = True):
+        """
+        Remove all rows with missing values.
 
-    :param abslog2fc: The threshold absolute log2 fold change for filtering out a feature. Float or int. \
-    All features whose absolute log2 fold change is lower than log2fc will be filtered out.
-    :type opposite: bool
-    :param opposite: If True, the output of the filtering will be the OPPOSITE of the specified \
-    (instead of filtering out X, the function will filter out anything BUT X). \
-    If False (default), the function will filter as expected.
-    :type inplace: bool (default=True)
-    :param inplace: If True (default), filtering will be applied to the current FoldChangeFilter object. If False, \
-    the function will return a new FoldChangeFilter instance and the current instance will not be affected.
-    :return: If 'inplace' is False, returns a new instance of FoldChangeFilter.
-
-
-    :Examples:
-        >>> from rnalysis import filtering
-        >>> f = filtering.FoldChangeFilter('tests/test_files/fc_1.csv','numerator name','denominator name')
-        >>> f.filter_abs_log2_fold_change(2) # keep only rows whose log2(fold change) is >=2 or <=-2
-        Filtered 18 features, leaving 4 of the original 22 features. Filtered inplace.
-
-    """
-    assert isinstance(abslog2fc, (float, int)), "abslog2fc must be a number!"
-    assert abslog2fc >= 0, "abslog2fc must be non-negative!"
-    suffix = f"_{abslog2fc}abslog2foldchange"
-    new_df = self.df[np.abs(np.log2(self.df)) >= abslog2fc].dropna()
-    return self._inplace(new_df, opposite, inplace, suffix)
+        :type opposite: bool
+        :param opposite: If True, the output of the filtering will be the OPPOSITE of the specified \
+        (instead of filtering out X, the function will filter out anything BUT X). \
+        If False (default), the function will filter as expected.
+        :type inplace: bool (default=True)
+        :param inplace: If True (default), filtering will be applied to the current Filter object. If False, \
+        the function will return a new Filter instance and the current instance will not be affected.
+        :return: If 'inplace' is False, returns a new instance of the Filter object.
+        """
+        suffix = '_removemissingvals'
+        new_df = self.df.dropna(axis=0, inplace=False)
+        return self._inplace(new_df, opposite, inplace, suffix)
 
 
-@readable_name('Filter by fold-change direction')
-def filter_fold_change_direction(self, direction: Literal['pos', 'neg'] = 'pos', opposite: bool = False,
-                                 inplace: bool = True):
-    """
-    Filters out features according to the direction in which they changed between the two conditions.
+    @readable_name('Filter by absolute log2 fold-change magnitude')
+    def filter_abs_log2_fold_change(self, abslog2fc: float = 1, opposite: bool = False, inplace: bool = True):
+        """
+        Filters out all features whose absolute log2 fold change is below the indicated threshold. \
+        For example: if log2fc is 1.0, all features whose log2 fold change is between 1 and -1 (went up less than \
+        two-fold or went down less than two-fold) will be filtered out.
 
-    :param direction: 'pos' or 'neg'. If 'pos', will keep only features that have positive log2foldchange. \
-    If 'neg', will keep only features that have negative log2foldchange.
-    :type opposite: bool
-    :param opposite: If True, the output of the filtering will be the OPPOSITE of the specified \
-    (instead of filtering out X, the function will filter out anything BUT X). \
-    If False (default), the function will filter as expected.
-    :type inplace: bool (default=True)
-    :param inplace: If True (default), filtering will be applied to the current FoldChangeFilter object. If False, \
-    the function will return a new FoldChangeFilter instance and the current instance will not be affected.
-    :return: If 'inplace' is False, returns a new instance of FoldChangeFilter.
-
-
-    :Examples:
-        >>> from rnalysis import filtering
-        >>> f = filtering.FoldChangeFilter('tests/test_files/fc_1.csv','numerator name','denominator name')
-        >>> # keep only rows with a positive log2(fold change) value
-        >>> f.filter_fold_change_direction('pos')
-        Filtered 10 features, leaving 12 of the original 22 features. Filtered inplace.
-
-        >>> f = filtering.FoldChangeFilter('tests/test_files/fc_1.csv','numerator name','denominator name')
-        >>>  # keep only rows with a negative log2(fold change) value
-        >>> f.filter_fold_change_direction('neg')
-        Filtered 14 features, leaving 8 of the original 22 features. Filtered inplace.
-
-        >>> f = filtering.FoldChangeFilter('tests/test_files/fc_1.csv','numerator name','denominator name')
-        >>> # keep only rows with a non-positive log2(fold change) value
-        >>> f.filter_fold_change_direction('pos', opposite=True)
-        Filtered 12 features, leaving 10 of the original 22 features. Filtered inplace.
-
-    """
-    assert isinstance(direction, str), \
-        "'direction' must be either 'pos' for positive fold-change, or 'neg' for negative fold-change. "
-    if direction == 'pos':
-        new_df = self.df[self.df > 1]
-        suffix = '_PositiveLog2FC'
-    elif direction == 'neg':
-        new_df = self.df[self.df < 1]
-        suffix = '_NegativeLog2FC'
-    else:
-        raise ValueError(
-            "'direction' must be either 'pos' for positive fold-change, or 'neg' for negative fold-change. ")
-    return self._inplace(new_df, opposite, inplace, suffix)
+        :param abslog2fc: The threshold absolute log2 fold change for filtering out a feature. Float or int. \
+        All features whose absolute log2 fold change is lower than log2fc will be filtered out.
+        :type opposite: bool
+        :param opposite: If True, the output of the filtering will be the OPPOSITE of the specified \
+        (instead of filtering out X, the function will filter out anything BUT X). \
+        If False (default), the function will filter as expected.
+        :type inplace: bool (default=True)
+        :param inplace: If True (default), filtering will be applied to the current FoldChangeFilter object. If False, \
+        the function will return a new FoldChangeFilter instance and the current instance will not be affected.
+        :return: If 'inplace' is False, returns a new instance of FoldChangeFilter.
 
 
-@readable_name('Split by fold-change direction')
-def split_fold_change_direction(self) -> tuple:
-    """
-    Splits the features in the FoldChangeFilter object into two non-overlapping \
-    FoldChangeFilter objects, based on the direction of their log2(fold change). \
-    The first object will contain only features with a positive log2(fold change), \
-    the second object will contain only features with a negative log2(fold change). \
-    Features with log2(fold change) = 0 will be ignored.
+        :Examples:
+            >>> from rnalysis import filtering
+            >>> f = filtering.FoldChangeFilter('tests/test_files/fc_1.csv','numerator name','denominator name')
+            >>> f.filter_abs_log2_fold_change(2) # keep only rows whose log2(fold change) is >=2 or <=-2
+            Filtered 18 features, leaving 4 of the original 22 features. Filtered inplace.
 
-    :rtype: Tuple[filtering.FoldChangeFilter, filtering.FoldChangeFilter]
-    :return: a tuple containing two FoldChangeFilter objects: the first has only features with positive log2 fold change, \
-    and the other has only features with negative log2 fold change.
+        """
+        assert isinstance(abslog2fc, (float, int)), "abslog2fc must be a number!"
+        assert abslog2fc >= 0, "abslog2fc must be non-negative!"
+        suffix = f"_{abslog2fc}abslog2foldchange"
+        new_df = self.df[np.abs(np.log2(self.df)) >= abslog2fc].dropna()
+        return self._inplace(new_df, opposite, inplace, suffix)
 
 
-    :Examples:
-        >>> from rnalysis import filtering
-        >>> f = filtering.FoldChangeFilter('tests/test_files/fc_1.csv','numerator name','denominator name')
-        >>> pos_log2fc, neg_log2fc = f.split_fold_change_direction()
-        Filtered 10 features, leaving 12 of the original 22 features. Filtering result saved to new object.
-        Filtered 14 features, leaving 8 of the original 22 features. Filtering result saved to new object.
+    @readable_name('Filter by fold-change direction')
+    def filter_fold_change_direction(self, direction: Literal['pos', 'neg'] = 'pos', opposite: bool = False,
+                                     inplace: bool = True):
+        """
+        Filters out features according to the direction in which they changed between the two conditions.
 
-    """
-    return self.filter_fold_change_direction(direction='pos', inplace=False), \
-        self.filter_fold_change_direction(direction='neg', inplace=False)
+        :param direction: 'pos' or 'neg'. If 'pos', will keep only features that have positive log2foldchange. \
+        If 'neg', will keep only features that have negative log2foldchange.
+        :type opposite: bool
+        :param opposite: If True, the output of the filtering will be the OPPOSITE of the specified \
+        (instead of filtering out X, the function will filter out anything BUT X). \
+        If False (default), the function will filter as expected.
+        :type inplace: bool (default=True)
+        :param inplace: If True (default), filtering will be applied to the current FoldChangeFilter object. If False, \
+        the function will return a new FoldChangeFilter instance and the current instance will not be affected.
+        :return: If 'inplace' is False, returns a new instance of FoldChangeFilter.
+
+
+        :Examples:
+            >>> from rnalysis import filtering
+            >>> f = filtering.FoldChangeFilter('tests/test_files/fc_1.csv','numerator name','denominator name')
+            >>> # keep only rows with a positive log2(fold change) value
+            >>> f.filter_fold_change_direction('pos')
+            Filtered 10 features, leaving 12 of the original 22 features. Filtered inplace.
+
+            >>> f = filtering.FoldChangeFilter('tests/test_files/fc_1.csv','numerator name','denominator name')
+            >>>  # keep only rows with a negative log2(fold change) value
+            >>> f.filter_fold_change_direction('neg')
+            Filtered 14 features, leaving 8 of the original 22 features. Filtered inplace.
+
+            >>> f = filtering.FoldChangeFilter('tests/test_files/fc_1.csv','numerator name','denominator name')
+            >>> # keep only rows with a non-positive log2(fold change) value
+            >>> f.filter_fold_change_direction('pos', opposite=True)
+            Filtered 12 features, leaving 10 of the original 22 features. Filtered inplace.
+
+        """
+        assert isinstance(direction, str), \
+            "'direction' must be either 'pos' for positive fold-change, or 'neg' for negative fold-change. "
+        if direction == 'pos':
+            new_df = self.df[self.df > 1]
+            suffix = '_PositiveLog2FC'
+        elif direction == 'neg':
+            new_df = self.df[self.df < 1]
+            suffix = '_NegativeLog2FC'
+        else:
+            raise ValueError(
+                "'direction' must be either 'pos' for positive fold-change, or 'neg' for negative fold-change. ")
+        return self._inplace(new_df, opposite, inplace, suffix)
+
+
+    @readable_name('Split by fold-change direction')
+    def split_fold_change_direction(self) -> tuple:
+        """
+        Splits the features in the FoldChangeFilter object into two non-overlapping \
+        FoldChangeFilter objects, based on the direction of their log2(fold change). \
+        The first object will contain only features with a positive log2(fold change), \
+        the second object will contain only features with a negative log2(fold change). \
+        Features with log2(fold change) = 0 will be ignored.
+
+        :rtype: Tuple[filtering.FoldChangeFilter, filtering.FoldChangeFilter]
+        :return: a tuple containing two FoldChangeFilter objects: the first has only features with positive log2 fold change, \
+        and the other has only features with negative log2 fold change.
+
+
+        :Examples:
+            >>> from rnalysis import filtering
+            >>> f = filtering.FoldChangeFilter('tests/test_files/fc_1.csv','numerator name','denominator name')
+            >>> pos_log2fc, neg_log2fc = f.split_fold_change_direction()
+            Filtered 10 features, leaving 12 of the original 22 features. Filtering result saved to new object.
+            Filtered 14 features, leaving 8 of the original 22 features. Filtering result saved to new object.
+
+        """
+        return self.filter_fold_change_direction(direction='pos', inplace=False), \
+            self.filter_fold_change_direction(direction='neg', inplace=False)
 
 
 @readable_name('Differential expression table')
