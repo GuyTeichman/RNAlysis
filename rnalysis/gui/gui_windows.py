@@ -396,9 +396,19 @@ class ErrorMessage(QtWidgets.QDialog):
 
     def init_ui(self):
         self.setWindowTitle("Error")
+        self.setWindowIcon(self.style().standardIcon(QtWidgets.QStyle.SP_MessageBoxCritical))
+
         self.widgets['error_label'] = QtWidgets.QLabel('<i>RNAlysis</i> has encountered the following error:')
         self.layout.addWidget(self.widgets['error_label'])
-        self.setWindowIcon(self.style().standardIcon(QtWidgets.QStyle.SP_MessageBoxCritical))
+
+        self.widgets['error_summary'] = QtWidgets.QLabel(f'<b>{";".join(self.exception[1].args)}</b>')
+        self.widgets['error_summary'].setTextInteractionFlags(QtCore.Qt.TextInteractionFlag.TextSelectableByMouse)
+        self.widgets['error_summary'].setWordWrap(True)
+        self.layout.addWidget(self.widgets['error_summary'])
+
+        self.layout.addSpacing(3)
+        self.widgets['full_text_label'] = QtWidgets.QLabel('Full error report:')
+        self.layout.addWidget(self.widgets['full_text_label'])
 
         tb = "\n".join(traceback.format_exception(*self.exception))
         self.widgets['error_text'] = QtWidgets.QPlainTextEdit(tb)
