@@ -1,5 +1,6 @@
 if (("DESeq2" %in% rownames(installed.packages()) == FALSE) || (!require("DESeq2", quietly = TRUE))) {
-    pgks <- list("png", "XML", "vctrs", "RCurl")
+    install.packages("png")
+    pgks <- list("XML", "vctrs", "RCurl")
     for (pkg in pgks) {
         tryCatch(
         {install.packages(pkg)
