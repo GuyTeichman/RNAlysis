@@ -10,7 +10,7 @@ if (("DESeq2" %in% rownames(installed.packages()) == FALSE) || (!require("DESeq2
             install.packages(pkg, type = "binary")},
             error = function(e) {
             install.packages(pkg, type = "binary")}),
-        error = return(NULL)
+        error = function(e) {}
         )
 }
     if (!require("BiocManager", quietly = TRUE)) {
