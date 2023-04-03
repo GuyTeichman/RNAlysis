@@ -21,6 +21,7 @@ Changed
 * In the RNAlysis graphical interface, optional parameters that can be disabled will now display the hint "disable this parammeter?" instead of "disable input?".
 * Added optional parameter 'ylim' to 'create enrichment bar-plot' function (enrichment.enrichment_bar_plot), allowing users to determine the Y-axis limits of the bar plot.
 * Updated function signatures of 'Visualize gene ontology' and 'Visualize KEGG pathway' (enrichment.gene_ontology_graph and enrichment.kegg_pathway_graph) to make more sense.
+* Removed parameter 'report_read_assignment_path' from featureCounts feature counting (fastq.featurecounts_single_end and fastq.featurecounts_paired_end).
 
 Fixed
 *******

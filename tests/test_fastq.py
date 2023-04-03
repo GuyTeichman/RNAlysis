@@ -507,7 +507,7 @@ def test_trim_adapters_single_end_command(monkeypatch, fastq_folder, output_fold
         assert print_stderr
 
     monkeypatch.setattr(io, 'run_subprocess', mock_run_subprocess)
-    monkeypatch.setattr(io,'generate_base_call',lambda *args, **kwargs: ['cutadapt'])
+    monkeypatch.setattr(io, 'generate_base_call', lambda *args, **kwargs: ['cutadapt'])
 
     trim_adapters_single_end(fastq_folder, output_folder, three_prime_adapters,
                              five_prime_adapters, any_position_adapters, quality_trimming, trim_n,
@@ -561,7 +561,7 @@ def test_trim_adapters_paired_end_command(monkeypatch, fastq_1, fastq_2, output_
         assert print_stderr
 
     monkeypatch.setattr(io, 'run_subprocess', mock_run_subprocess)
-    monkeypatch.setattr(io,'generate_base_call',lambda *args, **kwargs: ['cutadapt'])
+    monkeypatch.setattr(io, 'generate_base_call', lambda *args, **kwargs: ['cutadapt'])
 
     trim_adapters_paired_end(fastq_1, fastq_2, output_folder, three_prime_r1, three_prime_r2,
                              five_prime_r1, five_prime_r2, any_position_r1, any_position_r2,

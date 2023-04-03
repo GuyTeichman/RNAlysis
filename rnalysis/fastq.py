@@ -39,7 +39,6 @@ def featurecounts_single_end(input_folder: Union[str, Path], output_folder: Unio
                              ignore_secondary: bool = True,
                              count_fractionally: bool = False, is_long_read: bool = False,
                              report_read_assignment: Union[Literal['bam', 'sam', 'core'], None] = None,
-                             report_read_assignment_path: Union[str, Path, None] = None,
                              threads: PositiveInt = 1) -> Tuple[filtering.CountFilter, pd.DataFrame, pd.DataFrame]:
     """
     Assign mapped single-end sequencing reads to specified genomic features using \
@@ -94,8 +93,6 @@ def featurecounts_single_end(input_folder: Union[str, Path], output_folder: Unio
     :param report_read_assignment: if not None, featureCounts will generated detailed read assignment results \
     for each read. These results can be saved in one of three formats: BAM, SAM, or CORE.
     :type report_read_assignment: 'bam', 'sam', 'core', or None (default=None)
-    :param report_read_assignment_path: path to the folder where files including detailed read assignemt are saved.
-    :type report_read_assignment_path: str, Path, or None (default=None)
     :param threads: number of threads to run bowtie2-build on. More threads will generally make index building faster.
     :type threads: int > 0 (default=1)
     :return: a count matrix (CountFilter) containing feature counts for all input files, \
@@ -104,10 +101,10 @@ def featurecounts_single_end(input_folder: Union[str, Path], output_folder: Unio
     """
     output_folder = Path(output_folder)
     assert output_folder.exists(), f'Output folder does not exist!'
-    kwargs = _parse_featurecounts_misc_args(input_folder, gtf_file, gtf_feature_type, gtf_attr_name, stranded,
-                                            min_mapping_quality, count_multi_mapping_reads,
+    kwargs = _parse_featurecounts_misc_args(input_folder, output_folder, gtf_file, gtf_feature_type, gtf_attr_name,
+                                            stranded, min_mapping_quality, count_multi_mapping_reads,
                                             count_multi_overlapping_reads, ignore_secondary, count_fractionally,
-                                            is_long_read, report_read_assignment, report_read_assignment_path, threads)
+                                            is_long_read, report_read_assignment, threads)
 
     new_sample_names = _featurecounts_get_sample_names(kwargs['files'], new_sample_names)
 
@@ -127,8 +124,7 @@ def featurecounts_paired_end(input_folder: Union[str, Path], output_folder: Unio
                              count_chimeric_fragments: bool = False, min_fragment_length: NonNegativeInt = 50,
                              max_fragment_length: Union[PositiveInt, None] = 600,
                              report_read_assignment: Union[Literal['bam', 'sam', 'core'], None] = None,
-                             report_read_assignment_path: Union[str, Path, None] = None, threads: PositiveInt = 1
-                             ) -> Tuple[filtering.CountFilter, pd.DataFrame, pd.DataFrame]:
+                             threads: PositiveInt = 1) -> Tuple[filtering.CountFilter, pd.DataFrame, pd.DataFrame]:
     """
     Assign mapped paired-end sequencing reads to specified genomic features using \
     `RSubread featureCounts <https://doi.org/10.1093/bioinformatics/btt656>`_. \
@@ -184,8 +180,6 @@ def featurecounts_paired_end(input_folder: Union[str, Path], output_folder: Unio
     :param report_read_assignment: if not None, featureCounts will generated detailed read assignment results \
     for each read pair. These results can be saved in one of three formats: BAM, SAM, or CORE.
     :type report_read_assignment: 'bam', 'sam', 'core', or None (default=None)
-    :param report_read_assignment_path: path to the folder where files including detailed read assignemt are saved.
-    :type report_read_assignment_path: str, Path, or None (default=None)
     :param require_both_mapped: indicating if both ends from the same fragment are required to be successfully aligned \
     before the fragment can be assigned to a feature or meta-feature.
     :type require_both_mapped: bool (default=True)
@@ -207,10 +201,10 @@ def featurecounts_paired_end(input_folder: Union[str, Path], output_folder: Unio
     output_folder = Path(output_folder)
     assert output_folder.exists(), f'Output folder does not exist!'
 
-    kwargs = _parse_featurecounts_misc_args(input_folder, gtf_file, gtf_feature_type, gtf_attr_name, stranded,
-                                            min_mapping_quality, count_multi_mapping_reads,
+    kwargs = _parse_featurecounts_misc_args(input_folder, output_folder, gtf_file, gtf_feature_type, gtf_attr_name,
+                                            stranded, min_mapping_quality, count_multi_mapping_reads,
                                             count_multi_overlapping_reads, ignore_secondary, count_fractionally,
-                                            is_long_read, report_read_assignment, report_read_assignment_path, threads)
+                                            is_long_read, report_read_assignment, threads)
     paired_kwargs = {'isPairedEnd': True, 'requireBothEndsMapped': require_both_mapped,
                      'countChimericFragments': count_chimeric_fragments, 'minFragLength': min_fragment_length,
                      'maxFragLength': max_fragment_length, 'countReadPairs': True}
@@ -223,13 +217,13 @@ def featurecounts_paired_end(input_folder: Union[str, Path], output_folder: Unio
     return counts, annotation, stats
 
 
-def _parse_featurecounts_misc_args(input_folder: Union[str, Path], gtf_file: Union[str, Path], gtf_feature_type: str,
-                                   gtf_attr_name: str,
+def _parse_featurecounts_misc_args(input_folder: Union[str, Path], output_folder: Path, gtf_file: Union[str, Path],
+                                   gtf_feature_type: str, gtf_attr_name: str,
                                    stranded: Literal['no', 'forward', 'reverse'], min_mapping_quality: int,
                                    count_multi_mapping_reads: bool, count_multi_overlapping_reads: bool,
                                    ignore_secondary: bool, count_fractionally: bool, is_long_read: bool,
                                    report_read_assignment: Union[Literal['bam', 'sam', 'core'], None],
-                                   report_read_assignment_path: Union[str, Path, None], threads: PositiveInt):
+                                   threads: PositiveInt):
     strand_dict = {'no': 0, 'forward': 1, 'reverse': 2}
     assert stranded in strand_dict, f"Invalid value for 'stranded': '{stranded}'."
     read_assignment_formats = {'bam': 'BAM', 'sam': 'SAM', 'core': 'CORE', None: None}
@@ -254,10 +248,8 @@ def _parse_featurecounts_misc_args(input_folder: Union[str, Path], gtf_file: Uni
               'primaryOnly': ignore_secondary, 'strandSpecific': strand_dict[stranded], 'nthreads': threads}
 
     if report_read_assignment is not None:
-        report_read_assignment_path = Path(report_read_assignment_path)
-        assert report_read_assignment_path.exists(), f"report_read_assignment_path does not exist!"
         kwargs.update({'reportReads': read_assignment_formats[report_read_assignment],
-                       'reportReadsPath': report_read_assignment_path.as_posix()})
+                       'reportReadsPath': output_folder.as_posix()})
     return kwargs
 
 
