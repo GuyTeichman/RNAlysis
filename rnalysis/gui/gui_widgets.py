@@ -1160,7 +1160,7 @@ class OptionalWidget(QtWidgets.QWidget):
         self.layout = QtWidgets.QHBoxLayout(self)
         self.other = other
         self.default = default
-        self.checkbox = QtWidgets.QCheckBox('Disable input?')
+        self.checkbox = QtWidgets.QCheckBox('Disable this parameter?')
         self.toggled = self.checkbox.toggled
 
         self.init_ui()

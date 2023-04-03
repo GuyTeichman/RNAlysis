@@ -18,6 +18,7 @@ Changed
 *******
 * Tables loaded into RNAlysis that use integer-indices will now be converted to use string-indices.
 * Refactored CountFilter.from_folder into CountFilter.from_folder_htseqcount, and added a new CountFilter.from_folder method that accepts a folder of count files in any format.
+* In the RNAlysis graphical interface, optional parameters that can be disabled will now display the hint "disable this parammeter?" instead of "disable input?".
 
 Fixed
 *******
