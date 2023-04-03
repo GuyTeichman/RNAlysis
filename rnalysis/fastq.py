@@ -256,8 +256,8 @@ def _parse_featurecounts_misc_args(input_folder: Union[str, Path], gtf_file: Uni
     if report_read_assignment is not None:
         report_read_assignment_path = Path(report_read_assignment_path)
         assert report_read_assignment_path.exists(), f"report_read_assignment_path does not exist!"
-        kwargs += {'reportReads': read_assignment_formats[report_read_assignment],
-                   'reportReadsPath': report_read_assignment_path.as_posix()}
+        kwargs.update({'reportReads': read_assignment_formats[report_read_assignment],
+                       'reportReadsPath': report_read_assignment_path.as_posix()})
     return kwargs
 
 

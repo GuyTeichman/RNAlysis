@@ -28,6 +28,7 @@ Fixed
 * Fixed bug where the 'column' parameter of some functions ('Filter by percentile', 'Split by percentile', 'Filter with a number filter', 'Filter with a text filter') would not automatically detect column names in the graphical interface.
 * Fixed bug where the 'numerator' and 'denominator' parameters of of the function 'Calculate fold change' would not automatically detect column names in the graphical interface.
 * Fixed bug where tables with integer-indices could not be visualized properly through the graphical interface.
+* Fixed bug in the function 'featureCounts single-end' (fastq.featurecounts_single_end) where setting parameter 'report_read_assignment' to any value other than None would raise an error.
 * Functions that take column name/names as input (transform, filter_missing_values, filter_percentile, split_percentile) can now be applied to fold change tables (FoldCangeFilter objects).
 * Fixed bug where the description for the 'n_bars' parameter of the 'create enrichment bar-plot' function (enrichment.enrichment_bar_plot) would not display properly.
 * 'Visualize gene ontology' and 'Visualize KEGG pathway' (enrichment.gene_ontology_graph and enrichment.kegg_pathway_graph) now have proper parameter descriptions.
