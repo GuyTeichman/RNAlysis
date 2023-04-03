@@ -303,7 +303,7 @@ class FeatureSet(set):
         the function will return a new Filter instance and the current instance will not be affected.
         :return: If 'inplace' is False, returns a new and filtered instance of the Filter object.
         """
-        kwargs = dict(attributes=attributes, mode=mode, opposite=opposite,ref=ref)
+        kwargs = dict(attributes=attributes, mode=mode, opposite=opposite, ref=ref)
         return self._inplace(Filter.filter_by_attribute, kwargs, inplace)
 
     def change_set_name(self, new_name: str):
@@ -1421,7 +1421,8 @@ def enrichment_bar_plot(results_table_path: Union[str, Path], alpha: param_typin
                         n_bars: Union[param_typing.PositiveInt, Literal['all']] = 'all',
                         title: str = 'Enrichment results', center_bars: bool = True,
                         plot_horizontal: bool = True, ylabel: Union[str, Literal[
-        r"$\log_2$(Fold Enrichment)", r"$\log_2$(Enrichment Score)"]] = r"$\log_2$(Fold Enrichment)") -> plt.Figure:
+        r"$\log_2$(Fold Enrichment)", r"$\log_2$(Enrichment Score)"]] = r"$\log_2$(Fold Enrichment)",
+                        ylim: Union[float, Literal['auto']] = 'auto') -> plt.Figure:
     """
     Generate an enrichment bar-plot based on an enrichment results table. \
     For the clarity of display, complete depletion (linear enrichment = 0) \
@@ -1445,6 +1446,9 @@ def enrichment_bar_plot(results_table_path: Union[str, Path], alpha: param_typin
     :type ylabel: str (default=r"$\log_2$(Fold Enrichment)")
     :param center_bars: if True, center the bars around Y=0. Otherwise, ylim is determined by min/max values.
     :type center_bars: bool (default=True)
+    :param ylim: set the Y-axis limits. If `ylim`='auto', determines the axis limits automatically based on the data. \
+    If `ylim` is a number, set the Y-axis limits to [-ylim, ylim].
+    :type ylim: float or 'auto' (default='auto')
     :return: Figure object containing the bar plot
     :rtype: matplotlib.figure.Figure instance
     """
@@ -1453,7 +1457,7 @@ def enrichment_bar_plot(results_table_path: Union[str, Path], alpha: param_typin
                                                 plot_horizontal, '', False, 'hypergeometric', 'all')
     runner.en_score_col = enrichment_score_column
     runner.results = results_table
-    return runner.enrichment_bar_plot(n_bars, center_bars, ylabel, title)
+    return runner.enrichment_bar_plot(n_bars, center_bars, ylabel, title, ylim)
 
 
 def _fetch_sets(objs: dict, ref: Union[str, Path, Literal['predefined']] = 'predefined'):

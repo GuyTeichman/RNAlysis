@@ -329,10 +329,12 @@ def test_featureset_repr():
     assert repr(en) == "FeatureSet: 'my very important set'"
 
 
-def test_enrichment_bar_plot():
+@pytest.mark.parametrize('kwargs', [{},
+                                    dict(plot_horizontal=True, ylim=12),
+                                    dict(plot_horizontal=False, ylabel='different ylabel', alpha=0.1, ylim=0.42)])
+def test_enrichment_bar_plot(kwargs):
     pth = 'tests/test_files/enrichment_hypergeometric_res.csv'
-    enrichment_bar_plot(pth, plot_horizontal=True)
-    enrichment_bar_plot(pth, plot_horizontal=False, ylabel='different ylabel', alpha=0.1)
+    enrichment_bar_plot(pth, **kwargs)
     plt.close('all')
 
 

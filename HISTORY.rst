@@ -19,6 +19,8 @@ Changed
 * Tables loaded into RNAlysis that use integer-indices will now be converted to use string-indices.
 * Refactored CountFilter.from_folder into CountFilter.from_folder_htseqcount, and added a new CountFilter.from_folder method that accepts a folder of count files in any format.
 * In the RNAlysis graphical interface, optional parameters that can be disabled will now display the hint "disable this parammeter?" instead of "disable input?".
+* Added optional parameter 'ylim' to 'create enrichment bar-plot' function (enrichment.enrichment_bar_plot), allowing users to determine the Y-axis limits of the bar plot.
+* Updated function signatures of 'Visualize gene ontology' and 'Visualize KEGG pathway' (enrichment.gene_ontology_graph and enrichment.kegg_pathway_graph) to make more sense.
 
 Fixed
 *******

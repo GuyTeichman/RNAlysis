@@ -519,7 +519,8 @@ class EnrichmentRunner:
 
     def enrichment_bar_plot(self, n_bars: int = 'all', center_bars: bool = True,
                             ylabel: str = r"$\log_2$(Fold Enrichment)",
-                            title: str = 'Enrichment results') -> plt.Figure:
+                            title: str = 'Enrichment results',
+                            ylim: Union[float, Literal['auto']] = 'auto') -> plt.Figure:
 
         """
         Receives a DataFrame output from an enrichment function and plots it in a bar plot. \
@@ -581,15 +582,18 @@ class EnrichmentRunner:
         if len(scores_no_inf) == 0:
             scores_no_inf.append(3)
 
-        for i in range(len(enrichment_scores)):
-            if enrichment_scores[i] == -np.inf:
-                enrichment_scores[i] = -max(scores_no_inf)
-            elif enrichment_scores[i] == np.inf:
-                enrichment_scores[i] = max(scores_no_inf)
-        if len(scores_no_inf) > 0:
-            max_score = max(max(scores_no_inf), 3)
+        if ylim == 'auto':
+            for i in range(len(enrichment_scores)):
+                if enrichment_scores[i] == -np.inf:
+                    enrichment_scores[i] = -max(scores_no_inf)
+                elif enrichment_scores[i] == np.inf:
+                    enrichment_scores[i] = max(scores_no_inf)
+            if len(scores_no_inf) > 0:
+                max_score = max(max(scores_no_inf), 3)
+            else:
+                max_score = 3
         else:
-            max_score = 3
+            max_score = ylim
 
         # get color values for bars
         data_color_norm = [0.5 * (1 + i / (np.ceil(max_score))) * 255 for i in enrichment_scores]
@@ -603,8 +607,11 @@ class EnrichmentRunner:
         bar = bar_func(ax, range(len(enrichment_names)), enrichment_scores, color=colors, edgecolor='black',
                        linewidth=1, zorder=2)
         bar.tick_labels = enrichment_names
-        # determine bounds, and enlarge the bound by a small margin (0.2%) so nothing gets cut out of the figure
-        bounds = np.array([np.floor(-max_score), np.ceil(max_score)]) * 1.005
+        # determine bounds, and enlarge the bound by a small margin (0.5%) so nothing gets cut out of the figure
+        if ylim == 'auto':
+            bounds = np.array([np.floor(-max_score), np.ceil(max_score)]) * 1.005
+        else:
+            bounds = np.array([-max_score, max_score]) * 1.005
         # add black line at y=0 and grey lines at every round positive/negative integer in range
         for ind in range(int(bounds[0]), int(bounds[1]) + 1):
             color = 'black' if ind == 0 else 'grey'
