@@ -5,6 +5,7 @@ import hashlib
 import importlib
 import itertools
 import os
+import platform
 import sys
 import time
 import typing
@@ -149,6 +150,21 @@ class Bowtie2PairedWindow(gui_windows.PairedFuncExternalWindow):
 
     def init_ui(self):
         self.setWindowTitle('Bowtie2 paired-end alignment setup')
+        super().init_ui()
+
+
+class ShortStackWindow(gui_windows.FuncExternalWindow):
+    EXCLUDED_PARAMS = set()
+    __slots__ = {}
+
+    def __init__(self, parent=None):
+        func = fastq.shortstack_align_smallrna
+        help_link = f"https://guyteichman.github.io/RNAlysis/build/rnalysis.fastq.{func.__name__}.html"
+        super().__init__('ShortStack align (small RNAs)', func, help_link, self.EXCLUDED_PARAMS, parent=parent)
+        self.init_ui()
+
+    def init_ui(self):
+        self.setWindowTitle('ShortStack small RNA alignment setup')
         super().init_ui()
 
 
@@ -3240,6 +3256,13 @@ class MainWindow(QtWidgets.QMainWindow):
         self.bowtie2_paired_action.triggered.connect(
             functools.partial(self.start_external_window, Bowtie2PairedWindow))
 
+        action_name = "ShortStack small &RNA alignment..."
+        if platform.system() == 'Windows':
+            action_name = "ShortStack small &RNA alignment (not available on Windows)"
+        self.shortstack_action = QtWidgets.QAction(action_name, self)
+        self.shortstack_action.triggered.connect(functools.partial(self.start_external_window, ShortStackWindow))
+        self.shortstack_action.setEnabled(platform.system() != 'Windows')
+
         self.featurecounts_single_action = QtWidgets.QAction("&featureCounts Single-end counting...", self)
         self.featurecounts_single_action.triggered.connect(
             functools.partial(self.start_external_window, FeatureCountsSingleWindow))
@@ -3478,7 +3501,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.kallisto_menu.addActions(
             [self.kallisto_index_action, self.kallisto_single_action, self.kallisto_paired_action])
         self.alignment_menu.addActions(
-            [self.bowtie2_index_action, self.bowtie2_single_action, self.bowtie2_paired_action])
+            [self.bowtie2_index_action, self.bowtie2_single_action, self.bowtie2_paired_action, self.shortstack_action])
         self.count_menu.addActions([self.featurecounts_single_action, self.featurecounts_paired_action])
 
         gene_sets_menu = self.menu_bar.addMenu("&Gene sets")

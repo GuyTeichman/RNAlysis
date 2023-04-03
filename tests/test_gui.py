@@ -2166,6 +2166,7 @@ def test_MainWindow_new_table_from_folder(qtbot, main_window_with_tabs, monkeypa
 
     def mock_get_dir(*args, **kwargs):
         return dir_path
+
     monkeypatch.setattr(QtWidgets.QFileDialog, 'getExistingDirectory', mock_get_dir)
 
     main_window_with_tabs.new_table_from_folder_action.trigger()
@@ -2613,15 +2614,22 @@ def test_MainWindow_clear_session(qtbot, main_window_with_tabs):
     assert main_window_with_tabs.tabs.widget(0).is_empty()
 
 
+NO_WINOS_ACTIONS = ['shortstack_action']
+
+
 @pytest.mark.parametrize('action_name', ['ontology_graph_action', 'pathway_graph_action', 'featurecounts_single_action',
-                                         'featurecounts_paired_action', 'bowtie2_index_action',
+                                         'featurecounts_paired_action', 'bowtie2_index_action', 'shortstack_action',
                                          'bowtie2_single_action', 'bowtie2_paired_action', 'kallisto_index_action',
                                          'kallisto_single_action', 'kallisto_paired_action', 'cutadapt_single_action',
                                          'cutadapt_paired_action', 'set_op_action', 'enrichment_action',
                                          'set_vis_action', 'bar_plot_action'])
 def test_MainWindow_open_windows(qtbot, main_window_with_tabs, action_name):
     action = getattr(main_window_with_tabs, action_name)
-    action.trigger()
+    if platform.system() == 'Windows' and action_name in NO_WINOS_ACTIONS:
+        assert not action.isEnabled()
+    else:
+        assert action.isEnabled()
+        action.trigger()
 
 
 @pytest.mark.parametrize('action_name, window_attr_name',

@@ -194,6 +194,72 @@ def test_bowtie2_align_single_end_command(monkeypatch, fastq_folder, output_fold
     assert sorted(files_covered) == sorted(files_to_cover)
 
 
+@pytest.mark.parametrize(
+    "fastq_folder,output_folder,genome_fasta,shortstack_installation_folder,new_sample_names,known_rnas,trim_adapter,"
+    "autotrim_key,multimap_mode,align_only,show_secondary,dicer_min_length,dicer_max_length,loci_file,locus,"
+    "search_microrna,strand_cutoff,min_coverage,pad,threads,expected_command", [
+        ('tests/test_files/kallisto_tests',
+         'tests/test_files/shortstack_tests/outdir', 'tests/test_files/shortstack_tests/transcripts.fasta',
+         'auto',
+         'auto', None, None, 'autokey', 'fractional', False, True, 10, 30, None, 'locus string', None, 0.8, 2, 75, 1,
+         ['ShortStack', '--genomefile', 'tests/test_files/shortstack_tests/transcripts.fasta', '--mmap', 'f',
+          '--show_secondaries', '--locus', 'locus string', '--nohp', '--dicermin', '10', '--dicermax', '30',
+          '--strand_cutoff', '0.8', '--mincov', '2', '--pad', '75', '--threads', '1', '--readfile',
+          'tests/test_files/kallisto_tests/reads_1.fastq', '--outdir',
+          'tests/test_files/shortstack_tests/outdir/reads_1']
+
+         ),
+        ('tests/test_files/kallisto_tests',
+         'tests/test_files/shortstack_tests/outdir', 'tests/test_files/shortstack_tests/transcripts.fasta',
+         'path/to/shortstackinst', ['newName1', 'newName2', ], 'tests/test_files/test_deseq.csv',
+         'autotrim', 'autokey', 'random', True, False, 21, 24, 'tests/test_files/counted.csv',
+         None, 'known-rnas', 0.9, 1.2, 3, 12,
+         ['path/to/shortstackinst/ShortStack', '--genomefile', 'tests/test_files/shortstack_tests/transcripts.fasta',
+          '--mmap', 'r', '--adapter', 'autotrim', '--align_only', '--locifile', 'tests/test_files/counted.csv',
+          '--knownRNAs', 'tests/test_files/test_deseq.csv',
+          '--dicermin', '21', '--dicermax', '24', '--strand_cutoff',
+          '0.9', '--mincov', '1.2', '--pad', '3', '--threads', '12', '--readfile',
+          'tests/test_files/kallisto_tests/reads_1.fastq', '--outdir',
+          'tests/test_files/shortstack_tests/outdir/newName1']
+
+         ),
+    ])
+def test_shortstack_command(monkeypatch, fastq_folder, output_folder, genome_fasta, shortstack_installation_folder,
+                            new_sample_names, known_rnas, trim_adapter, autotrim_key, multimap_mode, align_only,
+                            show_secondary, dicer_min_length, dicer_max_length, loci_file, locus, search_microrna,
+                            strand_cutoff, min_coverage, pad, threads, expected_command):
+    files_to_cover = ['reads_1.fastq', 'reads_2.fastq']
+    file_stems = ['reads_1', 'reads_2']
+    files_covered = []
+
+    def mock_run_subprocess(args, print_stdout=True, print_stderr=True, log_filename: str = None, shell: bool = False):
+        assert shell
+        if args[1] == '--version':
+            return 0
+        for i in range(len(files_to_cover)):
+            if files_to_cover[i] in args[-3]:
+                exp = expected_command.copy()
+                exp[-3] = fastq_folder + '/' + files_to_cover[i]
+                if new_sample_names == 'auto':
+                    exp[-1] = f'{output_folder}/{file_stems[i]}'
+                else:
+                    exp[-1] = f'{output_folder}/{new_sample_names[i]}'
+
+                assert args == exp
+                files_covered.append(files_to_cover[i])
+                break
+        assert print_stdout
+        assert print_stderr
+
+    monkeypatch.setattr(io, 'run_subprocess', mock_run_subprocess)
+
+    shortstack_align_smallrna(fastq_folder, output_folder, genome_fasta, shortstack_installation_folder,
+                              new_sample_names, known_rnas, trim_adapter, autotrim_key, multimap_mode, align_only,
+                              show_secondary, dicer_min_length, dicer_max_length, loci_file, locus, search_microrna,
+                              strand_cutoff, min_coverage, pad, threads)
+    assert sorted(files_covered) == sorted(files_to_cover)
+
+
 def test_bowtie2_create_index():
     out_path = 'tests/test_files/bowtie2_tests/outdir'
     truth_path = 'tests/test_files/bowtie2_tests/index'

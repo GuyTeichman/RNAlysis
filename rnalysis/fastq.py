@@ -368,6 +368,220 @@ def _get_legal_samples(fastq_folder: Union[str, Path]) -> List[Path]:
     return legal_samples
 
 
+def shortstack_align_smallrna(fastq_folder: Union[str, Path], output_folder: Union[str, Path],
+                              genome_fasta: Union[str, Path],
+                              shortstack_installation_folder: Union[str, Path, Literal['auto']] = 'auto',
+                              new_sample_names: Union[List[str], Literal['auto']] = 'auto',
+                              known_rnas: Union[str, Path, None] = None,
+                              trim_adapter: Union[str, Literal['autotrim'], None] = None,
+                              autotrim_key: str = 'TCGGACCAGGCTTCATTCCCC',
+                              multimap_mode: Literal['fractional', 'unique', 'random'] = 'fractional',
+                              align_only: bool = False, show_secondary_alignments: bool = False,
+                              dicer_min_length: PositiveInt = 21, dicer_max_length: PositiveInt = 24,
+                              loci_file: Union[str, Path, None] = None, locus: Union[str, None] = None,
+                              search_microrna: Union[None, Literal['de-novo', 'known-rnas']] = 'known-rnas',
+                              strand_cutoff: Fraction = 0.8, min_coverage: float = 2, pad: PositiveInt = 75,
+                              threads: PositiveInt = 1):
+    """
+    Align small RNA single-end reads from FASTQ files to a reference sequence using the \
+    `ShortStack <https://github.com/MikeAxtell/ShortStack>`_ aligner (version 4). \
+    ShortStack is currently not supported on computers running Windows.
+
+    :param fastq_folder: Path to the folder containing the FASTQ files you want to quantify
+    :type fastq_folder: str or Path
+    :param output_folder: Path to a folder in which the aligned reads, as well as the log files, will be saved.
+    :type output_folder: str/Path to an existing folder
+    :param genome_fasta: Path to the FASTA file which contain the reference sequences to be aligned to.
+    :type genome_fasta: str or Path
+    :param shortstack_installation_folder: Path to the installation folder of ShortStack. For example: \
+    '/home/myuser/anaconda3/envs/myenv/bin'. if installation folder is set to 'auto', \
+    RNAlysis will attempt to find it automatically.
+    :type shortstack_installation_folder: str, Path, or 'auto' (default='auto')
+    :param new_sample_names: Give a new name to each quantified sample (optional). \
+    If sample_names='auto', sample names \
+    will be given automatically. Otherwise, sample_names should be a list of new names, with the order of the names \
+    matching the order of the file pairs.
+    :type new_sample_names: list of str or 'auto' (default='auto')
+    :param known_rnas: Path to FASTA-formatted file of known small RNAs. \
+    FASTA must be formatted such that a single RNA sequence is on one line only. \
+    ATCGUatcgu characters are acceptable. \
+    These RNAs are typically the sequences of known microRNAs; \
+    for instance, a FASTA file of mature miRNAs pulled from https://www.mirbase.org. \
+    Providing these data increases the accuracy of MIRNA locus identification.
+    :type known_rnas: str, Path, or None (default=None)
+    :param trim_adapter: Determines whether ShortStack will attempt to trim the supplied reads. \
+    If `trim_adapter` is not provided (default), no trimming will be run. \
+    If `trim_adapter` is set to 'autotrim', ShortStack will automatically infer the 3' adapter sequence \
+    of the untrimmed reads, and the uses that to coordinate read trimming. \
+    If `trim_adapter` is a DNA sequence, ShortStack will trim the reads using the given DNA sequence as the 3' adapter.
+    :type trim_adapter: str, 'autotrim', or None (default=None)
+    :param autotrim_key: A DNA sequence to use as a known suffix during the autotrim procedure. \
+    This parameter is used only if `trim_adapter` is set to 'autotrim'. \
+    ShortStack's autotrim discovers the 3' adapter by scanning for reads that begin with the sequence given by \
+    `autotrim_key`. This should be the sequence of a small RNA that is known to be highly abundant \
+    in all the libraries. The default sequence is for miR166, \
+    a microRNA that is present in nearly all plants at high levels. \
+    For non-plant experiments, or if the default is not working well, \
+    consider providing an alternative to the default.
+    :type autotrim_key: str (default="TCGGACCAGGCTTCATTCCCC" (miR166))
+    :param multimap_mode: Sets the mode by which multi-mapped reads are handled. \
+    These modes are described in Johnson et al. (2016). The default mode ('fractional') has the best performance. \
+    In 'fractional' mode, ShortStack will use a fractional weighting scheme for placement of multi-mapped reads. \
+    In 'unique' mode, only uniquely-aligned reads are used as weights for placement of multi-mapped reads. \
+    In 'random' mode, multi-mapped read placement is random.
+    :type multimap_mode: 'fractional', 'unique', or 'random' (default='fractional')
+    :param align_only: if True, ShortStack will terminate after the alignment phase; \
+    no additional analysis will occur.
+    :type align_only: bool (default=False)
+    :param show_secondary_alignments: if True, ShortStack will retain secondary alignments for multimapped reads. \
+    This will increase bam file size, possibly by a lot.
+    :type show_secondary_alignments: bool (default=False)
+    :param dicer_min_length: the minimum size (in nucleotides) of a valid small RNA. \
+    Together with `dicer_max_length`, \
+    this option sets the bounds to discriminate Dicer-derived small RNA loci from other loci. \
+    At least 80% of the reads in a given cluster \
+    must be in the range indicated by `dicer_min_length` and `dicer_max_length`.
+    :type dicer_min_length: positive int (default=21)
+    :param dicer_max_length: the maximun size (in nucleotides) of a valid small RNA. \
+    Together with `dicer_min_length`, \
+    this option sets the bounds to discriminate Dicer-derived small RNA loci from other loci. \
+    At least 80% of the reads in a given cluster \
+    must be in the range indicated by `dicer_min_length` and `dicer_max_length`.
+    :type dicer_max_length: positive int (default=24)
+    :param loci_file: Path to a file of pre-determined loci to analyze. \
+    This will prevent de-novo discovery of small RNA loci. \
+    The file may be in gff3, bed, or simple tab-delimited format (Chr:Start-Stop[tab]Name). \
+    Mutually exclusive with `locus`.
+    :type loci_file: str, Path, or None (default=None)
+    :param locus: A single locus to analyze, \
+    given as a string in the format Chr:Start-Stop (using one-based, inclusive numbering). \
+    This will prevent de novo discovery of small RNA loci. Mutually exclusive with `loci_file`.
+    :type locus: str or None (default=None)
+    :param search_microrna: determines whether and how search for microRNAs will be performed. \
+    if `search_microrna` is None, ShortStack will not search for microRNAs. \
+    This saves computational time, but MIRNA loci will not be differentiated from other types of small RNA clusters. \
+    if `search_microrna` is 'known-rnas', t ShortStack will confine MIRNA analysis to loci where one or more \
+    queries from the `known_rnas` file are aligned to the genome. \
+    if `search_microrna` is 'de-novo', ShortStack will run  a more comprehensive genome-wide scan for MIRNA loci. \
+    Discovered loci that do not overlap already known microRNAs should be treated with caution.
+    :type search_microrna: 'de-novo', 'known-rnas', or None (default='known-rnas')
+    :param strand_cutoff: Floating point number that sets the cutoff for standedness. \
+    By default (strand_cutoff=0.8), loci with >80% reads on the top genomic strand are '+' stranded, \
+    loci with <20% reads on the top genomic strand are '-' stranded, and all others are unstranded '.'.
+    :type strand_cutoff: float between 0.5 and 1 (default=0.8)
+    :param min_coverage: Minimum alignment depth, in units of 'reads per million', \
+    required to nucleate a small RNA cluster during de-novo cluster search.
+    :type min_coverage: float > 0 (default=2)
+    :param pad: initial peaks (continuous regions with depth exceeding the argument `min_coverage`) are merged \
+    if they are this distance or less from each other.
+    :type pad: positive int (default=75)
+    :param threads: number of threads to run ShortStack on. More threads will generally make index building faster.
+    :type threads: int > 0 (default=1)
+    """
+    available_multimap_modes = {'fractional': 'f', 'unique': 'u', 'random': 'r'}
+
+    output_folder = Path(output_folder)
+    assert output_folder.exists(), "supplied 'output_folder' does not exist!"
+
+    call = io.generate_base_call('ShortStack', shortstack_installation_folder, shell=True)
+
+    genome_fasta = Path(genome_fasta)
+    assert genome_fasta.exists(), f"file 'genome_fasta' at {genome_fasta.as_posix()} does not exist!"
+    call.extend(['--genomefile', genome_fasta.as_posix()])
+
+    assert multimap_mode in available_multimap_modes, f"Illegal value for 'multimap_mode': '{multimap_mode}'"
+    call.extend(['--mmap', available_multimap_modes[multimap_mode]])
+
+    if trim_adapter is not None:
+        if trim_adapter == 'auto':
+            assert isinstance(autotrim_key, str), f"'autotrim_key' must be a string, instead got {type(autotrim_key)}!"
+            call.extend(['--autotrim', '--autotrim_key', autotrim_key])
+        elif isinstance(trim_adapter, str):
+            call.extend(['--adapter', trim_adapter])
+        else:
+            raise TypeError(f"Illegal value for 'trim_adapter': '{trim_adapter}'.")
+
+    if align_only:
+        call.append('--align_only')
+
+    if show_secondary_alignments:
+        call.append('--show_secondaries')
+
+    if loci_file is not None:
+        assert locus is None, f"Cannot specify both 'loci_file' and 'locus'!"
+        loci_file = Path(loci_file)
+        assert loci_file.exists() and loci_file.is_file(), \
+            f"File 'loci_file' at {loci_file.as_posix()} does not exist!"
+        call.extend(['--locifile', loci_file.as_posix()])
+
+    if locus is not None:
+        assert isinstance(locus, str), f"'locus' must be a string, instead got {type(locus)}!"
+        call.extend(['--locus', locus])
+
+    if search_microrna == 'known-rnas':
+        if known_rnas is not None:
+            known_rnas = Path(known_rnas)
+            assert known_rnas.exists() and known_rnas.is_file(), \
+                f"File 'known_rnas' at {known_rnas.as_posix()} does not exist!"
+            call.extend(['--knownRNAs', known_rnas.as_posix()])
+    else:
+        if known_rnas is not None:
+            warnings.warn(f"'search_microrna' was set to '{search_microrna}', "
+                          f"and therefore parameter 'known_rnas' is ignored")
+        if search_microrna == 'de-novo':
+            call.append('--dn_mirna')
+        elif search_microrna is None:
+            call.append('--nohp')
+        else:
+            raise TypeError(f"Invalid type for 'search_microrna': {type(search_microrna)}. ")
+
+    assert isinstance(dicer_min_length, int) and dicer_min_length > 0, "'dicer_min_length' must be a positive integer!"
+    assert isinstance(dicer_max_length, int) and dicer_max_length > 0, "'dicer_max_length' must be a positive integer!"
+    assert dicer_min_length <= dicer_max_length, "'dicer_min_length' must be <= 'dicer_max_length'!"
+    call.extend(['--dicermin', str(dicer_min_length)])
+    call.extend(['--dicermax', str(dicer_max_length)])
+
+    assert isinstance(strand_cutoff,
+                      float) and 0.5 < strand_cutoff < 1, \
+        "'strand_cutoff' must be a fraction beetween 0.5 and 1 (non-inclusive)!"
+    call.extend(['--strand_cutoff', str(strand_cutoff)])
+
+    assert isinstance(min_coverage, (int, float)) and min_coverage > 0, "'min_coverage' must be a positive number!"
+    call.extend(['--mincov', str(min_coverage)])
+
+    assert isinstance(pad, int) and pad > 0, "'pad' must be a positive integer!"
+    call.extend(['--pad', str(pad)])
+
+    assert isinstance(threads, int) and threads >= 0, f"'threads' must be a non-negative int!"
+    call.extend(['--threads', str(threads)])
+
+    legal_samples = _get_legal_samples(fastq_folder)
+
+    assert (new_sample_names == 'auto') or (len(new_sample_names) == len(legal_samples)), \
+        f'Number of samples ({len(legal_samples)}) does not match number of sample names ({len(new_sample_names)})!'
+
+    calls = []
+    for i, item in enumerate(sorted(legal_samples)):
+        this_call = call.copy()
+        if new_sample_names == 'auto':
+            this_name = parsing.remove_suffixes(item).stem
+        else:
+            this_name = new_sample_names[i]
+
+        this_call.extend(['--readfile', item.as_posix()])
+        this_call.extend(['--outdir', output_folder.joinpath(f'{this_name}').as_posix()])
+        calls.append(this_call)
+
+    with tqdm(total=len(calls), desc='Aligning reads', unit='files') as pbar:
+        for shortstack_call in calls:
+            print(f"Running command: \n{' '.join(shortstack_call)}")
+            log_filename = Path(output_folder).joinpath(
+                f'ShortStack_{Path(shortstack_call[-1]).stem}.log').absolute().as_posix()
+            io.run_subprocess(shortstack_call, shell=True, log_filename=log_filename)
+            print(f"Files saved successfully at {shortstack_call[-1]}")
+            pbar.update(1)
+
+
 def bowtie2_align_single_end(fastq_folder: Union[str, Path], output_folder: Union[str, Path],
                              index_file: Union[str, Path],
                              bowtie2_installation_folder: Union[str, Path, Literal['auto']] = 'auto',
