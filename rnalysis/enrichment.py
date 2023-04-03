@@ -1437,7 +1437,7 @@ def enrichment_bar_plot(results_table_path: Union[str, Path], alpha: param_typin
     :type enrichment_score_column: str (default='log2_fold_enrichment')
     :param n_bars: number of bars to display in the bar plot. If n_bars='all', \
      all the results will be displayed on the graph. Otherwise, only the top n results will be displayed on the graph.
-     :type n_bars: int > 1 or 'all' (default='all')
+    :type n_bars: int > 1 or 'all' (default='all')
     :param title: plot title.
     :type title: str
     :param plot_horizontal: if True, results will be plotted with a horizontal bar plot. \
