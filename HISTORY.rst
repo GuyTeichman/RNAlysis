@@ -28,6 +28,7 @@ Fixed
 * Fixed bug where tables with integer-indices could not be visualized properly through the graphical interface.
 * Functions that take column name/names as input (transform, filter_missing_values, filter_percentile, split_percentile) can now be applied to fold change tables (FoldCangeFilter objects).
 * Fixed bug where the description for the 'n_bars' parameter of the 'create enrichment bar-plot' function (enrichment.enrichment_bar_plot) would not display properly.
+* 'Visualize gene ontology' and 'Visualize KEGG pathway' (enrichment.gene_ontology_graph and enrichment.kegg_pathway_graph) now have proper parameter descriptions.
 
 3.6.2 (2023-03-25)
 ------------------

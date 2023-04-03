@@ -572,7 +572,7 @@ class FeatureSet(set):
         :type plot_ontology_graph: bool (default=True)
         :param plot_ontology_graph: if True, will generate an ontology graph depicting the \
         significant GO terms and their parent nodes.
-        :type ontology_graph_format: 'pdf', 'png', 'svg', or None (default=None)
+        :type ontology_graph_format: 'pdf', 'png', 'svg', or 'none' (default='none')
         :param ontology_graph_format: if ontology_graph_format is not 'none', the ontology graph will additonally be \
         generated in the specified file format.
         :type plot_horizontal: bool (default=True)
@@ -1433,8 +1433,6 @@ def enrichment_bar_plot(results_table_path: Union[str, Path], alpha: param_typin
     :type alpha: float between 0 and 1 (default=0.05)
     :param enrichment_score_column: name of the table column containing enrichment scores.
     :type enrichment_score_column: str (default='log2_fold_enrichment')
-    :param enrichment_score_column: name of the table column that contains the enrichment scores.
-    :type enrichment_score_column: str (default='log2_fold_enrichment')
     :param n_bars: number of bars to display in the bar plot. If n_bars='all', \
      all the results will be displayed on the graph. Otherwise, only the top n results will be displayed on the graph.
     :type n_bars: int > 1 or 'all' (default='all')
@@ -1443,7 +1441,7 @@ def enrichment_bar_plot(results_table_path: Union[str, Path], alpha: param_typin
     :param plot_horizontal: if True, results will be plotted with a horizontal bar plot. \
         Otherwise, results will be plotted with a vertical plot.
     :type plot_horizontal: bool (default=True)
-    :param ylabel: plot ylabel.
+    :param ylabel: plot y-axis label.
     :type ylabel: str (default=r"$\log_2$(Fold Enrichment)")
     :param center_bars: if True, center the bars around Y=0. Otherwise, ylim is determined by min/max values.
     :type center_bars: bool (default=True)
@@ -1686,21 +1684,61 @@ def venn_diagram(objs: Dict[str, Union[str, FeatureSet, Set[str]]], title: Union
     return plot_obj, circle_obj
 
 
-def gene_ontology_graph(namespace: Literal[param_typing.GO_ASPECTS], enrichment_results_path: Union[str, Path],
-                        enrichment_score_col: Union[
+def gene_ontology_graph(aspect: Literal[param_typing.GO_ASPECTS], results_table_path: Union[str, Path],
+                        enrichment_score_column: Union[
                             str, Literal['log2_enrichment_score', 'log2_fold_enrichment']] = 'log2_fold_enrichment',
                         title: Union[str, Literal['auto']] = 'auto', ylabel: str = r"$\log_2$(Fold Enrichment)",
                         graph_format: Literal[param_typing.GRAPHVIZ_FORMATS] = 'none', dpi: PositiveInt = 300):
-    results_df = io.load_csv(enrichment_results_path, index_col=0)
-    assert enrichment_score_col in results_df, f"Invalid enrichment_score_col '{enrichment_score_col}'"
+    """
+    Generate a GO enrichment ontology graph based on an enrichment results table.
+
+    :param aspect: The GO aspect to generate an ontology graph for.
+    :type aspect: 'biological_process', 'molecular_function', or 'cellular_component'
+    :param results_table_path: Path to the results table returned by enrichment functions.
+    :type results_table_path: str or Path
+    :param enrichment_score_column: name of the table column that contains the enrichment scores.
+    :type enrichment_score_column: str (default='log2_fold_enrichment')
+    :param title: plot title.
+    :type title: str or 'auto' (default='auto')
+    :param ylabel: plot y-axis label.
+    :type ylabel: str (default=r"$\log_2$(Fold Enrichment)")
+    :param graph_format: if `graph_format` is not 'none', the ontology graph will additonally be \
+    generated in the specified file format.
+    :type graph_format: 'pdf', 'png', 'svg', or 'none' (default='none')
+    :param dpi: resolution of the ontology graph in DPI (dots per inch).
+    :type dpi: int (default=300)
+    """
+    results_df = io.load_csv(results_table_path, index_col=0)
+    assert enrichment_score_column in results_df, f"Invalid enrichment_score_col '{enrichment_score_column}'"
     dag_tree = ontology.fetch_go_basic()
-    dag_tree.plot_ontology(namespace, results_df, enrichment_score_col, title, ylabel, graph_format, dpi)
+    dag_tree.plot_ontology(aspect, results_df, enrichment_score_column, title, ylabel, graph_format, dpi)
 
 
 def kegg_pathway_graph(pathway_id: str, marked_genes: Union[Sequence[str], None],
                        gene_id_type: Union[str, Literal['auto'], Literal[get_gene_id_types()]] = 'auto',
                        title: Union[str, Literal['auto']] = 'auto', ylabel: str = '',
                        graph_format: Literal[param_typing.GRAPHVIZ_FORMATS] = 'none', dpi: PositiveInt = 300):
+    """
+    Generate a KEGG Pathway graph.
+
+    :param pathway_id: KEGG ID of the pathway to be plotted.
+    :type pathway_id: str
+    :param marked_genes: a set of genes/genomic features to be highlighted on the pathway graph. \
+    The gene ID type of those genes should match the parameter `gene_id_type`.
+    :type marked_genes: sequence of str or None
+    :param gene_id_type: the identifier type you want to use when displaying genes in the graph \
+        (for example: 'UniProtKB', 'WormBase', 'RNACentral', 'Entrez Gene ID'). \
+    :type gene_id_type: str or 'auto' (default='auto')
+    :param title: plot title.
+    :type title: str or 'auto' (default='auto')
+    :param ylabel: plot y-axis label.
+    :type ylabel: str (default=r"$\log_2$(Fold Enrichment)")
+    :param graph_format: if `graph_format` is not 'none', the ontology graph will additonally be \
+    generated in the specified file format.
+    :type graph_format: 'pdf', 'png', 'svg', or 'none' (default='none')
+    :param dpi: resolution of the ontology graph in DPI (dots per inch).
+    :type dpi: int (default=300)
+    """
     if marked_genes is None:
         translator = None
     else:
