@@ -15,6 +15,10 @@
         "name": "the <b>bowtie2</b> aligner",
         "citation": "\nLangmead, B., and Salzberg, S.L. (2012). \nFast gapped-read alignment with Bowtie 2. Nat. Methods 2012 94 9, 357–359. \n<a href=https://doi.org/10.1038/nmeth.1923>doi.org/10.1038/nmeth.1923</a>"
     },
+    "shortstack": {
+        "name": "the <b>ShortStack</b> aligner",
+        "citation": "\nAxtell, MJ. (2013). \nShortStack: Comprehensive annotation and quantification of small RNA genes. RNA 19:740-751. \n<a href=https://doi.org/10.1261/rna.035279.112>doi.org/10.1261/rna.035279.112</a>"
+    },
     "featurecounts": {
         "name": "the <b>featureCounts</b> read summarization program",
         "citation": "\nYang Liao, Gordon K. Smyth, Wei Shi (2013). \nfeatureCounts: an efficient general purpose program for assigning sequence reads to genomic features. \nBioinformatics, Volume 30, Issue 7, April 2014, Pages 923–930. \n<a href=https://doi.org/10.1093/bioinformatics/btt656>doi.org/10.1093/bioinformatics/btt656</a>"

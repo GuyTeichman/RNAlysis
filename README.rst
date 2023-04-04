@@ -120,11 +120,17 @@ If you use the *kallisto* RNA sequencing quantification tool in your research, p
     Nat Biotechnol 34, 525–527 (2016).
     https://doi.org/10.1038/nbt.3519
 
-If yo use the bowtie2 aligner in your research, please cite::
+If you use the bowtie2 aligner in your research, please cite::
 
     Langmead, B., and Salzberg, S.L. (2012).
     Fast gapped-read alignment with Bowtie 2. Nat. Methods 2012 94 9, 357–359.
     https://doi.org/10.1038/nmeth.1923
+
+If you use the ShortStack aligner in your research, please cite::
+
+    Axtell, MJ. (2013).
+    ShortStack: Comprehensive annotation and quantification of small RNA genes. RNA 19:740-751.
+    https://doi.org/10.1261/rna.035279.112
 
 
 If you use the *DESeq2* differential expression tool in your research, please cite::
