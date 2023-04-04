@@ -1773,7 +1773,7 @@ class Filter:
         # if intersection is performed inplace, apply it to the self
         if inplace:
             suffix = f"_intersection"
-            new_set = self._set_ops(others, 'set', set.intersection)
+            new_set = parsing.data_to_list(self._set_ops(others, 'set', set.intersection))
             return self._inplace(self.df.loc[new_set], opposite=False, inplace=inplace, suffix=suffix)
         # if intersection is not performed inplace, return a set/string according to user's request
         else:
@@ -1892,7 +1892,7 @@ class Filter:
         # if difference is performed inplace, apply it to the self
         if inplace:
             suffix = f"_difference"
-            new_set = self._set_ops(others, 'set', set.difference)
+            new_set = parsing.data_to_list(self._set_ops(others, 'set', set.difference))
             return self._inplace(self.df.loc[new_set], opposite=False, inplace=inplace, suffix=suffix)
         # if difference is not performed inplace, return a set/string according to user's request
         else:
