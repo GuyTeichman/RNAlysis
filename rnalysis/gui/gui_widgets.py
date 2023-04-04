@@ -552,6 +552,12 @@ class ComboBoxOrOtherWidget(QtWidgets.QWidget):
             return get_val_from_widget(self.other)
         return self.combo.currentText()
 
+    def setValue(self, value):
+        if value in self.items:
+            self.combo.setCurrentText(value)
+        else:
+            set_widget_value(self.other, value)
+
 
 class HelpButton(QtWidgets.QToolButton):
     __slots__ = {'param_name': 'name of the parameter',
@@ -870,6 +876,12 @@ class OrderedFileList(MultiChoiceListWithDeleteReorder):
 
     def get_sorted_names(self):
         return [name for name in self.items]
+
+    def setValue(self, items):
+        assert validation.isiterable(items) and validation.isinstanceiter(items, str), \
+            f"Invalid type for 'items': {type(items)}."
+        self.delete_all_quietly()
+        self.add_items(items)
 
 
 class MandatoryComboBox(QtWidgets.QComboBox):
@@ -1596,6 +1608,19 @@ class NewParam:
     def __init__(self, annotation, default=EMPTY):
         self.annotation = annotation
         self.default = default
+
+
+def set_widget_value(widget: QtWidgets.QWidget, value):
+    if hasattr(widget, 'setValue'):
+        widget.setValue(value)
+    elif hasattr(widget, 'setText'):
+        widget.setText(value)
+    elif hasattr(widget, 'setChecked'):
+        widget.setChecked(value)
+    elif hasattr(widget, 'setCurrentText'):
+        widget.setCurrentText(value)
+    else:
+        raise AttributeError(f'cannot set value for widget of type {type(widget)}.')
 
 
 def param_to_widget(param, name: str,
