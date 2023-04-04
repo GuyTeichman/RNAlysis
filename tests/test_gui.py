@@ -344,8 +344,8 @@ def test_KallistoPairedWindow_start_analysis(qtbot, kallisto_paired_window):
                         learn_bias=False,
                         bootstrap_samples=None, seek_fusion_genes=False)
 
-    kallisto_paired_window.pairs_widgets['r1_list'].add_items(r1_files)
-    kallisto_paired_window.pairs_widgets['r2_list'].add_items(r2_files)
+    kallisto_paired_window.pairs_widgets['r1_files'].add_items(r1_files)
+    kallisto_paired_window.pairs_widgets['r2_files'].add_items(r2_files)
     kallisto_paired_window.param_widgets['output_folder'].setText(out_folder)
     kallisto_paired_window.param_widgets['index_file'].setText(index_file)
     kallisto_paired_window.param_widgets['gtf_file'].setText(gtf_file)
@@ -403,8 +403,8 @@ def test_CutAdaptPairedWindow_start_analysis(qtbot, cutadapt_paired_window):
                         quality_trimming=20, trim_n=True, minimum_read_length=10, maximum_read_length=None,
                         discard_untrimmed_reads=True, pair_filter_if='both',
                         error_tolerance=0.1, minimum_overlap=3, allow_indels=True, parallel=True)
-    cutadapt_paired_window.pairs_widgets['r1_list'].add_items(r1_files)
-    cutadapt_paired_window.pairs_widgets['r2_list'].add_items(r2_files)
+    cutadapt_paired_window.pairs_widgets['r1_files'].add_items(r1_files)
+    cutadapt_paired_window.pairs_widgets['r2_files'].add_items(r2_files)
     cutadapt_paired_window.param_widgets['output_folder'].setText(out_folder)
     cutadapt_paired_window.param_widgets['three_prime_adapters_r1'].setValue(adapter1)
     cutadapt_paired_window.param_widgets['three_prime_adapters_r2'].setValue(adapter2)
