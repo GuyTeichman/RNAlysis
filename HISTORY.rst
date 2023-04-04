@@ -12,6 +12,7 @@ Added
 * Added small RNA read alignment using ShortStack (fastq.shortstack_align_smallrna).
 * Added new filtering function 'Filter specific rows by name' (Filter.filter_by_row_name).
 * Added new filtering function 'Filter rows with duplicate names/IDs' (Filter.filter_duplicate_ids).
+* Function parameters in pop-up windows in the graphical interface can now be imported and exported.
 * Added new parameter to Principal Component Analysis (CountFilter.pca) 'proportional_axes', that allows you to make the PCA projection axes proportional to the percentage of variance each PC explains.
 * Improved clarity of error messages in the graphical interface.
 

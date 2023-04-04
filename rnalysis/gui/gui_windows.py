@@ -9,6 +9,7 @@ from queue import Queue
 from typing import Callable
 
 import pandas as pd
+import yaml
 from PyQt5 import QtCore, QtWidgets, QtGui
 
 from rnalysis import __version__
@@ -751,7 +752,10 @@ class FuncExternalWindow(gui_widgets.MinMaxDialog):
                  'param_grid': 'layout for the parameter widgets',
                  'param_widgets': 'parameter widgets',
                  'start_button': 'start button',
-                 'close_button': 'close button'}
+                 'import_button': 'import button',
+                 'export_button': 'export button',
+                 'close_button': 'close button',
+                 'args': 'function args'}
 
     def __init__(self, func_name: str, func: Callable, help_link: str, excluded_params: set, threaded=True,
                  parent=None):
@@ -763,6 +767,7 @@ class FuncExternalWindow(gui_widgets.MinMaxDialog):
         self.help_link = help_link
         self.excluded_params = excluded_params.copy()
         self.threaded = threaded
+        self.args = []
 
         self.widgets = {}
         self.main_layout = QtWidgets.QVBoxLayout(self)
@@ -776,6 +781,8 @@ class FuncExternalWindow(gui_widgets.MinMaxDialog):
         self.param_widgets = {}
 
         self.start_button = QtWidgets.QPushButton(f'Start {self.func_name}')
+        self.import_button = QtWidgets.QPushButton('Import parameters')
+        self.export_button = QtWidgets.QPushButton('Export parameters')
         self.close_button = QtWidgets.QPushButton('Close')
 
     def init_ui(self):
@@ -793,13 +800,17 @@ class FuncExternalWindow(gui_widgets.MinMaxDialog):
 
         self.scroll_layout.addWidget(self.param_group, 0, 0)
         self.scroll_layout.addWidget(self.start_button, 1, 0, 1, 2)
-        self.scroll_layout.addWidget(self.close_button, 2, 0, 1, 2)
+        self.scroll_layout.addWidget(self.import_button, 2, 0, 1, 2)
+        self.scroll_layout.addWidget(self.export_button, 3, 0, 1, 2)
+        self.scroll_layout.addWidget(self.close_button, 4, 0, 1, 2)
 
         if self.threaded:
             self.start_button.clicked.connect(self.run_function_threaded)
         else:
             self.start_button.clicked.connect(self.run_function_in_main_loop)
 
+        self.import_button.clicked.connect(self.import_parameters)
+        self.export_button.clicked.connect(self.export_parameters)
         self.close_button.clicked.connect(self.close)
 
         self.init_param_ui()
@@ -841,8 +852,46 @@ class FuncExternalWindow(gui_widgets.MinMaxDialog):
         return kwargs
 
     def get_analysis_args(self):
-        args = []
+        args = self.args
         return args
+
+    def import_parameters(self):
+        filename, _ = QtWidgets.QFileDialog.getOpenFileName(self, "Choose a parameter file",
+                                                            filter="YAML file (*.yaml)")
+        if not filename:
+            return
+        with open(filename) as f:
+            params = yaml.safe_load(f)
+
+        for key in ['name', 'args', 'kwargs']:
+            assert key in params, f"Invalid parameter file: key '{key}' missing."
+        assert params.get('name') == self.func_name, f"Parameter file for function '{params.get('name')}' " \
+                                                     f"does not match this window's function: '{self.func_name}'"
+        args = params['args']
+        kwargs = params['kwargs']
+
+        self.args = args
+
+        for key, val in kwargs.items():
+            widget = self.param_widgets.get(key)
+            if widget is not None:
+                gui_widgets.set_widget_value(widget, val)
+
+        return params
+
+    def export_parameters(self):
+        args = self.get_analysis_args()
+        kwargs = self.get_analysis_kwargs()
+        parameter_dict = {'name': self.func_name, 'args': args, 'kwargs': kwargs}
+
+        default_name = f'parameters_{self.func_name}.yaml'
+        filename, _ = QtWidgets.QFileDialog.getSaveFileName(self, "Export parameter file",
+                                                            str(Path.home().joinpath(default_name)),
+                                                            "YAML file (*.yaml)")
+        if filename:
+            with open(filename, 'w') as f:
+                yaml.safe_dump(parameter_dict, f)
+                print(f"Successfully saved at {io.get_datetime()} under {filename}")
 
     def run_function_threaded(self):
         args = self.get_analysis_args()
@@ -880,19 +929,26 @@ class PairedFuncExternalWindow(FuncExternalWindow):
         self.init_pairs_ui()
 
     def init_pairs_ui(self):
-        self.pairs_widgets['r1_list'] = gui_widgets.OrderedFileList(self)
-        self.pairs_widgets['r2_list'] = gui_widgets.OrderedFileList(self)
+        self.pairs_widgets['r1_files'] = gui_widgets.OrderedFileList(self)
+        self.pairs_widgets['r2_files'] = gui_widgets.OrderedFileList(self)
 
-        self.pairs_grid.addWidget(self.pairs_widgets['r1_list'], 1, 0)
-        self.pairs_grid.addWidget(self.pairs_widgets['r2_list'], 1, 1)
+        self.pairs_grid.addWidget(self.pairs_widgets['r1_files'], 1, 0)
+        self.pairs_grid.addWidget(self.pairs_widgets['r2_files'], 1, 1)
         self.pairs_grid.addWidget(QtWidgets.QLabel("<b>R1 files:</b>"), 0, 0)
         self.pairs_grid.addWidget(QtWidgets.QLabel("<b>R2 files:</b>"), 0, 1)
 
     def get_analysis_kwargs(self):
         kwargs = super().get_analysis_kwargs()
-        kwargs['r1_files'] = self.pairs_widgets['r1_list'].get_sorted_names()
-        kwargs['r2_files'] = self.pairs_widgets['r2_list'].get_sorted_names()
+        kwargs['r1_files'] = self.pairs_widgets['r1_files'].get_sorted_names()
+        kwargs['r2_files'] = self.pairs_widgets['r2_files'].get_sorted_names()
         return kwargs
+
+    def import_parameters(self):
+        params = super().import_parameters()
+        for key in ['r1_files', 'r2_files']:
+            assert key in params['kwargs'], f"cannot find value for key '{key}'"
+            value = params['kwargs'][key]
+            gui_widgets.set_widget_value(self.pairs_widgets[key], value)
 
 
 class StatusBar(QtWidgets.QStatusBar):
