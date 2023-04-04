@@ -829,7 +829,7 @@ def test_noncategorical_enrichment_runner_one_sample_t_test_enrichment(monkeypat
 
     def validate_params(values, popmean):
         assert np.isclose(popmean, truth[3])
-        assert np.all(values == df.loc[gene_set, attr].values)
+        assert np.all(values == df.loc[list(gene_set), attr].values)
         return None, 0.05
 
     monkeypatch.setattr(enrichment_runner, 'ttest_1samp', validate_params)
