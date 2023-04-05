@@ -1204,8 +1204,8 @@ class OptionalWidget(QtWidgets.QWidget):
             self.checkbox.setChecked(True)
         else:
             try:
+                set_widget_value(self.other, val)
                 self.checkbox.setChecked(False)
-                self.other.setValue(val)
             except AttributeError:
                 raise ValueError(f'Unable to set default value of {type(self.other)} to {val}')
 

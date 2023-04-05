@@ -884,7 +884,7 @@ class FuncExternalWindow(gui_widgets.MinMaxDialog):
         kwargs = self.get_analysis_kwargs()
         parameter_dict = {'name': self.func_name, 'args': args, 'kwargs': kwargs}
 
-        default_name = f'parameters_{self.func_name}.yaml'
+        default_name = f'parameters {self.func_name}.yaml'
         filename, _ = QtWidgets.QFileDialog.getSaveFileName(self, "Export parameter file",
                                                             str(Path.home().joinpath(default_name)),
                                                             "YAML file (*.yaml)")
