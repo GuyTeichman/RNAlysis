@@ -3780,17 +3780,16 @@ class MainWindow(QtWidgets.QMainWindow):
 
         def alt_tqdm(iter_obj: typing.Iterable = None, desc: str = '', unit: str = '', bar_format: str = '',
                      total: int = None):
-            self.worker.startProgBar.emit(
-                dict(iter_obj=iter_obj, desc=desc, unit=unit, bar_format=bar_format, total=total))
             obj = gui_widgets.AltTQDM(iter_obj, desc=desc, unit=unit, bar_format=bar_format, total=total)
             obj.barUpdate.connect(self.status_bar.move_progress_bar)
             obj.barFinished.connect(self.status_bar.reset_progress)
+
+            self.worker.startProgBar.emit(
+                dict(iter_obj=iter_obj, desc=desc, unit=unit, bar_format=bar_format, total=total))
             return obj
 
         def alt_parallel(n_jobs: int = -1, desc: str = '', unit: str = '', bar_format: str = '',
                          total: int = None, **kwargs):
-            self.worker.startProgBar.emit(
-                dict(iter_obj=None, desc=desc, unit=unit, bar_format=bar_format, total=total))
             print(f"{desc}: started" + (f" {total} jobs\r" if isinstance(total, int) else "\r"))
             obj = gui_widgets.AltParallel(n_jobs=n_jobs, desc=desc, unit=unit, bar_format=bar_format,
                                           total=total, **kwargs)
@@ -3798,6 +3797,8 @@ class MainWindow(QtWidgets.QMainWindow):
             obj.barFinished.connect(self.status_bar.reset_progress)
             obj.barTotalUpdate.connect(self.status_bar.update_bar_total)
 
+            self.worker.startProgBar.emit(
+                dict(iter_obj=None, desc=desc, unit=unit, bar_format=bar_format, total=total))
             return obj
 
         enrichment.enrichment_runner.generic.ProgressParallel = alt_parallel
@@ -3841,7 +3842,7 @@ class MainWindow(QtWidgets.QMainWindow):
             try:
                 progbar_total = len(iter_obj)
             except TypeError:
-                progbar_total = 2
+                progbar_total = 1
 
         self.status_bar.start_progress(progbar_total, progbar_desc)
 

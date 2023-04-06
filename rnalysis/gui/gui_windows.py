@@ -958,14 +958,17 @@ class StatusBar(QtWidgets.QStatusBar):
         super().__init__(parent)
         self.progbar_desc = ''
         self.progbar_total = 0
-        self.progbar_start_time = 0
+        self.progbar_start_time = time.time()
         self.progbar_completed_items = 0
+        self._is_running = False
 
         self.n_tasks_button = QtWidgets.QPushButton(self)
         self.desc_label = QtWidgets.QLabel(self)
         self.progress_bar = QtWidgets.QProgressBar(self)
         self.elapsed_label = QtWidgets.QLabel(self)
         self.remaining_label = QtWidgets.QLabel(self)
+        self.update_timer = QtCore.QTimer(self)
+
         self.init_ui()
 
     def init_ui(self):
@@ -980,8 +983,12 @@ class StatusBar(QtWidgets.QStatusBar):
         self.update_n_tasks(0)
         self.reset_progress()
 
+        self.update_timer.timeout.connect(self.update_time)
+        self.update_timer.start(2000)
+
     def update_n_tasks(self, n_tasks: int):
         if n_tasks <= 0:
+            self._is_running = False
             self.n_tasks_button.setVisible(False)
         else:
             self.n_tasks_button.setVisible(True)
@@ -992,6 +999,9 @@ class StatusBar(QtWidgets.QStatusBar):
         self.desc_label.setVisible(True)
 
     def update_time(self):
+        if not self._is_running:
+            return
+
         elapsed_time = time.time() - self.progbar_start_time
         if self.progbar_completed_items == 0:
             remaining_time = elapsed_time * self.progbar_total
@@ -1004,25 +1014,26 @@ class StatusBar(QtWidgets.QStatusBar):
         self.remaining_label.setVisible(True)
 
     def reset_progress(self):
+        self._is_running = False
         self.desc_label.setVisible(False)
         self.progress_bar.setVisible(False)
         self.elapsed_label.setVisible(False)
         self.remaining_label.setVisible(False)
 
     def start_progress(self, total: int, description: str):
+        self._is_running = True
         self.progbar_start_time = time.time()
-        self.progbar_total = total
         self.progbar_completed_items = 0
 
-        self.progress_bar.setMinimum(0)
-        self.progress_bar.setMaximum(total)
+        self.update_bar_total(total)
         self.progress_bar.setValue(0)
         self.update_desc(description)
         self.progress_bar.setVisible(True)
+        self.move_progress_bar(0)
 
     def update_bar_total(self, total: int):
         self.progbar_total = total
-        self.progress_bar.setMaximum(total)
+        self.progress_bar.setRange(0, total)
 
     def move_progress_bar(self, value: int):
         self.progbar_completed_items += value

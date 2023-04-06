@@ -347,9 +347,10 @@ class AltTQDM(QtCore.QObject):
         super().__init__()
 
     def __iter__(self):
+        self.update(0)
         for i, item in enumerate(self.tqdm):
-            self.barUpdate.emit(1)
             yield item
+            self.update(1)
         self.barFinished.emit()
 
     def __enter__(self):
@@ -381,7 +382,7 @@ class AltParallel(QtCore.QObject):
         self.prev_total = 0
         self.prev_report = 0
         super().__init__()
-        self.barUpdate.emit(1)
+        self.barUpdate.emit(0)
 
     def __call__(self, *args, **kwargs):
         parallel_backend('multiprocessing')

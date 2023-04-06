@@ -24,6 +24,8 @@ Changed
 * Added optional parameter 'ylim' to 'create enrichment bar-plot' function (enrichment.enrichment_bar_plot), allowing users to determine the Y-axis limits of the bar plot.
 * Updated function signatures of 'Visualize gene ontology' and 'Visualize KEGG pathway' (enrichment.gene_ontology_graph and enrichment.kegg_pathway_graph) to make more sense.
 * Removed parameter 'report_read_assignment_path' from featureCounts feature counting (fastq.featurecounts_single_end and fastq.featurecounts_paired_end).
+* The RNAlysis graphical interface should now load more quickly.
+* Progress bars in the graphical interface should now reflect elapsed/remaining time for tasks more accurately.
 
 Fixed
 *******
@@ -36,7 +38,6 @@ Fixed
 * Fixed bug where the description for the 'n_bars' parameter of the 'create enrichment bar-plot' function (enrichment.enrichment_bar_plot) would not display properly.
 * 'Visualize gene ontology' and 'Visualize KEGG pathway' (enrichment.gene_ontology_graph and enrichment.kegg_pathway_graph) now have proper parameter descriptions.
 * Fixed bug where in-place intersection and difference in the filtering module would fail when using recent versions of pandas.
-* The RNAlysis graphical interface should now load more quickly.
 
 3.6.2 (2023-03-25)
 ------------------
