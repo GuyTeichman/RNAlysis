@@ -1357,7 +1357,7 @@ async def get_gui_videos(video_filenames: Tuple[str, ...]):  # pragma: no cover
                 i += 1
                 await asyncio.gather(task)
 
-    except aiohttp.ClientConnectorError:
+    except (aiohttp.ClientConnectorError, asyncio.TimeoutError):
         pass
 
 
