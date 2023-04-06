@@ -801,7 +801,7 @@ def test_noncategorical_enrichment_runner_sign_test_enrichment(monkeypatch, attr
 
     def validate_params(values, exp):
         assert np.isclose(exp, truth[3])
-        assert np.all(values == df.loc[gene_set, attr].values)
+        assert np.all(values == df.loc[list(gene_set), attr].values)
         return None, 0.05
 
     monkeypatch.setattr(enrichment_runner, 'sign_test', validate_params)
