@@ -3876,11 +3876,13 @@ async def run():  # pragma: no cover
         base_message = f"<i>RNAlysis</i> version {__version__}:\t"
         splash.showMessage(base_message + 'loading dependencies', QtCore.Qt.AlignBottom | QtCore.Qt.AlignHCenter)
 
-        video_files = gui_quickstart.QuickStartWizard.VIDEO_FILES
-        splash.showMessage(base_message + 'validating tutorial videos', QtCore.Qt.AlignBottom | QtCore.Qt.AlignHCenter)
-        async for i in io.get_gui_videos(video_files):
-            splash.showMessage(base_message + f'getting tutorial videos {i + 1}/{len(video_files)}',
+        if io.check_changed_version():
+            video_files = gui_quickstart.QuickStartWizard.VIDEO_FILES
+            splash.showMessage(base_message + 'validating tutorial videos',
                                QtCore.Qt.AlignBottom | QtCore.Qt.AlignHCenter)
+            async for i in io.get_gui_videos(video_files):
+                splash.showMessage(base_message + f'getting tutorial videos {i + 1}/{len(video_files)}',
+                                   QtCore.Qt.AlignBottom | QtCore.Qt.AlignHCenter)
 
         splash.showMessage(base_message + 'loading application', QtCore.Qt.AlignBottom | QtCore.Qt.AlignHCenter)
     matplotlib.use('Qt5Agg')

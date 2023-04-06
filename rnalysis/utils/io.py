@@ -137,6 +137,21 @@ def cache_gui_file(item: Union[pd.DataFrame, set, str], filename: str):
         raise TypeError(type(item))
 
 
+def check_changed_version():
+    filename = get_gui_cache_dir().joinpath('latest_version.txt')
+    if not filename.exists():
+        return True
+
+    with open(filename) as f:
+        ver = f.read()
+    current_ver = __version__
+    # update latest version to current version
+    with open(filename, 'w') as f:
+        f.write(current_ver)
+
+    return ver != current_ver
+
+
 def save_gui_session(session_filename: Union[str, Path], file_names: List[str], item_names: List[str], item_types: list,
                      item_properties: list, pipeline_names: List[str], pipeline_files: List[str]):
     session_filename = Path(session_filename)
