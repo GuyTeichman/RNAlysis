@@ -241,7 +241,8 @@ def _parse_featurecounts_misc_args(input_folder: Union[str, Path], output_folder
             files.append(item.as_posix())
     assert len(files) > 0, f"No legal input files were find in input_folder '{input_folder.as_posix()}'!"
 
-    kwargs = {'files': files, 'annot.ext': gtf_file.as_posix(), 'isGTFAnnotationFile': True,
+    kwargs = {'files': files, 'annot.ext': gtf_file.as_posix(),
+              'isGTFAnnotationFile': gtf_file.suffix.lower() != '.saf',
               'GTF.featureType': gtf_feature_type, 'GTF.attrType': gtf_attr_name,
               'allowMultiOverlap': count_multi_overlapping_reads, 'countMultiMappingReads': count_multi_mapping_reads,
               'fraction': count_fractionally, 'isLongRead': is_long_read, 'minMQS': min_mapping_quality,
