@@ -398,34 +398,26 @@ def test_infer_taxon_from_gene_ids_no_species(monkeypatch):
         infer_taxon_from_gene_ids([])
 
 
+ids_uniprot = ['P34544', 'Q27395', 'P12844']
+ids_wormbase = ['WBGene00019883', 'WBGene00023497', 'WBGene00003515']
+entrez_to_wb_truth = {'176183': 'WBGene00019883', '173203': 'WBGene00012343'}
+wb_to_entrez_truth = {val: key for key, val in zip(entrez_to_wb_truth.keys(), entrez_to_wb_truth.values())}
+mapped_ids_truth = {uniprot: wb for uniprot, wb in zip(ids_uniprot, ids_wormbase)}
+mapped_ids_truth_rev = {b: a for a, b in zip(mapped_ids_truth.keys(), mapped_ids_truth.values())}
+
+
+@pytest.mark.parametrize('ids,map_from,map_to,expected_dict',
+                         [(ids_uniprot, 'UniProtKB', 'WormBase', mapped_ids_truth),
+                          (ids_wormbase, 'WormBase', 'UniProtKB', mapped_ids_truth_rev),
+                          (entrez_to_wb_truth.keys(), 'Entrez Gene ID', 'WormBase', entrez_to_wb_truth),
+                          (wb_to_entrez_truth.keys(), 'WormBase', 'Entrez Gene ID', wb_to_entrez_truth)])
 @pytest.mark.skipif(not UNIPROT_AVAILABLE, reason='UniProt REST API is not available at the moment')
-def test_map_gene_ids_connectivity():
-    ids_uniprot = ['P34544', 'Q27395', 'P12844']
-    ids_wormbase = ['WBGene00019883', 'WBGene00023497', 'WBGene00003515']
-    entrez_to_wb_truth = {'176183': 'WBGene00019883', '173203': 'WBGene00012343'}
-    wb_to_entrez_truth = {val: key for key, val in zip(entrez_to_wb_truth.keys(), entrez_to_wb_truth.values())}
-    mapped_ids_truth = {uniprot: wb for uniprot, wb in zip(ids_uniprot, ids_wormbase)}
-    mapped_ids_truth_rev = {b: a for a, b in zip(mapped_ids_truth.keys(), mapped_ids_truth.values())}
-
-    mapped_ids = map_gene_ids(ids_uniprot, map_from='UniProtKB', map_to='WormBase')
-    for geneid in ids_uniprot:
+def test_map_gene_ids_connectivity(ids, map_from, map_to, expected_dict):
+    mapped_ids = map_gene_ids(ids, map_from, map_to)
+    for geneid in ids:
         assert geneid in mapped_ids
-        assert mapped_ids[geneid] == mapped_ids_truth[geneid]
-    assert mapped_ids.mapping_dict == mapped_ids_truth
-
-    mapped_ids = map_gene_ids(ids_wormbase, map_from='WormBase', map_to='UniProtKB')
-    for geneid in ids_wormbase:
-        assert geneid in mapped_ids
-        assert mapped_ids[geneid] == mapped_ids_truth_rev[geneid]
-    assert mapped_ids.mapping_dict == mapped_ids_truth_rev
-
-    mapped_ids = map_gene_ids(entrez_to_wb_truth.keys(), 'Entrez Gene ID', 'WormBase')
-    for geneid in entrez_to_wb_truth:
-        assert mapped_ids[geneid] == entrez_to_wb_truth[geneid]
-
-    mapped_ids = map_gene_ids(wb_to_entrez_truth.keys(), 'WormBase', 'Entrez Gene ID')
-    for geneid in wb_to_entrez_truth:
-        assert mapped_ids[geneid] == wb_to_entrez_truth[geneid]
+        assert mapped_ids[geneid] == expected_dict[geneid]
+    assert mapped_ids.mapping_dict == expected_dict
 
 
 @pytest.mark.parametrize('id_type', ['UniProtKB', 'Entrez', 'WormBase'])
