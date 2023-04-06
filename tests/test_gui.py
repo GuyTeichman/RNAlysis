@@ -1,3 +1,5 @@
+import re
+
 import matplotlib
 import pytest
 
@@ -2483,12 +2485,15 @@ def test_MainWindow_save_session(qtbot, use_temp_settings_file, main_window, mon
     item_properties_truth = [{'numerator_name': 'a', 'denominator_name': 'b'}, {'is_normalized': False}, {},
                              {'log2fc_col': 'log2FoldChange', 'padj_col': 'padj'}, {}]
     pipeline_names_truth = ['New Pipeline', 'Other Pipeline']
-    pipeline_files_truth = [pipeline.export_pipeline(filename=None) for pipeline in main_window.pipelines.values()]
+    pipeline_files_truth = [re.sub('\d\d:\d\d:\d\d', '$EXPORTTIME', pipeline.export_pipeline(filename=None)) for
+                            pipeline in main_window.pipelines.values()]
     func_called = []
 
     def mock_save_session(session_filename: Union[str, Path], file_names: List[str], item_names: List[str],
                           item_types: list, item_properties: list, pipeline_names: List[str],
                           pipeline_files: List[str]):
+        pipeline_files = [re.sub('\d\d:\d\d:\d\d', '$EXPORTTIME', f) for f in pipeline_files]
+
         assert session_filename == session_fname
         assert len(file_names) == n_files
         assert item_types == item_types_truth
