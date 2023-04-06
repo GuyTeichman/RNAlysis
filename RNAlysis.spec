@@ -50,7 +50,7 @@ if is_darwin:
     exe_contents = (pyz, a.scripts, a.binaries, a.zipfiles, a.datas, [],)
     exe_kwargs = dict(runtime_tmpdir=None, icon='rnalysis/favicon.icns')
 else:
-    splash = Splash('rnalysis/gui/splash.png',
+    splash = Splash('rnalysis/gui/splash_transparent.png',
                     binaries=a.binaries,
                     datas=a.datas,
                     text_pos=(175, 510),
