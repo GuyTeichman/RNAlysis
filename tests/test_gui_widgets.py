@@ -1090,8 +1090,12 @@ def test_AltTqdm_iter_signals(qtbot):
     with qtbot.waitSignal(iterator.barFinished) as blocker:
         for i in iterator:
             assert len(bar_updates) == i + 1
-            assert bar_updates[-1] == 1
-    assert bar_updates == [1, 1, 1, 1, 1]
+            if i == 0:
+                expected = 0
+            else:
+                expected = 1
+            assert bar_updates[-1] == expected
+    assert bar_updates == [0, 1, 1, 1, 1, 1]
 
 
 def test_AltTqdm_enter_signals():
