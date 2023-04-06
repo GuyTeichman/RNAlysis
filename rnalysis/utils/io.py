@@ -899,8 +899,8 @@ class GeneIDTranslator:
             return False
 
 
-def submit_id_mapping(url: str, from_db: str, to_db: str, ids: List[str]):
-    req = requests.post(f"{url}/idmapping/run", data={"from": from_db, "to": to_db, "ids": ",".join(ids)})
+def submit_id_mapping(session: requests.Session, url: str, from_db: str, to_db: str, ids: List[str]):
+    req = session.post(f"{url}/idmapping/run", data={"from": from_db, "to": to_db, "ids": ",".join(ids)})
     req.raise_for_status()
     return req.json()["jobId"]
 
@@ -1003,7 +1003,7 @@ def print_progress_batches(batch_index, size, total):
 
 def get_mapping_results(api_url: str, from_db: str, to_db: str, ids: List[str], polling_interval: float, session,
                         verbose: bool = True):
-    job_id = submit_id_mapping(api_url, from_db=from_db, to_db=to_db, ids=ids)
+    job_id = submit_id_mapping(session, api_url, from_db=from_db, to_db=to_db, ids=ids)
     if check_id_mapping_results_ready(session, api_url, job_id, polling_interval, verbose=verbose):
         link = get_id_mapping_results_link(session, api_url, job_id)
         results = get_id_mapping_results_search(session, link, verbose)
@@ -1076,7 +1076,9 @@ def map_gene_ids(ids: Union[str, Iterable[str]], map_from: str, map_to: str = 'U
 
         retries = Retry(total=5, backoff_factor=0.25, status_forcelist=[500, 502, 503, 504])
         session = requests.Session()
-        session.mount("https://", HTTPAdapter(max_retries=retries))
+        adapter = HTTPAdapter(max_retries=retries)
+        session.mount("http://", adapter)
+        session.mount("https://", adapter)
 
         results = get_mapping_results(api_url=API_URL, from_db=id_dict_from[map_from], to_db=id_dict_to[map_to],
                                       ids=ids,
