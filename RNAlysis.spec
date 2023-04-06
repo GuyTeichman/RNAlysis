@@ -54,8 +54,10 @@ else:
                     binaries=a.binaries,
                     datas=a.datas,
                     text_pos=(175, 510),
-                    text_size=12,
-                    text_color='black')
+                    text_font='Calibri',
+                    text_size=16,
+                    text_color='black',
+                    always_on_top=False)
     exe_contents = (pyz, splash, a.scripts, [],)
     exe_kwargs = dict(exclude_binaries=True, icon='rnalysis/favicon.ico')
 
