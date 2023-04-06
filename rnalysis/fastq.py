@@ -405,8 +405,8 @@ def shortstack_align_smallrna(fastq_folder: Union[str, Path], output_folder: Uni
     :param known_rnas: Path to FASTA-formatted file of known small RNAs. \
     FASTA must be formatted such that a single RNA sequence is on one line only. \
     ATCGUatcgu characters are acceptable. \
-    These RNAs are typically the sequences of known microRNAs; \
-    for instance, a FASTA file of mature miRNAs pulled from https://www.mirbase.org. \
+    These RNAs are typically the sequences of known microRNAs. \
+    For instance, a FASTA file of mature miRNAs pulled from https://www.mirbase.org. \
     Providing these data increases the accuracy of MIRNA locus identification.
     :type known_rnas: str, Path, or None (default=None)
     :param trim_adapter: Determines whether ShortStack will attempt to trim the supplied reads. \
