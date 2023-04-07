@@ -3121,19 +3121,31 @@ class CountFilter(Filter):
             warnings.warn(
                 "This function is meant for raw, unnormalize counts, and your count matrix appears to be normalized. ")
 
-    def _norm_scaling_factors(self, scaling_factors: pd.Series):
-        assert isinstance(scaling_factors,
-                          pd.Series), f"Invalid dimensions for 'scaling_factors' table: {scaling_factors.shape}"
-        new_df = self.df.copy()
+    def _norm_scaling_factors(self, scaling_factors: Union[pd.DataFrame, pd.Series]):
         numeric_cols = self._numeric_columns
-        for column in new_df.columns:
-            if column in numeric_cols:
-                norm_factor = scaling_factors[column]
-                new_df[column] /= norm_factor
+        scaling_factors = scaling_factors.squeeze()
+        new_df = self.df.copy()
+
+        if isinstance(scaling_factors, pd.Series):
+            assert scaling_factors.shape[0] == len(numeric_cols), \
+                f"Number of scaling factors ({scaling_factors.shape[0]}) does not match " \
+                f"number of numeric columns in your data table ({len(numeric_cols)})!"
+
+            for column in new_df.columns:
+                if column in numeric_cols:
+                    norm_factor = scaling_factors[column]
+                    new_df[column] /= norm_factor
+        elif isinstance(scaling_factors, pd.DataFrame):
+            assert scaling_factors.shape[0] == self.shape[0] and scaling_factors.shape[1] == len(numeric_cols), \
+                f"Dimensions of scaling factors table ({scaling_factors.shape}) does not match the " \
+                f"dimensions of your data table ({(self.shape[0], len(numeric_cols))} - numeric columns only)!"
+            new_df[numeric_cols] = new_df[numeric_cols].div(scaling_factors, axis='rows')
+
         return new_df
 
     @readable_name('Normalize to reads-per-million (RPM) - HTSeq-count output')
-    def normalize_to_rpm_htseqcount(self, special_counter_fname: Union[str, Path], inplace: bool = True):
+    def normalize_to_rpm_htseqcount(self, special_counter_fname: Union[str, Path], inplace: bool = True,
+                                    return_scaling_factors: bool = False):
 
         """
         Normalizes the count matrix to Reads Per Million (RPM). \
@@ -3156,7 +3168,8 @@ class CountFilter(Filter):
 
         """
         suffix = '_normtoRPMhtseqcount'
-        new_df = self.df.copy()
+        scaling_factors = {}
+
         if isinstance(special_counter_fname, (str, Path)):
             features = io.load_csv(special_counter_fname, 0)
         elif isinstance(special_counter_fname, pd.DataFrame):
@@ -3164,16 +3177,21 @@ class CountFilter(Filter):
         else:
             raise TypeError("Invalid type for 'special_counter_fname'!")
         numeric_cols = self._numeric_columns
-        for column in new_df.columns:
+        for column in self.df.columns:
             if column in numeric_cols:
-                norm_factor = (new_df[column].sum() + features.loc[r'__ambiguous', column] + features.loc[
+                norm_factor = (self.df[column].sum() + features.loc[r'__ambiguous', column] + features.loc[
                     r'__no_feature', column] + features.loc[r'__alignment_not_unique', column]) / (10 ** 6)
-                new_df[column] /= norm_factor
-        return self._inplace(new_df, opposite=False, inplace=inplace, suffix=suffix, printout_operation='normalize',
-                             _is_normalized=True)
+                scaling_factors[column] = norm_factor
+
+        scaling_factors = pd.Series(scaling_factors)
+        new_df = self._norm_scaling_factors(scaling_factors)
+
+        if return_scaling_factors:
+            return [self._inplace(new_df, False, inplace, suffix, 'normalize', _is_normalized=True), scaling_factors]
+        return self._inplace(new_df, False, inplace, suffix, 'normalize', _is_normalized=True)
 
     @readable_name('Normalize to reads-per-million (RPM)')
-    def normalize_to_rpm(self, inplace: bool = True):
+    def normalize_to_rpm(self, inplace: bool = True, return_scaling_factors: bool = False):
         """
         Normalizes the count matrix to Reads Per Million (RPM). \
         Divides each column in the count matrix by (total reads)*10^-6 .
@@ -3192,18 +3210,25 @@ class CountFilter(Filter):
 
         """
         suffix = '_normtoRPM'
-        new_df = self.df.copy()
+        scaling_factors = {}
+
         numeric_cols = self._numeric_columns
-        for column in new_df.columns:
+        for column in self.df.columns:
             if column in numeric_cols:
-                norm_factor = new_df[column].sum() / (10 ** 6)
-                new_df[column] /= norm_factor
-        return self._inplace(new_df, opposite=False, inplace=inplace, suffix=suffix, printout_operation='normalize',
-                             _is_normalized=True)
+                norm_factor = self.df[column].sum() / (10 ** 6)
+                scaling_factors[column] = norm_factor
+
+        scaling_factors = pd.Series(scaling_factors)
+        new_df = self._norm_scaling_factors(scaling_factors)
+
+        if return_scaling_factors:
+            return [self._inplace(new_df, False, inplace, suffix, 'normalize', _is_normalized=True), scaling_factors]
+        return self._inplace(new_df, False, inplace, suffix, 'normalize', _is_normalized=True)
 
     @readable_name('Normalize to reads-per-kilobase-million (RPKM)')
     def normalize_to_rpkm(self, gtf_file: Union[str, Path], feature_type: Literal['gene', 'transcript'] = 'gene',
-                          method: Literal[LEGAL_GENE_LENGTH_METHODS] = 'mean', inplace: bool = True):
+                          method: Literal[LEGAL_GENE_LENGTH_METHODS] = 'mean', inplace: bool = True,
+                          return_scaling_factors: bool = False):
         """
         Normalizes the count matrix to Reads Per Kilobase Million (RPKM). \
         Divides each column in the count matrix by (total reads)*(gene length / 1000)*10^-6. \
@@ -3231,20 +3256,20 @@ class CountFilter(Filter):
         suffix = f"_normtoRPKM{method.replace('_', '')}"
         gene_lengths_kbp = pd.Series(
             genome_annotation.get_genomic_feature_lengths(gtf_file, feature_type, method)) / 1000
-        new_df = self.df.copy()
         numeric_cols = self._numeric_columns
-        for column in new_df.columns:
-            if column in numeric_cols:
-                scaling_factor = new_df[column].sum() / (10 ** 6)
-                new_df[column] /= scaling_factor
-        new_df[numeric_cols] = new_df[numeric_cols].div(gene_lengths_kbp, axis='rows')
-        new_df = new_df.dropna(axis=0)
-        return self._inplace(new_df, opposite=False, inplace=inplace, suffix=suffix, printout_operation='normalize',
-                             _is_normalized=True)
+        scaling_factors = pd.concat([gene_lengths_kbp] * len(numeric_cols), axis=1)
+        scaling_factors.columns = numeric_cols
+        scaling_factors = scaling_factors.mul(self.df[numeric_cols].sum() / (10 ** 6), axis='columns')
+
+        new_df = self._norm_scaling_factors(scaling_factors)
+        if return_scaling_factors:
+            return [self._inplace(new_df, False, inplace, suffix, 'normalize', _is_normalized=True), scaling_factors]
+        return self._inplace(new_df, False, inplace, suffix, 'normalize', _is_normalized=True)
 
     @readable_name('Normalize to transcripts-per-million (TPM)')
     def normalize_to_tpm(self, gtf_file: Union[str, Path], feature_type: Literal['gene', 'transcript'] = 'gene',
-                         method: Literal[LEGAL_GENE_LENGTH_METHODS] = 'mean', inplace: bool = True):
+                         method: Literal[LEGAL_GENE_LENGTH_METHODS] = 'mean', inplace: bool = True,
+                         return_scaling_factors: bool = False):
         """
         Normalizes the count matrix to Transcripts Per Million (TPM). \
         First, normalizes each gene to Reads Per Kilobase (RPK) \
@@ -3275,20 +3300,22 @@ class CountFilter(Filter):
         suffix = f"_normtoTPM{method.replace('_', '')}"
         gene_lengths_kbp = pd.Series(
             genome_annotation.get_genomic_feature_lengths(gtf_file, feature_type, method)) / 1000
-        new_df = self.df.copy()
+        tmp_df = self.df.copy()
         numeric_cols = self._numeric_columns
-        new_df[numeric_cols] = new_df[numeric_cols].div(gene_lengths_kbp, axis='rows')
-        new_df = new_df.dropna(axis=0)
+        tmp_df[numeric_cols] = tmp_df[numeric_cols].div(gene_lengths_kbp, axis='rows')
 
-        for column in new_df.columns:
-            if column in numeric_cols:
-                scaling_factor = new_df[column].sum() / (10 ** 6)
-                new_df[column] /= scaling_factor
-        return self._inplace(new_df, opposite=False, inplace=inplace, suffix=suffix, printout_operation='normalize',
-                             _is_normalized=True)
+        scaling_factors = pd.concat([gene_lengths_kbp] * len(numeric_cols), axis=1)
+        scaling_factors.columns = numeric_cols
+        scaling_factors = scaling_factors.mul(tmp_df[numeric_cols].sum() / (10 ** 6), axis='columns')
+
+        new_df = self._norm_scaling_factors(scaling_factors)
+        if return_scaling_factors:
+            return [self._inplace(new_df, False, inplace, suffix, 'normalize', _is_normalized=True), scaling_factors]
+        return self._inplace(new_df, False, inplace, suffix, 'normalize', _is_normalized=True)
 
     @readable_name('Normalize with the Quantile method')
-    def normalize_to_quantile(self, quantile: param_typing.Fraction = 0.75, inplace: bool = True):
+    def normalize_to_quantile(self, quantile: param_typing.Fraction = 0.75, inplace: bool = True,
+                              return_scaling_factors: bool = False):
         """
         Normalizes the count matrix using the quantile method, generalized from \
         `Bullard et al 2010 <https://doi.org/10.1186/1471-2105-11-94>`_. \
@@ -3318,17 +3345,19 @@ class CountFilter(Filter):
         quantiles = expressed_genes.quantile(quantile, axis=0)
         if quantiles.min() == 0:
             warnings.warn("One or more quantiles are zero")
-        scaling_factors = quantiles / quantiles.mean()
 
+        scaling_factors = quantiles / quantiles.mean()
         new_df = self._norm_scaling_factors(scaling_factors)
-        return self._inplace(new_df, opposite=False, inplace=inplace, suffix=suffix, printout_operation='normalize',
-                             _is_normalized=True)
+
+        if return_scaling_factors:
+            return [self._inplace(new_df, False, inplace, suffix, 'normalize', _is_normalized=True), scaling_factors]
+        return self._inplace(new_df, False, inplace, suffix, 'normalize', _is_normalized=True)
 
     @readable_name('Normalize with the "Trimmed Mean of M-values" (TMM) method')
     def normalize_tmm(self, log_ratio_trim: float = 0.3, sum_trim: float = 0.05,
                       a_cutoff: Union[float, None] = -1 * 10 ** 10,
                       ref_column: Union[Literal['auto'], param_typing.ColumnName] = 'auto',
-                      inplace: bool = True):
+                      inplace: bool = True, return_scaling_factors: bool = False):
         """
         Normalizes the count matrix using the 'trimmed mean of M values' (TMM) method \
         `(Robinson and Oshlack 2010) <https://doi.org/10.1186/gb-2010-11-3-r25>`_. \
@@ -3403,11 +3432,12 @@ class CountFilter(Filter):
         scaling_factors -= scaling_factors.mean()
         scaling_factors = 2 ** scaling_factors
         new_df = self._norm_scaling_factors(scaling_factors)
-        return self._inplace(new_df, opposite=False, inplace=inplace, suffix=suffix, printout_operation='normalize',
-                             _is_normalized=True)
+        if return_scaling_factors:
+            return [self._inplace(new_df, False, inplace, suffix, 'normalize', _is_normalized=True), scaling_factors]
+        return self._inplace(new_df, False, inplace, suffix, 'normalize', _is_normalized=True)
 
     @readable_name('Normalize with the "Relative Log Expression" (RLE) method')
-    def normalize_rle(self, inplace: bool = True):
+    def normalize_rle(self, inplace: bool = True, return_scaling_factors: bool = False):
         """
         Normalizes the count matrix using the 'Relative Log Expression' (RLE) method \
         `(Anders and Huber 2010) <https://doi.org/10.1186/gb-2010-11-10-r106>`_. \
@@ -3439,12 +3469,14 @@ class CountFilter(Filter):
         # TODO: implement a 'control genes' parameter that calculates ratios only for the given control genes
 
         new_df = self._norm_scaling_factors(scaling_factors)
-        return self._inplace(new_df, opposite=False, inplace=inplace, suffix=suffix, printout_operation='normalize',
-                             _is_normalized=True)
+        if return_scaling_factors:
+            return [self._inplace(new_df, False, inplace, suffix, 'normalize', _is_normalized=True), scaling_factors]
+        return self._inplace(new_df, False, inplace, suffix, 'normalize', _is_normalized=True)
 
     @readable_name('Normalize with the "Median of Ratios" (MRN) method')
     def normalize_median_of_ratios(self, sample_grouping: param_typing.GroupedColumns,
-                                   reference_group: NonNegativeInt = 0, inplace: bool = True):
+                                   reference_group: NonNegativeInt = 0, inplace: bool = True,
+                                   return_scaling_factors: bool = False):
         """
         Normalizes the count matrix using the 'Median of Ratios Normalization' (MRN) method \
         `(Maza et al 2013) <https://doi.org/10.4161%2Fcib.25849>`_. \
@@ -3503,8 +3535,9 @@ class CountFilter(Filter):
         scaling_factors = scaling_factors / gmean(scaling_factors)
 
         new_df = self._norm_scaling_factors(scaling_factors)
-        return self._inplace(new_df, opposite=False, inplace=inplace, suffix=suffix, printout_operation='normalize',
-                             _is_normalized=True)
+        if return_scaling_factors:
+            return [self._inplace(new_df, False, inplace, suffix, 'normalize', _is_normalized=True), scaling_factors]
+        return self._inplace(new_df, False, inplace, suffix, 'normalize', _is_normalized=True)
 
     @readable_name('Normalize with pre-calculated scaling factors')
     def normalize_with_scaling_factors(self, scaling_factor_fname: Union[str, Path], inplace: bool = True):

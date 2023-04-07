@@ -3,6 +3,14 @@ History
 =======
 
 
+3.8.0 (2023-??-??)
+------------------
+This version allows users to calculate normalization scaling factors,
+
+Added
+*******
+* Added new parameter to normalization functions 'return_scaling_factors', that allows you to access the scaling factors calculated by RNAlysis.
+
 3.7.0 (2023-04-07)
 ------------------
 This version introduces small RNA read alignment using ShortStack, new filtering functions, a new optional parameter for Principal Component Analysis, improvements to the graphical interface, and bug fixes.
