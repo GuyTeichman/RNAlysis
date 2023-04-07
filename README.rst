@@ -103,9 +103,9 @@ How do I cite *RNAlysis*?
 **************************
 If you use *RNAlysis* in your research, please cite::
 
-    Teichman, G., Cohen, D., Ganon, O., Dunsky, N., Shani, S., Gingold, H., and Rechavi, O. (2022).
-    RNAlysis: analyze your RNA sequencing data without writing a single line of code. BioRxiv 2022.11.25.517851.
-    https://doi.org/10.1101/2022.11.25.517851
+    Teichman, G., Cohen, D., Ganon, O., Dunsky, N., Shani, S., Gingold, H., and Rechavi, O. (2023).
+    RNAlysis: analyze your RNA sequencing data without writing a single line of code. BMC Biology, 21, 74.
+    https://doi.org/10.1186/s12915-023-01574-6
 
 If you use the *CutAdapt* adapter trimming tool in your research, please cite::
 

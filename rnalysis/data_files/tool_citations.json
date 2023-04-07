@@ -1,7 +1,7 @@
 {
     "rnalysis": {
         "name": "<b>RNAlysis</b>",
-        "citation": "\nTeichman, G., Cohen, D., Ganon, O., Dunsky, N., Shani, S., Gingold, H., and Rechavi, O. (2022).\nRNAlysis: analyze your RNA sequencing data without writing a single line of code. BioRxiv 2022.11.25.517851.\n<br>\n<a href=https://doi.org/10.1101/2022.11.25.517851>doi.org/10.1101/2022.11.25.517851</a>\n"
+        "citation": "\nTeichman, G., Cohen, D., Ganon, O., Dunsky, N., Shani, S., Gingold, H., and Rechavi, O. (2023).\nRNAlysis: analyze your RNA sequencing data without writing a single line of code. BMC Biology, 21, 74.\n<br>\n<a href=https://doi.org/10.1186/s12915-023-01574-6>doi.org/10.1186/s12915-023-01574-6</a>\n"
     },
     "cutadapt": {
         "name": "the <b>CutAdapt</b> adapter trimming tool",
