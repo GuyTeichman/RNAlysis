@@ -24,7 +24,7 @@ AVAILABLE_ICONS.update(COLOR_ICONS)
 
 class CleanPlotToolBar(NavigationToolbar2QT):
     toolitems = [t for t in NavigationToolbar2QT.toolitems if
-                 t[0] in ('Home', 'Pan', 'Zoom', 'Save')]
+                 t[0] in ('Home', 'Pan', 'Zoom')]
 
     def set_message(self, msg):
         pass

@@ -1103,7 +1103,7 @@ class SetVisualizationWindow(gui_widgets.MinMaxDialog):
         if len(set_names) < 2:
             canvas = gui_graphics.EmptyCanvas('Please select 2 or more gene sets to continue', self)
         elif func_name is None:
-            canvas = gui_graphics.EmptyCanvas("Please choose a visualization function to continue")
+            canvas = gui_graphics.EmptyCanvas("Please choose a visualization function to continue", self)
         else:
             objs_to_plot, kwargs = self._get_function_params()
             try:
