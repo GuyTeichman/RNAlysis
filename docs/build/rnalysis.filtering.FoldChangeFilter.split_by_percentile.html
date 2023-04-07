@@ -4,7 +4,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>rnalysis.filtering.FoldChangeFilter.split_by_percentile &mdash; RNAlysis 3.6.2 documentation</title>
+  <title>rnalysis.filtering.FoldChangeFilter.split_by_percentile &mdash; RNAlysis 3.7.0 documentation</title>
       <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
     <link rel="shortcut icon" href="_static/favicon.ico"/>
@@ -87,6 +87,8 @@
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.filter_by_attribute.html">rnalysis.filtering.FoldChangeFilter.filter_by_attribute</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.filter_by_go_annotations.html">rnalysis.filtering.FoldChangeFilter.filter_by_go_annotations</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.filter_by_kegg_annotations.html">rnalysis.filtering.FoldChangeFilter.filter_by_kegg_annotations</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.filter_by_row_name.html">rnalysis.filtering.FoldChangeFilter.filter_by_row_name</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.filter_duplicate_ids.html">rnalysis.filtering.FoldChangeFilter.filter_duplicate_ids</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.filter_fold_change_direction.html">rnalysis.filtering.FoldChangeFilter.filter_fold_change_direction</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.filter_missing_values.html">rnalysis.filtering.FoldChangeFilter.filter_missing_values</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.filter_percentile.html">rnalysis.filtering.FoldChangeFilter.filter_percentile</a></li>
@@ -157,29 +159,17 @@
 <h1>rnalysis.filtering.FoldChangeFilter.split_by_percentile<a class="headerlink" href="#rnalysis-filtering-foldchangefilter-split-by-percentile" title="Permalink to this heading"></a></h1>
 <dl class="py method">
 <dt class="sig sig-object py" id="rnalysis.filtering.FoldChangeFilter.split_by_percentile">
-<span class="sig-prename descclassname"><span class="pre">FoldChangeFilter.</span></span><span class="sig-name descname"><span class="pre">split_by_percentile</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">percentile</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Fraction</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">column</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">tuple</span></span></span><a class="headerlink" href="#rnalysis.filtering.FoldChangeFilter.split_by_percentile" title="Permalink to this definition"></a></dt>
-<dd><p>Splits the features in the Filter object into two non-overlapping Filter objects:         one containing features below the specified percentile in the specfieid column,         and the other containing features about the specified percentile in the specified column.</p>
-<dl class="field-list">
+<span class="sig-prename descclassname"><span class="pre">FoldChangeFilter.</span></span><span class="sig-name descname"><span class="pre">split_by_percentile</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">percentile</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Fraction</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">tuple</span></span></span><a class="headerlink" href="#rnalysis.filtering.FoldChangeFilter.split_by_percentile" title="Permalink to this definition"></a></dt>
+<dd><p>Splits the features in the table into two non-overlapping tables:         one containing features below the specified percentile,         and the other containing features about the specified percentile.</p>
+<dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>percentile</strong> (<em>float between 0 and 1</em>) – The percentile that all features above it will be filtered out.</p></li>
-<li><p><strong>column</strong> (<em>str</em>) – Name of the DataFrame column according to which the filtering will be performed.</p></li>
-</ul>
+<dd class="field-odd"><p><strong>percentile</strong> (<em>float between 0 and 1</em>) – The percentile that all features above it will be filtered out.</p>
 </dd>
 <dt class="field-even">Return type</dt>
 <dd class="field-even"><p>Tuple[<a class="reference internal" href="rnalysis.filtering.Filter.html#rnalysis.filtering.Filter" title="rnalysis.filtering.Filter">filtering.Filter</a>, <a class="reference internal" href="rnalysis.filtering.Filter.html#rnalysis.filtering.Filter" title="rnalysis.filtering.Filter">filtering.Filter</a>]</p>
 </dd>
 <dt class="field-odd">Returns</dt>
-<dd class="field-odd"><p>a tuple of two Filter objects: the first contains all of the features below the specified percentile,         and the second contains all of the features above and equal to the specified percentile.</p>
-</dd>
-<dt class="field-even">Examples</dt>
-<dd class="field-even"><div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">rnalysis</span> <span class="kn">import</span> <span class="n">filtering</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">d</span> <span class="o">=</span> <span class="n">filtering</span><span class="o">.</span><span class="n">Filter</span><span class="p">(</span><span class="s2">&quot;tests/test_files/test_deseq.csv&quot;</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">below</span><span class="p">,</span> <span class="n">above</span> <span class="o">=</span> <span class="n">d</span><span class="o">.</span><span class="n">split_by_percentile</span><span class="p">(</span><span class="mf">0.75</span><span class="p">,</span><span class="s1">&#39;log2FoldChange&#39;</span><span class="p">)</span>
-<span class="go">Filtered 7 features, leaving 21 of the original 28 features. Filtering result saved to new object.</span>
-<span class="go">Filtered 21 features, leaving 7 of the original 28 features. Filtering result saved to new object.</span>
-</pre></div>
-</div>
+<dd class="field-odd"><p>a tuple of two Filter objects: the first contains all the features below the specified percentile,         and the second contains all the features above and equal to the specified percentile.</p>
 </dd>
 </dl>
 </dd></dl>

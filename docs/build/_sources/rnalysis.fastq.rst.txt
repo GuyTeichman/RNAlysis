@@ -31,6 +31,8 @@
     
     kallisto_quantify_single_end
     
+    shortstack_align_smallrna
+    
     trim_adapters_paired_end
     
     trim_adapters_single_end

@@ -4,7 +4,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>rnalysis.filtering.DESeqFilter &mdash; RNAlysis 3.6.2 documentation</title>
+  <title>rnalysis.filtering.DESeqFilter &mdash; RNAlysis 3.7.0 documentation</title>
       <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
     <link rel="shortcut icon" href="_static/favicon.ico"/>
@@ -88,6 +88,8 @@
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.DESeqFilter.filter_by_attribute.html">rnalysis.filtering.DESeqFilter.filter_by_attribute</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.DESeqFilter.filter_by_go_annotations.html">rnalysis.filtering.DESeqFilter.filter_by_go_annotations</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.DESeqFilter.filter_by_kegg_annotations.html">rnalysis.filtering.DESeqFilter.filter_by_kegg_annotations</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.DESeqFilter.filter_by_row_name.html">rnalysis.filtering.DESeqFilter.filter_by_row_name</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.DESeqFilter.filter_duplicate_ids.html">rnalysis.filtering.DESeqFilter.filter_duplicate_ids</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.DESeqFilter.filter_fold_change_direction.html">rnalysis.filtering.DESeqFilter.filter_fold_change_direction</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.DESeqFilter.filter_missing_values.html">rnalysis.filtering.DESeqFilter.filter_missing_values</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.DESeqFilter.filter_percentile.html">rnalysis.filtering.DESeqFilter.filter_percentile</a></li>
@@ -231,6 +233,12 @@
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.DESeqFilter.filter_by_kegg_annotations.html#rnalysis.filtering.DESeqFilter.filter_by_kegg_annotations" title="rnalysis.filtering.DESeqFilter.filter_by_kegg_annotations"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DESeqFilter.filter_by_kegg_annotations</span></code></a>(kegg_ids)</p></td>
 <td><p>Filters genes according to KEGG pathways, keeping only genes that belong to specific KEGG pathway.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.DESeqFilter.filter_by_row_name.html#rnalysis.filtering.DESeqFilter.filter_by_row_name" title="rnalysis.filtering.DESeqFilter.filter_by_row_name"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DESeqFilter.filter_by_row_name</span></code></a>(row_names[, ...])</p></td>
+<td><p>Filter out specific rows from the table by their name (index).</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.DESeqFilter.filter_duplicate_ids.html#rnalysis.filtering.DESeqFilter.filter_duplicate_ids" title="rnalysis.filtering.DESeqFilter.filter_duplicate_ids"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DESeqFilter.filter_duplicate_ids</span></code></a>([keep, ...])</p></td>
+<td><p>Filter out rows with duplicate names/IDs (index).</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.DESeqFilter.filter_fold_change_direction.html#rnalysis.filtering.DESeqFilter.filter_fold_change_direction" title="rnalysis.filtering.DESeqFilter.filter_fold_change_direction"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DESeqFilter.filter_fold_change_direction</span></code></a>([...])</p></td>
 <td><p>Filters out features according to the direction in which they changed between the two conditions.</p></td>

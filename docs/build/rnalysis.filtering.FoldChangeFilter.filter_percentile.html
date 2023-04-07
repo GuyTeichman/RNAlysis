@@ -4,7 +4,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>rnalysis.filtering.FoldChangeFilter.filter_percentile &mdash; RNAlysis 3.6.2 documentation</title>
+  <title>rnalysis.filtering.FoldChangeFilter.filter_percentile &mdash; RNAlysis 3.7.0 documentation</title>
       <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
     <link rel="shortcut icon" href="_static/favicon.ico"/>
@@ -87,6 +87,8 @@
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.filter_by_attribute.html">rnalysis.filtering.FoldChangeFilter.filter_by_attribute</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.filter_by_go_annotations.html">rnalysis.filtering.FoldChangeFilter.filter_by_go_annotations</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.filter_by_kegg_annotations.html">rnalysis.filtering.FoldChangeFilter.filter_by_kegg_annotations</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.filter_by_row_name.html">rnalysis.filtering.FoldChangeFilter.filter_by_row_name</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.filter_duplicate_ids.html">rnalysis.filtering.FoldChangeFilter.filter_duplicate_ids</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.filter_fold_change_direction.html">rnalysis.filtering.FoldChangeFilter.filter_fold_change_direction</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.filter_missing_values.html">rnalysis.filtering.FoldChangeFilter.filter_missing_values</a></li>
 <li class="toctree-l3 current"><a class="current reference internal" href="#">rnalysis.filtering.FoldChangeFilter.filter_percentile</a><ul>
@@ -157,34 +159,18 @@
 <h1>rnalysis.filtering.FoldChangeFilter.filter_percentile<a class="headerlink" href="#rnalysis-filtering-foldchangefilter-filter-percentile" title="Permalink to this heading"></a></h1>
 <dl class="py method">
 <dt class="sig sig-object py" id="rnalysis.filtering.FoldChangeFilter.filter_percentile">
-<span class="sig-prename descclassname"><span class="pre">FoldChangeFilter.</span></span><span class="sig-name descname"><span class="pre">filter_percentile</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">percentile</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Fraction</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">column</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">opposite</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inplace</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rnalysis.filtering.FoldChangeFilter.filter_percentile" title="Permalink to this definition"></a></dt>
-<dd><p>Removes all entries above the specified percentile in the specified column.         For example, if the column were ‘pvalue’ and the percentile was 0.5, then all features whose pvalue is above         the median pvalue will be filtered out.</p>
-<dl class="field-list">
+<span class="sig-prename descclassname"><span class="pre">FoldChangeFilter.</span></span><span class="sig-name descname"><span class="pre">filter_percentile</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">percentile</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Fraction</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">opposite</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inplace</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rnalysis.filtering.FoldChangeFilter.filter_percentile" title="Permalink to this definition"></a></dt>
+<dd><p>Removes all entries above the specified percentile.            For example, if the percentile was 0.5, then all features whose value is above            the median value will be filtered out.</p>
+<dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>percentile</strong> (<em>float between 0 and 1</em>) – The percentile that all features above it will be filtered out.</p></li>
-<li><p><strong>column</strong> (<em>str</em>) – Name of the DataFrame column according to which the filtering will be performed.</p></li>
-<li><p><strong>opposite</strong> (<em>bool</em>) – If True, the output of the filtering will be the OPPOSITE of the specified         (instead of filtering out X, the function will filter out anything BUT X).         If False (default), the function will filter as expected.</p></li>
-<li><p><strong>inplace</strong> (<em>bool</em><em> (</em><em>default=True</em><em>)</em>) – If True (default), filtering will be applied to the current Filter object. If False,         the function will return a new Filter instance and the current instance will not be affected.</p></li>
+<li><p><strong>opposite</strong> (<em>bool</em>) – If True, the output of the filtering will be the OPPOSITE of the specified            (instead of filtering out X, the function will filter out anything BUT X).            If False (default), the function will filter as expected.</p></li>
+<li><p><strong>inplace</strong> (<em>bool</em><em> (</em><em>default=True</em><em>)</em>) – If True (default), filtering will be applied to the current Filter object. If False,            the function will return a new CountFilter instance and the current instance will not be affected.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p>If inplace is False, returns a new and filtered instance of the Filter object.</p>
-</dd>
-<dt class="field-odd">Examples</dt>
-<dd class="field-odd"><div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">rnalysis</span> <span class="kn">import</span> <span class="n">filtering</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">d</span> <span class="o">=</span> <span class="n">filtering</span><span class="o">.</span><span class="n">Filter</span><span class="p">(</span><span class="s2">&quot;tests/test_files/test_deseq.csv&quot;</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="c1"># keep only the rows whose value in the column &#39;log2FoldChange&#39; is below the 75th percentile</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">d</span><span class="o">.</span><span class="n">filter_percentile</span><span class="p">(</span><span class="mf">0.75</span><span class="p">,</span><span class="s1">&#39;log2FoldChange&#39;</span><span class="p">)</span>
-<span class="go">Filtered 7 features, leaving 21 of the original 28 features. Filtered inplace.</span>
-</pre></div>
-</div>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">d</span> <span class="o">=</span> <span class="n">filtering</span><span class="o">.</span><span class="n">Filter</span><span class="p">(</span><span class="s2">&quot;tests/test_files/test_deseq.csv&quot;</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="c1"># keep only the rows vulse value in the column &#39;log2FoldChange&#39; is above the 25th percentile</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">d</span><span class="o">.</span><span class="n">filter_percentile</span><span class="p">(</span><span class="mf">0.25</span><span class="p">,</span><span class="s1">&#39;log2FoldChange&#39;</span><span class="p">,</span><span class="n">opposite</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-<span class="go">Filtered 7 features, leaving 21 of the original 28 features. Filtered inplace.</span>
-</pre></div>
-</div>
 </dd>
 </dl>
 </dd></dl>

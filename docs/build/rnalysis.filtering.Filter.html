@@ -4,7 +4,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>rnalysis.filtering.Filter &mdash; RNAlysis 3.6.2 documentation</title>
+  <title>rnalysis.filtering.Filter &mdash; RNAlysis 3.7.0 documentation</title>
       <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
     <link rel="shortcut icon" href="_static/favicon.ico"/>
@@ -88,6 +88,8 @@
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.Filter.filter_by_attribute.html">rnalysis.filtering.Filter.filter_by_attribute</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.Filter.filter_by_go_annotations.html">rnalysis.filtering.Filter.filter_by_go_annotations</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.Filter.filter_by_kegg_annotations.html">rnalysis.filtering.Filter.filter_by_kegg_annotations</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.Filter.filter_by_row_name.html">rnalysis.filtering.Filter.filter_by_row_name</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.Filter.filter_duplicate_ids.html">rnalysis.filtering.Filter.filter_duplicate_ids</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.Filter.filter_missing_values.html">rnalysis.filtering.Filter.filter_missing_values</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.Filter.filter_percentile.html">rnalysis.filtering.Filter.filter_percentile</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.Filter.filter_top_n.html">rnalysis.filtering.Filter.filter_top_n</a></li>
@@ -226,6 +228,12 @@
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.Filter.filter_by_kegg_annotations.html#rnalysis.filtering.Filter.filter_by_kegg_annotations" title="rnalysis.filtering.Filter.filter_by_kegg_annotations"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Filter.filter_by_kegg_annotations</span></code></a>(kegg_ids)</p></td>
 <td><p>Filters genes according to KEGG pathways, keeping only genes that belong to specific KEGG pathway.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.Filter.filter_by_row_name.html#rnalysis.filtering.Filter.filter_by_row_name" title="rnalysis.filtering.Filter.filter_by_row_name"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Filter.filter_by_row_name</span></code></a>(row_names[, ...])</p></td>
+<td><p>Filter out specific rows from the table by their name (index).</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.Filter.filter_duplicate_ids.html#rnalysis.filtering.Filter.filter_duplicate_ids" title="rnalysis.filtering.Filter.filter_duplicate_ids"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Filter.filter_duplicate_ids</span></code></a>([keep, ...])</p></td>
+<td><p>Filter out rows with duplicate names/IDs (index).</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.Filter.filter_missing_values.html#rnalysis.filtering.Filter.filter_missing_values" title="rnalysis.filtering.Filter.filter_missing_values"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Filter.filter_missing_values</span></code></a>([columns, ...])</p></td>
 <td><p>Remove all rows whose values in the specified columns are missing (NaN).</p></td>

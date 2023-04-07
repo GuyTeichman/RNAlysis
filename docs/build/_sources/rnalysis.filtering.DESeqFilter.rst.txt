@@ -27,6 +27,8 @@
     DESeqFilter.filter_by_attribute
     DESeqFilter.filter_by_go_annotations
     DESeqFilter.filter_by_kegg_annotations
+    DESeqFilter.filter_by_row_name
+    DESeqFilter.filter_duplicate_ids
     DESeqFilter.filter_fold_change_direction
     DESeqFilter.filter_missing_values
     DESeqFilter.filter_percentile

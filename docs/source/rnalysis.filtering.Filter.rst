@@ -26,6 +26,8 @@
     Filter.filter_by_attribute
     Filter.filter_by_go_annotations
     Filter.filter_by_kegg_annotations
+    Filter.filter_by_row_name
+    Filter.filter_duplicate_ids
     Filter.filter_missing_values
     Filter.filter_percentile
     Filter.filter_top_n

@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>rnalysis.fastq.shortstack_align_smallrna &mdash; RNAlysis 3.7.0 documentation</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+    <link rel="shortcut icon" href="_static/favicon.ico"/>
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/sphinx_highlight.js"></script>
+        <script src="_static/copybutton.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="rnalysis.fastq.trim_adapters_paired_end" href="rnalysis.fastq.trim_adapters_paired_end.html" />
+    <link rel="prev" title="rnalysis.fastq.kallisto_quantify_single_end" href="rnalysis.fastq.kallisto_quantify_single_end.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="index.html">
+            <img src="_static/logo.png" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">About RNAlysis:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="readme.html">What is <em>RNAlysis?</em></a></li>
+<li class="toctree-l1"><a class="reference internal" href="readme.html#what-can-i-do-with-rnalysis">What can I do with <em>RNAlysis</em>?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="readme.html#how-do-i-install-it">How do I install it?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="readme.html#how-do-i-use-it">How do I use it?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="readme.html#dependencies">Dependencies</a></li>
+<li class="toctree-l1"><a class="reference internal" href="readme.html#credits">Credits</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/GuyTeichman/RNAlysis">GitHub page</a></li>
+<li class="toctree-l1"><a class="reference internal" href="contributing.html">How can I contribute to <em>RNAlysis</em>?</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Starting with RNAlysis:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="quick_start.html"><em>RNAlysis</em> quick-start video guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tutorial.html">A-to-Z tutorial - example analysis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="faq.html">Frequently asked questions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="user_guide_gui.html">User guide - graphical interface</a></li>
+<li class="toctree-l1"><a class="reference internal" href="user_guide.html">User guide - programmatic interface</a></li>
+<li class="toctree-l1"><a class="reference internal" href="glossary.html">Glossary - programmatic interface</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Change history:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="history.html">History</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Modules:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="rnalysis.fastq.html">rnalysis.fastq</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="rnalysis.fastq.bowtie2_align_paired_end.html">rnalysis.fastq.bowtie2_align_paired_end</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rnalysis.fastq.bowtie2_align_single_end.html">rnalysis.fastq.bowtie2_align_single_end</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rnalysis.fastq.bowtie2_create_index.html">rnalysis.fastq.bowtie2_create_index</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rnalysis.fastq.featurecounts_paired_end.html">rnalysis.fastq.featurecounts_paired_end</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rnalysis.fastq.featurecounts_single_end.html">rnalysis.fastq.featurecounts_single_end</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rnalysis.fastq.kallisto_create_index.html">rnalysis.fastq.kallisto_create_index</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rnalysis.fastq.kallisto_quantify_paired_end.html">rnalysis.fastq.kallisto_quantify_paired_end</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rnalysis.fastq.kallisto_quantify_single_end.html">rnalysis.fastq.kallisto_quantify_single_end</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">rnalysis.fastq.shortstack_align_smallrna</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#rnalysis.fastq.shortstack_align_smallrna"><code class="docutils literal notranslate"><span class="pre">shortstack_align_smallrna()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="rnalysis.fastq.trim_adapters_paired_end.html">rnalysis.fastq.trim_adapters_paired_end</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rnalysis.fastq.trim_adapters_single_end.html">rnalysis.fastq.trim_adapters_single_end</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="rnalysis.filtering.html">rnalysis.filtering</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rnalysis.enrichment.html">rnalysis.enrichment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rnalysis.general.html">rnalysis.general</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Indices and tables:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="genindex.html">Index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api_reference.html">API Reference</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">RNAlysis</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="rnalysis.fastq.html">rnalysis.fastq</a> &raquo;</li>
+      <li>rnalysis.fastq.shortstack_align_smallrna</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/rnalysis.fastq.shortstack_align_smallrna.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="rnalysis-fastq-shortstack-align-smallrna">
+<h1>rnalysis.fastq.shortstack_align_smallrna<a class="headerlink" href="#rnalysis-fastq-shortstack-align-smallrna" title="Permalink to this heading"></a></h1>
+<dl class="py function">
+<dt class="sig sig-object py" id="rnalysis.fastq.shortstack_align_smallrna">
+<span class="sig-prename descclassname"><span class="pre">rnalysis.fastq.</span></span><span class="sig-name descname"><span class="pre">shortstack_align_smallrna</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fastq_folder</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Path</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_folder</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Path</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">genome_fasta</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Path</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">shortstack_installation_folder</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Path</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'auto'</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'auto'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">new_sample_names</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'auto'</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'auto'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">known_rnas</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Path</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">trim_adapter</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'autotrim'</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">autotrim_key</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'TCGGACCAGGCTTCATTCCCC'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">multimap_mode</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'fractional'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'unique'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'random'</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'fractional'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">align_only</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">show_secondary_alignments</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dicer_min_length</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">PositiveInt</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">21</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dicer_max_length</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">PositiveInt</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">24</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">loci_file</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Path</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">locus</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">search_microrna</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">None</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'de-novo'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'known-rnas'</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'known-rnas'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">strand_cutoff</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Fraction</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.8</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_coverage</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pad</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">PositiveInt</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">75</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threads</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">PositiveInt</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rnalysis.fastq.shortstack_align_smallrna" title="Permalink to this definition"></a></dt>
+<dd><p>Align small RNA single-end reads from FASTQ files to a reference sequence using the     <a class="reference external" href="https://github.com/MikeAxtell/ShortStack">ShortStack</a> aligner (version 4).     ShortStack is currently not supported on computers running Windows.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>fastq_folder</strong> (<em>str</em><em> or </em><em>Path</em>) – Path to the folder containing the FASTQ files you want to quantify</p></li>
+<li><p><strong>output_folder</strong> (<em>str/Path to an existing folder</em>) – Path to a folder in which the aligned reads, as well as the log files, will be saved.</p></li>
+<li><p><strong>genome_fasta</strong> (<em>str</em><em> or </em><em>Path</em>) – Path to the FASTA file which contain the reference sequences to be aligned to.</p></li>
+<li><p><strong>shortstack_installation_folder</strong> (<em>str</em><em>, </em><em>Path</em><em>, or </em><em>'auto'</em><em> (</em><em>default='auto'</em><em>)</em>) – Path to the installation folder of ShortStack. For example:     ‘/home/myuser/anaconda3/envs/myenv/bin’. if installation folder is set to ‘auto’,     RNAlysis will attempt to find it automatically.</p></li>
+<li><p><strong>new_sample_names</strong> (<em>list</em><em> of </em><em>str</em><em> or </em><em>'auto'</em><em> (</em><em>default='auto'</em><em>)</em>) – Give a new name to each quantified sample (optional).     If sample_names=’auto’, sample names     will be given automatically. Otherwise, sample_names should be a list of new names, with the order of the names     matching the order of the file pairs.</p></li>
+<li><p><strong>known_rnas</strong> (<em>str</em><em>, </em><em>Path</em><em>, or </em><em>None</em><em> (</em><em>default=None</em><em>)</em>) – Path to FASTA-formatted file of known small RNAs.     FASTA must be formatted such that a single RNA sequence is on one line only.     ATCGUatcgu characters are acceptable.     These RNAs are typically the sequences of known microRNAs.     For instance, a FASTA file of mature miRNAs pulled from <a class="reference external" href="https://www.mirbase.org">https://www.mirbase.org</a>.     Providing these data increases the accuracy of MIRNA locus identification.</p></li>
+<li><p><strong>trim_adapter</strong> (<em>str</em><em>, </em><em>'autotrim'</em><em>, or </em><em>None</em><em> (</em><em>default=None</em><em>)</em>) – Determines whether ShortStack will attempt to trim the supplied reads.     If <cite>trim_adapter</cite> is not provided (default), no trimming will be run.     If <cite>trim_adapter</cite> is set to ‘autotrim’, ShortStack will automatically infer the 3’ adapter sequence     of the untrimmed reads, and the uses that to coordinate read trimming.     If <cite>trim_adapter</cite> is a DNA sequence, ShortStack will trim the reads using the given DNA sequence as the 3’ adapter.</p></li>
+<li><p><strong>autotrim_key</strong> (<em>str</em><em> (</em><em>default=&quot;TCGGACCAGGCTTCATTCCCC&quot;</em><em> (</em><em>miR166</em><em>)</em><em>)</em>) – A DNA sequence to use as a known suffix during the autotrim procedure.     This parameter is used only if <cite>trim_adapter</cite> is set to ‘autotrim’.     ShortStack’s autotrim discovers the 3’ adapter by scanning for reads that begin with the sequence given by     <cite>autotrim_key</cite>. This should be the sequence of a small RNA that is known to be highly abundant     in all the libraries. The default sequence is for miR166,     a microRNA that is present in nearly all plants at high levels.     For non-plant experiments, or if the default is not working well,     consider providing an alternative to the default.</p></li>
+<li><p><strong>multimap_mode</strong> (<em>'fractional'</em><em>, </em><em>'unique'</em><em>, or </em><em>'random'</em><em> (</em><em>default='fractional'</em><em>)</em>) – Sets the mode by which multi-mapped reads are handled.     These modes are described in Johnson et al. (2016). The default mode (‘fractional’) has the best performance.     In ‘fractional’ mode, ShortStack will use a fractional weighting scheme for placement of multi-mapped reads.     In ‘unique’ mode, only uniquely-aligned reads are used as weights for placement of multi-mapped reads.     In ‘random’ mode, multi-mapped read placement is random.</p></li>
+<li><p><strong>align_only</strong> (<em>bool</em><em> (</em><em>default=False</em><em>)</em>) – if True, ShortStack will terminate after the alignment phase;     no additional analysis will occur.</p></li>
+<li><p><strong>show_secondary_alignments</strong> (<em>bool</em><em> (</em><em>default=False</em><em>)</em>) – if True, ShortStack will retain secondary alignments for multimapped reads.     This will increase bam file size, possibly by a lot.</p></li>
+<li><p><strong>dicer_min_length</strong> (<em>positive int</em><em> (</em><em>default=21</em><em>)</em>) – the minimum size (in nucleotides) of a valid small RNA.     Together with <cite>dicer_max_length</cite>,     this option sets the bounds to discriminate Dicer-derived small RNA loci from other loci.     At least 80% of the reads in a given cluster     must be in the range indicated by <cite>dicer_min_length</cite> and <cite>dicer_max_length</cite>.</p></li>
+<li><p><strong>dicer_max_length</strong> (<em>positive int</em><em> (</em><em>default=24</em><em>)</em>) – the maximun size (in nucleotides) of a valid small RNA.     Together with <cite>dicer_min_length</cite>,     this option sets the bounds to discriminate Dicer-derived small RNA loci from other loci.     At least 80% of the reads in a given cluster     must be in the range indicated by <cite>dicer_min_length</cite> and <cite>dicer_max_length</cite>.</p></li>
+<li><p><strong>loci_file</strong> (<em>str</em><em>, </em><em>Path</em><em>, or </em><em>None</em><em> (</em><em>default=None</em><em>)</em>) – Path to a file of pre-determined loci to analyze.     This will prevent de-novo discovery of small RNA loci.     The file may be in gff3, bed, or simple tab-delimited format (Chr:Start-Stop[tab]Name).     Mutually exclusive with <cite>locus</cite>.</p></li>
+<li><p><strong>locus</strong> (<em>str</em><em> or </em><em>None</em><em> (</em><em>default=None</em><em>)</em>) – A single locus to analyze,     given as a string in the format Chr:Start-Stop (using one-based, inclusive numbering).     This will prevent de novo discovery of small RNA loci. Mutually exclusive with <cite>loci_file</cite>.</p></li>
+<li><p><strong>search_microrna</strong> (<em>'de-novo'</em><em>, </em><em>'known-rnas'</em><em>, or </em><em>None</em><em> (</em><em>default='known-rnas'</em><em>)</em>) – determines whether and how search for microRNAs will be performed.     if <cite>search_microrna</cite> is None, ShortStack will not search for microRNAs.     This saves computational time, but MIRNA loci will not be differentiated from other types of small RNA clusters.     if <cite>search_microrna</cite> is ‘known-rnas’, t ShortStack will confine MIRNA analysis to loci where one or more     queries from the <cite>known_rnas</cite> file are aligned to the genome.     if <cite>search_microrna</cite> is ‘de-novo’, ShortStack will run  a more comprehensive genome-wide scan for MIRNA loci.     Discovered loci that do not overlap already known microRNAs should be treated with caution.</p></li>
+<li><p><strong>strand_cutoff</strong> (<em>float between 0.5 and 1</em><em> (</em><em>default=0.8</em><em>)</em>) – Floating point number that sets the cutoff for standedness.     By default (strand_cutoff=0.8), loci with &gt;80% reads on the top genomic strand are ‘+’ stranded,     loci with &lt;20% reads on the top genomic strand are ‘-’ stranded, and all others are unstranded ‘.’.</p></li>
+<li><p><strong>min_coverage</strong> (<em>float &gt; 0</em><em> (</em><em>default=2</em><em>)</em>) – Minimum alignment depth, in units of ‘reads per million’,     required to nucleate a small RNA cluster during de-novo cluster search.</p></li>
+<li><p><strong>pad</strong> (<em>positive int</em><em> (</em><em>default=75</em><em>)</em>) – initial peaks (continuous regions with depth exceeding the argument <cite>min_coverage</cite>) are merged     if they are this distance or less from each other.</p></li>
+<li><p><strong>threads</strong> (<em>int &gt; 0</em><em> (</em><em>default=1</em><em>)</em>) – number of threads to run ShortStack on. More threads will generally make index building faster.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="rnalysis.fastq.kallisto_quantify_single_end.html" class="btn btn-neutral float-left" title="rnalysis.fastq.kallisto_quantify_single_end" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="rnalysis.fastq.trim_adapters_paired_end.html" class="btn btn-neutral float-right" title="rnalysis.fastq.trim_adapters_paired_end" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, Guy Teichman.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -4,7 +4,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>rnalysis.filtering.FoldChangeFilter &mdash; RNAlysis 3.6.2 documentation</title>
+  <title>rnalysis.filtering.FoldChangeFilter &mdash; RNAlysis 3.7.0 documentation</title>
       <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
     <link rel="shortcut icon" href="_static/favicon.ico"/>
@@ -90,6 +90,8 @@
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.filter_by_attribute.html">rnalysis.filtering.FoldChangeFilter.filter_by_attribute</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.filter_by_go_annotations.html">rnalysis.filtering.FoldChangeFilter.filter_by_go_annotations</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.filter_by_kegg_annotations.html">rnalysis.filtering.FoldChangeFilter.filter_by_kegg_annotations</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.filter_by_row_name.html">rnalysis.filtering.FoldChangeFilter.filter_by_row_name</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.filter_duplicate_ids.html">rnalysis.filtering.FoldChangeFilter.filter_duplicate_ids</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.filter_fold_change_direction.html">rnalysis.filtering.FoldChangeFilter.filter_fold_change_direction</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.filter_missing_values.html">rnalysis.filtering.FoldChangeFilter.filter_missing_values</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.filter_percentile.html">rnalysis.filtering.FoldChangeFilter.filter_percentile</a></li>
@@ -237,14 +239,20 @@
 <tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.filter_by_kegg_annotations.html#rnalysis.filtering.FoldChangeFilter.filter_by_kegg_annotations" title="rnalysis.filtering.FoldChangeFilter.filter_by_kegg_annotations"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FoldChangeFilter.filter_by_kegg_annotations</span></code></a>(...)</p></td>
 <td><p>Filters genes according to KEGG pathways, keeping only genes that belong to specific KEGG pathway.</p></td>
 </tr>
+<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.filter_by_row_name.html#rnalysis.filtering.FoldChangeFilter.filter_by_row_name" title="rnalysis.filtering.FoldChangeFilter.filter_by_row_name"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FoldChangeFilter.filter_by_row_name</span></code></a>(row_names)</p></td>
+<td><p>Filter out specific rows from the table by their name (index).</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.filter_duplicate_ids.html#rnalysis.filtering.FoldChangeFilter.filter_duplicate_ids" title="rnalysis.filtering.FoldChangeFilter.filter_duplicate_ids"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FoldChangeFilter.filter_duplicate_ids</span></code></a>([...])</p></td>
+<td><p>Filter out rows with duplicate names/IDs (index).</p></td>
+</tr>
 <tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.filter_fold_change_direction.html#rnalysis.filtering.FoldChangeFilter.filter_fold_change_direction" title="rnalysis.filtering.FoldChangeFilter.filter_fold_change_direction"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FoldChangeFilter.filter_fold_change_direction</span></code></a>([...])</p></td>
 <td><p>Filters out features according to the direction in which they changed between the two conditions.</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.filter_missing_values.html#rnalysis.filtering.FoldChangeFilter.filter_missing_values" title="rnalysis.filtering.FoldChangeFilter.filter_missing_values"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FoldChangeFilter.filter_missing_values</span></code></a>([...])</p></td>
-<td><p>Remove all rows whose values in the specified columns are missing (NaN).</p></td>
+<td><p>Remove all rows with missing values.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.filter_percentile.html#rnalysis.filtering.FoldChangeFilter.filter_percentile" title="rnalysis.filtering.FoldChangeFilter.filter_percentile"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FoldChangeFilter.filter_percentile</span></code></a>(...[, ...])</p></td>
-<td><p>Removes all entries above the specified percentile in the specified column.</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.filter_percentile.html#rnalysis.filtering.FoldChangeFilter.filter_percentile" title="rnalysis.filtering.FoldChangeFilter.filter_percentile"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FoldChangeFilter.filter_percentile</span></code></a>(percentile)</p></td>
+<td><p>Removes all entries above the specified percentile.</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.filter_top_n.html#rnalysis.filtering.FoldChangeFilter.filter_top_n" title="rnalysis.filtering.FoldChangeFilter.filter_top_n"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FoldChangeFilter.filter_top_n</span></code></a>(by[, n, ...])</p></td>
 <td><p>Sort the rows by the values of specified column or columns, then keep only the top 'n' rows.</p></td>
@@ -279,8 +287,8 @@
 <tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.split_by_attribute.html#rnalysis.filtering.FoldChangeFilter.split_by_attribute" title="rnalysis.filtering.FoldChangeFilter.split_by_attribute"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FoldChangeFilter.split_by_attribute</span></code></a>(attributes)</p></td>
 <td><p>Splits the features in the Filter object into multiple Filter objects,         each corresponding to one of the specified Attribute Reference Table attributes.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.split_by_percentile.html#rnalysis.filtering.FoldChangeFilter.split_by_percentile" title="rnalysis.filtering.FoldChangeFilter.split_by_percentile"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FoldChangeFilter.split_by_percentile</span></code></a>(...)</p></td>
-<td><p>Splits the features in the Filter object into two non-overlapping Filter objects:         one containing features below the specified percentile in the specfieid column,         and the other containing features about the specified percentile in the specified column.</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.split_by_percentile.html#rnalysis.filtering.FoldChangeFilter.split_by_percentile" title="rnalysis.filtering.FoldChangeFilter.split_by_percentile"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FoldChangeFilter.split_by_percentile</span></code></a>(percentile)</p></td>
+<td><p>Splits the features in the table into two non-overlapping tables:         one containing features below the specified percentile,         and the other containing features about the specified percentile.</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.split_fold_change_direction.html#rnalysis.filtering.FoldChangeFilter.split_fold_change_direction" title="rnalysis.filtering.FoldChangeFilter.split_fold_change_direction"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FoldChangeFilter.split_fold_change_direction</span></code></a>()</p></td>
 <td><p>Splits the features in the FoldChangeFilter object into two non-overlapping         FoldChangeFilter objects, based on the direction of their log2(fold change).</p></td>
@@ -294,7 +302,7 @@
 <tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.text_filters.html#rnalysis.filtering.FoldChangeFilter.text_filters" title="rnalysis.filtering.FoldChangeFilter.text_filters"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FoldChangeFilter.text_filters</span></code></a>(column, ...[, ...])</p></td>
 <td><p>Applay a text filter (equals, contains, starts with, ends with) on a particular column in the Filter object.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.transform.html#rnalysis.filtering.FoldChangeFilter.transform" title="rnalysis.filtering.FoldChangeFilter.transform"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FoldChangeFilter.transform</span></code></a>(function[, ...])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.transform.html#rnalysis.filtering.FoldChangeFilter.transform" title="rnalysis.filtering.FoldChangeFilter.transform"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FoldChangeFilter.transform</span></code></a>(function[, inplace])</p></td>
 <td><p>Transform the values in the Filter object with the specified function.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.translate_gene_ids.html#rnalysis.filtering.FoldChangeFilter.translate_gene_ids" title="rnalysis.filtering.FoldChangeFilter.translate_gene_ids"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FoldChangeFilter.translate_gene_ids</span></code></a>(translate_to)</p></td>

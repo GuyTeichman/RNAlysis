@@ -5,17 +5,17 @@
 
 .. autoclass:: CountFilter
 
-
-
-
+   
+   
+   
     .. automethod:: __init__
+    
+    
 
-
-
-
+   
 .. autosummary::
     :toctree: .
-
+    
     CountFilter.average_replicate_samples
     CountFilter.biotypes_from_gtf
     CountFilter.biotypes_from_ref_table
@@ -32,13 +32,16 @@
     CountFilter.filter_by_attribute
     CountFilter.filter_by_go_annotations
     CountFilter.filter_by_kegg_annotations
+    CountFilter.filter_by_row_name
     CountFilter.filter_by_row_sum
+    CountFilter.filter_duplicate_ids
     CountFilter.filter_low_reads
     CountFilter.filter_missing_values
     CountFilter.filter_percentile
     CountFilter.filter_top_n
     CountFilter.fold_change
     CountFilter.from_dataframe
+    CountFilter.from_folder
     CountFilter.from_folder_htseqcount
     CountFilter.head
     CountFilter.intersection
@@ -77,4 +80,5 @@
     CountFilter.translate_gene_ids
     CountFilter.union
     CountFilter.violin_plot
-
+    
+    

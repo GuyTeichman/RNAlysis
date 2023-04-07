@@ -4,7 +4,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>rnalysis.fastq &mdash; RNAlysis 3.6.2 documentation</title>
+  <title>rnalysis.fastq &mdash; RNAlysis 3.7.0 documentation</title>
       <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
     <link rel="shortcut icon" href="_static/favicon.ico"/>
@@ -78,6 +78,7 @@
 <li class="toctree-l2"><a class="reference internal" href="rnalysis.fastq.kallisto_create_index.html">rnalysis.fastq.kallisto_create_index</a></li>
 <li class="toctree-l2"><a class="reference internal" href="rnalysis.fastq.kallisto_quantify_paired_end.html">rnalysis.fastq.kallisto_quantify_paired_end</a></li>
 <li class="toctree-l2"><a class="reference internal" href="rnalysis.fastq.kallisto_quantify_single_end.html">rnalysis.fastq.kallisto_quantify_single_end</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rnalysis.fastq.shortstack_align_smallrna.html">rnalysis.fastq.shortstack_align_smallrna</a></li>
 <li class="toctree-l2"><a class="reference internal" href="rnalysis.fastq.trim_adapters_paired_end.html">rnalysis.fastq.trim_adapters_paired_end</a></li>
 <li class="toctree-l2"><a class="reference internal" href="rnalysis.fastq.trim_adapters_single_end.html">rnalysis.fastq.trim_adapters_single_end</a></li>
 </ul>
@@ -156,10 +157,13 @@ the <em>bowtie2</em> alignment tool, and the <em>featureCounts</em> feature coun
 <td><p><p>Quantify transcript abundance in single-end mRNA sequencing data using     <a class="reference external" href="https://pachterlab.github.io/kallisto/">kallisto</a>.</p>
 </p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.fastq.trim_adapters_paired_end.html#rnalysis.fastq.trim_adapters_paired_end" title="rnalysis.fastq.trim_adapters_paired_end"><code class="xref py py-obj docutils literal notranslate"><span class="pre">trim_adapters_paired_end</span></code></a>(r1_files, r2_files, ...)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.fastq.shortstack_align_smallrna.html#rnalysis.fastq.shortstack_align_smallrna" title="rnalysis.fastq.shortstack_align_smallrna"><code class="xref py py-obj docutils literal notranslate"><span class="pre">shortstack_align_smallrna</span></code></a>(fastq_folder, ...)</p></td>
+<td><p>Align small RNA single-end reads from FASTQ files to a reference sequence using the     <a class="reference external" href="https://github.com/MikeAxtell/ShortStack">ShortStack</a> aligner (version 4).</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.fastq.trim_adapters_paired_end.html#rnalysis.fastq.trim_adapters_paired_end" title="rnalysis.fastq.trim_adapters_paired_end"><code class="xref py py-obj docutils literal notranslate"><span class="pre">trim_adapters_paired_end</span></code></a>(r1_files, r2_files, ...)</p></td>
 <td><p>Trim adapters from paired-end reads using <a class="reference external" href="https://cutadapt.readthedocs.io/">CutAdapt</a>.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.fastq.trim_adapters_single_end.html#rnalysis.fastq.trim_adapters_single_end" title="rnalysis.fastq.trim_adapters_single_end"><code class="xref py py-obj docutils literal notranslate"><span class="pre">trim_adapters_single_end</span></code></a>(fastq_folder, ...)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.fastq.trim_adapters_single_end.html#rnalysis.fastq.trim_adapters_single_end" title="rnalysis.fastq.trim_adapters_single_end"><code class="xref py py-obj docutils literal notranslate"><span class="pre">trim_adapters_single_end</span></code></a>(fastq_folder, ...)</p></td>
 <td><p><p>Trim adapters from single-end reads using <a class="reference external" href="https://cutadapt.readthedocs.io/">CutAdapt</a>.</p>
 </p></td>
 </tr>

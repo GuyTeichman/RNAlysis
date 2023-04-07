@@ -4,7 +4,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>rnalysis.filtering.FoldChangeFilter.filter_missing_values &mdash; RNAlysis 3.6.2 documentation</title>
+  <title>rnalysis.filtering.FoldChangeFilter.filter_missing_values &mdash; RNAlysis 3.7.0 documentation</title>
       <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
     <link rel="shortcut icon" href="_static/favicon.ico"/>
@@ -87,6 +87,8 @@
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.filter_by_attribute.html">rnalysis.filtering.FoldChangeFilter.filter_by_attribute</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.filter_by_go_annotations.html">rnalysis.filtering.FoldChangeFilter.filter_by_go_annotations</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.filter_by_kegg_annotations.html">rnalysis.filtering.FoldChangeFilter.filter_by_kegg_annotations</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.filter_by_row_name.html">rnalysis.filtering.FoldChangeFilter.filter_by_row_name</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.filter_duplicate_ids.html">rnalysis.filtering.FoldChangeFilter.filter_duplicate_ids</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.filter_fold_change_direction.html">rnalysis.filtering.FoldChangeFilter.filter_fold_change_direction</a></li>
 <li class="toctree-l3 current"><a class="current reference internal" href="#">rnalysis.filtering.FoldChangeFilter.filter_missing_values</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#rnalysis.filtering.FoldChangeFilter.filter_missing_values"><code class="docutils literal notranslate"><span class="pre">FoldChangeFilter.filter_missing_values()</span></code></a></li>
@@ -157,28 +159,17 @@
 <h1>rnalysis.filtering.FoldChangeFilter.filter_missing_values<a class="headerlink" href="#rnalysis-filtering-foldchangefilter-filter-missing-values" title="Permalink to this heading"></a></h1>
 <dl class="py method">
 <dt class="sig sig-object py" id="rnalysis.filtering.FoldChangeFilter.filter_missing_values">
-<span class="sig-prename descclassname"><span class="pre">FoldChangeFilter.</span></span><span class="sig-name descname"><span class="pre">filter_missing_values</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">columns</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">ColumnNames</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'all'</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'all'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">opposite</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inplace</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rnalysis.filtering.FoldChangeFilter.filter_missing_values" title="Permalink to this definition"></a></dt>
-<dd><p>Remove all rows whose values in the specified columns are missing (NaN).</p>
+<span class="sig-prename descclassname"><span class="pre">FoldChangeFilter.</span></span><span class="sig-name descname"><span class="pre">filter_missing_values</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">opposite</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inplace</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rnalysis.filtering.FoldChangeFilter.filter_missing_values" title="Permalink to this definition"></a></dt>
+<dd><p>Remove all rows with missing values.</p>
 <dl class="field-list simple">
-</dl>
-<p>:param columns:name/names of the columns to check for missing values.
-:type opposite: bool
-:param opposite: If True, the output of the filtering will be the OPPOSITE of the specified         (instead of filtering out X, the function will filter out anything BUT X).         If False (default), the function will filter as expected.
-:type inplace: bool (default=True)
-:param inplace: If True (default), filtering will be applied to the current Filter object. If False,         the function will return a new Filter instance and the current instance will not be affected.
-:return: If ‘inplace’ is False, returns a new instance of the Filter object.</p>
-<dl class="field-list">
-<dt class="field-odd">Examples</dt>
-<dd class="field-odd"><div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">rnalysis</span> <span class="kn">import</span> <span class="n">filtering</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">filt</span> <span class="o">=</span> <span class="n">filtering</span><span class="o">.</span><span class="n">Filter</span><span class="p">(</span><span class="s1">&#39;tests/test_files/test_deseq_with_nan.csv&#39;</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">filt_no_nan</span> <span class="o">=</span> <span class="n">filt</span><span class="o">.</span><span class="n">filter_missing_values</span><span class="p">(</span><span class="n">inplace</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
-<span class="go">Filtered 3 features, leaving 25 of the original 28 features. Filtering result saved to new object.</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">filt_no_nan_basemean</span> <span class="o">=</span> <span class="n">filt</span><span class="o">.</span><span class="n">filter_missing_values</span><span class="p">(</span><span class="n">columns</span><span class="o">=</span><span class="s1">&#39;baseMean&#39;</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
-<span class="go">Filtered 1 features, leaving 27 of the original 28 features. Filtering result saved to new object.</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">filt_no_nan_basemean_pval</span> <span class="o">=</span> <span class="n">filt</span><span class="o">.</span><span class="n">filter_missing_values</span><span class="p">(</span><span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;baseMean&#39;</span><span class="p">,</span><span class="s1">&#39;pval&#39;</span><span class="p">],</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
-<span class="go">Filtered 2 features, leaving 26 of the original 28 features. Filtering result saved to new object.</span>
-</pre></div>
-</div>
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>opposite</strong> (<em>bool</em>) – If True, the output of the filtering will be the OPPOSITE of the specified         (instead of filtering out X, the function will filter out anything BUT X).         If False (default), the function will filter as expected.</p></li>
+<li><p><strong>inplace</strong> (<em>bool</em><em> (</em><em>default=True</em><em>)</em>) – If True (default), filtering will be applied to the current Filter object. If False,         the function will return a new Filter instance and the current instance will not be affected.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>If ‘inplace’ is False, returns a new instance of the Filter object.</p>
 </dd>
 </dl>
 </dd></dl>
