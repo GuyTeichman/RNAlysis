@@ -38,6 +38,7 @@ Fixed
 * Fixed bug where the description for the 'n_bars' parameter of the 'create enrichment bar-plot' function (enrichment.enrichment_bar_plot) would not display properly.
 * 'Visualize gene ontology' and 'Visualize KEGG pathway' (enrichment.gene_ontology_graph and enrichment.kegg_pathway_graph) now have proper parameter descriptions.
 * Fixed bug where in-place intersection and difference in the filtering module would fail when using recent versions of pandas.
+* Fixed bug where graphs generated through the Visualize Gene Sets window would not immediately display when using the RNAlysis stand-alone app.
 
 3.6.2 (2023-03-25)
 ------------------

@@ -1562,6 +1562,8 @@ def upset_plot(objs: Dict[str, Union[str, FeatureSet, Set[str]]], set_colors: pa
     matrix_ax.clear()
     upset_obj.plot_matrix(matrix_ax)
     fig.suptitle(title, fontsize=title_fontsize)
+
+    plt.show()
     return upset_obj
 
 
@@ -1685,6 +1687,8 @@ def venn_diagram(objs: Dict[str, Union[str, FeatureSet, Set[str]]], title: Union
     if title == 'default':
         title = 'Venn diagram of ' + ''.join([name + ' ' for name in objs.keys()])
     ax.set_title(title, fontsize=title_fontsize)
+
+    plt.show()
     return plot_obj, circle_obj
 
 
