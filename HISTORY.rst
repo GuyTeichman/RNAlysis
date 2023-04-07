@@ -3,7 +3,7 @@ History
 =======
 
 
-3.7.0 (2023-??-??)
+3.7.0 (2023-04-07)
 ------------------
 This version introduces small RNA read alignment using ShortStack, new filtering functions, a new optional parameter for Principal Component Analysis, improvements to the graphical interface, and bug fixes.
 
