@@ -153,8 +153,13 @@ def test_filter_translate_gene_ids(map_to, map_from, remove_unmapped_genes, expe
 def test_countfilter_normalize_to_rpm_htseqcount():
     truth = io.load_csv(r"tests/test_files/test_norm_reads_rpm_htseqcount.csv", 0)
     h = CountFilter("tests/test_files/counted.csv")
-    not_inplace = h.normalize_to_rpm_htseqcount("tests/test_files/uncounted.csv", inplace=False)
+    not_inplace, factors = h.normalize_to_rpm_htseqcount("tests/test_files/uncounted.csv", inplace=False,
+                                                         return_scaling_factors=True)
     assert np.isclose(truth, not_inplace.df).all()
+
+    norm_df = h._norm_scaling_factors(factors)
+    assert np.isclose(truth, norm_df).all()
+
     h.normalize_to_rpm_htseqcount("tests/test_files/uncounted.csv")
     assert np.isclose(truth, h.df).all()
 
@@ -162,8 +167,12 @@ def test_countfilter_normalize_to_rpm_htseqcount():
 def test_countfilter_normalize_to_rpm():
     truth = io.load_csv(r"tests/test_files/test_norm_to_rpm.csv", 0)
     h = CountFilter("tests/test_files/counted.csv")
-    not_inplace = h.normalize_to_rpm(inplace=False)
+    not_inplace, factors = h.normalize_to_rpm(inplace=False, return_scaling_factors=True)
     assert np.isclose(truth, not_inplace.df).all()
+
+    norm_df = h._norm_scaling_factors(factors)
+    assert np.isclose(truth, norm_df).all()
+
     h.normalize_to_rpm()
     assert np.isclose(truth, h.df).all()
 
@@ -186,8 +195,13 @@ def test_countfilter_normalize_to_rpkm(monkeypatch, gtf_path, feature_type, meth
     monkeypatch.setattr(genome_annotation, 'get_genomic_feature_lengths', mock_get_feature_lengths)
     truth = io.load_csv(r"tests/test_files/test_norm_to_rpkm.csv", 0)
     h = CountFilter("tests/test_files/counted.csv")
-    not_inplace = h.normalize_to_rpkm(gtf_path, feature_type, method, inplace=False)
+    not_inplace, factors = h.normalize_to_rpkm(gtf_path, feature_type, method, inplace=False,
+                                               return_scaling_factors=True)
     assert np.isclose(truth, not_inplace.df).all()
+
+    norm_df = h._norm_scaling_factors(factors)
+    assert np.isclose(truth, norm_df).all()
+
     h.normalize_to_rpkm(gtf_path, feature_type, method, )
     assert np.isclose(truth, h.df).all()
 
@@ -210,8 +224,13 @@ def test_countfilter_normalize_to_tpm(monkeypatch, gtf_path, feature_type, metho
     monkeypatch.setattr(genome_annotation, 'get_genomic_feature_lengths', mock_get_feature_lengths)
     truth = io.load_csv(r"tests/test_files/test_norm_to_tpm.csv", 0)
     h = CountFilter("tests/test_files/counted.csv")
-    not_inplace = h.normalize_to_tpm(gtf_path, feature_type, method, inplace=False)
+    not_inplace, factors = h.normalize_to_tpm(gtf_path, feature_type, method, inplace=False,
+                                              return_scaling_factors=True)
     assert np.isclose(truth, not_inplace.df).all()
+
+    norm_df = h._norm_scaling_factors(factors)
+    assert np.isclose(truth, norm_df).all()
+
     h.normalize_to_tpm(gtf_path, feature_type, method)
     assert np.isclose(truth, h.df).all()
 
@@ -219,8 +238,11 @@ def test_countfilter_normalize_to_tpm(monkeypatch, gtf_path, feature_type, metho
 def test_countfilter_normalize_rle():
     truth = io.load_csv(r"tests/test_files/test_norm_rle.csv", 0)
     h = CountFilter("tests/test_files/counted.csv")
-    not_inplace = h.normalize_rle(inplace=False)
+    not_inplace, factors = h.normalize_rle(inplace=False, return_scaling_factors=True)
     assert np.isclose(truth, not_inplace.df).all()
+
+    norm_df = h._norm_scaling_factors(factors)
+    assert np.isclose(truth, norm_df).all()
     h.normalize_rle()
     assert np.isclose(truth, h.df).all()
 
@@ -228,8 +250,12 @@ def test_countfilter_normalize_rle():
 def test_countfilter_normalize_tmm():
     truth = io.load_csv(r"tests/test_files/test_norm_tmm.csv", 0)
     h = CountFilter("tests/test_files/counted.csv")
-    not_inplace = h.normalize_tmm(ref_column='cond1', inplace=False)
+    not_inplace, factors = h.normalize_tmm(ref_column='cond1', inplace=False, return_scaling_factors=True)
     assert np.isclose(truth, not_inplace.df).all()
+
+    norm_df = h._norm_scaling_factors(factors)
+    assert np.isclose(truth, norm_df).all()
+
     h.normalize_tmm(ref_column='cond1')
     assert np.isclose(truth, h.df).all()
 
@@ -237,8 +263,13 @@ def test_countfilter_normalize_tmm():
 def test_countfilter_normalize_median_of_ratios():
     truth = io.load_csv(r"tests/test_files/test_norm_mrn.csv", 0)
     h = CountFilter("tests/test_files/counted.csv")
-    not_inplace = h.normalize_median_of_ratios([['cond1', 'cond2'], ['cond3', 'cond4']], inplace=False)
+    not_inplace, factors = h.normalize_median_of_ratios([['cond1', 'cond2'], ['cond3', 'cond4']], inplace=False,
+                                                        return_scaling_factors=True)
     assert np.isclose(truth, not_inplace.df).all()
+
+    norm_df = h._norm_scaling_factors(factors)
+    assert np.isclose(truth, norm_df).all()
+
     h.normalize_median_of_ratios([['cond1', 'cond2'], ['cond3', 'cond4']])
     assert np.isclose(truth, h.df).all()
 
@@ -250,8 +281,12 @@ def test_countfilter_normalize_median_of_ratios():
 def test_countfilter_normalize_to_quantile(quantile, truth_path):
     truth = io.load_csv(truth_path, 0)
     h = CountFilter("tests/test_files/counted.csv")
-    not_inplace = h.normalize_to_quantile(quantile, inplace=False)
+    not_inplace, factors = h.normalize_to_quantile(quantile, inplace=False, return_scaling_factors=True)
     assert np.isclose(truth, not_inplace.df).all()
+
+    norm_df = h._norm_scaling_factors(factors)
+    assert np.isclose(truth, norm_df).all()
+
     h.normalize_to_quantile(quantile)
     assert np.isclose(truth, h.df).all()
 
@@ -1115,7 +1150,8 @@ def test_count_filter_from_folder():
 
     truth_all_expr = io.load_csv('tests/test_files/test_count_from_folder_all_expr.csv', 0).sort_index()
     truth_all_feature = io.load_csv('tests/test_files/test_count_from_folder_all_feature.csv', 0).sort_index()
-    counts = CountFilter.from_folder_htseqcount('tests/test_files/test_count_from_folder', norm_to_rpm=False, save_csv=True,
+    counts = CountFilter.from_folder_htseqcount('tests/test_files/test_count_from_folder', norm_to_rpm=False,
+                                                save_csv=True,
                                                 counted_fname=counted_fname, uncounted_fname=uncounted_fname)
 
     try:
@@ -1137,7 +1173,8 @@ def test_count_filter_from_folder_save_without_suffix():
     counted_fname = '__allexpr_temporary_testfile.csv'
     uncounted_fname = '__allfeature_temporary_testfile.csv'
     try:
-        _ = CountFilter.from_folder_htseqcount('tests/test_files/test_count_from_folder', norm_to_rpm=False, save_csv=True,
+        _ = CountFilter.from_folder_htseqcount('tests/test_files/test_count_from_folder', norm_to_rpm=False,
+                                               save_csv=True,
                                                counted_fname=counted_fname, uncounted_fname=uncounted_fname)
     finally:
         os.remove(f'tests/test_files/test_count_from_folder/{counted_fname}')
@@ -1146,7 +1183,8 @@ def test_count_filter_from_folder_save_without_suffix():
 
 def test_count_filter_from_folder_norm():
     truth_norm = io.load_csv('tests/test_files/test_count_from_folder_norm.csv', 0)
-    counts_norm = CountFilter.from_folder_htseqcount('tests/test_files/test_count_from_folder', norm_to_rpm=True, save_csv=False)
+    counts_norm = CountFilter.from_folder_htseqcount('tests/test_files/test_count_from_folder', norm_to_rpm=True,
+                                                     save_csv=False)
     assert np.all(np.isclose(counts_norm.df, truth_norm, atol=0, rtol=0.0001))
 
 

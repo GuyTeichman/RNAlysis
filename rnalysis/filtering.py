@@ -3157,6 +3157,8 @@ class CountFilter(Filter):
         :type inplace: bool (default=True)
         :param inplace: If True (default), filtering will be applied to the current CountFilter object. If False, \
         the function will return a new CountFilter instance and the current instance will not be affected.
+        :param return_scaling_factors: if True, return a DataFrame containing the calculated scaling factors.
+        :type return_scaling_factors: bool (default=False)
         :return: If inplace is False, returns a new instance of the Filter object.
 
 
@@ -3199,6 +3201,8 @@ class CountFilter(Filter):
         :type inplace: bool (default=True)
         :param inplace: If True (default), filtering will be applied to the current CountFilter object. If False, \
         the function will return a new CountFilter instance and the current instance will not be affected.
+        :param return_scaling_factors: if True, return a DataFrame containing the calculated scaling factors.
+        :type return_scaling_factors: bool (default=False)
         :return: If inplace is False, returns a new instance of the Filter object.
 
 
@@ -3251,6 +3255,8 @@ class CountFilter(Filter):
         :type inplace: bool (default=True)
         :param inplace: If True (default), filtering will be applied to the current CountFilter object. If False, \
         the function will return a new CountFilter instance and the current instance will not be affected.
+        :param return_scaling_factors: if True, return a DataFrame containing the calculated scaling factors.
+        :type return_scaling_factors: bool (default=False)
         :return: If inplace is False, returns a new instance of the Filter object.
         """
         suffix = f"_normtoRPKM{method.replace('_', '')}"
@@ -3295,6 +3301,8 @@ class CountFilter(Filter):
         :type inplace: bool (default=True)
         :param inplace: If True (default), filtering will be applied to the current CountFilter object. If False, \
         the function will return a new CountFilter instance and the current instance will not be affected.
+        :param return_scaling_factors: if True, return a DataFrame containing the calculated scaling factors.
+        :type return_scaling_factors: bool (default=False)
         :return: If inplace is False, returns a new instance of the Filter object.
         """
         suffix = f"_normtoTPM{method.replace('_', '')}"
@@ -3330,6 +3338,8 @@ class CountFilter(Filter):
         :type inplace: bool (default=True)
         :param inplace: If True (default), filtering will be applied to the current CountFilter object. If False, \
         the function will return a new CountFilter instance and the current instance will not be affected.
+        :param return_scaling_factors: if True, return a DataFrame containing the calculated scaling factors.
+        :type return_scaling_factors: bool (default=False)
         :return: If inplace is False, returns a new instance of the Filter object.
 
 
@@ -3387,6 +3397,8 @@ class CountFilter(Filter):
         :type inplace: bool (default=True)
         :param inplace: If True (default), filtering will be applied to the current CountFilter object. If False, \
         the function will return a new CountFilter instance and the current instance will not be affected.
+        :param return_scaling_factors: if True, return a DataFrame containing the calculated scaling factors.
+        :type return_scaling_factors: bool (default=False)
         :return: If inplace is False, returns a new instance of the Filter object.
 
 
@@ -3450,6 +3462,8 @@ class CountFilter(Filter):
         :type inplace: bool (default=True)
         :param inplace: If True (default), filtering will be applied to the current CountFilter object. If False, \
         the function will return a new CountFilter instance and the current instance will not be affected.
+        :param return_scaling_factors: if True, return a DataFrame containing the calculated scaling factors.
+        :type return_scaling_factors: bool (default=False)
         :return: If inplace is False, returns a new instance of the Filter object.
 
 
@@ -3497,6 +3511,8 @@ class CountFilter(Filter):
         :type inplace: bool (default=True)
         :param inplace: If True (default), filtering will be applied to the current CountFilter object. If False, \
         the function will return a new CountFilter instance and the current instance will not be affected.
+        :param return_scaling_factors: if True, return a DataFrame containing the calculated scaling factors.
+        :type return_scaling_factors: bool (default=False)
         :return: If inplace is False, returns a new instance of the Filter object.
 
 
