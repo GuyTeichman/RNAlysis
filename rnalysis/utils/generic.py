@@ -1,9 +1,13 @@
 import inspect
 import itertools
 import math
+import types
 import typing
 import warnings
+from datetime import datetime
 from functools import lru_cache
+import abc
+from pathlib import Path
 from typing import Union, Callable, Tuple
 
 import joblib
@@ -11,11 +15,14 @@ import matplotlib.collections
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+import yaml
 from matplotlib import figure
 from matplotlib.widgets import MultiCursor
 from scipy.special import comb
 from sklearn.preprocessing import PowerTransformer, StandardScaler
 from tqdm.auto import tqdm
+
+from rnalysis import __version__
 
 try:
     import numba
@@ -33,6 +40,14 @@ except ImportError:  # pragma: no cover
         @staticmethod
         def njit(*args, **kwargs):
             return lambda f: f
+
+
+def readable_name(name: str):
+    def decorator(item):
+        item.readable_name = name
+        return item
+
+    return decorator
 
 
 class ProgressParallel(joblib.Parallel):
@@ -300,3 +315,154 @@ class InteractiveScatterFigure(figure.Figure):
                                                          fontsize=self.annotation_fontsize)
 
             self.canvas.draw()
+
+
+class GenericPipeline:
+    __slots__ = {'functions': 'list of functions to perform', 'params': 'list of function parameters'}
+
+    def __init__(self):
+        self.functions = []
+        self.params = []
+
+    def __len__(self):
+        return len(self.functions)
+
+    def __eq__(self, other):
+        if self.functions == other.functions and self.params == other.params:
+            return True
+        return False
+
+    @staticmethod
+    def _param_string(args: tuple, kwargs: dict):
+
+        """
+        Returns a formatted string of the given arguments and keyworded arguments.
+
+        :param args: arguments to format as string
+        :type args: tuple
+        :param kwargs: keyworded arguments to format as string
+        :type kwargs: dict
+        :return: a formatted string of arguments and keyworded argumentss
+        :rtype: str
+
+        """
+        args_str = ', '.join([f"'{arg}'" if isinstance(arg, str) else f"{arg}" for arg in args])
+        kwargs_str = ', '.join(
+            [f"{key}='{arg}'" if isinstance(arg, str) else f"{key}={arg}" for key, arg in kwargs.items()])
+        if len(args_str) == 0:
+            return kwargs_str
+        elif len(kwargs_str) == 0:
+            return args_str
+        else:
+            return f"{args_str}, {kwargs_str}"
+
+    def remove_last_function(self):
+
+        """
+        Removes from the Pipeline the last function that was added to it. Removal is in-place.
+
+        :Examples:
+            >>> from rnalysis import filtering
+            >>> pipe = filtering.Pipeline()
+            >>> pipe.add_function(filtering.Filter.filter_missing_values)
+            Added function 'Filter.filter_missing_values()' to the pipeline.
+            >>> pipe.remove_last_function()
+            Removed function filter_missing_values with parameters [] from the pipeline.
+
+        """
+        assert len(self.functions) > 0 and len(self.params) > 0, "Pipeline is empty, no functions to remove!"
+        func = self.functions.pop(-1)
+        args, kwargs = self.params.pop(-1)
+        print(
+            f"Removed function {func.__name__} with parameters [{self._param_string(args, kwargs)}] from the pipeline.")
+
+    def _readable_func_signature(self, func: types.FunctionType, args: tuple, kwargs: dict):
+        """
+        Returns a human-readable string functions signature for the given function and arguments.
+
+        :param func: the function or method to generate signature for
+        :type func: function
+        :param args: arguments given for the function
+        :type args: tuple
+        :param kwargs: keyworded arguments given for the function
+        :type kwargs: dict
+        :return: function signature string
+        :rtype: str
+        """
+        return f"{get_method_readable_name(func)}: ({self._param_string(args, kwargs)})"
+
+    def export_pipeline(self, filename: Union[str, Path, None]) -> Union[None, str]:
+        """
+        Export a Pipeline to a Pipeline YAML file or YAML-like string.
+
+        :param filename: filename to save the Pipeline YAML to, or None to return a YAML-like string instead.
+        :type filename: str, pathlib.Path, or None
+        :return: if filename is None, returns the Pipeline YAML-like string.
+        """
+        pipeline_dict = self._get_pipeline_dict()
+        for func, params in zip(self.functions, self.params):
+            pipeline_dict['functions'].append(func.__name__)
+            pipeline_dict['params'].append(params)
+        if filename is None:
+            return yaml.safe_dump(pipeline_dict)
+        else:
+            with open(filename, 'w') as f:
+                yaml.safe_dump(pipeline_dict, f)
+
+    def _get_pipeline_dict(self):
+        d = dict(functions=[], params=[], metadata={'rnalysis_version': f'{__version__}',
+                                                    'export_time': datetime.today().strftime('%Y/%m/%d, %H:%M:%S')})
+        return d
+
+    @classmethod
+    def import_pipeline(cls, filename: Union[str, Path]) -> 'Pipeline':
+        """
+        Import a Pipeline from a Pipeline YAML file or YAML-like string.
+
+        :param filename: name of the YAML file containing the Pipeline, or a YAML-like string.
+        :type filename: str or pathlib.Path
+        :return: the imported Pipeline
+        :rtype: Pipeline
+        """
+        try:
+            with open(filename) as f:
+                pipeline_dict = yaml.safe_load(f)
+        except OSError:
+            pipeline_dict = yaml.safe_load(filename)
+        pipeline = cls.__new__(cls)
+        return cls._init_from_dict(pipeline, pipeline_dict)
+
+    @staticmethod
+    def _init_from_dict(pipeline: 'GenericPipeline', pipeline_dict: dict):
+        raise NotImplementedError
+
+    def _func_signature(self, func: types.FunctionType, args: tuple, kwargs: dict):
+        """
+        Returns a string functions signature for the given function and arguments.
+
+        :param func: the function or method to generate signature for
+        :type func: function
+        :param args: arguments given for the function
+        :type args: tuple
+        :param kwargs: keyworded arguments given for the function
+        :type kwargs: dict
+        :return: function signature string
+        :rtype: str
+        """
+        return f"{func.__name__}({self._param_string(args, kwargs)})"
+
+    def add_function(self, func: types.FunctionType, *args, **kwargs):
+        assert isinstance(func, types.FunctionType), f"'func' must be a function, is {type(func)} instead."
+
+        self.functions.append(func)
+        self.params.append((args, kwargs))
+        print(f"Added function '{self._func_signature(func, args, kwargs)}' to the pipeline.")
+
+    def _validate_pipeline(self):
+        assert len(self.functions) > 0 and len(self.params) > 0, "Cannot apply an empty pipeline!"
+        assert len(self.functions) == len(self.params), f"Cannot apply Pipeline: " \
+                                                        f"length of 'functions' different from length of 'params'!"
+
+    @abc.abstractmethod
+    def apply_to(self):
+        raise NotImplementedError

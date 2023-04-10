@@ -17,7 +17,6 @@ import warnings
 from pathlib import Path
 from typing import Any, Iterable, List, Tuple, Union, Callable, Sequence
 
-import yaml
 from scipy.stats import spearmanr
 from scipy.stats.mstats import gmean
 from tqdm.auto import tqdm
@@ -34,23 +33,15 @@ import seaborn as sns
 from grid_strategy import strategies
 from sklearn.decomposition import PCA
 from sklearn.preprocessing import PowerTransformer, StandardScaler
-from datetime import datetime
 
-from rnalysis import __version__
 from rnalysis.utils import clustering, io, parsing, generic, ontology, settings, validation, differential_expression, \
     param_typing, genome_annotation
+
+from rnalysis.utils.generic import readable_name
 
 from rnalysis.utils.param_typing import BIOTYPES, BIOTYPE_ATTRIBUTE_NAMES, GO_EVIDENCE_TYPES, GO_QUALIFIERS, \
     DEFAULT_ORGANISMS, PARALLEL_BACKENDS, LEGAL_GENE_LENGTH_METHODS, K_CRITERIA, get_gene_id_types, PositiveInt, \
     NonNegativeInt
-
-
-def readable_name(name: str):
-    def decorator(item):
-        item.readable_name = name
-        return item
-
-    return decorator
 
 
 @readable_name('Generic table')
@@ -5102,7 +5093,7 @@ class CountFilter(Filter):
         return count_filter_obj
 
 
-class Pipeline:
+class Pipeline(generic.GenericPipeline):
     """
     A collection of functions to be applied sequentially to Filter objects.
 
@@ -5116,8 +5107,7 @@ class Pipeline:
     filter_type: Filter object
         The type of Filter objects to which the Pipeline can be applied
     """
-    __slots__ = {'functions': 'list of functions to perform', 'params': 'list of function parameters',
-                 'filter_type': 'type of filter objects to which the Pipeline can be applied'}
+    __slots__ = {'filter_type': 'type of filter objects to which the Pipeline can be applied'}
     FILTER_TYPES = {'filter': Filter, 'deseqfilter': DESeqFilter, 'foldchangefilter': FoldChangeFilter,
                     'countfilter': CountFilter}
     FILTER_TYPES_REV = {val: key for key, val in FILTER_TYPES.items()}
@@ -5133,9 +5123,6 @@ class Pipeline:
             >>> deseq_pipe = filtering.Pipeline('deseqfilter')
 
         """
-        self.functions = []
-        self.params = []
-
         assert isinstance(filter_type,
                           (type, str)), f"'filter_type' must be type of a Filter object, is instead {type(filter_type)}"
         if isinstance(filter_type, str):
@@ -5144,6 +5131,7 @@ class Pipeline:
         else:
             assert filter_type in self.FILTER_TYPES.values(), f"Invalid filter_type {filter_type}"
         self.filter_type = filter_type
+        super().__init__()
 
     def __str__(self):
         string = f"Pipeline for {self.filter_type.readable_name}"
@@ -5160,93 +5148,22 @@ class Pipeline:
                 self._func_signature(func, params[0], params[1]) for func, params in zip(self.functions, self.params))
         return string
 
-    def __len__(self):
-        return len(self.functions)
-
     def __eq__(self, other):
-        if self.filter_type == other.filter_type and self.functions == other.functions and self.params == other.params:
+        if self.filter_type == other.filter_type and super().__eq__(other):
             return True
         return False
 
-    def export_pipeline(self, filename: Union[str, Path, None]) -> Union[None, str]:
-        """
-        Export a Pipeline to a Pipeline YAML file or YAML-like string.
+    def _get_pipeline_dict(self):
+        d = super()._get_pipeline_dict()
+        d['filter_type'] = self.FILTER_TYPES_REV[self.filter_type]
+        return d
 
-        :param filename: filename to save the Pipeline YAML to, or None to return a YAML-like string instead.
-        :type filename: str, pathlib.Path, or None
-        :return: if filename is None, returns the Pipeline YAML-like string.
-        """
-        pipeline_dict = dict(filter_type=self.FILTER_TYPES_REV[self.filter_type], functions=[], params=[],
-                             metadata={'rnalysis_version': f'{__version__}',
-                                       'export_time': datetime.today().strftime('%Y/%m/%d, %H:%M:%S')})
-        for func, params in zip(self.functions, self.params):
-            pipeline_dict['functions'].append(func.__name__)
-            pipeline_dict['params'].append(params)
-        if filename is None:
-            return yaml.safe_dump(pipeline_dict)
-        else:
-            with open(filename, 'w') as f:
-                yaml.safe_dump(pipeline_dict, f)
-
-    @classmethod
-    def import_pipeline(cls, filename: Union[str, Path]) -> 'Pipeline':
-        """
-        Import a Pipeline from a Pipeline YAML file or YAML-like string.
-
-        :param filename: name of the YAML file containing the Pipeline, or a YAML-like string.
-        :type filename: str or pathlib.Path
-        :return: the imported Pipeline
-        :rtype: Pipeline
-        """
-        try:
-            with open(filename) as f:
-                pipeline_dict = yaml.safe_load(f)
-        except OSError:
-            pipeline_dict = yaml.safe_load(filename)
-        pipeline = cls.__new__(cls)
-        pipeline.filter_type = cls.FILTER_TYPES[pipeline_dict['filter_type']]
+    @staticmethod
+    def _init_from_dict(pipeline: 'Pipeline', pipeline_dict: dict):
+        pipeline.filter_type = pipeline.FILTER_TYPES[pipeline_dict['filter_type']]
         pipeline.params = [(parsing.data_to_tuple(p[0]), p[1]) for p in pipeline_dict['params']]
         pipeline.functions = [getattr(pipeline.filter_type, func) for func in pipeline_dict['functions']]
         return pipeline
-
-    @staticmethod
-    def _param_string(args: tuple, kwargs: dict):
-
-        """
-        Returns a formatted string of the given arguments and keyworded arguments.
-
-        :param args: arguments to format as string
-        :type args: tuple
-        :param kwargs: keyworded arguments to format as string
-        :type kwargs: dict
-        :return: a formatted string of arguments and keyworded argumentss
-        :rtype: str
-
-        """
-        args_str = ', '.join([f"'{arg}'" if isinstance(arg, str) else f"{arg}" for arg in args])
-        kwargs_str = ', '.join(
-            [f"{key}='{arg}'" if isinstance(arg, str) else f"{key}={arg}" for key, arg in kwargs.items()])
-        if len(args_str) == 0:
-            return kwargs_str
-        elif len(kwargs_str) == 0:
-            return args_str
-        else:
-            return f"{args_str}, {kwargs_str}"
-
-    def _readable_func_signature(self, func: types.FunctionType, args: tuple, kwargs: dict):
-        """
-        Returns a human-readable string functions signature for the given function and arguments.
-
-        :param func: the function or method to generate signature for
-        :type func: function
-        :param args: arguments given for the function
-        :type args: tuple
-        :param kwargs: keyworded arguments given for the function
-        :type kwargs: dict
-        :return: function signature string
-        :rtype: str
-        """
-        return f"{func.readable_name}: ({self._param_string(args, kwargs)})"
 
     def _func_signature(self, func: types.FunctionType, args: tuple, kwargs: dict):
         """
@@ -5261,7 +5178,7 @@ class Pipeline:
         :return: function signature string
         :rtype: str
         """
-        return f"{self.filter_type.__name__}.{func.__name__}({self._param_string(args, kwargs)})"
+        return f"{self.filter_type.__name__}.{super()._func_signature(func, args, kwargs)})"
 
     def add_function(self, func: Union[types.FunctionType, str], *args, **kwargs):
 
@@ -5287,7 +5204,6 @@ class Pipeline:
             Added function 'Filter.number_filters('col1', 'greater than', value=5, opposite=True)' to the pipeline.
 
         """
-        assert isinstance(func, (str, types.FunctionType)), f"'func' must be a function/str, is {type(func)} instead."
         if isinstance(func, str):
             func = func.lower()  # function names are always expected to be lowercase. This prevents capitalized typos.
             assert hasattr(self.filter_type, func), \
@@ -5300,9 +5216,7 @@ class Pipeline:
             warnings.warn(
                 'The "inplace" argument supplied to this function will be ignored. '
                 'To apply the pipeline inplace, state "inplace=True" when calling Pipeline.apply_to().')
-        self.functions.append(func)
-        self.params.append((args, kwargs))
-        print(f"Added function '{self._func_signature(func, args, kwargs)}' to the pipeline.")
+        super().add_function(func, *args, **kwargs)
 
     def _apply_filter_norm_sort(self, func: types.FunctionType,
                                 filter_object: Union['Filter', 'CountFilter', 'DESeqFilter', 'FoldChangeFilter'],
@@ -5474,11 +5388,11 @@ class Pipeline:
             Sorted 3 features. Sorted inplace.
 
         """
+        self._validate_pipeline()
         # noinspection PyTypeHints
         assert issubclass(filter_object.__class__,
                           self.filter_type), f"Supplied filter object of type {type(filter_object)} " \
                                              f"mismatches the specified filter_type {self.filter_type}. "
-        assert len(self.functions) > 0 and len(self.params) > 0, "Cannot apply an empty pipeline!"
 
         original_filter_obj = copy.copy(filter_object)
         other_outputs = dict()
@@ -5502,23 +5416,3 @@ class Pipeline:
                 return filter_object
         if len(other_outputs) > 0:
             return other_outputs
-
-    def remove_last_function(self):
-
-        """
-        Removes from the Pipeline the last function that was added to it. Removal is in-place.
-
-        :Examples:
-            >>> from rnalysis import filtering
-            >>> pipe = filtering.Pipeline()
-            >>> pipe.add_function(filtering.Filter.filter_missing_values)
-            Added function 'Filter.filter_missing_values()' to the pipeline.
-            >>> pipe.remove_last_function()
-            Removed function filter_missing_values with parameters [] from the pipeline.
-
-        """
-        assert len(self.functions) > 0 and len(self.params) > 0, "Pipeline is empty, no functions to remove!"
-        func = self.functions.pop(-1)
-        args, kwargs = self.params.pop(-1)
-        print(
-            f"Removed function {func.__name__} with parameters [{self._param_string(args, kwargs)}] from the pipeline.")

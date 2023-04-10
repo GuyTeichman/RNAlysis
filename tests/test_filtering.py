@@ -3,8 +3,9 @@ import shutil
 
 import matplotlib
 import pytest
+import yaml
 
-from rnalysis import filtering
+from rnalysis import __version__
 from rnalysis.filtering import *
 from tests import __attr_ref__, __biotype_ref__
 
@@ -1905,7 +1906,7 @@ def test_export_pipeline():
                     if internal_key == 'export_time':
                         continue
                     elif internal_key == 'rnalysis_version':
-                        assert exported[key][internal_key] == filtering.__version__
+                        assert exported[key][internal_key] == __version__
             else:
                 assert exported[key] == truth[key]
     finally:
