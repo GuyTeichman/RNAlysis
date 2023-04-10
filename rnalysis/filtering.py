@@ -5178,7 +5178,7 @@ class Pipeline(generic.GenericPipeline):
         :return: function signature string
         :rtype: str
         """
-        return f"{self.filter_type.__name__}.{super()._func_signature(func, args, kwargs)})"
+        return f"{self.filter_type.__name__}.{super()._func_signature(func, args, kwargs)}"
 
     def add_function(self, func: Union[types.FunctionType, str], *args, **kwargs):
 
