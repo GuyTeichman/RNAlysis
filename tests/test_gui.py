@@ -2389,7 +2389,7 @@ def test_MainWindow_choose_set_op(qtbot, use_temp_settings_file, main_window, mo
         assert available_objs == 'my available objects'
         QtWidgets.QWidget.__init__(self)
 
-    monkeypatch.setattr(main_window, 'get_available_objects', lambda: 'my available objects')
+    monkeypatch.setattr(main_window, 'get_available_objects', lambda *args, **kwargs: 'my available objects')
     window_opened = []
     monkeypatch.setattr(SetOperationWindow, '__init__', mock_init)
     monkeypatch.setattr(SetOperationWindow, 'show', functools.partial(window_opened.append, True))
@@ -2403,7 +2403,7 @@ def test_MainWindow_visualize_gene_sets(qtbot, use_temp_settings_file, main_wind
         assert available_objs == 'my available objects'
         QtWidgets.QWidget.__init__(self)
 
-    monkeypatch.setattr(main_window, 'get_available_objects', lambda: 'my available objects')
+    monkeypatch.setattr(main_window, 'get_available_objects', lambda *args, **kwargs: 'my available objects')
     window_opened = []
     monkeypatch.setattr(SetVisualizationWindow, '__init__', mock_init)
     monkeypatch.setattr(SetVisualizationWindow, 'show', functools.partial(window_opened.append, True))
@@ -2454,7 +2454,7 @@ def test_MainWindow_edit_pipeline(monkeypatch, qtbot, use_temp_settings_file, ma
 
 def test_MainWindow_clear_cache(monkeypatch, qtbot, use_temp_settings_file, main_window):
     called = []
-    monkeypatch.setattr(io, 'clear_cache', lambda: called.append(True))
+    monkeypatch.setattr(io, 'clear_cache', lambda *args, **kwargs: called.append(True))
     main_window.clear_cache()
     assert called == [True]
 
