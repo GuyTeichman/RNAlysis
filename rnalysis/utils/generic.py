@@ -464,5 +464,5 @@ class GenericPipeline:
                                                         f"length of 'functions' different from length of 'params'!"
 
     @abc.abstractmethod
-    def apply_to(self):
+    def apply_to(self, *args, **kwargs):
         raise NotImplementedError
