@@ -2169,7 +2169,7 @@ class CreatePipelineWindow(gui_widgets.MinMaxDialog, FilterTabPage):
         self.is_unsaved = True
 
     def init_overview_ui(self):
-        self.function_group.setTitle("Pipeline preview")
+        self.overview_group.setTitle("Pipeline preview")
         self.layout.insertWidget(1, self.overview_group)
         self.overview_widgets['preview'] = QtWidgets.QPlainTextEdit()
         self.overview_widgets['preview'].setReadOnly(True)
