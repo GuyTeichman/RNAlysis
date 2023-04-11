@@ -12,6 +12,7 @@ K_CRITERIA = ('gap', 'silhouette', 'calinski_harabasz', 'davies_bouldin', 'bic')
 LEGAL_GENE_LENGTH_METHODS = ('mean', 'median', 'max', 'min', 'geometric_mean', 'merged_exons')
 
 LEGAL_FASTQ_SUFFIXES = ('.fastq', '.fastq.gz', '.fq', '.fq.gz')
+LEGAL_ALIGNMENT_SUFFIXES = ('.sam', '.bam','.cram',)
 LEGAL_BOWTIE2_PRESETS = ('very-fast', 'fast', 'sensitive', 'very-sensitive')
 LEGAL_BOWTIE2_MODES = ('end-to-end', 'local')
 LEGAL_QUAL_SCORE_TYPES = ('phred33', 'phred64', 'solexa-quals', 'int-quals')

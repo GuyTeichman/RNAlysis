@@ -16,7 +16,7 @@ from typing_extensions import Literal
 from rnalysis import filtering
 from rnalysis.utils import parsing, io, feature_counting, genome_annotation
 from rnalysis.utils.param_typing import PositiveInt, NonNegativeInt, Fraction, LEGAL_FASTQ_SUFFIXES, \
-    LEGAL_BOWTIE2_PRESETS, LEGAL_BOWTIE2_MODES, LEGAL_QUAL_SCORE_TYPES
+    LEGAL_BOWTIE2_PRESETS, LEGAL_BOWTIE2_MODES, LEGAL_QUAL_SCORE_TYPES, LEGAL_ALIGNMENT_SUFFIXES
 
 try:
     import cutadapt
@@ -236,9 +236,8 @@ def _parse_featurecounts_misc_args(input_folder: Union[str, Path], output_folder
     input_folder = Path(input_folder)
     assert input_folder.exists() and input_folder.is_dir(), f"input_folder does not exist!"
     files = []
-    for item in input_folder.iterdir():
-        if item.suffix.lower() in ['.bam', '.sam']:
-            files.append(item.as_posix())
+    for item in _get_legal_samples(input_folder, 'alignment'):
+        files.append(item.as_posix())
     assert len(files) > 0, f"No legal input files were find in input_folder '{input_folder.as_posix()}'!"
 
     kwargs = {'files': files, 'annot.ext': gtf_file.as_posix(),
@@ -356,16 +355,25 @@ def bowtie2_create_index(genome_fastas: List[Union[str, Path]], output_folder: U
         pbar.update()
 
 
-def _get_legal_samples(fastq_folder: Union[str, Path]) -> List[Path]:
-    fastq_folder = Path(fastq_folder)
-    assert fastq_folder.exists(), "'fastq_folder' does not exist!"
+def _get_legal_samples(in_dir: Union[str, Path], file_type: Literal['sequence', 'alignment'] = 'sequence') -> List[Path]:
+    in_dir = Path(in_dir)
+    assert in_dir.exists(), "'fastq_folder' does not exist!"
+
+    if file_type == 'sequence':
+        legal_suffixes = LEGAL_FASTQ_SUFFIXES
+    elif file_type == 'alignment':
+        legal_suffixes = LEGAL_ALIGNMENT_SUFFIXES
+    else:
+        raise ValueError(f"Invalid file type '{file_type}'.")
 
     legal_samples = []
-    for item in sorted(fastq_folder.iterdir()):
+    for item in sorted(in_dir.iterdir()):
         if item.is_file():
             name = item.name
-            if any([name.endswith(suffix) for suffix in LEGAL_FASTQ_SUFFIXES]):
+            if any([name.lower().endswith(suffix.lower()) for suffix in legal_suffixes]):
                 legal_samples.append(item)
+        else:
+            legal_samples.extend(_get_legal_samples(item, file_type))
     return legal_samples
 
 
@@ -1248,7 +1256,7 @@ def trim_adapters_single_end(fastq_folder: Union[str, Path], output_folder: Unio
                                           parallel))
 
     calls = []
-    for item in Path(fastq_folder).iterdir():
+    for item in _get_legal_samples(fastq_folder):
         if item.is_file():
             name = item.name
             if any([name.endswith(suffix) for suffix in LEGAL_FASTQ_SUFFIXES]):
