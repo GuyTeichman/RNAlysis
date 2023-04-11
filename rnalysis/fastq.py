@@ -289,6 +289,7 @@ def _process_featurecounts_output(output_folder, new_sample_names):
 
     return counts, annotation, stats
 
+
 @readable_name('Bowtie2 build index')
 def bowtie2_create_index(genome_fastas: List[Union[str, Path]], output_folder: Union[str, Path],
                          index_name: Union[str, Literal['auto']] = 'auto',
@@ -384,6 +385,7 @@ def _get_legal_samples(in_dir: Union[str, Path], file_type: Literal['sequence', 
         else:
             legal_samples.extend(_get_legal_samples(item, file_type))
     return legal_samples
+
 
 @readable_name('ShortStack align (small RNAs)')
 def shortstack_align_smallrna(fastq_folder: Union[str, Path], output_folder: Union[str, Path],
@@ -599,6 +601,7 @@ def shortstack_align_smallrna(fastq_folder: Union[str, Path], output_folder: Uni
             print(f"Files saved successfully at {shortstack_call[-1]}")
             pbar.update(1)
 
+
 @readable_name('Bowtie2 align (single-end reads)')
 def bowtie2_align_single_end(fastq_folder: Union[str, Path], output_folder: Union[str, Path],
                              index_file: Union[str, Path],
@@ -684,6 +687,7 @@ def bowtie2_align_single_end(fastq_folder: Union[str, Path], output_folder: Unio
             io.run_subprocess(bt2_call, shell=True, log_filename=log_filename)
             print(f"File saved successfully at {bt2_call[-1]}")
             pbar.update(1)
+
 
 @readable_name('Bowtie2 align (paired-end reads)')
 def bowtie2_align_paired_end(r1_files: List[str], r2_files: List[str], output_folder: Union[str, Path],
@@ -839,6 +843,7 @@ def _parse_bowtie2_misc_args(output_folder, index_file: str, bowtie2_installatio
 
     return call
 
+
 @readable_name('Kallisto build index')
 def kallisto_create_index(transcriptome_fasta: Union[str, Path],
                           kallisto_installation_folder: Union[str, Path, Literal['auto']] = 'auto',
@@ -886,6 +891,7 @@ def kallisto_create_index(transcriptome_fasta: Union[str, Path],
             f'kallisto-index_{transcriptome_fasta.stem}.log').absolute().as_posix()
         io.run_subprocess(call, log_filename=log_filename)
         pbar.update()
+
 
 @readable_name('Kallisto quantify (single-end reads)')
 def kallisto_quantify_single_end(fastq_folder: Union[str, Path], output_folder: Union[str, Path],
@@ -995,6 +1001,7 @@ def kallisto_quantify_single_end(fastq_folder: Union[str, Path], output_folder: 
             pbar.update(1)
 
     return _process_kallisto_outputs(output_folder, gtf_file)
+
 
 @readable_name('Kallisto quantify (paired-end reads)')
 def kallisto_quantify_paired_end(r1_files: List[str], r2_files: List[str], output_folder: Union[str, Path],
@@ -1190,6 +1197,7 @@ def _sum_transcripts_to_genes(tpm: pd.DataFrame, counts: pd.DataFrame, gtf_path:
 
     raise ValueError("Failed to map transcripts to genes with the given GTF file!")
 
+
 @readable_name('CutAdapt (single-end reads)')
 def trim_adapters_single_end(fastq_folder: Union[str, Path], output_folder: Union[str, Path],
                              three_prime_adapters: Union[None, str, List[str]],
@@ -1286,6 +1294,7 @@ def trim_adapters_single_end(fastq_folder: Union[str, Path], output_folder: Unio
                 cutadapt_main(cutadapt_call)
             print(f"File saved successfully at {cutadapt_call[-2]}")
             pbar.update(1)
+
 
 @readable_name('CutAdapt (paired-end reads)')
 def trim_adapters_paired_end(r1_files: List[Union[str, Path]], r2_files: List[Union[str, Path]],

@@ -1,6 +1,6 @@
 require("Rsubread")
 
-fc <- featureCounts(files = c("tests/test_files/featurecounts_tests/test-minimum.bam"),
+fc <- featureCounts(files = c("tests/test_files/featurecounts_tests/paired/test-minimum.bam"),
 annot.ext = "tests/test_files/featurecounts_tests/test-minimum.gtf",
 isGTFAnnotationFile = TRUE,
 GTF.featureType = "exon",

@@ -2112,7 +2112,7 @@ class CreatePipelineWindow(gui_widgets.MinMaxDialog, FilterTabPage):
         self.layout.insertWidget(2, self.apply_button)
         self.apply_button.setVisible(False)
 
-        self.basic_widgets['type_label'] = QtWidgets.QLabel('Choose table type:')
+        self.basic_widgets['type_label'] = QtWidgets.QLabel('Choose Pipeline type:')
 
         self.basic_grid.addWidget(self.basic_widgets['pipeline_name'], 1, 1)
         self.basic_grid.addWidget(self.basic_widgets['name_label'], 0, 0, 1, 2)
@@ -2179,7 +2179,7 @@ class CreatePipelineWindow(gui_widgets.MinMaxDialog, FilterTabPage):
                                                       f"'<b>{self._get_pipeline_name()}</b>'"), 0, 0, 1, 6)
         self.overview_grid.addWidget(self.overview_widgets['preview'], 2, 0, 2, 6)
 
-        self.overview_grid.addWidget(QtWidgets.QLabel(f"Pipeline table type: "
+        self.overview_grid.addWidget(QtWidgets.QLabel(f"Pipeline type: "
                                                       f"{self.basic_widgets['table_type_combo'].currentText()}"),
                                      5, 0, 1, 3)
 

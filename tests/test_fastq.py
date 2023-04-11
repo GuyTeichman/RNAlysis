@@ -44,13 +44,16 @@ def are_dir_trees_equal(dir1, dir2, compare_contents: bool = True):
     if (len(mismatch) > 0 or len(errors) > 0) and compare_contents:
         print(f"mismatch between {dir1} and {dir2} in the files {mismatch} with errors {errors}")
         for item in mismatch:
+            items = []
             for this_dir in [dir1, dir2]:
                 pth = Path(this_dir).joinpath(item)
-                print(f'{pth} contents:')
                 with open(pth) as f:
-                    print(f.read())
+                    items.append(f.read())
+            if items[0] != items[1]:
+                for i in items:
+                    print(i)
                     print('---------------------------')
-        return False
+                return False
     for common_dir in dirs_cmp.common_dirs:
         new_dir1 = Path(dir1).joinpath(common_dir).as_posix()
         new_dir2 = Path(dir2).joinpath(common_dir).as_posix()
@@ -663,7 +666,7 @@ def test_featurecounts_paired_end():
     truth_outdir = 'tests/test_files/featurecounts_tests/truth/paired'
     outdir = 'tests/test_files/featurecounts_tests/outdir'
     try:
-        counts, annotations, stats = featurecounts_paired_end('tests/test_files/featurecounts_tests', outdir,
+        counts, annotations, stats = featurecounts_paired_end('tests/test_files/featurecounts_tests/paired', outdir,
                                                               'tests/test_files/featurecounts_tests/test-minimum.gtf')
         assert counts == counts_truth
         assert annotations.equals(annotations_truth)
