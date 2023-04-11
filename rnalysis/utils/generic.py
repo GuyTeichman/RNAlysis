@@ -317,7 +317,7 @@ class InteractiveScatterFigure(figure.Figure):
             self.canvas.draw()
 
 
-class GenericPipeline:
+class GenericPipeline(abc.ABC):
     __slots__ = {'functions': 'list of functions to perform', 'params': 'list of function parameters'}
 
     def __init__(self):

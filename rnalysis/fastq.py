@@ -4,7 +4,11 @@ Those currently include the *CutAdapt* adapter-trimming tool, the *kallisto* RNA
 the *bowtie2* alignment tool, and the *featureCounts* feature counting tool.
 """
 
+import abc
 import os
+import sys
+import types
+import typing
 import warnings
 from pathlib import Path
 from typing import Union, List, Tuple
@@ -14,7 +18,7 @@ from tqdm.auto import tqdm
 from typing_extensions import Literal
 
 from rnalysis import filtering
-from rnalysis.utils import parsing, io, feature_counting, genome_annotation
+from rnalysis.utils import parsing, io, feature_counting, genome_annotation, generic
 from rnalysis.utils.param_typing import PositiveInt, NonNegativeInt, Fraction, LEGAL_FASTQ_SUFFIXES, \
     LEGAL_BOWTIE2_PRESETS, LEGAL_BOWTIE2_MODES, LEGAL_QUAL_SCORE_TYPES, LEGAL_ALIGNMENT_SUFFIXES
 
