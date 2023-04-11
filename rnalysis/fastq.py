@@ -19,6 +19,7 @@ from typing_extensions import Literal
 
 from rnalysis import filtering
 from rnalysis.utils import parsing, io, feature_counting, genome_annotation, generic
+from rnalysis.utils.generic import readable_name
 from rnalysis.utils.param_typing import PositiveInt, NonNegativeInt, Fraction, LEGAL_FASTQ_SUFFIXES, \
     LEGAL_BOWTIE2_PRESETS, LEGAL_BOWTIE2_MODES, LEGAL_QUAL_SCORE_TYPES, LEGAL_ALIGNMENT_SUFFIXES
 
@@ -33,6 +34,8 @@ except ImportError:  # pragma: no cover
     cutadapt_main = lambda x: None
 
 
+
+@readable_name('featureCounts count (single-end reads)')
 def featurecounts_single_end(input_folder: Union[str, Path], output_folder: Union[str, Path, None],
                              gtf_file: Union[str, Path],
                              gtf_feature_type: str = 'exon', gtf_attr_name: str = 'gene_id',
@@ -117,6 +120,7 @@ def featurecounts_single_end(input_folder: Union[str, Path], output_folder: Unio
     return counts, annotation, stats
 
 
+@readable_name('featureCounts count (paired-end reads)')
 def featurecounts_paired_end(input_folder: Union[str, Path], output_folder: Union[str, Path],
                              gtf_file: Union[str, Path], gtf_feature_type: str = 'exon', gtf_attr_name: str = 'gene_id',
                              r_installation_folder: Union[str, Path, Literal['auto']] = 'auto',
@@ -285,7 +289,7 @@ def _process_featurecounts_output(output_folder, new_sample_names):
 
     return counts, annotation, stats
 
-
+@readable_name('Bowtie2 build index')
 def bowtie2_create_index(genome_fastas: List[Union[str, Path]], output_folder: Union[str, Path],
                          index_name: Union[str, Literal['auto']] = 'auto',
                          bowtie2_installation_folder: Union[str, Path, Literal['auto']] = 'auto',
@@ -359,7 +363,8 @@ def bowtie2_create_index(genome_fastas: List[Union[str, Path]], output_folder: U
         pbar.update()
 
 
-def _get_legal_samples(in_dir: Union[str, Path], file_type: Literal['sequence', 'alignment'] = 'sequence') -> List[Path]:
+def _get_legal_samples(in_dir: Union[str, Path], file_type: Literal['sequence', 'alignment'] = 'sequence') -> List[
+    Path]:
     in_dir = Path(in_dir)
     assert in_dir.exists(), "'fastq_folder' does not exist!"
 
@@ -380,7 +385,7 @@ def _get_legal_samples(in_dir: Union[str, Path], file_type: Literal['sequence', 
             legal_samples.extend(_get_legal_samples(item, file_type))
     return legal_samples
 
-
+@readable_name('ShortStack align (small RNAs)')
 def shortstack_align_smallrna(fastq_folder: Union[str, Path], output_folder: Union[str, Path],
                               genome_fasta: Union[str, Path],
                               shortstack_installation_folder: Union[str, Path, Literal['auto']] = 'auto',
@@ -594,7 +599,7 @@ def shortstack_align_smallrna(fastq_folder: Union[str, Path], output_folder: Uni
             print(f"Files saved successfully at {shortstack_call[-1]}")
             pbar.update(1)
 
-
+@readable_name('Bowtie2 align (single-end reads)')
 def bowtie2_align_single_end(fastq_folder: Union[str, Path], output_folder: Union[str, Path],
                              index_file: Union[str, Path],
                              bowtie2_installation_folder: Union[str, Path, Literal['auto']] = 'auto',
@@ -680,7 +685,7 @@ def bowtie2_align_single_end(fastq_folder: Union[str, Path], output_folder: Unio
             print(f"File saved successfully at {bt2_call[-1]}")
             pbar.update(1)
 
-
+@readable_name('Bowtie2 align (paired-end reads)')
 def bowtie2_align_paired_end(r1_files: List[str], r2_files: List[str], output_folder: Union[str, Path],
                              index_file: Union[str, Path],
                              bowtie2_installation_folder: Union[str, Path, Literal['auto']] = 'auto',
@@ -834,7 +839,7 @@ def _parse_bowtie2_misc_args(output_folder, index_file: str, bowtie2_installatio
 
     return call
 
-
+@readable_name('Kallisto build index')
 def kallisto_create_index(transcriptome_fasta: Union[str, Path],
                           kallisto_installation_folder: Union[str, Path, Literal['auto']] = 'auto',
                           kmer_length: PositiveInt = 31, make_unique: bool = False):
@@ -882,7 +887,7 @@ def kallisto_create_index(transcriptome_fasta: Union[str, Path],
         io.run_subprocess(call, log_filename=log_filename)
         pbar.update()
 
-
+@readable_name('Kallisto quantify (single-end reads)')
 def kallisto_quantify_single_end(fastq_folder: Union[str, Path], output_folder: Union[str, Path],
                                  index_file: Union[str, Path], gtf_file: Union[str, Path],
                                  average_fragment_length: float, stdev_fragment_length: float,
@@ -991,7 +996,7 @@ def kallisto_quantify_single_end(fastq_folder: Union[str, Path], output_folder: 
 
     return _process_kallisto_outputs(output_folder, gtf_file)
 
-
+@readable_name('Kallisto quantify (paired-end reads)')
 def kallisto_quantify_paired_end(r1_files: List[str], r2_files: List[str], output_folder: Union[str, Path],
                                  index_file: Union[str, Path], gtf_file: Union[str, Path],
                                  kallisto_installation_folder: Union[str, Path, Literal['auto']] = 'auto',
@@ -1185,7 +1190,7 @@ def _sum_transcripts_to_genes(tpm: pd.DataFrame, counts: pd.DataFrame, gtf_path:
 
     raise ValueError("Failed to map transcripts to genes with the given GTF file!")
 
-
+@readable_name('CutAdapt (single-end reads)')
 def trim_adapters_single_end(fastq_folder: Union[str, Path], output_folder: Union[str, Path],
                              three_prime_adapters: Union[None, str, List[str]],
                              five_prime_adapters: Union[None, str, List[str]] = None,
@@ -1282,7 +1287,7 @@ def trim_adapters_single_end(fastq_folder: Union[str, Path], output_folder: Unio
             print(f"File saved successfully at {cutadapt_call[-2]}")
             pbar.update(1)
 
-
+@readable_name('CutAdapt (paired-end reads)')
 def trim_adapters_paired_end(r1_files: List[Union[str, Path]], r2_files: List[Union[str, Path]],
                              output_folder: Union[str, Path],
                              three_prime_adapters_r1: Union[None, str, List[str]],
