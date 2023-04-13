@@ -1068,8 +1068,7 @@ class TaskQueueWindow(gui_widgets.MinMaxDialog):
         name = self.tasks.pop(index)
         self.cancelRequested.emit(index, name)
 
-
-class ApplyPipelineWindow(gui_widgets.MinMaxDialog):
+class ApplyTablePipelineWindow(gui_widgets.MinMaxDialog):
     __slots__ = {'available_objects': 'available objects',
                  'layout': 'layout',
                  'label': 'main label of the window',

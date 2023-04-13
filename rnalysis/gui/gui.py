@@ -3543,7 +3543,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 pipeline.filter_type == filtering.Filter and issubclass(self.tabs.widget(i).obj_type(),
                                                                         filtering.Filter)):
                 filtered_available_objs[key] = val
-        window = gui_windows.ApplyPipelineWindow(filtered_available_objs, self)
+        window = gui_windows.ApplyTablePipelineWindow(filtered_available_objs, self)
         accepted = window.exec()
         if accepted:
             current_ind = self.tabs.currentIndex()
