@@ -1,3 +1,4 @@
+import abc
 import inspect
 import itertools
 import math
@@ -6,7 +7,6 @@ import typing
 import warnings
 from datetime import datetime
 from functools import lru_cache
-import abc
 from pathlib import Path
 from typing import Union, Callable, Tuple
 
@@ -430,10 +430,10 @@ class GenericPipeline(abc.ABC):
         except OSError:
             pipeline_dict = yaml.safe_load(filename)
         pipeline = cls.__new__(cls)
-        return cls._init_from_dict(pipeline, pipeline_dict)
+        pipeline._init_from_dict(pipeline_dict)
+        return pipeline
 
-    @staticmethod
-    def _init_from_dict(pipeline: 'GenericPipeline', pipeline_dict: dict):
+    def _init_from_dict(self, pipeline_dict: dict):
         raise NotImplementedError
 
     def _func_signature(self, func: types.FunctionType, args: tuple, kwargs: dict):

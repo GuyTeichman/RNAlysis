@@ -675,3 +675,61 @@ def test_featurecounts_paired_end():
         assert are_dir_trees_equal(outdir, truth_outdir)
     finally:
         unlink_tree(outdir)
+
+
+def test_SingleEndPipeline_add_function():
+    param_dict1 = {'allow_indels': True, 'any_position_adapters': None, 'discard_untrimmed_reads': False,
+                   'error_tolerance': 0.1}
+    p = SingleEndPipeline()
+    assert p.functions == [] and p.params == []
+    p.add_function(trim_adapters_single_end, 'ATGGG',
+                   **param_dict1)
+
+    assert p.functions == [trim_adapters_single_end] and p.params == [(('ATGGG',), param_dict1)]
+
+    p.add_function('bowtie2_align_single_end', 'arg', 'arg', kw1='val', kw2='val2')
+    assert p.functions == [trim_adapters_single_end, bowtie2_align_single_end] and \
+           p.params == [(('ATGGG',), param_dict1), (('arg', 'arg'), {'kw1': 'val', 'kw2': 'val2'})]
+
+
+def test_SingleEndPipeline_import():
+    truth = SingleEndPipeline()
+    truth.add_function(trim_adapters_single_end,
+                       **{'allow_indels': True, 'any_position_adapters': None, 'discard_untrimmed_reads': False,
+                          'error_tolerance': 0.1, 'five_prime_adapters': None, 'maximum_read_length': None,
+                          'minimum_overlap': 3, 'minimum_read_length': 10, 'parallel': True, 'quality_trimming': 20,
+                          'three_prime_adapters': 'ATGGGTATATGGGT', 'trim_n': True, 'gzip_output': False})
+    truth.add_function(bowtie2_align_single_end, **{'bowtie2_installation_folder': 'auto', 'ignore_qualities': False,
+                                                    'index_file': 'tests/test_files/bowtie2_tests/index/transcripts.1.bt2',
+                                                    'mode': 'end-to-end', 'new_sample_names': 'auto',
+                                                    'quality_score_type': 'phred33', 'random_seed': 0,
+                                                    'settings_preset': 'very-sensitive', 'threads': 1})
+    truth.add_function(featurecounts_single_end, **{'count_fractionally': False, 'count_multi_mapping_reads': False,
+                                                    'count_multi_overlapping_reads': False, 'gtf_attr_name': 'gene_id',
+                                                    'gtf_feature_type': 'exon',
+                                                    'gtf_file': 'tests/test_files/kallisto_tests/transcripts.gtf',
+                                                    'ignore_secondary': True, 'is_long_read': False,
+                                                    'min_mapping_quality': 0, 'new_sample_names': 'auto',
+                                                    'r_installation_folder': 'auto', 'report_read_assignment': None,
+                                                    'stranded': 'no', 'threads': 1})
+
+    pth = 'tests/test_files/test_singleend_pipeline.yaml'
+    p = SingleEndPipeline.import_pipeline(pth)
+    assert p == truth
+
+
+def test_SingleEndPipeline_apply_to():
+    in_dir = 'tests/test_files/fastq_pipeline_tests/in'
+    out_dir = 'tests/test_files/fastq_pipeline_tests/single/outdir'
+    truth_dir = 'tests/test_files/fastq_pipeline_tests/single/truth'
+    pth = 'tests/test_files/test_singleend_pipeline.yaml'
+    p = SingleEndPipeline.import_pipeline(pth)
+
+    try:
+        p.apply_to(in_dir, out_dir)
+        for file in Path(out_dir).joinpath('00_trim_adapters_single_end').iterdir():
+            if file.is_file() and file.suffix == '.log':
+                file.unlink()
+        assert are_dir_trees_equal(out_dir, truth_dir)
+    finally:
+        unlink_tree(out_dir)

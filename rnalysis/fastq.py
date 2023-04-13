@@ -85,6 +85,57 @@ class _FASTQPipeline(generic.GenericPipeline, abc.ABC):
             f"{'paired' * (not self.is_paired_end) + 'single' * self.is_paired_end}-end function " \
             f"cannot be added to {'single' * (not self.is_paired_end) + 'paired' * self.is_paired_end}-end Pipeline!"
 
+        super().add_function(func, *args, **kwargs)
+
+    def _init_from_dict(self, pipeline_dict: dict):
+        self.params = [(parsing.data_to_tuple(p[0]), p[1]) for p in pipeline_dict['params']]
+        self.functions = [getattr(sys.modules[__name__], func) for func in pipeline_dict['functions']]
+
+
+class SingleEndPipeline(_FASTQPipeline):
+    def __init__(self):
+        super().__init__(is_paired_end=False)
+
+    def __str__(self):
+        return "Pipeline for sequence files (single-end)" + super().__str__()
+
+    def __repr__(self):
+        return "SingleEndPipeline()" + super().__repr__()
+
+    def _get_pipeline_dict(self):
+        d = super()._get_pipeline_dict()
+        d['pipeline_type'] = 'single'
+        return d
+
+    def apply_to(self, input_folder: Union[str, Path], output_folder: Union[str, Path]):
+        input_folder = Path(input_folder)
+        output_folder = Path(output_folder)
+        return_values = []
+
+        assert input_folder.exists() and input_folder.is_dir(), f"input_folder does not exist!"
+        assert output_folder.exists(), f"output_folder does not exist!"
+
+        current_in_dir = input_folder
+        for i, (func, (args, kwargs)) in enumerate(zip(self.functions, self.params)):
+            current_out_dir = output_folder.joinpath(f'{i:02d}_{func.__name__}')
+            try:
+                current_out_dir.mkdir(parents=True)
+            except OSError:
+                pass
+
+            res = func(current_in_dir, current_out_dir, *args, **kwargs)
+            if res is not None:  # TODO: make uniform with Pipeline output dict?
+                if isinstance(res, (list, tuple)):
+                    return_values.extend(res)
+                else:
+                    return_values.append(res)
+
+            current_in_dir = current_out_dir
+
+        return parsing.data_to_tuple(return_values)
+
+
+@_func_type('single')
 @readable_name('featureCounts count (single-end reads)')
 def featurecounts_single_end(input_folder: Union[str, Path], output_folder: Union[str, Path, None],
                              gtf_file: Union[str, Path],
