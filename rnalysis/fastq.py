@@ -1264,7 +1264,8 @@ def trim_adapters_single_end(fastq_folder: Union[str, Path], output_folder: Unio
                              minimum_read_length: NonNegativeInt = 10,
                              maximum_read_length: Union[PositiveInt, None] = None,
                              discard_untrimmed_reads: bool = True, error_tolerance: Fraction = 0.1,
-                             minimum_overlap: NonNegativeInt = 3, allow_indels: bool = True, parallel: bool = True):
+                             minimum_overlap: NonNegativeInt = 3, allow_indels: bool = True, parallel: bool = True,
+                             gzip_output: bool = False):
     """
     Trim adapters from single-end reads using `CutAdapt <https://cutadapt.readthedocs.io/>`_.
 
@@ -1304,6 +1305,8 @@ def trim_adapters_single_end(fastq_folder: Union[str, Path], output_folder: Unio
     :param parallel: if True, runs CutAdapt on all available cores in parallel. \
     Otherwise, run CutAdapt on a single processor only.
     :type parallel: bool (default=True)
+    :param gzip_output: if True, gzips the output FASTQ files.
+    :type gzip_output: bool (default=False)
     """
     if not HAS_CUTADAPT:
         warnings.warn(f"Python package 'cutadapt' is not installed. \n"
@@ -1335,7 +1338,8 @@ def trim_adapters_single_end(fastq_folder: Union[str, Path], output_folder: Unio
             name = item.name
             if any([name.endswith(suffix) for suffix in LEGAL_FASTQ_SUFFIXES]):
                 stem = parsing.remove_suffixes(item).stem
-                output_path = Path(output_folder).joinpath(stem + '_trimmed.fastq.gz')
+                suffix = '_trimmed.fastq.gz' if gzip_output else '_trimmed.fastq'
+                output_path = Path(output_folder).joinpath(stem + suffix)
                 this_call = call.copy()
                 this_call.extend(['--output', output_path.as_posix(), item.as_posix()])
                 calls.append(this_call)
@@ -1369,7 +1373,7 @@ def trim_adapters_paired_end(r1_files: List[Union[str, Path]], r2_files: List[Un
                              discard_untrimmed_reads: bool = True,
                              pair_filter_if: Literal['both', 'any', 'first'] = 'both',
                              error_tolerance: Fraction = 0.1, minimum_overlap: NonNegativeInt = 3,
-                             allow_indels: bool = True, parallel: bool = True):
+                             allow_indels: bool = True, parallel: bool = True, gzip_output: bool = False):
     """
     Trim adapters from paired-end reads using `CutAdapt <https://cutadapt.readthedocs.io/>`_.
 
@@ -1431,6 +1435,8 @@ def trim_adapters_paired_end(r1_files: List[Union[str, Path]], r2_files: List[Un
     :param parallel: if True, runs CutAdapt on all available cores in parallel. \
     Otherwise, run CutAdapt on a single processor only.
     :type parallel: bool (default=True)
+    :param gzip_output: if True, gzips the output FASTQ files.
+    :type gzip_output: bool (default=False)
     """
     if not HAS_CUTADAPT:
         warnings.warn(f"Python package 'cutadapt' is not installed. \n"
@@ -1469,8 +1475,9 @@ def trim_adapters_paired_end(r1_files: List[Union[str, Path]], r2_files: List[Un
     for file1, file2 in zip(r1_files, r2_files):
         file1 = Path(file1)
         file2 = Path(file2)
-        output_path_r1 = Path(output_folder).joinpath(parsing.remove_suffixes(file1).stem + '_trimmed.fastq.gz')
-        output_path_r2 = Path(output_folder).joinpath(parsing.remove_suffixes(file2).stem + '_trimmed.fastq.gz')
+        suffix = '_trimmed.fastq.gz' if gzip_output else '_trimmed.fastq'
+        output_path_r1 = Path(output_folder).joinpath(parsing.remove_suffixes(file1).stem + suffix)
+        output_path_r2 = Path(output_folder).joinpath(parsing.remove_suffixes(file2).stem + suffix)
 
         this_call = call.copy()
         this_call.extend(['--output', output_path_r1.as_posix()])

@@ -504,7 +504,7 @@ def test_trim_adapters_single_end():
     truth_path = 'tests/test_files/test_fastqs/outdir/test_fastq_trimmed_truth.fastq.gz'
     adapter_seq = 'AACTTCTTA'
     try:
-        trim_adapters_single_end(in_dir, out_dir, adapter_seq)
+        trim_adapters_single_end(in_dir, out_dir, adapter_seq, gzip_output=True)
         with gzip.open(truth_path) as truth, gzip.open(out_path) as out:
             assert truth.read() == out.read()
     finally:
@@ -526,7 +526,8 @@ def test_trim_adapters_paired_end():
     adapter1_seq = 'TTA'
     adapter2_seq = 'TGT'
     try:
-        trim_adapters_paired_end([in1_path], [in2_path], out_dir, adapter1_seq, adapter2_seq, minimum_read_length=5)
+        trim_adapters_paired_end([in1_path], [in2_path], out_dir, adapter1_seq, adapter2_seq, minimum_read_length=5,
+                                 gzip_output=True)
 
         with gzip.open(truth1_path) as truth, gzip.open(out1_path) as out:
             assert truth.read() == out.read()
@@ -581,7 +582,7 @@ def test_trim_adapters_single_end_command(monkeypatch, fastq_folder, output_fold
     trim_adapters_single_end(fastq_folder, output_folder, three_prime_adapters,
                              five_prime_adapters, any_position_adapters, quality_trimming, trim_n,
                              minimum_read_length, maximum_read_length, discard_untrimmed_reads,
-                             error_tolerance, minimum_overlap, allow_indels, parallel)
+                             error_tolerance, minimum_overlap, allow_indels, parallel, gzip_output=True)
     assert sorted(files_covered) == sorted(files_to_cover)
 
 
@@ -636,7 +637,7 @@ def test_trim_adapters_paired_end_command(monkeypatch, fastq_1, fastq_2, output_
                              five_prime_r1, five_prime_r2, any_position_r1, any_position_r2,
                              quality_trimming, trim_n, minimum_read_length, maximum_read_length,
                              discard_untrimmed_reads, pair_filter_if,
-                             error_tolerance, minimum_overlap, allow_indels, parallel)
+                             error_tolerance, minimum_overlap, allow_indels, parallel, gzip_output=True)
     assert sorted(pairs_covered) == sorted(pairs_to_cover)
 
 
