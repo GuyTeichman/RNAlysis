@@ -135,6 +135,26 @@ class SingleEndPipeline(_FASTQPipeline):
         return parsing.data_to_tuple(return_values)
 
 
+class PairedEndPipeline(_FASTQPipeline):
+    def __init__(self):
+        super().__init__(is_paired_end=True)
+
+    def __str__(self):
+        return "Pipeline for sequence files (paired-end)" + super().__str__()
+
+    def __repr__(self):
+        return "PairedEndPipeline()" + super().__repr__()
+
+    def _get_pipeline_dict(self):
+        d = super()._get_pipeline_dict()
+        d['pipeline_type'] = 'paired'
+        return d
+
+    def apply_to(self, r1_files: List[str], r2_files: List[str], output_folder: Union[str, Path]):
+        for func, (args, kwargs) in zip(self.functions, self.params):
+            pass
+
+
 @_func_type('single')
 @readable_name('featureCounts count (single-end reads)')
 def featurecounts_single_end(input_folder: Union[str, Path], output_folder: Union[str, Path, None],
