@@ -6,7 +6,7 @@ import traceback
 import warnings
 from pathlib import Path
 from queue import Queue
-from typing import Callable
+from typing import Callable, Union
 
 import pandas as pd
 import yaml
@@ -757,7 +757,7 @@ class FuncExternalWindow(gui_widgets.MinMaxDialog):
                  'close_button': 'close button',
                  'args': 'function args'}
 
-    def __init__(self, func_name: str, func: Callable, help_link: str, excluded_params: set, threaded=True,
+    def __init__(self, func_name: str, func: Callable, help_link: Union[None, str], excluded_params: set, threaded=True,
                  parent=None):
         super().__init__(parent)
         self.func_name = func_name
@@ -793,10 +793,11 @@ class FuncExternalWindow(gui_widgets.MinMaxDialog):
 
         self.main_layout.addWidget(self.scroll)
 
-        self.param_widgets['help_link'] = QtWidgets.QLabel(
-            text=f'<a href="{self.help_link}">Open documentation for <b>{self.func_name}</b></a>')
-        self.param_widgets['help_link'].setOpenExternalLinks(True)
-        self.main_layout.addWidget(self.param_widgets['help_link'])
+        if self.help_link is not None:
+            self.param_widgets['help_link'] = QtWidgets.QLabel(
+                text=f'<a href="{self.help_link}">Open documentation for <b>{self.func_name}</b></a>')
+            self.param_widgets['help_link'].setOpenExternalLinks(True)
+            self.main_layout.addWidget(self.param_widgets['help_link'])
 
         self.scroll_layout.addWidget(self.param_group, 0, 0)
         self.scroll_layout.addWidget(self.start_button, 1, 0, 1, 2)
