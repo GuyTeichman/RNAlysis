@@ -5159,9 +5159,9 @@ class Pipeline(generic.GenericPipeline):
         return d
 
     def _init_from_dict(self, pipeline_dict: dict):
+        self.filter_type = self.FILTER_TYPES[pipeline_dict['filter_type']]
         self.params = [(parsing.data_to_tuple(p[0]), p[1]) for p in pipeline_dict['params']]
         self.functions = [getattr(self.filter_type, func) for func in pipeline_dict['functions']]
-        self.filter_type = self.FILTER_TYPES[pipeline_dict['filter_type']]
 
 
     def _func_signature(self, func: types.FunctionType, args: tuple, kwargs: dict):
