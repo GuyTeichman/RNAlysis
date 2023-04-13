@@ -34,6 +34,56 @@ except ImportError:  # pragma: no cover
     cutadapt_main = lambda x: None
 
 
+def _func_type(func_type: Literal['single', 'paired', 'both']):
+    def decorator(item):
+        item.func_type = func_type
+        return item
+
+    return decorator
+
+
+class _FASTQPipeline(generic.GenericPipeline, abc.ABC):
+    __slots__ = {'_is_paired_end': 'indicates whether it is single-end or paired-end Pipeline'}
+
+    def __init__(self, is_paired_end: bool = False):
+        self._is_paired_end = is_paired_end
+        super().__init__()
+
+    def __str__(self):
+        string = ''
+        if len(self) > 0:
+            string += f":\n\t" + '\n\t'.join(
+                self._readable_func_signature(func, params[0], params[1]) for func, params in
+                zip(self.functions, self.params))
+        return string
+
+    def __repr__(self):
+        string = ''
+        if len(self) > 0:
+            string += ": " + "-->".join(
+                self._func_signature(func, params[0], params[1]) for func, params in zip(self.functions, self.params))
+        return string
+
+    @property
+    def is_paired_end(self):
+        return self._is_paired_end
+
+    @staticmethod
+    def _is_paired_end_func(func: typing.Callable):
+        if func.__name__.endswith('paired_end'):
+            return True
+        elif func.__name__.endswith('single_end'):
+            return False
+        raise ValueError(f"Cannot determine whether function '{func}' is single-end or paired-end.")
+
+    def add_function(self, func: Union[str, types.FunctionType], *args, **kwargs):
+        if isinstance(func, str):
+            thismodule = sys.modules[__name__]
+            func = getattr(thismodule, func)
+
+        assert self._is_paired_end_func(func) == self.is_paired_end, \
+            f"{'paired' * (not self.is_paired_end) + 'single' * self.is_paired_end}-end function " \
+            f"cannot be added to {'single' * (not self.is_paired_end) + 'paired' * self.is_paired_end}-end Pipeline!"
 
 @readable_name('featureCounts count (single-end reads)')
 def featurecounts_single_end(input_folder: Union[str, Path], output_folder: Union[str, Path, None],
@@ -120,6 +170,7 @@ def featurecounts_single_end(input_folder: Union[str, Path], output_folder: Unio
     return counts, annotation, stats
 
 
+@_func_type('paired')
 @readable_name('featureCounts count (paired-end reads)')
 def featurecounts_paired_end(input_folder: Union[str, Path], output_folder: Union[str, Path],
                              gtf_file: Union[str, Path], gtf_feature_type: str = 'exon', gtf_attr_name: str = 'gene_id',
@@ -387,6 +438,7 @@ def _get_legal_samples(in_dir: Union[str, Path], file_type: Literal['sequence', 
     return legal_samples
 
 
+@_func_type('single')
 @readable_name('ShortStack align (small RNAs)')
 def shortstack_align_smallrna(fastq_folder: Union[str, Path], output_folder: Union[str, Path],
                               genome_fasta: Union[str, Path],
@@ -602,6 +654,7 @@ def shortstack_align_smallrna(fastq_folder: Union[str, Path], output_folder: Uni
             pbar.update(1)
 
 
+@_func_type('single')
 @readable_name('Bowtie2 align (single-end reads)')
 def bowtie2_align_single_end(fastq_folder: Union[str, Path], output_folder: Union[str, Path],
                              index_file: Union[str, Path],
@@ -689,6 +742,7 @@ def bowtie2_align_single_end(fastq_folder: Union[str, Path], output_folder: Unio
             pbar.update(1)
 
 
+@_func_type('paired')
 @readable_name('Bowtie2 align (paired-end reads)')
 def bowtie2_align_paired_end(r1_files: List[str], r2_files: List[str], output_folder: Union[str, Path],
                              index_file: Union[str, Path],
@@ -893,6 +947,7 @@ def kallisto_create_index(transcriptome_fasta: Union[str, Path],
         pbar.update()
 
 
+@_func_type('single')
 @readable_name('Kallisto quantify (single-end reads)')
 def kallisto_quantify_single_end(fastq_folder: Union[str, Path], output_folder: Union[str, Path],
                                  index_file: Union[str, Path], gtf_file: Union[str, Path],
@@ -1003,6 +1058,7 @@ def kallisto_quantify_single_end(fastq_folder: Union[str, Path], output_folder: 
     return _process_kallisto_outputs(output_folder, gtf_file)
 
 
+@_func_type('paired')
 @readable_name('Kallisto quantify (paired-end reads)')
 def kallisto_quantify_paired_end(r1_files: List[str], r2_files: List[str], output_folder: Union[str, Path],
                                  index_file: Union[str, Path], gtf_file: Union[str, Path],
@@ -1198,6 +1254,7 @@ def _sum_transcripts_to_genes(tpm: pd.DataFrame, counts: pd.DataFrame, gtf_path:
     raise ValueError("Failed to map transcripts to genes with the given GTF file!")
 
 
+@_func_type('single')
 @readable_name('CutAdapt (single-end reads)')
 def trim_adapters_single_end(fastq_folder: Union[str, Path], output_folder: Union[str, Path],
                              three_prime_adapters: Union[None, str, List[str]],
@@ -1296,6 +1353,7 @@ def trim_adapters_single_end(fastq_folder: Union[str, Path], output_folder: Unio
             pbar.update(1)
 
 
+@_func_type('paired')
 @readable_name('CutAdapt (paired-end reads)')
 def trim_adapters_paired_end(r1_files: List[Union[str, Path]], r2_files: List[Union[str, Path]],
                              output_folder: Union[str, Path],
