@@ -1133,7 +1133,7 @@ class GOEnrichmentRunner(EnrichmentRunner):
                         translated_sparse_annotation_dict[translator[gene_id]] = sparse_dict_cp.pop(gene_id)
 
             except AssertionError as e:
-                if 'not a valid Uniprot Dataset' in e.args[0]:
+                if 'not a valid Uniprot Dataset' in "".join(e.args):
                     warnings.warn(f"Failed to map gene IDs for {len(source_to_gene_id_dict[source])} annotations "
                                   f"from dataset '{source}'.")
                 else:
