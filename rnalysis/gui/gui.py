@@ -2064,8 +2064,8 @@ class FilterTabPage(TabPage):
 
 
 class CreatePipelineWindow(gui_widgets.MinMaxDialog, FilterTabPage):
-    pipelineSaved = QtCore.pyqtSignal(str, filtering.Pipeline)
-    pipelineExported = QtCore.pyqtSignal(str, filtering.Pipeline)
+    pipelineSaved = QtCore.pyqtSignal(str, generic.GenericPipeline)
+    pipelineExported = QtCore.pyqtSignal(str, generic.GenericPipeline)
     widthChanged = QtCore.pyqtSignal()
     geneSetsRequested = QtCore.pyqtSignal()
     __slots__ = {'pipeline': 'Pipeline object',
@@ -2075,7 +2075,7 @@ class CreatePipelineWindow(gui_widgets.MinMaxDialog, FilterTabPage):
         super().__init__(parent=parent)
         self.setLayout(self.layout)
         self.setWindowTitle(f'Create new Pipeline')
-        self.setGeometry(500, 200, 800, 800)
+        self.setGeometry(500, 200, 900, 800)
         self.pipeline = None
         self.is_unsaved = False
 
@@ -2132,6 +2132,8 @@ class CreatePipelineWindow(gui_widgets.MinMaxDialog, FilterTabPage):
         for action_type in sorted_actions:
             self.stack_widgets[action_type].pipeline_mode = True
             self.stack_widgets[action_type].excluded_params.add('inplace')
+
+        self.function_group.setTitle("Add functions to Pipeline")
 
     def apply_function(self):
         this_stack: FuncTypeStack = self.stack.currentWidget()
@@ -2616,37 +2618,6 @@ class PipelineInplaceCommand(QtWidgets.QUndoCommand):
 
     def redo(self):
         self.tab._apply_pipeline(self.pipeline, inplace=True)
-
-
-class ApplyPipelineWindow(gui_widgets.MinMaxDialog):
-    __slots__ = {'available_objects': 'available objects',
-                 'layout': 'layout',
-                 'label': 'main label of the window',
-                 'button_box': 'button box for accept/cancel buttons',
-                 'list': 'multiple choice list for choosing objects to apply to'}
-
-    def __init__(self, available_objects: dict, parent=None):
-        super().__init__(parent)
-        self.available_objects = available_objects
-        self.layout = QtWidgets.QVBoxLayout(self)
-        self.label = QtWidgets.QLabel('Choose the tables you wish to apply your Pipeline to', self)
-        self.button_box = QtWidgets.QDialogButtonBox(QtWidgets.QDialogButtonBox.Ok | QtWidgets.QDialogButtonBox.Cancel)
-        self.list = gui_widgets.MultipleChoiceList(self.available_objects,
-                                                   [val[1] for val in self.available_objects.values()],
-                                                   self)
-
-        self.init_ui()
-
-    def init_ui(self):
-        self.setWindowTitle('Choose tables to apply Pipeline to')
-        self.button_box.accepted.connect(self.accept)
-        self.button_box.rejected.connect(self.reject)
-        self.layout.addWidget(self.label)
-        self.layout.addWidget(self.list)
-        self.layout.addWidget(self.button_box, QtCore.Qt.AlignCenter)
-
-    def result(self):
-        return [item.text() for item in self.list.get_sorted_selection()]
 
 
 class MainWindow(QtWidgets.QMainWindow):
@@ -3544,7 +3515,18 @@ class MainWindow(QtWidgets.QMainWindow):
         # Step 3. Add the actions to the menu
         menu.addActions(actions)
 
-    def apply_pipeline(self, pipeline: filtering.Pipeline, pipeline_name: str):
+    def apply_pipeline(self, pipeline: generic.GenericPipeline, pipeline_name: str):
+        if isinstance(pipeline, filtering.Pipeline):
+            self._apply_table_pipeline(pipeline, pipeline_name)
+        elif isinstance(pipeline, fastq._FASTQPipeline):
+            self._apply_fastq_pipeline(pipeline, pipeline_name)
+        else:
+            raise TypeError(f"Invalid Pipeline type: {type(pipeline)}")
+
+    def _apply_fastq_pipeline(self, pipeline: fastq._FASTQPipeline, pipeline_name: str):
+        pass
+
+    def _apply_table_pipeline(self, pipeline: filtering.Pipeline, pipeline_name: str):
         apply_msg = f"Do you want to apply Pipeline '{pipeline_name}' inplace?"
         reply = QtWidgets.QMessageBox.question(self, f"Apply Pipeline '{pipeline_name}'",
                                                apply_msg,
@@ -3561,7 +3543,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 pipeline.filter_type == filtering.Filter and issubclass(self.tabs.widget(i).obj_type(),
                                                                         filtering.Filter)):
                 filtered_available_objs[key] = val
-        window = ApplyPipelineWindow(filtered_available_objs, self)
+        window = gui_windows.ApplyPipelineWindow(filtered_available_objs, self)
         accepted = window.exec()
         if accepted:
             current_ind = self.tabs.currentIndex()

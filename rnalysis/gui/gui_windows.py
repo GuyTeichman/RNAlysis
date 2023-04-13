@@ -1066,3 +1066,34 @@ class TaskQueueWindow(gui_widgets.MinMaxDialog):
     def request_cancel(self, index: int):
         name = self.tasks.pop(index)
         self.cancelRequested.emit(index, name)
+
+
+class ApplyPipelineWindow(gui_widgets.MinMaxDialog):
+    __slots__ = {'available_objects': 'available objects',
+                 'layout': 'layout',
+                 'label': 'main label of the window',
+                 'button_box': 'button box for accept/cancel buttons',
+                 'list': 'multiple choice list for choosing objects to apply to'}
+
+    def __init__(self, available_objects: dict, parent=None):
+        super().__init__(parent)
+        self.available_objects = available_objects
+        self.layout = QtWidgets.QVBoxLayout(self)
+        self.label = QtWidgets.QLabel('Choose the tables you wish to apply your Pipeline to', self)
+        self.button_box = QtWidgets.QDialogButtonBox(QtWidgets.QDialogButtonBox.Ok | QtWidgets.QDialogButtonBox.Cancel)
+        self.list = gui_widgets.MultipleChoiceList(self.available_objects,
+                                                   [val[1] for val in self.available_objects.values()],
+                                                   self)
+
+        self.init_ui()
+
+    def init_ui(self):
+        self.setWindowTitle('Choose tables to apply Pipeline to')
+        self.button_box.accepted.connect(self.accept)
+        self.button_box.rejected.connect(self.reject)
+        self.layout.addWidget(self.label)
+        self.layout.addWidget(self.list)
+        self.layout.addWidget(self.button_box, QtCore.Qt.AlignCenter)
+
+    def result(self):
+        return [item.text() for item in self.list.get_sorted_selection()]

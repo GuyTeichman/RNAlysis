@@ -253,17 +253,17 @@ def widget_setup(qtbot, widget_class, *args, **kwargs):
 
 
 def test_ApplyPipelineWindow_init(qtbot, available_objects_no_tabpages):
-    qtbot, window = widget_setup(qtbot, ApplyPipelineWindow, available_objects_no_tabpages)
+    qtbot, window = widget_setup(qtbot, gui_windows.ApplyPipelineWindow, available_objects_no_tabpages)
 
 
 def test_ApplyPipelineWindow_select_all(qtbot, available_objects_no_tabpages):
-    qtbot, window = widget_setup(qtbot, ApplyPipelineWindow, available_objects_no_tabpages)
+    qtbot, window = widget_setup(qtbot, gui_windows.ApplyPipelineWindow, available_objects_no_tabpages)
     qtbot.mouseClick(window.list.select_all_button, LEFT_CLICK)
     assert window.result() == list(available_objects_no_tabpages.keys())
 
 
 def test_ApplyPipelineWindow_clear_all(qtbot, available_objects_no_tabpages):
-    qtbot, window = widget_setup(qtbot, ApplyPipelineWindow, available_objects_no_tabpages)
+    qtbot, window = widget_setup(qtbot, gui_windows.ApplyPipelineWindow, available_objects_no_tabpages)
     qtbot.mouseClick(window.list.select_all_button, LEFT_CLICK)
     qtbot.mouseClick(window.list.clear_all_button, LEFT_CLICK)
     assert window.result() == []
