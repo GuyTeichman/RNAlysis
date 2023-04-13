@@ -11,6 +11,15 @@ Added
 *******
 * Added new parameter to normalization functions 'return_scaling_factors', that allows you to access the scaling factors calculated by RNAlysis.
 
+Fixed
+*******
+* RNAlysis failing to map gene IDs during GO enrichment analysis should no longer raise an error (thanks to `clockgene <https://github.com/clockgene>`_ in `#16 <https://github.com/GuyTeichman/RNAlysis/issues/16>`_).
+
+New Contributors
+*****************
+* `clockgene`_ in `#16`_
+
+
 3.7.0 (2023-04-07)
 ------------------
 This version introduces small RNA read alignment using ShortStack, new filtering functions, a new optional parameter for Principal Component Analysis, improvements to the graphical interface, and bug fixes.

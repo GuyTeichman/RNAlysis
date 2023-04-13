@@ -1126,10 +1126,18 @@ class GOEnrichmentRunner(EnrichmentRunner):
             _, self.gene_id_type, _ = io.find_best_gene_mapping(parsing.data_to_tuple(self.gene_set), None,
                                                                 ('UniProtKB',))
         for source in source_to_gene_id_dict:
-            translator = io.map_gene_ids(source_to_gene_id_dict[source], source, self.gene_id_type)
-            for gene_id in sparse_dict_cp.copy():
-                if gene_id in translator:
-                    translated_sparse_annotation_dict[translator[gene_id]] = sparse_dict_cp.pop(gene_id)
+            try:
+                translator = io.map_gene_ids(source_to_gene_id_dict[source], source, self.gene_id_type)
+                for gene_id in sparse_dict_cp.copy():
+                    if gene_id in translator:
+                        translated_sparse_annotation_dict[translator[gene_id]] = sparse_dict_cp.pop(gene_id)
+
+            except AssertionError as e:
+                if 'not a valid Uniprot Dataset' in e.args[0]:
+                    warnings.warn(f"Failed to map gene IDs for {len(source_to_gene_id_dict[source])} annotations "
+                                  f"from dataset '{source}'.")
+                else:
+                    raise e
         return translated_sparse_annotation_dict
 
     def _get_query_key(self):
