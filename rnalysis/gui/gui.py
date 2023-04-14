@@ -1375,7 +1375,7 @@ class TabPage(QtWidgets.QWidget):
         self.process_outputs(result, func_name)
 
     def process_outputs(self, outputs, source_name: str = ''):
-        if len(outputs) == 0:
+        if validation.isiterable(outputs) and len(outputs) == 0:
             return
         elif validation.isinstanceinh(outputs, (filtering.Filter, fastq.filtering.Filter)):
             self.filterObjectCreated.emit(outputs)
