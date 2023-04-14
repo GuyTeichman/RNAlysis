@@ -590,8 +590,7 @@ class Filter:
     @readable_name('Filter by feature biotype (based on a reference table)')
     def filter_biotype_from_ref_table(self, biotype: Union[Literal[BIOTYPES], str, List[str]] = 'protein_coding',
                                       ref: Union[str, Path, Literal['predefined']] = 'predefined',
-                                      opposite: bool = False,
-                                      inplace: bool = True):
+                                      opposite: bool = False, inplace: bool = True):
 
         """
         Filters out all features that do not match the indicated biotype/biotypes \
@@ -5162,7 +5161,6 @@ class Pipeline(generic.GenericPipeline):
         self.filter_type = self.FILTER_TYPES[pipeline_dict['filter_type']]
         self.params = [(parsing.data_to_tuple(p[0]), p[1]) for p in pipeline_dict['params']]
         self.functions = [getattr(self.filter_type, func) for func in pipeline_dict['functions']]
-
 
     def _func_signature(self, func: types.FunctionType, args: tuple, kwargs: dict):
         """

@@ -916,7 +916,7 @@ class PairedFuncExternalWindow(FuncExternalWindow):
                  'pairs_widgets': 'widgets for picking file pairs'}
     EXCLUDED_PARAMS = {'r1_files', 'r2_files'}
 
-    def __init__(self, func_name: str, func: Callable, help_link: str, excluded_params: set, parent=None):
+    def __init__(self, func_name: str, func: Callable, help_link: Union[str, None], excluded_params: set, parent=None):
         super().__init__(func_name, func, help_link, excluded_params, parent=parent)
 
         self.pairs_group = QtWidgets.QGroupBox("2. Choose FASTQ file pairs")
@@ -1067,6 +1067,7 @@ class TaskQueueWindow(gui_widgets.MinMaxDialog):
     def request_cancel(self, index: int):
         name = self.tasks.pop(index)
         self.cancelRequested.emit(index, name)
+
 
 class ApplyTablePipelineWindow(gui_widgets.MinMaxDialog):
     __slots__ = {'available_objects': 'available objects',

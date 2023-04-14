@@ -2227,11 +2227,14 @@ def test_MainWindow_export_pipeline(use_temp_settings_file, main_window, monkeyp
     assert pipeline_exported == [True]
 
 
-def test_MainWindow_import_pipeline(use_temp_settings_file, main_window, monkeypatch):
-    fname = 'tests/test_files/test_pipeline.yaml'
+@pytest.mark.parametrize('name,exp_class', [('test_pipeline', filtering.Pipeline),
+                                             (
+                                             'test_singleend_pipeline', fastq.SingleEndPipeline)])
+def test_MainWindow_import_pipeline(use_temp_settings_file, main_window, monkeypatch, name, exp_class):
+    fname = f'tests/test_files/{name}.yaml'
     monkeypatch.setattr(QtWidgets.QFileDialog, 'getOpenFileName', lambda *args, **kwargs: (fname, '.yaml'))
     main_window.import_pipeline_action.trigger()
-    assert main_window.pipelines == {'test_pipeline': filtering.Pipeline.import_pipeline(fname)}
+    assert main_window.pipelines == {name: exp_class.import_pipeline(fname)}
 
 
 def test_MainWindow_import_multiple_gene_sets(qtbot, main_window_with_tabs, monkeypatch):

@@ -2071,6 +2071,10 @@ class CreatePipelineWindow(gui_widgets.MinMaxDialog, FilterTabPage):
     pipelineExported = QtCore.pyqtSignal(str, generic.GenericPipeline)
     widthChanged = QtCore.pyqtSignal()
     geneSetsRequested = QtCore.pyqtSignal()
+    PIPELINE_TYPES = {name: filtering.Pipeline for name in FILTER_OBJ_TYPES.keys()}
+    PIPELINE_TYPES.update({'Sequence files (paired-end)': fastq.PairedEndPipeline,
+                           'Sequence files (single-end)': fastq.SingleEndPipeline})
+    INV_PIPELINE_TYPES = {val.__name__: key for key, val in PIPELINE_TYPES.items()}
     __slots__ = {'pipeline': 'Pipeline object',
                  'is_unsaved': 'indicates whether the Pipeline was saved since changes were last made'}
 
@@ -2083,16 +2087,21 @@ class CreatePipelineWindow(gui_widgets.MinMaxDialog, FilterTabPage):
         self.is_unsaved = False
 
     @classmethod
-    def start_from_pipeline(cls, pipeline: filtering.Pipeline, pipeline_name: str, parent=None):
-        obj = cls(parent)
-        obj.basic_widgets['pipeline_name'].setText(pipeline_name)
-        obj.pipeline = pipeline
-        obj.filter_obj = pipeline.filter_type.__new__(pipeline.filter_type)
-        obj.init_overview_ui()
-        obj.init_function_ui()
-        obj.basic_group.setVisible(False)
-        obj.is_unsaved = False
-        return obj
+    def start_from_pipeline(cls, pipeline: generic.GenericPipeline, pipeline_name: str, parent=None):
+        window = cls(parent)
+        window.basic_widgets['pipeline_name'].setText(pipeline_name)
+        window.pipeline = pipeline
+        pipeline_type = cls.INV_PIPELINE_TYPES[type(pipeline).__name__]
+        if isinstance(pipeline, filtering.Pipeline):
+            window.filter_obj = pipeline.filter_type.__new__(pipeline.filter_type)
+            pipeline_type = FILTER_OBJ_TYPES_INV[pipeline.filter_type.__name__]
+
+        window.basic_widgets['table_type_combo'].setCurrentText(pipeline_type)
+        window.init_overview_ui()
+        window.init_function_ui()
+        window.basic_group.setVisible(False)
+        window.is_unsaved = False
+        return window
 
     def init_basic_ui(self):
         self.layout.insertWidget(0, self.basic_group)
@@ -2100,6 +2109,7 @@ class CreatePipelineWindow(gui_widgets.MinMaxDialog, FilterTabPage):
 
         self.basic_widgets['table_type_combo'] = QtWidgets.QComboBox()
         self.basic_widgets['table_type_combo'].addItems(FILTER_OBJ_TYPES.keys())
+        self.basic_widgets['table_type_combo'].addItems(self.PIPELINE_TYPES.keys())
         self.basic_widgets['table_type_combo'].setCurrentText('Other')
 
         self.basic_widgets['pipeline_name'] = QtWidgets.QLineEdit()
@@ -2128,13 +2138,41 @@ class CreatePipelineWindow(gui_widgets.MinMaxDialog, FilterTabPage):
         self.basic_grid.setRowStretch(2, 1)
         self.basic_grid.setColumnStretch(4, 1)
 
+    def get_all_fastq_actions(self):
+        func_type = 'single' if isinstance(self.pipeline, fastq.SingleEndPipeline) else 'paired'
+        all_funcs = dir(fastq)
+        public_funcs = []
+        for func in all_funcs:
+            func_obj = getattr(fastq, func)
+            if func.startswith('_'):
+                continue
+            if not hasattr(func_obj, 'func_type'):
+                continue
+            if getattr(func_obj, 'func_type') not in [func_type, 'both']:
+                continue
+            public_funcs.append(func)
+
+        return public_funcs
+
     def init_function_ui(self):
-        super().init_function_ui()
-        self.function_group.setTitle("Add functions to Pipeline")
-        sorted_actions = self.get_all_actions()
-        for action_type in sorted_actions:
-            self.stack_widgets[action_type].pipeline_mode = True
-            self.stack_widgets[action_type].excluded_params.add('inplace')
+        if isinstance(self.pipeline, (fastq.SingleEndPipeline, fastq.PairedEndPipeline)):
+            self.function_group.setVisible(True)
+            self.funcs = {}
+            actions = self.get_all_fastq_actions()
+            for func in actions:
+                self.funcs[generic.get_method_readable_name(func, fastq)] = func
+            self.stack_widgets['main'] = FuncTypeStack(actions, fastq, self,
+                                                       {'input_folder', 'fastq_folder', 'output_folder'}, True)
+            self.stack_widgets['main'].funcSelected.connect(self.apply_button.setVisible)
+
+            self.stack.addWidget(self.stack_widgets['main'])
+            self.function_grid.addWidget(self.stack, 1, 0, 1, 1)
+        else:
+            super().init_function_ui()
+            sorted_actions = self.get_all_actions()
+            for action_type in sorted_actions:
+                self.stack_widgets[action_type].pipeline_mode = True
+                self.stack_widgets[action_type].excluded_params.add('inplace')
 
         self.function_group.setTitle("Add functions to Pipeline")
 
@@ -2165,9 +2203,15 @@ class CreatePipelineWindow(gui_widgets.MinMaxDialog, FilterTabPage):
         raise NotImplementedError
 
     def start(self):
-        filt_obj_type = FILTER_OBJ_TYPES[self.basic_widgets['table_type_combo'].currentText()]
-        self.filter_obj = filt_obj_type.__new__(filt_obj_type)
-        self.pipeline = filtering.Pipeline(filt_obj_type)
+        table_type = self.basic_widgets['table_type_combo'].currentText()
+        pipeline_type = self.PIPELINE_TYPES[table_type]
+        if pipeline_type == filtering.Pipeline:
+            filt_obj_type = FILTER_OBJ_TYPES[self.basic_widgets['table_type_combo'].currentText()]
+            self.filter_obj = filt_obj_type.__new__(filt_obj_type)
+            self.pipeline = filtering.Pipeline(filt_obj_type)
+        else:
+            self.pipeline = pipeline_type()
+
         self.init_overview_ui()
         self.init_function_ui()
         self.basic_group.setVisible(False)
@@ -3535,13 +3579,22 @@ class MainWindow(QtWidgets.QMainWindow):
     def apply_pipeline(self, pipeline: generic.GenericPipeline, pipeline_name: str):
         if isinstance(pipeline, filtering.Pipeline):
             self._apply_table_pipeline(pipeline, pipeline_name)
-        elif isinstance(pipeline, fastq._FASTQPipeline):
+        elif validation.isinstanceinh(pipeline, fastq._FASTQPipeline):
             self._apply_fastq_pipeline(pipeline, pipeline_name)
         else:
             raise TypeError(f"Invalid Pipeline type: {type(pipeline)}")
 
     def _apply_fastq_pipeline(self, pipeline: fastq._FASTQPipeline, pipeline_name: str):
-        pass
+        if isinstance(pipeline, fastq.SingleEndPipeline):
+            dialog = gui_windows.FuncExternalWindow('Pipeline', pipeline.apply_to, None, {'self'}, parent=self)
+        else:
+            dialog = gui_windows.PairedFuncExternalWindow('Pipeline', pipeline.apply_to, None, {'self'}, parent=self)
+        dialog.paramsAccepted.connect(
+            functools.partial(self.start_generic_job_from_params, pipeline_name, pipeline.apply_to))
+        dialog.paramsAccepted.connect(dialog.deleteLater)
+        dialog.init_ui()
+        self.external_windows['fastq_pipeline'] = dialog
+        dialog.exec()
 
     def _apply_table_pipeline(self, pipeline: filtering.Pipeline, pipeline_name: str):
         apply_msg = f"Do you want to apply Pipeline '{pipeline_name}' inplace?"
