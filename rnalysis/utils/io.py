@@ -253,6 +253,12 @@ def load_csv(filename: Union[str, Path], index_col: int = None, drop_columns: Un
     """
     assert isinstance(filename,
                       (str, Path)), f"Filename must be of type str or pathlib.Path, is instead {type(filename)}."
+    filename = Path(filename)
+    assert filename.exists() and filename.is_file(), f"File '{filename.as_posix()}' does not exist!"
+    assert filename.suffix.lower() in {'.csv', '.tsv', '.txt'}, \
+        f"RNAlysis cannot load files of type '{filename.suffix}'. " \
+        f"Please convert your file to a .csv, .tsv, or .txt file and try again."
+
     encoding = 'ISO-8859-1'
     kwargs = dict(sep=None, engine='python', encoding=encoding, comment=comment, skipinitialspace=True)
     if index_col is not None:
