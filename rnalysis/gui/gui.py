@@ -19,6 +19,7 @@ import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+import yaml
 from PyQt5 import QtCore, QtWidgets, QtGui
 from joblib import parallel_backend
 
@@ -3014,12 +3015,26 @@ class MainWindow(QtWidgets.QMainWindow):
             pipeline.export_pipeline(filename)
             print(f"Successfully saved at {io.get_datetime()} under {filename}")
 
+    def _import_pipeline_from_str(self, pipeline_name: str, content: str):
+        d = yaml.safe_load(content)
+        if d.get('filter_type') is not None:
+            pipeline = filtering.Pipeline.import_pipeline(content)
+        elif d['metadata'].get('pipeline_type') == 'single':
+            pipeline = fastq.SingleEndPipeline.import_pipeline(content)
+        elif d['metadata'].get('pipeline_type') == 'paired':
+            pipeline = fastq.PairedEndPipeline.import_pipeline(content)
+        else:
+            raise TypeError(f"Pipeline file '{content}' is invalid.")
+        self.pipelines[pipeline_name] = pipeline
+
     def import_pipeline(self):
         filename, _ = QtWidgets.QFileDialog.getOpenFileName(self, "Choose a Pipeline file", str(Path.home()),
                                                             "YAML file (*.yaml)")
         if filename:
-            pipeline = filtering.Pipeline.import_pipeline(filename)
-            self.pipelines[str(Path(filename).stem)] = pipeline
+            pipeline_name = str(Path(filename).stem)
+            with open(filename) as f:
+                content = f.read()
+            self._import_pipeline_from_str(pipeline_name, content)
 
     def import_multiple_gene_sets(self):
         dialog = gui_windows.MultiFileSelectionDialog()
@@ -3584,8 +3599,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 session_filename)
 
             for pipeline_name, pipeline_file in zip(pipeline_names, pipeline_files):
-                pipeline = filtering.Pipeline.import_pipeline(pipeline_file)
-                self.pipelines[pipeline_name] = pipeline
+                self._import_pipeline_from_str(pipeline_name, pipeline_file)
             QtWidgets.QApplication.processEvents()
 
             tabs_to_close = None
