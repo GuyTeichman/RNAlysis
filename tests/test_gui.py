@@ -378,7 +378,7 @@ def test_CutAdaptSingleWindow_start_analysis(qtbot, cutadapt_single_window):
                         quality_trimming=20, trim_n=True,
                         minimum_read_length=10, maximum_read_length=None,
                         discard_untrimmed_reads=True, error_tolerance=0.1,
-                        minimum_overlap=3, allow_indels=True, parallel=True)
+                        minimum_overlap=3, allow_indels=True, parallel=True, gzip_output=False)
 
     cutadapt_single_window.param_widgets['fastq_folder'].setText(fq_folder)
     cutadapt_single_window.param_widgets['output_folder'].setText(out_folder)
@@ -404,7 +404,7 @@ def test_CutAdaptPairedWindow_start_analysis(qtbot, cutadapt_paired_window):
                         any_position_adapters_r1=None, any_position_adapters_r2=None,
                         quality_trimming=20, trim_n=True, minimum_read_length=10, maximum_read_length=None,
                         discard_untrimmed_reads=True, pair_filter_if='both',
-                        error_tolerance=0.1, minimum_overlap=3, allow_indels=True, parallel=True)
+                        error_tolerance=0.1, minimum_overlap=3, allow_indels=True, parallel=True, gzip_output=False)
     cutadapt_paired_window.pairs_widgets['r1_files'].add_items(r1_files)
     cutadapt_paired_window.pairs_widgets['r2_files'].add_items(r2_files)
     cutadapt_paired_window.param_widgets['output_folder'].setText(out_folder)
