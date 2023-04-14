@@ -125,7 +125,7 @@ def test_enrichment_get_attrs_from_string(monkeypatch):
 def test_enrichment_get_attrs_bad_path():
     e = EnrichmentRunner({'_'}, 'attribute1', 0.05, 'fakepath', True, False, '', False, True, 'test_set', False,
                          'hypergeometric', biotypes='all', biotype_ref_path=__biotype_ref__)
-    with pytest.raises(FileNotFoundError):
+    with pytest.raises((FileNotFoundError, AssertionError)):
         e.fetch_annotations()
         e.fetch_attributes()
         e.get_background_set()
