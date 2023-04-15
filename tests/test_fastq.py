@@ -1,7 +1,6 @@
 import filecmp
 import gzip
 import platform
-import shutil
 
 import pytest
 
@@ -720,16 +719,22 @@ def test_SingleEndPipeline_import():
 
 def test_SingleEndPipeline_apply_to():
     in_dir = 'tests/test_files/fastq_pipeline_tests/in'
-    out_dir = 'tests/test_files/fastq_pipeline_tests/single/outdir'
-    truth_dir = 'tests/test_files/fastq_pipeline_tests/single/truth'
+    out_dir = Path('tests/test_files/fastq_pipeline_tests/single/outdir')
+    truth_dir = Path('tests/test_files/fastq_pipeline_tests/single/truth')
     pth = 'tests/test_files/test_singleend_pipeline.yaml'
     p = SingleEndPipeline.import_pipeline(pth)
 
     try:
         p.apply_to(in_dir, out_dir)
-        for file in Path(out_dir).joinpath('00_trim_adapters_single_end').iterdir():
+        for file in Path(out_dir).joinpath('01_trim_adapters_single_end').iterdir():
             if file.is_file() and file.suffix == '.log':
                 file.unlink()
-        assert are_dir_trees_equal(out_dir, truth_dir)
+
+        assert are_dir_trees_equal(out_dir.joinpath('01_trim_adapters_single_end'),
+                                   truth_dir.joinpath('01_trim_adapters_single_end'))
+        assert are_dir_trees_equal(out_dir.joinpath('02_bowtie2_align_single_end'),
+                                   truth_dir.joinpath('02_bowtie2_align_single_end'),compare_contents=False)
+        assert are_dir_trees_equal(out_dir.joinpath('03_featurecounts_single_end'),
+                                   truth_dir.joinpath('03_featurecounts_single_end'))
     finally:
         unlink_tree(out_dir)

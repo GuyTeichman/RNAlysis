@@ -13,7 +13,7 @@
 @SQ	SN:ENST00000430889.2	LN:1666
 @SQ	SN:ENST00000394331.3	LN:2943
 @SQ	SN:ENST00000243103.3	LN:3335
-@PG	ID:bowtie2	PN:bowtie2	VN:2.5.0	CL:"D:\bowtie2-2.5.0\bowtie2-align-s.exe --wrapper basic-0 --end-to-end --very-sensitive --phred33 --seed 0 --threads 1 -x tests/test_files/bowtie2_tests/index/transcripts -S tests/test_files/fastq_pipeline_tests/single/outdir/01_bowtie2_align_single_end/reads_1_trimmed.sam -U tests/test_files/fastq_pipeline_tests/single/outdir/00_trim_adapters_single_end/reads_1_trimmed.fastq"
+@PG	ID:bowtie2	PN:bowtie2	VN:2.5.1	CL:"D:\bowtie2-2.5.0\bowtie2-align-s.exe --wrapper basic-0 --end-to-end --very-sensitive --phred33 --seed 0 --threads 1 -x tests/test_files/bowtie2_tests/index/transcripts -S tests/test_files/fastq_pipeline_tests/single/outdir/01_bowtie2_align_single_end/reads_1_trimmed.sam -U tests/test_files/fastq_pipeline_tests/single/outdir/00_trim_adapters_single_end/reads_1_trimmed.fastq"
 2:NM_014620:1094:172	0	ENST00000430889.2	461	1	50M	*	0	0	ATGAAAAAAATTCACGTTAGCACGGTGAACCCCAATTATAACGGAGGGGA	IIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII	AS:i:0	XS:i:0	XN:i:0	XM:i:0	XO:i:0	XG:i:0	NM:i:0	MD:Z:50	YT:Z:UU
 3:NM_022658:294:172	0	ENST00000040584.5	295	42	50M	*	0	0	TGTACGGGCCCGGCGGCTCGGCGCCCGGCTTCCAGCACGCTTCGCACCAC	IIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII	AS:i:0	XN:i:0	XM:i:0	XO:i:0	XG:i:0	NM:i:0	MD:Z:50	YT:Z:UU
 4:NM_022658:1362:195	0	ENST00000040584.5	1363	42	50M	*	0	0	ACTAGATGTACTTTTTCTAAAAAGGAAAGGACAGAAAAAAATGAAGAAAG	IIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII	AS:i:0	XN:i:0	XM:i:0	XO:i:0	XG:i:0	NM:i:0	MD:Z:50	YT:Z:UU

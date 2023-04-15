@@ -113,11 +113,11 @@ class SingleEndPipeline(_FASTQPipeline):
         return_values = []
 
         assert input_folder.exists() and input_folder.is_dir(), f"input_folder does not exist!"
-        assert output_folder.exists(), f"output_folder does not exist!"
+        assert output_folder.exists() and output_folder.is_dir(), f"output_folder does not exist!"
 
         current_in_dir = input_folder
         for i, (func, (args, kwargs)) in enumerate(zip(self.functions, self.params)):
-            current_out_dir = output_folder.joinpath(f'{i:02d}_{func.__name__}')
+            current_out_dir = output_folder.joinpath(f'{i+1:02d}_{func.__name__}')
             try:
                 current_out_dir.mkdir(parents=True)
             except OSError:
@@ -129,7 +129,6 @@ class SingleEndPipeline(_FASTQPipeline):
                     return_values.extend(res)
                 else:
                     return_values.append(res)
-
             current_in_dir = current_out_dir
 
         return parsing.data_to_tuple(return_values)
