@@ -2108,7 +2108,6 @@ class CreatePipelineWindow(gui_widgets.MinMaxDialog, FilterTabPage):
         self.basic_group.setTitle("Choose data table type for Pipeline")
 
         self.basic_widgets['table_type_combo'] = QtWidgets.QComboBox()
-        self.basic_widgets['table_type_combo'].addItems(FILTER_OBJ_TYPES.keys())
         self.basic_widgets['table_type_combo'].addItems(self.PIPELINE_TYPES.keys())
         self.basic_widgets['table_type_combo'].setCurrentText('Other')
 
