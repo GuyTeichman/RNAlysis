@@ -2161,7 +2161,8 @@ class CreatePipelineWindow(gui_widgets.MinMaxDialog, FilterTabPage):
             for func in actions:
                 self.funcs[generic.get_method_readable_name(func, fastq)] = func
             self.stack_widgets['main'] = FuncTypeStack(actions, fastq, self,
-                                                       {'input_folder', 'fastq_folder', 'output_folder'}, True)
+                                                       {'input_folder', 'fastq_folder', 'output_folder', 'r1_files',
+                                                        'r2_files'}, True)
             self.stack_widgets['main'].funcSelected.connect(self.apply_button.setVisible)
 
             self.stack.addWidget(self.stack_widgets['main'])
