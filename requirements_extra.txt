@@ -8,3 +8,4 @@ xlmhg>=2.5.4:       single-set
 numba>=0.55.1:      randomization
 cutadapt>=4.1:      fastq
 pyvis>=0.3.2:       reports
+networkx>=2.8.0:    reports
