@@ -302,3 +302,10 @@ def parse_gff3_attributes(attr_str: str):
             val = val[0]
         attributes_dict[key] = val
     return attributes_dict
+
+
+def beautify_dict(d: dict) -> str:
+    output = []
+    for key, val in d.items():
+        output.append(f"{key} = {repr(val)}")
+    return ', \n'.join(output)
