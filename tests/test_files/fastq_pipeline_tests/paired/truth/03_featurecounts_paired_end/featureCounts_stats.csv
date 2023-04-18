@@ -1,0 +1,15 @@
+,Status,reads_1_trimmed_reads_2_trimmed
+1,Assigned,0
+2,Unassigned_Unmapped,607
+3,Unassigned_Read_Type,0
+4,Unassigned_Singleton,267
+5,Unassigned_MappingQuality,0
+6,Unassigned_Chimera,1
+7,Unassigned_FragmentLength,0
+8,Unassigned_Duplicate,0
+9,Unassigned_MultiMapping,0
+10,Unassigned_Secondary,0
+11,Unassigned_NonSplit,0
+12,Unassigned_NoFeatures,9125
+13,Unassigned_Overlapping_Length,0
+14,Unassigned_Ambiguity,0

@@ -2162,7 +2162,7 @@ class CreatePipelineWindow(gui_widgets.MinMaxDialog, FilterTabPage):
                 self.funcs[generic.get_method_readable_name(func, fastq)] = func
             self.stack_widgets['main'] = FuncTypeStack(actions, fastq, self,
                                                        {'input_folder', 'fastq_folder', 'output_folder', 'r1_files',
-                                                        'r2_files'}, True)
+                                                        'r2_files', 'return_new_filenames'}, True)
             self.stack_widgets['main'].funcSelected.connect(self.apply_button.setVisible)
 
             self.stack.addWidget(self.stack_widgets['main'])
@@ -3588,7 +3588,8 @@ class MainWindow(QtWidgets.QMainWindow):
         if isinstance(pipeline, fastq.SingleEndPipeline):
             dialog = gui_windows.FuncExternalWindow('Pipeline', pipeline.apply_to, None, {'self'}, parent=self)
         else:
-            dialog = gui_windows.PairedFuncExternalWindow('Pipeline', pipeline.apply_to, None, {'self'}, parent=self)
+            dialog = gui_windows.PairedFuncExternalWindow('Pipeline', pipeline.apply_to, None,
+                                                          {'self', 'r1_files', 'r2_files'}, parent=self)
         dialog.paramsAccepted.connect(
             functools.partial(self.start_generic_job_from_params, pipeline_name, pipeline.apply_to))
         dialog.paramsAccepted.connect(dialog.deleteLater)

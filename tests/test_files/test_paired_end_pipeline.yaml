@@ -1,0 +1,61 @@
+functions:
+- trim_adapters_paired_end
+- bowtie2_align_paired_end
+- featurecounts_paired_end
+metadata:
+  export_time: 2023/04/18, 11:02:01
+  rnalysis_version: 3.7.0
+  pipeline_type: paired
+params:
+- - []
+  - allow_indels: true
+    any_position_adapters_r1: null
+    any_position_adapters_r2: null
+    discard_untrimmed_reads: false
+    error_tolerance: 0.1
+    five_prime_adapters_r1: null
+    five_prime_adapters_r2: null
+    gzip_output: false
+    maximum_read_length: null
+    minimum_overlap: 3
+    minimum_read_length: 10
+    pair_filter_if: both
+    parallel: true
+    quality_trimming: 20
+    three_prime_adapters_r1: ATGGGTATATGGGT
+    three_prime_adapters_r2: AGTTTACCGTTGT
+    trim_n: true
+- - []
+  - allow_disconcordant_alignment: true
+    allow_individual_alignment: true
+    bowtie2_installation_folder: auto
+    ignore_qualities: false
+    index_file: tests/test_files/bowtie2_tests/index/transcripts.1.bt2
+    mate_orientations: fwd-rev
+    max_fragment_length: 500
+    min_fragment_length: 0
+    mode: local
+    new_sample_names: auto
+    quality_score_type: phred33
+    random_seed: 0
+    settings_preset: very-fast
+    threads: 1
+- - []
+  - count_chimeric_fragments: false
+    count_fractionally: false
+    count_multi_mapping_reads: false
+    count_multi_overlapping_reads: false
+    gtf_attr_name: gene_id
+    gtf_feature_type: exon
+    gtf_file: tests/test_files/kallisto_tests/transcripts.gtf
+    ignore_secondary: true
+    is_long_read: false
+    max_fragment_length: 600
+    min_fragment_length: 50
+    min_mapping_quality: 0
+    new_sample_names: auto
+    r_installation_folder: auto
+    report_read_assignment: null
+    require_both_mapped: true
+    stranded: 'no'
+    threads: 1

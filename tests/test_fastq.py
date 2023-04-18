@@ -660,7 +660,7 @@ def test_SingleEndPipeline_import():
                                                     'r_installation_folder': 'auto', 'report_read_assignment': None,
                                                     'stranded': 'no', 'threads': 1})
 
-    pth = 'tests/test_files/test_singleend_pipeline.yaml'
+    pth = 'tests/test_files/test_single_end_pipeline.yaml'
     p = SingleEndPipeline.import_pipeline(pth)
     assert p == truth
 
@@ -669,7 +669,7 @@ def test_SingleEndPipeline_apply_to():
     in_dir = 'tests/test_files/fastq_pipeline_tests/in'
     out_dir = Path('tests/test_files/fastq_pipeline_tests/single/outdir')
     truth_dir = Path('tests/test_files/fastq_pipeline_tests/single/truth')
-    pth = 'tests/test_files/test_singleend_pipeline.yaml'
+    pth = 'tests/test_files/test_single_end_pipeline.yaml'
     p = SingleEndPipeline.import_pipeline(pth)
 
     try:
@@ -684,5 +684,77 @@ def test_SingleEndPipeline_apply_to():
                                    truth_dir.joinpath('02_bowtie2_align_single_end'), compare_contents=False)
         assert are_dir_trees_equal(out_dir.joinpath('03_featurecounts_single_end'),
                                    truth_dir.joinpath('03_featurecounts_single_end'))
+    finally:
+        unlink_tree(out_dir)
+
+
+def test_PairedEndPipeline_add_function():
+    param_dict1 = {'allow_indels': True, 'any_position_adapters': None, 'discard_untrimmed_reads': False,
+                   'error_tolerance': 0.1}
+    p = PairedEndPipeline()
+    assert p.functions == [] and p.params == []
+    p.add_function(trim_adapters_paired_end, 'ATGGG',
+                   **param_dict1)
+
+    assert p.functions == [trim_adapters_paired_end] and p.params == [(('ATGGG',), param_dict1)]
+
+    p.add_function('bowtie2_align_paired_end', 'arg', 'arg', kw1='val', kw2='val2')
+    assert p.functions == [trim_adapters_paired_end, bowtie2_align_paired_end] and \
+           p.params == [(('ATGGG',), param_dict1), (('arg', 'arg'), {'kw1': 'val', 'kw2': 'val2'})]
+
+
+def test_PairedEndPipeline_import():
+    truth = PairedEndPipeline()
+    truth.add_function(trim_adapters_paired_end,
+                       **{'allow_indels': True, 'any_position_adapters_r1': None, 'any_position_adapters_r2': None,
+                          'discard_untrimmed_reads': False,
+                          'error_tolerance': 0.1, 'five_prime_adapters_r1': None, 'five_prime_adapters_r2': None,
+                          'maximum_read_length': None, 'pair_filter_if': 'both',
+                          'minimum_overlap': 3, 'minimum_read_length': 10, 'parallel': True, 'quality_trimming': 20,
+                          'three_prime_adapters_r1': 'ATGGGTATATGGGT',
+                          'three_prime_adapters_r2': 'AGTTTACCGTTGT', 'trim_n': True, 'gzip_output': False})
+    truth.add_function(bowtie2_align_paired_end, **{'bowtie2_installation_folder': 'auto', 'ignore_qualities': False,
+                                                    'index_file': 'tests/test_files/bowtie2_tests/index/transcripts.1.bt2',
+                                                    'mode': 'local', 'new_sample_names': 'auto',
+                                                    'allow_disconcordant_alignment': True,
+                                                    'allow_individual_alignment': True,
+                                                    'quality_score_type': 'phred33', 'random_seed': 0,
+                                                    'settings_preset': 'very-fast', 'mate_orientations': 'fwd-rev',
+                                                    'max_fragment_length': 500, 'min_fragment_length': 0, 'threads': 1})
+    truth.add_function(featurecounts_paired_end, **{'count_fractionally': False, 'count_multi_mapping_reads': False,
+                                                    'count_multi_overlapping_reads': False, 'gtf_attr_name': 'gene_id',
+                                                    'gtf_feature_type': 'exon',
+                                                    'gtf_file': 'tests/test_files/kallisto_tests/transcripts.gtf',
+                                                    'count_chimeric_fragments': False,
+                                                    'ignore_secondary': True, 'is_long_read': False,
+                                                    'min_mapping_quality': 0, 'new_sample_names': 'auto',
+                                                    'r_installation_folder': 'auto', 'report_read_assignment': None,
+                                                    'stranded': 'no', 'threads': 1, 'require_both_mapped': True,
+                                                    'max_fragment_length': 600, 'min_fragment_length': 50})
+
+    pth = 'tests/test_files/test_paired_end_pipeline.yaml'
+    p = PairedEndPipeline.import_pipeline(pth)
+    assert p == truth
+
+
+def test_PairedEndPipeline_apply_to():
+    in_dir = Path('tests/test_files/fastq_pipeline_tests/in')
+    out_dir = Path('tests/test_files/fastq_pipeline_tests/paired/outdir')
+    truth_dir = Path('tests/test_files/fastq_pipeline_tests/paired/truth')
+    pth = 'tests/test_files/test_paired_end_pipeline.yaml'
+    p = PairedEndPipeline.import_pipeline(pth)
+
+    try:
+        p.apply_to([in_dir.joinpath('reads_1.fastq')], [in_dir.joinpath('reads_2.fastq')], out_dir)
+        for file in Path(out_dir).joinpath('01_trim_adapters_paired_end').iterdir():
+            if file.is_file() and file.suffix == '.log':
+                file.unlink()
+
+        assert are_dir_trees_equal(out_dir.joinpath('01_trim_adapters_paired_end'),
+                                   truth_dir.joinpath('01_trim_adapters_paired_end'))
+        assert are_dir_trees_equal(out_dir.joinpath('02_bowtie2_align_paired_end'),
+                                   truth_dir.joinpath('02_bowtie2_align_paired_end'), compare_contents=False)
+        assert are_dir_trees_equal(out_dir.joinpath('03_featurecounts_paired_end'),
+                                   truth_dir.joinpath('03_featurecounts_paired_end'))
     finally:
         unlink_tree(out_dir)

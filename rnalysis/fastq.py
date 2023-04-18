@@ -5,7 +5,9 @@ the *bowtie2* alignment tool, and the *featureCounts* feature counting tool.
 """
 
 import abc
+import itertools
 import os
+import shutil
 import sys
 import types
 import typing
@@ -18,7 +20,7 @@ from tqdm.auto import tqdm
 from typing_extensions import Literal
 
 from rnalysis import filtering
-from rnalysis.utils import parsing, io, feature_counting, genome_annotation, generic
+from rnalysis.utils import validation, parsing, io, feature_counting, genome_annotation, generic
 from rnalysis.utils.generic import readable_name
 from rnalysis.utils.param_typing import PositiveInt, NonNegativeInt, Fraction, LEGAL_FASTQ_SUFFIXES, \
     LEGAL_BOWTIE2_PRESETS, LEGAL_BOWTIE2_MODES, LEGAL_QUAL_SCORE_TYPES, LEGAL_ALIGNMENT_SUFFIXES
@@ -104,7 +106,7 @@ class SingleEndPipeline(_FASTQPipeline):
 
     def _get_pipeline_dict(self):
         d = super()._get_pipeline_dict()
-        d['pipeline_type'] = 'single'
+        d['metadata']['pipeline_type'] = 'single'
         return d
 
     def apply_to(self, input_folder: Union[str, Path], output_folder: Union[str, Path]):
@@ -117,7 +119,7 @@ class SingleEndPipeline(_FASTQPipeline):
 
         current_in_dir = input_folder
         for i, (func, (args, kwargs)) in enumerate(zip(self.functions, self.params)):
-            current_out_dir = output_folder.joinpath(f'{i+1:02d}_{func.__name__}')
+            current_out_dir = output_folder.joinpath(f'{i + 1:02d}_{func.__name__}')
             try:
                 current_out_dir.mkdir(parents=True)
             except OSError:
@@ -146,12 +148,62 @@ class PairedEndPipeline(_FASTQPipeline):
 
     def _get_pipeline_dict(self):
         d = super()._get_pipeline_dict()
-        d['pipeline_type'] = 'paired'
+        d['metadata']['pipeline_type'] = 'paired'
         return d
 
     def apply_to(self, r1_files: List[str], r2_files: List[str], output_folder: Union[str, Path]):
-        for func, (args, kwargs) in zip(self.functions, self.params):
-            pass
+        output_folder = Path(output_folder)
+        return_values = []
+
+        assert output_folder.exists() and output_folder.is_dir(), f"output_folder does not exist!"
+
+        current_r1, current_r2 = r1_files, r2_files
+        current_in_dir = output_folder.joinpath('00_input')
+        # if the first function in the Pipeline takes a single input folder as input,
+        # create an 'input' folder and copy the starting files into it.
+        params = generic.get_method_signature(self.functions[0])
+        if 'input_folder' in params:
+            try:
+                current_in_dir.mkdir(parents=True)
+            except OSError:
+                pass
+            with tqdm(total=len(r1_files) + len(r2_files), desc='Copying files', unit='files') as pbar:
+                for file in (itertools.chain(r1_files, r2_files)):
+                    shutil.copy(file, current_in_dir)
+                    pbar.update(1)
+
+        for i, (func, (args, kwargs)) in enumerate(zip(self.functions, self.params)):
+            current_out_dir = output_folder.joinpath(f'{i + 1:02d}_{func.__name__}')
+            try:
+                current_out_dir.mkdir(parents=True)
+            except OSError:
+                pass
+
+            params = generic.get_method_signature(func)
+
+            if 'return_new_filenames' in params:
+                kwargs['return_new_filenames'] = True
+
+            if 'r1_files' in params and 'r2_files' in params:
+                res = func(current_r1, current_r2, current_out_dir, *args, **kwargs)
+            elif 'input_folder' in params:
+                res = func(current_in_dir, current_out_dir, *args, **kwargs)
+            else:
+                raise NotImplementedError(f"Cannot run function '{func.__name__}' in this Pipeline.")
+
+            if res is not None and not (validation.isiterable(res) and validation.isinstanceiter(res,
+                                                                                                 str)):  # TODO: make uniform with Pipeline output dict?
+                if isinstance(res, (list, tuple)):
+                    return_values.extend(res)
+                else:
+                    return_values.append(res)
+
+            if 'new_sample_names' in params:
+                current_in_dir = current_out_dir
+            elif 'return_new_filenames' in params:
+                current_r1, current_r2 = res
+
+        return parsing.data_to_tuple(return_values)
 
 
 @_func_type('single')
@@ -1443,7 +1495,8 @@ def trim_adapters_paired_end(r1_files: List[Union[str, Path]], r2_files: List[Un
                              discard_untrimmed_reads: bool = True,
                              pair_filter_if: Literal['both', 'any', 'first'] = 'both',
                              error_tolerance: Fraction = 0.1, minimum_overlap: NonNegativeInt = 3,
-                             allow_indels: bool = True, parallel: bool = True, gzip_output: bool = False):
+                             allow_indels: bool = True, parallel: bool = True, gzip_output: bool = False,
+                             return_new_filenames: bool = False):
     """
     Trim adapters from paired-end reads using `CutAdapt <https://cutadapt.readthedocs.io/>`_.
 
@@ -1542,12 +1595,16 @@ def trim_adapters_paired_end(r1_files: List[Union[str, Path]], r2_files: List[Un
                                           parallel))
     call.append(f'--pair-filter={pair_filter_if}')
     calls = []
+    r1_out = []
+    r2_out = []
     for file1, file2 in zip(r1_files, r2_files):
         file1 = Path(file1)
         file2 = Path(file2)
         suffix = '_trimmed.fastq.gz' if gzip_output else '_trimmed.fastq'
         output_path_r1 = Path(output_folder).joinpath(parsing.remove_suffixes(file1).stem + suffix)
         output_path_r2 = Path(output_folder).joinpath(parsing.remove_suffixes(file2).stem + suffix)
+        r1_out.append(output_path_r1)
+        r2_out.append(output_path_r2)
 
         this_call = call.copy()
         this_call.extend(['--output', output_path_r1.as_posix()])
@@ -1567,6 +1624,9 @@ def trim_adapters_paired_end(r1_files: List[Union[str, Path]], r2_files: List[Un
                 cutadapt_main(cutadapt_call)
             print(f"Files saved successfully at {cutadapt_call[-2]} and  {cutadapt_call[-1]}")
             pbar.update(1)
+
+    if return_new_filenames:
+        return r1_out, r2_out
 
 
 def _parse_cutadapt_misc_args(quality_trimming: Union[int, None], trim_n: bool,

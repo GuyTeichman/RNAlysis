@@ -1,0 +1,24 @@
+Warning: minimum score function gave negative number in --local mode for mate #1 of read '1:NM_014620:16:182; setting to 0 instead
+Warning: skipping mate #1 of read '1:NM_014620:16:182' because length (0) <= # seed mismatches (0)
+Warning: skipping mate #1 of read '1:NM_014620:16:182' because it was < 2 characters long
+Warning: minimum score function gave negative number in --local mode for mate #1 of read '7:NM_022658:1912:184; setting to 0 instead
+Warning: skipping mate #1 of read '7:NM_022658:1912:184' because length (0) <= # seed mismatches (0)
+Warning: skipping mate #1 of read '7:NM_022658:1912:184' because it was < 2 characters long
+Warning: minimum score function gave negative number in --local mode for mate #1 of read '9:NM_174914:46:212; setting to 0 instead
+Warning: skipping mate #1 of read '9:NM_174914:46:212' because length (0) <= # seed mismatches (0)
+Warning: skipping mate #1 of read '9:NM_174914:46:212' because it was < 2 characters long
+10000 reads; of these:
+  10000 (100.00%) were paired; of these:
+    875 (8.75%) aligned concordantly 0 times
+    6431 (64.31%) aligned concordantly exactly 1 time
+    2694 (26.94%) aligned concordantly >1 times
+    ----
+    875 pairs aligned concordantly 0 times; of these:
+      0 (0.00%) aligned discordantly 1 time
+    ----
+    875 pairs aligned 0 times concordantly or discordantly; of these:
+      1750 mates make up the pairs; of these:
+        1481 (84.63%) aligned 0 times
+        258 (14.74%) aligned exactly 1 time
+        11 (0.63%) aligned >1 times
+92.59% overall alignment rate
