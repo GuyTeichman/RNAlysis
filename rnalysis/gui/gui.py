@@ -232,6 +232,9 @@ class CutAdaptSingleWindow(gui_windows.FuncExternalWindow):
 
 
 class CutAdaptPairedWindow(gui_windows.PairedFuncExternalWindow):
+    EXCLUDED_PARAMS = gui_windows.PairedFuncExternalWindow.EXCLUDED_PARAMS.copy()
+    EXCLUDED_PARAMS.add('return_new_filenames')
+
     __slots__ = {}
 
     def __init__(self, parent=None):

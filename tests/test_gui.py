@@ -2228,8 +2228,9 @@ def test_MainWindow_export_pipeline(use_temp_settings_file, main_window, monkeyp
 
 
 @pytest.mark.parametrize('name,exp_class', [('test_pipeline', filtering.Pipeline),
-                                             (
-                                             'test_singleend_pipeline', fastq.SingleEndPipeline)])
+                                             ('test_single_end_pipeline', fastq.SingleEndPipeline),
+                                            ('test_paired_end_pipeline', fastq.PairedEndPipeline)
+                                            ])
 def test_MainWindow_import_pipeline(use_temp_settings_file, main_window, monkeypatch, name, exp_class):
     fname = f'tests/test_files/{name}.yaml'
     monkeypatch.setattr(QtWidgets.QFileDialog, 'getOpenFileName', lambda *args, **kwargs: (fname, '.yaml'))
