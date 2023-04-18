@@ -415,7 +415,7 @@ class GenericPipeline(abc.ABC):
         return d
 
     @classmethod
-    def import_pipeline(cls, filename: Union[str, Path]) -> 'Pipeline':
+    def import_pipeline(cls, filename: Union[str, Path]) -> 'GenericPipeline':
         """
         Import a Pipeline from a Pipeline YAML file or YAML-like string.
 

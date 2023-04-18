@@ -2,6 +2,7 @@ import gzip
 import platform
 
 import pytest
+import yaml
 
 from rnalysis import fastq
 from rnalysis.fastq import *
@@ -639,6 +640,18 @@ def test_SingleEndPipeline_add_function():
            p.params == [(('ATGGG',), param_dict1), (('arg', 'arg'), {'kw1': 'val', 'kw2': 'val2'})]
 
 
+def test_SingleEndPipeline_export():
+    truth_pth = 'tests/test_files/test_single_end_pipeline.yaml'
+    p = SingleEndPipeline.import_pipeline(truth_pth)
+    res = yaml.safe_load(p.export_pipeline(None))
+
+    with open(truth_pth) as f:
+        truth = yaml.safe_load(f)
+    res['metadata']['export_time'] = None
+    truth['metadata']['export_time'] = None
+    assert res == truth
+
+
 def test_SingleEndPipeline_import():
     truth = SingleEndPipeline()
     truth.add_function(trim_adapters_single_end,
@@ -701,6 +714,18 @@ def test_PairedEndPipeline_add_function():
     p.add_function('bowtie2_align_paired_end', 'arg', 'arg', kw1='val', kw2='val2')
     assert p.functions == [trim_adapters_paired_end, bowtie2_align_paired_end] and \
            p.params == [(('ATGGG',), param_dict1), (('arg', 'arg'), {'kw1': 'val', 'kw2': 'val2'})]
+
+
+def test_PairedEndPipeline_export():
+    truth_pth = 'tests/test_files/test_paired_end_pipeline.yaml'
+    p = PairedEndPipeline.import_pipeline(truth_pth)
+    res = yaml.safe_load(p.export_pipeline(None))
+
+    with open(truth_pth) as f:
+        truth = yaml.safe_load(f)
+    res['metadata']['export_time'] = None
+    truth['metadata']['export_time'] = None
+    assert res == truth
 
 
 def test_PairedEndPipeline_import():
