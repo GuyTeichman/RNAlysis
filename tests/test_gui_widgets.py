@@ -1,9 +1,10 @@
-import pytest
-import joblib
-from rnalysis.gui.gui_widgets import *
 import time
-from typing_extensions import Literal
 from typing import Set
+
+import joblib
+import pytest
+
+from rnalysis.gui.gui_widgets import *
 from rnalysis.utils import io
 
 LEFT_CLICK = QtCore.Qt.LeftButton
@@ -152,6 +153,30 @@ def test_get_val_from_widget_native_types(qtbot, widget_class, keyboard_interact
     assert get_val_from_widget(widget) == expected_val
 
 
+@pytest.mark.parametrize("widget_class,expected_val,kwargs", [
+    (QtWidgets.QLineEdit, "12", {}),
+    (QtWidgets.QSpinBox, 12, {}),
+    (FilledComboBox, '12', {}),
+    (PathLineEdit, '12', {}),
+    (StrIntLineEdit, 12, {}),
+    (OptionalWidget, None, {}),
+    (OptionalWidget, 'test123', {}),
+    (ComboBoxOrOtherWidget, '12',
+     {'items': ['opt1', 'opt2', '12'], 'default': 'opt1'}),
+    (ComboBoxOrOtherWidget, '12',
+     {'items': ['opt1', 'opt2', 'opt3'], 'default': None}),
+    (ToggleSwitch, True, {}),
+    (QMultiDoubleSpinBox, [0.1, 3.2, 5], {}),
+
+])
+def test_set_widget_val(qtbot, widget_class, expected_val, kwargs):
+    if widget_class in (ComboBoxOrOtherWidget, OptionalWidget):
+        kwargs['other'] = QtWidgets.QLineEdit()
+    qtbot, widget = widget_setup(qtbot, widget_class, **kwargs)
+    set_widget_value(widget, expected_val)
+    assert get_val_from_widget(widget) == expected_val
+
+
 @pytest.mark.parametrize("widget_class,keyboard_interact,attr,expected_val,kwargs", [
     (PathLineEdit, True, 'file_path', '12', {}),
     (StrIntLineEdit, True, None, 12, {}),
@@ -162,6 +187,7 @@ def test_get_val_from_widget_native_types(qtbot, widget_class, keyboard_interact
     (ComboBoxOrOtherWidget, True, 'other', '12',
      {'items': ['opt1', 'opt2', 'opt3'], 'default': None}),
     (ToggleSwitch, False, 'switch', True, {}),
+
 ])
 def test_get_val_from_widget_nonnative_types(qtbot, widget_class, keyboard_interact, attr, expected_val, kwargs):
     if widget_class == ComboBoxOrOtherWidget:
