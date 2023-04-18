@@ -1772,19 +1772,26 @@ def test_CreatePipelineWindow_from_pipeline(qtbot):
     assert window._get_pipeline_name() == name
 
 
-def test_CreatePipelineWindow_create_pipeline(qtbot, monkeypatch):
+@pytest.mark.parametrize('pipeline_type,exp_pipeline,exp_filter_type', [
+    ('Differential expression', filtering.Pipeline, filtering.DESeqFilter),
+    ('Other', filtering.Pipeline, filtering.Filter),
+    ('Sequence files (single-end)', fastq.SingleEndPipeline, False),
+    ('Sequence files (paired-end)', fastq.PairedEndPipeline, False)
+])
+def test_CreatePipelineWindow_create_pipeline(qtbot, monkeypatch, pipeline_type, exp_pipeline, exp_filter_type):
     monkeypatch.setattr(QtWidgets.QMessageBox, "question", lambda *args: QtWidgets.QMessageBox.Yes)
     pipeline_name = 'my pipeline name'
     qtbot, window = widget_setup(qtbot, CreatePipelineWindow)
     window.basic_widgets['pipeline_name'].clear()
     qtbot.keyClicks(window.basic_widgets['pipeline_name'], pipeline_name)
-    qtbot.keyClicks(window.basic_widgets['table_type_combo'], 'Differential expression')
+    window.basic_widgets['table_type_combo'].setCurrentText(pipeline_type)
     qtbot.mouseClick(window.basic_widgets['start_button'], LEFT_CLICK)
 
     assert not window.basic_group.isVisible()
-    assert isinstance(window.pipeline, filtering.Pipeline)
-    assert window.pipeline.filter_type == filtering.DESeqFilter
+    assert isinstance(window.pipeline, exp_pipeline)
     assert window._get_pipeline_name() == pipeline_name
+    if exp_filter_type:
+        assert window.pipeline.filter_type == exp_filter_type
 
 
 def test_CreatePipelineWindow_add_function(qtbot, monkeypatch):
