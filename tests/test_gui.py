@@ -173,6 +173,12 @@ def deseq_window(qtbot) -> DESeqWindow:
 
 
 @pytest.fixture
+def limma_window(qtbot) -> LimmaWindow:
+    qtbot, window = widget_setup(qtbot, LimmaWindow)
+    return window
+
+
+@pytest.fixture
 def cutadapt_single_window(qtbot) -> CutAdaptSingleWindow:
     qtbot, window = widget_setup(qtbot, CutAdaptSingleWindow)
     return window
@@ -465,6 +471,58 @@ def test_DESeqWindow_start_analysis(qtbot, deseq_window):
 
     with qtbot.waitSignal(deseq_window.paramsAccepted) as blocker:
         qtbot.mouseClick(deseq_window.start_button, LEFT_CLICK)
+    assert blocker.args[0] == truth_args
+    assert blocker.args[1] == truth_kwargs
+
+
+def test_LimmaWindow_init(qtbot, limma_window):
+    _ = limma_window
+
+
+def test_LimmaWindow_load_design_mat(qtbot, limma_window):
+    design_mat_path = 'tests/test_files/test_design_matrix.csv'
+    design_mat_truth = io.load_csv(design_mat_path, 0)
+    limma_window.param_widgets['design_matrix'].setText(design_mat_path)
+    qtbot.mouseClick(limma_window.param_widgets['load_design'], LEFT_CLICK)
+    assert limma_window.design_mat.equals(design_mat_truth)
+    assert limma_window.comparisons_widgets['picker'].design_mat.equals(design_mat_truth)
+
+
+def test_LimmaWindow_get_analysis_params(qtbot, limma_window):
+    design_mat_path = 'tests/test_files/test_design_matrix.csv'
+    truth = dict(r_installation_folder='auto', design_matrix=design_mat_path, output_folder=None,
+                 comparisons=[('replicate', 'rep3', 'rep2'), ('condition', 'cond1', 'cond1')])
+
+    limma_window.param_widgets['design_matrix'].setText(design_mat_path)
+    qtbot.mouseClick(limma_window.param_widgets['load_design'], LEFT_CLICK)
+
+    limma_window.comparisons_widgets['picker'].add_comparison_widget()
+
+    limma_window.comparisons_widgets['picker'].inputs[0].factor.setCurrentText('replicate')
+    limma_window.comparisons_widgets['picker'].inputs[0].numerator.setCurrentText('rep3')
+    limma_window.comparisons_widgets['picker'].inputs[0].denominator.setCurrentText('rep2')
+
+    assert limma_window.get_analysis_kwargs() == truth
+
+
+def test_LimmaWindow_start_analysis(qtbot, limma_window):
+    design_mat_path = 'tests/test_files/test_design_matrix.csv'
+
+    truth_args = []
+    truth_kwargs = dict(r_installation_folder='auto', design_matrix=design_mat_path, output_folder=None,
+                        comparisons=[('replicate', 'rep3', 'rep2'), ('condition', 'cond1', 'cond1')])
+
+    limma_window.param_widgets['design_matrix'].setText(design_mat_path)
+    qtbot.mouseClick(limma_window.param_widgets['load_design'], LEFT_CLICK)
+
+    limma_window.comparisons_widgets['picker'].add_comparison_widget()
+
+    limma_window.comparisons_widgets['picker'].inputs[0].factor.setCurrentText('replicate')
+    limma_window.comparisons_widgets['picker'].inputs[0].numerator.setCurrentText('rep3')
+    limma_window.comparisons_widgets['picker'].inputs[0].denominator.setCurrentText('rep2')
+
+    with qtbot.waitSignal(limma_window.paramsAccepted) as blocker:
+        qtbot.mouseClick(limma_window.start_button, LEFT_CLICK)
     assert blocker.args[0] == truth_args
     assert blocker.args[1] == truth_kwargs
 
@@ -1534,6 +1592,22 @@ def test_FilterTabPage_open_deseq(countfiltertabpage_with_undo_stack, qtbot, mon
     assert opened == [True]
 
 
+def test_FilterTabPage_open_limma(countfiltertabpage_with_undo_stack, qtbot, monkeypatch):
+    tabpage = countfiltertabpage_with_undo_stack[0]
+    opened = []
+
+    def mock_show(*args, **kwargs):
+        opened.append(True)
+
+    monkeypatch.setattr(LimmaWindow, 'show', mock_show)
+
+    tabpage.stack_buttons[5].click()
+    tabpage.stack_widgets['General'].func_combo.setCurrentText(
+        filtering.CountFilter.differential_expression_limma_voom.readable_name)
+
+    assert opened == [True]
+
+
 def test_FilterTabPage_get_all_actions(qtbot, countfiltertabpage_with_undo_stack, filtertabpage_with_undo_stack):
     countfilter = countfiltertabpage_with_undo_stack[0]
     deseqfilter = filtertabpage_with_undo_stack[0]
@@ -2228,7 +2302,7 @@ def test_MainWindow_export_pipeline(use_temp_settings_file, main_window, monkeyp
 
 
 @pytest.mark.parametrize('name,exp_class', [('test_pipeline', filtering.Pipeline),
-                                             ('test_single_end_pipeline', fastq.SingleEndPipeline),
+                                            ('test_single_end_pipeline', fastq.SingleEndPipeline),
                                             ('test_paired_end_pipeline', fastq.PairedEndPipeline)
                                             ])
 def test_MainWindow_import_pipeline(use_temp_settings_file, main_window, monkeypatch, name, exp_class):
