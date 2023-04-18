@@ -34,6 +34,8 @@ INIT_EXCLUDED_PARAMS = {'self', 'fname', 'suppress_warnings'}
 
 FROZEN_ENV = getattr(sys, 'frozen', False) and hasattr(sys, '_MEIPASS')
 
+JOB_COUNTER = gui_widgets.JobCounter()
+
 
 class BarPlotWindow(gui_windows.FuncExternalWindow):
     EXCLUDED_PARAMS = set()
@@ -683,6 +685,7 @@ class EnrichmentWindow(gui_widgets.MinMaxDialog):
 
     def get_analysis_params(self):
         kwargs = dict()
+        pred_ids = []
         stat_test = self._get_statistical_test()
 
         if not self.is_single_set():
@@ -691,6 +694,7 @@ class EnrichmentWindow(gui_widgets.MinMaxDialog):
             else:
                 kwargs['parametric_test'] = stat_test
         gene_set = self.widgets['enrichment_list'].value()
+        pred_ids.append(self.widgets['enrichment_list'].current_id())
         gene_set_name = self.widgets['enrichment_list'].currentText()
 
         for param_name, widget in itertools.chain(self.parameter_widgets.items(), self.plot_widgets.items(),
@@ -702,14 +706,16 @@ class EnrichmentWindow(gui_widgets.MinMaxDialog):
 
         if not self.is_single_set():
             bg_set = self.widgets['bg_list'].value()
+            pred_ids.append(self.widgets['bg_list'].current_id())
+
         else:
             bg_set = None
-        return gene_set, bg_set, gene_set_name.rstrip('*'), kwargs
+        return gene_set, bg_set, gene_set_name.rstrip('*'), kwargs, pred_ids
 
     @QtCore.pyqtSlot()
     def run_analysis(self):
         func = self.get_current_func()
-        gene_set, bg_set, set_name, kwargs = self.get_analysis_params()
+        gene_set, bg_set, set_name, kwargs, pred_ids = self.get_analysis_params()
         kwargs['gui_mode'] = True
         print("Enrichment analysis started")
         self.showMinimized()
@@ -726,6 +732,9 @@ class EnrichmentWindow(gui_widgets.MinMaxDialog):
                 partial = functools.partial(func, feature_set_obj, **kwargs)
             else:
                 partial = functools.partial(func, feature_set_obj, background_genes=bg_set_obj, **kwargs)
+
+            worker = gui_widgets.Worker(partial, JOB_COUNTER.get_id(), pred_ids)
+            worker.finished.connect()  # TODO
 
             self.enrichmentStarted.emit(partial, set_name, self.showNormal)
 
@@ -995,6 +1004,7 @@ class SetOperationWindow(gui_widgets.MinMaxDialog):
 
     @QtCore.pyqtSlot()
     def apply_set_op(self):
+        # TODO: add worker/IDs
         func_name = self.get_current_func_name()
         if func_name == 'other':
             output_set = self.widgets['canvas'].get_custom_selection()
@@ -1197,19 +1207,22 @@ class SetVisualizationWindow(gui_widgets.MinMaxDialog):
 
     @QtCore.pyqtSlot()
     def generate_graph(self):
+        # TODO: add worker/IDs
         func_name = self.get_current_func_name()
         objs_to_plot, kwargs = self._get_function_params()
         _ = getattr(enrichment, func_name)(objs_to_plot, **kwargs)
 
 
 class TabPage(QtWidgets.QWidget):
-    filterObjectCreated = QtCore.pyqtSignal(object)
+    functionApplied = QtCore.pyqtSignal(tuple)
+    filterObjectCreated = QtCore.pyqtSignal(object, int)
     featureSetCreated = QtCore.pyqtSignal(object)
     startedJob = QtCore.pyqtSignal(object, str, object)
     tabNameChange = QtCore.pyqtSignal(str, bool)
     tabSaved = QtCore.pyqtSignal()
     changeIcon = QtCore.pyqtSignal(str)
     geneSetsRequested = QtCore.pyqtSignal(object)
+    tabLoaded = QtCore.pyqtSignal(int, str)
 
     EXCLUDED_FUNCS = set()
     SUMMARY_FUNCS = set()
@@ -1217,8 +1230,9 @@ class TabPage(QtWidgets.QWidget):
     GENERAL_FUNCS = ()
     THREADED_FUNCS = set()
 
-    def __init__(self, parent=None, undo_stack: QtWidgets.QUndoStack = None):
+    def __init__(self, parent=None, undo_stack: QtWidgets.QUndoStack = None, tab_id: int = None):
         super().__init__(parent)
+        self.tab_id = tab_id
         self.undo_stack = undo_stack
         self.sup_layout = QtWidgets.QVBoxLayout(self)
         self.container = QtWidgets.QWidget(self)
@@ -1367,21 +1381,29 @@ class TabPage(QtWidgets.QWidget):
             self._apply_function_from_params(func_name, args=[], kwargs=func_params)
 
     def _apply_function_from_params(self, func_name, args: list, kwargs: dict, finish_slot=None):
+        partial = functools.partial(getattr(self.obj(), func_name), *args, **kwargs)
+        job_id = JOB_COUNTER.get_id()
+        worker = gui_widgets.Worker(partial, job_id, [self.tab_id])
+        worker.finished.connect(self.functionApplied.emit)
+        worker.finished.connect(functools.partial(print, 'hiiiiii'))
+
         if func_name in self.THREADED_FUNCS and (not kwargs.get('inplace', False)):
-            partial = functools.partial(getattr(self.obj(), func_name), *args, **kwargs)
-            self.startedJob.emit(partial, func_name, finish_slot)
+            self.startedJob.emit(worker, func_name, finish_slot)
             return
 
         prev_name = self.get_tab_name()
-        result = getattr(self.obj(), func_name)(*args, **kwargs)
-        self.update_tab(prev_name != self.obj_name())
-        self.process_outputs(result, func_name)
+        result = worker.run()
+        if kwargs.get('inplace', False):
+            self.tab_id = job_id
 
-    def process_outputs(self, outputs, source_name: str = ''):
+        self.update_tab(prev_name != self.obj_name())
+        self.process_outputs(result, job_id, func_name)
+
+    def process_outputs(self, outputs, job_id: int, source_name: str = ''):
         if isinstance(outputs, (list, tuple)) and len(outputs) == 0:
             return
         elif validation.isinstanceinh(outputs, (filtering.Filter, fastq.filtering.Filter)):
-            self.filterObjectCreated.emit(outputs)
+            self.filterObjectCreated.emit(outputs, job_id)
         elif validation.isinstanceinh(outputs, enrichment.FeatureSet):
             self.featureSetCreated.emit(outputs)
         elif isinstance(outputs, pd.DataFrame):
@@ -1389,26 +1411,27 @@ class TabPage(QtWidgets.QWidget):
             self.object_views[-1].show()
         elif isinstance(outputs, np.ndarray):
             df = pd.DataFrame(outputs)
-            self.process_outputs(df, source_name)
+            self.process_outputs(df, job_id, source_name)
 
         elif isinstance(outputs, (tuple, list)):
             if validation.isinstanceiter_inh(outputs,
                                              (filtering.Filter, fastq.filtering.Filter, enrichment.FeatureSet)):
-                dialog = MultiKeepWindow(outputs, self)
+                dialog = MultiKeepWindow(outputs, job_id, self)
                 dialog.accepted.connect(functools.partial(self._multi_keep_window_accepted, dialog, source_name))
                 dialog.exec()
             else:
                 for output in outputs:
-                    self.process_outputs(output, source_name)
+                    self.process_outputs(output, job_id, source_name)
         elif isinstance(outputs, dict):
             tab_name = self.get_tab_name()
             for this_src_name, output in outputs.items():
-                self.process_outputs(output, f"{this_src_name} {tab_name}")
+                self.process_outputs(output, job_id, f"{this_src_name} {tab_name}")
 
-    def _multi_keep_window_accepted(self, dialog: QtWidgets.QDialog, source_name: str):
+    def _multi_keep_window_accepted(self, dialog: 'MultiKeepWindow', source_name: str):
         kept_outputs = dialog.result()
+        job_id = dialog.job_id
         for output in kept_outputs:
-            self.process_outputs(output, source_name)
+            self.process_outputs(output, job_id, source_name)
 
     def init_stdout_ui(self):
         self.stdout_widgets['text_edit_stdout'] = gui_widgets.StdOutTextEdit(self)
@@ -1450,8 +1473,8 @@ class SetTabPage(TabPage):
     THREADED_FUNCS = {'translate_gene_ids', 'filter_by_kegg_annotations', 'filter_by_go_annotations'}
 
     def __init__(self, set_name: str, gene_set: typing.Union[set, enrichment.FeatureSet] = None, parent=None,
-                 undo_stack: QtWidgets.QUndoStack = None):
-        super().__init__(parent, undo_stack)
+                 undo_stack: QtWidgets.QUndoStack = None, tab_id: int = None):
+        super().__init__(parent, undo_stack, tab_id)
         if gene_set is None:
             gene_set = enrichment.FeatureSet(set(), set_name)
         elif isinstance(gene_set, set):
@@ -1476,6 +1499,10 @@ class SetTabPage(TabPage):
 
     def get_index_string(self):
         return "\n".join(self.obj())
+
+    def start_from_gene_set(self, tab_id: int, gene_set: set):
+        self.tab_id = tab_id
+        self.update_obj(gene_set)
 
     def init_overview_ui(self):
         this_row = 0
@@ -1730,8 +1757,8 @@ class FilterTabPage(TabPage):
     startedClustering = QtCore.pyqtSignal(object, str, object)
     widthChanged = QtCore.pyqtSignal()
 
-    def __init__(self, parent=None, undo_stack: QtWidgets.QUndoStack = None):
-        super().__init__(parent, undo_stack)
+    def __init__(self, parent=None, undo_stack: QtWidgets.QUndoStack = None, tab_id: int = None):
+        super().__init__(parent, undo_stack, tab_id)
         self.filter_obj = None
 
         self.basic_group = QtWidgets.QGroupBox('Load a data table')
@@ -1982,12 +2009,9 @@ class FilterTabPage(TabPage):
             if FROZEN_ENV:
                 kwargs['parallel_backend'] = 'multiprocessing'
             partial = functools.partial(getattr(self.filter_obj, func_name), *args, **kwargs)
-            self.startedClustering.emit(partial, func_name, finish_slot)
-            return
-        elif func_name in self.THREADED_FUNCS and (not kwargs.get('inplace', False)):
-
-            partial = functools.partial(getattr(self.filter_obj, func_name), *args, **kwargs)
-            self.startedJob.emit(partial, func_name, finish_slot)
+            worker = gui_widgets.Worker(partial, JOB_COUNTER.get_id(), [self.tab_id])
+            worker.finished.connect()  # TODO
+            self.startedClustering.emit(worker, func_name, finish_slot)
             return
 
         return super()._apply_function_from_params(func_name, args, kwargs, finish_slot)
@@ -2000,6 +2024,9 @@ class FilterTabPage(TabPage):
             self._apply_pipeline(pipeline, inplace=False)
 
     def _apply_pipeline(self, pipeline, inplace: bool):
+        # TODO: get job ID for applied pipeline
+        # TODO: pass through worker
+        # TODO: how to display pipeline on report?
         job_name = f'Pipeline on {self.get_tab_name()}'
         partial = functools.partial(pipeline.apply_to, self.filter_obj, inplace)
         # if not inplace:
@@ -2058,7 +2085,10 @@ class FilterTabPage(TabPage):
 
         self.changeIcon.emit(type(self.filter_obj).__name__)
 
-    def start_from_filter_obj(self, filter_obj: filtering.Filter, name: str = None):
+        self.tabLoaded.emit(self.tab_id, self.name)
+
+    def start_from_filter_obj(self, filter_obj: filtering.Filter, tab_id: int, name: str = None):
+        self.tab_id = tab_id
         self.filter_obj = filter_obj
         self.basic_group.setVisible(False)
         self.init_overview_ui()
@@ -2291,6 +2321,7 @@ class CreatePipelineWindow(gui_widgets.MinMaxDialog, FilterTabPage):
 
 class MultiKeepWindow(gui_widgets.MinMaxDialog):
     __slots__ = {'objs': 'objects to keep or discard',
+                 'job_id': 'job ID',
                  'files': 'filenames of the objects to keep',
                  'button_box': 'button box for selecting objects to keep',
                  'labels': 'labels for the objects',
@@ -2302,9 +2333,10 @@ class MultiKeepWindow(gui_widgets.MinMaxDialog):
                  'scroll_widget': 'widget containing scroll area',
                  'main_layout': 'main layout for the window'}
 
-    def __init__(self, objs: List[Union[filtering.Filter, enrichment.FeatureSet]], parent=None):
+    def __init__(self, objs: List[Union[filtering.Filter, enrichment.FeatureSet]], job_id: int, parent=None):
         super().__init__(parent)
-        # make sure there are no two objects with the sane name
+        self.job_id = job_id
+        # make sure there are no two objects with the same name
         self.objs = {}
         for obj in objs:
             key = str(obj.fname.stem) if validation.isinstanceinh(obj, (
@@ -2538,6 +2570,12 @@ class ReactiveTabWidget(QtWidgets.QTabWidget):
             self.cornerWidget().setMinimumHeight(h)
             self.setMinimumHeight(h)
 
+    def addTab(self, widget: TabPage, a1: str) -> int:
+        return super().addTab(widget, a1)
+
+    def currentWidget(self) -> Union[FilterTabPage, SetTabPage]:
+        return super().currentWidget()
+
 
 class RenameCommand(QtWidgets.QUndoCommand):
     __slots__ = {'prev_name': 'previous name of the tab',
@@ -2678,6 +2716,8 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def __init__(self):
         super().__init__()
+        self._generate_report = False
+        self.report = None
         self.tabs = ReactiveTabWidget(self)
 
         self.closed_tabs_stack = QtWidgets.QUndoStack(self)
@@ -2732,17 +2772,33 @@ class MainWindow(QtWidgets.QMainWindow):
         self.thread_stdout_queue_listener.start()
 
         # init thread execution attributes
-        self.worker = None
+        self.current_worker = None
         self.thread = QtCore.QThread()
         self.job_queue = Queue()
         self.job_timer = QtCore.QTimer(self)
-        self.job_timer.timeout.connect(self.run_partial)
+        self.job_timer.timeout.connect(self.run_threaded_workers)
         self.job_timer.start(3500)
-        self.jobQueued.connect(self.run_partial)
+        self.jobQueued.connect(self.run_threaded_workers)
 
     def show_tutorial(self):
         if settings.get_show_tutorial_settings():
             self.quickstart_window.show()
+
+    def check_reporting(self):
+        reply = QtWidgets.QMessageBox.question(self, 'Turn on report generation',
+                                               'Do you want to enable report generation for this session?',
+                                               QtWidgets.QMessageBox.Yes, QtWidgets.QMessageBox.No)
+        if reply == QtWidgets.QMessageBox.No:
+            return
+        print("Turning on report generation...")
+        try:
+            from rnalysis.gui import gui_report
+            self._generate_report = True
+            self.report = gui_report.ReportGenerator()
+            self.clear_session(not (self.tabs.count() == 1 and self.tabs.currentWidget().is_empty()))
+        except ImportError:
+            warnings.warn(f"The RNAlysis 'reports' module is not installed. Please install it and try again. ")
+            self._generate_report = False
 
     def init_ui(self):
         self.setWindowTitle(f'RNAlysis {__version__}')
@@ -2912,6 +2968,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.tabs.tabBar().moveTab(self.tabs.currentIndex(), index)
 
     def add_new_tab(self, name: str = None, is_set: bool = False):
+        tab_id = JOB_COUNTER.get_id()
         new_undo_stack = QtWidgets.QUndoStack()
         self.undo_group.addStack(new_undo_stack)
         if name is None:
@@ -2921,9 +2978,9 @@ class MainWindow(QtWidgets.QMainWindow):
             print(name)
 
         if is_set:
-            tab = SetTabPage(name, parent=self.tabs, undo_stack=new_undo_stack)
+            tab = SetTabPage(name, parent=self.tabs, undo_stack=new_undo_stack, tab_id=tab_id)
         else:
-            tab = FilterTabPage(self.tabs, undo_stack=new_undo_stack)
+            tab = FilterTabPage(self.tabs, undo_stack=new_undo_stack, tab_id=tab_id)
             tab.startedClustering.connect(self.start_clustering)
             tab.startedJob.connect(self.start_generic_job)
         tab.filterObjectCreated.connect(self.new_tab_from_filter_obj)
@@ -2933,6 +2990,10 @@ class MainWindow(QtWidgets.QMainWindow):
         tab.geneSetsRequested.connect(self.update_gene_sets_widget)
         self.tabs.addTab(tab, name)
         self.tabs.setCurrentIndex(self.tabs.count() - 1)
+
+        if self._generate_report:
+            self.tabs.currentWidget().functionApplied.connect(self.update_report)
+            self.tabs.currentWidget().tabLoaded.connect(self.add_tab_to_report)
 
     @QtCore.pyqtSlot(object)
     def update_gene_sets_widget(self, widget: gui_widgets.GeneSetComboBox):
@@ -3000,9 +3061,9 @@ class MainWindow(QtWidgets.QMainWindow):
                     if tabs_to_close is not None:
                         self.tabs.removeTab(tabs_to_close)
 
-    def new_tab_from_filter_obj(self, filter_obj: filtering.Filter, name: str = None):
-        self.add_new_tab(filter_obj.fname.name)
-        self.tabs.currentWidget().start_from_filter_obj(filter_obj, name)
+    def new_tab_from_filter_obj(self, filter_obj: filtering.Filter, tab_id: int, name: str = None):
+        self.add_new_tab(filter_obj.fname.name)  # TODO: add ID to newly created tabs, connect it to predecessors
+        self.tabs.currentWidget().start_from_filter_obj(filter_obj, tab_id, name)
         QtWidgets.QApplication.processEvents()
 
     @QtCore.pyqtSlot(str)
@@ -3021,10 +3082,23 @@ class MainWindow(QtWidgets.QMainWindow):
             icon = gui_graphics.get_icon(icon_name)
         self.tabs.setTabIcon(ind, icon)
 
-    def new_tab_from_gene_set(self, gene_set: set, gene_set_name: str = None):
+    def new_tab_from_gene_set(self, gene_set: set, tab_id: int, gene_set_name: str = None):
         self.add_new_tab(gene_set_name, is_set=True)
-        self.tabs.currentWidget().update_gene_set(gene_set)
+        self.tabs.currentWidget().start_from_gene_set(tab_id, gene_set)
+        if self._generate_report:
+            self.tabs.currentWidget().functionApplied.connect(self.update_report)
         QtWidgets.QApplication.processEvents()
+
+    def add_tab_to_report(self, tab_id: int, tab_name: str):
+        self.report.add_node(f"Loaded file '{tab_name}'", tab_id, [0])
+
+    def update_report(self, worker_output: tuple):
+        print("updating report: ", worker_output)
+        result = worker_output[0]  # TODO: use result in report generation
+        partial, job_id, predecessor_ids = worker_output[-3:]
+        kwargs = partial.keywords
+        name = partial.func.__name__
+        self.report.add_node(name, job_id, predecessor_ids, parsing.beautify_dict(kwargs))
 
     def delete_pipeline(self):
         if len(self.pipelines) == 0:
@@ -3231,6 +3305,8 @@ class MainWindow(QtWidgets.QMainWindow):
         self.exit_action.triggered.connect(self.close)
         self.check_update_action = QtWidgets.QAction("Check for &updates...", self)
         self.check_update_action.triggered.connect(self.check_for_updates)
+        self.generate_report_action = QtWidgets.QAction("&Generate report")
+        self.generate_report_action.triggered.connect(self.generate_report)
 
         self.undo_action = self.undo_group.createUndoAction(self)
         self.redo_action = self.undo_group.createRedoAction(self)
@@ -3509,6 +3585,16 @@ class MainWindow(QtWidgets.QMainWindow):
     def get_tab_names(self) -> List[str]:
         return [self.tabs.tabText(i).rstrip('*') for i in range(self.tabs.count())]
 
+    def generate_report(self):
+        if not self._generate_report:
+            QtWidgets.QMessageBox.warning(self, 'Report generation was not enabled!',
+                                          'Cannot generate a report since report generation was not enabled. '
+                                          'You can enable it from the Settings menu.')
+            return
+        outdir = QtWidgets.QFileDialog.getExistingDirectory(self, "Save report")
+        if outdir:
+            return self.report.generate_report(Path(outdir))
+
     def init_menu_ui(self):
         self.setMenuBar(self.menu_bar)
         file_menu = self.menu_bar.addMenu("&File")
@@ -3517,7 +3603,7 @@ class MainWindow(QtWidgets.QMainWindow):
                                   self.new_table_from_folder_htseq_action])
         file_menu.addActions(
             [self.save_action, self.load_session_action, self.save_session_action, self.clear_session_action,
-             self.clear_cache_action, self.settings_action, self.exit_action])
+             self.clear_cache_action, self.generate_report_action, self.settings_action, self.exit_action])
 
         edit_menu = self.menu_bar.addMenu("&Edit")
         edit_menu.addActions([self.undo_action, self.redo_action, self.restore_tab_action, self.close_current_action,
@@ -3738,31 +3824,31 @@ class MainWindow(QtWidgets.QMainWindow):
             event.ignore()
 
     @QtCore.pyqtSlot(object, str, object)
-    def start_generic_job(self, partial: Callable, func_name: str, finish_slot: Union[Callable, None]):
+    def start_generic_job(self, worker: gui_widgets.Worker, func_name: str, finish_slot: Union[Callable, None]):
         slots = (self.finish_generic_job, finish_slot)
-        self.queue_partial(partial, slots, func_name)
+        self.queue_worker(worker, slots, func_name)
 
     def start_generic_job_from_params(self, func_name, func, args, kwargs, finish_slot: Union[Callable, None]):
         partial = functools.partial(func, *args, **kwargs)
         self.start_generic_job(partial, func_name, finish_slot)
 
     @QtCore.pyqtSlot(tuple)
-    def finish_generic_job(self, worker_output):
+    def finish_generic_job(self, worker_output: tuple):
         if len(worker_output) == 1:
             if isinstance(worker_output[0], Exception):
                 raise worker_output[0]
             print("Done")
         else:
-            assert len(worker_output) == 2
-            func_name: str = worker_output[-1]
+            assert len(worker_output) == 5
+            func_name: str = worker_output[1]
             return_val: tuple = worker_output[0]
-            self.tabs.currentWidget().process_outputs(return_val, func_name)
+            self.tabs.currentWidget().process_outputs(return_val, worker_output[-2], func_name)
             self.tabs.currentWidget().update_tab()
 
     @QtCore.pyqtSlot(object, str, object)
-    def start_clustering(self, partial: Callable, func_name: str, finish_slot: Union[Callable, None]):
+    def start_clustering(self, worker: gui_widgets.Worker, func_name: str, finish_slot: Union[Callable, None]):
         slots = (self.finish_clustering, finish_slot)
-        self.queue_partial(partial, slots, func_name)
+        self.queue_worker(worker, slots, func_name)
 
     @QtCore.pyqtSlot(tuple)
     def finish_clustering(self, worker_output: tuple):
@@ -3770,17 +3856,17 @@ class MainWindow(QtWidgets.QMainWindow):
             if isinstance(worker_output[0], Exception):
                 raise worker_output[0]
             return
-        func_name: str = worker_output[-1]
+        func_name: str = worker_output[1]
         clustering_runner: clustering.ClusteringRunner = worker_output[0][1]
         return_val: tuple = worker_output[0][0]
         clustering_runner.plot_clustering()
-        self.tabs.currentWidget().process_outputs(return_val, func_name)
+        self.tabs.currentWidget().process_outputs(return_val, worker_output[-2], func_name)
         self.tabs.currentWidget().update_tab()
 
     @QtCore.pyqtSlot(object, str, object)
-    def start_enrichment(self, partial: Callable, set_name: str, finish_slot: Union[Callable, None]):
+    def start_enrichment(self, worker: gui_widgets.Worker, set_name: str, finish_slot: Union[Callable, None]):
         slots = (self.finish_enrichment, finish_slot)
-        self.queue_partial(partial, slots, set_name)
+        self.queue_worker(worker, slots, set_name)
 
     @QtCore.pyqtSlot(tuple)
     def finish_enrichment(self, worker_output: tuple):
@@ -3788,14 +3874,15 @@ class MainWindow(QtWidgets.QMainWindow):
             if isinstance(worker_output[0], Exception):
                 raise worker_output[0]
             return
-        set_name = worker_output[-1]
+        set_name = worker_output[1]
         results, enrichment_runner = worker_output[0]
         self.show()
         enrichment_runner.plot_results()
         self.display_enrichment_results(results, set_name)
 
-    def queue_partial(self, partial: Callable, output_slots: Union[Callable, Tuple[Callable, ...], None] = None, *args):
-        self.job_queue.put((partial, output_slots, args))
+    def queue_worker(self, worker: gui_widgets.Worker,
+                     output_slots: Union[Callable, Tuple[Callable, ...], None] = None, *args):
+        self.job_queue.put((worker, output_slots, args))
         self.jobQueued.emit()
 
     @QtCore.pyqtSlot(int, str)
@@ -3808,14 +3895,15 @@ class MainWindow(QtWidgets.QMainWindow):
         print(f'Cancelling job "{func_name}"...')
         index -= 1
         modified_queue = parsing.data_to_list(self.job_queue.queue)
-        modified_queue.pop(index)
+        worker = modified_queue.pop(index)
+        worker.deleteLater()
         while not self.job_queue.empty():
             self.job_queue.get()
         for item in modified_queue:
             self.job_queue.put(item)
-        self.run_partial()
+        self.run_threaded_workers()
 
-    def run_partial(self):  # pragma: no cover
+    def run_threaded_workers(self):  # pragma: no cover
         job_running = (self.thread is not None) and self.thread.isRunning()
         self.status_bar.update_n_tasks(self.job_queue.qsize() + job_running)
         # if there are no jobs available, don't proceed
@@ -3836,6 +3924,8 @@ class MainWindow(QtWidgets.QMainWindow):
 
         def alt_tqdm(iter_obj: typing.Iterable = None, desc: str = '', unit: str = '', bar_format: str = '',
                      total: int = None):
+            self.current_worker.startProgBar.emit(
+                dict(iter_obj=iter_obj, desc=desc, unit=unit, bar_format=bar_format, total=total))
             obj = gui_widgets.AltTQDM(iter_obj, desc=desc, unit=unit, bar_format=bar_format, total=total)
             obj.barUpdate.connect(self.status_bar.move_progress_bar)
             obj.barFinished.connect(self.status_bar.reset_progress)
@@ -3846,6 +3936,8 @@ class MainWindow(QtWidgets.QMainWindow):
 
         def alt_parallel(n_jobs: int = -1, desc: str = '', unit: str = '', bar_format: str = '',
                          total: int = None, **kwargs):
+            self.current_worker.startProgBar.emit(
+                dict(iter_obj=None, desc=desc, unit=unit, bar_format=bar_format, total=total))
             print(f"{desc}: started" + (f" {total} jobs\r" if isinstance(total, int) else "\r"))
             obj = gui_widgets.AltParallel(n_jobs=n_jobs, desc=desc, unit=unit, bar_format=bar_format,
                                           total=total, **kwargs)
@@ -3869,22 +3961,23 @@ class MainWindow(QtWidgets.QMainWindow):
         fastq.tqdm = alt_tqdm
 
         #  Move worker to the thread
-        self.worker.moveToThread(self.thread)
+        self.current_worker.moveToThread(self.thread)
         #  Connect signals and slots
-        self.worker.startProgBar.connect(self.start_progress_bar)
-        self.thread.started.connect(self.worker.run)
+        self.current_worker.startProgBar.connect(self.start_progress_bar)
+        self.thread.started.connect(self.current_worker.run)
         for slot in parsing.data_to_tuple(output_slots):
             if slot is not None:
-                self.worker.finished.connect(slot)
-        self.worker.finished.connect(self.run_partial)
-        self.worker.finished.connect(self.thread.quit)
+                self.current_worker.finished.connect(slot)
+        self.current_worker.finished.connect(self.run_threaded_workers)
+        self.current_worker.finished.connect(self.thread.quit)
+        self.current_worker.finished.connect(self.current_worker.deleteLater)
 
         self.thread.start()
 
         self._update_queue_window(True)
 
     def _update_queue_window(self, job_running: bool):
-        jobs = [self.worker.partial.func.__name__ + ' (running)'] if job_running else []
+        jobs = [self.current_worker.partial.func.__name__ + ' (running)'] if job_running else []
         jobs += [item[0].func.__name__ + ' (queued)' for item in self.job_queue.queue]
         self.task_queue_window.update_tasks(jobs)
 
@@ -3958,5 +4051,6 @@ async def run():  # pragma: no cover
         window.show()
         window.check_for_updates(False)
         window.show_tutorial()
+        window.check_reporting()
         splash.finish(window)
     sys.exit(app.exec())
