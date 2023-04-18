@@ -5217,7 +5217,7 @@ class Pipeline(generic.GenericPipeline):
 
     def _apply_filter_norm_sort(self, func: types.FunctionType,
                                 filter_object: Union['Filter', 'CountFilter', 'DESeqFilter', 'FoldChangeFilter'],
-                                args: tuple, kwargs: dict, inplace: bool):
+                                args: tuple, kwargs: dict, inplace: bool, other_outputs: dict, other_cnt):
         """
         Apply a filtering/normalizing/sorting function.
 
@@ -5238,8 +5238,16 @@ class Pipeline(generic.GenericPipeline):
             kwargs['inplace'] = False
             try:
                 if isinstance(filter_object, tuple):
-                    temp_object = [self._apply_filter_norm_sort(func, this_obj, args, kwargs, inplace)
-                                   for this_obj in filter_object]
+                    temp_res = [
+                        self._apply_filter_norm_sort(func, this_obj, args, kwargs, inplace, other_outputs, other_cnt)
+                        for this_obj in filter_object]
+                    temp_object = []
+                    for item in temp_res:
+                        if validation.isinstanceinh(item, Filter) or isinstance(item, tuple):
+                            temp_object.append(item)
+                        elif item is not None:
+                            other_outputs[f"{func.__name__}_{other_cnt.setdefault(func.__name__, 1)}"] = item
+                            other_cnt[func.__name__] += 1
                     filter_object = parsing.data_to_tuple(temp_object)
                 else:
                     filter_object = func(filter_object, *args, **kwargs)
@@ -5249,10 +5257,13 @@ class Pipeline(generic.GenericPipeline):
             kwargs['inplace'] = True
             try:
                 if isinstance(filter_object, tuple):
-                    _ = [self._apply_filter_norm_sort(func, this_obj, args, kwargs, inplace)
+                    _ = [self._apply_filter_norm_sort(func, this_obj, args, kwargs, inplace, other_outputs, other_cnt)
                          for this_obj in filter_object]
                 else:
-                    func(filter_object, *args, **kwargs)
+                    res = func(filter_object, *args, **kwargs)
+                    if res is not None:
+                        other_outputs[f"{func.__name__}_{other_cnt.setdefault(func.__name__, 1)}"] = res
+                        other_cnt[func.__name__] += 1
             except (ValueError, AssertionError, TypeError) as e:
                 raise e.__class__(f"Invalid function signature {self._func_signature(func, args, kwargs)}")
         return filter_object
@@ -5398,7 +5409,8 @@ class Pipeline(generic.GenericPipeline):
         for func, (args, kwargs) in zip(self.functions, self.params):
             keywords = ['filter', 'normalize', 'sort', 'translate']
             if any([kw in func.__name__ for kw in keywords]):
-                filter_object = self._apply_filter_norm_sort(func, filter_object, args, kwargs, inplace)
+                filter_object = self._apply_filter_norm_sort(func, filter_object, args, kwargs, inplace, other_outputs,
+                                                             other_cnt)
             elif func.__name__.startswith('split'):
                 assert not inplace, f"Cannot apply the split function {self._func_signature(func, args, kwargs)} " \
                                     f"when inplace={inplace}!"
