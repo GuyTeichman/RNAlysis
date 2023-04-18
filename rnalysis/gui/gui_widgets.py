@@ -3,6 +3,7 @@ import collections
 import functools
 import inspect
 import json
+import threading
 from pathlib import Path
 from queue import Queue
 from typing import List, Dict, Tuple, Sequence, Iterable, Union, Callable
@@ -312,19 +313,36 @@ class PathInputDialog(QtWidgets.QDialog):
         return self.path.text()
 
 
+class JobCounter(QtCore.QObject):
+    def __init__(self):
+        self._count = 0
+        self.lock = threading.Lock()
+
+    def get_id(self):
+        with self.lock:
+            self._count += 1
+            return self._count
+
+    def get_total(self):
+        with self.lock:
+            return self._count
+
+
 class Worker(QtCore.QObject):
     finished = QtCore.pyqtSignal(tuple)
     startProgBar = QtCore.pyqtSignal(object)
     __slots__ = {'partial': 'partial function to run in the Worker',
-                 'args': "arguments to emit alongside the partial function's output"}
+                 'emit_args': "arguments to emit alongside the partial function's output"}
 
-    def __init__(self, partial, *args):
+    def __init__(self, partial: functools.partial, job_id: int, predecessor_ids: List[int], *emit_args):
         self.partial = partial
-        self.args = args
+        self.job_id = job_id
+        self.predecessor_ids = predecessor_ids
+        self.emit_args = emit_args
         super().__init__()
 
     def run(self):
-        args = []
+        args_to_emit = []
         try:
             result = self.partial()
         except Exception as e:
@@ -332,8 +350,10 @@ class Worker(QtCore.QObject):
             return
 
         if result is not None:
-            args = self.args
-        self.finished.emit((result, *args))
+            args_to_emit = self.emit_args
+        self.finished.emit((result, *args_to_emit, self.partial, self.job_id, self.predecessor_ids))
+
+        return result
 
 
 class AltTQDM(QtCore.QObject):
@@ -952,6 +972,13 @@ class GeneSetComboBox(MandatoryComboBox):
             return set()
         assert set_name in self.available_objects, f"Tab '{set_name}' does not exist!"
         return self.available_objects[set_name][0].obj()
+
+    def current_id(self):
+        set_name = self.currentText()
+        if set_name == self.default_choice:
+            return None
+        assert set_name in self.available_objects, f"Tab '{set_name}' does not exist!"
+        return self.available_objects[set_name][0].tab_id
 
 
 class MinMaxDialog(QtWidgets.QDialog):
