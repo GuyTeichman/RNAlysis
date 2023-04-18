@@ -3126,7 +3126,7 @@ class CountFilter(Filter):
                     norm_factor = scaling_factors[column]
                     new_df[column] /= norm_factor
         elif isinstance(scaling_factors, pd.DataFrame):
-            assert scaling_factors.shape[0] == self.shape[0] and scaling_factors.shape[1] == len(numeric_cols), \
+            assert scaling_factors.shape[0] >= self.shape[0] and scaling_factors.shape[1] == len(numeric_cols), \
                 f"Dimensions of scaling factors table ({scaling_factors.shape}) does not match the " \
                 f"dimensions of your data table ({(self.shape[0], len(numeric_cols))} - numeric columns only)!"
             new_df[numeric_cols] = new_df[numeric_cols].div(scaling_factors, axis='rows')
