@@ -137,7 +137,7 @@ def cache_gui_file(item: Union[pd.DataFrame, set, str], filename: str):
         raise TypeError(type(item))
 
 
-def check_changed_version():
+def check_changed_version():  # pragma: no cover
     filename = get_gui_cache_dir().joinpath('latest_version.txt')
     if not filename.exists():
         return True
