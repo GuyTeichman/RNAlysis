@@ -3645,6 +3645,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
             self.pipelines = {}
             self.clear_history(confirm_action=False)
+            self._change_undo_stack(0)
 
     def load_session(self):
         session_filename, _ = QtWidgets.QFileDialog.getOpenFileName(self, "Load session",
