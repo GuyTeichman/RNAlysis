@@ -1431,7 +1431,7 @@ class TabPage(QtWidgets.QWidget):
         job_id = dialog.job_id
         for i, output in enumerate(kept_outputs):
             new_id = JOB_COUNTER.get_id()
-            self.multiSpawned.emit(f'{source_name} output #{i + 1}', new_id, job_id)
+            self.multiSpawned.emit(f'{source_name}\noutput #{i + 1}', new_id, job_id)
             self.process_outputs(output, new_id, source_name)
 
     def init_stdout_ui(self):
@@ -2011,7 +2011,7 @@ class FilterTabPage(TabPage):
                 kwargs['parallel_backend'] = 'multiprocessing'
             partial = functools.partial(getattr(self.filter_obj, func_name), *args, **kwargs)
             worker = gui_widgets.Worker(partial, JOB_COUNTER.get_id(), [self.tab_id])
-            worker.finished.connect()  # TODO
+            worker.finished.connect(self.functionApplied.emit)
             self.startedClustering.emit(worker, func_name, finish_slot)
             return
 
@@ -3074,7 +3074,7 @@ class MainWindow(QtWidgets.QMainWindow):
     @QtCore.pyqtSlot(filtering.Filter, int, str)
     @QtCore.pyqtSlot(filtering.Filter, int)
     def new_tab_from_filter_obj(self, filter_obj: filtering.Filter, tab_id: int, name: str = None):
-        self.add_new_tab(filter_obj.fname.name)  # TODO: connect it to predecessors
+        self.add_new_tab(filter_obj.fname.name)
         self.tabs.currentWidget().start_from_filter_obj(filter_obj, tab_id, name)
         if self._generate_report:
             self.add_tab_to_report(tab_id, self.tabs.currentWidget().name)
@@ -3881,7 +3881,7 @@ class MainWindow(QtWidgets.QMainWindow):
             if isinstance(worker_output[0], Exception):
                 raise worker_output[0]
             return
-        func_name: str = worker_output[1]
+        func_name: str = generic.get_method_readable_name(worker_output[-3].func)
         clustering_runner: clustering.ClusteringRunner = worker_output[0][1]
         return_val: tuple = worker_output[0][0]
         clustering_runner.plot_clustering()
@@ -3941,11 +3941,11 @@ class MainWindow(QtWidgets.QMainWindow):
             self.status_bar.update_time()
             return
 
-        partial, output_slots, args = self.job_queue.get()
+        worker, output_slots, args = self.job_queue.get()
         # Create a worker object
-        if isinstance(self.worker, gui_widgets.Worker):
-            self.worker.deleteLater()
-        self.worker = gui_widgets.Worker(partial, *args)
+        if isinstance(self.current_worker, gui_widgets.Worker):
+            self.current_worker.deleteLater()
+        self.current_worker = worker
 
         def alt_tqdm(iter_obj: typing.Iterable = None, desc: str = '', unit: str = '', bar_format: str = '',
                      total: int = None):
@@ -3955,7 +3955,7 @@ class MainWindow(QtWidgets.QMainWindow):
             obj.barUpdate.connect(self.status_bar.move_progress_bar)
             obj.barFinished.connect(self.status_bar.reset_progress)
 
-            self.worker.startProgBar.emit(
+            self.current_worker.startProgBar.emit(
                 dict(iter_obj=iter_obj, desc=desc, unit=unit, bar_format=bar_format, total=total))
             return obj
 
@@ -3970,7 +3970,7 @@ class MainWindow(QtWidgets.QMainWindow):
             obj.barFinished.connect(self.status_bar.reset_progress)
             obj.barTotalUpdate.connect(self.status_bar.update_bar_total)
 
-            self.worker.startProgBar.emit(
+            self.current_worker.startProgBar.emit(
                 dict(iter_obj=None, desc=desc, unit=unit, bar_format=bar_format, total=total))
             return obj
 
