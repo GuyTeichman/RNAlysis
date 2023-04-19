@@ -60,7 +60,7 @@ class ReportGenerator:
             name = self.nodes[node_id].node_name
             popup_element = self.nodes[node_id].popup_element
         else:
-            self.nodes[node_id] = Node(node_id, name, predecessors)
+            self.nodes[node_id] = Node(node_id, name, predecessors, popup_element)
 
         self.graph.add_node(node_id, label=name, title=popup_element)
         for pred in predecessors:

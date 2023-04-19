@@ -3099,6 +3099,8 @@ class MainWindow(QtWidgets.QMainWindow):
     @QtCore.pyqtSlot(set, int)
     def new_tab_from_gene_set(self, gene_set: set, tab_id: int, gene_set_name: str = None):
         self.add_new_tab(gene_set_name, is_set=True)
+        if tab_id == -1:
+            tab_id = self.tabs.currentWidget().tab_id
         self.tabs.currentWidget().start_from_gene_set(tab_id, gene_set)
         if self._generate_report:
             self.add_tab_to_report(tab_id, self.tabs.currentWidget().name)
@@ -3200,7 +3202,7 @@ class MainWindow(QtWidgets.QMainWindow):
             if self.tabs.currentWidget().is_empty():
                 tabs_to_close = self.tabs.currentIndex()
             gene_set = self._filename_to_gene_set(filename)
-            self.new_tab_from_gene_set(gene_set, Path(filename).stem)
+            self.new_tab_from_gene_set(gene_set, -1, Path(filename).stem)
             if tabs_to_close is not None:
                 self.tabs.removeTab(tabs_to_close)
 
