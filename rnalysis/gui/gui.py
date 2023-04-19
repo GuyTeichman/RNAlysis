@@ -1216,7 +1216,7 @@ class SetVisualizationWindow(gui_widgets.MinMaxDialog):
 class TabPage(QtWidgets.QWidget):
     functionApplied = QtCore.pyqtSignal(tuple)
     filterObjectCreated = QtCore.pyqtSignal(object, int)
-    featureSetCreated = QtCore.pyqtSignal(object)
+    featureSetCreated = QtCore.pyqtSignal(object, int)
     startedJob = QtCore.pyqtSignal(object, str, object)
     tabNameChange = QtCore.pyqtSignal(str, bool)
     tabSaved = QtCore.pyqtSignal()
@@ -1405,7 +1405,7 @@ class TabPage(QtWidgets.QWidget):
         elif validation.isinstanceinh(outputs, (filtering.Filter, fastq.filtering.Filter)):
             self.filterObjectCreated.emit(outputs, job_id)
         elif validation.isinstanceinh(outputs, enrichment.FeatureSet):
-            self.featureSetCreated.emit(outputs)
+            self.featureSetCreated.emit(outputs, job_id)
         elif isinstance(outputs, pd.DataFrame):
             self.object_views.append(gui_windows.DataFrameView(outputs, source_name))
             self.object_views[-1].show()
@@ -2531,8 +2531,9 @@ class MultiOpenWindow(QtWidgets.QDialog):
 
 class ReactiveTabWidget(QtWidgets.QTabWidget):
     tabRightClicked = QtCore.pyqtSignal(int)
-    newTabFromSet = QtCore.pyqtSignal(set, str)
-    newTabFromFilter = QtCore.pyqtSignal(filtering.Filter, str)
+    newTabFromSet = QtCore.pyqtSignal(set, int, str)
+    newTabFromFilter = QtCore.pyqtSignal(filtering.Filter, int, str)
+    tabClosed = QtCore.pyqtSignal(int)
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -2553,28 +2554,33 @@ class ReactiveTabWidget(QtWidgets.QTabWidget):
                 return
             self.tabRightClicked.emit(ind)
 
-    def new_tab_from_item(self, item: Union[filtering.Filter, set], name: str):
+    def new_tab_from_item(self, item: Union[filtering.Filter, set], name: str, tab_id: int):
         if isinstance(item, set):
-            self.newTabFromSet.emit(item, name)
+            self.newTabFromSet.emit(item, tab_id, name)
         elif validation.isinstanceinh(item, filtering.Filter):
-            self.newTabFromFilter.emit(item, name)
+            self.newTabFromFilter.emit(item, tab_id, name)
         else:
             raise TypeError(type(item))
 
     def removeTab(self, index):
         h = self.cornerWidget().height()
+        tab_id = self.widget(index).tab_id
 
         super().removeTab(index)
         self.update()
         if self.count() == 0:
             self.cornerWidget().setMinimumHeight(h)
             self.setMinimumHeight(h)
+        self.tabClosed.emit(tab_id)
 
     def addTab(self, widget: TabPage, a1: str) -> int:
         return super().addTab(widget, a1)
 
     def currentWidget(self) -> Union[FilterTabPage, SetTabPage]:
         return super().currentWidget()
+
+    def widget(self, index: int) -> Union[FilterTabPage, SetTabPage]:
+        return super().widget(index)
 
 
 class RenameCommand(QtWidgets.QUndoCommand):
@@ -2608,6 +2614,7 @@ class CloseTabCommand(QtWidgets.QUndoCommand):
         super().__init__(description)
         self.tab_container = tab_container
         self.tab_index = tab_index
+        self.tab_id = self.tab_container.widget(self.tab_index).tab_id
         self.tab_icon = tab_container.tabIcon(self.tab_index)
         self.tab_name = tab_container.tabText(self.tab_index).rstrip('*')
         self.obj_type = self.tab_container.widget(self.tab_index).obj_type()
@@ -2620,7 +2627,7 @@ class CloseTabCommand(QtWidgets.QUndoCommand):
         if isinstance(item, pd.DataFrame):
             item = self.obj_type.from_dataframe(item, self.tab_name, **self.kwargs)
 
-        self.tab_container.new_tab_from_item(item, self.tab_name)
+        self.tab_container.new_tab_from_item(item, self.tab_name, self.tab_id)
         self.tab_container.setTabIcon(self.tab_container.currentIndex(), self.tab_icon)
 
     def redo(self):
@@ -2809,6 +2816,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.tabs.tabCloseRequested.connect(self.close_tab)
         self.tabs.newTabFromSet.connect(self.new_tab_from_gene_set)
         self.tabs.newTabFromFilter.connect(self.new_tab_from_filter_obj)
+        self.tabs.tabClosed.connect(self.remove_tab_from_report)
 
         self.command_history_dock.setWidget(self.undo_view)
         self.command_history_dock.setFloating(False)
@@ -3061,9 +3069,14 @@ class MainWindow(QtWidgets.QMainWindow):
                     if tabs_to_close is not None:
                         self.tabs.removeTab(tabs_to_close)
 
+    @QtCore.pyqtSlot(filtering.Filter, int, str)
+    @QtCore.pyqtSlot(filtering.Filter, int)
     def new_tab_from_filter_obj(self, filter_obj: filtering.Filter, tab_id: int, name: str = None):
-        self.add_new_tab(filter_obj.fname.name)  # TODO: add ID to newly created tabs, connect it to predecessors
+        self.add_new_tab(filter_obj.fname.name)  # TODO: connect it to predecessors
         self.tabs.currentWidget().start_from_filter_obj(filter_obj, tab_id, name)
+        if self._generate_report:
+            self.add_tab_to_report(tab_id, self.tabs.currentWidget().name)
+
         QtWidgets.QApplication.processEvents()
 
     @QtCore.pyqtSlot(str)
@@ -3082,18 +3095,23 @@ class MainWindow(QtWidgets.QMainWindow):
             icon = gui_graphics.get_icon(icon_name)
         self.tabs.setTabIcon(ind, icon)
 
+    @QtCore.pyqtSlot(set, int, str)
+    @QtCore.pyqtSlot(set, int)
     def new_tab_from_gene_set(self, gene_set: set, tab_id: int, gene_set_name: str = None):
         self.add_new_tab(gene_set_name, is_set=True)
         self.tabs.currentWidget().start_from_gene_set(tab_id, gene_set)
         if self._generate_report:
-            self.tabs.currentWidget().functionApplied.connect(self.update_report)
+            self.add_tab_to_report(tab_id, self.tabs.currentWidget().name)
         QtWidgets.QApplication.processEvents()
 
     def add_tab_to_report(self, tab_id: int, tab_name: str):
         self.report.add_node(f"Loaded file '{tab_name}'", tab_id, [0])
 
+    def remove_tab_from_report(self, tab_id: int):
+        if self._generate_report:
+            self.report.trim_node(tab_id)
+
     def update_report(self, worker_output: tuple):
-        print("updating report: ", worker_output)
         result = worker_output[0]  # TODO: use result in report generation
         partial, job_id, predecessor_ids = worker_output[-3:]
         kwargs = partial.keywords
