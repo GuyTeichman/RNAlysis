@@ -1215,6 +1215,7 @@ class SetVisualizationWindow(gui_widgets.MinMaxDialog):
 
 class TabPage(QtWidgets.QWidget):
     functionApplied = QtCore.pyqtSignal(tuple)
+    multiSpawned = QtCore.pyqtSignal(str, int, int)
     filterObjectCreated = QtCore.pyqtSignal(object, int)
     featureSetCreated = QtCore.pyqtSignal(object, int)
     startedJob = QtCore.pyqtSignal(object, str, object)
@@ -1385,7 +1386,6 @@ class TabPage(QtWidgets.QWidget):
         job_id = JOB_COUNTER.get_id()
         worker = gui_widgets.Worker(partial, job_id, [self.tab_id])
         worker.finished.connect(self.functionApplied.emit)
-        worker.finished.connect(functools.partial(print, 'hiiiiii'))
 
         if func_name in self.THREADED_FUNCS and (not kwargs.get('inplace', False)):
             self.startedJob.emit(worker, func_name, finish_slot)
@@ -1412,7 +1412,6 @@ class TabPage(QtWidgets.QWidget):
         elif isinstance(outputs, np.ndarray):
             df = pd.DataFrame(outputs)
             self.process_outputs(df, job_id, source_name)
-
         elif isinstance(outputs, (tuple, list)):
             if validation.isinstanceiter_inh(outputs,
                                              (filtering.Filter, fastq.filtering.Filter, enrichment.FeatureSet)):
@@ -1430,8 +1429,10 @@ class TabPage(QtWidgets.QWidget):
     def _multi_keep_window_accepted(self, dialog: 'MultiKeepWindow', source_name: str):
         kept_outputs = dialog.result()
         job_id = dialog.job_id
-        for output in kept_outputs:
-            self.process_outputs(output, job_id, source_name)
+        for i, output in enumerate(kept_outputs):
+            new_id = JOB_COUNTER.get_id()
+            self.multiSpawned.emit(f'{source_name} output #{i + 1}', new_id, job_id)
+            self.process_outputs(output, new_id, source_name)
 
     def init_stdout_ui(self):
         self.stdout_widgets['text_edit_stdout'] = gui_widgets.StdOutTextEdit(self)
@@ -2399,7 +2400,7 @@ class MultiKeepWindow(gui_widgets.MinMaxDialog):
         for widget in self.keep_marks.values():
             widget.setChecked(self.select_all.isChecked())
 
-    def result(self):
+    def result(self) -> list:
         keep_tables = {file: widget.isChecked() for file, widget in self.keep_marks.items()}
         new_names = {file: gui_widgets.get_val_from_widget(widget) for file, widget in self.names.items()}
         out = []
@@ -3001,6 +3002,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
         if self._generate_report:
             self.tabs.currentWidget().functionApplied.connect(self.update_report)
+            self.tabs.currentWidget().multiSpawned.connect(self.update_report_func_spawns)
             self.tabs.currentWidget().tabLoaded.connect(self.add_tab_to_report)
 
     @QtCore.pyqtSlot(object)
@@ -3119,6 +3121,9 @@ class MainWindow(QtWidgets.QMainWindow):
         kwargs = partial.keywords
         name = partial.func.__name__
         self.report.add_node(name, job_id, predecessor_ids, parsing.beautify_dict(kwargs))
+
+    def update_report_func_spawns(self, name: str, spawn_id: int, predecessor_id: int):
+        self.report.add_node(name, spawn_id, [predecessor_id], '')  # TODO: use result in report generation
 
     def delete_pipeline(self):
         if len(self.pipelines) == 0:
