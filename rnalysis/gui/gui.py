@@ -1224,6 +1224,7 @@ class TabPage(QtWidgets.QWidget):
     changeIcon = QtCore.pyqtSignal(str)
     geneSetsRequested = QtCore.pyqtSignal(object)
     tabLoaded = QtCore.pyqtSignal(int, str)
+    tabReverted = QtCore.pyqtSignal(int)
 
     EXCLUDED_FUNCS = set()
     SUMMARY_FUNCS = set()
@@ -1381,9 +1382,9 @@ class TabPage(QtWidgets.QWidget):
         else:
             self._apply_function_from_params(func_name, args=[], kwargs=func_params)
 
-    def _apply_function_from_params(self, func_name, args: list, kwargs: dict, finish_slot=None):
+    def _apply_function_from_params(self, func_name, args: list, kwargs: dict, finish_slot=None, job_id: int = None):
         partial = functools.partial(getattr(self.obj(), func_name), *args, **kwargs)
-        job_id = JOB_COUNTER.get_id()
+        job_id = JOB_COUNTER.get_id() if job_id is None else job_id
         worker = gui_widgets.Worker(partial, job_id, [self.tab_id])
         worker.finished.connect(self.functionApplied.emit)
 
@@ -2001,7 +2002,7 @@ class FilterTabPage(TabPage):
         self.name = str(self.filter_obj.fname.stem)
         self.update_table_name_label()
 
-    def _apply_function_from_params(self, func_name, args: list, kwargs: dict, finish_slot=None):
+    def _apply_function_from_params(self, func_name, args: list, kwargs: dict, finish_slot=None, job_id:int=None):
         # since clustering functions can be computationally intensive, start them in another thread.
         # furthermode, make sure they use the 'multiprocessing' backend instead of the 'loky' backend -
         # otherwise this could cause issues in Pyinstaller-frozen versions of RNAlysis
@@ -2015,7 +2016,7 @@ class FilterTabPage(TabPage):
             self.startedClustering.emit(worker, func_name, finish_slot)
             return
 
-        return super()._apply_function_from_params(func_name, args, kwargs, finish_slot)
+        return super()._apply_function_from_params(func_name, args, kwargs, finish_slot, job_id)
 
     def apply_pipeline(self, pipeline: filtering.Pipeline, pipeline_name: str, inplace: bool):
         if inplace:
@@ -2218,7 +2219,7 @@ class CreatePipelineWindow(gui_widgets.MinMaxDialog, FilterTabPage):
         self.update_pipeline_preview()
         self.is_unsaved = True
 
-    def _apply_function_from_params(self, func_name, args: list, kwargs: dict, finish_slot=None):
+    def _apply_function_from_params(self, func_name, args: list, kwargs: dict, finish_slot=None, job_id:int=None):
         raise NotImplementedError
 
     def update_table_preview_width(self):
@@ -2637,6 +2638,8 @@ class CloseTabCommand(QtWidgets.QUndoCommand):
 
 class InplaceCommand(QtWidgets.QUndoCommand):
     __slots__ = {'tab': 'tab object',
+                 'prev_job_id': 'previous job ID',
+                 'new_job_id': 'new job ID',
                  'func_name': 'name of the function to apply/undo',
                  'args': 'function args',
                  'kwargs': 'function kwargs',
@@ -2645,6 +2648,8 @@ class InplaceCommand(QtWidgets.QUndoCommand):
     def __init__(self, tab: TabPage, func_name: str, args: list, kwargs: dict, description: str):
         super().__init__(description)
         self.tab = tab
+        self.prev_job_id = tab.tab_id
+        self.new_job_id = None
         self.func_name = func_name
         self.args = args
         self.kwargs = kwargs
@@ -2655,9 +2660,12 @@ class InplaceCommand(QtWidgets.QUndoCommand):
         del obj
         self.tab.update_obj(copy.copy(self.obj_copy))
         self.tab.update_tab(is_unsaved=True)
+        self.tab.tabReverted.emit(self.tab.tab_id)
+        self.tab.tab_id = self.prev_job_id
 
     def redo(self):
-        self.tab._apply_function_from_params(self.func_name, self.args, self.kwargs)
+        self.new_job_id = JOB_COUNTER.get_id() if self.new_job_id is None else self.new_job_id
+        self.tab._apply_function_from_params(self.func_name, self.args, self.kwargs, job_id=self.new_job_id)
 
 
 class InplaceCachedCommand(InplaceCommand):
@@ -3004,6 +3012,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self.tabs.currentWidget().functionApplied.connect(self.update_report)
             self.tabs.currentWidget().multiSpawned.connect(self.update_report_func_spawns)
             self.tabs.currentWidget().tabLoaded.connect(self.add_tab_to_report)
+            self.tabs.currentWidget().tabReverted.connect(self.remove_tab_from_report)
 
     @QtCore.pyqtSlot(object)
     def update_gene_sets_widget(self, widget: gui_widgets.GeneSetComboBox):

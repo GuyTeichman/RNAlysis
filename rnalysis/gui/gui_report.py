@@ -67,7 +67,7 @@ class ReportGenerator:
             self.graph.add_edge(pred, node_id)
 
     def trim_node(self, node_id: int):
-        if node_id in self.nodes and self.graph.out_degree(node_id) == 0:
+        if node_id in self.graph and self.graph.out_degree(node_id) == 0:
             self.graph.remove_node(node_id)
             self.nodes[node_id].set_active(False)
 
