@@ -2818,6 +2818,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self._generate_report = True
             self.report = gui_report.ReportGenerator()
             self.clear_session(not (self.tabs.count() == 1 and self.tabs.currentWidget().is_empty()))
+            print("Report generation turned on. ")
         except ImportError:
             warnings.warn(f"The RNAlysis 'reports' module is not installed. Please install it and try again. ")
             self._generate_report = False

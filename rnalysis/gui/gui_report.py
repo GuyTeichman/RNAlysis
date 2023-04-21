@@ -75,5 +75,6 @@ class ReportGenerator:
         assert save_path.exists() and save_path.is_dir()
         save_file = save_path.joinpath('report.html').as_posix()
         vis_report = Network(directed=True, layout=True)
+        vis_report.show_buttons(filter_=['layout', 'physics'])
         vis_report.from_nx(self.graph)
         vis_report.show(save_file, notebook=False)
