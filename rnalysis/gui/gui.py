@@ -2002,7 +2002,7 @@ class FilterTabPage(TabPage):
         self.name = str(self.filter_obj.fname.stem)
         self.update_table_name_label()
 
-    def _apply_function_from_params(self, func_name, args: list, kwargs: dict, finish_slot=None, job_id:int=None):
+    def _apply_function_from_params(self, func_name, args: list, kwargs: dict, finish_slot=None, job_id: int = None):
         # since clustering functions can be computationally intensive, start them in another thread.
         # furthermode, make sure they use the 'multiprocessing' backend instead of the 'loky' backend -
         # otherwise this could cause issues in Pyinstaller-frozen versions of RNAlysis
@@ -2219,7 +2219,7 @@ class CreatePipelineWindow(gui_widgets.MinMaxDialog, FilterTabPage):
         self.update_pipeline_preview()
         self.is_unsaved = True
 
-    def _apply_function_from_params(self, func_name, args: list, kwargs: dict, finish_slot=None, job_id:int=None):
+    def _apply_function_from_params(self, func_name, args: list, kwargs: dict, finish_slot=None, job_id: int = None):
         raise NotImplementedError
 
     def update_table_preview_width(self):
@@ -2682,14 +2682,20 @@ class InplaceCachedCommand(InplaceCommand):
             self.first_pass = False
             super().redo()
         else:
+            self.new_job_id = JOB_COUNTER.get_id() if self.new_job_id is None else self.new_job_id
             self.tab.update_obj(copy.copy(self.processed_obj))
             self.tab.update_tab(is_unsaved=True)
+            self.tab.tab_id = self.new_job_id
+            mock_partial = functools.partial(lambda *args, **kwargs: None, self.args, self.kwargs)
+            self.tab.functionApplied.emit((self.tab.obj(), mock_partial, self.new_job_id, [self.prev_job_id]))
 
     def undo(self):
         processed_obj = self.tab.obj()
         self.processed_obj = copy.copy(processed_obj)
         self.tab.update_obj(copy.copy(self.obj_copy))
         self.tab.update_tab(is_unsaved=True)
+        self.tab.tabReverted.emit(self.tab.tab_id)
+        self.tab.tab_id = self.prev_job_id
 
 
 class SetOpInplacCommand(InplaceCommand):
