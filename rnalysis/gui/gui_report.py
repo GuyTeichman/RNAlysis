@@ -1,9 +1,12 @@
+import re
 import typing
+import webbrowser
 from pathlib import Path
 
 import networkx
 from pyvis.network import Network
 
+from rnalysis import __version__
 from rnalysis.utils import parsing
 
 
@@ -71,10 +74,42 @@ class ReportGenerator:
             self.graph.remove_node(node_id)
             self.nodes[node_id].set_active(False)
 
-    def generate_report(self, save_path: Path):
+    def generate_report(self, save_path: Path, show_buttons: bool = False):
         assert save_path.exists() and save_path.is_dir()
         save_file = save_path.joinpath('report.html').as_posix()
-        vis_report = Network(directed=True, layout=True)
-        vis_report.show_buttons(filter_=['layout', 'physics'])
+        title = f"Data analysis report (<i>RNAlysis</i> version {__version__})"
+        vis_report = Network(directed=True, layout=True, heading=title)
         vis_report.from_nx(self.graph)
-        vis_report.show(save_file, notebook=False)
+        enabled_str = 'true' if show_buttons else 'false'
+
+        vis_report.set_options("""const options = {
+    "configure": {"""
+                               f'"enabled": {enabled_str}'
+                               """
+    },
+    "layout": {
+        "hierarchical": {
+            "enabled": true,
+            "levelSeparation": 95,
+            "nodeSpacing": 220,
+            "treeSpacing": 220,
+            "sortMethod": "directed"
+        }
+    },
+    "physics": {
+        "hierarchicalRepulsion": {
+            "centralGravity": 0,
+            "avoidOverlap": null
+        },
+        "minVelocity": 0.75,
+        "solver": "hierarchicalRepulsion"
+    }
+}""")
+        html = vis_report.generate_html(save_file)
+        if html.count(title) > 1:
+            html = re.sub(r'<center>.+?<\/h1>\s+<\/center>', '', html, 1, re.DOTALL)
+        print(html)
+        with open(save_file, 'w') as f:
+            f.write(html)
+
+        webbrowser.open(save_file)
