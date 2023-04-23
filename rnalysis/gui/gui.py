@@ -1371,21 +1371,24 @@ class TabPage(QtWidgets.QWidget):
         this_stack: FuncTypeStack = self.stack.currentWidget()
         func_name = this_stack.get_function_name()
         func_params = this_stack.get_function_params()
+        ancestors = this_stack.get_function_ancestors()
         if func_params.get('inplace', False):
             if func_name in self.THREADED_FUNCS:
                 command = InplaceCachedCommand(self, func_name, args=[], kwargs=func_params,
-                                               description=f'Apply "{func_name}"')
+                                               description=f'Apply "{func_name}"', ancestors=ancestors)
             else:
                 command = InplaceCommand(self, func_name, args=[], kwargs=func_params,
-                                         description=f'Apply "{func_name}"')
+                                         description=f'Apply "{func_name}"', ancestors=ancestors)
             self.undo_stack.push(command)
         else:
-            self._apply_function_from_params(func_name, args=[], kwargs=func_params)
+            self._apply_function_from_params(func_name, args=[], kwargs=func_params, ancestors=ancestors)
 
-    def _apply_function_from_params(self, func_name, args: list, kwargs: dict, finish_slot=None, job_id: int = None):
+    def _apply_function_from_params(self, func_name, args: list, kwargs: dict, finish_slot=None, job_id: int = None,
+                                    ancestors: list = None):
         partial = functools.partial(getattr(self.obj(), func_name), *args, **kwargs)
         job_id = JOB_COUNTER.get_id() if job_id is None else job_id
-        worker = gui_widgets.Worker(partial, job_id, [self.tab_id])
+        ancestors = ancestors if isinstance(ancestors, list) else []
+        worker = gui_widgets.Worker(partial, job_id, ancestors + [self.tab_id])
         worker.finished.connect(self.functionApplied.emit)
 
         if func_name in self.THREADED_FUNCS and (not kwargs.get('inplace', False)):
@@ -1735,6 +1738,17 @@ class FuncTypeStack(QtWidgets.QWidget):
             func_params[param_name] = val
         return func_params
 
+    def get_function_ancestors(self):
+        ancestors = []
+        for param_name, widget in self.parameter_widgets.items():
+            if isinstance(widget,(gui_widgets.OptionalWidget,gui_widgets.ComboBoxOrOtherWidget)):
+                if widget.other.isEnabled():
+                    widget = widget.other
+
+            if isinstance(widget, gui_widgets.GeneSetComboBox):
+                ancestors.append(widget.current_id())
+        return ancestors
+
     def get_function_readable_name(self):
         return self.func_combo.currentText()
 
@@ -2004,7 +2018,8 @@ class FilterTabPage(TabPage):
         self.name = str(self.filter_obj.fname.stem)
         self.update_table_name_label()
 
-    def _apply_function_from_params(self, func_name, args: list, kwargs: dict, finish_slot=None, job_id: int = None):
+    def _apply_function_from_params(self, func_name, args: list, kwargs: dict, finish_slot=None, job_id: int = None,
+                                    ancestors: list = None):
         # since clustering functions can be computationally intensive, start them in another thread.
         # furthermode, make sure they use the 'multiprocessing' backend instead of the 'loky' backend -
         # otherwise this could cause issues in Pyinstaller-frozen versions of RNAlysis
@@ -2013,12 +2028,13 @@ class FilterTabPage(TabPage):
             if FROZEN_ENV:
                 kwargs['parallel_backend'] = 'multiprocessing'
             partial = functools.partial(getattr(self.filter_obj, func_name), *args, **kwargs)
+            ancestors = ancestors if isinstance(ancestors, list) else []
             worker = gui_widgets.Worker(partial, JOB_COUNTER.get_id(), [self.tab_id])
             worker.finished.connect(self.functionApplied.emit)
             self.startedClustering.emit(worker, func_name, finish_slot)
             return
 
-        return super()._apply_function_from_params(func_name, args, kwargs, finish_slot, job_id)
+        return super()._apply_function_from_params(func_name, args, kwargs, finish_slot, job_id, ancestors)
 
     def apply_pipeline(self, pipeline: filtering.Pipeline, pipeline_name: str, inplace: bool):
         if inplace:
@@ -2651,9 +2667,10 @@ class InplaceCommand(QtWidgets.QUndoCommand):
                  'func_name': 'name of the function to apply/undo',
                  'args': 'function args',
                  'kwargs': 'function kwargs',
-                 'obj_copy': 'copy of the original object'}
+                 'obj_copy': 'copy of the original object',
+                 'ancestors': 'ancestor job IDs for the action'}
 
-    def __init__(self, tab: TabPage, func_name: str, args: list, kwargs: dict, description: str):
+    def __init__(self, tab: TabPage, func_name: str, args: list, kwargs: dict, description: str, ancestors: list):
         super().__init__(description)
         self.tab = tab
         self.prev_job_id = tab.tab_id
@@ -2662,6 +2679,7 @@ class InplaceCommand(QtWidgets.QUndoCommand):
         self.args = args
         self.kwargs = kwargs
         self.obj_copy = copy.copy(self.tab.obj())
+        self.ancestors = ancestors if isinstance(ancestors, list) else []
 
     def undo(self):
         obj = self.tab.obj()
@@ -2673,15 +2691,16 @@ class InplaceCommand(QtWidgets.QUndoCommand):
 
     def redo(self):
         self.new_job_id = JOB_COUNTER.get_id() if self.new_job_id is None else self.new_job_id
-        self.tab._apply_function_from_params(self.func_name, self.args, self.kwargs, job_id=self.new_job_id)
+        self.tab._apply_function_from_params(self.func_name, self.args, self.kwargs, job_id=self.new_job_id,
+                                             ancestors=self.ancestors)
 
 
 class InplaceCachedCommand(InplaceCommand):
     __slots__ = {'first_pass': 'indicates whether the command was already applied once',
                  'processed_obj': 'object after application of the function'}
 
-    def __init__(self, tab: TabPage, func_name: str, args: list, kwargs: dict, description: str):
-        super().__init__(tab, func_name, args, kwargs, description)
+    def __init__(self, tab: TabPage, func_name: str, args: list, kwargs: dict, description: str, ancestors: list):
+        super().__init__(tab, func_name, args, kwargs, description, ancestors)
         self.first_pass = True
         self.processed_obj = None
 
@@ -2695,7 +2714,8 @@ class InplaceCachedCommand(InplaceCommand):
             self.tab.update_tab(is_unsaved=True)
             self.tab.tab_id = self.new_job_id
             mock_partial = functools.partial(lambda *args, **kwargs: None, self.args, self.kwargs)
-            self.tab.functionApplied.emit((self.tab.obj(), mock_partial, self.new_job_id, [self.prev_job_id]))
+            self.tab.functionApplied.emit(
+                (self.tab.obj(), mock_partial, self.new_job_id, self.ancestors + [self.prev_job_id]))
 
     def undo(self):
         processed_obj = self.tab.obj()
@@ -3648,7 +3668,10 @@ class MainWindow(QtWidgets.QMainWindow):
             return
         outdir = QtWidgets.QFileDialog.getExistingDirectory(self, "Save report")
         if outdir:
-            return self.report.generate_report(Path(outdir))
+            outdir = Path(outdir).joinpath('RNAlysis_report')
+            if not outdir.exists():
+                outdir.mkdir()
+            return self.report.generate_report(outdir)
 
     def init_menu_ui(self):
         self.setMenuBar(self.menu_bar)
