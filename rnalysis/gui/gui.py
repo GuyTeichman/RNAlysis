@@ -429,8 +429,9 @@ class EnrichmentWindow(gui_widgets.MinMaxDialog):
                  'kegg': {'plot_horizontal', 'plot_pathway_graphs', 'pathway_graphs_format'},
                  'non_categorical': {'plot_log_scale', 'plot_style', 'n_bins'}}
 
-    enrichmentStarted = QtCore.pyqtSignal(object, str, object)
+    enrichmentStarted = QtCore.pyqtSignal(object, object)
     geneSetsRequested = QtCore.pyqtSignal(object)
+    functionApplied = QtCore.pyqtSignal(tuple)
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -733,10 +734,10 @@ class EnrichmentWindow(gui_widgets.MinMaxDialog):
             else:
                 partial = functools.partial(func, feature_set_obj, background_genes=bg_set_obj, **kwargs)
 
-            worker = gui_widgets.Worker(partial, JOB_COUNTER.get_id(), pred_ids)
-            worker.finished.connect()  # TODO
+            worker = gui_widgets.Worker(partial, JOB_COUNTER.get_id(), pred_ids, set_name)
+            worker.finished.connect(self.functionApplied.emit)
 
-            self.enrichmentStarted.emit(partial, set_name, self.showNormal)
+            self.enrichmentStarted.emit(worker, self.showNormal)
 
         except Exception as e:
             self.showNormal()
@@ -1741,7 +1742,7 @@ class FuncTypeStack(QtWidgets.QWidget):
     def get_function_ancestors(self):
         ancestors = []
         for param_name, widget in self.parameter_widgets.items():
-            if isinstance(widget,(gui_widgets.OptionalWidget,gui_widgets.ComboBoxOrOtherWidget)):
+            if isinstance(widget, (gui_widgets.OptionalWidget, gui_widgets.ComboBoxOrOtherWidget)):
                 if widget.other.isEnabled():
                     widget = widget.other
 
@@ -3169,7 +3170,7 @@ class MainWindow(QtWidgets.QMainWindow):
         result = worker_output[0]  # TODO: use result in report generation
         partial, job_id, predecessor_ids = worker_output[-3:]
         kwargs = partial.keywords
-        name = partial.func.__name__
+        name = generic.get_method_readable_name(partial.func)
         self.report.add_node(name, job_id, predecessor_ids, parsing.beautify_dict(kwargs))
 
     def update_report_func_spawns(self, name: str, spawn_id: int, predecessor_id: int):
@@ -3655,6 +3656,8 @@ class MainWindow(QtWidgets.QMainWindow):
         self.enrichment_window = EnrichmentWindow(self)
         self.enrichment_window.geneSetsRequested.connect(self.update_gene_sets_widget)
         self.enrichment_window.enrichmentStarted.connect(self.start_enrichment)
+        if self._generate_report:
+            self.enrichment_window.functionApplied.connect(self.update_report)
         self.enrichment_window.show()
 
     def get_tab_names(self) -> List[str]:
@@ -3942,10 +3945,10 @@ class MainWindow(QtWidgets.QMainWindow):
         self.tabs.currentWidget().process_outputs(return_val, worker_output[-2], func_name)
         self.tabs.currentWidget().update_tab()
 
-    @QtCore.pyqtSlot(object, str, object)
-    def start_enrichment(self, worker: gui_widgets.Worker, set_name: str, finish_slot: Union[Callable, None]):
+    @QtCore.pyqtSlot(object, object)
+    def start_enrichment(self, worker: gui_widgets.Worker, finish_slot: Union[Callable, None]):
         slots = (self.finish_enrichment, finish_slot)
-        self.queue_worker(worker, slots, set_name)
+        self.queue_worker(worker, slots)
 
     @QtCore.pyqtSlot(tuple)
     def finish_enrichment(self, worker_output: tuple):
@@ -3960,8 +3963,8 @@ class MainWindow(QtWidgets.QMainWindow):
         self.display_enrichment_results(results, set_name)
 
     def queue_worker(self, worker: gui_widgets.Worker,
-                     output_slots: Union[Callable, Tuple[Callable, ...], None] = None, *args):
-        self.job_queue.put((worker, output_slots, args))
+                     output_slots: Union[Callable, Tuple[Callable, ...], None] = None):
+        self.job_queue.put((worker, output_slots))
         self.jobQueued.emit()
 
     @QtCore.pyqtSlot(int, str)
@@ -3995,7 +3998,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self.status_bar.update_time()
             return
 
-        worker, output_slots, args = self.job_queue.get()
+        worker, output_slots = self.job_queue.get()
         # Create a worker object
         if isinstance(self.current_worker, gui_widgets.Worker):
             self.current_worker.deleteLater()

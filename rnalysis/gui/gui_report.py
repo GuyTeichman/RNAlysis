@@ -108,7 +108,6 @@ class ReportGenerator:
         html = vis_report.generate_html(save_file)
         if html.count(title) > 1:
             html = re.sub(r'<center>.+?<\/h1>\s+<\/center>', '', html, 1, re.DOTALL)
-        print(html)
         with open(save_file, 'w') as f:
             f.write(html)
 
