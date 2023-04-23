@@ -3827,22 +3827,23 @@ class MainWindow(QtWidgets.QMainWindow):
                 self._import_pipeline_from_str(pipeline_name, pipeline_file)
             QtWidgets.QApplication.processEvents()
 
-            tabs_to_close = None
+            tab_to_close = None
             if self.tabs.currentWidget().is_empty():
-                tabs_to_close = self.tabs.currentIndex()
+                tab_to_close = self.tabs.currentIndex()
 
             for item, item_name, item_type, item_property in zip(items, item_names, item_types, item_properties):
+                tab_id = JOB_COUNTER.get_id()
                 if item_type == 'set':
-                    self.new_tab_from_gene_set(item, item_name)
+                    self.new_tab_from_gene_set(item, tab_id, item_name)
                 else:
                     try:
                         cls = getattr(filtering, item_type)
                     except AttributeError:
                         raise TypeError(f"Invalid object type in session file: '{item_type}'")
                     obj = cls.from_dataframe(item, item_name, **item_property)
-                    self.new_tab_from_filter_obj(obj, item_name)
-            if tabs_to_close is not None:
-                self.tabs.removeTab(tabs_to_close)
+                    self.new_tab_from_filter_obj(obj, tab_id)
+            if tab_to_close is not None:
+                self.tabs.removeTab(tab_to_close)
 
     def save_session(self):
         default_name = 'Untitled session.rnal'
