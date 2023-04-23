@@ -750,7 +750,7 @@ class SetOperationWindow(gui_widgets.MinMaxDialog):
                       'Symmetric Difference': 'symmetric_difference', 'Other': 'other'}
     EXCLUDED_PARAMS = {'self', 'other', 'others', 'return_type'}
 
-    geneSetReturned = QtCore.pyqtSignal(set, str)
+    geneSetReturned = QtCore.pyqtSignal(set, str, list, dict)
     primarySetUsed = QtCore.pyqtSignal(str)
     primarySetChangedDifference = QtCore.pyqtSignal(str)
     primarySetChangedIntersection = QtCore.pyqtSignal()
@@ -987,8 +987,11 @@ class SetOperationWindow(gui_widgets.MinMaxDialog):
     def _set_op_other(self):
         self.widgets['radio_button_box'].set_selection('Other')
 
+    def _get_set_names(self):
+        return [item.text() for item in self.widgets['set_list'].get_sorted_selection()]
+
     def _get_function_params(self):
-        set_names = [item.text() for item in self.widgets['set_list'].get_sorted_selection()]
+        set_names = self._get_set_names()
         if self.get_current_func_name() in ['intersection', 'difference']:
             primary_set_name = self.widgets['choose_primary_set'].currentText()
             self.primarySetUsed.emit(primary_set_name)
@@ -1005,11 +1008,12 @@ class SetOperationWindow(gui_widgets.MinMaxDialog):
 
     @QtCore.pyqtSlot()
     def apply_set_op(self):
-        # TODO: add worker/IDs
         func_name = self.get_current_func_name()
+        ancestor_ids = [self.available_objects[name][0].tab_id for name in self._get_set_names()]
         if func_name == 'other':
             output_set = self.widgets['canvas'].get_custom_selection()
-            output_name = f"Other set operation output"
+            output_name = "Other set operation output"
+            kwargs = {}
         else:
             set_names, primary_set_name, kwargs = self._get_function_params()
 
@@ -1024,14 +1028,14 @@ class SetOperationWindow(gui_widgets.MinMaxDialog):
 
             if kwargs.get('inplace', False):
                 command = SetOpInplacCommand(self.available_objects[primary_set_name][0], func_name, other_objs, kwargs,
-                                             f'Apply "{func_name}"')
+                                             f'Apply "{func_name}"', ancestor_ids)
                 self.available_objects[primary_set_name][0].undo_stack.push(command)
                 output_set = None
             else:
                 output_set = getattr(first_obj, func_name)(*other_objs, **kwargs)
 
         if isinstance(output_set, set):
-            self.geneSetReturned.emit(output_set, output_name)
+            self.geneSetReturned.emit(output_set, output_name, ancestor_ids, kwargs)
         self.close()
 
 
@@ -2729,14 +2733,20 @@ class InplaceCachedCommand(InplaceCommand):
 
 class SetOpInplacCommand(InplaceCommand):
     def redo(self):
+        self.new_job_id = JOB_COUNTER.get_id() if self.new_job_id is None else self.new_job_id
         is_filter_obj = validation.isinstanceinh(self.tab.obj(), filtering.Filter)
         first_obj = self.tab.obj()
         if not is_filter_obj:
             first_obj = filtering.Filter.from_dataframe(pd.DataFrame(index=first_obj), 'placeholder')
-        getattr(first_obj, self.func_name)(*self.args, **self.kwargs)
+        partial = functools.partial(getattr(first_obj, self.func_name), *self.args, **self.kwargs)
+        partial()
         if not is_filter_obj:
             self.tab.update_obj(first_obj.index_set)
         self.tab.update_tab()
+
+        self.tab.tab_id = self.new_job_id
+        self.tab.functionApplied.emit(
+            (self.tab.obj(), partial, self.new_job_id, self.ancestors + [self.prev_job_id]))
 
 
 class PipelineInplaceCommand(QtWidgets.QUndoCommand):
@@ -3043,7 +3053,7 @@ class MainWindow(QtWidgets.QMainWindow):
         tab.geneSetsRequested.connect(self.update_gene_sets_widget)
 
         if self._generate_report:
-            tab.functionApplied.connect(self.update_report)
+            tab.functionApplied.connect(self.update_report_from_worker)
             tab.multiSpawned.connect(self.update_report_func_spawns)
             tab.tabLoaded.connect(self.add_tab_to_report)
             tab.tabReverted.connect(self.remove_tab_from_report)
@@ -3166,15 +3176,18 @@ class MainWindow(QtWidgets.QMainWindow):
         if self._generate_report:
             self.report.trim_node(tab_id)
 
-    def update_report(self, worker_output: tuple):
+    def update_report(self, name: str, job_id: int, predecessor_ids: List[int], description: str):
+        self.report.add_node(name, job_id, predecessor_ids, description)
+
+    def update_report_from_worker(self, worker_output: tuple):
         result = worker_output[0]  # TODO: use result in report generation
         partial, job_id, predecessor_ids = worker_output[-3:]
         kwargs = partial.keywords
         name = generic.get_method_readable_name(partial.func)
-        self.report.add_node(name, job_id, predecessor_ids, parsing.beautify_dict(kwargs))
+        self.update_report(name, job_id, predecessor_ids, parsing.beautify_dict(kwargs))
 
     def update_report_func_spawns(self, name: str, spawn_id: int, predecessor_id: int):
-        self.report.add_node(name, spawn_id, [predecessor_id], '')  # TODO: use result in report generation
+        self.update_report(name, spawn_id, [predecessor_id], '')  # TODO: use result in report generation
 
     def delete_pipeline(self):
         if len(self.pipelines) == 0:
@@ -3631,8 +3644,19 @@ class MainWindow(QtWidgets.QMainWindow):
         available_objs = self.get_available_objects()
         self.set_op_window = SetOperationWindow(available_objs, self)
         self.set_op_window.primarySetUsed.connect(self.choose_tab_by_name)
-        self.set_op_window.geneSetReturned.connect(self.new_tab_from_gene_set)
+        self.set_op_window.geneSetReturned.connect(self.resolve_set_op)
         self.set_op_window.show()
+
+    @QtCore.pyqtSlot(set, str, list, dict)
+    def resolve_set_op(self, output_set: set, output_name: str, ancestor_ids: list, kwargs: dict):
+        set_op_id = JOB_COUNTER.get_id()
+        new_tab_id = JOB_COUNTER.get_id()
+        if self._generate_report:
+            # TODO: use output in report
+            self.update_report(output_name.replace(' output', ''), set_op_id, ancestor_ids,
+                               parsing.beautify_dict(kwargs))
+            self.update_report_func_spawns('Set operation result', new_tab_id, set_op_id)
+        self.new_tab_from_gene_set(output_set, new_tab_id, output_name)
 
     def visualize_gene_sets(self):
         available_objs = self.get_available_objects()
@@ -3657,7 +3681,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.enrichment_window.geneSetsRequested.connect(self.update_gene_sets_widget)
         self.enrichment_window.enrichmentStarted.connect(self.start_enrichment)
         if self._generate_report:
-            self.enrichment_window.functionApplied.connect(self.update_report)
+            self.enrichment_window.functionApplied.connect(self.update_report_from_worker)
         self.enrichment_window.show()
 
     def get_tab_names(self) -> List[str]:
