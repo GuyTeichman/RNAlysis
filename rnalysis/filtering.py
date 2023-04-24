@@ -1114,8 +1114,8 @@ class Filter:
 
         """
         if self.df.index.has_duplicates:
-            warnings.warn(" this filter object contains multiple rows with the same WBGene index. When "
-                          "returning a set or string of features from this DESeqFilter object, each WBGene index will "
+            warnings.warn(" this filter object contains multiple rows with the same gene name/ID. When "
+                          "returning a set or string of features from this table, each gene ID will "
                           "appear ONLY ONCE!")
         return set(self.df.index)
 

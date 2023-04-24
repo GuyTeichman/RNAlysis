@@ -1220,10 +1220,10 @@ class SetVisualizationWindow(gui_widgets.MinMaxDialog):
 
 class TabPage(QtWidgets.QWidget):
     functionApplied = QtCore.pyqtSignal(tuple)
-    multiSpawned = QtCore.pyqtSignal(str, int, int)
+    tableSpawned = QtCore.pyqtSignal(str, int, int)
     filterObjectCreated = QtCore.pyqtSignal(object, int)
     featureSetCreated = QtCore.pyqtSignal(object, int)
-    startedJob = QtCore.pyqtSignal(object, str, object)
+    startedJob = QtCore.pyqtSignal(object, object)
     tabNameChange = QtCore.pyqtSignal(str, bool, int, int)
     tabSaved = QtCore.pyqtSignal()
     changeIcon = QtCore.pyqtSignal(str)
@@ -1376,45 +1376,51 @@ class TabPage(QtWidgets.QWidget):
         this_stack: FuncTypeStack = self.stack.currentWidget()
         func_name = this_stack.get_function_name()
         func_params = this_stack.get_function_params()
-        ancestors = this_stack.get_function_ancestors()
+        predecessors = this_stack.get_function_predecessors()
         if func_params.get('inplace', False):
             if func_name in self.THREADED_FUNCS:
                 command = InplaceCachedCommand(self, func_name, args=[], kwargs=func_params,
-                                               description=f'Apply "{func_name}"', ancestors=ancestors)
+                                               description=f'Apply "{func_name}"', predecessors=predecessors)
             else:
                 command = InplaceCommand(self, func_name, args=[], kwargs=func_params,
-                                         description=f'Apply "{func_name}"', ancestors=ancestors)
+                                         description=f'Apply "{func_name}"', predecessors=predecessors)
             self.undo_stack.push(command)
         else:
-            self._apply_function_from_params(func_name, args=[], kwargs=func_params, ancestors=ancestors)
+            self._apply_function_from_params(func_name, args=[], kwargs=func_params, predecessors=predecessors)
 
     def _apply_function_from_params(self, func_name, args: list, kwargs: dict, finish_slot=None, job_id: int = None,
-                                    ancestors: list = None):
+                                    predecessors: list = None):
         partial = functools.partial(getattr(self.obj(), func_name), *args, **kwargs)
+        source_name = generic.get_method_readable_name(partial.func)
         job_id = JOB_COUNTER.get_id() if job_id is None else job_id
-        ancestors = ancestors if isinstance(ancestors, list) else []
-        worker = gui_widgets.Worker(partial, job_id, ancestors + [self.tab_id])
+        predecessors = predecessors if isinstance(predecessors, list) else []
+        worker = gui_widgets.Worker(partial, job_id, predecessors + [self.tab_id], source_name)
         worker.finished.connect(self.functionApplied.emit)
 
         if func_name in self.THREADED_FUNCS and (not kwargs.get('inplace', False)):
-            self.startedJob.emit(worker, func_name, finish_slot)
+            self.startedJob.emit(worker, finish_slot)
             return
 
         prev_name = self.get_tab_name()
         result = worker.run()
         if kwargs.get('inplace', False):
-            self.tab_id = job_id
+            self.tab_id = JOB_COUNTER.get_id()
+            self.tableSpawned.emit(f"'{source_name}'\noutput", self.tab_id, job_id)
 
         self.update_tab(prev_name != self.obj_name())
-        self.process_outputs(result, job_id, func_name)
+        self.process_outputs(result, job_id, source_name)
 
     def process_outputs(self, outputs, job_id: int, source_name: str = ''):
         if isinstance(outputs, (list, tuple)) and len(outputs) == 0:
             return
         elif validation.isinstanceinh(outputs, (filtering.Filter, fastq.filtering.Filter)):
-            self.filterObjectCreated.emit(outputs, job_id)
+            new_id = JOB_COUNTER.get_id()
+            self.tableSpawned.emit(f"'{source_name}'\noutput", new_id, job_id)
+            self.filterObjectCreated.emit(outputs, new_id)
         elif validation.isinstanceinh(outputs, enrichment.FeatureSet):
-            self.featureSetCreated.emit(outputs, job_id)
+            new_id = JOB_COUNTER.get_id()
+            self.tableSpawned.emit(f"'{source_name}'\noutput", new_id, job_id)
+            self.featureSetCreated.emit(outputs, new_id)
         elif isinstance(outputs, pd.DataFrame):
             self.object_views.append(gui_windows.DataFrameView(outputs, source_name))
             self.object_views[-1].show()
@@ -1439,9 +1445,7 @@ class TabPage(QtWidgets.QWidget):
         kept_outputs = dialog.result()
         job_id = dialog.job_id
         for i, output in enumerate(kept_outputs):
-            new_id = JOB_COUNTER.get_id()
-            self.multiSpawned.emit(f'{source_name}\noutput #{i + 1}', new_id, job_id)
-            self.process_outputs(output, new_id, source_name)
+            self.process_outputs(output, job_id, source_name)
 
     def init_stdout_ui(self):
         self.stdout_widgets['text_edit_stdout'] = gui_widgets.StdOutTextEdit(self)
@@ -1743,16 +1747,16 @@ class FuncTypeStack(QtWidgets.QWidget):
             func_params[param_name] = val
         return func_params
 
-    def get_function_ancestors(self):
-        ancestors = []
+    def get_function_predecessors(self):
+        predecessors = []
         for param_name, widget in self.parameter_widgets.items():
             if isinstance(widget, (gui_widgets.OptionalWidget, gui_widgets.ComboBoxOrOtherWidget)):
                 if widget.other.isEnabled():
                     widget = widget.other
 
             if isinstance(widget, gui_widgets.GeneSetComboBox):
-                ancestors.append(widget.current_id())
-        return ancestors
+                predecessors.append(widget.current_id())
+        return predecessors
 
     def get_function_readable_name(self):
         return self.func_combo.currentText()
@@ -2024,7 +2028,7 @@ class FilterTabPage(TabPage):
         self.update_table_name_label()
 
     def _apply_function_from_params(self, func_name, args: list, kwargs: dict, finish_slot=None, job_id: int = None,
-                                    ancestors: list = None):
+                                    predecessors: list = None):
         # since clustering functions can be computationally intensive, start them in another thread.
         # furthermode, make sure they use the 'multiprocessing' backend instead of the 'loky' backend -
         # otherwise this could cause issues in Pyinstaller-frozen versions of RNAlysis
@@ -2033,13 +2037,13 @@ class FilterTabPage(TabPage):
             if FROZEN_ENV:
                 kwargs['parallel_backend'] = 'multiprocessing'
             partial = functools.partial(getattr(self.filter_obj, func_name), *args, **kwargs)
-            ancestors = ancestors if isinstance(ancestors, list) else []
-            worker = gui_widgets.Worker(partial, JOB_COUNTER.get_id(), [self.tab_id])
+            predecessors = predecessors if isinstance(predecessors, list) else []
+            worker = gui_widgets.Worker(partial, JOB_COUNTER.get_id(), predecessors + [self.tab_id])
             worker.finished.connect(self.functionApplied.emit)
             self.startedClustering.emit(worker, func_name, finish_slot)
             return
 
-        return super()._apply_function_from_params(func_name, args, kwargs, finish_slot, job_id, ancestors)
+        return super()._apply_function_from_params(func_name, args, kwargs, finish_slot, job_id, predecessors)
 
     def apply_pipeline(self, pipeline: filtering.Pipeline, pipeline_name: str, inplace: bool):
         if inplace:
@@ -2673,9 +2677,9 @@ class InplaceCommand(QtWidgets.QUndoCommand):
                  'args': 'function args',
                  'kwargs': 'function kwargs',
                  'obj_copy': 'copy of the original object',
-                 'ancestors': 'ancestor job IDs for the action'}
+                 'predecessors': 'ancestor job IDs for the action'}
 
-    def __init__(self, tab: TabPage, func_name: str, args: list, kwargs: dict, description: str, ancestors: list):
+    def __init__(self, tab: TabPage, func_name: str, args: list, kwargs: dict, description: str, predecessors: list):
         super().__init__(description)
         self.tab = tab
         self.prev_job_id = tab.tab_id
@@ -2684,7 +2688,7 @@ class InplaceCommand(QtWidgets.QUndoCommand):
         self.args = args
         self.kwargs = kwargs
         self.obj_copy = copy.copy(self.tab.obj())
-        self.ancestors = ancestors if isinstance(ancestors, list) else []
+        self.predecessors = predecessors if isinstance(predecessors, list) else []
 
     def undo(self):
         obj = self.tab.obj()
@@ -2697,56 +2701,64 @@ class InplaceCommand(QtWidgets.QUndoCommand):
     def redo(self):
         self.new_job_id = JOB_COUNTER.get_id() if self.new_job_id is None else self.new_job_id
         self.tab._apply_function_from_params(self.func_name, self.args, self.kwargs, job_id=self.new_job_id,
-                                             ancestors=self.ancestors)
+                                             predecessors=self.predecessors)
 
 
 class InplaceCachedCommand(InplaceCommand):
     __slots__ = {'first_pass': 'indicates whether the command was already applied once',
-                 'processed_obj': 'object after application of the function'}
+                 'processed_obj': 'object after application of the function',
+                 'new_spawn_id': 'tab id of the tab after running redo()'}
 
-    def __init__(self, tab: TabPage, func_name: str, args: list, kwargs: dict, description: str, ancestors: list):
-        super().__init__(tab, func_name, args, kwargs, description, ancestors)
+    def __init__(self, tab: TabPage, func_name: str, args: list, kwargs: dict, description: str, predecessors: list):
+        super().__init__(tab, func_name, args, kwargs, description, predecessors)
         self.first_pass = True
         self.processed_obj = None
+        self.new_spawn_id = None
 
     def redo(self):
         if self.first_pass:
             self.first_pass = False
             super().redo()
         else:
+            assert self.new_spawn_id is not None
+            source_name = generic.get_method_readable_name(getattr(self.tab.obj(), self.func_name))
             self.new_job_id = JOB_COUNTER.get_id() if self.new_job_id is None else self.new_job_id
             self.tab.update_obj(copy.copy(self.processed_obj))
             self.tab.update_tab(is_unsaved=True)
-            self.tab.tab_id = self.new_job_id
+            self.tab.tab_id = self.new_spawn_id
             mock_partial = functools.partial(lambda *args, **kwargs: None, self.args, self.kwargs)
             self.tab.functionApplied.emit(
-                (self.tab.obj(), mock_partial, self.new_job_id, self.ancestors + [self.prev_job_id]))
+                (self.tab.obj(), mock_partial, self.new_job_id, self.predecessors + [self.prev_job_id]))
+            self.tab.tableSpawned.emit(f"'{source_name}'\noutput", self.new_spawn_id, self.new_job_id)
 
     def undo(self):
         processed_obj = self.tab.obj()
         self.processed_obj = copy.copy(processed_obj)
         self.tab.update_obj(copy.copy(self.obj_copy))
         self.tab.update_tab(is_unsaved=True)
+        self.new_spawn_id = self.tab.tab_id
         self.tab.tabReverted.emit(self.tab.tab_id)
         self.tab.tab_id = self.prev_job_id
 
 
 class SetOpInplacCommand(InplaceCommand):
     def redo(self):
+        source_name = generic.get_method_readable_name(getattr(self.tab.obj(), self.func_name))
         self.new_job_id = JOB_COUNTER.get_id() if self.new_job_id is None else self.new_job_id
         is_filter_obj = validation.isinstanceinh(self.tab.obj(), filtering.Filter)
         first_obj = self.tab.obj()
         if not is_filter_obj:
             first_obj = filtering.Filter.from_dataframe(pd.DataFrame(index=first_obj), 'placeholder')
         partial = functools.partial(getattr(first_obj, self.func_name), *self.args, **self.kwargs)
-        partial()
+        worker = gui_widgets.Worker(partial, self.new_job_id, self.predecessors + [self.prev_job_id])
+        worker.finished.connect(self.tab.functionApplied.emit)
+        worker.run()
         if not is_filter_obj:
             self.tab.update_obj(first_obj.index_set)
         self.tab.update_tab()
-
-        self.tab.tab_id = self.new_job_id
-        self.tab.functionApplied.emit(
-            (self.tab.obj(), partial, self.new_job_id, self.ancestors + [self.prev_job_id]))
+        new_spawn_id = JOB_COUNTER.get_id()
+        self.tab.tab_id = new_spawn_id
+        self.tab.tableSpawned.emit(f"'{source_name}'\noutput", new_spawn_id, self.new_job_id)
 
 
 class PipelineInplaceCommand(QtWidgets.QUndoCommand):
@@ -3045,7 +3057,8 @@ class MainWindow(QtWidgets.QMainWindow):
         else:
             tab = FilterTabPage(self.tabs, undo_stack=new_undo_stack, tab_id=tab_id)
             tab.startedClustering.connect(self.start_clustering)
-            tab.startedJob.connect(self.start_generic_job)
+
+        tab.startedJob.connect(self.start_generic_job)
         tab.filterObjectCreated.connect(self.new_tab_from_filter_obj)
         tab.featureSetCreated.connect(self.new_tab_from_gene_set)
         tab.changeIcon.connect(self.set_current_tab_icon)
@@ -3054,7 +3067,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
         if self._generate_report:
             tab.functionApplied.connect(self.update_report_from_worker)
-            tab.multiSpawned.connect(self.update_report_func_spawns)
+            tab.tableSpawned.connect(self.update_report_func_spawns)
             tab.tabLoaded.connect(self.add_tab_to_report)
             tab.tabReverted.connect(self.remove_tab_from_report)
 
@@ -3135,8 +3148,8 @@ class MainWindow(QtWidgets.QMainWindow):
     @QtCore.pyqtSlot(filtering.Filter, int, str)
     @QtCore.pyqtSlot(filtering.Filter, int)
     def new_tab_from_filter_obj(self, filter_obj: filtering.Filter, tab_id: int, name: str = None):
-        self.add_new_tab(filter_obj.fname.name)
-        self.tabs.currentWidget().start_from_filter_obj(filter_obj, tab_id, name)
+        self.add_new_tab(filter_obj.fname.name if name is None else name)
+        self.tabs.currentWidget().start_from_filter_obj(filter_obj, tab_id)
         if self._generate_report:
             self.add_tab_to_report(tab_id, self.tabs.currentWidget().name)
 
@@ -3176,15 +3189,16 @@ class MainWindow(QtWidgets.QMainWindow):
         if self._generate_report:
             self.report.trim_node(tab_id)
 
-    def update_report(self, name: str, job_id: int, predecessor_ids: List[int], description: str):
-        self.report.add_node(name, job_id, predecessor_ids, description)
+    def update_report(self, name: str, job_id: int, predecessor_ids: List[int], description: str,
+                      node_type: str = 'data'):
+        self.report.add_node(name, job_id, predecessor_ids, description, node_type)
 
     def update_report_from_worker(self, worker_output: tuple):
         result = worker_output[0]  # TODO: use result in report generation
         partial, job_id, predecessor_ids = worker_output[-3:]
         kwargs = partial.keywords
         name = generic.get_method_readable_name(partial.func)
-        self.update_report(name, job_id, predecessor_ids, parsing.beautify_dict(kwargs))
+        self.update_report(name, job_id, predecessor_ids, parsing.beautify_dict(kwargs), 'function')
 
     def update_report_func_spawns(self, name: str, spawn_id: int, predecessor_id: int):
         self.update_report(name, spawn_id, [predecessor_id], '')  # TODO: use result in report generation
@@ -3654,8 +3668,8 @@ class MainWindow(QtWidgets.QMainWindow):
         if self._generate_report:
             # TODO: use output in report
             self.update_report(output_name.replace(' output', ''), set_op_id, ancestor_ids,
-                               parsing.beautify_dict(kwargs))
-            self.update_report_func_spawns('Set operation result', new_tab_id, set_op_id)
+                               parsing.beautify_dict(kwargs), 'function')
+            self.update_report_func_spawns('Set operation output', new_tab_id, set_op_id)
         self.new_tab_from_gene_set(output_set, new_tab_id, output_name)
 
     def visualize_gene_sets(self):
@@ -3930,14 +3944,15 @@ class MainWindow(QtWidgets.QMainWindow):
         else:
             event.ignore()
 
-    @QtCore.pyqtSlot(object, str, object)
-    def start_generic_job(self, worker: gui_widgets.Worker, func_name: str, finish_slot: Union[Callable, None]):
+    @QtCore.pyqtSlot(object, object)
+    def start_generic_job(self, worker: gui_widgets.Worker, finish_slot: Union[Callable, None]):
         slots = (self.finish_generic_job, finish_slot)
-        self.queue_worker(worker, slots, func_name)
+        self.queue_worker(worker, slots)
 
     def start_generic_job_from_params(self, func_name, func, args, kwargs, finish_slot: Union[Callable, None]):
         partial = functools.partial(func, *args, **kwargs)
-        self.start_generic_job(partial, func_name, finish_slot)
+        worker = gui_widgets.Worker(partial, JOB_COUNTER.get_id(), [], func_name)
+        self.start_generic_job(worker, finish_slot)
 
     @QtCore.pyqtSlot(tuple)
     def finish_generic_job(self, worker_output: tuple):
@@ -3946,7 +3961,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 raise worker_output[0]
             print("Done")
         else:
-            assert len(worker_output) == 5
+            assert len(worker_output) == 5, f"invalid worker output: {worker_output}"
             func_name: str = worker_output[1]
             return_val: tuple = worker_output[0]
             self.tabs.currentWidget().process_outputs(return_val, worker_output[-2], func_name)
@@ -4026,7 +4041,10 @@ class MainWindow(QtWidgets.QMainWindow):
         worker, output_slots = self.job_queue.get()
         # Create a worker object
         if isinstance(self.current_worker, gui_widgets.Worker):
-            self.current_worker.deleteLater()
+            try:
+                self.current_worker.deleteLater()
+            except RuntimeError:
+                pass
         self.current_worker = worker
 
         def alt_tqdm(iter_obj: typing.Iterable = None, desc: str = '', unit: str = '', bar_format: str = '',
@@ -4085,7 +4103,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def _update_queue_window(self, job_running: bool):
         jobs = [self.current_worker.partial.func.__name__ + ' (running)'] if job_running else []
-        jobs += [item[0].func.__name__ + ' (queued)' for item in self.job_queue.queue]
+        jobs += [item[0].partial.func.__name__ + ' (queued)' for item in self.job_queue.queue]
         self.task_queue_window.update_tasks(jobs)
 
     def start_progress_bar(self, arg_dict):  # pragma: no cover
