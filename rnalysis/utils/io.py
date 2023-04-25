@@ -104,13 +104,23 @@ def clear_gui_cache():
     clear_directory(directory)
 
 
-def load_cached_gui_file(filename: str):
+def load_cached_gui_file(filename: str, load_as_obj: bool = True):
+    """
+    Load a cached file from the GUI cache directory.
+
+    :param filename: The name of the file to load.
+    :type filename: str
+    :param load_as_obj: Whether to load the file as an object or raw content as string. Defaults to True.
+    :type load_as_obj: bool
+    :return: The contents of the file, loaded as either a string, a Pandas DataFrame or a set.
+    :rtype: str or pandas.DataFrame or set or None
+    """
     directory = get_gui_cache_dir()
     file_path = directory.joinpath(filename)
     if file_path.exists():
-        if file_path.suffix in {'.csv', '.tsv'}:
+        if file_path.suffix in {'.csv', '.tsv'} and load_as_obj:
             return load_csv(file_path, index_col=0)
-        elif file_path.suffix in {'.txt'}:
+        elif file_path.suffix in {'.txt'} and load_as_obj:
             with open(file_path) as f:
                 return {item.strip() for item in f.readlines()}
 

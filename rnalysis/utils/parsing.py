@@ -7,6 +7,7 @@ from typing import Any, Dict, Union, List, Tuple
 
 import numpy as np
 import pandas as pd
+import unicodedata
 from tqdm.auto import tqdm
 
 from rnalysis.utils import validation
@@ -358,3 +359,41 @@ def replace_last_occurrence(regex, repl, item):
         # Replace the last occurrence of the regex with the replacement string
         start, end = match.span()
         return item[:start] + re.sub(regex, repl, item[start:end]) + item[end:]
+
+
+def df_to_html(df: pd.DataFrame):
+    """
+    Convert a pandas DataFrame to an HTML table.
+
+    :param df: A pandas DataFrame to be converted.
+    :type df: pandas.DataFrame
+    :return: A string representation of the HTML table.
+    :rtype: str
+    """
+    styler = df.style.format(precision=2)
+    styler.set_table_styles(
+        [{'selector': 'td', 'props': 'border: 1px solid grey; border-collapse: collapse;'},
+         {'selector': 'th', 'props': 'border: 1px solid grey; border-collapse: collapse;'}], )
+    html = replace_last_occurrence(r'<td class="data col[\d]+ row_trim" >...<\/td>', '',
+                                   styler.to_html(max_rows=8, max_columns=4, float_format=lambda x: f"{x:.2f}"))
+    return html
+
+
+def slugify(value, allow_unicode=False):
+    """
+    Convert to ASCII if 'allow_unicode' is False. Convert spaces or repeated
+    dashes to single dashes. Remove characters that aren't alphanumerics,
+    underscores, or hyphens. Also strip leading and
+    trailing whitespace, dashes, and underscores.
+    """
+    value = str(value)
+    if allow_unicode:
+        value = unicodedata.normalize("NFKC", value)
+    else:
+        value = (
+            unicodedata.normalize("NFKD", value)
+            .encode("ascii", "ignore")
+            .decode("ascii")
+        )
+    value = re.sub(r"[^\w\s-]", "", value)
+    return re.sub(r"[-\s]+", "-", value).strip("-_")

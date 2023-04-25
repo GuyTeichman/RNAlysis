@@ -1034,7 +1034,7 @@ class SetOperationWindow(gui_widgets.MinMaxDialog):
             else:
                 output_set = getattr(first_obj, func_name)(*other_objs, **kwargs)
 
-        if isinstance(output_set, set):
+        if output_set is not None:
             self.geneSetReturned.emit(output_set, output_name, ancestor_ids, kwargs)
         self.close()
 
@@ -1221,6 +1221,7 @@ class SetVisualizationWindow(gui_widgets.MinMaxDialog):
 class TabPage(QtWidgets.QWidget):
     functionApplied = QtCore.pyqtSignal(tuple)
     tableSpawned = QtCore.pyqtSignal(str, int, int, object)
+    otherSpawned = QtCore.pyqtSignal(str, int, int, object)
     filterObjectCreated = QtCore.pyqtSignal(object, int)
     featureSetCreated = QtCore.pyqtSignal(object, int)
     startedJob = QtCore.pyqtSignal(object, object)
@@ -1422,6 +1423,8 @@ class TabPage(QtWidgets.QWidget):
             self.tableSpawned.emit(f"'{source_name}'\noutput", new_id, job_id, outputs)
             self.featureSetCreated.emit(outputs, new_id)
         elif isinstance(outputs, pd.DataFrame):
+            new_id = JOB_COUNTER.get_id()
+            self.otherSpawned.emit(f"'{source_name}'\noutput", new_id, job_id, outputs)
             self.object_views.append(gui_windows.DataFrameView(outputs, source_name))
             self.object_views[-1].show()
         elif isinstance(outputs, np.ndarray):
@@ -3068,7 +3071,8 @@ class MainWindow(QtWidgets.QMainWindow):
 
         if self._generate_report:
             tab.functionApplied.connect(self.update_report_from_worker)
-            tab.tableSpawned.connect(self.update_report_func_spawns)
+            tab.tableSpawned.connect(self.update_report_tab_spawns)
+            tab.otherSpawned.connect(self.update_report_other_spawns)
             tab.tabLoaded.connect(self.add_tab_to_report)
             tab.tabReverted.connect(self.remove_tab_from_report)
 
@@ -3185,39 +3189,58 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def add_tab_to_report(self, tab_id: int, tab_name: str, obj: Union[filtering.Filter, enrichment.FeatureSet]):
         desc = self._format_report_desc(obj)
-        self.report.add_node(f"Loaded file\n'{tab_name}'", tab_id, [0], desc)
+        filename = self._cache_spawn(obj, str(tab_id))
+        self.report.add_node(f"Loaded file\n'{tab_name}'", tab_id, [0], desc, filename=filename)
 
     def remove_tab_from_report(self, tab_id: int):
         if self._generate_report:
             self.report.trim_node(tab_id)
 
     def update_report(self, name: str, job_id: int, predecessor_ids: List[int], description: str,
-                      node_type: str = 'data'):
-        self.report.add_node(name, job_id, predecessor_ids, description, node_type)
+                      node_type: str = 'data', filename: Union[str, Path] = None):
+        self.report.add_node(name, job_id, predecessor_ids, description, node_type, filename)
 
     def update_report_from_worker(self, worker_output: tuple):
         result = worker_output[0]  # TODO: use result in report generation
+        # TODO: add function name and shape like a call
         partial, job_id, predecessor_ids = worker_output[-3:]
         kwargs = partial.keywords
         name = generic.get_method_readable_name(partial.func)
         self.update_report(name, job_id, predecessor_ids, parsing.format_dict_for_display(kwargs), 'function')
 
-    def update_report_func_spawns(self, name: str, spawn_id: int, predecessor_id: int,
-                                  spawn: Union[filtering.Filter, enrichment.FeatureSet]):
+    def update_report_tab_spawns(self, name: str, spawn_id: int, predecessor_id: int,
+                                 spawn: Union[filtering.Filter, enrichment.FeatureSet]):
         desc = self._format_report_desc(spawn)
-        self.update_report(name, spawn_id, [predecessor_id], desc)  # TODO: use result in report generation
+        filename = self._cache_spawn(spawn, str(spawn_id))
+        self.update_report(name, spawn_id, [predecessor_id], desc, filename=filename)
+
+    def update_report_other_spawns(self, name: str, spawn_id: int, predecessor_id: int, spawn: pd.DataFrame):
+        desc = self._format_report_desc(spawn)
+        filename = self._cache_spawn(spawn, f'{spawn_id}_{name}')
+        self.update_report(name, spawn_id, [predecessor_id], desc, 'other', filename)
 
     @staticmethod
-    def _format_report_desc(obj: Union[filtering.Filter, enrichment.FeatureSet]):
+    def _cache_spawn(spawn: Union[filtering.Filter, enrichment.FeatureSet, pd.DataFrame], suffix: str):
+        if validation.isinstanceinh(spawn, filtering.Filter):
+            obj = spawn.df
+            filename = parsing.slugify(f'{suffix}_{spawn.fname.stem}') + '.csv'
+        elif validation.isinstanceinh(spawn, enrichment.FeatureSet):
+            obj = spawn
+            filename = parsing.slugify(f'{suffix}_{spawn.set_name}') + '.txt'
+        elif isinstance(spawn, (pd.Series, pd.DataFrame)):
+            obj = spawn
+            filename = parsing.slugify(f'{suffix}') + '.csv'
+        else:
+            raise TypeError(f"Invalid spawn type '{type(spawn)}' for spawn '{spawn}'!")
+        io.cache_gui_file(obj, filename)
+        return filename
+
+    @staticmethod
+    def _format_report_desc(obj: Union[filtering.Filter, enrichment.FeatureSet, pd.DataFrame]):
         if validation.isinstanceinh(obj, filtering.Filter):
-            styler = obj.df.style.format(precision=2)
-            styler.set_table_styles(
-                [{'selector': 'td', 'props': 'border: 1px solid grey; border-collapse: collapse;'},
-                 {'selector': 'th', 'props': 'border: 1px solid grey; border-collapse: collapse;'}], )
-            desc = obj.fname.stem + '<br>' + parsing.replace_last_occurrence(
-                r'<td class="data col[\d]+ row_trim" >...<\/td>', '', styler.to_html(max_rows=8, max_columns=4,
-                                                                                     float_format=lambda
-                                                                                         x: f"{x:.2f}")) + f'{obj.shape[0]} rows, {obj.shape[1]} columns'
+            html = parsing.df_to_html(obj.df)
+            desc = obj.fname.stem + '<br>' + html + f'{obj.shape[0]} rows, {obj.shape[1]} columns'
+
         elif validation.isinstanceinh(obj, enrichment.FeatureSet):
             items = []
             for i, item in enumerate(obj.gene_set):
@@ -3226,6 +3249,8 @@ class MainWindow(QtWidgets.QMainWindow):
                 items.append(item)
             items.append('...')
             desc = obj.set_name + '<br>' + parsing.items_to_html_table(items) + f'{len(obj.gene_set)} features'
+        elif isinstance(obj, (pd.DataFrame, pd.Series)):
+            desc = parsing.df_to_html(obj)
         else:
             raise TypeError(f"Invalid object type '{type(obj)}' for object '{obj}'.")
         return desc
@@ -3693,10 +3718,11 @@ class MainWindow(QtWidgets.QMainWindow):
         set_op_id = JOB_COUNTER.get_id()
         new_tab_id = JOB_COUNTER.get_id()
         if self._generate_report:
-            # TODO: use output in report
             self.update_report(output_name.replace(' output', ''), set_op_id, ancestor_ids,
                                parsing.format_dict_for_display(kwargs), 'function')
-            self.update_report_func_spawns('Set operation output', new_tab_id, set_op_id)
+            self.update_report_tab_spawns('Set operation output', new_tab_id, set_op_id,
+                                          enrichment.FeatureSet(output_set, output_name))
+
         self.new_tab_from_gene_set(output_set, new_tab_id, output_name)
 
     def visualize_gene_sets(self):

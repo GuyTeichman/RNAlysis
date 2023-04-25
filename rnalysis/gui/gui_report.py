@@ -1,4 +1,5 @@
 import re
+import shutil
 import typing
 import webbrowser
 from pathlib import Path
@@ -8,43 +9,57 @@ from pyvis.network import Network
 from typing_extensions import Literal
 
 from rnalysis import __version__
-from rnalysis.utils import parsing
+from rnalysis.utils import parsing, io
 
 
 class Node:
-    __slots__ = ('_node_id', '_node_name', '_predecessors', '_is_active', '_popup_element', '_node_type')
+    __slots__ = ('_node_id', '_node_name', '_predecessors', '_is_active', '_popup_element', '_node_type', '_filename')
 
-    def __init__(self, node_id: int, node_name: str, predecessors: list, popup_element: str, node_type: str):
+    def __init__(self, node_id: int, node_name: str, predecessors: list, popup_element: str, node_type: str,
+                 filename: str = None):
         self._node_id = node_id
         self._node_name = node_name
         self._predecessors = parsing.data_to_set(predecessors)
         self._popup_element = popup_element
         self._node_type = node_type
         self._is_active = True
+        self._filename = None if filename is None else Path(filename)
+        self._filename = filename
+
+        if filename is not None:
+            href = Path('tables').joinpath(filename).as_posix()
+            self._popup_element += f'<br><a href="{href}" target="_blank" rel="noopener noreferrer">Open file</a>'
+
+        if node_type in ['data', 'other']:
+            self._node_name += f' (#{node_id})'
 
     @property
-    def node_id(self):
+    def node_id(self) -> int:
         return self._node_id
 
     @property
-    def node_name(self):
+    def node_name(self) -> str:
         return self._node_name
 
     @property
-    def predecessors(self):
+    def predecessors(self) -> typing.Set[int]:
         return self._predecessors
 
     @property
-    def popup_element(self):
+    def popup_element(self) -> str:
         return self._popup_element
 
     @property
-    def node_type(self):
+    def node_type(self) -> str:
         return self._node_type
 
     @property
-    def is_active(self):
+    def is_active(self) -> bool:
         return self._is_active
+
+    @property
+    def filename(self) -> str:
+        return self._filename
 
     def set_active(self, is_active: bool):
         self._is_active = is_active
@@ -54,35 +69,40 @@ class Node:
 
 
 class ReportGenerator:
-    CSS_TEMPLATE_PATH = Path(__file__).parent.parent.joinpath('data_files/report_templates/vis.css')
+    CSS_TEMPLATE_PATH = Path(__file__).parent.parent.joinpath('data_files/report_templates/vis-network.min.css')
     JS_TEMPLATE_PATH = Path(__file__).parent.parent.joinpath('data_files/report_templates/vis-network.min.js')
-    NODE_STYLES = {'data': dict(),
-                   'function': dict(shape='triangleDown', color='yellow'),
-                   'other': dict(shape='hexagon', color='red')}
+    NODE_STYLES = {'root': dict(shape='box', color='#DAA520'),
+                   'data': dict(),
+                   'function': dict(shape='triangleDown', color='#DAA520'),
+                   'other': dict(shape='square', color='#DCDCDC'),
+                   'Count matrix': dict(color='#0D47A1'),
+                   'Differential expression': dict(color='#BF360C'),
+                   'Fold change': dict(color='00838F'),
+                   'Other table': dict(color='#F7B30A'),
+                   'Gene set': dict(color='#BA68C8')}
 
     def __init__(self):
         self.graph = networkx.DiGraph()
         self.nodes: typing.Dict[int, Node] = {}
 
-        self.add_node('Started RNAlysis session', 0, [])
+        self.add_node('Started RNAlysis session', 0, [], node_type='root')
 
     def add_node(self, name: str, node_id: int, predecessors: typing.List[int] = (0,), popup_element: str = '',
-                 node_type: Literal['data', 'function', 'other'] = 'data'):
+                 node_type: Literal['root', 'data', 'function', 'other'] = 'data', filename: str = None):
         if node_id in self.nodes:
             if self.nodes[node_id].is_active:
                 return
-            self.nodes[node_id].set_active(True)
-            predecessors = self.nodes[node_id].predecessors
-            name = self.nodes[node_id].node_name
-            popup_element = self.nodes[node_id].popup_element
-            node_type = self.nodes[node_id].node_type
+            node = self.nodes[node_id]
+            node.set_active(True)
+
             for pred in predecessors:
                 if not self.nodes[pred].is_active:
                     self.add_node('', pred)
         else:
-            self.nodes[node_id] = Node(node_id, name, predecessors, popup_element, node_type)
+            node = Node(node_id, name, predecessors, popup_element, node_type, filename)
+            self.nodes[node_id] = node
         kwargs = self.NODE_STYLES[node_type]
-        self.graph.add_node(node_id, label=name, title=popup_element, **kwargs)
+        self.graph.add_node(node.node_id, label=node.node_name, title=node.popup_element, **kwargs)
         for pred in predecessors:
             self.graph.add_edge(pred, node_id)
 
@@ -123,9 +143,10 @@ class ReportGenerator:
     "layout": {
         "hierarchical": {
             "enabled": true,
-            "levelSeparation": 95,
-            "nodeSpacing": 300,
-            "treeSpacing": 300,
+            "levelSeparation": 250,
+            "nodeSpacing": 250,
+            "treeSpacing": 250,
+            "direction": "LR",
             "sortMethod": "directed"
         }
     },
@@ -146,7 +167,18 @@ class ReportGenerator:
         for item in [self.CSS_TEMPLATE_PATH, self.JS_TEMPLATE_PATH]:
             with open(item, encoding="utf-8") as f:
                 content = f.read()
-            with open(save_path.joinpath(item.name), 'w') as outfile:
+            with open(save_path.joinpath(item.name), 'w', encoding="utf-8") as outfile:
                 outfile.write(content)
 
+        tables_path = save_path.joinpath('tables')
+        if tables_path.exists():
+            shutil.rmtree(tables_path)
+        tables_path.mkdir()
+
+        for ind, node in self.nodes.items():
+            if node.is_active and node.filename is not None:
+                content = io.load_cached_gui_file(node.filename, load_as_obj=False)
+                if content is not None:
+                    with open(tables_path.joinpath(node.filename), 'w') as f:
+                        f.write(content)
         webbrowser.open(save_file)
