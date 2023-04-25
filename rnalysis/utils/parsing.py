@@ -304,8 +304,57 @@ def parse_gff3_attributes(attr_str: str):
     return attributes_dict
 
 
-def beautify_dict(d: dict) -> str:
+def format_dict_for_display(d: dict) -> str:
+    """
+    Formats a dictionary for display in a human-readable format.
+
+    :param d: The dictionary to format.
+    :type d: dict
+    :return: A string representation of the dictionary with keys and values formatted for readability.
+    :rtype: str
+    """
     output = []
     for key, val in d.items():
         output.append(f"{key} = {repr(val)}")
     return ', \n'.join(output)
+
+
+def items_to_html_table(items):
+    """
+    Converts a list of strings to an HTML table with a single column.
+
+    :param items: The list of strings to convert.
+    :type items: list of str
+    :return: A string representation of the HTML table.
+    :rtype: str
+        """
+    table = '<table border="1" class="dataframe">\n'
+    for item in items:
+        table += f'<tr><td style="border: 1px solid black; border-collapse: collapse;"><b>{item}</b></td></tr>\n'
+    table += "</table>"
+    return table
+
+
+def replace_last_occurrence(regex, repl, item):
+    """
+    Replaces the last occurrence of a given regular expression in a string with a replacement string.
+
+    :param regex: The regular expression to search for.
+    :type regex: str
+    :param repl: The replacement string.
+    :type repl: str
+    :param item: The input string.
+    :type item: str
+    :return: The modified string.
+    :rtype: str
+    """
+    match = None
+    for m in re.finditer(regex, item):
+        match = m
+    if match is None:
+        # If no match was found, return the original string
+        return item
+    else:
+        # Replace the last occurrence of the regex with the replacement string
+        start, end = match.span()
+        return item[:start] + re.sub(regex, repl, item[start:end]) + item[end:]

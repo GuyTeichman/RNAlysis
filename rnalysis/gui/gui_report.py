@@ -54,8 +54,11 @@ class Node:
 
 
 class ReportGenerator:
+    CSS_TEMPLATE_PATH = Path(__file__).parent.parent.joinpath('data_files/report_templates/vis.css')
+    JS_TEMPLATE_PATH = Path(__file__).parent.parent.joinpath('data_files/report_templates/vis-network.min.js')
     NODE_STYLES = {'data': dict(),
-                   'function': dict(shape='triangleDown', color='yellow')}
+                   'function': dict(shape='triangleDown', color='yellow'),
+                   'other': dict(shape='hexagon', color='red')}
 
     def __init__(self):
         self.graph = networkx.DiGraph()
@@ -64,7 +67,7 @@ class ReportGenerator:
         self.add_node('Started RNAlysis session', 0, [])
 
     def add_node(self, name: str, node_id: int, predecessors: typing.List[int] = (0,), popup_element: str = '',
-                 node_type: Literal['data', 'function'] = 'data'):
+                 node_type: Literal['data', 'function', 'other'] = 'data'):
         if node_id in self.nodes:
             if self.nodes[node_id].is_active:
                 return
@@ -91,6 +94,18 @@ class ReportGenerator:
             for pred in predecessors:
                 if self.nodes[pred].node_type == 'function':
                     self.trim_node(pred)
+
+    def _modify_html(self, html: str, title: str) -> str:
+        if html.count(title) > 1:
+            html = re.sub(r'<center>.+?<\/h1>\s+<\/center>', '', html, 1, re.DOTALL)
+
+        css_line = f'<link rel = "stylesheet" href="{self.CSS_TEMPLATE_PATH.name}"/>'
+        js_line = f'<script src="{self.JS_TEMPLATE_PATH.name}"></script>'
+
+        html = re.sub(r'<link\s+rel="stylesheet"\s+href\s*=\s*"([^"]+)"[^>]*>', css_line, html, 1, re.DOTALL)
+        html = re.sub(r'<script\s+src\s*=\s*"(https?:\/\/[^"]+\.js)"[^>]*><\/script>', js_line, html, 1, re.DOTALL)
+
+        return html
 
     def generate_report(self, save_path: Path, show_buttons: bool = False):
         assert save_path.exists() and save_path.is_dir()
@@ -123,10 +138,15 @@ class ReportGenerator:
         "solver": "hierarchicalRepulsion"
     }
 }""")
-        html = vis_report.generate_html(save_file)
-        if html.count(title) > 1:
-            html = re.sub(r'<center>.+?<\/h1>\s+<\/center>', '', html, 1, re.DOTALL)
+        html = self._modify_html(vis_report.generate_html(save_file), title)
+
         with open(save_file, 'w') as f:
             f.write(html)
+
+        for item in [self.CSS_TEMPLATE_PATH, self.JS_TEMPLATE_PATH]:
+            with open(item, encoding="utf-8") as f:
+                content = f.read()
+            with open(save_path.joinpath(item.name), 'w') as outfile:
+                outfile.write(content)
 
         webbrowser.open(save_file)

@@ -1220,7 +1220,7 @@ class SetVisualizationWindow(gui_widgets.MinMaxDialog):
 
 class TabPage(QtWidgets.QWidget):
     functionApplied = QtCore.pyqtSignal(tuple)
-    tableSpawned = QtCore.pyqtSignal(str, int, int)
+    tableSpawned = QtCore.pyqtSignal(str, int, int, object)
     filterObjectCreated = QtCore.pyqtSignal(object, int)
     featureSetCreated = QtCore.pyqtSignal(object, int)
     startedJob = QtCore.pyqtSignal(object, object)
@@ -1228,7 +1228,7 @@ class TabPage(QtWidgets.QWidget):
     tabSaved = QtCore.pyqtSignal()
     changeIcon = QtCore.pyqtSignal(str)
     geneSetsRequested = QtCore.pyqtSignal(object)
-    tabLoaded = QtCore.pyqtSignal(int, str)
+    tabLoaded = QtCore.pyqtSignal(int, str, object)
     tabReverted = QtCore.pyqtSignal(int)
 
     EXCLUDED_FUNCS = set()
@@ -1405,7 +1405,7 @@ class TabPage(QtWidgets.QWidget):
         result = worker.run()
         if kwargs.get('inplace', False):
             self.tab_id = JOB_COUNTER.get_id()
-            self.tableSpawned.emit(f"'{source_name}'\noutput", self.tab_id, job_id)
+            self.tableSpawned.emit(f"'{source_name}'\noutput", self.tab_id, job_id, self.obj())
 
         self.update_tab(prev_name != self.obj_name())
         self.process_outputs(result, job_id, source_name)
@@ -1415,11 +1415,11 @@ class TabPage(QtWidgets.QWidget):
             return
         elif validation.isinstanceinh(outputs, (filtering.Filter, fastq.filtering.Filter)):
             new_id = JOB_COUNTER.get_id()
-            self.tableSpawned.emit(f"'{source_name}'\noutput", new_id, job_id)
+            self.tableSpawned.emit(f"'{source_name}'\noutput", new_id, job_id, outputs)
             self.filterObjectCreated.emit(outputs, new_id)
         elif validation.isinstanceinh(outputs, enrichment.FeatureSet):
             new_id = JOB_COUNTER.get_id()
-            self.tableSpawned.emit(f"'{source_name}'\noutput", new_id, job_id)
+            self.tableSpawned.emit(f"'{source_name}'\noutput", new_id, job_id, outputs)
             self.featureSetCreated.emit(outputs, new_id)
         elif isinstance(outputs, pd.DataFrame):
             self.object_views.append(gui_windows.DataFrameView(outputs, source_name))
@@ -2114,7 +2114,7 @@ class FilterTabPage(TabPage):
 
         self.changeIcon.emit(type(self.filter_obj).__name__)
 
-        self.tabLoaded.emit(self.tab_id, self.name)
+        self.tabLoaded.emit(self.tab_id, self.name, self.obj())
 
     def start_from_filter_obj(self, filter_obj: filtering.Filter, tab_id: int, name: str = None):
         self.tab_id = tab_id
@@ -2729,7 +2729,8 @@ class InplaceCachedCommand(InplaceCommand):
             mock_partial = functools.partial(lambda *args, **kwargs: None, self.args, self.kwargs)
             self.tab.functionApplied.emit(
                 (self.tab.obj(), mock_partial, self.new_job_id, self.predecessors + [self.prev_job_id]))
-            self.tab.tableSpawned.emit(f"'{source_name}'\noutput", self.new_spawn_id, self.new_job_id)
+            self.tab.tableSpawned.emit(f"'{source_name}'\noutput", self.new_spawn_id, self.new_job_id,
+                                       self.processed_obj)
 
     def undo(self):
         processed_obj = self.tab.obj()
@@ -2758,7 +2759,7 @@ class SetOpInplacCommand(InplaceCommand):
         self.tab.update_tab()
         new_spawn_id = JOB_COUNTER.get_id()
         self.tab.tab_id = new_spawn_id
-        self.tab.tableSpawned.emit(f"'{source_name}'\noutput", new_spawn_id, self.new_job_id)
+        self.tab.tableSpawned.emit(f"'{source_name}'\noutput", new_spawn_id, self.new_job_id, self.tab.obj())
 
 
 class PipelineInplaceCommand(QtWidgets.QUndoCommand):
@@ -3151,7 +3152,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.add_new_tab(filter_obj.fname.name if name is None else name)
         self.tabs.currentWidget().start_from_filter_obj(filter_obj, tab_id)
         if self._generate_report:
-            self.add_tab_to_report(tab_id, self.tabs.currentWidget().name)
+            self.add_tab_to_report(tab_id, self.tabs.currentWidget().name, self.tabs.currentWidget().obj())
 
         QtWidgets.QApplication.processEvents()
 
@@ -3179,11 +3180,12 @@ class MainWindow(QtWidgets.QMainWindow):
             tab_id = self.tabs.currentWidget().tab_id
         self.tabs.currentWidget().start_from_gene_set(tab_id, gene_set)
         if self._generate_report:
-            self.add_tab_to_report(tab_id, self.tabs.currentWidget().name)
+            self.add_tab_to_report(tab_id, self.tabs.currentWidget().name, self.tabs.currentWidget().obj())
         QtWidgets.QApplication.processEvents()
 
-    def add_tab_to_report(self, tab_id: int, tab_name: str):
-        self.report.add_node(f"Loaded file\n'{tab_name}'", tab_id, [0])
+    def add_tab_to_report(self, tab_id: int, tab_name: str, obj: Union[filtering.Filter, enrichment.FeatureSet]):
+        desc = self._format_report_desc(obj)
+        self.report.add_node(f"Loaded file\n'{tab_name}'", tab_id, [0], desc)
 
     def remove_tab_from_report(self, tab_id: int):
         if self._generate_report:
@@ -3198,10 +3200,35 @@ class MainWindow(QtWidgets.QMainWindow):
         partial, job_id, predecessor_ids = worker_output[-3:]
         kwargs = partial.keywords
         name = generic.get_method_readable_name(partial.func)
-        self.update_report(name, job_id, predecessor_ids, parsing.beautify_dict(kwargs), 'function')
+        self.update_report(name, job_id, predecessor_ids, parsing.format_dict_for_display(kwargs), 'function')
 
-    def update_report_func_spawns(self, name: str, spawn_id: int, predecessor_id: int):
-        self.update_report(name, spawn_id, [predecessor_id], '')  # TODO: use result in report generation
+    def update_report_func_spawns(self, name: str, spawn_id: int, predecessor_id: int,
+                                  spawn: Union[filtering.Filter, enrichment.FeatureSet]):
+        desc = self._format_report_desc(spawn)
+        self.update_report(name, spawn_id, [predecessor_id], desc)  # TODO: use result in report generation
+
+    @staticmethod
+    def _format_report_desc(obj: Union[filtering.Filter, enrichment.FeatureSet]):
+        if validation.isinstanceinh(obj, filtering.Filter):
+            styler = obj.df.style.format(precision=2)
+            styler.set_table_styles(
+                [{'selector': 'td', 'props': 'border: 1px solid grey; border-collapse: collapse;'},
+                 {'selector': 'th', 'props': 'border: 1px solid grey; border-collapse: collapse;'}], )
+            desc = obj.fname.stem + '<br>' + parsing.replace_last_occurrence(
+                r'<td class="data col[\d]+ row_trim" >...<\/td>', '', styler.to_html(max_rows=8, max_columns=4,
+                                                                                     float_format=lambda
+                                                                                         x: f"{x:.2f}")) + f'{obj.shape[0]} rows, {obj.shape[1]} columns'
+        elif validation.isinstanceinh(obj, enrichment.FeatureSet):
+            items = []
+            for i, item in enumerate(obj.gene_set):
+                if i == 5:
+                    break
+                items.append(item)
+            items.append('...')
+            desc = obj.set_name + '<br>' + parsing.items_to_html_table(items) + f'{len(obj.gene_set)} features'
+        else:
+            raise TypeError(f"Invalid object type '{type(obj)}' for object '{obj}'.")
+        return desc
 
     def delete_pipeline(self):
         if len(self.pipelines) == 0:
@@ -3668,7 +3695,7 @@ class MainWindow(QtWidgets.QMainWindow):
         if self._generate_report:
             # TODO: use output in report
             self.update_report(output_name.replace(' output', ''), set_op_id, ancestor_ids,
-                               parsing.beautify_dict(kwargs), 'function')
+                               parsing.format_dict_for_display(kwargs), 'function')
             self.update_report_func_spawns('Set operation output', new_tab_id, set_op_id)
         self.new_tab_from_gene_set(output_set, new_tab_id, output_name)
 
