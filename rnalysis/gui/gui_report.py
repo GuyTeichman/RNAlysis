@@ -157,6 +157,9 @@ class ReportGenerator:
         },
         "minVelocity": 0.75,
         "solver": "hierarchicalRepulsion"
+    },
+    "interaction": {
+    "navigationButtons": true
     }
 }""")
         html = self._modify_html(vis_report.generate_html(save_file), title)
