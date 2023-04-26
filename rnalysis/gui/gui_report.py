@@ -14,6 +14,7 @@ from rnalysis.utils import parsing, io
 
 class Node:
     __slots__ = ('_node_id', '_node_name', '_predecessors', '_is_active', '_popup_element', '_node_type', '_filename')
+    DATA_TYPES = {'Count matrix', 'Differential expression', 'Fold change', 'Other table', 'Gene set', 'dataframe'}
 
     def __init__(self, node_id: int, node_name: str, predecessors: list, popup_element: str, node_type: str,
                  filename: str = None):
@@ -30,7 +31,7 @@ class Node:
             href = Path('tables').joinpath(filename).as_posix()
             self._popup_element += f'<br><a href="{href}" target="_blank" rel="noopener noreferrer">Open file</a>'
 
-        if node_type in ['data', 'other']:
+        if node_type in self.DATA_TYPES:
             self._node_name += f' (#{node_id})'
 
     @property
@@ -71,10 +72,9 @@ class Node:
 class ReportGenerator:
     CSS_TEMPLATE_PATH = Path(__file__).parent.parent.joinpath('data_files/report_templates/vis-network.min.css')
     JS_TEMPLATE_PATH = Path(__file__).parent.parent.joinpath('data_files/report_templates/vis-network.min.js')
-    NODE_STYLES = {'root': dict(shape='box', color='#DAA520'),
-                   'data': dict(),
-                   'function': dict(shape='triangleDown', color='#DAA520'),
-                   'other': dict(shape='square', color='#DCDCDC'),
+    NODE_STYLES = {'root': dict(shape='box', color='#00CED1'),
+                   'function': dict(shape='triangleDown', color='#00CED1'),
+                   'dataframe': dict(shape='square', color='#DCDCDC'),
                    'Count matrix': dict(color='#0D47A1'),
                    'Differential expression': dict(color='#BF360C'),
                    'Fold change': dict(color='00838F'),
@@ -88,7 +88,7 @@ class ReportGenerator:
         self.add_node('Started RNAlysis session', 0, [], node_type='root')
 
     def add_node(self, name: str, node_id: int, predecessors: typing.List[int] = (0,), popup_element: str = '',
-                 node_type: Literal['root', 'data', 'function', 'other'] = 'data', filename: str = None):
+                 node_type: Literal[tuple(NODE_STYLES)] = 'Other table', filename: str = None):
         if node_id in self.nodes:
             if self.nodes[node_id].is_active:
                 return

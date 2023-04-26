@@ -28,7 +28,7 @@ from rnalysis.gui import gui_style, gui_widgets, gui_windows, gui_graphics, gui_
 from rnalysis.utils import io, validation, generic, parsing, settings, clustering
 
 FILTER_OBJ_TYPES = {'Count matrix': filtering.CountFilter, 'Differential expression': filtering.DESeqFilter,
-                    'Fold change': filtering.FoldChangeFilter, 'Other': filtering.Filter}
+                    'Fold change': filtering.FoldChangeFilter, 'Other table': filtering.Filter}
 FILTER_OBJ_TYPES_INV = {val.__name__: key for key, val in FILTER_OBJ_TYPES.items()}
 INIT_EXCLUDED_PARAMS = {'self', 'fname', 'suppress_warnings'}
 
@@ -1220,8 +1220,7 @@ class SetVisualizationWindow(gui_widgets.MinMaxDialog):
 
 class TabPage(QtWidgets.QWidget):
     functionApplied = QtCore.pyqtSignal(tuple)
-    tableSpawned = QtCore.pyqtSignal(str, int, int, object)
-    otherSpawned = QtCore.pyqtSignal(str, int, int, object)
+    itemSpawned = QtCore.pyqtSignal(str, int, int, object)
     filterObjectCreated = QtCore.pyqtSignal(object, int)
     featureSetCreated = QtCore.pyqtSignal(object, int)
     startedJob = QtCore.pyqtSignal(object, object)
@@ -1406,7 +1405,7 @@ class TabPage(QtWidgets.QWidget):
         result = worker.run()
         if kwargs.get('inplace', False):
             self.tab_id = JOB_COUNTER.get_id()
-            self.tableSpawned.emit(f"'{source_name}'\noutput", self.tab_id, job_id, self.obj())
+            self.itemSpawned.emit(f"'{source_name}'\noutput", self.tab_id, job_id, self.obj())
 
         self.update_tab(prev_name != self.obj_name())
         self.process_outputs(result, job_id, source_name)
@@ -1416,15 +1415,15 @@ class TabPage(QtWidgets.QWidget):
             return
         elif validation.isinstanceinh(outputs, (filtering.Filter, fastq.filtering.Filter)):
             new_id = JOB_COUNTER.get_id()
-            self.tableSpawned.emit(f"'{source_name}'\noutput", new_id, job_id, outputs)
+            self.itemSpawned.emit(f"'{source_name}'\noutput", new_id, job_id, outputs)
             self.filterObjectCreated.emit(outputs, new_id)
         elif validation.isinstanceinh(outputs, enrichment.FeatureSet):
             new_id = JOB_COUNTER.get_id()
-            self.tableSpawned.emit(f"'{source_name}'\noutput", new_id, job_id, outputs)
+            self.itemSpawned.emit(f"'{source_name}'\noutput", new_id, job_id, outputs)
             self.featureSetCreated.emit(outputs, new_id)
         elif isinstance(outputs, pd.DataFrame):
             new_id = JOB_COUNTER.get_id()
-            self.otherSpawned.emit(f"'{source_name}'\noutput", new_id, job_id, outputs)
+            self.itemSpawned.emit(f"'{source_name}'\noutput", new_id, job_id, outputs)
             self.object_views.append(gui_windows.DataFrameView(outputs, source_name))
             self.object_views[-1].show()
         elif isinstance(outputs, np.ndarray):
@@ -2174,7 +2173,7 @@ class CreatePipelineWindow(gui_widgets.MinMaxDialog, FilterTabPage):
 
         self.basic_widgets['table_type_combo'] = QtWidgets.QComboBox()
         self.basic_widgets['table_type_combo'].addItems(self.PIPELINE_TYPES.keys())
-        self.basic_widgets['table_type_combo'].setCurrentText('Other')
+        self.basic_widgets['table_type_combo'].setCurrentText('Other table')
 
         self.basic_widgets['pipeline_name'] = QtWidgets.QLineEdit()
         self.basic_widgets['pipeline_name'].setText('New Pipeline')
@@ -2499,7 +2498,7 @@ class MultiOpenWindow(QtWidgets.QDialog):
         self.scroll_layout.addWidget(self.all_types_combo, 2, 1)
 
         self.all_types_combo.addItems(list(FILTER_OBJ_TYPES.keys()))
-        self.all_types_combo.setCurrentText('Other')
+        self.all_types_combo.setCurrentText('Other table')
         self.all_types_combo.currentTextChanged.connect(self.change_all_table_types)
 
         for i, file in enumerate(self.files, 3):
@@ -2511,7 +2510,7 @@ class MultiOpenWindow(QtWidgets.QDialog):
             self.kwargs[file] = QtWidgets.QGridLayout(kwargs_widget)
 
             self.table_types[file].currentTextChanged.connect(functools.partial(self.update_args_ui, file))
-            self.table_types[file].setCurrentText('Other')
+            self.table_types[file].setCurrentText('Other tabke')
 
             self.scroll_layout.addWidget(self.paths[file], i, 0)
             self.scroll_layout.addWidget(self.table_types[file], i, 1)
@@ -2732,8 +2731,8 @@ class InplaceCachedCommand(InplaceCommand):
             mock_partial = functools.partial(lambda *args, **kwargs: None, self.args, self.kwargs)
             self.tab.functionApplied.emit(
                 (self.tab.obj(), mock_partial, self.new_job_id, self.predecessors + [self.prev_job_id]))
-            self.tab.tableSpawned.emit(f"'{source_name}'\noutput", self.new_spawn_id, self.new_job_id,
-                                       self.processed_obj)
+            self.tab.itemSpawned.emit(f"'{source_name}'\noutput", self.new_spawn_id, self.new_job_id,
+                                      self.processed_obj)
 
     def undo(self):
         processed_obj = self.tab.obj()
@@ -2762,7 +2761,7 @@ class SetOpInplacCommand(InplaceCommand):
         self.tab.update_tab()
         new_spawn_id = JOB_COUNTER.get_id()
         self.tab.tab_id = new_spawn_id
-        self.tab.tableSpawned.emit(f"'{source_name}'\noutput", new_spawn_id, self.new_job_id, self.tab.obj())
+        self.tab.itemSpawned.emit(f"'{source_name}'\noutput", new_spawn_id, self.new_job_id, self.tab.obj())
 
 
 class PipelineInplaceCommand(QtWidgets.QUndoCommand):
@@ -3071,8 +3070,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
         if self._generate_report:
             tab.functionApplied.connect(self.update_report_from_worker)
-            tab.tableSpawned.connect(self.update_report_tab_spawns)
-            tab.otherSpawned.connect(self.update_report_other_spawns)
+            tab.itemSpawned.connect(self.update_report_spawn)
             tab.tabLoaded.connect(self.add_tab_to_report)
             tab.tabReverted.connect(self.remove_tab_from_report)
 
@@ -3190,14 +3188,15 @@ class MainWindow(QtWidgets.QMainWindow):
     def add_tab_to_report(self, tab_id: int, tab_name: str, obj: Union[filtering.Filter, enrichment.FeatureSet]):
         desc = self._format_report_desc(obj)
         filename = self._cache_spawn(obj, str(tab_id))
-        self.report.add_node(f"Loaded file\n'{tab_name}'", tab_id, [0], desc, filename=filename)
+        obj_type = self._get_spawn_type(obj)
+        self.report.add_node(f"Loaded file\n'{tab_name}'", tab_id, [0], desc, obj_type, filename)
 
     def remove_tab_from_report(self, tab_id: int):
         if self._generate_report:
             self.report.trim_node(tab_id)
 
     def update_report(self, name: str, job_id: int, predecessor_ids: List[int], description: str,
-                      node_type: str = 'data', filename: Union[str, Path] = None):
+                      node_type: str = 'Other table', filename: Union[str, Path] = None):
         self.report.add_node(name, job_id, predecessor_ids, description, node_type, filename)
 
     def update_report_from_worker(self, worker_output: tuple):
@@ -3208,16 +3207,24 @@ class MainWindow(QtWidgets.QMainWindow):
         name = generic.get_method_readable_name(partial.func)
         self.update_report(name, job_id, predecessor_ids, parsing.format_dict_for_display(kwargs), 'function')
 
-    def update_report_tab_spawns(self, name: str, spawn_id: int, predecessor_id: int,
-                                 spawn: Union[filtering.Filter, enrichment.FeatureSet]):
+    def update_report_spawn(self, name: str, spawn_id: int, predecessor_id: int,
+                            spawn: Union[filtering.Filter, enrichment.FeatureSet, pd.DataFrame]):
         desc = self._format_report_desc(spawn)
         filename = self._cache_spawn(spawn, str(spawn_id))
-        self.update_report(name, spawn_id, [predecessor_id], desc, filename=filename)
+        spawn_type = self._get_spawn_type(spawn)
+        self.update_report(name, spawn_id, [predecessor_id], desc, spawn_type, filename)
 
-    def update_report_other_spawns(self, name: str, spawn_id: int, predecessor_id: int, spawn: pd.DataFrame):
-        desc = self._format_report_desc(spawn)
-        filename = self._cache_spawn(spawn, f'{spawn_id}_{name}')
-        self.update_report(name, spawn_id, [predecessor_id], desc, 'other', filename)
+    @staticmethod
+    def _get_spawn_type(spawn: Union[filtering.Filter, enrichment.FeatureSet]):
+        if validation.isinstanceinh(spawn, filtering.Filter):
+            spawn_type = FILTER_OBJ_TYPES_INV.get(type(spawn).__name__, 'Other table')
+        elif validation.isinstanceinh(spawn, enrichment.FeatureSet):
+            spawn_type = 'Gene set'
+        elif isinstance(spawn, (pd.Series, pd.DataFrame)):
+            spawn_type = 'dataframe'
+        else:
+            raise TypeError(f"Invalid spawn type '{type(spawn)}' for spawn '{spawn}'!")
+        return spawn_type
 
     @staticmethod
     def _cache_spawn(spawn: Union[filtering.Filter, enrichment.FeatureSet, pd.DataFrame], suffix: str):
@@ -3720,8 +3727,8 @@ class MainWindow(QtWidgets.QMainWindow):
         if self._generate_report:
             self.update_report(output_name.replace(' output', ''), set_op_id, ancestor_ids,
                                parsing.format_dict_for_display(kwargs), 'function')
-            self.update_report_tab_spawns('Set operation output', new_tab_id, set_op_id,
-                                          enrichment.FeatureSet(output_set, output_name))
+            self.update_report_spawn('Set operation output', new_tab_id, set_op_id,
+                                     enrichment.FeatureSet(output_set, output_name))
 
         self.new_tab_from_gene_set(output_set, new_tab_id, output_name)
 
