@@ -2566,6 +2566,7 @@ class DESeqFilter(Filter):
         :type interactive: bool (default=True)
         :param show_cursor: if True, show the cursor position on the plot during interactive mode
         :type show_cursor: bool (default=False)
+        :rtype: A matplotlib Figure
 
         .. figure:: /figures/volcano.png
            :align:   center
@@ -2945,7 +2946,7 @@ class CountFilter(Filter):
     def pairplot(self, samples: Union[param_typing.GroupedColumns, Literal['all']] = 'all',
                  log2: bool = True, show_corr: bool = True, title: Union[str, Literal['auto']] = 'auto',
                  title_fontsize: float = 30,
-                 label_fontsize: float = 16, tick_fontsize: float = 12) -> sns.PairGrid:
+                 label_fontsize: float = 16, tick_fontsize: float = 12) -> plt.Figure:
 
         """
         Plot pairwise relationships in the dataset. \
@@ -2971,7 +2972,7 @@ class CountFilter(Filter):
         :type label_fontsize: float (default=15)
          :param tick_fontsize: determines the font size of the X and Y tick labels.
         :type tick_fontsize: float (default=10)
-        :return: An instance of seaborn.PairGrid.
+        :return: A matplotlib Figure.
 
         .. figure:: /figures/pairplot.png
            :align:   center
@@ -3017,7 +3018,7 @@ class CountFilter(Filter):
         except AttributeError:
             pairplt.figure.set_constrained_layout(True)
         plt.show()
-        return pairplt
+        return pairplt.figure
 
     @readable_name('Average the expression values of replicate columns')
     def average_replicate_samples(self, sample_grouping: param_typing.GroupedColumns,
@@ -3596,7 +3597,7 @@ class CountFilter(Filter):
     def ma_plot(self, ref_column: Union[Literal['auto'], param_typing.ColumnName] = 'auto',
                 columns: Union[param_typing.ColumnNames, Literal['all']] = 'all', split_plots: bool = False,
                 title: Union[str, Literal['auto']] = 'auto', title_fontsize: float = 20,
-                label_fontsize: Union[float, Literal['auto']] = 'auto', tick_fontsize: float = 12):
+                label_fontsize: Union[float, Literal['auto']] = 'auto', tick_fontsize: float = 12) -> List[plt.Figure]:
         """
 
         :param ref_column: the column to be used as reference for MA plot. If 'auto', \
@@ -3616,7 +3617,7 @@ class CountFilter(Filter):
         :type label_fontsize: float (default=15)
          :param tick_fontsize: determines the font size of the X and Y tick labels.
         :type tick_fontsize: float (default=10)
-        :rtype: a matplotlib Axes.
+        :rtype: a list of matplotlib Figures.
         """
         if isinstance(ref_column, int):
             assert ref_column < len(self.columns), "the index of 'ref_column' is larger than the number of columns!"
@@ -3673,6 +3674,10 @@ class CountFilter(Filter):
         if not split_plots:
             fig.tight_layout(rect=[0, 0.03, 1, 0.92])
         plt.show()
+
+        if split_plots:
+            return [subplots[i][0] for i in range(len(columns))]
+        return [fig]
 
     @readable_name('Filter genes with low expression in all columns')
     def filter_low_reads(self, threshold: float = 5, opposite: bool = False, inplace: bool = True):
@@ -4322,7 +4327,7 @@ class CountFilter(Filter):
                     metric: str = 'Euclidean',
                     linkage: Literal['Single', 'Average', 'Complete', 'Ward', 'Weighted', 'Centroid', 'Median'
                     ] = 'Average', title: Union[str, Literal['auto']] = 'auto', title_fontsize: float = 20,
-                    tick_fontsize: float = 12):
+                    tick_fontsize: float = 12) -> plt.Figure:
         """
         Performs hierarchical clustering and plots a clustergram on the base-2 log of a given set of samples.
 
@@ -4343,7 +4348,7 @@ class CountFilter(Filter):
         :type title_fontsize: float (default=30)
         :param tick_fontsize: determines the font size of the X and Y tick labels.
         :type tick_fontsize: float (default=10)
-        :rtype: A seaborn clustermap object.
+        :rtype: A matplotlib Figure.
 
 
         .. figure:: /figures/clustergram.png
@@ -4374,7 +4379,7 @@ class CountFilter(Filter):
         plt.title(title, fontsize=title_fontsize)
         plt.tick_params(axis='both', which='both', labelsize=tick_fontsize)
         plt.show()
-        return clustergram
+        return clustergram.figure
 
     @readable_name('Plot expression of specific genes')
     def plot_expression(self, features: Union[List[str], str],
@@ -4579,8 +4584,8 @@ class CountFilter(Filter):
         if title == 'auto':
             title = f'PCA plot of {self.fname.stem}'
         pc_var = pca_obj.explained_variance_ratio_
-        figs = []
-        self._scree_plot(pc_var, label_fontsize, title_fontsize, tick_fontsize)
+
+        figs = [self._scree_plot(pc_var, label_fontsize, title_fontsize, tick_fontsize)]
         for first_pc in range(n_components):
             for second_pc in range(first_pc + 1, n_components):
                 figs.append(CountFilter._pca_plot(
@@ -4593,7 +4598,8 @@ class CountFilter(Filter):
         return pca_obj, figs
 
     @staticmethod
-    def _scree_plot(pc_var: List[float], label_fontsize: float, title_fontsize: float, tick_fontsize: float):
+    def _scree_plot(pc_var: List[float], label_fontsize: float, title_fontsize: float,
+                    tick_fontsize: float) -> plt.Figure:
         pc_var_percent = [var * 100 for var in pc_var]
         pc_var_cumsum = np.cumsum(pc_var_percent)
         pc_indices = list(range(len(pc_var)))
@@ -4610,11 +4616,12 @@ class CountFilter(Filter):
         ax.tick_params(axis='both', which='both', labelsize=tick_fontsize)
         ax.yaxis.set_major_formatter('{x}%')
         generic.despine(ax)
+        return fig
 
     @staticmethod
     def _pca_plot(final_df: pd.DataFrame, pc1_var: float, pc2_var: float, sample_grouping: param_typing.GroupedColumns,
                   labels: bool, title: str, title_fontsize: float, label_fontsize: float, tick_fontsize: float,
-                  proportional_axes: bool):
+                  proportional_axes: bool) -> plt.Figure:
         """
         Internal method, used to plot the results from CountFilter.pca().
 
@@ -4787,7 +4794,7 @@ class CountFilter(Filter):
     def box_plot(self, samples: Union[param_typing.GroupedColumns, Literal['all']] = 'all', notch: bool = True,
                  scatter: bool = False, ylabel: str = 'log10(Normalized reads + 1)',
                  title: Union[str, Literal['auto']] = 'auto',
-                 title_fontsize: float = 20, label_fontsize: float = 16, tick_fontsize: float = 12) -> plt.Axes:
+                 title_fontsize: float = 20, label_fontsize: float = 16, tick_fontsize: float = 12) -> plt.Figure:
         """
         Generates a box plot of the specified samples in the CountFilter object in log10 scale. \
         Can plot both single samples and average multiple replicates. \
@@ -4814,7 +4821,7 @@ class CountFilter(Filter):
         :type label_fontsize: float (default=15)
          :param tick_fontsize: determines the font size of the X and Y tick labels.
         :type tick_fontsize: float (default=10)
-        :rtype: a matplotlib axes.
+        :rtype: a matplotlib Figure.
 
         .. figure:: /figures/box_plot.png
            :align:   center
@@ -4848,13 +4855,13 @@ class CountFilter(Filter):
 
         generic.despine(ax)
         plt.show()
-        return ax
+        return ax.figure
 
     @readable_name('Enhanced box plot')
     def enhanced_box_plot(self, samples: Union[param_typing.GroupedColumns, Literal['all']] = 'all',
                           scatter: bool = False, ylabel: str = 'log10(Normalized reads + 1)',
                           title: Union[str, Literal['auto']] = 'auto', title_fontsize: float = 20,
-                          label_fontsize: float = 16, tick_fontsize: float = 12) -> plt.Axes:
+                          label_fontsize: float = 16, tick_fontsize: float = 12) -> plt.Figure:
         """
         Generates an enhanced box-plot of the specified samples in the CountFilter object in log10 scale. \
         Can plot both single samples and average multiple replicates. \
@@ -4879,7 +4886,7 @@ class CountFilter(Filter):
         :type label_fontsize: float (default=15)
         :param tick_fontsize: determines the font size of the X and Y tick labels.
         :type tick_fontsize: float (default=10)
-        :rtype: matplotlib Axes.
+        :rtype: matplotlib Figure.
 
         .. figure:: /figures/enhanced_box_plot.png
            :align:   center
@@ -4911,12 +4918,12 @@ class CountFilter(Filter):
         ax.tick_params(axis='both', which='both', labelsize=tick_fontsize)
         generic.despine(ax)
         plt.show()
-        return ax
+        return ax.figure
 
     @readable_name('Violin plot')
     def violin_plot(self, samples: Union[param_typing.GroupedColumns, Literal['all']] = 'all',
                     ylabel: str = '$\log_10$(normalized reads + 1)', title: Union[str, Literal['auto']] = 'auto',
-                    title_fontsize: float = 20, label_fontsize: float = 16, tick_fontsize: float = 12) -> plt.Axes:
+                    title_fontsize: float = 20, label_fontsize: float = 16, tick_fontsize: float = 12) -> plt.Figure:
         """
         Generates a violin plot of the specified samples in the CountFilter object in log10 scale. \
         Can plot both single samples and average multiple replicates. \
@@ -4939,7 +4946,7 @@ class CountFilter(Filter):
         :type label_fontsize: float (default=15)
          :param tick_fontsize: determines the font size of the X and Y tick labels.
         :type tick_fontsize: float (default=10)
-        :rtype: a matplotlib Axes.
+        :rtype: a matplotlib Figure.
 
         .. figure:: /figures/violin.png
            :align:   center
@@ -4969,7 +4976,7 @@ class CountFilter(Filter):
         ax.tick_params(axis='both', which='both', labelsize=tick_fontsize)
         generic.despine(ax)
         plt.show()
-        return ax
+        return ax.figure
 
     @classmethod
     def from_folder(cls, folder_path: str, save_csv: bool = False, fname: str = None, input_format: str = '.txt'
