@@ -3209,7 +3209,8 @@ class MainWindow(QtWidgets.QMainWindow):
     def update_report_spawn(self, name: str, spawn_id: int, predecessor_id: int,
                             spawn: Union[filtering.Filter, enrichment.FeatureSet, pd.DataFrame]):
         desc = self._format_report_desc(spawn)
-        filename = self._cache_spawn(spawn, str(spawn_id))
+        prefix = f'{spawn_id}_{name}' if isinstance(spawn, pd.DataFrame) else str(spawn_id)
+        filename = self._cache_spawn(spawn, prefix)
         spawn_type = self._get_spawn_type(spawn)
         self.update_report(name, spawn_id, [predecessor_id], desc, spawn_type, filename)
 
