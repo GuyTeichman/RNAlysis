@@ -88,16 +88,15 @@ class ReportGenerator:
         self.add_node('Started RNAlysis session', 0, [], node_type='root', filename='session.rnal')
 
     def create_legend(self):
-        x = -30
-        y = -20
-        step = 10
-        level = 1
+        x = -500
+        y = -350
+        step = 75
         for node_type, kwargs in self.NODE_STYLES.items():
             if node_type in {'root'}:
                 continue
-            self.graph.add_node(node_type, label=node_type.capitalize(), fixed=True, physics=False, **kwargs)
+            self.graph.add_node(node_type, label=node_type.capitalize(), fixed=True, physics=False, x=x, y=y,
+                                font={'size': 16}, widthConstraint=100, **kwargs)
             y += step
-            level += 1
 
     def add_node(self, name: str, node_id: int, predecessors: typing.List[int] = (0,), popup_element: str = '',
                  node_type: Literal[tuple(NODE_STYLES)] = 'Other table', filename: str = None):
@@ -143,7 +142,7 @@ class ReportGenerator:
         assert save_path.exists() and save_path.is_dir()
         save_file = save_path.joinpath('report.html').as_posix()
         title = f"Data analysis report (<i>RNAlysis</i> version {__version__})"
-        vis_report = Network(directed=True, layout=True, heading=title)
+        vis_report = Network(directed=True, layout=False, heading=title)
         vis_report.from_nx(self.graph)
         enabled_str = 'true' if show_buttons else 'false'
 
@@ -154,7 +153,7 @@ class ReportGenerator:
     },
     "layout": {
         "hierarchical": {
-            "enabled": true,
+            "enabled": false,
             "levelSeparation": 250,
             "nodeSpacing": 250,
             "treeSpacing": 250,
@@ -163,12 +162,7 @@ class ReportGenerator:
         }
     },
     "physics": {
-        "hierarchicalRepulsion": {
-            "centralGravity": 0,
-            "avoidOverlap": null
-        },
-        "minVelocity": 0.75,
-        "solver": "hierarchicalRepulsion"
+        "solver": "repulsion"
     },
     "interaction": {
     "navigationButtons": true
