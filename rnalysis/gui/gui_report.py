@@ -14,7 +14,7 @@ from rnalysis.utils import parsing, io
 
 class Node:
     __slots__ = ('_node_id', '_node_name', '_predecessors', '_is_active', '_popup_element', '_node_type', '_filename')
-    DATA_TYPES = {'Count matrix', 'Differential expression', 'Fold change', 'Other table', 'Gene set', 'dataframe'}
+    DATA_TYPES = {'Count matrix', 'Differential expression', 'Fold change', 'Other table', 'Gene set', 'Other output'}
 
     def __init__(self, node_id: int, node_name: str, predecessors: list, popup_element: str, node_type: str,
                  filename: str = None):
@@ -26,11 +26,6 @@ class Node:
         self._is_active = True
         self._filename = None if filename is None else Path(filename)
         self._filename = filename
-
-        if filename is not None:
-            href = Path('data').joinpath(filename).as_posix()
-            self._popup_element += f'<br><a href="{href}" target="_blank" rel="noopener noreferrer">Open file</a>'
-
         if node_type in self.DATA_TYPES:
             self._node_name += f' (#{node_id})'
 
@@ -73,13 +68,13 @@ class ReportGenerator:
     CSS_TEMPLATE_PATH = Path(__file__).parent.parent.joinpath('data_files/report_templates/vis-network.min.css')
     JS_TEMPLATE_PATH = Path(__file__).parent.parent.joinpath('data_files/report_templates/vis-network.min.js')
     NODE_STYLES = {'root': dict(shape='box', color='#00D4D8'),
-                   'function': dict(shape='triangleDown', color='#00D4D8'),
-                   'dataframe': dict(shape='square', color='#228B22'),
                    'Count matrix': dict(color='#0D47A1'),
                    'Differential expression': dict(color='#BF360C'),
                    'Fold change': dict(color='#00838F'),
                    'Other table': dict(color='#F7B30A'),
-                   'Gene set': dict(color='#BA68C8')}
+                   'Gene set': dict(color='#BA68C8'),
+                   'Function': dict(shape='triangleDown', color='#00D4D8'),
+                   'Other output': dict(shape='square', color='#228B22')}
 
     def __init__(self):
         self.graph = networkx.DiGraph()
@@ -123,7 +118,7 @@ class ReportGenerator:
             self.graph.remove_node(node_id)
             self.nodes[node_id].set_active(False)
             for pred in predecessors:
-                if self.nodes[pred].node_type == 'function':
+                if self.nodes[pred].node_type == 'Function':
                     self.trim_node(pred)
 
     def _modify_html(self, html: str, title: str) -> str:

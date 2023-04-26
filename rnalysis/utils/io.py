@@ -26,6 +26,7 @@ from urllib.parse import urlparse, parse_qs, urlencode
 import aiohttp
 import aiolimiter
 import appdirs
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import requests
@@ -143,6 +144,8 @@ def cache_gui_file(item: Union[pd.DataFrame, set, str], filename: str):
     elif isinstance(item, str):
         with open(file_path, 'w') as f:
             f.write(item)
+    elif isinstance(item,plt.Figure):
+        item.savefig(file_path)
     else:
         raise TypeError(type(item))
 

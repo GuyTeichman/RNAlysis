@@ -464,7 +464,7 @@ class ClusteringRunner:
                 sorted_arr[new_ind] = orig_arr[orig_ind]
         return ArbitraryClusterer(updated_labels, n_clusters, **sorted_arrays)
 
-    def _pca_plot(self, n_clusters: int, data: pd.DataFrame, labels: np.ndarray, title: str):
+    def _pca_plot(self, n_clusters: int, data: pd.DataFrame, labels: np.ndarray, title: str) -> plt.Figure:
         data_standardized = generic.standardize(data)
         n_components = 2
         pca_obj = PCA(n_components=n_components)
@@ -498,9 +498,10 @@ class ClusteringRunner:
         ax.grid(True)
         plt.tight_layout()
         plt.show()
+        return fig
 
     def _generate_plots(self, n_clusters: int, data: pd.DataFrame, labels: np.ndarray, centers: np.ndarray,
-                        title: str) -> Union[Tuple[plt.Figure, List[plt.Axes]], None]:
+                        title: str) -> Union[List[plt.Figure], plt.Figure, None]:
         if self.plot_style == 'none':
             return
 
@@ -555,15 +556,20 @@ class ClusteringRunner:
         if not self.split_plots:
             fig.tight_layout(rect=[0, 0.03, 1, 0.92])
         plt.show()
-        self._pca_plot(n_clusters, data, labels, title)
-        return fig, axes
+        pca_fig = self._pca_plot(n_clusters, data, labels, title)
+        if self.split_plots:
+            return [subplot[0] for subplot in subplots] + [pca_fig]
+        return [fig, pca_fig]
 
-    def plot_clustering(self):
+    def plot_clustering(self) -> List[plt.Figure]:
+        figs = []
         data = self.data_for_plot
         for clusterer, centers, title in zip(self.clusterers, self.centers, self.titles):
-            self._generate_plots(clusterer.n_clusters_, data, clusterer.labels_, centers, title)
+            generated = self._generate_plots(clusterer.n_clusters_, data, clusterer.labels_, centers, title)
+            figs.extend(parsing.data_to_list(generated))
         if self.n_clusters_determine_plot is not None:
-            self.n_clusters_determine_plot()
+            figs.append(self.n_clusters_determine_plot())
+        return figs
 
     def clustering_labels_to_binary_format(self) -> np.ndarray:
         pass
@@ -753,7 +759,7 @@ class ClusteringRunnerWithNClusters(ClusteringRunner, ABC):
         return best_n_clusters
 
     @staticmethod
-    def _plot_k_criterion_res(best_n_clusters: int, n_clusters_range: list, scores: list, method: str):
+    def _plot_k_criterion_res(best_n_clusters: int, n_clusters_range: list, scores: list, method: str) -> plt.Figure:
         assert method in ClusteringRunnerWithNClusters.N_CLUSTERS_METHODS
         fig = plt.figure(figsize=(7, 9))
         ax = fig.add_subplot(111)

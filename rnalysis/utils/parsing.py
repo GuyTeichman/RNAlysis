@@ -142,7 +142,7 @@ def data_to_list(data: Any, sort: bool = False) -> list:
         try:
             lst = list(data)
         except TypeError:
-            raise TypeError(f"Invalid type {type(data)}.")
+            lst = [data]
 
     if sort:
         lst.sort()
@@ -164,7 +164,7 @@ def data_to_tuple(data: Any, sort: bool = False) -> tuple:
         try:
             tpl = tuple(data)
         except TypeError:
-            raise TypeError(f"Invalid type {type(data)}.")
+            tpl = (data,)
     if sort:
         tpl = tuple(sorted(tpl))
     return tpl
@@ -185,8 +185,7 @@ def data_to_set(data: Any) -> set:
         try:
             return set(data)
         except TypeError:
-            raise TypeError(f"Invalid type {type(data)}.")
-
+            return {data}
 
 def sparse_dict_to_bool_df(sparse_dict: Dict[str, set], progress_bar_desc: str = '') -> pd.DataFrame:
     fmt = '{desc}: {percentage:3.0f}%|{bar}| [{elapsed}<{remaining}]'

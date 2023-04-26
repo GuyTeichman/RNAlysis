@@ -1429,6 +1429,9 @@ class TabPage(QtWidgets.QWidget):
         elif isinstance(outputs, np.ndarray):
             df = pd.DataFrame(outputs)
             self.process_outputs(df, job_id, source_name)
+        elif isinstance(outputs, plt.Figure):
+            new_id = JOB_COUNTER.get_id()
+            self.itemSpawned.emit(f"'{source_name}'\ngraph", new_id, job_id, outputs)
         elif isinstance(outputs, (tuple, list)):
             if validation.isinstanceiter_inh(outputs,
                                              (filtering.Filter, fastq.filtering.Filter, enrichment.FeatureSet)):
@@ -1783,7 +1786,7 @@ class FilterTabPage(TabPage):
                      'average_replicate_samples', 'drop_columns', 'differential_expression_limma_voom'}
     THREADED_FUNCS = {'translate_gene_ids', 'differential_expression_deseq2', 'filter_by_kegg_annotations',
                       'filter_by_go_annotations', 'differential_expression_limma_voom'}
-    startedClustering = QtCore.pyqtSignal(object, str, object)
+    startedClustering = QtCore.pyqtSignal(object, object)
     widthChanged = QtCore.pyqtSignal()
 
     def __init__(self, parent=None, undo_stack: QtWidgets.QUndoStack = None, tab_id: int = None):
@@ -2040,9 +2043,9 @@ class FilterTabPage(TabPage):
                 kwargs['parallel_backend'] = 'multiprocessing'
             partial = functools.partial(getattr(self.filter_obj, func_name), *args, **kwargs)
             predecessors = predecessors if isinstance(predecessors, list) else []
-            worker = gui_widgets.Worker(partial, JOB_COUNTER.get_id(), predecessors + [self.tab_id])
+            worker = gui_widgets.Worker(partial, JOB_COUNTER.get_id(), predecessors + [self.tab_id], func_name)
             worker.finished.connect(self.functionApplied.emit)
-            self.startedClustering.emit(worker, func_name, finish_slot)
+            self.startedClustering.emit(worker, finish_slot)
             return
 
         return super()._apply_function_from_params(func_name, args, kwargs, finish_slot, job_id, predecessors)
@@ -3186,8 +3189,8 @@ class MainWindow(QtWidgets.QMainWindow):
         QtWidgets.QApplication.processEvents()
 
     def add_tab_to_report(self, tab_id: int, tab_name: str, obj: Union[filtering.Filter, enrichment.FeatureSet]):
-        desc = self._format_report_desc(obj)
         filename = self._cache_spawn(obj, str(tab_id))
+        desc = self._format_report_desc(obj, filename)
         obj_type = self._get_spawn_type(obj)
         self.report.add_node(f"Loaded file\n'{tab_name}'", tab_id, [0], desc, obj_type, filename)
 
@@ -3204,50 +3207,51 @@ class MainWindow(QtWidgets.QMainWindow):
         kwargs = partial.keywords
         name = generic.get_method_readable_name(partial.func)
         desc = f'{partial.func.__name__}({parsing.format_dict_for_display(kwargs)})'
-        self.update_report(name, job_id, predecessor_ids, desc, 'function')
+        self.update_report(name, job_id, predecessor_ids, desc, 'Function')
 
     def update_report_spawn(self, name: str, spawn_id: int, predecessor_id: int,
-                            spawn: Union[filtering.Filter, enrichment.FeatureSet, pd.DataFrame]):
-        desc = self._format_report_desc(spawn)
-        prefix = f'{spawn_id}_{name}' if isinstance(spawn, pd.DataFrame) else str(spawn_id)
+                            spawn: Union[filtering.Filter, enrichment.FeatureSet, pd.DataFrame, plt.Figure]):
+        prefix = f'{spawn_id}_{name}' if isinstance(spawn, (pd.DataFrame, plt.Figure)) else str(spawn_id)
         filename = self._cache_spawn(spawn, prefix)
+        desc = self._format_report_desc(spawn, filename)
         spawn_type = self._get_spawn_type(spawn)
         self.update_report(name, spawn_id, [predecessor_id], desc, spawn_type, filename)
 
     @staticmethod
-    def _get_spawn_type(spawn: Union[filtering.Filter, enrichment.FeatureSet]):
+    def _get_spawn_type(spawn: Union[filtering.Filter, enrichment.FeatureSet, pd.DataFrame, plt.Figure]):
         if validation.isinstanceinh(spawn, filtering.Filter):
             spawn_type = FILTER_OBJ_TYPES_INV.get(type(spawn).__name__, 'Other table')
         elif validation.isinstanceinh(spawn, enrichment.FeatureSet):
             spawn_type = 'Gene set'
-        elif isinstance(spawn, (pd.Series, pd.DataFrame)):
-            spawn_type = 'dataframe'
+        elif isinstance(spawn, (pd.Series, pd.DataFrame, plt.Figure)):
+            spawn_type = 'Other output'
         else:
             raise TypeError(f"Invalid spawn type '{type(spawn)}' for spawn '{spawn}'!")
         return spawn_type
 
     @staticmethod
     def _cache_spawn(spawn: Union[filtering.Filter, enrichment.FeatureSet, pd.DataFrame], suffix: str):
+        obj = spawn
         if validation.isinstanceinh(spawn, filtering.Filter):
             obj = spawn.df
             filename = parsing.slugify(f'{suffix}_{spawn.fname.stem}') + '.csv'
         elif validation.isinstanceinh(spawn, enrichment.FeatureSet):
-            obj = spawn
             filename = parsing.slugify(f'{suffix}_{spawn.set_name}') + '.txt'
         elif isinstance(spawn, (pd.Series, pd.DataFrame)):
-            obj = spawn
             filename = parsing.slugify(f'{suffix}') + '.csv'
+        elif isinstance(spawn, plt.Figure):
+            filename = parsing.slugify(f'{suffix}') + '.svg'
         else:
             raise TypeError(f"Invalid spawn type '{type(spawn)}' for spawn '{spawn}'!")
         io.cache_gui_file(obj, filename)
         return filename
 
     @staticmethod
-    def _format_report_desc(obj: Union[filtering.Filter, enrichment.FeatureSet, pd.DataFrame]):
+    def _format_report_desc(obj: Union[filtering.Filter, enrichment.FeatureSet, pd.DataFrame], filename: str):
+        href = Path('data').joinpath(filename).as_posix()
         if validation.isinstanceinh(obj, filtering.Filter):
             html = parsing.df_to_html(obj.df)
             desc = obj.fname.stem + '<br>' + html + f'{obj.shape[0]} rows, {obj.shape[1]} columns'
-
         elif validation.isinstanceinh(obj, enrichment.FeatureSet):
             items = []
             for i, item in enumerate(obj.gene_set):
@@ -3258,8 +3262,12 @@ class MainWindow(QtWidgets.QMainWindow):
             desc = obj.set_name + '<br>' + parsing.items_to_html_table(items) + f'{len(obj.gene_set)} features'
         elif isinstance(obj, (pd.DataFrame, pd.Series)):
             desc = parsing.df_to_html(obj)
+        elif isinstance(obj, plt.Figure):
+            desc = f'<img src="data/{filename}" alt="Figure" height="400">'
         else:
             raise TypeError(f"Invalid object type '{type(obj)}' for object '{obj}'.")
+
+        desc += f'<br><a href="{href}" target="_blank" rel="noopener noreferrer">Open file</a>'
         return desc
 
     def delete_pipeline(self):
@@ -3726,7 +3734,7 @@ class MainWindow(QtWidgets.QMainWindow):
         new_tab_id = JOB_COUNTER.get_id()
         if self._generate_report:
             self.update_report(output_name.replace(' output', ''), set_op_id, ancestor_ids,
-                               parsing.format_dict_for_display(kwargs), 'function')
+                               parsing.format_dict_for_display(kwargs), 'Function')
             self.update_report_spawn('Set operation output', new_tab_id, set_op_id,
                                      enrichment.FeatureSet(output_set, output_name))
 
@@ -3745,13 +3753,10 @@ class MainWindow(QtWidgets.QMainWindow):
                 self.tabs.setCurrentIndex(i)
                 return
 
-    def display_enrichment_results(self, result: pd.DataFrame, gene_set_name: str, job_id: int):
+    def display_enrichment_results(self, result: pd.DataFrame, gene_set_name: str):
         df_window = gui_windows.DataFrameView(result, f'Enrichment results for set "{gene_set_name}"')
         self.enrichment_results.append(df_window)
         df_window.show()
-        if self._generate_report:
-            self.update_report_spawn(f'Enrichment results for set\n"{gene_set_name}"', JOB_COUNTER.get_id(), job_id,
-                                     result)
 
     def open_enrichment_analysis(self):
         self.enrichment_window = EnrichmentWindow(self)
@@ -4034,10 +4039,10 @@ class MainWindow(QtWidgets.QMainWindow):
             self.tabs.currentWidget().process_outputs(return_val, worker_output[-2], func_name)
             self.tabs.currentWidget().update_tab()
 
-    @QtCore.pyqtSlot(object, str, object)
-    def start_clustering(self, worker: gui_widgets.Worker, func_name: str, finish_slot: Union[Callable, None]):
+    @QtCore.pyqtSlot(object, object)
+    def start_clustering(self, worker: gui_widgets.Worker, finish_slot: Union[Callable, None]):
         slots = (self.finish_clustering, finish_slot)
-        self.queue_worker(worker, slots, func_name)
+        self.queue_worker(worker, slots)
 
     @QtCore.pyqtSlot(tuple)
     def finish_clustering(self, worker_output: tuple):
@@ -4048,8 +4053,10 @@ class MainWindow(QtWidgets.QMainWindow):
         func_name: str = generic.get_method_readable_name(worker_output[-3].func)
         clustering_runner: clustering.ClusteringRunner = worker_output[0][1]
         return_val: tuple = worker_output[0][0]
-        clustering_runner.plot_clustering()
-        self.tabs.currentWidget().process_outputs(return_val, worker_output[-2], func_name)
+        figs = clustering_runner.plot_clustering()
+        job_id = worker_output[-2]
+        self.tabs.currentWidget().process_outputs(figs, job_id, func_name)
+        self.tabs.currentWidget().process_outputs(return_val, job_id, func_name)
         self.tabs.currentWidget().update_tab()
 
     @QtCore.pyqtSlot(object, object)
@@ -4067,8 +4074,13 @@ class MainWindow(QtWidgets.QMainWindow):
         job_id = worker_output[-2]
         results, enrichment_runner = worker_output[0]
         self.show()
-        enrichment_runner.plot_results()
-        self.display_enrichment_results(results, set_name, job_id)
+        outputs = parsing.data_to_list(enrichment_runner.plot_results()) + [results]
+        self.display_enrichment_results(results, set_name)
+
+        if self._generate_report:
+            spawn_name = f'Enrichment results for set\n"{set_name}"'
+            for item in outputs:
+                self.update_report_spawn(spawn_name, JOB_COUNTER.get_id(), job_id, item)
 
     def queue_worker(self, worker: gui_widgets.Worker,
                      output_slots: Union[Callable, Tuple[Callable, ...], None] = None):
