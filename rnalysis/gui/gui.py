@@ -1938,7 +1938,7 @@ class FilterTabPage(TabPage):
         self.basic_widgets['table_type_combo'] = QtWidgets.QComboBox()
         self.basic_widgets['table_type_combo'].addItems(FILTER_OBJ_TYPES.keys())
         self.basic_widgets['table_type_combo'].currentIndexChanged.connect(self.update_basic_ui)
-        self.basic_widgets['table_type_combo'].setCurrentText("Other")
+        self.basic_widgets['table_type_combo'].setCurrentText('Other table')
 
         self.basic_widgets['start_button'] = QtWidgets.QPushButton('Start')
         self.basic_widgets['start_button'].clicked.connect(self.start)
