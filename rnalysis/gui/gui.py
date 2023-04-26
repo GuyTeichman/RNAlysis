@@ -3745,10 +3745,13 @@ class MainWindow(QtWidgets.QMainWindow):
                 self.tabs.setCurrentIndex(i)
                 return
 
-    def display_enrichment_results(self, result: pd.DataFrame, gene_set_name: str):
-        df_window = gui_windows.DataFrameView(result, "Enrichment results for set " + gene_set_name)
+    def display_enrichment_results(self, result: pd.DataFrame, gene_set_name: str, job_id: int):
+        df_window = gui_windows.DataFrameView(result, f'Enrichment results for set "{gene_set_name}"')
         self.enrichment_results.append(df_window)
         df_window.show()
+        if self._generate_report:
+            self.update_report_spawn(f'Enrichment results for set\n"{gene_set_name}"', JOB_COUNTER.get_id(), job_id,
+                                     result)
 
     def open_enrichment_analysis(self):
         self.enrichment_window = EnrichmentWindow(self)
@@ -4061,10 +4064,11 @@ class MainWindow(QtWidgets.QMainWindow):
                 raise worker_output[0]
             return
         set_name = worker_output[1]
+        job_id = worker_output[-2]
         results, enrichment_runner = worker_output[0]
         self.show()
         enrichment_runner.plot_results()
-        self.display_enrichment_results(results, set_name)
+        self.display_enrichment_results(results, set_name, job_id)
 
     def queue_worker(self, worker: gui_widgets.Worker,
                      output_slots: Union[Callable, Tuple[Callable, ...], None] = None):
