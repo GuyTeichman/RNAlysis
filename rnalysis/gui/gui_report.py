@@ -72,12 +72,12 @@ class Node:
 class ReportGenerator:
     CSS_TEMPLATE_PATH = Path(__file__).parent.parent.joinpath('data_files/report_templates/vis-network.min.css')
     JS_TEMPLATE_PATH = Path(__file__).parent.parent.joinpath('data_files/report_templates/vis-network.min.js')
-    NODE_STYLES = {'root': dict(shape='box', color='#00CED1'),
-                   'function': dict(shape='triangleDown', color='#00CED1'),
-                   'dataframe': dict(shape='square', color='#DCDCDC'),
+    NODE_STYLES = {'root': dict(shape='box', color='#00D4D8'),
+                   'function': dict(shape='triangleDown', color='#00D4D8'),
+                   'dataframe': dict(shape='square', color='#228B22'),
                    'Count matrix': dict(color='#0D47A1'),
                    'Differential expression': dict(color='#BF360C'),
-                   'Fold change': dict(color='00838F'),
+                   'Fold change': dict(color='#00838F'),
                    'Other table': dict(color='#F7B30A'),
                    'Gene set': dict(color='#BA68C8')}
 
