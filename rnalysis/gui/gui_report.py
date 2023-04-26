@@ -75,12 +75,15 @@ class ReportGenerator:
                    'Gene set': dict(color='#BA68C8'),
                    'Function': dict(shape='triangleDown', color='#00D4D8'),
                    'Other output': dict(shape='square', color='#228B22')}
+    ROOT_FNAME = 'session.rnal'
 
     def __init__(self):
         self.graph = networkx.DiGraph()
         self.nodes: typing.Dict[int, Node] = {}
         self.create_legend()
-        self.add_node('Started RNAlysis session', 0, [], node_type='root', filename='session.rnal')
+        href = Path('data').joinpath(self.ROOT_FNAME).as_posix()
+        root_desc = f'<a href="{href}" target="_blank" rel="noopener noreferrer">Open RNAlysis session</a>'
+        self.add_node('Started RNAlysis session', 0, [], root_desc, node_type='root', filename=self.ROOT_FNAME)
 
     def create_legend(self):
         x = -500

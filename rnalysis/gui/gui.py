@@ -3190,8 +3190,8 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def add_tab_to_report(self, tab_id: int, tab_name: str, obj: Union[filtering.Filter, enrichment.FeatureSet]):
         filename = self._cache_spawn(obj, str(tab_id))
-        desc = self._format_report_desc(obj, filename)
         obj_type = self._get_spawn_type(obj)
+        desc = self._format_report_desc(obj, filename, obj_type)
         self.report.add_node(f"Loaded file\n'{tab_name}'", tab_id, [0], desc, obj_type, filename)
 
     def remove_tab_from_report(self, tab_id: int):
@@ -3213,8 +3213,8 @@ class MainWindow(QtWidgets.QMainWindow):
                             spawn: Union[filtering.Filter, enrichment.FeatureSet, pd.DataFrame, plt.Figure]):
         prefix = f'{spawn_id}_{name}' if isinstance(spawn, (pd.DataFrame, plt.Figure)) else str(spawn_id)
         filename = self._cache_spawn(spawn, prefix)
-        desc = self._format_report_desc(spawn, filename)
         spawn_type = self._get_spawn_type(spawn)
+        desc = self._format_report_desc(spawn, filename, spawn_type)
         self.update_report(name, spawn_id, [predecessor_id], desc, spawn_type, filename)
 
     @staticmethod
@@ -3247,11 +3247,12 @@ class MainWindow(QtWidgets.QMainWindow):
         return filename
 
     @staticmethod
-    def _format_report_desc(obj: Union[filtering.Filter, enrichment.FeatureSet, pd.DataFrame], filename: str):
+    def _format_report_desc(obj: Union[filtering.Filter, enrichment.FeatureSet, pd.DataFrame], filename: str,
+                            obj_type: str):
         href = Path('data').joinpath(filename).as_posix()
         if validation.isinstanceinh(obj, filtering.Filter):
             html = parsing.df_to_html(obj.df)
-            desc = obj.fname.stem + '<br>' + html + f'{obj.shape[0]} rows, {obj.shape[1]} columns'
+            desc = f'{obj_type}:<br>"{obj.fname.stem}"<br>{html}{obj.shape[0]} rows, {obj.shape[1]} columns'
         elif validation.isinstanceinh(obj, enrichment.FeatureSet):
             items = []
             for i, item in enumerate(obj.gene_set):
@@ -3259,13 +3260,14 @@ class MainWindow(QtWidgets.QMainWindow):
                     break
                 items.append(item)
             items.append('...')
-            desc = obj.set_name + '<br>' + parsing.items_to_html_table(items) + f'{len(obj.gene_set)} features'
+            desc = f'{obj_type}:<br>"{obj.set_name}"<br>{parsing.items_to_html_table(items)}' \
+                   f'{len(obj.gene_set)} features'
         elif isinstance(obj, (pd.DataFrame, pd.Series)):
             desc = parsing.df_to_html(obj)
         elif isinstance(obj, plt.Figure):
             desc = f'<img src="data/{filename}" alt="Figure" height="400">'
         else:
-            raise TypeError(f"Invalid object type '{type(obj)}' for object '{obj}'.")
+            raise TypeError(f"Invalid object type '{type(obj)}' of object '{obj}'.")
 
         desc += f'<br><a href="{href}" target="_blank" rel="noopener noreferrer">Open file</a>'
         return desc
@@ -3744,6 +3746,7 @@ class MainWindow(QtWidgets.QMainWindow):
         available_objs = self.get_available_objects()
         self.set_visualization_window = SetVisualizationWindow(available_objs, self)
         self.set_visualization_window.show()
+        # TODO: add Figure to auto-report
 
     @QtCore.pyqtSlot(str)
     def choose_tab_by_name(self, set_name: str):
@@ -3781,7 +3784,7 @@ class MainWindow(QtWidgets.QMainWindow):
             if not outdir.exists():
                 outdir.mkdir()
             self.report.generate_report(outdir)
-            self._save_session_to(outdir.joinpath('data', 'session.rnal'))
+            self._save_session_to(outdir.joinpath('data', self.report.ROOT_FNAME))
 
     def init_menu_ui(self):
         self.setMenuBar(self.menu_bar)
