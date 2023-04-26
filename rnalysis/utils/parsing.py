@@ -187,6 +187,7 @@ def data_to_set(data: Any) -> set:
         except TypeError:
             return {data}
 
+
 def sparse_dict_to_bool_df(sparse_dict: Dict[str, set], progress_bar_desc: str = '') -> pd.DataFrame:
     fmt = '{desc}: {percentage:3.0f}%|{bar}| [{elapsed}<{remaining}]'
 
@@ -360,10 +361,14 @@ def replace_last_occurrence(regex, repl, item):
         return item[:start] + re.sub(regex, repl, item[start:end]) + item[end:]
 
 
-def df_to_html(df: pd.DataFrame):
+def df_to_html(df: pd.DataFrame, max_rows: int = 5, max_cols: int = 4):
     """
     Convert a pandas DataFrame to an HTML table.
 
+    :param max_cols: maximum number of columns to display in the HTML table.
+    :type max_cols: int (default=4)
+    :param max_rows: maximum number of rows to display in the HTML table.
+    :type max_rows: int (default=5)
     :param df: A pandas DataFrame to be converted.
     :type df: pandas.DataFrame
     :return: A string representation of the HTML table.
@@ -373,8 +378,10 @@ def df_to_html(df: pd.DataFrame):
     styler.set_table_styles(
         [{'selector': 'td', 'props': 'border: 1px solid grey; border-collapse: collapse;'},
          {'selector': 'th', 'props': 'border: 1px solid grey; border-collapse: collapse;'}], )
-    html = replace_last_occurrence(r'<td class="data col[\d]+ row_trim" >...<\/td>', '',
-                                   styler.to_html(max_rows=8, max_columns=4, float_format=lambda x: f"{x:.2f}"))
+    html = styler.to_html(max_rows=5, max_columns=4, float_format=lambda x: f"{x:.2f}")
+    if df.shape[0] > max_rows and df.shape[1] > max_cols:
+        # remove a redundant '...' from the end of the table
+        html = replace_last_occurrence(r'<td class="data col[\d]+ row_trim" >...<\/td>', '', html)
     return html
 
 
