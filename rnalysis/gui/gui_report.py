@@ -28,7 +28,7 @@ class Node:
         self._filename = filename
 
         if filename is not None:
-            href = Path('tables').joinpath(filename).as_posix()
+            href = Path('data').joinpath(filename).as_posix()
             self._popup_element += f'<br><a href="{href}" target="_blank" rel="noopener noreferrer">Open file</a>'
 
         if node_type in self.DATA_TYPES:
@@ -84,8 +84,20 @@ class ReportGenerator:
     def __init__(self):
         self.graph = networkx.DiGraph()
         self.nodes: typing.Dict[int, Node] = {}
+        self.create_legend()
+        self.add_node('Started RNAlysis session', 0, [], node_type='root', filename='session.rnal')
 
-        self.add_node('Started RNAlysis session', 0, [], node_type='root')
+    def create_legend(self):
+        x = -30
+        y = -20
+        step = 10
+        level = 1
+        for node_type, kwargs in self.NODE_STYLES.items():
+            if node_type in {'root'}:
+                continue
+            self.graph.add_node(node_type, label=node_type.capitalize(), fixed=True, physics=False, **kwargs)
+            y += step
+            level += 1
 
     def add_node(self, name: str, node_id: int, predecessors: typing.List[int] = (0,), popup_element: str = '',
                  node_type: Literal[tuple(NODE_STYLES)] = 'Other table', filename: str = None):
@@ -127,7 +139,7 @@ class ReportGenerator:
 
         return html
 
-    def generate_report(self, save_path: Path, show_buttons: bool = False):
+    def generate_report(self, save_path: Path, show_buttons: bool = True):
         assert save_path.exists() and save_path.is_dir()
         save_file = save_path.joinpath('report.html').as_posix()
         title = f"Data analysis report (<i>RNAlysis</i> version {__version__})"
@@ -173,12 +185,14 @@ class ReportGenerator:
             with open(save_path.joinpath(item.name), 'w', encoding="utf-8") as outfile:
                 outfile.write(content)
 
-        tables_path = save_path.joinpath('tables')
+        tables_path = save_path.joinpath('data')
         if tables_path.exists():
             shutil.rmtree(tables_path)
         tables_path.mkdir()
 
         for ind, node in self.nodes.items():
+            if ind == 0:  # skip the root node
+                continue
             if node.is_active and node.filename is not None:
                 content = io.load_cached_gui_file(node.filename, load_as_obj=False)
                 if content is not None:

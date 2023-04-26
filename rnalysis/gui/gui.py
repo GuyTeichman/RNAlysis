@@ -3200,12 +3200,11 @@ class MainWindow(QtWidgets.QMainWindow):
         self.report.add_node(name, job_id, predecessor_ids, description, node_type, filename)
 
     def update_report_from_worker(self, worker_output: tuple):
-        result = worker_output[0]  # TODO: use result in report generation
-        # TODO: add function name and shape like a call
         partial, job_id, predecessor_ids = worker_output[-3:]
         kwargs = partial.keywords
         name = generic.get_method_readable_name(partial.func)
-        self.update_report(name, job_id, predecessor_ids, parsing.format_dict_for_display(kwargs), 'function')
+        desc = f'{partial.func.__name__}({parsing.format_dict_for_display(kwargs)})'
+        self.update_report(name, job_id, predecessor_ids, desc, 'function')
 
     def update_report_spawn(self, name: str, spawn_id: int, predecessor_id: int,
                             spawn: Union[filtering.Filter, enrichment.FeatureSet, pd.DataFrame]):
@@ -3772,7 +3771,8 @@ class MainWindow(QtWidgets.QMainWindow):
             outdir = Path(outdir).joinpath('RNAlysis_report')
             if not outdir.exists():
                 outdir.mkdir()
-            return self.report.generate_report(outdir)
+            self.report.generate_report(outdir)
+            self._save_session_to(outdir.joinpath('data', 'session.rnal'))
 
     def init_menu_ui(self):
         self.setMenuBar(self.menu_bar)
@@ -3943,6 +3943,31 @@ class MainWindow(QtWidgets.QMainWindow):
             if tab_to_close is not None:
                 self.tabs.removeTab(tab_to_close)
 
+    def _save_session_to(self, session_filename: Union[str, Path]):
+        filenames = []
+        item_names = []
+        item_types = []
+        item_properties = []
+        for ind in range(self.tabs.count()):
+            tab = self.tabs.widget(ind)
+            if not tab.is_empty():
+                filenames.append(tab.cache())
+                item_names.append(self.tabs.tabText(ind).rstrip('*'))
+                if isinstance(tab, SetTabPage):
+                    item_types.append(set)
+                else:
+                    item_types.append(tab.obj_type())
+                item_properties.append(tab.obj_properties())
+
+        pipeline_names = []
+        pipeline_files = []
+        for pipeline_name, pipeline in self.pipelines.items():
+            pipeline_files.append(pipeline.export_pipeline(filename=None))
+            pipeline_names.append(pipeline_name)
+
+        io.save_gui_session(session_filename, filenames, item_names, item_types, item_properties, pipeline_names,
+                            pipeline_files)
+
     def save_session(self):
         default_name = 'Untitled session.rnal'
         session_filename, _ = QtWidgets.QFileDialog.getSaveFileName(self, "Save session",
@@ -3950,29 +3975,7 @@ class MainWindow(QtWidgets.QMainWindow):
                                                                     "RNAlysis session files (*.rnal);;"
                                                                     "All Files (*)")
         if session_filename:
-            filenames = []
-            item_names = []
-            item_types = []
-            item_properties = []
-            for ind in range(self.tabs.count()):
-                tab = self.tabs.widget(ind)
-                if not tab.is_empty():
-                    filenames.append(tab.cache())
-                    item_names.append(self.tabs.tabText(ind).rstrip('*'))
-                    if isinstance(tab, SetTabPage):
-                        item_types.append(set)
-                    else:
-                        item_types.append(tab.obj_type())
-                    item_properties.append(tab.obj_properties())
-
-            pipeline_names = []
-            pipeline_files = []
-            for pipeline_name, pipeline in self.pipelines.items():
-                pipeline_files.append(pipeline.export_pipeline(filename=None))
-                pipeline_names.append(pipeline_name)
-
-            io.save_gui_session(session_filename, filenames, item_names, item_types, item_properties, pipeline_names,
-                                pipeline_files)
+            self._save_session_to(session_filename)
             print(f"Session saved successfully at {io.get_datetime()} under {session_filename}")
 
     def about(self):
