@@ -953,17 +953,16 @@ class KEGGEnrichmentRunner(EnrichmentRunner):
         self.attributes = parsing.data_to_list(self.annotation_df.columns)
         self.attributes_set = parsing.data_to_set(self.attributes)
 
-    def plot_results(self) -> plt.Figure:
-        fig = super().plot_results()
-
+    def plot_results(self) -> List[plt.Figure]:
+        figs = [super().plot_results()]
         if self.plot_pathway_graphs:
             for pathway in self.pathway_names_dict:
                 if pathway in self.results.index and self.results.loc[pathway, 'significant']:
-                    status = self.pathway_plot(pathway)
-                    if not status:
+                    fig = self.pathway_plot(pathway)
+                    if fig is None:
                         break
-
-        return fig
+                    figs.append(fig)
+        return figs
 
     def pathway_plot(self, pathway_id: str) -> bool:
         ylabel = self.SINGLE_SET_ENRICHMENT_SCORE_YLABEL if self.single_set else self.ENRICHMENT_SCORE_YLABEL
@@ -1160,7 +1159,7 @@ class GOEnrichmentRunner(EnrichmentRunner):
         self.results.loc[self.results['pval'].notna(), 'padj'] = padj
         self.results.loc[self.results['padj'].notna(), 'significant'] = significant
 
-    def plot_results(self) -> Union[plt.Figure, Tuple[plt.Figure, plt.Figure]]:
+    def plot_results(self) -> List[plt.Figure]:
         n_bars = min(10, len(self.results))
         kwargs = dict()
         if self.single_set:
@@ -1172,23 +1171,27 @@ class GOEnrichmentRunner(EnrichmentRunner):
             kwargs['title'] = f"GO enrichment for gene set '{self.set_name}'\n" \
                               f"top {n_bars} most specific GO terms"
 
-        bar_plot = self.enrichment_bar_plot(n_bars=n_bars, **kwargs)
+        figs = [self.enrichment_bar_plot(n_bars=n_bars, **kwargs)]
         if self.plot_ontology_graph:
             ontology_kwargs = kwargs.copy()
             ontology_kwargs['title'] = f"Single-list GO enrichment for gene set '{self.set_name}'" if self.single_set \
                 else f"GO enrichment for gene set '{self.set_name}'"
-            self.go_dag_plot(**ontology_kwargs)
-        return bar_plot
+            figs.extend(self.go_dag_plot(**ontology_kwargs))
+        return figs
 
-    def go_dag_plot(self, title, dpi: int = 300, ylabel: str = r"$\log_2$(Fold Enrichment)"):
+    def go_dag_plot(self, title, dpi: int = 300, ylabel: str = r"$\log_2$(Fold Enrichment)") -> List[plt.Figure]:
         aspects = ('biological_process', 'cellular_component',
                    'molecular_function') if self.aspects == 'any' else parsing.data_to_tuple(self.aspects)
+        figs = []
         for go_aspect in aspects:
             this_title = title + f'\n{go_aspect}'.replace('_', ' ').title()
-            status = self.dag_tree.plot_ontology(go_aspect, self.results, self.en_score_col, this_title, ylabel,
-                                                 self.ontology_graph_format, dpi)
-            if not status:
-                return
+            fig = self.dag_tree.plot_ontology(go_aspect, self.results, self.en_score_col, this_title, ylabel,
+                                              self.ontology_graph_format, dpi)
+            if fig is None:
+                return figs
+            figs.append(fig)
+
+        return figs
 
     def format_results(self, unformatted_results_dict: dict):
         if self.single_set:

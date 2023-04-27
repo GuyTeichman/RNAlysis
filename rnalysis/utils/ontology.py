@@ -281,7 +281,8 @@ class KEGGPathway:
         self.entries[succ].children_relationships[rel_type].add((pred, rel_symbol))
 
     def plot_pathway(self, significant: Union[set, dict, None] = None, title: Union[str, Literal['auto']] = 'auto',
-                     ylabel: str = '', graph_format: Literal[param_typing.GRAPHVIZ_FORMATS] = 'none', dpi: int = 300):
+                     ylabel: str = '', graph_format: Literal[param_typing.GRAPHVIZ_FORMATS] = 'none', dpi: int = 300
+                     ) -> Union[plt.Figure, None]:
         if significant is None:
             significant = {}
         elif isinstance(significant, dict):
@@ -384,7 +385,7 @@ class KEGGPathway:
             i += 1
         res = render_graphviz_plot(main_graph, save_path, graph_format)
         if not res:
-            return False
+            return
         fig, axes = plt.subplots(1, 2, figsize=(14, 9), constrained_layout=True, gridspec_kw=dict(width_ratios=[3, 1]))
         if title == 'auto':
             title = f'KEGG Pathway: {self.pathway_name}'
@@ -415,7 +416,7 @@ class KEGGPathway:
             cbar.ax.tick_params(labelsize=10, pad=2)
 
         plt.show()
-        return True
+        return fig
 
 
 class GOTerm:
@@ -641,7 +642,8 @@ class DAGTree:
     def plot_ontology(self, namespace: Literal[param_typing.GO_ASPECTS], results_df: pd.DataFrame,
                       en_score_col: str = 'log2_fold_enrichment',
                       title: Union[str, Literal['auto']] = 'auto', ylabel: str = r"$\log_2$(Fold Enrichment)",
-                      graph_format: Literal[param_typing.GRAPHVIZ_FORMATS] = 'none', dpi: int = 300) -> bool:
+                      graph_format: Literal[param_typing.GRAPHVIZ_FORMATS] = 'none', dpi: int = 300) -> Union[
+        plt.Figure, None]:
         # colormap
         scores_no_inf = [i for i in results_df[en_score_col] if i != np.inf and i != -np.inf and i < 0]
         if len(scores_no_inf) == 0:
@@ -696,7 +698,7 @@ class DAGTree:
             i += 1
         res = render_graphviz_plot(graph, save_path, graph_format)
         if not res:
-            return False
+            return
         # show graph in a matplotlib window
         png_str = pipe_graphviz_plot(graph)
         sio = builtin_io.BytesIO()
@@ -721,7 +723,7 @@ class DAGTree:
         cbar.ax.tick_params(labelsize=14, pad=6)
 
         plt.show()
-        return True
+        return fig
 
 
 @lru_cache(maxsize=128)
