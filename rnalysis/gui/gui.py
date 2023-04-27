@@ -1035,13 +1035,14 @@ class SetOperationWindow(gui_widgets.MinMaxDialog):
                 output_set = getattr(first_obj, func_name)(*other_objs, **kwargs)
 
         if output_set is not None:
-            self.geneSetReturned.emit(output_set, output_name, ancestor_ids, kwargs)
+            self.geneSetRturned.emit(output_set, output_name, ancestor_ids, kwargs)
         self.close()
 
 
 class SetVisualizationWindow(gui_widgets.MinMaxDialog):
     VISUALIZATION_FUNCS = {'Venn Diagram': 'venn_diagram', 'UpSet Plot': 'upset_plot'}
     EXCLUDED_PARAMS = {'objs', 'attr_ref_table_path', 'fig'}
+    figureGenerated = QtCore.pyqtSignal(plt.Figure, str, list, dict)
 
     def __init__(self, available_objects: dict, parent=None):
         super().__init__(parent)
@@ -1201,6 +1202,9 @@ class SetVisualizationWindow(gui_widgets.MinMaxDialog):
         set_names = [item.text() for item in self.widgets['set_list'].get_sorted_selection()]
         objs_to_plot = {name: self.available_objects[name][0].obj() for name in set_names if
                         not self.available_objects[name][0].is_empty()}
+        ancestor_ids = [self.available_objects[name][0].tab_id for name in set_names if
+                        not self.available_objects[name][0].is_empty()]
+
         kwargs = {}
         for param_name, widget in self.parameter_widgets.items():
             if param_name in {'apply_button', 'help_link'}:
@@ -1208,14 +1212,14 @@ class SetVisualizationWindow(gui_widgets.MinMaxDialog):
             val = gui_widgets.get_val_from_widget(widget)
 
             kwargs[param_name] = val
-        return objs_to_plot, kwargs
+        return objs_to_plot, kwargs, ancestor_ids
 
     @QtCore.pyqtSlot()
     def generate_graph(self):
-        # TODO: add worker/IDs
         func_name = self.get_current_func_name()
-        objs_to_plot, kwargs = self._get_function_params()
-        _ = getattr(enrichment, func_name)(objs_to_plot, **kwargs)
+        objs_to_plot, kwargs, ancestor_ids = self._get_function_params()
+        fig = getattr(enrichment, func_name)(objs_to_plot, **kwargs)
+        self.figureGenerated.emit(fig, func_name, ancestor_ids, kwargs)
 
 
 class TabPage(QtWidgets.QWidget):
@@ -3748,7 +3752,16 @@ class MainWindow(QtWidgets.QMainWindow):
         available_objs = self.get_available_objects()
         self.set_visualization_window = SetVisualizationWindow(available_objs, self)
         self.set_visualization_window.show()
-        # TODO: add Figure to auto-report
+        if self._generate_report:
+            self.set_visualization_window.figureGenerated.connect(self.resolve_set_vis)
+
+    @QtCore.pyqtSlot(plt.Figure, str, list, dict)
+    def resolve_set_vis(self, output_fig: plt.Figure, output_name: str, ancestor_ids: list, kwargs: dict):
+        func_id = JOB_COUNTER.get_id()
+        fig_id = JOB_COUNTER.get_id()
+        if self._generate_report:
+            self.update_report(output_name, func_id, ancestor_ids, parsing.format_dict_for_display(kwargs), 'Function')
+            self.update_report_spawn('Set visualization output', fig_id, func_id, output_fig)
 
     @QtCore.pyqtSlot(str)
     def choose_tab_by_name(self, set_name: str):
