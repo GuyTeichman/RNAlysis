@@ -328,8 +328,26 @@ class JobCounter(QtCore.QObject):
             return self._count
 
 
+class WorkerOutput:
+    __slots__ = {'partial': 'partial function executed in the Worker',
+                 'emit_args': "arguments to emit alongside the partial function's output",
+                 'result': 'result of the worker',
+                 'job_id': 'job ID',
+                 'predecessor_ids': 'predecessor IDs',
+                 'raised_exception': 'indicates if an exception was raised'}
+
+    def __init__(self, result, partial: functools.partial, job_id: int, predecessor_ids: List[int], *args_to_emit,
+                 err=None):
+        self.result = result
+        self.partial = partial
+        self.job_id = job_id
+        self.predecessor_ids = predecessor_ids
+        self.emit_args = args_to_emit
+        self.raised_exception = False if err is None else err
+
+
 class Worker(QtCore.QObject):
-    finished = QtCore.pyqtSignal(tuple)
+    finished = QtCore.pyqtSignal(WorkerOutput)
     startProgBar = QtCore.pyqtSignal(object)
     __slots__ = {'partial': 'partial function to run in the Worker',
                  'emit_args': "arguments to emit alongside the partial function's output"}
@@ -346,12 +364,12 @@ class Worker(QtCore.QObject):
         try:
             result = self.partial()
         except Exception as e:
-            self.finished.emit((e,))
+            self.finished.emit(WorkerOutput(None, None, None, None, err=e))
             return
 
         if result is not None:
             args_to_emit = self.emit_args
-        self.finished.emit((result, *args_to_emit, self.partial, self.job_id, self.predecessor_ids))
+        self.finished.emit(WorkerOutput(result, self.partial, self.job_id, self.predecessor_ids, *args_to_emit))
 
         return result
 

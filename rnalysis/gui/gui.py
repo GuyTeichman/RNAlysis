@@ -431,7 +431,7 @@ class EnrichmentWindow(gui_widgets.MinMaxDialog):
 
     enrichmentStarted = QtCore.pyqtSignal(object, object)
     geneSetsRequested = QtCore.pyqtSignal(object)
-    functionApplied = QtCore.pyqtSignal(tuple)
+    functionApplied = QtCore.pyqtSignal(gui_widgets.WorkerOutput)
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -1219,7 +1219,7 @@ class SetVisualizationWindow(gui_widgets.MinMaxDialog):
 
 
 class TabPage(QtWidgets.QWidget):
-    functionApplied = QtCore.pyqtSignal(tuple)
+    functionApplied = QtCore.pyqtSignal(gui_widgets.WorkerOutput)
     itemSpawned = QtCore.pyqtSignal(str, int, int, object)
     filterObjectCreated = QtCore.pyqtSignal(object, int)
     featureSetCreated = QtCore.pyqtSignal(object, int)
@@ -2732,8 +2732,9 @@ class InplaceCachedCommand(InplaceCommand):
             self.tab.update_tab(is_unsaved=True)
             self.tab.tab_id = self.new_spawn_id
             mock_partial = functools.partial(lambda *args, **kwargs: None, self.args, self.kwargs)
-            self.tab.functionApplied.emit(
-                (self.tab.obj(), mock_partial, self.new_job_id, self.predecessors + [self.prev_job_id]))
+            worker_output = gui_widgets.WorkerOutput(self.tab.obj(), mock_partial, self.new_job_id,
+                                                     self.predecessors + [self.prev_job_id])
+            self.tab.functionApplied.emit(worker_output)
             self.tab.itemSpawned.emit(f"'{source_name}'\noutput", self.new_spawn_id, self.new_job_id,
                                       self.processed_obj)
 
@@ -3202,12 +3203,13 @@ class MainWindow(QtWidgets.QMainWindow):
                       node_type: str = 'Other table', filename: Union[str, Path] = None):
         self.report.add_node(name, job_id, predecessor_ids, description, node_type, filename)
 
-    def update_report_from_worker(self, worker_output: tuple):
-        partial, job_id, predecessor_ids = worker_output[-3:]
+    @QtCore.pyqtSlot(gui_widgets.WorkerOutput)
+    def update_report_from_worker(self, worker_output: gui_widgets.WorkerOutput):
+        partial = worker_output.partial
         kwargs = partial.keywords
         name = generic.get_method_readable_name(partial.func)
         desc = f'{partial.func.__name__}({parsing.format_dict_for_display(kwargs)})'
-        self.update_report(name, job_id, predecessor_ids, desc, 'Function')
+        self.update_report(name, worker_output.job_id, worker_output.predecessor_ids, desc, 'Function')
 
     def update_report_spawn(self, name: str, spawn_id: int, predecessor_id: int,
                             spawn: Union[filtering.Filter, enrichment.FeatureSet, pd.DataFrame, plt.Figure]):
@@ -4029,35 +4031,38 @@ class MainWindow(QtWidgets.QMainWindow):
         worker = gui_widgets.Worker(partial, JOB_COUNTER.get_id(), [], func_name)
         self.start_generic_job(worker, finish_slot)
 
-    @QtCore.pyqtSlot(tuple)
-    def finish_generic_job(self, worker_output: tuple):
-        if len(worker_output) == 1:
-            if isinstance(worker_output[0], Exception):
-                raise worker_output[0]
+    @QtCore.pyqtSlot(gui_widgets.WorkerOutput)
+    def finish_generic_job(self, worker_output: gui_widgets.WorkerOutput):
+        if worker_output.raised_exception:
+            raise worker_output.raised_exception
+        if worker_output.result is None or len(worker_output.result) == 0:
             print("Done")
-        else:
-            assert len(worker_output) == 5, f"invalid worker output: {worker_output}"
-            func_name: str = worker_output[1]
-            return_val: tuple = worker_output[0]
-            self.tabs.currentWidget().process_outputs(return_val, worker_output[-2], func_name)
-            self.tabs.currentWidget().update_tab()
+            return
+        assert isinstance(worker_output, gui_widgets.WorkerOutput), f"invalid worker output: {worker_output}"
+        func_name: str = worker_output.emit_args[0]
+        return_val: tuple = worker_output.result
+        self.tabs.currentWidget().process_outputs(worker_output.result, worker_output.job_id, func_name)
+        self.tabs.currentWidget().update_tab()
 
     @QtCore.pyqtSlot(object, object)
     def start_clustering(self, worker: gui_widgets.Worker, finish_slot: Union[Callable, None]):
         slots = (self.finish_clustering, finish_slot)
         self.queue_worker(worker, slots)
 
-    @QtCore.pyqtSlot(tuple)
-    def finish_clustering(self, worker_output: tuple):
-        if len(worker_output) == 1:
-            if isinstance(worker_output[0], Exception):
-                raise worker_output[0]
+    @QtCore.pyqtSlot(gui_widgets.WorkerOutput)
+    def finish_clustering(self, worker_output: gui_widgets.WorkerOutput):
+        if worker_output.raised_exception:
+            raise worker_output.raised_exception
+        if len(worker_output.result) == 0:
+            print("Done")
             return
-        func_name: str = generic.get_method_readable_name(worker_output[-3].func)
-        clustering_runner: clustering.ClusteringRunner = worker_output[0][1]
-        return_val: tuple = worker_output[0][0]
+        assert isinstance(worker_output, gui_widgets.WorkerOutput), f"invalid worker output: {worker_output}"
+
+        func_name: str = generic.get_method_readable_name(worker_output.partial.func)
+        clustering_runner: clustering.ClusteringRunner = worker_output.result[1]
+        return_val: clustering.ClusteringRunner = worker_output.result[0]
+        job_id = worker_output.job_id
         figs = clustering_runner.plot_clustering()
-        job_id = worker_output[-2]
         self.tabs.currentWidget().process_outputs(figs, job_id, func_name)
         self.tabs.currentWidget().process_outputs(return_val, job_id, func_name)
         self.tabs.currentWidget().update_tab()
@@ -4067,15 +4072,18 @@ class MainWindow(QtWidgets.QMainWindow):
         slots = (self.finish_enrichment, finish_slot)
         self.queue_worker(worker, slots)
 
-    @QtCore.pyqtSlot(tuple)
-    def finish_enrichment(self, worker_output: tuple):
-        if len(worker_output) == 1:
-            if isinstance(worker_output[0], Exception):
-                raise worker_output[0]
+    @QtCore.pyqtSlot(gui_widgets.WorkerOutput)
+    def finish_enrichment(self, worker_output: gui_widgets.WorkerOutput):
+        if worker_output.raised_exception:
+            raise worker_output.raised_exception
+        if len(worker_output.result) == 0:
+            print("Done")
             return
-        set_name = worker_output[1]
-        job_id = worker_output[-2]
-        results, enrichment_runner = worker_output[0]
+        assert isinstance(worker_output, gui_widgets.WorkerOutput), f"invalid worker output: {worker_output}"
+
+        set_name = worker_output.emit_args[0]
+        job_id = worker_output.job_id
+        results, enrichment_runner = worker_output.result
         self.show()
         outputs = parsing.data_to_list(enrichment_runner.plot_results()) + [results]
         self.display_enrichment_results(results, set_name)
