@@ -86,7 +86,7 @@ class ReportGenerator:
         self.add_node('Started RNAlysis session', 0, [], root_desc, node_type='root', filename=self.ROOT_FNAME)
 
     def create_legend(self):
-        x = -500
+        x = -750
         y = -350
         step = 75
         for node_type, kwargs in self.NODE_STYLES.items():
