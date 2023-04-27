@@ -1465,6 +1465,7 @@ class TabPage(QtWidgets.QWidget):
         return self.stdout_widgets['text_edit_stdout']
 
     @QtCore.pyqtSlot()
+    @generic.readable_name('Rename tab')
     def rename(self, new_name: str = None):
         if new_name is None:
             new_name = self.overview_widgets['table_name'].text()
@@ -1474,11 +1475,17 @@ class TabPage(QtWidgets.QWidget):
 
     def _rename(self, new_name: str = None, job_id: int = None):
         prev_id = self.tab_id
-        self.tab_id = JOB_COUNTER.get_id() if job_id is None else job_id
+        self.tab_id = JOB_COUNTER.get_id() if job_id is not None else prev_id
+
         self.tabNameChange.emit(new_name, True, self.tab_id, prev_id)
         self.overview_widgets['table_name_label'].setText(f"Table name: '<b>{new_name}</b>'")
         self.overview_widgets['table_name'].setText('')
         self.name = new_name.rstrip('*')
+        if job_id is not None:
+            worker_output = gui_widgets.WorkerOutput(self.obj(), functools.partial(self.rename, new_name=new_name),
+                                                     job_id, [prev_id])
+            self.functionApplied.emit(worker_output)
+            self.itemSpawned.emit(self.name, self.tab_id, job_id, self.obj())
 
     def cache(self):
         raise NotImplementedError
@@ -1584,8 +1591,8 @@ class SetTabPage(TabPage):
 
     @QtCore.pyqtSlot()
     def _rename(self, new_name: str = None, job_id: int = None):
-        super()._rename(new_name, job_id)
         self.gene_set.change_set_name(new_name)
+        super()._rename(new_name, job_id)
 
     def cache(self) -> str:
         base_str = str(time.time_ns()) + self.get_tab_name() + str(len(self.gene_set))
@@ -1837,9 +1844,9 @@ class FilterTabPage(TabPage):
 
     @QtCore.pyqtSlot()
     def _rename(self, new_name: str = None, job_id: int = None):
-        super()._rename(new_name, job_id)
         self.filter_obj.fname = Path(
             os.path.join(str(self.filter_obj.fname.parent), f"{new_name}{self.filter_obj.fname.suffix}"))
+        super()._rename(new_name, job_id)
 
     def cache(self):
         base_str = str(time.time_ns()) + str(self.filter_obj.fname) + str(len(self.filter_obj.shape))
@@ -2624,25 +2631,26 @@ class ReactiveTabWidget(QtWidgets.QTabWidget):
 class RenameCommand(QtWidgets.QUndoCommand):
     __slots__ = {'prev_name': 'previous name of the tab',
                  'new_name': 'new name of the tab',
-                 'prev_job_id': 'previous job ID',
-                 'new_job_id': 'new job ID',
+                 'prev_id': 'previous ID',
+                 'job_id': 'job ID of the rename command',
                  'tab': 'tab widget'}
 
     def __init__(self, prev_name: str, new_name: str, tab: TabPage, description: str):
         super().__init__(description)
         self.prev_name = prev_name
         self.new_name = new_name
-        self.prev_job_id = tab.tab_id
-        self.new_job_id = None
+        self.prev_id = tab.tab_id
+        self.job_id = JOB_COUNTER.get_id()
         self.tab = tab
 
     def undo(self):
         self.tab.tabReverted.emit(self.tab.tab_id)
-        self.tab._rename(self.prev_name, self.prev_job_id)
+        self.tab._rename(self.prev_name)
+        self.tab.tab_id = self.prev_id
 
     def redo(self):
-        self.new_job_id = JOB_COUNTER.get_id() if self.new_job_id is None else self.new_job_id
-        self.tab._rename(self.new_name, self.new_job_id)
+        self.job_id = JOB_COUNTER.get_id() if self.job_id is None else self.job_id
+        self.tab._rename(self.new_name, self.job_id)
 
 
 class CloseTabCommand(QtWidgets.QUndoCommand):
@@ -3089,13 +3097,8 @@ class MainWindow(QtWidgets.QMainWindow):
     def update_gene_sets_widget(self, widget: gui_widgets.GeneSetComboBox):
         widget.update_gene_sets(self.get_available_objects())
 
-    def rename_tab_report(self, new_name: str, new_id: int, prev_id: int):
-        self.report.add_node(f"Rename tab to\n'{new_name}'", new_id, [prev_id], f"New name: '{new_name}'")
-
     @QtCore.pyqtSlot(str, bool, int, int)
     def rename_tab(self, new_name: str, is_unsaved: bool, new_id: int = -1, prev_id: int = -1):
-        if self._generate_report and new_id != -1 and prev_id != -1:
-            self.rename_tab_report(new_name, new_id, prev_id)
         if is_unsaved:
             new_name += '*'
         else:
@@ -3194,6 +3197,11 @@ class MainWindow(QtWidgets.QMainWindow):
         QtWidgets.QApplication.processEvents()
 
     def add_tab_to_report(self, tab_id: int, tab_name: str, obj: Union[filtering.Filter, enrichment.FeatureSet]):
+        if tab_id in self.report.nodes:
+            if self.report.nodes[tab_id].is_active:
+                return
+            self.report.add_node("reactivate node", tab_id, [0], '', '', '')
+            return
         filename = self._cache_spawn(obj, str(tab_id))
         obj_type = self._get_spawn_type(obj)
         desc = self._format_report_desc(obj, filename, obj_type)
