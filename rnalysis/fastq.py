@@ -109,6 +109,7 @@ class SingleEndPipeline(_FASTQPipeline):
         d['metadata']['pipeline_type'] = 'single'
         return d
 
+    @readable_name('Apply Pipeline to single-end sequencing data')
     def apply_to(self, input_folder: Union[str, Path], output_folder: Union[str, Path]):
         input_folder = Path(input_folder)
         output_folder = Path(output_folder)
@@ -151,6 +152,7 @@ class PairedEndPipeline(_FASTQPipeline):
         d['metadata']['pipeline_type'] = 'paired'
         return d
 
+    @readable_name('Apply Pipeline to paired-end sequencing data')
     def apply_to(self, r1_files: List[str], r2_files: List[str], output_folder: Union[str, Path]):
         output_folder = Path(output_folder)
         return_values = []

@@ -5362,6 +5362,7 @@ class Pipeline(generic.GenericPipeline):
         except (ValueError, AssertionError, TypeError) as e:
             raise e.__class__(f"Invalid function signature {self._func_signature(func, args, kwargs)}")
 
+    @readable_name('Apply Pipeline to a table')
     def apply_to(self, filter_object: Union['Filter', 'CountFilter', 'DESeqFilter', 'FoldChangeFilter'],
                  inplace: bool = True
                  ) -> Union['Filter', Tuple['Filter', dict], Tuple[Tuple['Filter'], dict], dict, None]:

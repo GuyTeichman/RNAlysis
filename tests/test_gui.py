@@ -1536,11 +1536,11 @@ def test_FilterTabPage_apply_pipeline(qtbot, filtertabpage_with_undo_stack, pipe
     filter_obj_truth = pipeline.apply_to(window.obj(), inplace=False)[0]
 
     with qtbot.waitSignal(window.filterObjectCreated) as blocker:
-        window.apply_pipeline(pipeline, pipeline_name='my pipeline', inplace=False)
+        window.apply_pipeline(pipeline, pipeline_name='my pipeline', pipeline_id=1, inplace=False)
     assert blocker.args[0] == filter_obj_truth
     assert window.obj() == filter_obj_orig
 
-    window.apply_pipeline(pipeline, pipeline_name='my pipeline', inplace=True)
+    window.apply_pipeline(pipeline, pipeline_name='my pipeline', pipeline_id=1, inplace=True)
     assert window.obj() == filter_obj_truth
 
 
@@ -2302,7 +2302,7 @@ def test_MainWindow_export_pipeline(use_temp_settings_file, main_window, monkeyp
     monkeypatch.setattr(QtWidgets.QInputDialog, 'getItem', lambda *args, **kwargs: ('test_pipeline', True))
     monkeypatch.setattr(QtWidgets.QFileDialog, 'getSaveFileName', lambda *args, **kwargs: (fname, '.yaml'))
     monkeypatch.setattr(filtering.Pipeline, 'export_pipeline', mock_export)
-    main_window.pipelines['test_pipeline'] = pipeline_truth
+    main_window.pipelines['test_pipeline'] = (pipeline_truth, 1)
 
     main_window.export_pipeline_action.trigger()
     assert pipeline_exported == [True]
@@ -2316,7 +2316,7 @@ def test_MainWindow_import_pipeline(use_temp_settings_file, main_window, monkeyp
     fname = f'tests/test_files/{name}.yaml'
     monkeypatch.setattr(QtWidgets.QFileDialog, 'getOpenFileName', lambda *args, **kwargs: (fname, '.yaml'))
     main_window.import_pipeline_action.trigger()
-    assert main_window.pipelines == {name: exp_class.import_pipeline(fname)}
+    assert main_window.pipelines == {name: (exp_class.import_pipeline(fname),1)}
 
 
 def test_MainWindow_import_multiple_gene_sets(qtbot, main_window_with_tabs, monkeypatch):
@@ -2517,10 +2517,10 @@ def test_MainWindow_choose_tab_by_name(qtbot, use_temp_settings_file, main_windo
 
 
 def test_MainWindow_delete_pipeline(qtbot, use_temp_settings_file, main_window, monkeypatch):
-    main_window.pipelines = {'p1': 1, 'p2': 2, 'p3': 3}
+    main_window.pipelines = {'p1': (1, 1), 'p2': (2, 2), 'p3': (3, 3)}
     monkeypatch.setattr(QtWidgets.QInputDialog, 'getItem', lambda *args, **kwargs: ('p2', True))
     main_window.delete_pipeline()
-    assert main_window.pipelines == {'p1': 1, 'p3': 3}
+    assert main_window.pipelines == {'p1': (1, 1), 'p3': (3, 3)}
 
 
 def test_MainWindow_delete_pipeline_no_pipelines(qtbot, use_temp_settings_file, main_window):
@@ -2533,7 +2533,7 @@ def test_MainWindow_export_pipeline_no_pipelines(qtbot, use_temp_settings_file, 
 
 def test_MainWindow_edit_pipeline(monkeypatch, qtbot, use_temp_settings_file, main_window):
     monkeypatch.setattr(CreatePipelineWindow, 'exec', lambda *args, **kwargs: None)
-    main_window.pipelines = {'p1': filtering.Pipeline()}
+    main_window.pipelines = {'p1': (filtering.Pipeline(), 1)}
     main_window.edit_pipeline('p1')
 
 
@@ -2571,7 +2571,7 @@ def test_MainWindow_save_session(qtbot, use_temp_settings_file, main_window, mon
                              {'log2fc_col': 'log2FoldChange', 'padj_col': 'padj'}, {}]
     pipeline_names_truth = ['New Pipeline', 'Other Pipeline']
     pipeline_files_truth = [re.sub('\d\d:\d\d:\d\d', '$EXPORTTIME', pipeline.export_pipeline(filename=None)) for
-                            pipeline in main_window.pipelines.values()]
+                            pipeline,p_id in main_window.pipelines.values()]
     func_called = []
 
     def mock_save_session(session_filename: Union[str, Path], file_names: List[str], item_names: List[str],
@@ -2627,7 +2627,7 @@ def test_MainWindow_load_session(qtbot, use_temp_settings_file, main_window, mon
     main_window.load_session_action.trigger()
     assert main_window.tabs.count() == 5
     assert len(main_window.pipelines) == 2
-    assert main_window.pipelines == pipelines_truth
+    assert {key:val[0] for key,val in main_window.pipelines.items()} == pipelines_truth
 
     for i in range(1, main_window.tabs.count()):
         assert (main_window.tabs.widget(i).obj() == objs_truth[i]) or (

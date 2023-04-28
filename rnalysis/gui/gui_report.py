@@ -14,7 +14,8 @@ from rnalysis.utils import parsing, io
 
 class Node:
     __slots__ = ('_node_id', '_node_name', '_predecessors', '_is_active', '_popup_element', '_node_type', '_filename')
-    DATA_TYPES = {'Count matrix', 'Differential expression', 'Fold change', 'Other table', 'Gene set', 'Other output'}
+    DATA_TYPES = {'Count matrix', 'Differential expression', 'Fold change', 'Other table', 'Gene set', 'Other output',
+                  'Pipeline'}
 
     def __init__(self, node_id: int, node_name: str, predecessors: list, popup_element: str, node_type: str,
                  filename: str = None):
@@ -74,7 +75,8 @@ class ReportGenerator:
                    'Other table': dict(color='#F7B30A'),
                    'Gene set': dict(color='#BA68C8'),
                    'Function': dict(shape='triangleDown', color='#00D4D8'),
-                   'Other output': dict(shape='square', color='#228B22')}
+                   'Other output': dict(shape='square', color='#228B22'),
+                   'Pipeline': dict(shape='diamond', color='#FF66B8')}
     ROOT_FNAME = 'session.rnal'
 
     def __init__(self):

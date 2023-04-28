@@ -1035,7 +1035,7 @@ class SetOperationWindow(gui_widgets.MinMaxDialog):
                 output_set = getattr(first_obj, func_name)(*other_objs, **kwargs)
 
         if output_set is not None:
-            self.geneSetRturned.emit(output_set, output_name, ancestor_ids, kwargs)
+            self.geneSetReturned.emit(output_set, output_name, ancestor_ids, kwargs)
         self.close()
 
 
@@ -1125,7 +1125,7 @@ class SetVisualizationWindow(gui_widgets.MinMaxDialog):
         elif func_name is None:
             canvas = gui_graphics.EmptyCanvas("Please choose a visualization function to continue", self)
         else:
-            objs_to_plot, kwargs = self._get_function_params()
+            objs_to_plot, kwargs, _ = self._get_function_params()
             try:
                 canvas = gui_graphics.BasePreviewCanvas(getattr(enrichment, func_name), self, objs=objs_to_plot,
                                                         **kwargs)
@@ -2061,27 +2061,28 @@ class FilterTabPage(TabPage):
 
         return super()._apply_function_from_params(func_name, args, kwargs, finish_slot, job_id, predecessors)
 
-    def apply_pipeline(self, pipeline: filtering.Pipeline, pipeline_name: str, inplace: bool):
+    def apply_pipeline(self, pipeline: filtering.Pipeline, pipeline_name: str, pipeline_id: int, inplace: bool):
+        predecessors = [pipeline_id]
         if inplace:
-            command = PipelineInplaceCommand(self, pipeline, description=f'Apply Pipeline "{pipeline_name}"')
+            command = PipelineInplaceCommand(self, pipeline, pipeline_name, f'Apply Pipeline "{pipeline_name}"',
+                                             predecessors)
             self.undo_stack.push(command)
         else:
-            self._apply_pipeline(pipeline, inplace=False)
+            self._apply_pipeline(pipeline, pipeline_name, False, JOB_COUNTER.get_id(), predecessors)
 
-    def _apply_pipeline(self, pipeline, inplace: bool):
-        # TODO: get job ID for applied pipeline
-        # TODO: pass through worker
-        # TODO: how to display pipeline on report?
-        job_name = f'Pipeline on {self.get_tab_name()}'
+    def _apply_pipeline(self, pipeline, pipeline_name: str, inplace: bool, job_id: int = None,
+                        predecessors: list = None):
+
+        job_name = f'Pipeline {pipeline_name} on {self.get_tab_name()}'
         partial = functools.partial(pipeline.apply_to, self.filter_obj, inplace)
-        # if not inplace:
-        #     self.startedJob.emit(partial, job_name, None)
-        #     return
-
+        job_id = JOB_COUNTER.get_id() if job_id is None else job_id
+        predecessors = predecessors if isinstance(predecessors, list) else []
+        worker = gui_widgets.Worker(partial, job_id, predecessors + [self.tab_id], f"Pipeline '{pipeline_name}'")
+        worker.finished.connect(self.functionApplied.emit)
         prev_name = self.get_tab_name()
-        result = partial()
+        result = worker.run()
         self.update_tab(prev_name != self.filter_obj.fname.name)
-        self.process_outputs(result, job_name)
+        self.process_outputs(result, job_id, job_name)
 
     def get_index_string(self):
         if self.is_empty():
@@ -2696,7 +2697,8 @@ class InplaceCommand(QtWidgets.QUndoCommand):
                  'obj_copy': 'copy of the original object',
                  'predecessors': 'ancestor job IDs for the action'}
 
-    def __init__(self, tab: TabPage, func_name: str, args: list, kwargs: dict, description: str, predecessors: list):
+    def __init__(self, tab: TabPage, func_name: str, args: list, kwargs: dict, description: str,
+                 predecessors: List[int]):
         super().__init__(description)
         self.tab = tab
         self.prev_job_id = tab.tab_id
@@ -2783,21 +2785,33 @@ class SetOpInplacCommand(InplaceCommand):
 class PipelineInplaceCommand(QtWidgets.QUndoCommand):
     __slots__ = {'tab': 'tab object',
                  'pipeline': 'Pipeline to apply',
-                 'obj_copy': 'copy of the original Filter object of the tab'}
+                 'pipeline_name': 'Pipeline name',
+                 'obj_copy': 'copy of the original Filter object of the tab',
+                 'prev_job_id': 'previous job ID',
+                 'new_job_id': 'new job ID',
+                 'predecessors': 'ancestor job IDs for the action'}
 
-    def __init__(self, tab: FilterTabPage, pipeline: filtering.Pipeline, description: str):
+    def __init__(self, tab: FilterTabPage, pipeline: filtering.Pipeline, pipeline_name: str, description: str,
+                 predecessors: List[int]):
         super().__init__(description)
         self.tab = tab
+        self.prev_job_id = tab.tab_id
+        self.new_job_id = None
         self.pipeline = pipeline
+        self.pipeline_name = pipeline_name
+        self.predecessors = predecessors if isinstance(predecessors, list) else []
         self.obj_copy = copy.copy(self.tab.filter_obj)
 
     def undo(self):
         del self.tab.filter_obj
         self.tab.filter_obj = copy.copy(self.obj_copy)
         self.tab.update_tab(is_unsaved=True)
+        self.tab.tabReverted.emit(self.tab.tab_id)
+        self.tab.tab_id = self.prev_job_id
 
     def redo(self):
-        self.tab._apply_pipeline(self.pipeline, inplace=True)
+        self.new_job_id = JOB_COUNTER.get_id() if self.new_job_id is None else self.new_job_id
+        self.tab._apply_pipeline(self.pipeline, self.pipeline_name, True, self.new_job_id, self.predecessors)
 
 
 class MainWindow(QtWidgets.QMainWindow):
@@ -2828,7 +2842,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self.menu_bar = QtWidgets.QMenuBar(self)
         self.tab_contextmenu = None
-        self.pipelines: typing.OrderedDict[str, filtering.Pipeline] = OrderedDict()
+        self.pipelines: typing.OrderedDict[str, (generic.GenericPipeline, int)] = OrderedDict()
         self.pipeline_window = None
 
         self.about_window = gui_windows.AboutWindow(self)
@@ -3087,7 +3101,7 @@ class MainWindow(QtWidgets.QMainWindow):
         if self._generate_report:
             tab.functionApplied.connect(self.update_report_from_worker)
             tab.itemSpawned.connect(self.update_report_spawn)
-            tab.tabLoaded.connect(self.add_tab_to_report)
+            tab.tabLoaded.connect(self.add_loaded_item_to_report)
             tab.tabReverted.connect(self.remove_tab_from_report)
 
         self.tabs.addTab(tab, name)
@@ -3165,7 +3179,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.add_new_tab(filter_obj.fname.name if name is None else name)
         self.tabs.currentWidget().start_from_filter_obj(filter_obj, tab_id)
         if self._generate_report:
-            self.add_tab_to_report(tab_id, self.tabs.currentWidget().name, self.tabs.currentWidget().obj())
+            self.add_loaded_item_to_report(tab_id, self.tabs.currentWidget().name, self.tabs.currentWidget().obj())
 
         QtWidgets.QApplication.processEvents()
 
@@ -3193,19 +3207,22 @@ class MainWindow(QtWidgets.QMainWindow):
             tab_id = self.tabs.currentWidget().tab_id
         self.tabs.currentWidget().start_from_gene_set(tab_id, gene_set)
         if self._generate_report:
-            self.add_tab_to_report(tab_id, self.tabs.currentWidget().name, self.tabs.currentWidget().obj())
+            self.add_loaded_item_to_report(tab_id, self.tabs.currentWidget().name, self.tabs.currentWidget().obj())
         QtWidgets.QApplication.processEvents()
 
-    def add_tab_to_report(self, tab_id: int, tab_name: str, obj: Union[filtering.Filter, enrichment.FeatureSet]):
-        if tab_id in self.report.nodes:
-            if self.report.nodes[tab_id].is_active:
+    def add_loaded_item_to_report(self, item_id: int, item_name: str,
+                                  obj: Union[filtering.Filter, enrichment.FeatureSet, generic.GenericPipeline]):
+        if item_id in self.report.nodes:
+            if self.report.nodes[item_id].is_active:
                 return
-            self.report.add_node("reactivate node", tab_id, [0], '', '', '')
+            self.report.add_node("reactivate node", item_id, [0], '', '', '')
             return
-        filename = self._cache_spawn(obj, str(tab_id))
         obj_type = self._get_spawn_type(obj)
+        prefix = f'{item_id}_{item_name}' if obj_type in ('Other output', 'Pipeline') else str(item_id)
+        filename = self._cache_spawn(obj, prefix)
         desc = self._format_report_desc(obj, filename, obj_type)
-        self.report.add_node(f"Loaded file\n'{tab_name}'", tab_id, [0], desc, obj_type, filename)
+        label = f"Loaded {obj_type}\n'{item_name}'"
+        self.report.add_node(label, item_id, [0], desc, obj_type, filename)
 
     def remove_tab_from_report(self, tab_id: int):
         if self._generate_report:
@@ -3217,6 +3234,8 @@ class MainWindow(QtWidgets.QMainWindow):
 
     @QtCore.pyqtSlot(gui_widgets.WorkerOutput)
     def update_report_from_worker(self, worker_output: gui_widgets.WorkerOutput):
+        if worker_output.raised_exception:
+            return
         partial = worker_output.partial
         kwargs = partial.keywords
         name = generic.get_method_readable_name(partial.func)
@@ -3224,10 +3243,11 @@ class MainWindow(QtWidgets.QMainWindow):
         self.update_report(name, worker_output.job_id, worker_output.predecessor_ids, desc, 'Function')
 
     def update_report_spawn(self, name: str, spawn_id: int, predecessor_id: int,
-                            spawn: Union[filtering.Filter, enrichment.FeatureSet, pd.DataFrame, plt.Figure]):
-        prefix = f'{spawn_id}_{name}' if isinstance(spawn, (pd.DataFrame, plt.Figure)) else str(spawn_id)
-        filename = self._cache_spawn(spawn, prefix)
+                            spawn: Union[
+                                filtering.Filter, enrichment.FeatureSet, pd.DataFrame, plt.Figure, generic.GenericPipeline]):
         spawn_type = self._get_spawn_type(spawn)
+        prefix = f'{spawn_id}_{name}' if spawn_type in ('Other output', 'Pipeline') else str(spawn_id)
+        filename = self._cache_spawn(spawn, prefix)
         desc = self._format_report_desc(spawn, filename, spawn_type)
         self.update_report(name, spawn_id, [predecessor_id], desc, spawn_type, filename)
 
@@ -3239,6 +3259,8 @@ class MainWindow(QtWidgets.QMainWindow):
             spawn_type = 'Gene set'
         elif isinstance(spawn, (pd.Series, pd.DataFrame, plt.Figure)):
             spawn_type = 'Other output'
+        elif validation.isinstanceinh(spawn, generic.GenericPipeline):
+            spawn_type = 'Pipeline'
         else:
             raise TypeError(f"Invalid spawn type '{type(spawn)}' for spawn '{spawn}'!")
         return spawn_type
@@ -3252,9 +3274,12 @@ class MainWindow(QtWidgets.QMainWindow):
         elif validation.isinstanceinh(spawn, enrichment.FeatureSet):
             filename = parsing.slugify(f'{suffix}_{spawn.set_name}') + '.txt'
         elif isinstance(spawn, (pd.Series, pd.DataFrame)):
-            filename = parsing.slugify(f'{suffix}') + '.csv'
+            filename = parsing.slugify(suffix) + '.csv'
         elif isinstance(spawn, plt.Figure):
-            filename = parsing.slugify(f'{suffix}') + '.svg'
+            filename = parsing.slugify(suffix) + '.svg'
+        elif validation.isinstanceinh(spawn, generic.GenericPipeline):
+            filename = parsing.slugify(suffix) + '.yaml'
+            obj = spawn.export_pipeline(None)
         else:
             raise TypeError(f"Invalid spawn type '{type(spawn)}' for spawn '{spawn}'!")
         io.cache_gui_file(obj, filename)
@@ -3280,6 +3305,8 @@ class MainWindow(QtWidgets.QMainWindow):
             desc = parsing.df_to_html(obj)
         elif isinstance(obj, plt.Figure):
             desc = f'<img src="data/{filename}" alt="Figure" height="400">'
+        elif validation.isinstanceinh(obj, generic.GenericPipeline):
+            desc = str(obj)
         else:
             raise TypeError(f"Invalid object type '{type(obj)}' of object '{obj}'.")
 
@@ -3310,7 +3337,7 @@ class MainWindow(QtWidgets.QMainWindow):
         pipeline_name, status = QtWidgets.QInputDialog.getItem(
             self, 'Export Pipeline', 'Choose Pipeline to export:', self.pipelines.keys())
         if status:
-            pipeline = self.pipelines[pipeline_name]
+            pipeline = self.pipelines[pipeline_name][0]
             self._export_pipeline_from_obj(pipeline_name, pipeline)
 
     def _export_pipeline_from_obj(self, pipeline_name: str, pipeline: filtering.Pipeline):
@@ -3332,7 +3359,10 @@ class MainWindow(QtWidgets.QMainWindow):
             pipeline = fastq.PairedEndPipeline.import_pipeline(content)
         else:
             raise TypeError(f"Pipeline file '{content}' is invalid.")
-        self.pipelines[pipeline_name] = pipeline
+        pipeline_id = JOB_COUNTER.get_id()
+        self.pipelines[pipeline_name] = (pipeline, pipeline_id)
+        if self._generate_report:
+            self.add_loaded_item_to_report(pipeline_id, pipeline_name, pipeline)
 
     def import_pipeline(self):
         filename, _ = QtWidgets.QFileDialog.getOpenFileName(self, "Choose a Pipeline file", str(Path.home()),
@@ -3439,7 +3469,7 @@ class MainWindow(QtWidgets.QMainWindow):
     @QtCore.pyqtSlot(str)
     def edit_pipeline(self, pipeline_name: str):
         assert pipeline_name in self.pipelines, f"Pipeline {pipeline_name} doesn't exist!"
-        pipeline = self.pipelines[pipeline_name]
+        pipeline = self.pipelines[pipeline_name][0]
         self.pipeline_window = CreatePipelineWindow.start_from_pipeline(pipeline, pipeline_name, self)
         self.pipeline_window.pipelineSaved.connect(self.save_pipeline)
         self.pipeline_window.pipelineExported.connect(self._export_pipeline_from_obj)
@@ -3449,15 +3479,25 @@ class MainWindow(QtWidgets.QMainWindow):
     @QtCore.pyqtSlot(str, filtering.Pipeline)
     def save_pipeline(self, pipeline_name: str, pipeline: filtering.Pipeline):
         if pipeline_name in self.pipelines:
+            is_new = False
             response = QtWidgets.QMessageBox.question(self, 'Overwrite Pipeline?',
                                                       'A Pipeline with this name already exists. '
                                                       'Are you sure you want to overwrite it?',
                                                       defaultButton=QtWidgets.QMessageBox.No)
 
         else:
+            is_new = True
             response = QtWidgets.QMessageBox.Yes
+
         if response == QtWidgets.QMessageBox.Yes:
-            self.pipelines[pipeline_name] = pipeline
+            new_pipeline_id = JOB_COUNTER.get_id()
+            if self._generate_report:
+                if is_new:
+                    self.add_loaded_item_to_report(new_pipeline_id, pipeline_name, pipeline)
+                else:
+                    self.update_report_spawn(pipeline_name, new_pipeline_id, self.pipelines[pipeline_name][1], pipeline)
+
+            self.pipelines[pipeline_name] = (pipeline, new_pipeline_id)
 
     def settings(self):
         self.settings_window.exec()
@@ -3867,7 +3907,7 @@ class MainWindow(QtWidgets.QMainWindow):
         menu.clear()
         # Dynamically create the actions
         actions = []
-        for name, pipeline in self.pipelines.items():
+        for name, (pipeline, pipeline_id) in self.pipelines.items():
             action = QtWidgets.QAction(name, self)
             args = []
             if pipeline_arg:
@@ -3880,14 +3920,15 @@ class MainWindow(QtWidgets.QMainWindow):
         menu.addActions(actions)
 
     def apply_pipeline(self, pipeline: generic.GenericPipeline, pipeline_name: str):
+        pipeline_id = self.pipelines[pipeline_name][1]
         if isinstance(pipeline, filtering.Pipeline):
-            self._apply_table_pipeline(pipeline, pipeline_name)
+            self._apply_table_pipeline(pipeline, pipeline_name, pipeline_id)
         elif validation.isinstanceinh(pipeline, fastq._FASTQPipeline):
-            self._apply_fastq_pipeline(pipeline, pipeline_name)
+            self._apply_fastq_pipeline(pipeline, pipeline_name, pipeline_id)
         else:
             raise TypeError(f"Invalid Pipeline type: {type(pipeline)}")
 
-    def _apply_fastq_pipeline(self, pipeline: fastq._FASTQPipeline, pipeline_name: str):
+    def _apply_fastq_pipeline(self, pipeline: fastq._FASTQPipeline, pipeline_name: str, pipeline_id: int):
         if isinstance(pipeline, fastq.SingleEndPipeline):
             dialog = gui_windows.FuncExternalWindow('Pipeline', pipeline.apply_to, None, {'self'}, parent=self)
         else:
@@ -3900,7 +3941,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.external_windows['fastq_pipeline'] = dialog
         dialog.exec()
 
-    def _apply_table_pipeline(self, pipeline: filtering.Pipeline, pipeline_name: str):
+    def _apply_table_pipeline(self, pipeline: filtering.Pipeline, pipeline_name: str, pipeline_id: int):
         apply_msg = f"Do you want to apply Pipeline '{pipeline_name}' inplace?"
         reply = QtWidgets.QMessageBox.question(self, f"Apply Pipeline '{pipeline_name}'",
                                                apply_msg,
@@ -3924,7 +3965,7 @@ class MainWindow(QtWidgets.QMainWindow):
             chosen_names = window.result()
             for name in chosen_names:
                 self.tabs.setCurrentWidget(filtered_available_objs[name][0])
-                filtered_available_objs[name][0].apply_pipeline(pipeline, name, inplace)
+                filtered_available_objs[name][0].apply_pipeline(pipeline, name, pipeline_id, inplace)
                 QtWidgets.QApplication.processEvents()
             self.tabs.setCurrentIndex(current_ind)
 
@@ -3943,7 +3984,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 self.close_tab(0)
             self.close_tab(0)
 
-            self.pipelines = {}
+            self.pipelines = OrderedDict()
             self.clear_history(confirm_action=False)
             self._change_undo_stack(0)
 
@@ -3996,7 +4037,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
         pipeline_names = []
         pipeline_files = []
-        for pipeline_name, pipeline in self.pipelines.items():
+        for pipeline_name, (pipeline, pipeline_id) in self.pipelines.items():
             pipeline_files.append(pipeline.export_pipeline(filename=None))
             pipeline_names.append(pipeline_name)
 
