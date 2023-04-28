@@ -459,6 +459,7 @@ class FeatureSet(set):
         """
         return FeatureSet(self._set_ops((other,), set.symmetric_difference))
 
+    @readable_name("GO Enrichment")
     def go_enrichment(self, organism: Union[str, int, Literal['auto'], Literal[DEFAULT_ORGANISMS]] = 'auto',
                       gene_id_type: Union[str, Literal['auto'], Literal[get_gene_id_types()]] = 'auto',
                       alpha: param_typing.Fraction = 0.05,
@@ -637,6 +638,7 @@ class FeatureSet(set):
             return runner.run(plot=False), runner
         return runner.run()
 
+    @readable_name("Enrichment for KEGG Pathways")
     def kegg_enrichment(self, organism: Union[str, int, Literal['auto'], Literal[DEFAULT_ORGANISMS]] = 'auto',
                         gene_id_type: Union[str, Literal['auto'], Literal[get_gene_id_types()]] = 'auto',
                         alpha: param_typing.Fraction = 0.05,
@@ -759,6 +761,7 @@ class FeatureSet(set):
             return runner.run(plot=False), runner
         return runner.run()
 
+    @readable_name("Enrichment for user-defined attributes")
     def user_defined_enrichment(self, attributes: Union[List[str], str, List[int], int, Literal['all']],
                                 statistical_test: Literal['fisher', 'hypergeometric', 'randomization'] = 'fisher',
                                 alpha: param_typing.Fraction = 0.05,
@@ -873,6 +876,7 @@ class FeatureSet(set):
             return runner.run(plot=False), runner
         return runner.run()
 
+    @readable_name("Enrichment for user-defined non-categorical attributes")
     def non_categorical_enrichment(self, attributes: Union[List[str], str, List[int], int, Literal['all']] = None,
                                    alpha: param_typing.Fraction = 0.05, parametric_test: bool = False,
                                    biotype: Union[str, List[str], Literal['all']] = 'all',
@@ -1085,6 +1089,7 @@ class RankedSet(FeatureSet):
                       "the return type will always be FeatureSet and not RankedSet.")
         return super()._set_ops(others, op)
 
+    @readable_name("Single-Set GO Enrichment")
     def single_set_go_enrichment(self, organism: Union[str, int, Literal['auto'], Literal[DEFAULT_ORGANISMS]] = 'auto',
                                  gene_id_type: Union[str, Literal['auto'], Literal[get_gene_id_types()]] = 'auto',
                                  alpha: param_typing.Fraction = 0.05,
@@ -1240,6 +1245,7 @@ class RankedSet(FeatureSet):
             return runner.run(plot=False), runner
         return runner.run()
 
+    @readable_name("Single-Set Enrichment for KEGG Pathways")
     def single_set_kegg_enrichment(self,
                                    organism: Union[str, int, Literal['auto'], Literal[DEFAULT_ORGANISMS]] = 'auto',
                                    gene_id_type: Union[str, Literal['auto'], Literal[get_gene_id_types()]] = 'auto',
@@ -1336,6 +1342,7 @@ class RankedSet(FeatureSet):
             return runner.run(plot=False), runner
         return runner.run()
 
+    @readable_name("Single-Set Enrichment for user-defined attributes")
     def single_set_enrichment(self, attributes: Union[List[str], str, List[int], int, Literal['all']],
                               alpha: param_typing.Fraction = 0.05,
                               attr_ref_path: Union[str, Path, Literal['predefined']] = 'predefined',
