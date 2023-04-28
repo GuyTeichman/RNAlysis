@@ -93,6 +93,8 @@ All of *RNAlysis*'s dependencies can be installed automatically via PyPI.
 * `aiodns <https://github.com/saghul/aiodns>`_
 * `aiolimiter <https://aiolimiter.readthedocs.io/>`_
 * `Brotli <https://github.com/google/brotli>`_
+* `networkx <https://networkx.org>`_
+* `pyvis <https://github.com/WestHealth/pyvis>`_
 
 ----
 
