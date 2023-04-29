@@ -262,3 +262,71 @@ def test_slugify(allow_unicode, string, expected):
 def test_replace_last_occurrence(regex, repl, item, expected):
     res = replace_last_occurrence(regex, repl, item)
     assert res == expected
+
+
+@pytest.fixture
+def sample_df():
+    return pd.DataFrame({
+        "A": [1.0, 2, 3, 4, 5],
+        "B": [6.00111, 7, 8, 9, 10],
+        "C": [11, 12, 13, 14, 15],
+        "D": [16, 17, 18, 19, 20],
+        "E": [21, 22, 23, 24, 25]
+    })
+
+
+def test_df_to_html_returns_string(sample_df):
+    html = df_to_html(sample_df)
+    assert isinstance(html, str)
+
+
+@pytest.mark.parametrize('n_rows', [2, 3, 4])
+def test_df_to_html_limits_number_of_rows(sample_df, n_rows):
+    html = df_to_html(sample_df, max_rows=n_rows)
+    assert html.count("<tr>") == n_rows + 2  # includes header row and '...'
+
+
+def test_df_to_html_formats_floats_with_two_decimals(sample_df):
+    html = df_to_html(sample_df)
+    assert "1.00" in html
+    assert "6.00" in html
+
+
+def test_df_to_html_does_not_truncate_values(sample_df):
+    long_string = "a" * 100
+    df = pd.DataFrame({
+        "A": [1, 2, 3],
+        "B": [long_string, long_string, long_string],
+    })
+    html = df_to_html(df)
+    assert long_string in html
+
+
+def test_df_to_html_removes_redundant_dots(sample_df):
+    df = pd.DataFrame({
+        "A": ["A", "B", "C"],
+        "B": ["...", "...", "..."],
+    })
+    html = df_to_html(df, max_rows=2, max_cols=2)
+    assert "...<br>" not in html
+
+
+@pytest.mark.parametrize("items, expected_output", [
+    ([], '<table border="1" class="dataframe">\n</table>'),
+    (['item'],
+     '<table border="1" class="dataframe">\n<tr><td style="border: 1px solid black; border-collapse: collapse;"><b>item</b></td></tr>\n</table>'),
+    (['item1', 'item2', 'item3'],
+     '<table border="1" class="dataframe">\n<tr><td style="border: 1px solid black; border-collapse: collapse;"><b>item1</b></td></tr>\n<tr><td style="border: 1px solid black; border-collapse: collapse;"><b>item2</b></td></tr>\n<tr><td style="border: 1px solid black; border-collapse: collapse;"><b>item3</b></td></tr>\n</table>'),
+])
+def test_items_to_html_table(items, expected_output):
+    assert items_to_html_table(items) == expected_output
+
+
+@pytest.mark.parametrize("d, expected", [
+    ({}, ''),
+    ({'a': 1}, "a = 1"),
+    ({'a': 1, 'b': 'hello'}, "a = 1, \nb = 'hello'"),
+    ({'a': [1, 2, 3], 'b': {'x': 1}}, "a = [1, 2, 3], \nb = {'x': 1}")
+])
+def test_format_dict_for_display(d, expected):
+    assert format_dict_for_display(d) == expected

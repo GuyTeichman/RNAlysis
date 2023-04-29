@@ -378,7 +378,7 @@ def df_to_html(df: pd.DataFrame, max_rows: int = 5, max_cols: int = 4):
     styler.set_table_styles(
         [{'selector': 'td', 'props': 'border: 1px solid grey; border-collapse: collapse;'},
          {'selector': 'th', 'props': 'border: 1px solid grey; border-collapse: collapse;'}], )
-    html = styler.to_html(max_rows=5, max_columns=4, float_format=lambda x: f"{x:.2f}")
+    html = styler.to_html(max_rows=max_rows, max_columns=max_cols, float_format=lambda x: f"{x:.2f}")
     if df.shape[0] > max_rows and df.shape[1] > max_cols:
         # remove a redundant '...' from the end of the table
         html = replace_last_occurrence(r'<td class="data col[\d]+ row_trim" >...<\/td>', '', html)
