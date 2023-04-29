@@ -1335,7 +1335,7 @@ def test_FilterTabPage_from_obj(qtbot):
 def test_FilterTabPage_cache(qtbot, monkeypatch):
     qtbot, window = widget_setup(qtbot, FilterTabPage)
     filt = filtering.DESeqFilter('tests/test_files/test_deseq.csv')
-    window.start_from_filter_obj(filt, 'table name', 1)
+    window.start_from_filter_obj(filt, 1, 'table name')
     cached = []
 
     def mock_cache(obj, filename):
@@ -1366,7 +1366,7 @@ def test_FilterTabPage_cache(qtbot, monkeypatch):
 ])
 def test_FilterTabPage_obj_properties(qtbot, filter_obj, truth):
     qtbot, window = widget_setup(qtbot, FilterTabPage)
-    window.start_from_filter_obj(filter_obj, 'table name', 1)
+    window.start_from_filter_obj(filter_obj, 1, 'table name')
 
     assert window.obj_properties() == truth
 
@@ -1433,7 +1433,7 @@ def test_FilterTabPage_save_table(qtbot, monkeypatch):
 
     qtbot, window = widget_setup(qtbot, FilterTabPage)
     filt = filtering.DESeqFilter('tests/test_files/test_deseq.csv')
-    window.start_from_filter_obj(filt, 'table name', 1)
+    window.start_from_filter_obj(filt, 1, 'table name')
     qtbot.mouseClick(window.overview_widgets['save_button'], LEFT_CLICK)
 
     assert saved == ['got name', fname]

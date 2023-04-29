@@ -448,13 +448,13 @@ def test_kallisto_quantify_paired_end_command(monkeypatch, r1_files, r2_files, o
 def test_trim_adapters_single_end():
     in_dir = 'tests/test_files/test_fastqs/dir3'
     out_dir = 'tests/test_files/test_fastqs/outdir'
-    out_path = 'tests/test_files/test_fastqs/outdir/test_fastq_trimmed.fastq.gz'
+    out_path = 'tests/test_files/test_fastqs/outdir/test_fastq_trimmed.fastq'
     truth_path = 'tests/test_files/test_fastqs/outdir/test_fastq_trimmed_truth.fastq.gz'
     adapter_seq = 'AACTTCTTA'
     try:
-        trim_adapters_single_end(in_dir, out_dir, adapter_seq, gzip_output=True)
-        with gzip.open(truth_path) as truth, gzip.open(out_path) as out:
-            assert truth.read() == out.read()
+        trim_adapters_single_end(in_dir, out_dir, adapter_seq)
+        with gzip.open(truth_path) as truth, open(out_path) as out:
+            assert truth.read().decode('utf-8') == out.read()
     finally:
         if Path(out_path).exists():
             Path(out_path).unlink()
