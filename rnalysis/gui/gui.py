@@ -3239,7 +3239,7 @@ class MainWindow(QtWidgets.QMainWindow):
         partial = worker_output.partial
         kwargs = partial.keywords
         name = generic.get_method_readable_name(partial.func)
-        desc = f'{partial.func.__name__}({parsing.format_dict_for_display(kwargs)})'
+        desc = f'{partial.func.__name__}({parsing.format_dict_for_display(kwargs)})'.replace('\n', '<br>')
         self.update_report(name, worker_output.job_id, worker_output.predecessor_ids, desc, 'Function')
 
     def update_report_spawn(self, name: str, spawn_id: int, predecessor_id: int,
@@ -3306,7 +3306,7 @@ class MainWindow(QtWidgets.QMainWindow):
         elif isinstance(obj, plt.Figure):
             desc = f'<img src="data/{filename}" alt="Figure" height="400">'
         elif validation.isinstanceinh(obj, generic.GenericPipeline):
-            desc = str(obj)
+            desc = str(obj).replace('\n', '<br>')
         else:
             raise TypeError(f"Invalid object type '{type(obj)}' of object '{obj}'.")
 
