@@ -27,7 +27,7 @@ from rnalysis.utils.param_typing import PositiveInt, NonNegativeInt, Fraction, L
 
 try:
     import cutadapt
-    from cutadapt.__main__ import main as cutadapt_main
+    from cutadapt.cli import main as cutadapt_main
 
     HAS_CUTADAPT = True
 

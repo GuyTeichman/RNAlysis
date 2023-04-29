@@ -23,6 +23,7 @@ Fixed
 *******
 * RNAlysis failing to map gene IDs during GO enrichment analysis should no longer raise an error (thanks to `clockgene <https://github.com/clockgene>`_ in `#16 <https://github.com/GuyTeichman/RNAlysis/issues/16>`_).
 * Fixed bug where the Command History window would not display history of the current tab immediately after clearing the current session.
+* Fixed bug where adapter trimming would fail to run when using CutAdapt version >= 4.4.0.
 
 New Contributors
 *****************
