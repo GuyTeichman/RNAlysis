@@ -345,6 +345,16 @@ class WorkerOutput:
         self.emit_args = args_to_emit
         self.raised_exception = False if err is None else err
 
+    def __eq__(self, other):
+        if type(self) != type(other):
+            return False
+        return self.result == other.result and \
+            self.partial == other.partial and \
+            self.job_id == other.job_id and \
+            self.predecessor_ids == other.predecessor_ids and \
+            self.emit_args == other.emit_args and \
+            self.raised_exception == other.raised_exception
+
 
 class Worker(QtCore.QObject):
     finished = QtCore.pyqtSignal(WorkerOutput)

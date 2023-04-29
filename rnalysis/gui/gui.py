@@ -2525,7 +2525,7 @@ class MultiOpenWindow(QtWidgets.QDialog):
             self.kwargs[file] = QtWidgets.QGridLayout(kwargs_widget)
 
             self.table_types[file].currentTextChanged.connect(functools.partial(self.update_args_ui, file))
-            self.table_types[file].setCurrentText('Other tabke')
+            self.table_types[file].setCurrentText('Other table')
 
             self.scroll_layout.addWidget(self.paths[file], i, 0)
             self.scroll_layout.addWidget(self.table_types[file], i, 1)
@@ -3131,7 +3131,7 @@ class MainWindow(QtWidgets.QMainWindow):
             filter_obj = filtering.CountFilter.from_folder(folder_name)
             if self.tabs.currentWidget().is_empty():
                 self.tabs.removeTab(self.tabs.currentIndex())
-            self.new_tab_from_filter_obj(filter_obj)
+            self.new_tab_from_filter_obj(filter_obj, JOB_COUNTER.get_id())
 
     def new_table_from_folder_htseqcount(self):
         folder_name = QtWidgets.QFileDialog.getExistingDirectory(self, "Choose directory", str(Path.home()))
@@ -3145,7 +3145,7 @@ class MainWindow(QtWidgets.QMainWindow):
             filter_obj = filtering.CountFilter.from_folder_htseqcount(folder_name, norm_to_rpm=to_normalize)
             if self.tabs.currentWidget().is_empty():
                 self.tabs.removeTab(self.tabs.currentIndex())
-            self.new_tab_from_filter_obj(filter_obj)
+            self.new_tab_from_filter_obj(filter_obj, JOB_COUNTER.get_id())
 
     def load_multiple_files(self):
         dialog = gui_windows.MultiFileSelectionDialog()
@@ -3167,9 +3167,9 @@ class MainWindow(QtWidgets.QMainWindow):
                         name = names[filename]
                         filter_obj = table_type(path, **kwargs[filename])
                         if name == '':
-                            self.new_tab_from_filter_obj(filter_obj)
+                            self.new_tab_from_filter_obj(filter_obj, JOB_COUNTER.get_id())
                         else:
-                            self.new_tab_from_filter_obj(filter_obj, name)
+                            self.new_tab_from_filter_obj(filter_obj, JOB_COUNTER.get_id(), name)
                     if tabs_to_close is not None:
                         self.tabs.removeTab(tabs_to_close)
 
@@ -3383,7 +3383,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 tabs_to_close = self.tabs.currentIndex()
             for filename in filenames:
                 gene_set = self._filename_to_gene_set(filename)
-                self.new_tab_from_gene_set(gene_set, Path(filename).stem)
+                self.new_tab_from_gene_set(gene_set, JOB_COUNTER.get_id(), Path(filename).stem)
             if tabs_to_close is not None:
                 self.tabs.removeTab(tabs_to_close)
 

@@ -1100,12 +1100,13 @@ def test_worker(qtbot):
         return a * b * c, a + b + c
 
     partial = functools.partial(func, 5, 6, 7)
+    truth = WorkerOutput((5 * 6 * 7, 5 + 6 + 7), partial, 2, [0, 1], 'other input')
     try:
-        worker = Worker(partial, 'other input')
+        worker = Worker(partial, 2, [0, 1], 'other input')
 
         with qtbot.waitSignal(worker.finished, timeout=4000) as blocker:
             worker.run()
-        assert blocker.args == [((5 * 6 * 7, 5 + 6 + 7), 'other input')]
+        assert blocker.args == [truth]
     finally:
         try:
             worker.deleteLater()

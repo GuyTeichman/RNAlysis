@@ -50,11 +50,11 @@ def available_objects(qtbot, red_icon, green_icon):
                                 {'WBGene00000002', 'WBGene00000006', 'WBGene00000015', 'WBGene00000017'})
 
     qtbot, second = widget_setup(qtbot, FilterTabPage, undo_stack=QtWidgets.QUndoStack())
-    second.start_from_filter_obj(filtering.DESeqFilter('tests/test_files/test_deseq.csv'))
+    second.start_from_filter_obj(filtering.DESeqFilter('tests/test_files/test_deseq.csv'), 1)
     second.rename('second tab')
 
     qtbot, third = widget_setup(qtbot, FilterTabPage, undo_stack=QtWidgets.QUndoStack())
-    third.start_from_filter_obj(filtering.CountFilter('tests/test_files/counted.tsv'))
+    third.start_from_filter_obj(filtering.CountFilter('tests/test_files/counted.tsv'), 2)
     third.rename('third tab')
 
     return {'first tab': (first, red_icon), 'second tab': (second, red_icon), 'third tab': (third, green_icon)}
@@ -66,15 +66,15 @@ def four_available_objects_and_empty(qtbot, red_icon, green_icon, blank_icon):
                                 {'WBGene00008447', 'WBGene00044258', 'WBGene00045410', 'WBGene00010100'})
 
     qtbot, second = widget_setup(qtbot, FilterTabPage, undo_stack=QtWidgets.QUndoStack())
-    second.start_from_filter_obj(filtering.DESeqFilter('tests/test_files/test_deseq_set_ops_1.csv'))
+    second.start_from_filter_obj(filtering.DESeqFilter('tests/test_files/test_deseq_set_ops_1.csv'), 2)
     second.rename('second tab')
 
     qtbot, third = widget_setup(qtbot, FilterTabPage, undo_stack=QtWidgets.QUndoStack())
-    third.start_from_filter_obj(filtering.DESeqFilter('tests/test_files/test_deseq_set_ops_2.csv'))
+    third.start_from_filter_obj(filtering.DESeqFilter('tests/test_files/test_deseq_set_ops_2.csv'), 3)
     third.rename('third tab')
 
     qtbot, fourth = widget_setup(qtbot, FilterTabPage, undo_stack=QtWidgets.QUndoStack())
-    fourth.start_from_filter_obj(filtering.CountFilter('tests/test_files/counted.tsv'))
+    fourth.start_from_filter_obj(filtering.CountFilter('tests/test_files/counted.tsv'), 4)
     fourth.rename('fourth tab')
 
     qtbot, empty = widget_setup(qtbot, FilterTabPage, undo_stack=QtWidgets.QUndoStack())
@@ -115,14 +115,14 @@ def multi_keep_window(qtbot):
     objs = [filtering.DESeqFilter('tests/test_files/test_deseq.csv'),
             filtering.CountFilter('tests/test_files/counted.tsv'),
             filtering.Filter('tests/test_files/test_deseq_biotype.csv')]
-    qtbot, window = widget_setup(qtbot, MultiKeepWindow, objs)
+    qtbot, window = widget_setup(qtbot, MultiKeepWindow, objs, -1)
     return window
 
 
 @pytest.fixture
 def filtertabpage(qtbot):
     qtbot, window = widget_setup(qtbot, FilterTabPage)
-    window.start_from_filter_obj(filtering.DESeqFilter('tests/test_files/test_deseq.csv'))
+    window.start_from_filter_obj(filtering.DESeqFilter('tests/test_files/test_deseq.csv'), 1)
     return window
 
 
@@ -130,7 +130,7 @@ def filtertabpage(qtbot):
 def filtertabpage_with_undo_stack(qtbot):
     stack = QtWidgets.QUndoStack()
     qtbot, window = widget_setup(qtbot, FilterTabPage, undo_stack=stack)
-    window.start_from_filter_obj(filtering.DESeqFilter('tests/test_files/test_deseq_sig.csv'))
+    window.start_from_filter_obj(filtering.DESeqFilter('tests/test_files/test_deseq_sig.csv'), 1)
     return window, stack
 
 
@@ -138,7 +138,7 @@ def filtertabpage_with_undo_stack(qtbot):
 def countfiltertabpage_with_undo_stack(qtbot):
     stack = QtWidgets.QUndoStack()
     qtbot, window = widget_setup(qtbot, FilterTabPage, undo_stack=stack)
-    window.start_from_filter_obj(filtering.CountFilter('tests/test_files/counted.csv'))
+    window.start_from_filter_obj(filtering.CountFilter('tests/test_files/counted.csv'), 1)
     return window, stack
 
 
@@ -723,7 +723,7 @@ def test_EnrichmentWindow_get_analysis_params(qtbot, enrichment_window, button_n
         enrichment_window.widgets['bg_list'].showPopup()
         qtbot.keyClicks(enrichment_window.widgets['bg_list'], bg_set)
 
-    gene_set, bg_set, gene_set_name, kwargs = enrichment_window.get_analysis_params()
+    gene_set, bg_set, gene_set_name, kwargs, pred_ids = enrichment_window.get_analysis_params()
 
     assert gene_set == available_objects[en_set_truth][0].obj()
     if is_single_set:
@@ -782,7 +782,7 @@ def test_EnrichmentWindow_get_analysis_params_single_set(qtbot, enrichment_windo
     enrichment_window.widgets['bg_list'].showPopup()
     qtbot.keyClicks(enrichment_window.widgets['bg_list'], bg_set)
 
-    gene_set, bg_set, gene_set_name, kwargs = enrichment_window.get_analysis_params()
+    gene_set, bg_set, gene_set_name, kwargs, predecessor_ids = enrichment_window.get_analysis_params()
 
     assert gene_set == available_objects[en_set_truth][0].obj()
 
@@ -860,22 +860,23 @@ def test_EnrichmentWindow_run_analysis(qtbot, enrichment_window, button_name, te
     with qtbot.waitSignal(enrichment_window.enrichmentStarted) as blocker:
         enrichment_window.widgets['run_button'].click()
 
-    assert callable(blocker.args[0])
-    assert blocker.args[1] == set_name_truth
+    assert isinstance(blocker.args[0], gui_widgets.Worker)
+    worker = blocker.args[0]
+    assert worker.emit_args[0] == set_name_truth
 
     if is_single_set:
         pass
     else:
-        assert blocker.args[0].keywords['statistical_test'] == test_arg_truth
-        assert blocker.args[0].keywords['background_genes'].gene_set == available_objects[bg_set_truth][
+        assert worker.partial.keywords['statistical_test'] == test_arg_truth
+        assert worker.partial.keywords['background_genes'].gene_set == available_objects[bg_set_truth][
             0].obj() if isinstance(available_objects[bg_set_truth][0].obj(), set) else available_objects[bg_set_truth][
             0].obj().index_set
 
     for kw in kwargs_truth:
-        assert blocker.args[0].keywords[kw] == kwargs_truth[kw]
+        assert worker.partial.keywords[kw] == kwargs_truth[kw]
 
-    assert blocker.args[0].func == func_truth[(dataset_name_truth, is_single_set)]
-    assert blocker.args[0].args[0] == gene_set_truth
+    assert worker.partial.func == func_truth[(dataset_name_truth, is_single_set)]
+    assert worker.partial.args[0] == gene_set_truth
 
 
 @pytest.mark.parametrize('en_set,bg_set,en_set_truth,bg_set_truth,', [
@@ -928,17 +929,18 @@ def test_EnrichmentWindow_run_analysis_non_categorical(qtbot, enrichment_window,
     with qtbot.waitSignal(enrichment_window.enrichmentStarted) as blocker:
         enrichment_window.widgets['run_button'].click()
 
-    assert callable(blocker.args[0])
-    assert blocker.args[1] == set_name_truth
+    assert isinstance(blocker.args[0], gui_widgets.Worker)
+    worker = blocker.args[0]
+    assert worker.emit_args[0] == set_name_truth
 
-    assert blocker.args[0].keywords['parametric_test'] == test_arg_truth
+    assert worker.partial.keywords['parametric_test'] == test_arg_truth
     for kw in kwargs_truth:
-        assert blocker.args[0].keywords[kw] == kwargs_truth[kw]
+        assert worker.partial.keywords[kw] == kwargs_truth[kw]
 
-    assert blocker.args[0].func == enrichment.FeatureSet.non_categorical_enrichment
-    assert blocker.args[0].args[0] == gene_set_truth
+    assert worker.partial.func == enrichment.FeatureSet.non_categorical_enrichment
+    assert worker.partial.args[0] == gene_set_truth
 
-    assert blocker.args[0].keywords['background_genes'].gene_set == available_objects[bg_set_truth][
+    assert worker.partial.keywords['background_genes'].gene_set == available_objects[bg_set_truth][
         0].obj() if isinstance(available_objects[bg_set_truth][0].obj(), set) else available_objects[bg_set_truth][
         0].obj().index_set
 
@@ -1282,6 +1284,7 @@ def test_SetVisualizationWindow_generate_graph(qtbot, set_vis_window, monkeypatc
         assert args[0] == objs_truth
 
         called.append(True)
+        return plt.Figure()
 
     set_vis_window.widgets['radio_button_box'].radio_buttons[op_name].click()
     for i in range(n_sets):
@@ -1320,7 +1323,7 @@ def test_FilterTabPage_from_obj(qtbot):
     qtbot, window = widget_setup(qtbot, FilterTabPage)
     obj = filtering.DESeqFilter('tests/test_files/test_deseq.csv')
     assert window.is_empty()
-    window.start_from_filter_obj(obj, table_name)
+    window.start_from_filter_obj(obj, 1, table_name)
 
     assert not window.is_empty()
     assert window.obj() == obj
@@ -1332,7 +1335,7 @@ def test_FilterTabPage_from_obj(qtbot):
 def test_FilterTabPage_cache(qtbot, monkeypatch):
     qtbot, window = widget_setup(qtbot, FilterTabPage)
     filt = filtering.DESeqFilter('tests/test_files/test_deseq.csv')
-    window.start_from_filter_obj(filt, 'table name')
+    window.start_from_filter_obj(filt, 'table name', 1)
     cached = []
 
     def mock_cache(obj, filename):
@@ -1363,7 +1366,7 @@ def test_FilterTabPage_cache(qtbot, monkeypatch):
 ])
 def test_FilterTabPage_obj_properties(qtbot, filter_obj, truth):
     qtbot, window = widget_setup(qtbot, FilterTabPage)
-    window.start_from_filter_obj(filter_obj, 'table name')
+    window.start_from_filter_obj(filter_obj, 'table name', 1)
 
     assert window.obj_properties() == truth
 
@@ -1430,7 +1433,7 @@ def test_FilterTabPage_save_table(qtbot, monkeypatch):
 
     qtbot, window = widget_setup(qtbot, FilterTabPage)
     filt = filtering.DESeqFilter('tests/test_files/test_deseq.csv')
-    window.start_from_filter_obj(filt, 'table name')
+    window.start_from_filter_obj(filt, 'table name', 1)
     qtbot.mouseClick(window.overview_widgets['save_button'], LEFT_CLICK)
 
     assert saved == ['got name', fname]
@@ -1469,8 +1472,8 @@ def test_FilterTabPage_apply_split_clustering_function(qtbot, monkeypatch, count
 
     window, stack = countfiltertabpage_with_undo_stack
 
-    def my_slot(partial, func_name):
-        window.process_outputs(partial()[0], func_name)
+    def my_slot(worker, func_name):
+        window.process_outputs(worker.run()[0], func_name)
 
     window.startedClustering.connect(my_slot)
 
@@ -1549,7 +1552,7 @@ def test_FilterTabPage_undo_pipeline(qtbot, filtertabpage_with_undo_stack, pipel
     orig_name = window.name
     filter_obj_orig = window.obj().__copy__()
     filter_obj_truth = pipeline.apply_to(window.obj(), inplace=False)[0]
-    window.apply_pipeline(pipeline, pipeline_name='my pipeline', inplace=True)
+    window.apply_pipeline(pipeline, 'my pipeline', 1, True)
     assert window.obj() == filter_obj_truth
 
     stack.undo()
@@ -1774,7 +1777,7 @@ def test_CreatePipelineWindow_from_pipeline(qtbot):
 
 @pytest.mark.parametrize('pipeline_type,exp_pipeline,exp_filter_type', [
     ('Differential expression', filtering.Pipeline, filtering.DESeqFilter),
-    ('Other', filtering.Pipeline, filtering.Filter),
+    ('Other table', filtering.Pipeline, filtering.Filter),
     ('Sequence files (single-end)', fastq.SingleEndPipeline, False),
     ('Sequence files (paired-end)', fastq.PairedEndPipeline, False)
 ])
@@ -1956,7 +1959,8 @@ def test_MultiOpenWindow_init(qtbot, multi_open_window):
 @pytest.mark.parametrize('path_ops,type_ops,name_ops,truth', [
     ({}, {}, {}, ({'tests/counted.csv': 'tests/counted.csv', 'tests/test_deseq.csv': 'tests/test_deseq.csv',
                    'tests/counted.tsv': 'tests/counted.tsv'},
-                  {'tests/counted.csv': 'Other', 'tests/test_deseq.csv': 'Other', 'tests/counted.tsv': 'Other'},
+                  {'tests/counted.csv': 'Other table', 'tests/test_deseq.csv': 'Other table',
+                   'tests/counted.tsv': 'Other table'},
                   {'tests/counted.csv': '', 'tests/test_deseq.csv': '', 'tests/counted.tsv': ''},
                   {'tests/counted.csv': {'drop_columns': []},
                    'tests/counted.tsv': {'drop_columns': []},
@@ -1965,8 +1969,8 @@ def test_MultiOpenWindow_init(qtbot, multi_open_window):
         {}, {}, {1: 'new name', 2: 'second new name'},
         ({'tests/counted.csv': 'tests/counted.csv', 'tests/test_deseq.csv': 'tests/test_deseq.csv',
           'tests/counted.tsv': 'tests/counted.tsv'},
-         {'tests/counted.csv': 'Other', 'tests/test_deseq.csv': 'Other',
-          'tests/counted.tsv': 'Other'},
+         {'tests/counted.csv': 'Other table', 'tests/test_deseq.csv': 'Other table',
+          'tests/counted.tsv': 'Other table'},
          {'tests/counted.csv': '', 'tests/test_deseq.csv': 'new name', 'tests/counted.tsv': 'second new name'},
          {'tests/counted.csv': {'drop_columns': []},
           'tests/counted.tsv': {'drop_columns': []},
@@ -1976,7 +1980,7 @@ def test_MultiOpenWindow_init(qtbot, multi_open_window):
      ({'tests/counted.csv': 'tests/counted.csv', 'tests/test_deseq.csv': 'tests/test_deseq.csv',
        'tests/counted.tsv': 'tests/counted.tsv'},
       {'tests/counted.csv': 'Count matrix', 'tests/test_deseq.csv': 'Differential expression',
-       'tests/counted.tsv': 'Other'},
+       'tests/counted.tsv': 'Other table'},
       {'tests/counted.csv': '', 'tests/test_deseq.csv': '', 'tests/counted.tsv': ''},
       {'tests/counted.csv': {'drop_columns': [], 'is_normalized': False},
        'tests/counted.tsv': {'drop_columns': []},
@@ -1987,7 +1991,7 @@ def test_MultiOpenWindow_init(qtbot, multi_open_window):
     ({1: 'tests/big_counted.csv'}, {}, {},
      ({'tests/counted.csv': 'tests/counted.csv', 'tests/test_deseq.csv': 'tests/big_counted.csv',
        'tests/counted.tsv': 'tests/counted.tsv'},
-      {'tests/counted.csv': 'Other', 'tests/test_deseq.csv': 'Other', 'tests/counted.tsv': 'Other'},
+      {'tests/counted.csv': 'Other table', 'tests/test_deseq.csv': 'Other table', 'tests/counted.tsv': 'Other table'},
       {'tests/counted.csv': '', 'tests/test_deseq.csv': '', 'tests/counted.tsv': ''},
       {'tests/counted.csv': {'drop_columns': []},
        'tests/counted.tsv': {'drop_columns': []},
@@ -1997,7 +2001,7 @@ def test_MultiOpenWindow_init(qtbot, multi_open_window):
      ({'tests/counted.csv': 'tests/counted.csv', 'tests/test_deseq.csv': 'tests/test_deseq.csv',
        'tests/counted.tsv': 'tests/counted.tsv'},
       {'tests/counted.csv': 'Count matrix', 'tests/test_deseq.csv': 'Differential expression',
-       'tests/counted.tsv': 'Other'},
+       'tests/counted.tsv': 'Other table'},
       {'tests/counted.csv': '', 'tests/test_deseq.csv': 'new name', 'tests/counted.tsv': 'second new name'},
       {'tests/counted.csv': {'drop_columns': [], 'is_normalized': False},
        'tests/counted.tsv': {'drop_columns': []},
@@ -2024,24 +2028,30 @@ def test_ReactiveTabWidget_init(qtbot, tab_widget):
 
 def test_ReactiveTabWidget_new_tab_from_item(qtbot, tab_widget):
     with qtbot.waitSignal(tab_widget.newTabFromSet) as blocker:
-        tab_widget.new_tab_from_item({'a', 'b', 'c', 'd'}, 'my name')
-    assert blocker.args == [{'a', 'b', 'c', 'd'}, 'my name']
+        tab_widget.new_tab_from_item({'a', 'b', 'c', 'd'}, 'my name', 1)
+    assert blocker.args == [{'a', 'b', 'c', 'd'}, 1, 'my name']
 
     with qtbot.waitSignal(tab_widget.newTabFromFilter) as blocker:
-        tab_widget.new_tab_from_item(filtering.CountFilter('tests/test_files/counted.tsv'), 'my name')
-    assert blocker.args == [filtering.CountFilter('tests/test_files/counted.tsv'), 'my name']
+        tab_widget.new_tab_from_item(filtering.CountFilter('tests/test_files/counted.tsv'), 'my name', -1)
+    assert blocker.args == [filtering.CountFilter('tests/test_files/counted.tsv'), -1, 'my name']
 
     with pytest.raises(TypeError):
         with qtbot.assertNotEmitted(tab_widget.newTabFromSet):
             with qtbot.assertNotEmitted(tab_widget.newTabFromFilter):
-                tab_widget.new_tab_from_item(['invalid item type'], 'my name')
+                tab_widget.new_tab_from_item(['invalid item type'], 'my name', 1)
+
+
+class MockTab(QtWidgets.QWidget):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.tab_id = -1
 
 
 def test_ReactiveTabWidget_remove_tab(qtbot, tab_widget):
-    qtbot, widget = widget_setup(qtbot, QtWidgets.QWidget)
+    qtbot, widget = widget_setup(qtbot, MockTab)
     tab_widget.setCornerWidget(widget, QtCore.Qt.TopRightCorner)
     for i in range(3):
-        qtbot, widget = widget_setup(qtbot, QtWidgets.QWidget)
+        qtbot, widget = widget_setup(qtbot, MockTab)
         tab_widget.addTab(widget, 'name')
 
     for i in range(3):
@@ -2316,7 +2326,8 @@ def test_MainWindow_import_pipeline(use_temp_settings_file, main_window, monkeyp
     fname = f'tests/test_files/{name}.yaml'
     monkeypatch.setattr(QtWidgets.QFileDialog, 'getOpenFileName', lambda *args, **kwargs: (fname, '.yaml'))
     main_window.import_pipeline_action.trigger()
-    assert main_window.pipelines == {name: (exp_class.import_pipeline(fname),1)}
+    main_window.pipelines[name] = (main_window.pipelines[name][0], -1)
+    assert main_window.pipelines == OrderedDict({name: (exp_class.import_pipeline(fname), -1)})
 
 
 def test_MainWindow_import_multiple_gene_sets(qtbot, main_window_with_tabs, monkeypatch):
@@ -2571,7 +2582,7 @@ def test_MainWindow_save_session(qtbot, use_temp_settings_file, main_window, mon
                              {'log2fc_col': 'log2FoldChange', 'padj_col': 'padj'}, {}]
     pipeline_names_truth = ['New Pipeline', 'Other Pipeline']
     pipeline_files_truth = [re.sub('\d\d:\d\d:\d\d', '$EXPORTTIME', pipeline.export_pipeline(filename=None)) for
-                            pipeline,p_id in main_window.pipelines.values()]
+                            pipeline, p_id in main_window.pipelines.values()]
     func_called = []
 
     def mock_save_session(session_filename: Union[str, Path], file_names: List[str], item_names: List[str],
@@ -2627,7 +2638,7 @@ def test_MainWindow_load_session(qtbot, use_temp_settings_file, main_window, mon
     main_window.load_session_action.trigger()
     assert main_window.tabs.count() == 5
     assert len(main_window.pipelines) == 2
-    assert {key:val[0] for key,val in main_window.pipelines.items()} == pipelines_truth
+    assert {key: val[0] for key, val in main_window.pipelines.items()} == pipelines_truth
 
     for i in range(1, main_window.tabs.count()):
         assert (main_window.tabs.widget(i).obj() == objs_truth[i]) or (

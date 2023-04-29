@@ -8,6 +8,9 @@ class DummyClass:
     def __init__(self):
         pass
 
+    def __eq__(self, other):
+        return type(self) == type(other)
+
 
 @pytest.mark.parametrize('is_input_path', [True, False])
 @pytest.mark.parametrize('path,expected_path', [
@@ -31,6 +34,7 @@ def test_remove_suffixes(path, expected_path, is_input_path):
                           ({'three', 'different', 'elements'}, True, ['different', 'elements', 'three']),
                           (np.array([6, 9, 2]), False, [6, 9, 2]),
                           (np.array([6, 9, 2]), True, [2, 6, 9]),
+                          (DummyClass(), False, [DummyClass()]),
                           (None, False, [None])])
 def test_data_to_list(input_val, sort, truth):
     assert data_to_list(input_val, sort=sort) == truth
@@ -47,34 +51,23 @@ def test_data_to_list(input_val, sort, truth):
                           (67.2, False, (67.2,)),
                           ((67.2,), False, (67.2,)),
                           ((67.5,), True, (67.5,)),
+                          (DummyClass(), False, (DummyClass(),)),
                           (None, False, (None,))])
 def test_data_to_tuple(input_val, sort, truth):
     assert data_to_tuple(input_val, sort=sort) == truth
 
 
-def test_data_to_list_invalid_type():
-    with pytest.raises(TypeError):
-        data_to_list(DummyClass())
-
-
-def test_data_to_tuple_invalid_type():
-    with pytest.raises(TypeError):
-        data_to_tuple(DummyClass())
-
-
-def test_data_to_set_invalid_type():
-    with pytest.raises(TypeError):
-        data_to_set(DummyClass())
-
-
-def test_data_to_set():
-    assert data_to_set([1, 2, 'hi']) == {1, 2, 'hi'}
-    assert data_to_set((1, 2, 'hi')) == {1, 2, 'hi'}
-    assert data_to_set('fifty seven brave men') == {'fifty seven brave men'}
-    assert data_to_set({'three', 'different', 'elements'}) == {'three', 'different', 'elements'}
-    assert data_to_set(np.array([6, 9, 2])) == {6, 9, 2}
-    assert data_to_set(67.2) == {67.2}
-    assert data_to_set(None) == {None}
+@pytest.mark.parametrize('val,expected', [
+    ([1, 2, 'hi'], {1, 2, 'hi'}),
+    ((1, 2, 'hi'), {1, 2, 'hi'}),
+    ('fifty seven brave men', {'fifty seven brave men'}),
+    ({'three', 'different', 'elements'}, {'three', 'different', 'elements'}),
+    (np.array([6, 9, 2]), {6, 9, 2}),
+    (67.2, {67.2}),
+    (None, {None}),
+])
+def test_data_to_set(val, expected):
+    assert data_to_set(val) == expected
 
 
 def test_from_string(monkeypatch):
