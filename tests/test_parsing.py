@@ -231,3 +231,17 @@ def test_python_to_r_kwargs(kwargs, expected):
 def test_parse_gff3_attributes(attrs, expected):
     res = parse_gff3_attributes(attrs)
     assert res == expected
+
+
+@pytest.mark.parametrize('allow_unicode,string,expected', [
+    (False, 'text', 'text'),
+    (False, 'text with spaces', 'text-with-spaces'),
+    (True, 'text_without_spaces', 'text_without_spaces'),
+    (False, 'text---without--spaces', 'text-without-spaces'),
+    (False, 'dash_', 'dash'),
+    (True, 'dash-', 'dash'),
+    (False, 'more!characters?:&%a', 'morecharactersa')
+])
+def test_slugify(allow_unicode, string, expected):
+    res = slugify(string, allow_unicode)
+    assert res == expected
