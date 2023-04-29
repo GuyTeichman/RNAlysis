@@ -856,3 +856,48 @@ def test_is_rnalysis_outdated(monkeypatch, this_version, response, expected):
 def test_get_gunzip_size(path, expected):
     res = get_gunzip_size(path)
     assert res == expected
+
+
+@pytest.mark.parametrize('item, filename', [
+    (pd.DataFrame({'A': [1, 2], 'B': [3, 4]}), 'test1.csv'),
+    ({'gene1', 'gene2', 'gene3'}, 'test2.txt'),
+    ('this is a test', 'test3.txt'),
+    (plt.figure(), 'test4.png')
+])
+def test_cache_gui_file(item, filename):
+    try:
+        cache_gui_file(item, filename)
+        # Check if the file is created
+        assert Path(get_gui_cache_dir(), filename).exists()
+    finally:
+        # Clean up after the test
+        if Path(get_gui_cache_dir(), filename).exists():
+            Path(get_gui_cache_dir(), filename).unlink()
+
+
+@pytest.mark.parametrize("item, filename, load_as_obj, expected_output", [
+    (pd.DataFrame({"a": [1, 2, 3], "b": [4, 5, 6]}, index=['h', 'i', 'j']), "test.csv", True,
+     pd.DataFrame({"a": [1, 2, 3], "b": [4, 5, 6]}, index=['h', 'i', 'j'])),
+    ({"apple", "banana", "cherry"}, "test.txt", True, {"apple", "banana", "cherry"}),
+    ("test", "test.txt", True, {"test"}),
+    ("test123", "test.txt", False, "test123"),
+    (pd.DataFrame({"a": [1, 2, 3], "b": [4, 5, 6]}), "test.csv", False, ",a,b\n0,1,4\n1,2,5\n2,3,6\n"),
+    ({"apple", "banana", "cherry"}, "test.txt", False, "\n".join({"apple", "banana", "cherry"})),
+    ("test", "test.txt", False, "test")
+])
+def test_load_cached_gui_file(item, filename, load_as_obj, expected_output):
+    directory = get_gui_cache_dir()
+    if not directory.exists():
+        directory.mkdir(parents=True)
+    path = directory.joinpath(filename)
+
+    try:
+        cache_gui_file(item, filename)
+        res = load_cached_gui_file(filename, load_as_obj)
+        if isinstance(res, pd.DataFrame):
+            assert res.equals(item)
+        else:
+            assert res == expected_output
+    finally:
+        if os.path.exists(path):
+            os.remove(path)
