@@ -320,22 +320,6 @@ def format_dict_for_display(d: dict) -> str:
     return ', \n'.join(output)
 
 
-def items_to_html_table(items):
-    """
-    Converts a list of strings to an HTML table with a single column.
-
-    :param items: The list of strings to convert.
-    :type items: list of str
-    :return: A string representation of the HTML table.
-    :rtype: str
-        """
-    table = '<table border="1" class="dataframe">\n'
-    for item in items:
-        table += f'<tr><td style="border: 1px solid black; border-collapse: collapse;"><b>{item}</b></td></tr>\n'
-    table += "</table>"
-    return table
-
-
 def replace_last_occurrence(regex, repl, item):
     """
     Replaces the last occurrence of a given regular expression in a string with a replacement string.
@@ -359,6 +343,22 @@ def replace_last_occurrence(regex, repl, item):
         # Replace the last occurrence of the regex with the replacement string
         start, end = match.span()
         return item[:start] + re.sub(regex, repl, item[start:end]) + item[end:]
+
+
+def items_to_html_table(items):
+    """
+    Converts a list of strings to an HTML table with a single column.
+
+    :param items: The list of strings to convert.
+    :type items: list of str
+    :return: A string representation of the HTML table.
+    :rtype: str
+        """
+    table = '<table border="1" class="dataframe">\n'
+    for item in items:
+        table += f'<tr><td style="border: 1px solid black; border-collapse: collapse;"><b>{item}</b></td></tr>\n'
+    table += "</table>"
+    return table
 
 
 def df_to_html(df: pd.DataFrame, max_rows: int = 5, max_cols: int = 4):

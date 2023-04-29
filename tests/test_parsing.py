@@ -245,3 +245,20 @@ def test_parse_gff3_attributes(attrs, expected):
 def test_slugify(allow_unicode, string, expected):
     res = slugify(string, allow_unicode)
     assert res == expected
+
+
+@pytest.mark.parametrize('regex,repl,item,expected', [
+    ('cat', 'dog', 'The cat sat on the cat', 'The cat sat on the dog'),
+    ('1', 'one', '1234 1 5678 1', '1234 1 5678 one'),
+    ('([A-Za-z]+)', r'\1\1', 'hello world', 'hello worldworld'),
+    ('abc', 'xyz', 'abcdefabc', 'abcdefxyz'),
+    ('[0-9]+', '', 'abcd1234', 'abcd'),
+    ('(abc)+', 'def', 'abcabcabc', 'def'),
+    ('', 'xyz', 'Hello, world!', 'Hello, world!xyz'),
+    ('[A-Z][a-z]+', 'Mr.', 'Hello John Smith', 'Hello John Mr.'),
+    ('[0-9]{2,3}', 'one', '12345', '123one'),
+    ('e', 'replaced', 'escaped', 'escapreplacedd')
+])
+def test_replace_last_occurrence(regex, repl, item, expected):
+    res = replace_last_occurrence(regex, repl, item)
+    assert res == expected
