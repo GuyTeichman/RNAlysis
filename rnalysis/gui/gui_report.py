@@ -78,6 +78,7 @@ class ReportGenerator:
                    'Other output': dict(shape='square', color='#228B22'),
                    'Pipeline': dict(shape='diamond', color='#FF66B8')}
     ROOT_FNAME = 'session.rnal'
+    TITLE = f"Data analysis report (<i>RNAlysis</i> version {__version__})"
 
     def __init__(self):
         self.graph = networkx.DiGraph()
@@ -118,6 +119,22 @@ class ReportGenerator:
             self.graph.add_edge(pred, node_id)
 
     def trim_node(self, node_id: int):
+        """
+        Removes a node from the report graph if it is a leaf node with no outgoing edges, \
+        and trims any of its predecessors that are of type 'Function' and are also now leaf nodes.
+
+        :param node_id: The ID of the node to be trimmed.
+        :type node_id: int
+
+        This method checks if the specified node is present in the report graph, and if it is a leaf node \
+        with no outgoing edges. If both conditions are met, the node is removed from the graph, \
+        its corresponding `ReportNode` object is set to inactive, and any of its predecessors that are of type \
+        'Function' are recursively checked to see if they are now leaf nodes themselves (i.e., have no outgoing edges).\
+         If a predecessor is a leaf node, it is also trimmed from the graph and marked as inactive.
+
+        This method is used for pruning the report graph of unnecessary nodes when a tab is closed \
+        or an action is undone.
+            """
         if node_id in self.graph and self.graph.out_degree(node_id) == 0:
             predecessors = self.graph.predecessors(node_id)
             self.graph.remove_node(node_id)
@@ -126,8 +143,8 @@ class ReportGenerator:
                 if self.nodes[pred].node_type == 'Function':
                     self.trim_node(pred)
 
-    def _modify_html(self, html: str, title: str) -> str:
-        if html.count(title) > 1:
+    def _modify_html(self, html: str) -> str:
+        if html.count(self.TITLE) > 1:
             html = re.sub(r'<center>.+?<\/h1>\s+<\/center>', '', html, 1, re.DOTALL)
 
         css_line = f'<link rel = "stylesheet" href="{self.CSS_TEMPLATE_PATH.name}"/>'
@@ -138,37 +155,40 @@ class ReportGenerator:
 
         return html
 
-    def generate_report(self, save_path: Path, show_buttons: bool = True):
-        assert save_path.exists() and save_path.is_dir()
-        save_file = save_path.joinpath('report.html').as_posix()
-        title = f"Data analysis report (<i>RNAlysis</i> version {__version__})"
-        vis_report = Network(directed=True, layout=False, heading=title)
+    def _report_from_nx(self, show_buttons: bool) -> Network:
+        vis_report = Network(directed=True, layout=False, heading=self.TITLE)
         vis_report.from_nx(self.graph)
         enabled_str = 'true' if show_buttons else 'false'
 
         vis_report.set_options("""const options = {
-    "configure": {"""
+            "configure": {"""
                                f'"enabled": {enabled_str}'
                                """
-    },
-    "layout": {
-        "hierarchical": {
-            "enabled": false,
-            "levelSeparation": 250,
-            "nodeSpacing": 250,
-            "treeSpacing": 250,
-            "direction": "LR",
-            "sortMethod": "directed"
-        }
-    },
-    "physics": {
-        "solver": "repulsion"
-    },
-    "interaction": {
-    "navigationButtons": true
-    }
-}""")
-        html = self._modify_html(vis_report.generate_html(save_file), title)
+            },
+            "layout": {
+                "hierarchical": {
+                    "enabled": false,
+                    "levelSeparation": 250,
+                    "nodeSpacing": 250,
+                    "treeSpacing": 250,
+                    "direction": "LR",
+                    "sortMethod": "directed"
+                }
+            },
+            "physics": {
+                "solver": "repulsion"
+            },
+            "interaction": {
+            "navigationButtons": true
+            }
+        }""")
+        return vis_report
+
+    def generate_report(self, save_path: Path, show_buttons: bool = True):
+        assert save_path.exists() and save_path.is_dir()
+        save_file = save_path.joinpath('report.html').as_posix()
+        vis_report = self._report_from_nx(show_buttons)
+        html = self._modify_html(vis_report.generate_html(save_file), self.TITLE)
 
         with open(save_file, 'w') as f:
             f.write(html)
