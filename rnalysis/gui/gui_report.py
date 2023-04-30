@@ -188,7 +188,7 @@ class ReportGenerator:
         assert save_path.exists() and save_path.is_dir()
         save_file = save_path.joinpath('report.html').as_posix()
         vis_report = self._report_from_nx(show_buttons)
-        html = self._modify_html(vis_report.generate_html(save_file), self.TITLE)
+        html = self._modify_html(vis_report.generate_html(save_file))
 
         with open(save_file, 'w') as f:
             f.write(html)
