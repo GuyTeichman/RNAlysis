@@ -1291,3 +1291,88 @@ def test_TextWithCopyButton_copy_to_clipboard(qtbot, monkeypatch):
 
     cb = QtWidgets.QApplication.clipboard().text()
     assert cb == truth
+
+
+@pytest.fixture()
+def column_names():
+    return ["A", "B", "C", "D", "E", "F", "G"]
+
+
+@pytest.fixture()
+def column_picker(column_names, qtbot):
+    qtbot, window = widget_setup(qtbot, TableColumnGroupPicker)
+    window.add_columns(column_names)
+    return window
+
+
+@pytest.mark.parametrize(
+    "selected_columns",
+    [
+        [["A"]],
+        [["B", "D"]],
+        [["C", "E"], ["G"]],
+        [["A"], ["C"], ["E"], ["G"]],
+        [],
+        [["A", "B", "C", "D"], ["E", "F"], ["G"]],
+        [["A", "C"], ["B", "E", "G"], ["D", "F"]],
+    ]
+)
+def test_set_selection(column_picker, selected_columns):
+    column_picker.set_selection(selected_columns)
+    assert column_picker.value() == selected_columns
+
+
+@pytest.mark.parametrize(
+    "selected_columns",
+    [
+        [["A"]],
+        [["B", "D"]],
+        [["C", "E"], ["G"]],
+        [["A"], ["C"], ["E"], ["G"]],
+        [],
+        [["A", "B", "C", "D"], ["E", "F"], ["G"]],
+        [["A", "C"], ["B", "E", "G"], ["D", "F"]],
+    ]
+)
+def test_import_selection(column_picker, monkeypatch, selected_columns):
+    file_name = "test_selection.txt"
+    monkeypatch.setattr(QtWidgets.QFileDialog, "getOpenFileName", lambda *args: (file_name, ""))
+    monkeypatch.setattr(QtWidgets.QFileDialog, "getSaveFileName", lambda *args: (file_name, ""))
+
+    try:
+        # Save the selected columns to the file
+        with open(file_name, "w") as f:
+            json.dump(selected_columns, f)
+        column_picker.clear_selection()
+        column_picker.import_selection()
+        assert column_picker.value() == selected_columns
+    finally:
+        if Path(file_name).exists():
+            Path(file_name).unlink()
+
+
+@pytest.mark.parametrize(
+    "selected_columns",
+    [
+        [["A"]],
+        [["B", "D"]],
+        [["C", "E"], ["G"]],
+        [["A"], ["C"], ["E"], ["G"]],
+        [],
+        [["A", "B", "C", "D"], ["E", "F"], ["G"]],
+        [["A", "C"], ["B", "E", "G"], ["D", "F"]],
+    ]
+)
+def test_export_selection(column_picker, tmp_path, monkeypatch, selected_columns):
+    file_name = tmp_path / "test_selection.txt"
+    monkeypatch.setattr(QtWidgets.QFileDialog, "getSaveFileName", lambda *args: (file_name, ""))
+    try:
+        column_picker.set_selection(selected_columns)
+        column_picker.export_selection()
+        with open(file_name, "r") as f:
+            contents = json.load(f)
+            print(contents)
+        assert contents == selected_columns
+    finally:
+        if Path(file_name).exists():
+            Path(file_name).unlink()
