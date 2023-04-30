@@ -3,7 +3,6 @@ import os.path
 import numpy as np
 import pytest
 
-from rnalysis import __version__
 from rnalysis.gui.gui_windows import *
 
 LEFT_CLICK = QtCore.Qt.LeftButton
@@ -203,7 +202,7 @@ def test_SettingsWindow_get_defaults(qtbot, use_temp_settings_file):
     font_truth = 'Arial'
     font_size_truth = '16'
     theme_truth = 'Light'
-    dbs_truth = ['NCBI Genes','ParaSite','ZFIN']
+    dbs_truth = ['NCBI Genes', 'ParaSite', 'ZFIN']
     show_tutorial_truth = False
     attr_truth = os.path.abspath('tests/test_files/counted.tsv')
     biotype_truth = os.path.abspath('tests/test_files/counted.csv')
@@ -382,17 +381,62 @@ def test_dataframe_preview_model(qtmodeltester, pth):
     model = DataFramePreviewModel(pd.read_csv(pth, index_col=0))
     qtmodeltester.check(model)
 
-#
-# def test_checkable_file_system_model(qtmodeltester):
-#     model = CheckableFileSystemModel()
-#     model.setRootPath('')
-#     qtmodeltester.check(model, force_py=True)
-#
-#
-# def test_proxy_model(qtmodeltester):
-#     model = FilterProxy(False)
-#     file_system = CheckableFileSystemModel()
-#     file_system.setRootPath('')
-#     model.setSourceModel(file_system)
-#     model.setFilterRegularExpression(r'^(?![.])(?!.*[-_.]$).+')
-#     qtmodeltester.check(model, force_py=True)
+
+@pytest.fixture
+def func_external_window(qtbot):
+    def func_to_apply(x: int, y: float, z: int):
+        return x + y + z
+
+    qtbot, window = widget_setup(qtbot, FuncExternalWindow, "Test Function", func_to_apply, None, set())
+    window.init_ui()
+    return window
+
+
+def test_import_parameters(func_external_window, tmp_path, monkeypatch):
+    params = {'x': 1, 'y': 2, 'z': 3}
+    data = {'args': [], 'kwargs': params, 'name': 'Test Function'}
+    filename = tmp_path / "params.yaml"
+    monkeypatch.setattr(QtWidgets.QFileDialog, "getOpenFileName", lambda *args, filter='': (filename, ""))
+    monkeypatch.setattr(QtWidgets.QFileDialog, "getSaveFileName", lambda *args, filter='': (filename, ""))
+    with open(filename, "w") as f:
+        yaml.dump(data, f)
+
+    func_external_window.import_parameters()
+    assert func_external_window.param_widgets['x'].value() == 1
+    assert func_external_window.param_widgets['y'].value() == 2
+    assert func_external_window.param_widgets['z'].value() == 3
+
+
+def test_export_parameters(func_external_window, tmp_path, monkeypatch):
+    func_external_window.param_widgets['x'].setValue(1)
+    func_external_window.param_widgets['y'].setValue(2)
+    func_external_window.param_widgets['z'].setValue(3)
+    filename = tmp_path / "params.yaml"
+    monkeypatch.setattr(QtWidgets.QFileDialog, "getOpenFileName", lambda *args, filter='': (filename, ""))
+    monkeypatch.setattr(QtWidgets.QFileDialog, "getSaveFileName", lambda *args, filter='': (filename, ""))
+    func_external_window.export_parameters()
+    with open(filename, "r") as f:
+        exported_params = yaml.safe_load(f)
+    print(exported_params)
+    assert exported_params['kwargs']['x'] == 1
+    assert exported_params['kwargs']['y'] == 2
+    assert exported_params['kwargs']['z'] == 3
+    assert exported_params['args'] == []
+    assert exported_params['name'] == 'Test Function'
+
+
+def test_run_function_in_main_loop(qtbot):
+    done = []
+
+    def func_to_apply(x: int, y: float, z: int):
+        assert x == 1 and y == 2 and z == 3
+        done.append(True)
+
+    qtbot, window = widget_setup(qtbot, FuncExternalWindow, "Test Function", func_to_apply, None, set())
+    window.init_ui()
+
+    window.param_widgets['x'].setValue(1)
+    window.param_widgets['y'].setValue(2)
+    window.param_widgets['z'].setValue(3)
+    window.run_function_in_main_loop()
+    assert done == [True]
