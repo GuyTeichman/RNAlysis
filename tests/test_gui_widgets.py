@@ -1094,7 +1094,7 @@ def _run_param_to_widget(qtbot, param_type, default, name, expected_widget, expe
             assert val == default
 
 
-def test_worker(qtbot):
+def test_worker_signal(qtbot):
     def func(a, b, c):
         time.sleep(0.5)
         return a * b * c, a + b + c
@@ -1112,6 +1112,117 @@ def test_worker(qtbot):
             worker.deleteLater()
         except Exception:
             pass
+
+
+def test_worker_output_equality():
+    partial = functools.partial(sum, [1, 2, 3])
+    job_id = 1
+    predecessor_ids = [2, 3]
+    args_to_emit = ('foo', 'bar')
+    output1 = WorkerOutput(6, partial, job_id, predecessor_ids, *args_to_emit)
+    output2 = WorkerOutput(6, partial, job_id, predecessor_ids, *args_to_emit)
+    assert output1 == output2
+
+
+def test_worker_output_equality_different_type():
+    output1 = WorkerOutput(6, None, 1, [2, 3])
+    output2 = 6
+    assert not output1 == output2
+
+
+def test_worker_output_inequality_different_result():
+    output1 = WorkerOutput(6, None, 1, [2, 3])
+    output2 = WorkerOutput(7, None, 1, [2, 3])
+    assert not output1 == output2
+
+
+def test_worker_output_inequality_different_partial():
+    partial1 = functools.partial(sum, [1, 2, 3])
+    partial2 = functools.partial(len, [1, 2, 3])
+    output1 = WorkerOutput(6, partial1, 1, [2, 3])
+    output2 = WorkerOutput(6, partial2, 1, [2, 3])
+    assert not output1 == output2
+
+
+def test_worker_output_inequality_different_job_id():
+    output1 = WorkerOutput(6, None, 1, [2, 3])
+    output2 = WorkerOutput(6, None, 2, [2, 3])
+    assert not output1 == output2
+
+
+def test_worker_output_inequality_different_predecessor_ids():
+    output1 = WorkerOutput(6, None, 1, [2, 3])
+    output2 = WorkerOutput(6, None, 1, [4, 5])
+    assert not output1 == output2
+
+
+def test_worker_output_inequality_different_emit_args():
+    output1 = WorkerOutput(6, None, 1, [2, 3], 'foo', 'bar')
+    output2 = WorkerOutput(6, None, 1, [2, 3], 'baz')
+    assert not output1 == output2
+
+
+def test_worker_output_error():
+    partial = functools.partial(divmod, 1, 0)
+    job_id = 1
+    predecessor_ids = [2, 3]
+    args_to_emit = ('foo', 'bar')
+    output = WorkerOutput(None, partial, job_id, predecessor_ids, *args_to_emit, err=ZeroDivisionError())
+    assert output.raised_exception != False and isinstance(output.raised_exception, Exception)
+
+
+def test_worker():
+    partial = functools.partial(sum, [1, 2, 3])
+    job_id = 1
+    predecessor_ids = [2, 3]
+    args_to_emit = ('foo', 'bar')
+    worker = Worker(partial, job_id, predecessor_ids, *args_to_emit)
+    output = worker.run()
+    expected_output = 6
+    assert output == expected_output
+
+
+def test_worker_normal(qtbot):
+    def add(x, y):
+        return x + y
+
+    worker = Worker(functools.partial(add, 2, 3), 1, [0])
+
+    def assert_partial(output):
+        assert output.result == 5
+
+    worker.finished.connect(assert_partial)
+    with qtbot.waitSignal(worker.finished, timeout=1000):
+        worker.run()
+
+
+def test_worker_error(qtbot):
+    def divide(x, y):
+        return x / y
+
+    worker = Worker(functools.partial(divide, 1, 0), 1, [0])
+
+    def assert_partial(output):
+        assert output.raised_exception is not None
+
+    worker.finished.connect(assert_partial)
+
+    with qtbot.waitSignal(worker.finished, timeout=1000):
+        worker.run()
+
+
+def test_worker_output():
+    def add(x, y):
+        return x + y
+
+    worker_output = WorkerOutput(5, functools.partial(add, 2, 3), 1, [0], 'extra', 'args')
+    assert worker_output.result == 5
+    assert worker_output.partial.func == add
+    assert worker_output.partial.args == (2, 3)
+    assert worker_output.job_id == 1
+    assert worker_output.predecessor_ids == [0]
+    assert worker_output.emit_args == ('extra', 'args')
+    assert not worker_output.raised_exception
 
 
 def test_AltTqdm_init():
