@@ -353,9 +353,8 @@ class Filter:
         suffix = f'_dropduplicateskeep{keep}'
         if keep == 'neither':
             keep = False
-        new_df = self.df[self.df.index.drop_duplicates(keep)]
+        new_df = self.df[~self.df.index.duplicated(keep=keep)]
         return self._inplace(new_df, opposite, inplace, suffix)
-        pass
 
     @readable_name('Filter specific rows by name')
     def filter_by_row_name(self, row_names: Union[str, List[str]], opposite: bool = False, inplace: bool = True):
@@ -2940,7 +2939,7 @@ class CountFilter(Filter):
 
         return fcfilt
 
-        pass
+
 
     @readable_name('Pair-plot')
     def pairplot(self, samples: Union[param_typing.GroupedColumns, Literal['all']] = 'all',

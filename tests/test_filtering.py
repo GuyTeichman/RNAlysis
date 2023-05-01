@@ -2095,3 +2095,17 @@ def test_differential_expression_limma(monkeypatch, comparisons, expected_paths,
             assert outfile.read() == truthfile.read()
     finally:
         unlink_tree(outdir)
+
+
+@pytest.mark.parametrize('keep,exp_path', [
+    ('first', 'tests/test_files/counted_duplicates_first.csv'),
+    ('last', 'tests/test_files/counted_duplicates_last.csv'),
+    ('neither', 'tests/test_files/counted_duplicates_neither.csv')
+])
+def test_filter_duplicate_ids(keep, exp_path):
+    f = Filter('tests/test_files/counted_duplicates.csv')
+    truth = io.load_csv(exp_path, 0)
+    res = f.filter_duplicate_ids(keep, inplace=False)
+    assert res.df.equals(truth)
+    f.filter_duplicate_ids(keep)
+    assert f.df.equals(truth)
