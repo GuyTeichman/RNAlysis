@@ -139,5 +139,15 @@ jobs:
                     COVERALLS_PARALLEL: true
                     COVERALLS_SERVICE_JOB_ID: ${{ github.run_id }}
                 run: |
-                    coverage report -m
                     coveralls --service=github
+                    coverage report -m
+
+    finish:
+        name: Finish submitting coverage
+        runs-on: [ ubuntu-latest ]
+        steps:
+            -   name: Send coverage finish to coveralls.io
+                env:
+                    GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+                run: |
+                    coveralls --service=github --finish
