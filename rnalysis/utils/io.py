@@ -144,7 +144,7 @@ def cache_gui_file(item: Union[pd.DataFrame, set, str], filename: str):
     elif isinstance(item, str):
         with open(file_path, 'w') as f:
             f.write(item)
-    elif isinstance(item,plt.Figure):
+    elif isinstance(item, plt.Figure):
         item.savefig(file_path)
     else:
         raise TypeError(type(item))
@@ -939,7 +939,7 @@ def submit_id_mapping(session: requests.Session, url: str, from_db: str, to_db: 
     return req.json()["jobId"]
 
 
-def get_next_link(headers):
+def get_next_link(headers: dict):
     re_next_link = re.compile(r'<(.+)>; rel="next"')
     if "Link" in headers:
         match = re_next_link.match(headers["Link"])
@@ -947,7 +947,7 @@ def get_next_link(headers):
             return match.group(1)
 
 
-def check_id_mapping_results_ready(session, url: str, job_id, polling_interval: float, verbose: bool = True):
+def check_id_mapping_results_ready(session, url: str, job_id: str, polling_interval: float, verbose: bool = True):
     while True:
         r = session.get(f"{url}/idmapping/status/{job_id}")
         r.raise_for_status()
@@ -963,7 +963,7 @@ def check_id_mapping_results_ready(session, url: str, job_id, polling_interval: 
             return bool(j.get("results", False) or j.get("failedIds", False))
 
 
-def get_batch(session, batch_response, file_format):
+def get_batch(session: requests.Session, batch_response: requests.Response, file_format: Literal['json', 'tsv']):
     batch_url = get_next_link(batch_response.headers)
     while batch_url:
         batch_response = session.get(batch_url)
@@ -972,7 +972,7 @@ def get_batch(session, batch_response, file_format):
         batch_url = get_next_link(batch_response.headers)
 
 
-def combine_batches(all_results, batch_results, file_format):
+def combine_batches(all_results, batch_results, file_format: Literal['json', 'tsv']):
     if file_format == "json":
         for key in ("results", "failedIds"):
             if batch_results[key]:
@@ -984,14 +984,14 @@ def combine_batches(all_results, batch_results, file_format):
     return all_results
 
 
-def get_id_mapping_results_link(session, url, job_id):
+def get_id_mapping_results_link(session: requests.Session, url: str, job_id):
     url = f"{url}/idmapping/details/{job_id}"
     r = session.get(url)
     r.raise_for_status()
     return r.json()["redirectURL"]
 
 
-def decode_results(response, file_format):
+def decode_results(response: requests.Response, file_format: Literal['json', 'tsv']):
     if file_format == "json":
         return response.json()
     elif file_format == "tsv":
@@ -999,7 +999,7 @@ def decode_results(response, file_format):
     return response.text
 
 
-def get_id_mapping_results_search(session, url, verbose: bool = True):
+def get_id_mapping_results_search(session: requests.Session, url: str, verbose: bool = True):
     parsed = urlparse(url)
     query = parse_qs(parsed.query)
     query["fields"] = 'accession,annotation_score'
@@ -1030,13 +1030,13 @@ def get_id_mapping_results_search(session, url, verbose: bool = True):
     return results
 
 
-def print_progress_batches(batch_index, size, total):
+def print_progress_batches(batch_index: int, size: int, total: int):
     n = min((batch_index + 1) * size, total)
     print(f"Fetched: {n} / {total}")
 
 
-def get_mapping_results(api_url: str, from_db: str, to_db: str, ids: List[str], polling_interval: float, session,
-                        verbose: bool = True):
+def get_mapping_results(api_url: str, from_db: str, to_db: str, ids: List[str], polling_interval: float,
+                        session: requests.Session, verbose: bool = True):
     job_id = submit_id_mapping(session, api_url, from_db=from_db, to_db=to_db, ids=ids)
     if check_id_mapping_results_ready(session, api_url, job_id, polling_interval, verbose=verbose):
         link = get_id_mapping_results_link(session, api_url, job_id)

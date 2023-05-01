@@ -16,3 +16,4 @@ typing_extensions
 pyinstaller
 pyinstaller-hooks-contrib
 rst-to-myst
+requests-mock

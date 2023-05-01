@@ -1,6 +1,8 @@
-import pytest
+from unittest.mock import MagicMock
 
-import rnalysis.utils.io
+import pytest
+import requests_mock
+
 from rnalysis.utils import io
 from rnalysis.utils.io import *
 from rnalysis.utils.io import _format_ids_iter, _ensmbl_lookup_post_request
@@ -213,7 +215,7 @@ def test_golr_annotation_iterator_golr_request_connectivity(monkeypatch):
 
 def remove_cached_test_file(cached_filename: str):
     try:
-        os.remove(io.get_todays_cache_dir().joinpath(cached_filename))
+        os.remove(get_todays_cache_dir().joinpath(cached_filename))
     except FileNotFoundError:
         pass
 
@@ -451,7 +453,7 @@ def test_map_gene_ids_request(monkeypatch, ids, map_from, map_to, req_from, req_
         return MockResponse(text=txt)
 
     monkeypatch.setattr(requests, 'get', mock_get)
-    monkeypatch.setattr(rnalysis.utils.io, 'get_legal_gene_id_types', lambda: legal_types)
+    monkeypatch.setattr(io, 'get_legal_gene_id_types', lambda: legal_types)
     res = map_gene_ids(ids, map_from, map_to)
     for gene_id in truth:
         assert res[gene_id] == truth[gene_id]
@@ -497,7 +499,7 @@ def test_get_todays_cache_dir():
     today = date.today()
     today_str = str(today.year) + '_' + str(today.month).zfill(2) + '_' + str(today.day).zfill(2)
     cache_dir_truth = os.path.join(appdirs.user_cache_dir('RNAlysis'), today_str)
-    assert cache_dir_truth == str(io.get_todays_cache_dir())
+    assert cache_dir_truth == str(get_todays_cache_dir())
 
 
 def test_load_cached_file():
@@ -505,7 +507,7 @@ def test_load_cached_file():
     remove_cached_test_file(cached_filename)
 
     cache_content_truth = "testing\n123"
-    cache_dir = io.get_todays_cache_dir()
+    cache_dir = get_todays_cache_dir()
     path = os.path.join(cache_dir, cached_filename)
 
     assert load_cached_file(cached_filename) is None
@@ -524,7 +526,7 @@ def test_cache_file():
     remove_cached_test_file(cached_filename)
 
     cache_content_truth = "testing\n123"
-    cache_dir = io.get_todays_cache_dir()
+    cache_dir = get_todays_cache_dir()
     path = os.path.join(cache_dir, cached_filename)
 
     cache_file(cache_content_truth, cached_filename)
@@ -845,7 +847,7 @@ def test_run_subprocess(stdout, stderr):
 ])
 def test_is_rnalysis_outdated(monkeypatch, this_version, response, expected):
     monkeypatch.setattr(requests, 'get', lambda *args, **kwargs: response)
-    monkeypatch.setattr(rnalysis.utils.io, '__version__', this_version)
+    monkeypatch.setattr(io, '__version__', this_version)
     assert is_rnalysis_outdated() == expected
 
 
@@ -901,3 +903,116 @@ def test_load_cached_gui_file(item, filename, load_as_obj, expected_output):
     finally:
         if os.path.exists(path):
             os.remove(path)
+
+
+def test_get_next_link():
+    headers = {"Link": '<https://www.example.com/next-batch>; rel="next"'}
+    result = get_next_link(headers)
+    assert result == "https://www.example.com/next-batch"
+
+
+def test_combine_batches_json():
+    all_results = {"results": [], "failedIds": []}
+    batch_results = {"results": [{"accession": "P29307", "identifier": "7157"}], "failedIds": []}
+    file_format = "json"
+    assert combine_batches(all_results, batch_results, file_format) == {
+        "results": [{"accession": "P29307", "identifier": "7157"}], "failedIds": []}
+
+
+def test_combine_batches_tsv():
+    all_results = ["accession\tannotation_score", "P12345\t1.0"]
+    batch_results = ["accession\tannotation_score", "Q67890\t0.8", "P12355\t1.0"]
+    file_format = "tsv"
+    combined_results = combine_batches(all_results, batch_results, file_format)
+    assert combined_results == ["accession\tannotation_score", "P12345\t1.0", "Q67890\t0.8", "P12355\t1.0"]
+
+
+def test_combine_batches_other():
+    all_results = "some text"
+    batch_results = "more text"
+    file_format = "unknown"
+    combined_results = combine_batches(all_results, batch_results, file_format)
+    assert combined_results == "some textmore text"
+
+
+def test_decode_results_json():
+    response_mock = MagicMock(spec=requests.Response)
+    response_mock.text = '{"id": 1, "name": "John"}'
+    response_mock.json.return_value = {'id': 1, 'name': 'John'}
+
+    result = decode_results(response_mock, 'json')
+    assert result == {'id': 1, 'name': 'John'}
+
+
+def test_decode_results_tsv():
+    response_mock = MagicMock(spec=requests.Response)
+    response_mock.text = "id\tname\n1\tJohn\n2\tJane\n"
+
+    result = decode_results(response_mock, 'tsv')
+    assert result == ['id\tname', '1\tJohn', '2\tJane']
+
+
+def test_decode_results_with_invalid_file_format():
+    response_mock = MagicMock(spec=requests.Response)
+    response_mock.text = 'Invalid format'
+
+    result = decode_results(response_mock, 'csv')
+    assert result == 'Invalid format'
+
+
+def test_check_id_mapping_results_ready_with_results():
+    with requests_mock.Mocker() as m:
+        # Mock the response from the server
+        m.get("http://example.com/idmapping/status/123", json={"results": ['content']})
+        # Call the function
+        session = requests.Session()
+        ready = check_id_mapping_results_ready(session, "http://example.com", "123", 0.1)
+        # Check the result
+        assert ready
+
+
+def test_check_id_mapping_results_ready_with_failed_ids():
+    with requests_mock.Mocker() as m:
+        # Mock the response from the server
+        m.get("http://example.com/idmapping/status/123", json={"failedIds": ['content']})
+        # Call the function
+        session = requests.Session()
+        ready = check_id_mapping_results_ready(session, "http://example.com", "123", 0.1)
+        # Check the result
+        assert ready
+
+
+def test_check_id_mapping_results_ready_running():
+    with requests_mock.Mocker() as m:
+        # Mock the response from the server
+        count = 0
+
+        def request_callback(request, context):
+            nonlocal count
+            count += 1
+            if count < 5:
+                return {"jobStatus": "RUNNING"}
+            else:
+                return {"results": ['data'], "status_code": 200}
+
+        m.get("http://example.com/idmapping/status/123", json=request_callback)
+
+        # Call the function
+        session = requests.Session()
+        ready = check_id_mapping_results_ready(session, "http://example.com", "123", 0.1)
+        # Check the result
+        assert ready
+        assert count == 5
+
+
+def test_check_id_mapping_results_ready_error():
+    with requests_mock.Mocker() as m:
+        # Mock the response from the server
+        m.get("http://example.com/idmapping/status/123", json={"jobStatus": "ERROR"})
+
+        # Call the function
+        session = requests.Session()
+
+        # Check that an exception is raised
+        with pytest.raises(Exception):
+            check_id_mapping_results_ready(session, "http://example.com", "123", 0.1)
