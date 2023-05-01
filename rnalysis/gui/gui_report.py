@@ -113,7 +113,7 @@ class ReportGenerator:
         else:
             node = Node(node_id, name, predecessors, popup_element, node_type, filename)
             self.nodes[node_id] = node
-        kwargs = self.NODE_STYLES[node_type]
+        kwargs = self.NODE_STYLES[node.node_type]
         self.graph.add_node(node.node_id, label=node.node_name, title=node.popup_element, **kwargs)
         for pred in predecessors:
             self.graph.add_edge(pred, node_id)
