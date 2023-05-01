@@ -91,8 +91,9 @@ def main_window(qtbot, monkeypatch, use_temp_settings_file):
     settings.set_show_tutorial_settings(False)
     qtbot, window = widget_setup(qtbot, MainWindow)
     warnings.showwarning = customwarn
-    sys.excepthook = window.excepthook
+    # sys.excepthook = window.excepthook
     builtins.input = window.input
+    window.check_reporting()
     return window
 
 
