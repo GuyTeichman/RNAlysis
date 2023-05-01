@@ -133,7 +133,6 @@ jobs:
 
                 continue-on-error: true
             -   name: Send coverage result to coveralls.io
-                shell: bash -l {0}
                 env:
                     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
                     COVERALLS_PARALLEL: true
