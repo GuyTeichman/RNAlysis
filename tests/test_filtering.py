@@ -2109,3 +2109,13 @@ def test_filter_duplicate_ids(keep, exp_path):
     assert res.df.equals(truth)
     f.filter_duplicate_ids(keep)
     assert f.df.equals(truth)
+
+
+def test_filter_by_row_name():
+    names = ['WBGene00044951', 'WBGene00014997', 'WBGene00007069']
+    f = Filter('tests/test_files/counted_duplicates.csv')
+    truth = io.load_csv('tests/test_files/counted_drop_names.csv', 0)
+    res = f.filter_by_row_name(names, inplace=False)
+    assert res.df.equals(truth)
+    f.filter_by_row_name(names)
+    assert f.df.equals(truth)
