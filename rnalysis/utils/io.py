@@ -151,12 +151,12 @@ def cache_gui_file(item: Union[pd.DataFrame, set, str], filename: str):
 
 
 def check_changed_version():  # pragma: no cover
-    filename = get_gui_cache_dir().joinpath('latest_version.txt')
+    filename = get_data_dir().joinpath('latest_version.txt')
     if not filename.exists():
-        return True
-
-    with open(filename) as f:
-        ver = f.read()
+        ver = ''
+    else:
+        with open(filename) as f:
+            ver = f.read()
     current_ver = __version__
     # update latest version to current version
     with open(filename, 'w') as f:
