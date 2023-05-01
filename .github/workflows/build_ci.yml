@@ -132,9 +132,12 @@ jobs:
                     coverage run --source=rnalysis/ -m pytest tests/
 
                 continue-on-error: true
-            -   name: Coveralls
+            -   name: Send coverage result to coveralls.io
+                shell: bash -l {0}
                 env:
                     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+                    COVERALLS_PARALLEL: true
+                    COVERALLS_SERVICE_JOB_ID: ${{ github.run_id }}
                 run: |
                     coverage report -m
-                    coveralls
+                    coveralls --service=github
