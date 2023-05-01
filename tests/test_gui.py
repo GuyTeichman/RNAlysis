@@ -2665,7 +2665,7 @@ def test_MainWindow_cite(qtbot, main_window, monkeypatch):
 
 def test_MainWindow_settings(qtbot, main_window, monkeypatch):
     window_opened = []
-    monkeypatch.setattr(gui_windows.SettingsWindow, 'exec', functools.partial(window_opened.append, True))
+    monkeypatch.setattr(gui_windows.SettingsWindow, 'exec', lambda *args: window_opened.append(True))
 
     main_window.settings_action.trigger()
     assert window_opened == [True]
