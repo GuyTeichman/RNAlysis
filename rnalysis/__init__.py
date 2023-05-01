@@ -16,6 +16,7 @@ __font_key__ = "gui_font"
 __font_size_key__ = "gui_font_size"
 __stylesheet_key__ = "gui_stylesheet"
 __show_tutorial_key__ = "show_tutorial_on_startup"
+__report_gen_key__ = "ask_report_generation"
 __databases_key__ = "databases"
 
 

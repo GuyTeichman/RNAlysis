@@ -6,7 +6,7 @@ import traceback
 import warnings
 from pathlib import Path
 from queue import Queue
-from typing import Callable, Union
+from typing import Callable, Union, Tuple
 
 import pandas as pd
 import yaml
@@ -459,6 +459,7 @@ class SettingsWindow(gui_widgets.MinMaxDialog):
     LOOKUP_DATABASES_PATH = Path(__file__).parent.parent.joinpath('data_files/lookup_databases.json')
     THEMES = gui_style.get_stylesheet_names()
     FONT_SIZES = [str(i) for i in [6, 7, 8, 9, 10, 11, 12, 14, 16, 18, 20, 22, 24, 28, 32, 36, 48, 72]]
+    REPORT_GEN_OPTIONS = {'Ask me every time': None, 'Always': True, 'Never': False}
     styleSheetUpdated = QtCore.pyqtSignal()
 
     def __init__(self, parent=None):
@@ -498,13 +499,16 @@ class SettingsWindow(gui_widgets.MinMaxDialog):
         super().exec()
 
     def set_choices(self):
-        current_font, current_font_size, current_theme, current_dbs, current_show_tutorial = settings.get_gui_settings()
+        current_font, current_font_size, current_theme, current_dbs, current_show_tutorial, current_report_gen = \
+            settings.get_gui_settings()
         current_theme = {val: key for key, val in self.THEMES.items()}[current_theme]
 
         self.appearance_widgets['app_theme'].setCurrentText(current_theme)
         self.appearance_widgets['app_font'].setCurrentText(current_font)
         self.appearance_widgets['app_font_size'].setCurrentText(str(current_font_size))
         self.appearance_widgets['show_tutorial'].setChecked(current_show_tutorial)
+        self.appearance_widgets['report_gen'].setCurrentText(
+            {val: key for key, val in self.REPORT_GEN_OPTIONS.items()}[current_report_gen])
 
         for i in range(self.appearance_widgets['databases'].count()):
             item = self.appearance_widgets['databases'].item(i)
@@ -525,7 +529,6 @@ class SettingsWindow(gui_widgets.MinMaxDialog):
 
         self.appearance_widgets['app_font'] = QtWidgets.QFontComboBox(self.appearance_group)
         self.appearance_widgets['app_font'].setFontFilters(QtWidgets.QFontComboBox.ScalableFonts)
-        # self.appearance_widgets['app_font'].addItems(list(QtGui.QFontDatabase().families()))
         self.appearance_widgets['app_font'].setEditable(True)
         self.appearance_widgets['app_font'].completer().setCompletionMode(QtWidgets.QCompleter.PopupCompletion)
         self.appearance_widgets['app_font'].setInsertPolicy(QtWidgets.QComboBox.NoInsert)
@@ -541,8 +544,11 @@ class SettingsWindow(gui_widgets.MinMaxDialog):
                 self.appearance_widgets['databases'].addItem(item)
 
         self.appearance_widgets['show_tutorial'] = QtWidgets.QCheckBox("Show tutorial page on startup")
+        self.appearance_widgets['report_gen'] = QtWidgets.QComboBox()
+        self.appearance_widgets['report_gen'].addItems(self.REPORT_GEN_OPTIONS.keys())
+        self.appearance_widgets['report_gen'].setInsertPolicy(QtWidgets.QComboBox.NoInsert)
 
-        for widget_name in ['app_theme', 'app_font', 'app_font_size']:
+        for widget_name in ['app_theme', 'app_font', 'app_font_size', 'report_gen']:
             self.appearance_widgets[widget_name].currentIndexChanged.connect(self._trigger_settings_changed)
         self.appearance_widgets['show_tutorial'].stateChanged.connect(self._trigger_settings_changed)
 
@@ -555,6 +561,8 @@ class SettingsWindow(gui_widgets.MinMaxDialog):
         self.appearance_grid.addWidget(QtWidgets.QLabel('Right-click databases'), 3, 0)
         self.appearance_grid.addWidget(self.appearance_widgets['databases'], 3, 1)
         self.appearance_grid.addWidget(self.appearance_widgets['show_tutorial'], 4, 0, 1, 2)
+        self.appearance_grid.addWidget(QtWidgets.QLabel('Turn on report generation automatically'), 5, 0)
+        self.appearance_grid.addWidget(self.appearance_widgets['report_gen'], 5, 1)
 
     def save_settings(self):
         if self.settings_changed:
@@ -563,13 +571,14 @@ class SettingsWindow(gui_widgets.MinMaxDialog):
             font_size = int(self.appearance_widgets['app_font_size'].currentText())
             theme = self.THEMES[self.appearance_widgets['app_theme'].currentText()]
             show_tutorial = self.appearance_widgets['show_tutorial'].isChecked()
+            prompt_report_gen = self.REPORT_GEN_OPTIONS[self.appearance_widgets['report_gen'].currentText()]
             dbs = []
             for i in range(self.appearance_widgets['databases'].count()):
                 item = self.appearance_widgets['databases'].item(i)
                 if item.checkState():
                     dbs.append(item.text())
 
-            settings.set_gui_settings(font, font_size, theme, dbs, show_tutorial)
+            settings.set_gui_settings(font, font_size, theme, dbs, show_tutorial, prompt_report_gen)
 
             attr_ref_path = self.tables_widgets['attr_ref_path'].text() if self.tables_widgets[
                 'attr_ref_path'].is_legal else ''
@@ -1098,3 +1107,23 @@ class ApplyTablePipelineWindow(gui_widgets.MinMaxDialog):
 
     def result(self):
         return [item.text() for item in self.list.get_sorted_selection()]
+
+
+class ReportGenerationMessageBox(QtWidgets.QMessageBox):
+    def __init__(self, parent=None):
+        super().__init__(parent=parent)
+        self.setWindowTitle("Report Generation")
+        self.setText("Do you want to enable report generation for this session?")
+
+        self.yes_button = self.addButton(QtWidgets.QPushButton("Yes"), QtWidgets.QMessageBox.YesRole)
+        self.no_button = self.addButton(QtWidgets.QPushButton("No"), QtWidgets.QMessageBox.NoRole)
+
+        self.checkbox = QtWidgets.QCheckBox("Don't ask me again")
+        self.setCheckBox(self.checkbox)
+
+    def exec(self) -> Tuple[bool, bool]:
+        super().exec()
+        result = self.clickedButton()
+        choice = self.buttonRole(result) == QtWidgets.QMessageBox.ButtonRole.YesRole
+        checkbox_checked = self.checkbox.isChecked()
+        return choice, checkbox_checked

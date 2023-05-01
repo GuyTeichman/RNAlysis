@@ -5,11 +5,12 @@ from typing import Union, Any
 import yaml
 
 from rnalysis import __attr_file_key__, __biotype_file_key__, __font_key__, __font_size_key__, __stylesheet_key__, \
-    __show_tutorial_key__, __databases_key__
+    __show_tutorial_key__, __report_gen_key__, __databases_key__
 from rnalysis.utils import io
 
 DEFAULT_VALUES = {__font_key__: 'Times New Roman', __font_size_key__: 10, __stylesheet_key__: 'base',
-                  __show_tutorial_key__: True, __databases_key__: ['Google', 'NCBI Genes', 'UniProtKB']}
+                  __show_tutorial_key__: True, __databases_key__: ['Google', 'NCBI Genes', 'UniProtKB'],
+                  __report_gen_key__: None}
 
 
 def get_settings_file_path():
@@ -143,15 +144,18 @@ def get_gui_settings():
     stylesheet = read_value_from_settings(__stylesheet_key__)
     databases = read_value_from_settings(__databases_key__)
     show_tutorial = read_value_from_settings(__show_tutorial_key__)
-    return font, font_size, stylesheet, databases, show_tutorial
+    prompt_report_gen = read_value_from_settings(__report_gen_key__)
+    return font, font_size, stylesheet, databases, show_tutorial, prompt_report_gen
 
 
-def set_gui_settings(font: str, font_size: int, stylesheet: str, databases, show_tutorial: bool):
+def set_gui_settings(font: str, font_size: int, stylesheet: str, databases, show_tutorial: bool,
+                     prompt_report_gen: Union[bool, None]):
     update_settings_file(font, __font_key__)
     update_settings_file(str(font_size), __font_size_key__)
     update_settings_file(stylesheet, __stylesheet_key__)
     update_settings_file(databases, __databases_key__)
     update_settings_file(show_tutorial, __show_tutorial_key__)
+    update_settings_file(prompt_report_gen, __report_gen_key__)
 
 
 def get_databases_settings():
@@ -164,6 +168,14 @@ def get_show_tutorial_settings():
 
 def set_show_tutorial_settings(show_tutorial: bool):
     update_settings_file(show_tutorial, __show_tutorial_key__)
+
+
+def get_report_gen_settings():
+    return read_value_from_settings(__report_gen_key__)
+
+
+def set_report_gen_settings(prompt_report_gen: Union[bool, None]):
+    update_settings_file(prompt_report_gen, __report_gen_key__)
 
 
 def set_table_settings(attr_ref_path: str, biotype_ref_path: str):

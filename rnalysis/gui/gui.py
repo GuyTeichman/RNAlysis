@@ -2890,22 +2890,46 @@ class MainWindow(QtWidgets.QMainWindow):
         if settings.get_show_tutorial_settings():
             self.quickstart_window.show()
 
-    def check_reporting(self):
-        reply = QtWidgets.QMessageBox.question(self, 'Turn on report generation',
-                                               'Do you want to enable report generation for this session?',
-                                               QtWidgets.QMessageBox.Yes, QtWidgets.QMessageBox.No)
-        if reply == QtWidgets.QMessageBox.No:
-            return
-        print("Turning on report generation...")
-        try:
-            from rnalysis.gui import gui_report
-            self._generate_report = True
-            self.report = gui_report.ReportGenerator()
-            self.clear_session(not (self.tabs.count() == 1 and self.tabs.currentWidget().is_empty()))
-            print("Report generation turned on. ")
-        except ImportError:
-            warnings.warn(f"The RNAlysis 'reports' module is not installed. Please install it and try again. ")
+    @QtCore.pyqtSlot(bool)
+    def _toggle_reporting(self, state: bool):
+        if state:
+            print("Turning on report generation...")
+            try:
+                from rnalysis.gui import gui_report
+                cleared = self.clear_session(not (self.tabs.count() == 1 and self.tabs.currentWidget().is_empty()))
+                self.report = gui_report.ReportGenerator()
+                assert cleared
+                self._generate_report = True
+                print("Report generation turned on. ")
+            except ImportError:
+                warnings.warn(f"The RNAlysis 'reports' module is not installed. Please install it and try again. ")
+                self._toggle_reporting(False)
+            except AssertionError:
+                warnings.warn(f"You must clear the current session before turning report generation on. "
+                              f"Please clear your current session and try again. ")
+                self._toggle_reporting(False)
+
+        else:
             self._generate_report = False
+            self.report = None
+            self.toggle_report_action.setChecked(False)
+            print("Report generation turned off. ")
+
+    def prompt_auto_report_gen(self):
+        preset = settings.get_report_gen_settings()
+        if preset is None:
+            message_box = gui_windows.ReportGenerationMessageBox(self)
+            choice, dont_ask_again = message_box.exec()
+            if dont_ask_again:
+                new_setting = choice
+            else:
+                new_setting = None
+            settings.set_report_gen_settings(new_setting)
+        else:
+            choice = preset
+
+        self.toggle_report_action.setChecked(choice)
+        self._toggle_reporting(choice)
 
     def init_ui(self):
         self.setWindowTitle(f'RNAlysis {__version__}')
@@ -3532,7 +3556,11 @@ class MainWindow(QtWidgets.QMainWindow):
         self.exit_action.triggered.connect(self.close)
         self.check_update_action = QtWidgets.QAction("Check for &updates...", self)
         self.check_update_action.triggered.connect(self.check_for_updates)
-        self.generate_report_action = QtWidgets.QAction("&Generate report")
+        self.toggle_report_action = QtWidgets.QAction("&Enable report generation")
+        self.toggle_report_action.setCheckable(True)
+        self.toggle_report_action.setChecked(False)
+        self.toggle_report_action.triggered.connect(self._toggle_reporting)
+        self.generate_report_action = QtWidgets.QAction("&Create session report")
         self.generate_report_action.triggered.connect(self.generate_report)
 
         self.undo_action = self.undo_group.createUndoAction(self)
@@ -3858,7 +3886,8 @@ class MainWindow(QtWidgets.QMainWindow):
                                   self.new_table_from_folder_htseq_action])
         file_menu.addActions(
             [self.save_action, self.load_session_action, self.save_session_action, self.clear_session_action,
-             self.clear_cache_action, self.generate_report_action, self.settings_action, self.exit_action])
+             self.clear_cache_action, self.toggle_report_action, self.generate_report_action, self.settings_action,
+             self.exit_action])
 
         edit_menu = self.menu_bar.addMenu("&Edit")
         edit_menu.addActions([self.undo_action, self.redo_action, self.restore_tab_action, self.close_current_action,
@@ -3971,7 +4000,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self.tabs.setCurrentIndex(current_ind)
 
     @QtCore.pyqtSlot()
-    def clear_session(self, confirm_action: bool = True):
+    def clear_session(self, confirm_action: bool = True) -> bool:
         if confirm_action:
             response = QtWidgets.QMessageBox.question(self, 'Clear session?',
                                                       'Are you sure you want to clear your session? '
@@ -3988,6 +4017,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self.pipelines = OrderedDict()
             self.clear_history(confirm_action=False)
             self._change_undo_stack(0)
+        return response == QtWidgets.QMessageBox.Yes
 
     def load_session(self):
         session_filename, _ = QtWidgets.QFileDialog.getOpenFileName(self, "Load session",
@@ -4330,6 +4360,6 @@ async def run():  # pragma: no cover
         window.show()
         window.check_for_updates(False)
         window.show_tutorial()
-        window.check_reporting()
+        window.prompt_auto_report_gen()
         splash.finish(window)
     sys.exit(app.exec())

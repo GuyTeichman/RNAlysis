@@ -93,7 +93,7 @@ def main_window(qtbot, monkeypatch, use_temp_settings_file):
     warnings.showwarning = customwarn
     # sys.excepthook = window.excepthook
     builtins.input = window.input
-    window.check_reporting()
+    window._toggle_reporting(True)
     return window
 
 
