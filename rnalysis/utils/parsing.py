@@ -374,6 +374,9 @@ def df_to_html(df: pd.DataFrame, max_rows: int = 5, max_cols: int = 4):
     :return: A string representation of the HTML table.
     :rtype: str
     """
+    if isinstance(df, pd.Series):
+        df = df.to_frame()
+
     styler = df.style.format(precision=2)
     styler.set_table_styles(
         [{'selector': 'td', 'props': 'border: 1px solid grey; border-collapse: collapse;'},

@@ -2349,7 +2349,7 @@ class CreatePipelineWindow(gui_widgets.MinMaxDialog, FilterTabPage):
             print("Failed to save Pipeline")
             raise e
 
-    def closeEvent(self, event):
+    def closeEvent(self, event):  # pragma: no cover
         if self.is_unsaved:
             quit_msg = "Are you sure you want to close this window without saving your Pipeline?\n" \
                        "All unsaved progress will be lost"
@@ -3291,7 +3291,8 @@ class MainWindow(QtWidgets.QMainWindow):
         href = Path('data').joinpath(filename).as_posix()
         if validation.isinstanceinh(obj, filtering.Filter):
             html = parsing.df_to_html(obj.df)
-            desc = f'{obj_type}:<br>"{obj.fname.stem}"<br>{html}{obj.shape[0]} rows, {obj.shape[1]} columns'
+            shape = obj.shape if len(obj.shape) >= 2 else (obj.shape[0], 1)
+            desc = f'{obj_type}:<br>"{obj.fname.stem}"<br>{html}{shape[0]} rows, {shape[1]} columns'
         elif validation.isinstanceinh(obj, enrichment.FeatureSet):
             items = []
             for i, item in enumerate(obj.gene_set):
