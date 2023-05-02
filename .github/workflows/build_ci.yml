@@ -144,6 +144,7 @@ jobs:
 
     finish:
         name: Finish submitting coverage
+        if: ${{ always() }}
         needs: build
         runs-on: [ ubuntu-latest ]
         steps:
