@@ -7,6 +7,8 @@ History
 ------------------
 This version allows users to calculate normalization scaling factors,
 
+Since Python 3.7 will be reaching end of life as of June 2023, new versions of *RNAlysis* will no longer support it.
+
 Added
 *******
 * Added Pipelines for the FASTQ module (SingleEndPipeline and PairedEndPipeline), allowing you to apply a series of functions (adapter trimming, alignment, quantification, etc) to a batch of sequence/alignment files.
@@ -15,6 +17,7 @@ Added
 
 Changed
 *******
+* RNAlysis no longer supports Python version 3.7.
 * CutAdapt adapter trimming (fastq.trim_adapters_single_end and fastq.trim_adapters_paired_end) now outputs non-gzipped files by default.
 * RNAlysis now shows an easier to understand error message when users attempt to load a table in an unsupported format (e.g. Excel files).
 * Standardized all plotting functions in the filtering module to return a matplotlib Figure object, which can be further modified by users.

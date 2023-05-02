@@ -53,7 +53,6 @@ setup(
         'License :: OSI Approved :: MIT License',
         'Natural Language :: English',
         'Programming Language :: Python :: 3 :: Only',
-        'Programming Language :: Python :: 3.7',
         'Programming Language :: Python :: 3.8',
         'Programming Language :: Python :: 3.9',
         'Programming Language :: Python :: 3.10',
@@ -64,7 +63,7 @@ setup(
     description='RNAlysis is an analysis software for RNA sequencing data. '
                 'RNAlysis can help to filter, visualize, explore, analyze, and share your data. ',
     install_requires=requirements,
-    python_requires='>=3.7, <3.11',
+    python_requires='>=3.8, <3.11',
     license="MIT license",
     long_description=readme + '\n\n' + history,
     include_package_data=True,

@@ -5,7 +5,7 @@
 
 hdbscan>=0.8.29:    hdbscan
 xlmhg>=2.5.4:       single-set
-numba>=0.55.1:      randomization
+numba>=0.57.0:      randomization
 cutadapt>=4.4:      fastq
 pyvis>=0.3.2:       reports
-networkx>=2.6.3:    reports
+networkx>=3.0.0:    reports
