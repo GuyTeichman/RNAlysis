@@ -17,7 +17,7 @@ Added
 
 Changed
 *******
-* RNAlysis no longer supports Python version 3.7.
+* RNAlysis now supports Python 3.11, and no longer supports Python 3.7.
 * Many of the functions in RNAlysis should now run faster.
 * The RNAlysis graphic interface should now boot up significantly faster.
 * RNAlysis now shows an easier to understand error message when users attempt to load a table in an unsupported format (e.g. Excel files).
