@@ -204,10 +204,11 @@ def test_SettingsWindow_get_defaults(qtbot, use_temp_settings_file):
     theme_truth = 'Light'
     dbs_truth = ['NCBI Genes', 'ParaSite', 'ZFIN']
     show_tutorial_truth = False
+    auto_report_truth = None
     attr_truth = os.path.abspath('tests/test_files/counted.tsv')
     biotype_truth = os.path.abspath('tests/test_files/counted.csv')
 
-    settings.set_gui_settings(font_truth, int(font_size_truth), theme_truth.lower(), dbs_truth, show_tutorial_truth)
+    settings.set_gui_settings(font_truth, int(font_size_truth), theme_truth.lower(), dbs_truth, show_tutorial_truth, auto_report_truth)
     settings.set_table_settings(attr_truth, biotype_truth)
 
     qtbot, dialog = widget_setup(qtbot, SettingsWindow)
@@ -225,6 +226,7 @@ def test_SettingsWindow_get_defaults(qtbot, use_temp_settings_file):
     assert dialog.appearance_widgets['app_font_size'].currentText() == font_size_truth
     assert dialog.appearance_widgets['app_theme'].currentText() == theme_truth
     assert dialog.appearance_widgets['show_tutorial'].isChecked() == show_tutorial_truth
+    assert dialog.appearance_widgets['report_gen'].currentText() == 'Ask me every time'
     assert dialog.tables_widgets['attr_ref_path'].text() == attr_truth
     assert dialog.tables_widgets['biotype_ref_path'].text() == biotype_truth
 
@@ -249,15 +251,17 @@ def test_SettingsWindow_save_settings(qtbot, monkeypatch, use_temp_settings_file
     theme_truth = 'Light'
     dbs_truth = ['NCBI Genes', 'ParaSite', 'ZFIN']
     show_tutorial_truth = False
+    report_gen_truth = True
     attr_truth = os.path.abspath('tests/test_files/counted.tsv')
     biotype_truth = os.path.abspath('tests/test_files/counted.csv')
 
-    def mock_save_gui(font, font_size, theme, dbs, show_tutorial):
+    def mock_save_gui(font, font_size, theme, dbs, show_tutorial, report_gen):
         assert font == font_truth
         assert font_size == int(font_size_truth)
         assert theme == theme_truth.lower()
         assert dbs == dbs_truth
         assert show_tutorial == show_tutorial_truth
+        assert report_gen == report_gen_truth
         settings_saved[0] = True
 
     def mock_save_tables(attr, biotype):
@@ -278,6 +282,7 @@ def test_SettingsWindow_save_settings(qtbot, monkeypatch, use_temp_settings_file
     qtbot.keyClicks(dialog.appearance_widgets['app_font'], font_truth)
     qtbot.keyClicks(dialog.appearance_widgets['app_font_size'], font_size_truth)
     qtbot.keyClicks(dialog.appearance_widgets['app_theme'], theme_truth)
+    qtbot.keyClicks(dialog.appearance_widgets['report_gen'], 'Always')
     dialog.appearance_widgets['show_tutorial'].setChecked(False)
 
     for i in range(dialog.appearance_widgets['databases'].count()):

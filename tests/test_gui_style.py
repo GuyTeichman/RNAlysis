@@ -97,7 +97,8 @@ font-size: $FONTSIZEPLACEHOLDER*1.5;
 def test_get_stylesheet(monkeypatch):
     param_stylesheet = "1\n2\n3\n\n"
     monkeypatch.setattr(gui_style, 'get_parametric_stylesheet', lambda size, name: param_stylesheet)
-    monkeypatch.setattr(settings, 'get_gui_settings', lambda: ('Arial', 18, 'light', ['UniProtKB', 'PomBase'], True))
+    monkeypatch.setattr(settings, 'get_gui_settings',
+                        lambda: ('Arial', 18, 'light', ['UniProtKB', 'PomBase'], True, None))
 
     stylesheet = gui_style.get_stylesheet()
 
