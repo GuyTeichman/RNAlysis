@@ -132,3 +132,10 @@ Interface with other bioinformatic tools
 Analyze your data at any stage - adapter trimming, alignment, feature counting, or differential expression.
 
 .. image:: ../../rnalysis/gui/videos/external_windows.webp
+
+Create an interactive analysis report
+==================================================================
+Create an interactive analysis report with the click of a button.
+All tables, gene sets, and graphs you generate will be added to your report automatically.
+
+.. image:: ../../rnalysis/gui/videos/create_report.webp

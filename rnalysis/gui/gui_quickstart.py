@@ -26,7 +26,8 @@ class QuickStartWizard(QtWidgets.QWizard):
         "Create Pipelines to streamline your data analysis",
         "Apply Pipelines to one or more of your tables",
         "Export and share Pipelines to make your analysis more reproducible",
-        "Interface with other bioinformatic tools")
+        "Interface with other bioinformatic tools",
+        "Create an interactive analysis report",)
 
     CONTENTS = (
         "Choose a file from your computer, and click 'start' to load it into <i>RNAlysis</i>. ",
@@ -90,6 +91,9 @@ class QuickStartWizard(QtWidgets.QWizard):
 
         "<i>RNAlysis</i> offers a graphic interface for many bioinformatic tools. "
         "Analyze your data at any stage - adapter trimming, alignment, feature counting, or differential expression. ",
+
+        "Create an interactive analysis report with the click of a button. "
+        "All tables, gene sets, and graphs you generate will be added to your report automatically. ",
     )
 
     VIDEO_FILES = (
@@ -113,6 +117,7 @@ class QuickStartWizard(QtWidgets.QWizard):
         'apply_pipeline.webp',
         'export_pipeline.webp',
         'external_windows.webp',
+        'create_report.webp',
     )
 
     def __init__(self, parent=None):
