@@ -1301,6 +1301,87 @@ def test_FilterTabPage_init(qtbot):
     _, _ = widget_setup(qtbot, FilterTabPage)
 
 
+@pytest.mark.parametrize('outputs,exp_signals', [
+    ([], []),
+    (tuple(), []),
+    (filtering.CountFilter('tests/test_files/counted.csv'), ['itemSpawned', 'filterObjectCreated']),
+    (enrichment.FeatureSet({'a', 'b', 'c'}, 'set name'), ['itemSpawned', 'featureSetCreated']),
+    (pd.DataFrame([1, 2, 3]), ['itemSpawned']),
+    (plt.Figure(), ['itemSpawned']),
+    ('filterlist', []),
+    ('dict', []),
+    ('mix', []),
+
+])
+def test_FilterTabPage_process_outputs_signals(qtbot, outputs, exp_signals):
+    qtbot, tabpage = widget_setup(qtbot, FilterTabPage)
+    job_id = -1
+    source_name = 'source name'
+    all_signals = [tabpage.filterObjectCreated, tabpage.featureSetCreated, tabpage.itemSpawned]
+
+    if len(exp_signals) == 0:
+        for signal in all_signals:
+            with qtbot.assertNotEmitted(signal):
+                tabpage.process_outputs(outputs, job_id, source_name)
+    else:
+        signals = [getattr(tabpage, sig) for sig in exp_signals]
+        with qtbot.waitSignals(signals):
+            tabpage.process_outputs(outputs, job_id, source_name)
+
+
+@pytest.mark.parametrize('outputs,exp_filts,exp_sets,exp_items', [
+    (filtering.CountFilter('tests/test_files/counted.csv'),
+     [(filtering.CountFilter('tests/test_files/counted.csv'), 42)],
+     [], [("'source name'\noutput", 42, -1, filtering.CountFilter('tests/test_files/counted.csv'))]),
+
+    (enrichment.FeatureSet({'a', 'b', 'c'}, 'set name'), [], [(enrichment.FeatureSet({'a', 'b', 'c'}, 'set name'), 42)],
+     [("'source name'\noutput", 42, -1, enrichment.FeatureSet({'a', 'b', 'c'}, 'set name'))]),
+
+    (pd.DataFrame([1, 2, 3]), [], [], [("'source name'\noutput", 42, -1, pd.DataFrame([1, 2, 3]))]),
+
+    (plt.Figure(), [], [], [("'source name'\ngraph", 42, -1, plt.gcf())]),
+
+    ([filtering.Filter('tests/test_files/counted.csv'), filtering.DESeqFilter('tests/test_files/test_deseq.csv')],
+     [(filtering.Filter('tests/test_files/counted.csv'), 42),
+      (filtering.DESeqFilter('tests/test_files/test_deseq.csv'), 42)], [],
+     [("'source name'\noutput", 42, -1, filtering.Filter('tests/test_files/counted.csv')),
+      ("'source name'\noutput", 42, -1, filtering.DESeqFilter('tests/test_files/test_deseq.csv'))]),
+
+    ({'out1': plt.Figure(), 'out2': pd.DataFrame(), 'other': 'some str'}, [], [],
+     [("'source name'\ngraph", 42, -1, plt.gcf()), ("'source name'\noutput", 42, -1, pd.DataFrame())]),
+
+    ([], [], [], []),
+
+])
+def test_FilterTabPage_process_outputs_signal_contents(monkeypatch, qtbot, outputs, exp_filts, exp_sets, exp_items):
+    monkeypatch.setattr(JOB_COUNTER, 'get_id', lambda *args: 42)
+
+    def mock_exec(self):
+        self.select_all.click()
+        self.accepted.emit()
+
+    monkeypatch.setattr(MultiKeepWindow, 'exec', mock_exec)
+
+    qtbot, tabpage = widget_setup(qtbot, FilterTabPage)
+    tabpage.name = 'tab_name*'
+    job_id = -1
+    source_name = 'source name'
+    filter_objs = []
+    gene_sets = []
+    items = []
+    tabpage.filterObjectCreated.connect(lambda *args: filter_objs.append(args))
+    tabpage.featureSetCreated.connect(lambda *args: gene_sets.append(args))
+    tabpage.itemSpawned.connect(lambda *args: items.append(args))
+
+    tabpage.process_outputs(outputs, job_id, source_name)
+
+    assert filter_objs == exp_filts
+    assert gene_sets == exp_sets
+    assert len(items) == len(exp_items)
+    for item, item_truth in zip(items, exp_items):
+        assert type(item[-1]) == type(item_truth[-1])
+
+
 def test_FilterTabPage_load_file(qtbot):
     obj_truth = filtering.CountFilter('tests/test_files/counted.csv')
     qtbot, window = widget_setup(qtbot, FilterTabPage)
