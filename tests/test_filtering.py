@@ -25,25 +25,25 @@ def unlink_tree(dir):
 def test_filter_api():
     f = Filter('tests/test_files/uncounted.csv')
     assert f.__str__() == "Generic table named 'uncounted.csv'"
-    assert f.__repr__().replace('\\', '/') == "Filter('tests/test_files/uncounted.csv')"
+    assert f.__repr__() == "Filter('tests/test_files/uncounted.csv')"
 
 
 def test_countfilter_api():
     h = CountFilter('tests/test_files/counted.csv')
     assert h.__str__() == "Count matrix named 'counted.csv'"
-    assert h.__repr__().replace('\\', '/') == "CountFilter('tests/test_files/counted.csv')"
+    assert h.__repr__() == "CountFilter('tests/test_files/counted.csv')"
 
 
 def test_deseqfilter_api():
     d = DESeqFilter('tests/test_files/test_deseq.csv')
     assert d.__str__() == "Differential expression table named 'test_deseq.csv'"
-    assert d.__repr__().replace('\\', '/') == "DESeqFilter('tests/test_files/test_deseq.csv')"
+    assert d.__repr__() == "DESeqFilter('tests/test_files/test_deseq.csv')"
 
 
 def test_foldchangefilter_api():
     fc = FoldChangeFilter("tests/test_files/fc_1.csv", 'a', 'b')
     assert fc.__str__() == "FoldChangeFilter (numerator: 'a', denominator: 'b') of file fc_1.csv"
-    assert fc.__repr__().replace('\\', '/') == "FoldChangeFilter('tests/test_files/fc_1.csv', 'a', 'b')"
+    assert fc.__repr__() == "FoldChangeFilter('tests/test_files/fc_1.csv', 'a', 'b')"
 
 
 def test_filter_contains():

@@ -107,7 +107,7 @@ class Filter:
         pass
 
     def __repr__(self):
-        return f"{type(self).__name__}('{self.fname}')"
+        return f"{type(self).__name__}('{self.fname.as_posix()}')"
 
     def __str__(self):
         return f"{self.readable_name} named '{self.fname.stem}{self.fname.suffix}'"
@@ -1989,7 +1989,7 @@ class FoldChangeFilter(Filter):
                 "Unexpected results may occur during filtering or statistical analyses. ")
 
     def __repr__(self):
-        return f"{type(self).__name__}('{self.fname}', '{self.numerator}', '{self.denominator}')"
+        return f"{type(self).__name__}('{self.fname.as_posix()}', '{self.numerator}', '{self.denominator}')"
 
     def __str__(self):
         return f"{type(self).__name__} (numerator: '{self.numerator}', denominator: '{self.denominator}') " \
