@@ -11,9 +11,10 @@ Since Python 3.7 will be reaching end of life as of June 2023, new versions of *
 
 Added
 *******
+* You can now generate interactive analysis reports automatically using the RNAlysis graphical interface. Read more about this feature `here <https://guyteichman.github.io/RNAlysis/build/user_guide_gui.html>`_.
 * Added Pipelines for the FASTQ module (SingleEndPipeline and PairedEndPipeline), allowing you to apply a series of functions (adapter trimming, alignment, quantification, etc) to a batch of sequence/alignment files.
-* Added new parameter to normalization functions 'return_scaling_factors', that allows you to access the scaling factors calculated by RNAlysis.
-* Added parameter 'gzip_output' to CutAdapt adapter trimming (fastq.trim_adapters_single_end and fastq.trim_adapters_paired_end), allowing users to determine whether or not the output files will be gzipped.
+* Added new parameter 'return_scaling_factors' to normalization functions, that allows you to access the scaling factors calculated by RNAlysis.
+* Added new parameter 'gzip_output' to CutAdapt adapter trimming (fastq.trim_adapters_single_end and fastq.trim_adapters_paired_end), allowing users to determine whether or not the output files will be gzipped.
 
 Changed
 *******
