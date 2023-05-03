@@ -1,3 +1,4 @@
+import itertools
 import re
 import shutil
 import typing
@@ -66,8 +67,10 @@ class Node:
 
 
 class ReportGenerator:
-    CSS_TEMPLATE_PATH = Path(__file__).parent.parent.joinpath('data_files/report_templates/vis-network.min.css')
-    JS_TEMPLATE_PATH = Path(__file__).parent.parent.joinpath('data_files/report_templates/vis-network.min.js')
+    CSS_TEMPLATE_PATHS = [Path(__file__).parent.parent.joinpath('data_files/report_templates/vis-network.min.css'),
+                          Path(__file__).parent.parent.joinpath('data_files/report_templates/bootstrap.min.css')]
+    JS_TEMPLATE_PATHS = [Path(__file__).parent.parent.joinpath('data_files/report_templates/vis-network.min.js'),
+                         Path(__file__).parent.parent.joinpath('data_files/report_templates/bootstrap.bundle.min.js')]
     NODE_STYLES = {'root': dict(shape='box', color='#00D4D8'),
                    'Count matrix': dict(color='#0D47A1'),
                    'Differential expression': dict(color='#BF360C'),
@@ -146,12 +149,18 @@ class ReportGenerator:
     def _modify_html(self, html: str) -> str:
         if html.count(self.TITLE) > 1:
             html = re.sub(r'<center>.+?<\/h1>\s+<\/center>', '', html, 1, re.DOTALL)
+        # remove comments from file
+        comment_regex = r"<!--[\s\S]*?-->"
+        html = re.sub(comment_regex, "", html)
 
-        css_line = f'<link rel = "stylesheet" href="{self.CSS_TEMPLATE_PATH.name}"/>'
-        js_line = f'<script src="{self.JS_TEMPLATE_PATH.name}"></script>'
+        for css_pth in self.CSS_TEMPLATE_PATHS:
+            css_line = f'<link rel="stylesheet" href="assets/{css_pth.name}"/>'
+            html = re.sub(r'<link(?:\s+[\w-]+="[^"]*")*\s+href="[^"]+"\s+(?:[\w-]+="[^"]*"\s+)*?\/>', css_line, html, 1,
+                          re.DOTALL)
 
-        html = re.sub(r'<link\s+rel="stylesheet"\s+href\s*=\s*"([^"]+)"[^>]*>', css_line, html, 1, re.DOTALL)
-        html = re.sub(r'<script\s+src\s*=\s*"(https?:\/\/[^"]+\.js)"[^>]*><\/script>', js_line, html, 1, re.DOTALL)
+        for js_pth in self.JS_TEMPLATE_PATHS:
+            js_line = f'<script src="assets/{js_pth.name}"></script>'
+            html = re.sub(r'<script\s+src\s*=\s*"(https?:\/\/[^"]+\.js)"[^>]*><\/script>', js_line, html, 1, re.DOTALL)
 
         return html
 
@@ -193,16 +202,20 @@ class ReportGenerator:
         with open(save_file, 'w') as f:
             f.write(html)
 
-        for item in [self.CSS_TEMPLATE_PATH, self.JS_TEMPLATE_PATH]:
+        assets_path = save_path.joinpath('assets')
+        if assets_path.exists():
+            shutil.rmtree(assets_path)
+        assets_path.mkdir()
+        for item in itertools.chain(self.CSS_TEMPLATE_PATHS, self.JS_TEMPLATE_PATHS):
             with open(item, encoding="utf-8") as f:
                 content = f.read()
-            with open(save_path.joinpath(item.name), 'w', encoding="utf-8") as outfile:
+            with open(assets_path.joinpath(item.name), 'w', encoding="utf-8") as outfile:
                 outfile.write(content)
 
-        tables_path = save_path.joinpath('data')
-        if tables_path.exists():
-            shutil.rmtree(tables_path)
-        tables_path.mkdir()
+        data_path = save_path.joinpath('data')
+        if data_path.exists():
+            shutil.rmtree(data_path)
+        data_path.mkdir()
 
         for ind, node in self.nodes.items():
             if ind == 0:  # skip the root node
@@ -210,6 +223,6 @@ class ReportGenerator:
             if node.is_active and node.filename is not None:
                 content = io.load_cached_gui_file(node.filename, load_as_obj=False)
                 if content is not None:
-                    with open(tables_path.joinpath(node.filename), 'w') as f:
+                    with open(data_path.joinpath(node.filename), 'w') as f:
                         f.write(content)
         webbrowser.open(save_file)

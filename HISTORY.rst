@@ -18,10 +18,11 @@ Added
 Changed
 *******
 * RNAlysis no longer supports Python version 3.7.
-* CutAdapt adapter trimming (fastq.trim_adapters_single_end and fastq.trim_adapters_paired_end) now outputs non-gzipped files by default.
-* RNAlysis now shows an easier to understand error message when users attempt to load a table in an unsupported format (e.g. Excel files).
-* Standardized all plotting functions in the filtering module to return a matplotlib Figure object, which can be further modified by users.
+* Many of the functions in RNAlysis should now run faster.
 * The RNAlysis graphic interface should now boot up significantly faster.
+* RNAlysis now shows an easier to understand error message when users attempt to load a table in an unsupported format (e.g. Excel files).
+* CutAdapt adapter trimming (fastq.trim_adapters_single_end and fastq.trim_adapters_paired_end) now outputs non-gzipped files by default.
+* Standardized all plotting functions in the filtering module to return a matplotlib Figure object, which can be further modified by users.
 
 Fixed
 *******

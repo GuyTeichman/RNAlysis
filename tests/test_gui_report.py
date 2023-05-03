@@ -83,8 +83,8 @@ def test_trim_function(report_generator):
 def test_modify_html(report_generator):
     html = report_generator._report_from_nx(True).generate_html()
     modified_html = report_generator._modify_html(html)
-    assert 'vis-network.min.css' in modified_html
-    assert 'vis-network.min.js' in modified_html
+    for filename in ['vis-network.min.css', 'bootstrap.min.css', 'vis-network.min.js', 'bootstrap.bundle.min.js']:
+        assert f'assets/{filename}' in modified_html
     assert modified_html.count(report_generator.TITLE) == 1
 
 
