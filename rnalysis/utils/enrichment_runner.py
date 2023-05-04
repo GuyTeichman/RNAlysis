@@ -24,6 +24,7 @@ from rnalysis.utils.param_typing import PARALLEL_BACKENDS, GRAPHVIZ_FORMATS
 
 try:
     import xlmhg
+    xlmhg.test.np.float = np.float64
 
     logging.getLogger('xlmhg').setLevel(50)  # suppress warnings from xlmhg module
     HAS_XLMHG = True
