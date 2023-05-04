@@ -4,7 +4,7 @@ import platform
 import pytest
 import yaml
 
-from rnalysis import fastq
+from rnalysis import fastq, __version__
 from rnalysis.fastq import *
 from rnalysis.utils import io
 from tests import unlink_tree, are_dir_trees_equal
@@ -647,6 +647,7 @@ def test_SingleEndPipeline_export():
 
     with open(truth_pth) as f:
         truth = yaml.safe_load(f)
+    truth['metadata']['rnalysis_version'] = __version__
     res['metadata']['export_time'] = None
     truth['metadata']['export_time'] = None
     assert res == truth
@@ -723,6 +724,7 @@ def test_PairedEndPipeline_export():
 
     with open(truth_pth) as f:
         truth = yaml.safe_load(f)
+    truth['metadata']['rnalysis_version'] = __version__
     res['metadata']['export_time'] = None
     truth['metadata']['export_time'] = None
     assert res == truth

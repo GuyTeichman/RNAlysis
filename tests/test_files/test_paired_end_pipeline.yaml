@@ -4,7 +4,7 @@ functions:
 - featurecounts_paired_end
 metadata:
   export_time: 2023/04/18, 11:02:01
-  rnalysis_version: 3.7.0
+  rnalysis_version: __version__
   pipeline_type: paired
 params:
 - - []
