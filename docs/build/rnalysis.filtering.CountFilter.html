@@ -4,14 +4,14 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>rnalysis.filtering.CountFilter &mdash; RNAlysis 3.7.0 documentation</title>
+  <title>rnalysis.filtering.CountFilter &mdash; RNAlysis 3.8.0 documentation</title>
       <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
     <link rel="shortcut icon" href="_static/favicon.ico"/>
   <!--[if lt IE 9]>
     <script src="_static/js/html5shiv.min.js"></script>
   <![endif]-->
-  
+
         <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
         <script src="_static/jquery.js"></script>
         <script src="_static/underscore.js"></script>
@@ -23,10 +23,10 @@
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="rnalysis.filtering.CountFilter.average_replicate_samples" href="rnalysis.filtering.CountFilter.average_replicate_samples.html" />
-    <link rel="prev" title="rnalysis.filtering" href="rnalysis.filtering.html" /> 
+    <link rel="prev" title="rnalysis.filtering" href="rnalysis.filtering.html" />
 </head>
 
-<body class="wy-body-for-nav"> 
+<body class="wy-body-for-nav">
   <div class="wy-grid-for-nav">
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
@@ -146,7 +146,6 @@
 <li class="toctree-l2"><a class="reference internal" href="rnalysis.filtering.Filter.html">rnalysis.filtering.Filter</a></li>
 <li class="toctree-l2"><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.html">rnalysis.filtering.FoldChangeFilter</a></li>
 <li class="toctree-l2"><a class="reference internal" href="rnalysis.filtering.Pipeline.html">rnalysis.filtering.Pipeline</a></li>
-<li class="toctree-l2"><a class="reference internal" href="rnalysis.filtering.readable_name.html">rnalysis.filtering.readable_name</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="rnalysis.enrichment.html">rnalysis.enrichment</a></li>
@@ -182,7 +181,7 @@
 </div>
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
-             
+
   <section id="rnalysis-filtering-countfilter">
 <h1>rnalysis.filtering.CountFilter<a class="headerlink" href="#rnalysis-filtering-countfilter" title="Permalink to this heading"></a></h1>
 <dl class="py class">
@@ -330,7 +329,7 @@
 <tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.CountFilter.normalize_median_of_ratios.html#rnalysis.filtering.CountFilter.normalize_median_of_ratios" title="rnalysis.filtering.CountFilter.normalize_median_of_ratios"><code class="xref py py-obj docutils literal notranslate"><span class="pre">CountFilter.normalize_median_of_ratios</span></code></a>(...)</p></td>
 <td><p>Normalizes the count matrix using the 'Median of Ratios Normalization' (MRN) method         <a class="reference external" href="https://doi.org/10.4161%2Fcib.25849">(Maza et al 2013)</a>.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.CountFilter.normalize_rle.html#rnalysis.filtering.CountFilter.normalize_rle" title="rnalysis.filtering.CountFilter.normalize_rle"><code class="xref py py-obj docutils literal notranslate"><span class="pre">CountFilter.normalize_rle</span></code></a>([inplace])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.CountFilter.normalize_rle.html#rnalysis.filtering.CountFilter.normalize_rle" title="rnalysis.filtering.CountFilter.normalize_rle"><code class="xref py py-obj docutils literal notranslate"><span class="pre">CountFilter.normalize_rle</span></code></a>([inplace, ...])</p></td>
 <td><p>Normalizes the count matrix using the 'Relative Log Expression' (RLE) method         <a class="reference external" href="https://doi.org/10.1186/gb-2010-11-10-r106">(Anders and Huber 2010)</a>.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.CountFilter.normalize_tmm.html#rnalysis.filtering.CountFilter.normalize_tmm" title="rnalysis.filtering.CountFilter.normalize_tmm"><code class="xref py py-obj docutils literal notranslate"><span class="pre">CountFilter.normalize_tmm</span></code></a>([log_ratio_trim, ...])</p></td>
@@ -342,7 +341,7 @@
 <tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.CountFilter.normalize_to_rpkm.html#rnalysis.filtering.CountFilter.normalize_to_rpkm" title="rnalysis.filtering.CountFilter.normalize_to_rpkm"><code class="xref py py-obj docutils literal notranslate"><span class="pre">CountFilter.normalize_to_rpkm</span></code></a>(gtf_file[, ...])</p></td>
 <td><p>Normalizes the count matrix to Reads Per Kilobase Million (RPKM).         Divides each column in the count matrix by (total reads)*(gene length / 1000)*10^-6.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.CountFilter.normalize_to_rpm.html#rnalysis.filtering.CountFilter.normalize_to_rpm" title="rnalysis.filtering.CountFilter.normalize_to_rpm"><code class="xref py py-obj docutils literal notranslate"><span class="pre">CountFilter.normalize_to_rpm</span></code></a>([inplace])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.CountFilter.normalize_to_rpm.html#rnalysis.filtering.CountFilter.normalize_to_rpm" title="rnalysis.filtering.CountFilter.normalize_to_rpm"><code class="xref py py-obj docutils literal notranslate"><span class="pre">CountFilter.normalize_to_rpm</span></code></a>([inplace, ...])</p></td>
 <td><p>Normalizes the count matrix to Reads Per Million (RPM).</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.CountFilter.normalize_to_rpm_htseqcount.html#rnalysis.filtering.CountFilter.normalize_to_rpm_htseqcount" title="rnalysis.filtering.CountFilter.normalize_to_rpm_htseqcount"><code class="xref py py-obj docutils literal notranslate"><span class="pre">CountFilter.normalize_to_rpm_htseqcount</span></code></a>(...)</p></td>
@@ -447,7 +446,7 @@
   Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
     <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
     provided by <a href="https://readthedocs.org">Read the Docs</a>.
-   
+
 
 </footer>
         </div>
@@ -458,7 +457,7 @@
       jQuery(function () {
           SphinxRtdTheme.Navigation.enable(true);
       });
-  </script> 
+  </script>
 
 </body>
 </html>

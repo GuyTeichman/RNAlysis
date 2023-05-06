@@ -4,14 +4,14 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Frequently asked questions &mdash; RNAlysis 3.7.0 documentation</title>
+  <title>Frequently asked questions &mdash; RNAlysis 3.8.0 documentation</title>
       <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
     <link rel="shortcut icon" href="_static/favicon.ico"/>
   <!--[if lt IE 9]>
     <script src="_static/js/html5shiv.min.js"></script>
   <![endif]-->
-  
+
         <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
         <script src="_static/jquery.js"></script>
         <script src="_static/underscore.js"></script>
@@ -23,10 +23,10 @@
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="User guide - graphical interface" href="user_guide_gui.html" />
-    <link rel="prev" title="A-to-Z tutorial - example analysis" href="tutorial.html" /> 
+    <link rel="prev" title="A-to-Z tutorial - example analysis" href="tutorial.html" />
 </head>
 
-<body class="wy-body-for-nav"> 
+<body class="wy-body-for-nav">
   <div class="wy-grid-for-nav">
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
@@ -77,6 +77,17 @@
 <li class="toctree-l3"><a class="reference internal" href="#i-ran-into-a-problem-that-is-not-specified-here-what-can-i-do">I ran into a problem that is not specified here. What can I do?</a></li>
 </ul>
 </li>
+<li class="toctree-l2"><a class="reference internal" href="#automatic-analysis-reports">Automatic analysis reports</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#how-can-i-generate-an-analysis-report">How can I generate an analysis report?</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#how-can-i-view-an-analysis-report">How can I view an analysis report?</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#how-can-i-share-an-analysis-report">How can I share an analysis report?</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#how-can-i-access-the-data-and-figures-that-appear-in-an-analysis-report">How can I access the data and figures that appear in an analysis report?</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#do-i-need-to-generate-analysis-reports-manually">Do I need to generate analysis reports manually?</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#can-i-edit-my-analysis-report">Can I edit my analysis report?</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#rnalysis-crashed-during-an-analysis-can-i-restore-my-automatic-analysis-report"><em>RNAlysis</em> crashed during an analysis! Can I restore my automatic analysis report?</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#can-i-create-an-analysis-report-through-the-programmatic-interface">Can I create an analysis report through the programmatic interface?</a></li>
+</ul>
+</li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="user_guide_gui.html">User guide - graphical interface</a></li>
@@ -123,7 +134,7 @@
 </div>
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
-             
+
   <section id="frequently-asked-questions">
 <h1>Frequently asked questions<a class="headerlink" href="#frequently-asked-questions" title="Permalink to this heading"></a></h1>
 <section id="installation">
@@ -314,6 +325,64 @@ The running mode can be changed via the <cite>parallel_backend</cite> parameter 
 <p>Please submit a bug report through <a class="reference external" href="https://github.com/GuyTeichman/RNAlysis/issues">GitHub</a>, and we will do our best to help solve your problem.</p>
 </section>
 </section>
+<section id="automatic-analysis-reports">
+<h2>Automatic analysis reports<a class="headerlink" href="#automatic-analysis-reports" title="Permalink to this heading"></a></h2>
+<section id="how-can-i-generate-an-analysis-report">
+<h3>How can I generate an analysis report?<a class="headerlink" href="#how-can-i-generate-an-analysis-report" title="Permalink to this heading"></a></h3>
+<p>To generate an automatic analysis report with <em>RNAlysis</em>, follow these steps:</p>
+<ol class="arabic simple">
+<li><p>Open the <em>RNAlysis</em> graphical interface.</p></li>
+<li><p>Turn on automatic report generation through the ‘File’ menu <strong>before</strong> your begin your analysis.</p></li>
+<li><p>Analyze your data as you would normally.</p></li>
+<li><p>Open the ‘File’ menu and click on “create session report”.</p></li>
+</ol>
+</section>
+<section id="how-can-i-view-an-analysis-report">
+<h3>How can I view an analysis report?<a class="headerlink" href="#how-can-i-view-an-analysis-report" title="Permalink to this heading"></a></h3>
+<p>To view an analysis report generated with <em>RNAlysis</em>, follow these steps:</p>
+<ol class="arabic simple">
+<li><p>If the report is currently compressed into a ZIP file, unzip it.</p></li>
+<li><p>Enter the “RNAlysis_report” directory.</p></li>
+<li><p>Double-click on the “report.html” file to open it in your internet browser.</p></li>
+</ol>
+</section>
+<section id="how-can-i-share-an-analysis-report">
+<h3>How can I share an analysis report?<a class="headerlink" href="#how-can-i-share-an-analysis-report" title="Permalink to this heading"></a></h3>
+<p>To share an analysis report generated with <em>RNAlysis</em>, follow these steps:</p>
+<ol class="arabic simple">
+<li><p>Find the “RNAlysis_report” directory.</p></li>
+<li><p>Compress the directory into a ZIP file (or any other compressed format of your choice).</p></li>
+<li><p>Share the ZIP file with others.</p></li>
+</ol>
+</section>
+<section id="how-can-i-access-the-data-and-figures-that-appear-in-an-analysis-report">
+<h3>How can I access the data and figures that appear in an analysis report?<a class="headerlink" href="#how-can-i-access-the-data-and-figures-that-appear-in-an-analysis-report" title="Permalink to this heading"></a></h3>
+<p>There are two ways to access the data and figures in an analysis report:</p>
+<p>The first option is hover on a node in the interactive report, and once the description pane appears click on the “Open file” link:</p>
+<a class="reference internal image-reference" href="_images/01i02_hover_node.png"><img alt="Hover over a data node in the interactive report and click on the &quot;Open file&quot; link" src="_images/01i02_hover_node.png" style="width: 600px;" /></a>
+<p>The second option is to open the report directory “RNAlysis_report”, and then enter the report directory “data”.
+There you will find all of the data files generated in the report, as well as a “session.rnal” session file that can be loaded into RNAlysis:</p>
+<a class="reference internal image-reference" href="_images/01i03_data_files.png"><img alt="Access the data files through the report directory." src="_images/01i03_data_files.png" style="width: 600px;" /></a>
+</section>
+<section id="do-i-need-to-generate-analysis-reports-manually">
+<h3>Do I need to generate analysis reports manually?<a class="headerlink" href="#do-i-need-to-generate-analysis-reports-manually" title="Permalink to this heading"></a></h3>
+<p>No! <em>RNAlysis</em> generates analysis reports automatically based on the functions you used and the outputs you generated through your session.
+You only need to turn on automatic report generation <strong>before</strong> your begin your analysis, and click on “create session report” once you are done.</p>
+</section>
+<section id="can-i-edit-my-analysis-report">
+<h3>Can I edit my analysis report?<a class="headerlink" href="#can-i-edit-my-analysis-report" title="Permalink to this heading"></a></h3>
+<p>Currently, the interactive analysis reports generated through <em>RNAlysis</em> cannot be edited.</p>
+</section>
+<section id="rnalysis-crashed-during-an-analysis-can-i-restore-my-automatic-analysis-report">
+<h3><em>RNAlysis</em> crashed during an analysis! Can I restore my automatic analysis report?<a class="headerlink" href="#rnalysis-crashed-during-an-analysis-can-i-restore-my-automatic-analysis-report" title="Permalink to this heading"></a></h3>
+<p>Unfortunately, it is currently not possible to restore your automatic analysis reports if <em>RNAlysis</em> closes in the middle.</p>
+</section>
+<section id="can-i-create-an-analysis-report-through-the-programmatic-interface">
+<h3>Can I create an analysis report through the programmatic interface?<a class="headerlink" href="#can-i-create-an-analysis-report-through-the-programmatic-interface" title="Permalink to this heading"></a></h3>
+<p>Currently, interactive analysis reports can only be generated through the <em>RNAlysis</em> graphical interface.
+However, you can achieve similar levels of reproducibility by sharing your <em>RNAlysis</em> Python scripts, as well as any graphs, tables, and Pipelines you generated.</p>
+</section>
+</section>
 </section>
 
 
@@ -333,7 +402,7 @@ The running mode can be changed via the <cite>parallel_backend</cite> parameter 
   Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
     <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
     provided by <a href="https://readthedocs.org">Read the Docs</a>.
-   
+
 
 </footer>
         </div>
@@ -344,7 +413,7 @@ The running mode can be changed via the <cite>parallel_backend</cite> parameter 
       jQuery(function () {
           SphinxRtdTheme.Navigation.enable(true);
       });
-  </script> 
+  </script>
 
 </body>
 </html>

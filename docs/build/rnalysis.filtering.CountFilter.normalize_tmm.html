@@ -4,14 +4,14 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>rnalysis.filtering.CountFilter.normalize_tmm &mdash; RNAlysis 3.7.0 documentation</title>
+  <title>rnalysis.filtering.CountFilter.normalize_tmm &mdash; RNAlysis 3.8.0 documentation</title>
       <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
     <link rel="shortcut icon" href="_static/favicon.ico"/>
   <!--[if lt IE 9]>
     <script src="_static/js/html5shiv.min.js"></script>
   <![endif]-->
-  
+
         <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
         <script src="_static/jquery.js"></script>
         <script src="_static/underscore.js"></script>
@@ -23,10 +23,10 @@
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="rnalysis.filtering.CountFilter.normalize_to_quantile" href="rnalysis.filtering.CountFilter.normalize_to_quantile.html" />
-    <link rel="prev" title="rnalysis.filtering.CountFilter.normalize_rle" href="rnalysis.filtering.CountFilter.normalize_rle.html" /> 
+    <link rel="prev" title="rnalysis.filtering.CountFilter.normalize_rle" href="rnalysis.filtering.CountFilter.normalize_rle.html" />
 </head>
 
-<body class="wy-body-for-nav"> 
+<body class="wy-body-for-nav">
   <div class="wy-grid-for-nav">
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
@@ -146,7 +146,6 @@
 <li class="toctree-l2"><a class="reference internal" href="rnalysis.filtering.Filter.html">rnalysis.filtering.Filter</a></li>
 <li class="toctree-l2"><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.html">rnalysis.filtering.FoldChangeFilter</a></li>
 <li class="toctree-l2"><a class="reference internal" href="rnalysis.filtering.Pipeline.html">rnalysis.filtering.Pipeline</a></li>
-<li class="toctree-l2"><a class="reference internal" href="rnalysis.filtering.readable_name.html">rnalysis.filtering.readable_name</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="rnalysis.enrichment.html">rnalysis.enrichment</a></li>
@@ -183,12 +182,12 @@
 </div>
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
-             
+
   <section id="rnalysis-filtering-countfilter-normalize-tmm">
 <h1>rnalysis.filtering.CountFilter.normalize_tmm<a class="headerlink" href="#rnalysis-filtering-countfilter-normalize-tmm" title="Permalink to this heading"></a></h1>
 <dl class="py method">
 <dt class="sig sig-object py" id="rnalysis.filtering.CountFilter.normalize_tmm">
-<span class="sig-prename descclassname"><span class="pre">CountFilter.</span></span><span class="sig-name descname"><span class="pre">normalize_tmm</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">log_ratio_trim</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sum_trim</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.05</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">a_cutoff</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">-10000000000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ref_column</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'auto'</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">ColumnName</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'auto'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inplace</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rnalysis.filtering.CountFilter.normalize_tmm" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">CountFilter.</span></span><span class="sig-name descname"><span class="pre">normalize_tmm</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">log_ratio_trim</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sum_trim</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.05</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">a_cutoff</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">-10000000000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ref_column</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'auto'</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">ColumnName</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'auto'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inplace</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_scaling_factors</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rnalysis.filtering.CountFilter.normalize_tmm" title="Permalink to this definition"></a></dt>
 <dd><p>Normalizes the count matrix using the ‘trimmed mean of M values’ (TMM) method         <a class="reference external" href="https://doi.org/10.1186/gb-2010-11-3-r25">(Robinson and Oshlack 2010)</a>.         This is the default normalization method used by R’s edgeR.         To calculate the Trimmed Mean of M Values scaling factors, you first calculate the M-values of each gene         between each sample and the reference sample (log2 of each sample Minus log2 of the reference sample),         and the A-values of each gene between each sample and the reference sample         (log2 of each sample Added to log2 of the reference sample).         You then trim out genes with extreme values that are likely to be differentially expressed or non-indicative,         by trimming the top and bottom X% of M-values, the top and bottom Y% of A-values, all A-values which are         smaller than the specified cutuff, and all genes with 0 reads (to avoid log2 values of inf or -inf).         Next, a weighted mean is calculated on the filtered M-values, with the weights being an inverse of         an approximation of variance of each gene, which gives out the scaling factors for each sample.         Finally, the scaling factors are adjusted, for symmetry, so that they multiply to 1.</p>
 <dl class="field-list">
 <dt class="field-odd">Parameters</dt>
@@ -198,6 +197,7 @@
 <li><p><strong>a_cutoff</strong> (<em>float</em><em> or </em><em>None</em><em> (</em><em>default = -1e10</em><em>)</em>) – a lower bound on the A-values that should be included in the trimmed mean.         If set to None, no lower bound will be used.</p></li>
 <li><p><strong>ref_column</strong> (<em>name</em><em> of </em><em>a column</em><em> or </em><em>'auto'</em><em> (</em><em>default='auto'</em><em>)</em>) – the column to be used as reference for normalization. If ‘auto’,         then the reference column will be chosen automatically to be         the column whose upper quartile is closest to the mean upper quartile.</p></li>
 <li><p><strong>inplace</strong> (<em>bool</em><em> (</em><em>default=True</em><em>)</em>) – If True (default), filtering will be applied to the current CountFilter object. If False,         the function will return a new CountFilter instance and the current instance will not be affected.</p></li>
+<li><p><strong>return_scaling_factors</strong> (<em>bool</em><em> (</em><em>default=False</em><em>)</em>) – if True, return a DataFrame containing the calculated scaling factors.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
@@ -233,7 +233,7 @@
   Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
     <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
     provided by <a href="https://readthedocs.org">Read the Docs</a>.
-   
+
 
 </footer>
         </div>
@@ -244,7 +244,7 @@
       jQuery(function () {
           SphinxRtdTheme.Navigation.enable(true);
       });
-  </script> 
+  </script>
 
 </body>
 </html>

@@ -4,14 +4,14 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>rnalysis.filtering.CountFilter.normalize_rle &mdash; RNAlysis 3.7.0 documentation</title>
+  <title>rnalysis.filtering.CountFilter.normalize_rle &mdash; RNAlysis 3.8.0 documentation</title>
       <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
     <link rel="shortcut icon" href="_static/favicon.ico"/>
   <!--[if lt IE 9]>
     <script src="_static/js/html5shiv.min.js"></script>
   <![endif]-->
-  
+
         <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
         <script src="_static/jquery.js"></script>
         <script src="_static/underscore.js"></script>
@@ -23,10 +23,10 @@
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="rnalysis.filtering.CountFilter.normalize_tmm" href="rnalysis.filtering.CountFilter.normalize_tmm.html" />
-    <link rel="prev" title="rnalysis.filtering.CountFilter.normalize_median_of_ratios" href="rnalysis.filtering.CountFilter.normalize_median_of_ratios.html" /> 
+    <link rel="prev" title="rnalysis.filtering.CountFilter.normalize_median_of_ratios" href="rnalysis.filtering.CountFilter.normalize_median_of_ratios.html" />
 </head>
 
-<body class="wy-body-for-nav"> 
+<body class="wy-body-for-nav">
   <div class="wy-grid-for-nav">
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
@@ -146,7 +146,6 @@
 <li class="toctree-l2"><a class="reference internal" href="rnalysis.filtering.Filter.html">rnalysis.filtering.Filter</a></li>
 <li class="toctree-l2"><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.html">rnalysis.filtering.FoldChangeFilter</a></li>
 <li class="toctree-l2"><a class="reference internal" href="rnalysis.filtering.Pipeline.html">rnalysis.filtering.Pipeline</a></li>
-<li class="toctree-l2"><a class="reference internal" href="rnalysis.filtering.readable_name.html">rnalysis.filtering.readable_name</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="rnalysis.enrichment.html">rnalysis.enrichment</a></li>
@@ -183,16 +182,19 @@
 </div>
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
-             
+
   <section id="rnalysis-filtering-countfilter-normalize-rle">
 <h1>rnalysis.filtering.CountFilter.normalize_rle<a class="headerlink" href="#rnalysis-filtering-countfilter-normalize-rle" title="Permalink to this heading"></a></h1>
 <dl class="py method">
 <dt class="sig sig-object py" id="rnalysis.filtering.CountFilter.normalize_rle">
-<span class="sig-prename descclassname"><span class="pre">CountFilter.</span></span><span class="sig-name descname"><span class="pre">normalize_rle</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inplace</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rnalysis.filtering.CountFilter.normalize_rle" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">CountFilter.</span></span><span class="sig-name descname"><span class="pre">normalize_rle</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inplace</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_scaling_factors</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rnalysis.filtering.CountFilter.normalize_rle" title="Permalink to this definition"></a></dt>
 <dd><p>Normalizes the count matrix using the ‘Relative Log Expression’ (RLE) method         <a class="reference external" href="https://doi.org/10.1186/gb-2010-11-10-r106">(Anders and Huber 2010)</a>.         This is the default normalization method used by R’s DESeq2.         To calculate the Relative Log Expression scaling factors, you first generate a pseudo-sample by calculating         the geometric mean expression of each gene across samples. You then calculate the gene-wise ratio         of expression between each sample and the pseudo-sample. You then pick the median ratio within each         sample as the scaling factor for that sample.</p>
 <dl class="field-list">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>inplace</strong> (<em>bool</em><em> (</em><em>default=True</em><em>)</em>) – If True (default), filtering will be applied to the current CountFilter object. If False,         the function will return a new CountFilter instance and the current instance will not be affected.</p>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>inplace</strong> (<em>bool</em><em> (</em><em>default=True</em><em>)</em>) – If True (default), filtering will be applied to the current CountFilter object. If False,         the function will return a new CountFilter instance and the current instance will not be affected.</p></li>
+<li><p><strong>return_scaling_factors</strong> (<em>bool</em><em> (</em><em>default=False</em><em>)</em>) – if True, return a DataFrame containing the calculated scaling factors.</p></li>
+</ul>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p>If inplace is False, returns a new instance of the Filter object.</p>
@@ -227,7 +229,7 @@
   Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
     <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
     provided by <a href="https://readthedocs.org">Read the Docs</a>.
-   
+
 
 </footer>
         </div>
@@ -238,7 +240,7 @@
       jQuery(function () {
           SphinxRtdTheme.Navigation.enable(true);
       });
-  </script> 
+  </script>
 
 </body>
 </html>

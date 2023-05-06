@@ -4,14 +4,14 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>User guide - graphical interface &mdash; RNAlysis 3.7.0 documentation</title>
+  <title>User guide - graphical interface &mdash; RNAlysis 3.8.0 documentation</title>
       <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
     <link rel="shortcut icon" href="_static/favicon.ico"/>
   <!--[if lt IE 9]>
     <script src="_static/js/html5shiv.min.js"></script>
   <![endif]-->
-  
+
         <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
         <script src="_static/jquery.js"></script>
         <script src="_static/underscore.js"></script>
@@ -23,10 +23,10 @@
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="User guide - programmatic interface" href="user_guide.html" />
-    <link rel="prev" title="Frequently asked questions" href="faq.html" /> 
+    <link rel="prev" title="Frequently asked questions" href="faq.html" />
 </head>
 
-<body class="wy-body-for-nav"> 
+<body class="wy-body-for-nav">
   <div class="wy-grid-for-nav">
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
@@ -114,6 +114,18 @@
 </li>
 </ul>
 </li>
+<li class="toctree-l2"><a class="reference internal" href="#rnalysis-interactive-analysis-reports"><em>RNAlysis</em> interactive analysis reports</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#enable-report-generation">Enable report generation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#generate-an-analysis-report">Generate an analysis report</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#viewing-your-analysis-report">Viewing your analysis report</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#open-an-analysis-report">Open an analysis report</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#interacting-with-the-analysis-report">Interacting with the analysis report</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#access-the-session-output-files">Access the session output files</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#sharing-your-analysis-report">Sharing your analysis report</a></li>
+</ul>
+</li>
 <li class="toctree-l2"><a class="reference internal" href="#rnalysis-settings"><em>RNAlysis</em> settings</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#set-and-load-a-reference-table">Set and load a Reference Table</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#what-is-an-attribute-reference-table">What is an Attribute Reference Table?</a></li>
@@ -168,7 +180,7 @@
 </div>
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
-             
+
   <section id="user-guide-graphical-interface">
 <h1>User guide - graphical interface<a class="headerlink" href="#user-guide-graphical-interface" title="Permalink to this heading"></a></h1>
 <section id="analyzing-data-tables-with-rnalysis">
@@ -1608,6 +1620,88 @@ and sorting (ranking) the table by either the DE test statistic, or by log2 fold
 </section>
 </section>
 </section>
+<section id="rnalysis-interactive-analysis-reports">
+<h2><em>RNAlysis</em> interactive analysis reports<a class="headerlink" href="#rnalysis-interactive-analysis-reports" title="Permalink to this heading"></a></h2>
+<p>The auto-report feature in RNAlysis allows you to generate automatic, interactive HTML reports of your RNA sequencing data analysis.
+These reports can help you easily communicate your results and findings with others, provide a clear overview of the data analysis workflow, and conveniently share your graphs and data in a single file.</p>
+<p>You can find a sample of such report <a class="reference external" href="https://raw.githubusercontent.com/GuyTeichman/RNAlysis/master/tests/test_files/sample_RNAlysis_report.zip">here</a>.</p>
+<section id="enable-report-generation">
+<h3>Enable report generation<a class="headerlink" href="#enable-report-generation" title="Permalink to this heading"></a></h3>
+<p>Before you can generate an interactive analysis report, you need to turn on the automatic report generation feature.
+This is done through the “File” menu within RNAlysis graphical interface.
+Please note that you must turn on the feature <strong>before</strong> beginning your analysis.</p>
+</section>
+<section id="generate-an-analysis-report">
+<h3>Generate an analysis report<a class="headerlink" href="#generate-an-analysis-report" title="Permalink to this heading"></a></h3>
+<p>After you have turned on automatic report generation, you can analyze your RNA sequencing data as you normally would.
+Once you have completed your analysis, simply click on “Create session report” under the “File” menu to generate an automatic report of your analysis.
+RNAlysis will then compile your analysis data and outputs into an interactive HTML report.</p>
+</section>
+<section id="viewing-your-analysis-report">
+<h3>Viewing your analysis report<a class="headerlink" href="#viewing-your-analysis-report" title="Permalink to this heading"></a></h3>
+<section id="open-an-analysis-report">
+<h4>Open an analysis report<a class="headerlink" href="#open-an-analysis-report" title="Permalink to this heading"></a></h4>
+<p>After clicking on “Create session report”, the report should open automatically in your default internet browser.
+If you want to open it again, or want to open a report generated by someone else, follow these steps:</p>
+<ol class="arabic simple">
+<li><p>If the report is currently compressed into a ZIP file, unzip it.</p></li>
+</ol>
+<a class="reference internal image-reference" href="_images/user_guide_open_report_01.png"><img alt="Unzip the report" src="_images/user_guide_open_report_01.png" style="width: 600px;" /></a>
+<ol class="arabic simple" start="2">
+<li><p>Enter the “RNAlysis_report” directory.</p></li>
+</ol>
+<a class="reference internal image-reference" href="_images/user_guide_open_report_02.png"><img alt="Enter the &quot;RNAlysis_report&quot; directory" src="_images/user_guide_open_report_02.png" style="width: 600px;" /></a>
+<ol class="arabic simple" start="3">
+<li><p>Double-click on the “report.html” file to open it in your internet browser.</p></li>
+</ol>
+<a class="reference internal image-reference" href="_images/user_guide_open_report_03.png"><img alt="Open the &quot;report.html&quot; file" src="_images/user_guide_open_report_03.png" style="width: 600px;" /></a>
+</section>
+<section id="interacting-with-the-analysis-report">
+<h4>Interacting with the analysis report<a class="headerlink" href="#interacting-with-the-analysis-report" title="Permalink to this heading"></a></h4>
+<p>The RNAlysis report provides a graphical representation of all the datasets that you loaded into the tool, along with the functions that were applied to them, the order in which they were applied, and the parameters that were used.
+The report also includes all the outputs generated during the analysis, such as graphs, data tables, gene sets, and other output data.
+The report captures all the intermediate steps of the analysis, so you can access the data at any point during the analysis.</p>
+<a class="reference internal image-reference" href="_images/user_guide_reports_01.png"><img alt="*RNAlysis* interactive analysis report" src="_images/user_guide_reports_01.png" style="width: 600px;" /></a>
+<p>Each node in the report graph represents a dataset, an applied function, or the output of a function, and the arrows indicate the flow of information between them.
+For example, the arrows show which datasets were used in enrichment analysis or which table was filtered for statistically significant genes.</p>
+<a class="reference internal image-reference" href="_images/user_guide_reports_02.png"><img alt="Information flow across the analysis report" src="_images/user_guide_reports_02.png" style="width: 600px;" /></a>
+<p>The report includes a legend at the side of the window that shows you the types of different nodes, such as data tables, gene sets, functions, and other outputs.</p>
+<a class="reference internal image-reference" href="_images/user_guide_reports_03.png"><img alt="Report legend" src="_images/user_guide_reports_03.png" style="width: 600px;" /></a>
+<p>You can move around the report using the arrow keys or by clicking, dragging, and using the cursor wheel.
+Alternatively, you can use the controls at the bottom-right and bottom-left corners of the screen to move around the report or readjust the display to show the entire report.</p>
+<a class="reference internal image-reference" href="_images/user_guide_reports_04.png"><img alt="Navigation controls" src="_images/user_guide_reports_04.png" style="width: 600px;" /></a>
+<p>Additionally, you can rearrange the nodes of the graph by dragging and moving them around.</p>
+<a class="reference internal image-reference" href="_images/user_guide_reports_05.png"><img alt="Drag nodes to rearrange the graph" src="_images/user_guide_reports_05.png" style="width: 600px;" /></a>
+<p>There are settings at the bottom of the screen that allow you to modify the appearance of the graph, such as the size of the nodes, distance between them, structure of the graph, and physics simulation.
+Note that any changes made to the graph settings are not saved when you close the report.</p>
+<a class="reference internal image-reference" href="_images/user_guide_reports_06.png"><img alt="Graph settings at the bottom of the screen" src="_images/user_guide_reports_06.png" style="width: 600px;" /></a>
+<p>You can hover over a node to see more information about it.
+For example, when hovering over a function node, you can see the name of the function as well as the exact parameters used when calling it.</p>
+<a class="reference internal image-reference" href="_images/user_guide_reports_07.png"><img alt="Hover over a function node in the interactive report to see the function's parameters" src="_images/user_guide_reports_07.png" style="width: 600px;" /></a>
+<p>When hovering over an output node, you can see the generated graph or data table and also access the file itself.</p>
+<a class="reference internal image-reference" href="_images/user_guide_reports_08.png"><img alt="Hover over a data node in the interactive report and click on the &quot;Open file&quot; link" src="_images/user_guide_reports_08.png" style="width: 600px;" /></a>
+</section>
+<section id="access-the-session-output-files">
+<h4>Access the session output files<a class="headerlink" href="#access-the-session-output-files" title="Permalink to this heading"></a></h4>
+<p>The analysis reports generated by <em>RNAlysis</em> contain all of the data tables, gene sets, and figures generated during your analysis, including all of the intermediate analysis steps, and the parameters used in each function.
+There are two ways to access the data and figures in an analysis report:</p>
+<p>The first option is hover on a node in the interactive report, and once the description pane appears click on the “Open file” link:</p>
+<a class="reference internal image-reference" href="_images/01i02_hover_node.png"><img alt="Hover over a data node in the interactive report and click on the &quot;Open file&quot; link" src="_images/01i02_hover_node.png" style="width: 600px;" /></a>
+<p>The second option is to open the report directory “RNAlysis_report”, and then enter the report directory “data”.
+There you will find all of the data files generated in the report, as well as a “session.rnal” session file that can be loaded into RNAlysis:</p>
+<a class="reference internal image-reference" href="_images/01i03_data_files.png"><img alt="Access the data files through the report directory." src="_images/01i03_data_files.png" style="width: 600px;" /></a>
+</section>
+</section>
+<section id="sharing-your-analysis-report">
+<h3>Sharing your analysis report<a class="headerlink" href="#sharing-your-analysis-report" title="Permalink to this heading"></a></h3>
+<p>To share an analysis report generated with <em>RNAlysis</em>, follow these steps:</p>
+<ol class="arabic simple">
+<li><p>Find the “RNAlysis_report” directory.</p></li>
+<li><p>Compress the directory into a ZIP file (or any other compressed format of your choice).</p></li>
+<li><p>Share the ZIP file with others.</p></li>
+</ol>
+</section>
+</section>
 <section id="rnalysis-settings">
 <h2><em>RNAlysis</em> settings<a class="headerlink" href="#rnalysis-settings" title="Permalink to this heading"></a></h2>
 <p>The <em>RNAlysis</em> settings window allows you to modify the appearance of the graphical interface, and to set a default path for your Reference Tables (see more information below).
@@ -1724,7 +1818,7 @@ User-annotated biotypes should be defined in a <a class="reference internal" hre
   Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
     <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
     provided by <a href="https://readthedocs.org">Read the Docs</a>.
-   
+
 
 </footer>
         </div>
@@ -1735,7 +1829,7 @@ User-annotated biotypes should be defined in a <a class="reference internal" hre
       jQuery(function () {
           SphinxRtdTheme.Navigation.enable(true);
       });
-  </script> 
+  </script>
 
 </body>
 </html>

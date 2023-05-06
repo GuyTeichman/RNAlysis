@@ -184,3 +184,70 @@ The running mode can be changed via the `parallel_backend` parameter of the func
 I ran into a problem that is not specified here. What can I do?
 ======================================================================
 Please submit a bug report through `GitHub <https://github.com/GuyTeichman/RNAlysis/issues>`_, and we will do our best to help solve your problem.
+
+**************************
+Automatic analysis reports
+**************************
+
+How can I generate an analysis report?
+============================================================================================================================================================
+To generate an automatic analysis report with *RNAlysis*, follow these steps:
+
+1. Open the *RNAlysis* graphical interface.
+2. Turn on automatic report generation through the 'File' menu **before** your begin your analysis.
+3. Analyze your data as you would normally.
+4. Open the 'File' menu and click on "create session report".
+
+
+How can I view an analysis report?
+============================================================================================================================================================
+To view an analysis report generated with *RNAlysis*, follow these steps:
+
+1. If the report is currently compressed into a ZIP file, unzip it.
+2. Enter the "RNAlysis_report" directory.
+3. Double-click on the "report.html" file to open it in your internet browser.
+
+How can I share an analysis report?
+============================================================================================================================================================
+To share an analysis report generated with *RNAlysis*, follow these steps:
+
+1. Find the "RNAlysis_report" directory.
+2. Compress the directory into a ZIP file (or any other compressed format of your choice).
+3. Share the ZIP file with others.
+
+How can I access the data and figures that appear in an analysis report?
+============================================================================================================================================================
+
+There are two ways to access the data and figures in an analysis report:
+
+The first option is hover on a node in the interactive report, and once the description pane appears click on the "Open file" link:
+
+.. image:: /tutorial_screenshots/01i02_hover_node.png
+  :width: 600
+  :alt: Hover over a data node in the interactive report and click on the "Open file" link
+
+The second option is to open the report directory "RNAlysis_report", and then enter the report directory "data".
+There you will find all of the data files generated in the report, as well as a "session.rnal" session file that can be loaded into RNAlysis:
+
+.. image:: /tutorial_screenshots/01i03_data_files.png
+  :width: 600
+  :alt: Access the data files through the report directory.
+
+
+Do I need to generate analysis reports manually?
+============================================================================================================================================================
+No! *RNAlysis* generates analysis reports automatically based on the functions you used and the outputs you generated through your session.
+You only need to turn on automatic report generation **before** your begin your analysis, and click on "create session report" once you are done.
+
+Can I edit my analysis report?
+============================================================================================================================================================
+Currently, the interactive analysis reports generated through *RNAlysis* cannot be edited.
+
+*RNAlysis* crashed during an analysis! Can I restore my automatic analysis report?
+============================================================================================================================================================
+Unfortunately, it is currently not possible to restore your automatic analysis reports if *RNAlysis* closes in the middle.
+
+Can I create an analysis report through the programmatic interface?
+============================================================================================================================================================
+Currently, interactive analysis reports can only be generated through the *RNAlysis* graphical interface.
+However, you can achieve similar levels of reproducibility by sharing your *RNAlysis* Python scripts, as well as any graphs, tables, and Pipelines you generated.

@@ -90,6 +90,7 @@ You can also install *RNAlysis* with only some of the following additional featu
 * `hdbscan` - clustering analysis using the HDBSCAN method
 * `single-set` - single-set enrichment analysis using the XL-mHG test
 * `randomization` - improved performance for randomization tests
+* `reports` - automatically generate interactive analysis reports
 
 by calling the install command with one or more additional features inside the square brackets, separated by commas. For example::
 

@@ -12,7 +12,7 @@
 
 .. autosummary::
     :toctree: .
-    
+
     CountFilter
     DESeqFilter
     Filter
@@ -20,13 +20,4 @@
     Pipeline
 
 
-
-
-.. rubric:: Functions
-
-.. autosummary::
-    :toctree: .
-    
-    readable_name
-    
 

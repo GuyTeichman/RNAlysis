@@ -4,14 +4,14 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>A-to-Z tutorial - example analysis &mdash; RNAlysis 3.7.0 documentation</title>
+  <title>A-to-Z tutorial - example analysis &mdash; RNAlysis 3.8.0 documentation</title>
       <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
     <link rel="shortcut icon" href="_static/favicon.ico"/>
   <!--[if lt IE 9]>
     <script src="_static/js/html5shiv.min.js"></script>
   <![endif]-->
-  
+
         <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
         <script src="_static/jquery.js"></script>
         <script src="_static/underscore.js"></script>
@@ -23,10 +23,10 @@
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Frequently asked questions" href="faq.html" />
-    <link rel="prev" title="RNAlysis quick-start video guide" href="quick_start.html" /> 
+    <link rel="prev" title="RNAlysis quick-start video guide" href="quick_start.html" />
 </head>
 
-<body class="wy-body-for-nav"> 
+<body class="wy-body-for-nav">
   <div class="wy-grid-for-nav">
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
@@ -61,6 +61,7 @@
 <li class="toctree-l2"><a class="reference internal" href="#intro-and-recommendations">Intro and recommendations</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#analysis-1-time-series-rna-sequencing">Analysis #1 - time series RNA sequencing</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#the-dataset">The dataset</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#start-rnalysis">Start <em>RNAlysis</em></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#data-preprocessing-and-exploratory-data-analysis">Data preprocessing and exploratory data analysis</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#filter-out-lowly-expressed-genes">Filter out lowly-expressed genes</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#examine-variance-in-our-data-with-principal-component-analysis">Examine variance in our data with Principal Component Analysis</a></li>
@@ -78,10 +79,11 @@
 <li class="toctree-l4"><a class="reference internal" href="#running-enrichment-analysis">Running enrichment analysis</a></li>
 </ul>
 </li>
+<li class="toctree-l3"><a class="reference internal" href="#create-analysis-report">Create analysis report</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#analysis-2-differential-expression-data">Analysis #2 - differential expression data</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#id5">The dataset</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id6">The dataset</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#quantify-fastq-files-and-differential-expression-analysis">Quantify FASTQ files and Differential Expression Analysis</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#quality-control-with-fastqc">Quality control with <em>FastQC</em></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#trim-adapters-and-remove-low-quality-reads-with-cutadapt">Trim adapters and remove low-quality reads with <em>CutAdapt</em></a></li>
@@ -99,10 +101,10 @@
 <li class="toctree-l4"><a class="reference internal" href="#extract-the-gene-subsets-we-are-interested-in">Extract the gene subsets we are interested in</a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="#id8">Enrichment analysis</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id9">Enrichment analysis</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#define-a-background-set">Define a background set</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#define-our-custom-enrichment-attributes">Define our custom enrichment attributes</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#id10">Running enrichment analysis</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#id11">Running enrichment analysis</a></li>
 </ul>
 </li>
 </ul>
@@ -155,7 +157,7 @@
 </div>
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
-             
+
   <section id="a-to-z-tutorial-example-analysis">
 <h1>A-to-Z tutorial - example analysis<a class="headerlink" href="#a-to-z-tutorial-example-analysis" title="Permalink to this heading"></a></h1>
 <section id="intro-and-recommendations">
@@ -171,7 +173,16 @@
 This dataset describes the median expression level of each gene over the developmental stages of <em>C. elegans</em> nematodes, averaged from RNA-sequencing short-read experiments that have been identified in the literature as being ‘controls’.</p>
 <p>The original table linked above contains the mean expression, median expression, and number of samples for each developmental stage. Since we are only interested in the medians, before starting the analysis, I copied the Median columns to a new table, and gave the columns more readable names.
 You can find the table I created <a class="reference external" href="https://raw.githubusercontent.com/GuyTeichman/RNAlysis/master/tests/test_files/elegans_developmental_stages.tsv">here</a>.</p>
-<p>Let’s start by loading the dataset - in the main window, click on the “Load” button and choose the table’s file from your computer.
+</section>
+<section id="start-rnalysis">
+<h3>Start <em>RNAlysis</em><a class="headerlink" href="#start-rnalysis" title="Permalink to this heading"></a></h3>
+<p>Let’s start by opening <em>RNAlysis</em> - you can learn how to do that by reading the <a class="reference external" href="https://guyteichman.github.io/RNAlysis/build/installation.html">Installation page</a>.</p>
+<p>When you open <em>RNAlysis</em> for the first time, you will be asked whether or not do you want to enable report generation.
+<em>RNAlysis</em> allows you to generate automatic, interactive HTML reports of your RNA sequencing data analysis.
+This feature is not mandatory, but is highly recommended. You can read more about it in this <a class="reference external" href="https://guyteichman.github.io/RNAlysis/build/user_guide_gui.html#rnalysis-interactive-analysis-reports">User Guide section</a>.
+For this sample analysis, we will enable report generation.</p>
+<a class="reference internal image-reference" href="_images/01a00_enable_report_gen.png"><img alt="Enable automatic report generation" src="_images/01a00_enable_report_gen.png" style="width: 600px;" /></a>
+<p>We can now load the dataset: in the main window, click on the “Load” button and choose the table’s file from your computer.
 We will then use the drop-down menu to change our table type from “Other” to “Count matrix”. This will allow us to later on use analysis methods that are dedicated to count matrix-style datasets.</p>
 <a class="reference internal image-reference" href="_images/01a01_load_table.png"><img alt="Loading a table into *RNAlysis* - choose the table type" src="_images/01a01_load_table.png" style="width: 600px;" /></a>
 <p>Once we picked a table type, a new option will appear, allowing us to specify whether our table was pre-normalized. We will set this option to “True”, since our dataset was already normalized to Fragments Per Kilobase Million (FPKM).
@@ -413,11 +424,27 @@ The color of the terms on the graph indicates their log2 fold change, and the de
 <a class="reference internal image-reference" href="_images/01h07_go_enrichment.png"><img alt="Enrichment analysis results - bar plot" src="_images/01h07_go_enrichment.png" style="width: 600px;" /></a>
 </section>
 </section>
+<section id="create-analysis-report">
+<h3>Create analysis report<a class="headerlink" href="#create-analysis-report" title="Permalink to this heading"></a></h3>
+<p>Once we are done analyzing the data, we can generate an interactive analysis report.
+To do that, open the ‘File’ menu and click on “Create session report”:</p>
+<a class="reference internal image-reference" href="_images/01_i01_generate_report.png"><img alt="Create interactive analysis report" src="_images/01_i01_generate_report.png" style="width: 600px;" /></a>
+<p>Next, select a location on your computer to save the report to.
+Once you do, <em>RNAlysis</em> will automatically generate a complete report of the analysis you ran up until this point.
+The report should open on its own once is was generated.</p>
+<p>Your report should look similar to this:</p>
+<a class="reference internal image-reference" href="tutorial_screenshots/01_i04_view_report.png"><img alt="View interactive analysis report" src="tutorial_screenshots/01_i04_view_report.png" style="width: 600px;" /></a>
+<p>The report includes all of the functions we applied throughout the analysis, and the tables and graphs we generated.
+You can get a closer look at these elements by hovering your cursor on them:</p>
+<a class="reference internal image-reference" href="_images/01_i05_hover.png"><img alt="Hover on a node to reveal more information" src="_images/01_i05_hover.png" style="width: 600px;" /></a>
+<p>If you want to learn more about <em>RNAlysis</em> interactive reports, see this <a class="reference external" href="https://guyteichman.github.io/RNAlysis/build/user_guide_gui.html#rnalysis-interactive-analysis-reports">User Guide section</a>.</p>
+<p>If you want, you can download <a class="reference external" href="https://raw.githubusercontent.com/GuyTeichman/RNAlysis/master/tests/test_files/sample_RNAlysis_report.zip">the report that I generated</a>.</p>
+</section>
 </section>
 <section id="analysis-2-differential-expression-data">
 <h2>Analysis #2 - differential expression data<a class="headerlink" href="#analysis-2-differential-expression-data" title="Permalink to this heading"></a></h2>
-<section id="id5">
-<h3>The dataset<a class="headerlink" href="#id5" title="Permalink to this heading"></a></h3>
+<section id="id6">
+<h3>The dataset<a class="headerlink" href="#id6" title="Permalink to this heading"></a></h3>
 <p>In the second analysis, we will analyze three publicly available datasets from GEO. Each individual dataset is an RNA sequencing experiment of <em>Caenorhabidtis elegans</em> nematodes, measuring the effect of a particular stress condition on gene expression.
 Our goal in this analysis will be to examine the similarities between the different stress conditions, and to answer a specific question - how are Epigenetic genes and pathways affected by exposure to stress?</p>
 <p>In this analysis, unlike the first analysis, we will not start from a pre-made counts table.
@@ -734,8 +761,8 @@ After renaming the set, it should look like this:</p>
 <a class="reference internal image-reference" href="_images/02f09_set_ops.png"><img alt="Set Operations - custom operation output" src="_images/02f09_set_ops.png" style="width: 600px;" /></a>
 </section>
 </section>
-<section id="id8">
-<h3>Enrichment analysis<a class="headerlink" href="#id8" title="Permalink to this heading"></a></h3>
+<section id="id9">
+<h3>Enrichment analysis<a class="headerlink" href="#id9" title="Permalink to this heading"></a></h3>
 <p>We now have two lists of genes we want to analyze - genes that are significantly downregulated in all three stress conditions, and genes that are significantly upregulated in all three stress conditions.
 Let’s now proceed to enrichment analysis!</p>
 <section id="define-a-background-set">
@@ -812,8 +839,8 @@ As an example, see this mock Attribute Reference Table:</p>
 <p>For our analysis, we curated a list of epigenetic genes based on gene lists from the following publications: <a class="reference external" href="https://doi.org/10.1016/j.cell.2016.02.057">Houri et al 2014</a>, <a class="reference external" href="https://doi.org/10.1371/journal.pntd.0001176">Dalzell et al 2011</a>, <a class="reference external" href="https://doi.org/10.1016/j.cell.2006.09.033">Yigit et al 2006</a>, and based on existing GO annotations.
 You can find the pre-made curated Attribute Reference Table <a class="reference external" href="https://raw.githubusercontent.com/GuyTeichman/RNAlysis/development/tests/test_files/attribute_reference_table.csv">here</a>.</p>
 </section>
-<section id="id10">
-<h4>Running enrichment analysis<a class="headerlink" href="#id10" title="Permalink to this heading"></a></h4>
+<section id="id11">
+<h4>Running enrichment analysis<a class="headerlink" href="#id11" title="Permalink to this heading"></a></h4>
 <p>To open the Enrichent Analysis window, open the ‘Gene sets’ menu and click “Enrichment Analysis”:</p>
 <a class="reference internal image-reference" href="_images/02h01_enrichment.png"><img alt="Pick 'Enrichment analysis' from the 'Gene sets' menu" src="_images/02h01_enrichment.png" style="width: 600px;" /></a>
 <p>We can choose our test and background sets (as explained in Analysis #1) from the two drop-down menus in the Enrichment window:</p>
@@ -867,7 +894,7 @@ If you still have questions about using <em>RNAlysis</em>, feel free to drop the
   Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
     <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
     provided by <a href="https://readthedocs.org">Read the Docs</a>.
-   
+
 
 </footer>
         </div>
@@ -878,7 +905,7 @@ If you still have questions about using <em>RNAlysis</em>, feel free to drop the
       jQuery(function () {
           SphinxRtdTheme.Navigation.enable(true);
       });
-  </script> 
+  </script>
 
 </body>
 </html>
