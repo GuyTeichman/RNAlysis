@@ -221,8 +221,8 @@ class ReportGenerator:
             if ind == 0:  # skip the root node
                 continue
             if node.is_active and node.filename is not None:
-                content = io.load_cached_gui_file(node.filename, load_as_obj=False)
+                content: bytes = io.load_cached_gui_file(node.filename, load_as_obj=False)
                 if content is not None:
-                    with open(data_path.joinpath(node.filename), 'w') as f:
+                    with open(data_path.joinpath(node.filename), 'wb') as f:
                         f.write(content)
         webbrowser.open(save_file)

@@ -882,10 +882,11 @@ def test_cache_gui_file(item, filename):
      pd.DataFrame({"a": [1, 2, 3], "b": [4, 5, 6]}, index=['h', 'i', 'j'])),
     ({"apple", "banana", "cherry"}, "test.txt", True, {"apple", "banana", "cherry"}),
     ("test", "test.txt", True, {"test"}),
-    ("test123", "test.txt", False, "test123"),
-    (pd.DataFrame({"a": [1, 2, 3], "b": [4, 5, 6]}), "test.csv", False, ",a,b\n0,1,4\n1,2,5\n2,3,6\n"),
-    ({"apple", "banana", "cherry"}, "test.txt", False, "\n".join({"apple", "banana", "cherry"})),
-    ("test", "test.txt", False, "test")
+    ("test123", "test.txt", False, b"test123"),
+    (pd.DataFrame({"a": [1, 2, 3], "b": [4, 5, 6]}), "test.csv", False, b",a,b\r\n0,1,4\r\n1,2,5\r\n2,3,6\r\n"),
+    ({"apple", "banana", "cherry"}, "test.txt", False,
+     bytes("\r\n".join({"apple", "banana", "cherry"}), encoding='utf-8')),
+    ("test", "test.txt", False, b"test")
 ])
 def test_load_cached_gui_file(item, filename, load_as_obj, expected_output):
     directory = get_gui_cache_dir()

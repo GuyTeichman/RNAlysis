@@ -105,7 +105,7 @@ def clear_gui_cache():
     clear_directory(directory)
 
 
-def load_cached_gui_file(filename: str, load_as_obj: bool = True):
+def load_cached_gui_file(filename: str, load_as_obj: bool = True) -> Union[str, set, pd.DataFrame, bytes, None]:
     """
     Load a cached file from the GUI cache directory.
 
@@ -114,7 +114,7 @@ def load_cached_gui_file(filename: str, load_as_obj: bool = True):
     :param load_as_obj: Whether to load the file as an object or raw content as string. Defaults to True.
     :type load_as_obj: bool
     :return: The contents of the file, loaded as either a string, a Pandas DataFrame or a set.
-    :rtype: str or pandas.DataFrame or set or None
+    :rtype: str or pandas.DataFrame or set or Bytes or None
     """
     directory = get_gui_cache_dir()
     file_path = directory.joinpath(filename)
@@ -126,7 +126,7 @@ def load_cached_gui_file(filename: str, load_as_obj: bool = True):
                 return {item.strip() for item in f.readlines()}
 
         else:
-            with open(file_path) as f:
+            with open(file_path, 'rb') as f:
                 return f.read()
     else:
         return None
