@@ -9,12 +9,14 @@ datas = []
 binaries = []
 hiddenimports = []
 
-tmp_ret = collect_data_files('rnalysis')
+tmp_collection = collect_data_files('rnalysis')
 
-for item in tmp_ret:
+for item in tmp_collection:
     if 'videos' in item[0]:
         continue
     datas.append(item)
+
+datas += collect_data_files('pyvis')
 
 hiddenimports += collect_submodules('sklearn')
 hiddenimports += collect_submodules('cutadapt')
