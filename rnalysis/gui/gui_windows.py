@@ -1113,7 +1113,8 @@ class ReportGenerationMessageBox(QtWidgets.QMessageBox):
     def __init__(self, parent=None):
         super().__init__(parent=parent)
         self.setWindowTitle("Report Generation")
-        self.setText("Do you want to enable report generation for this session?")
+        self.setText("Do you want to enable report generation for this session?\n"
+                     "(this will slow down the program slightly)")
 
         self.yes_button = self.addButton(QtWidgets.QPushButton("Yes"), QtWidgets.QMessageBox.YesRole)
         self.no_button = self.addButton(QtWidgets.QPushButton("No"), QtWidgets.QMessageBox.NoRole)
