@@ -23,8 +23,20 @@ This dataset describes the median expression level of each gene over the develop
 The original table linked above contains the mean expression, median expression, and number of samples for each developmental stage. Since we are only interested in the medians, before starting the analysis, I copied the Median columns to a new table, and gave the columns more readable names.
 You can find the table I created `here <https://raw.githubusercontent.com/GuyTeichman/RNAlysis/master/tests/test_files/elegans_developmental_stages.tsv>`_.
 
+Start *RNAlysis*
+=================
+Let's start by opening *RNAlysis* - you can learn how to do that by reading the `Installation page <https://guyteichman.github.io/RNAlysis/build/installation.html>`_.
 
-Let's start by loading the dataset - in the main window, click on the "Load" button and choose the table's file from your computer.
+When you open *RNAlysis* for the first time, you will be asked whether or not do you want to enable report generation.
+*RNAlysis* allows you to generate automatic, interactive HTML reports of your RNA sequencing data analysis.
+This feature is not mandatory, but is highly recommended. You can read more about it in this `User Guide section <https://guyteichman.github.io/RNAlysis/build/user_guide_gui.html#rnalysis-interactive-analysis-reports>`_.
+For this sample analysis, we will enable report generation.
+
+.. image:: /tutorial_screenshots/01a00_enable_report_gen.png
+  :width: 600
+  :alt: Enable automatic report generation
+
+We can now load the dataset: in the main window, click on the "Load" button and choose the table's file from your computer.
 We will then use the drop-down menu to change our table type from "Other" to "Count matrix". This will allow us to later on use analysis methods that are dedicated to count matrix-style datasets.
 
 .. image:: /tutorial_screenshots/01a01_load_table.png
@@ -463,6 +475,36 @@ The final output format is a bar plot depicting the log2 fold change values, as 
 .. image:: /tutorial_screenshots/01h07_go_enrichment.png
   :width: 600
   :alt: Enrichment analysis results - bar plot
+
+Create analysis report
+=========================
+Once we are done analyzing the data, we can generate an interactive analysis report.
+To do that, open the 'File' menu and click on "Create session report":
+
+.. image:: /tutorial_screenshots/01_i01_generate_report.png
+  :width: 600
+  :alt: Create interactive analysis report
+
+Next, select a location on your computer to save the report to.
+Once you do, *RNAlysis* will automatically generate a complete report of the analysis you ran up until this point.
+The report should open on its own once is was generated.
+
+Your report should look similar to this:
+
+.. image:: /tutorial_screenshots/01_i04_view_report.png
+  :width: 600
+  :alt: View interactive analysis report
+
+The report includes all of the functions we applied throughout the analysis, and the tables and graphs we generated.
+You can get a closer look at these elements by hovering your cursor on them:
+
+.. image:: /tutorial_screenshots/01_i05_hover.png
+  :width: 600
+  :alt: Hover on a node to reveal more information
+
+If you want to learn more about *RNAlysis* interactive reports, see this `User Guide section <https://guyteichman.github.io/RNAlysis/build/user_guide_gui.html#rnalysis-interactive-analysis-reports>`_.
+
+If you want, you can download `the report that I generated <https://raw.githubusercontent.com/GuyTeichman/RNAlysis/master/tests/test_files/sample_RNAlysis_report.zip>`_.
 
 *******************************************
 Analysis #2 - differential expression data
