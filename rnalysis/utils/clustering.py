@@ -402,7 +402,7 @@ class ClusteringRunner:
                            'ys1': pwdist.ys1_distance, 'yr1': pwdist.yr1_distance,
                            'jackknife': pwdist.jackknife_distance, 'sharpened_cosine': pwdist.sharpened_cosine_distance}
 
-    def __init__(self, data: pd.DataFrame, power_transform: bool, metric: Tuple[str, str] = None,
+    def __init__(self, data: pd.DataFrame, power_transform: bool, metric: str = None,
                  plot_style: str = 'none', split_plots: bool = False, parallel_backend='loky'):
         assert plot_style.lower() in {'all', 'std_bar', 'std_area', 'none'}, \
             f"Invalid value for 'plot_style': '{plot_style}'. " \
@@ -424,8 +424,7 @@ class ClusteringRunner:
         self.transform: Callable = transform
 
         if metric is not None:
-            metric_parameter_name, metric_name = metric
-            metric_name = metric_name.lower()
+            metric_name = metric.lower()
             validation.validate_clustering_parameters(self.legal_metrics.union(self.precomputed_metrics),
                                                       metric_name)
             if metric_name in self.precomputed_metrics:
@@ -438,7 +437,7 @@ class ClusteringRunner:
                 self.metric = 'precomputed'
             else:
                 self.metric = metric_name.lower()
-            self.clusterer_kwargs[metric_parameter_name] = self.metric
+            self.clusterer_kwargs['metric'] = self.metric
             self.metric_name = metric_name
 
         self.plot_style: str = plot_style.lower()
@@ -597,7 +596,7 @@ class ClusteringRunnerWithNClusters(ClusteringRunner, ABC):
 
     def __init__(self, data: pd.DataFrame, power_transform: bool, n_clusters: Union[int, List[int], str],
                  max_n_clusters_estimate: Union[int, str] = 'auto', plot_style: str = 'none',
-                 split_plots: bool = False, metric: Tuple[str, str] = None, parallel_backend='loky'):
+                 split_plots: bool = False, metric: str = None, parallel_backend='loky'):
         super().__init__(data, power_transform, metric, plot_style, split_plots, parallel_backend)
         self.max_n_clusters_estimate = min(20, data.shape[
             0] // 4) if max_n_clusters_estimate == 'auto' else max_n_clusters_estimate
@@ -847,7 +846,7 @@ class KMedoidsRunner(ClusteringRunnerWithNClusters):
         self.max_iter = max_iter
         self.clusterer_kwargs = dict(n_init=self.n_init, max_iter=self.max_iter, random_state=self.random_seed)
         super(KMedoidsRunner, self).__init__(data, power_transform, n_clusters, max_n_clusters_estimate, plot_style,
-                                             split_plots, ('metric', metric), parallel_backend)
+                                             split_plots,  metric, parallel_backend)
 
     def _run(self, plot: bool = True) -> List[ArbitraryClusterer]:
         self.clusterers = []
@@ -896,14 +895,14 @@ class HierarchicalRunner(ClusteringRunnerWithNClusters):
                 raise ValueError("Neither 'n_clusters' or 'distance_threshold' were provided. ")
             self.clusterer_kwargs = dict(n_clusters=None, linkage=self.linkage,
                                          distance_threshold=self.distance_threshold)
-            super(ClusteringRunnerWithNClusters, self).__init__(data, power_transform, ('affinity', metric), plot_style,
+            super(ClusteringRunnerWithNClusters, self).__init__(data, power_transform, metric, plot_style,
                                                                 split_plots, parallel_backend)
         else:
             if distance_threshold is not None:
                 raise ValueError('Both n_clusters and distance_threshold were provided.')
             self.clusterer_kwargs = dict(linkage=self.linkage)
             super().__init__(data, power_transform, n_clusters, max_n_clusters_estimate, plot_style, split_plots,
-                             ('affinity', metric))
+                             metric)
 
     def _run(self, plot: bool = True) -> List[ArbitraryClusterer]:
         self.clusterers = []
@@ -970,7 +969,7 @@ class HDBSCANRunner(ClusteringRunner):
         self.clusterer_kwargs = dict(min_cluster_size=self.min_cluster_size, min_samples=self.min_samples,
                                      cluster_selection_epsilon=self.cluster_selection_epsilon,
                                      cluster_selection_method=self.cluster_selection_method)
-        super().__init__(data, power_transform, ('metric', metric), plot_style, split_plots, parallel_backend)
+        super().__init__(data, power_transform,  metric, plot_style, split_plots, parallel_backend)
 
     @staticmethod
     def _missing_dependency_warning():
