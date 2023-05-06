@@ -7,7 +7,7 @@ History
 ------------------
 Version 3.8.0 of *RNAlysis* comes with several exciting new features, including the ability to generate interactive analysis reports automatically.
 This feature allows users to create an interactive graph of all the datasets they loaded into RNAlysis, the functions applied, and the outputs generated during the analysis.
-You can read more about this feature in the `Tutorial <https://guyteichman.github.io/RNAlysis/build/tutorial.html#create-analysis-report>`_ and the `User Guide <https://guyteichman.github.io/RNAlysis/build/user_guide_gui.html#rnalysis-interactive-analysis-reports>`_.
+You can read more about this feature in the `Tutorial chapter <https://guyteichman.github.io/RNAlysis/build/tutorial.html#create-analysis-report>`_ and the `User Guide chapter <https://guyteichman.github.io/RNAlysis/build/user_guide_gui.html#rnalysis-interactive-analysis-reports>`_.
 
 The new release also includes Pipelines for FASTQ functions, the ability to export normalization scaling factors, and other changes to improve the software's performance.
 RNAlysis now supports Python 3.11, and many functions should now run faster. The software's graphic interface has also improved significantly, and users will now see a clearer error message when attempting to load unsupported file formats.
