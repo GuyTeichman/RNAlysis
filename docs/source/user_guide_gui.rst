@@ -46,47 +46,47 @@ and for any table you can specify the names of specific columns that you want to
 .. image:: ../../rnalysis/gui/videos/table_types.webp
 
 Finally, we can click the "start" button to actually open our table on *RNAlysis*.
-The window will now display a preview of our table, as well as a short summary of our table's content (table name, table type, number of rows and columns). 
+The window will now display a preview of our table, as well as a short summary of our table's content (table name, table type, number of rows and columns).
 
 
 Loading multiple tables into *RNAlysis*
 -------------------------------------------
-To save time and effort, you can load multiple tables into *RNAlysis* at once. 
-To do that, open the "File" menu, hover on "New..." and choose "Multiple new tables". 
+To save time and effort, you can load multiple tables into *RNAlysis* at once.
+To do that, open the "File" menu, hover on "New..." and choose "Multiple new tables".
 
-You can then pick multiple table files to load into *RNAlysis*. 
+You can then pick multiple table files to load into *RNAlysis*.
 
-When you are done picking files, click on the "OK" button. 
-You will then be prompted to set each table's type, parameters, and optionally an alternative name. 
+When you are done picking files, click on the "OK" button.
+You will then be prompted to set each table's type, parameters, and optionally an alternative name.
 
 .. image:: /userguide_screenshots/user_guide_load_multi_01.png
 
-Once you are happy with those parameters, click on the "OK" buttons to load all tables into *RNAlysis*. 
+Once you are happy with those parameters, click on the "OK" buttons to load all tables into *RNAlysis*.
 
 .. image:: /userguide_screenshots/user_guide_load_multi_02.png
 
 Working with multiple tables and organizing your workspace
 ----------------------------------------------------------------
 
-The main window of *RNAlysis* works much like an internet browser - you can load multiple tables in the same session, and each table will be displayed in its own tab. 
+The main window of *RNAlysis* works much like an internet browser - you can load multiple tables in the same session, and each table will be displayed in its own tab.
 You can switch between tabs by clicking on a different tab's label, and you can apply (or undo) functions to each table separately and independently:
 
 .. image:: ../../rnalysis/gui/videos/new_tab.webp
 
-To see the full name of a tab, you can hover over it's label with your cursor. 
+To see the full name of a tab, you can hover over it's label with your cursor.
 
-Each tab will have a colored icon, showing the type of that table ('C' for count matrices, 'DE' for differential expression tables, 'FC' for fold-change tables, 'T' for other tables, and 'S' for gene sets). 
-To make it easier for you to analyze multiple tables at the same time, you can change the icon of a specific tab by right-clicking on it and choosing a new color. 
-Moreover, you can sort your tables by name, type, or creation time, by right-clicking on tab and choosing a sorting method. 
+Each tab will have a colored icon, showing the type of that table ('C' for count matrices, 'DE' for differential expression tables, 'FC' for fold-change tables, 'T' for other tables, and 'S' for gene sets).
+To make it easier for you to analyze multiple tables at the same time, you can change the icon of a specific tab by right-clicking on it and choosing a new color.
+Moreover, you can sort your tables by name, type, or creation time, by right-clicking on tab and choosing a sorting method.
 
 .. image:: ../../rnalysis/gui/videos/sort_tabs.webp
 
 
 Examining tables
 --------------------
-Let's go through three different ways to view a glimpse of the table we just loaded. 
+Let's go through three different ways to view a glimpse of the table we just loaded.
 
-First, as we saw earlier, each tab will display a small preview of the table loaded into it. We can also see the name, the shape, (how many rows and columns), and the type of the table. 
+First, as we saw earlier, each tab will display a small preview of the table loaded into it. We can also see the name, the shape, (how many rows and columns), and the type of the table.
 
 Second, if you want to see the entire table, you can click on the 'View full table' button to see your table in its entirety:
 
@@ -95,41 +95,41 @@ Second, if you want to see the entire table, you can click on the 'View full tab
 Finally, if your table is particularly big, or your system doesn't have enough memory to show it all at once, you will need to use more sophisticated methods to get a glimpse of your data
 To view a glimpse of the table we can use the 'head' and 'tail' functions.
 By default 'head' will show the first 5 rows of the file, and 'tail' will show the last 5 rows,
-but you can specify a specific number of lines to show. 
+but you can specify a specific number of lines to show.
 
-Click on the 'Summarize' button near the bottom of the screen, and then choose either the 'Table Head' or the 'Table Tail' functions, and then click on the 'Apply' button at the bottom of the screen. 
-A new window will open, showing a preview of the top/bottom of the table. 
+Click on the 'Summarize' button near the bottom of the screen, and then choose either the 'Table Head' or the 'Table Tail' functions, and then click on the 'Apply' button at the bottom of the screen.
+A new window will open, showing a preview of the top/bottom of the table.
 
 Filtering operations
 ----------------------
 
 Now we can start filtering the rows in the table we loaded according to parameters of our choosing.
-The filtering operations we apply are going to affect the table in the current tab. Those operations do not affect the original `csv` file we loaded, but its representation within the *RNAlysis* program. 
-If we want to save the changes we made we can do that by clicking on the "Save table" button, and choosing a name for the new, filtered table. 
+The filtering operations we apply are going to affect the table in the current tab. Those operations do not affect the original `csv` file we loaded, but its representation within the *RNAlysis* program.
+If we want to save the changes we made we can do that by clicking on the "Save table" button, and choosing a name for the new, filtered table.
 
 *RNAlysis* contains a large variety of filtering functions. You can view them and choose one by clicking on the "Filter" button, and choosing a function from the drop-down list:
 
 .. image:: ../../rnalysis/gui/videos/filter_table.webp
 
-If we now look at the shape of the table, we will see that some rows have been filtered out of the table. This information will also appear in the log textbox at the bottom of the screen. 
-*RNAlysis* will display a summary of each applied operation in this log textbox, as well as warnings and other information. 
-When you work with multiple tables at the same time, each tab will have its own log textbox, and log messages should appear in the tab that's relevant to them. 
+If we now look at the shape of the table, we will see that some rows have been filtered out of the table. This information will also appear in the log textbox at the bottom of the screen.
+*RNAlysis* will display a summary of each applied operation in this log textbox, as well as warnings and other information.
+When you work with multiple tables at the same time, each tab will have its own log textbox, and log messages should appear in the tab that's relevant to them.
 
-Different functions in *RNAlysis* have different parameters. Those parameters determine exactly how those functions are applied. 
-For example, the function 'Filter by statistical significance' for differential expression tables can filter out genes which are not significantly differentially expressed. 
-You can determine exactly what the threshold for statistical analysis is, by setting the 'alpha' parameter. 
+Different functions in *RNAlysis* have different parameters. Those parameters determine exactly how those functions are applied.
+For example, the function 'Filter by statistical significance' for differential expression tables can filter out genes which are not significantly differentially expressed.
+You can determine exactly what the threshold for statistical analysis is, by setting the 'alpha' parameter.
 
-By default, when you apply filtering operations (or other table-modifying operations) on data tables, they are performed in-place - meaning the table is modified in its original tab. 
-However, if we don't want to modify the original tab, we can choose not to apply the operation in-place, and instead open a copy of the table in a new tab, applying the operation to that copy. 
-This will leave the original table unchanged - so you can have two copies of the table and look at them side-by-side, or use both the filtered and unfiltered versions later down the line. 
+By default, when you apply filtering operations (or other table-modifying operations) on data tables, they are performed in-place - meaning the table is modified in its original tab.
+However, if we don't want to modify the original tab, we can choose not to apply the operation in-place, and instead open a copy of the table in a new tab, applying the operation to that copy.
+This will leave the original table unchanged - so you can have two copies of the table and look at them side-by-side, or use both the filtered and unfiltered versions later down the line.
 To determine whether filtering (or other table-modifying operations) will be applied in-place or not, you can set the "inplace" parameter of those functions to True (to apply in-place) or "False" (to apply in a new tab):
 
 .. image:: ../../rnalysis/gui/videos/apply_inplace.webp
 
-Another useful parameter common to all filtering operations is to perform an Opposite filter. When we specify the parameter 'opposite' as True, the filtering function will be performed in opposite. 
-This means that all of the rows that were supposed to be filtered out are kept in the table, and the rows that were supposed to be kept in the table are instead filtered out. 
-This is useful when you want to find a group of genes that **doesn't** match a specific criteria. For example - you could use the 'Filter by statistical significance' function with the `opposite` parameter set to True, 
-in order to extract the list of genes which are NOT significantly differentially expressed. 
+Another useful parameter common to all filtering operations is to perform an Opposite filter. When we specify the parameter 'opposite' as True, the filtering function will be performed in opposite.
+This means that all of the rows that were supposed to be filtered out are kept in the table, and the rows that were supposed to be kept in the table are instead filtered out.
+This is useful when you want to find a group of genes that **doesn't** match a specific criteria. For example - you could use the 'Filter by statistical significance' function with the `opposite` parameter set to True,
+in order to extract the list of genes which are NOT significantly differentially expressed.
 
 Any table-modifying operation you apply in-place can be undone with a click of a button, by using the Command History pane:
 
@@ -140,32 +140,32 @@ Using an Attribute Reference Table to filter tables
 ---------------------------------------------------------
 An :term:`Attribute Reference Table` contains various user-defined attributes (such as 'genes expressed in intestine', 'epigenetic genes' or 'genes that have paralogs') and their value for each genomic feature.
 You can read more about the :term:`Attribute Reference Table` format and loading an :term:`Attribute Reference Table` in the :ref:`reference-table-ref` section.
-Using the function "Filter by user-defined attribute", you can filter your tables by one of the user-defined attributes in your Attribute Reference Table. 
+Using the function "Filter by user-defined attribute", you can filter your tables by one of the user-defined attributes in your Attribute Reference Table.
 
 Using a GTF file or Biotype Reference Table to filter tables or summarize tables
 ---------------------------------------------------------------------------------
-If you want to filter the genes in your tables by their biotypes (protein coding gene, pseudogene, lncRNA, etc), or summarize their biotypes, you can do that using either a GTF file or a Biotype Reference Table. 
+If you want to filter the genes in your tables by their biotypes (protein coding gene, pseudogene, lncRNA, etc), or summarize their biotypes, you can do that using either a GTF file or a Biotype Reference Table.
 
-If you use a GTF file, your GTF file must contain information about each genomic feature's biotype, and the gene ID type of your table should match that of your GTF file. 
-Alternatively, if you don't have such a GTF file, or you want to define the biotypes of your genomic features differently, you can use a custom-made :term:'Biotype Reference Table'. 
+If you use a GTF file, your GTF file must contain information about each genomic feature's biotype, and the gene ID type of your table should match that of your GTF file.
+Alternatively, if you don't have such a GTF file, or you want to define the biotypes of your genomic features differently, you can use a custom-made :term:'Biotype Reference Table'.
 
 A :term:`Biotype Reference Table` contains annotations of the biotype of each genomic features ('protein_coding', 'piRNAs', 'lincRNAs', 'pseudogenes', etc).
 You can read more about the :term:`Biotype Reference Table` format and loading a :term:`Biotype Reference Table` in the :ref:`reference-table-ref` section.
 
-To filter a table based on the biotypes of the genomic features in it, use either the "Filter by feature biotype (based on a GTF file)" function or the "Filter by feature biotype (based on a reference table)" function. 
+To filter a table based on the biotypes of the genomic features in it, use either the "Filter by feature biotype (based on a GTF file)" function or the "Filter by feature biotype (based on a reference table)" function.
 
-You can also view the number of genomic features belonging to each biotype using either the function "Summarize feature biotypes (based on a GTF file)" or the function "Summarize feature biotypes (based on a reference table)". 
+You can also view the number of genomic features belonging to each biotype using either the function "Summarize feature biotypes (based on a GTF file)" or the function "Summarize feature biotypes (based on a reference table)".
 
 
 Working with Differential Expression Tables
 ==============================================
-Differential Expression Tables are data tables describing the results of differential expression analysis. Most importantly, these tables contain data about the log2 fold change of each gene, and the adjusted p-value for each gene (meaning, whether it is statistically significant in the DE analysis). 
-*RNAlysis* has special functions implemented for differential expression data. 
+Differential Expression Tables are data tables describing the results of differential expression analysis. Most importantly, these tables contain data about the log2 fold change of each gene, and the adjusted p-value for each gene (meaning, whether it is statistically significant in the DE analysis).
+*RNAlysis* has special functions implemented for differential expression data.
 
-You can either load pre-existing Differential Expression Tables into *RNAlysis*, or run differential expression analysis on a count matrix through *RNAlysis* using the built-in DESeq2 Differential Expression tool. 
+You can either load pre-existing Differential Expression Tables into *RNAlysis*, or run differential expression analysis on a count matrix through *RNAlysis* using the built-in DESeq2 Differential Expression tool.
 
 Differential expression analysis using DESeq2 through *RNAlysis*
------------------------------------------------------------------- 
+------------------------------------------------------------------
 You can read more about DESeq2 here:
 https://doi.org/doi:10.18129/B9.bioc.DESeq2
 
@@ -261,19 +261,19 @@ By default, *RNAlysis* assumes that log2 fold change values will be specified un
 | WBGene00000028 | 219.1632 | 3.913657       | 0.217802 | 17.96885 | 3.42E-72 | 2.32E-69 |
 +----------------+----------+----------------+----------+----------+----------+----------+
 
-Loading a table that follows this format as a Differential Expression Table works similarly to other table types. The only difference is that when loading the table, you need to specify the table type as 'Differential expression'. 
+Loading a table that follows this format as a Differential Expression Table works similarly to other table types. The only difference is that when loading the table, you need to specify the table type as 'Differential expression'.
 
-If your differential expression table does not follow this format, you can specify the exact names of the columns in your table that contain log2 fold change values and adjusted p-values. 
-The fields for this parameters will appear after setting the table type to 'Differential expression'. 
+If your differential expression table does not follow this format, you can specify the exact names of the columns in your table that contain log2 fold change values and adjusted p-values.
+The fields for this parameters will appear after setting the table type to 'Differential expression'.
 
 
- Functions unique to Differential Expression Tables (such as 'Filter by statistical significance' and 'Filter by fold change magnitude') will not work properly if the log2 fold change column and adjusted p-value column are not specified correctly. 
+ Functions unique to Differential Expression Tables (such as 'Filter by statistical significance' and 'Filter by fold change magnitude') will not work properly if the log2 fold change column and adjusted p-value column are not specified correctly.
 
 Filtering operations unique to Differential Expression tables
 ------------------------------------------------------------------------------------
-There are a few filtering operations unique to differential expression tables. Those include 'Filter by statistical significance', which removes statistically-insignificant genes according to a specified threshold; 
-'FIlter by log2 fold change magnitude', removes rows whose absolute value log2 fold change is below the specified threshold; 
-'Filter by fold change direction' which removes either up-regulated (positive log2 fold change) or down-regulated (negative log2 fold change) genes; 
+There are a few filtering operations unique to differential expression tables. Those include 'Filter by statistical significance', which removes statistically-insignificant genes according to a specified threshold;
+'FIlter by log2 fold change magnitude', removes rows whose absolute value log2 fold change is below the specified threshold;
+'Filter by fold change direction' which removes either up-regulated (positive log2 fold change) or down-regulated (negative log2 fold change) genes;
 and 'Split table by fold change direction' which returns two new tables: one containing only up-regulated genes and one containing only down-regulated genes.
 
 
@@ -293,8 +293,8 @@ With 'Volcano plot', you can observe the direction, magnitude, and significance 
 
 Working with count matrices
 =====================================
-Count matrices are a type of table that describe expression level of different genes/genomic features under different conditions/samples. 
-*RNAlysis* is capable of visualizing, filtering, normalizing, and clustering of count matrices. 
+Count matrices are a type of table that describe expression level of different genes/genomic features under different conditions/samples.
+*RNAlysis* is capable of visualizing, filtering, normalizing, and clustering of count matrices.
 Data can be imported into a CountFilter objects either from a `csv` file, or directly from text output files generated by *HTSeq-count* as explained below.
 
 In principle, any `csv` file where the columns are different conditions/replicates and the rows include reads/normalized reads per genomic feature can be used as input for CountFilter. However, some count matrix functions (such as 'normalize_to_rpm_htseqcount') will only work on HTSeq-count output files, and other unintended interactions may occur.
@@ -342,20 +342,20 @@ An HTSeq-count output file would follow the following format:
 +------------------------+-----+
 
 When running HTSeq-count on multiple SAM files (which could represent different conditions or replicates), the final output would be a directory of .txt files.
-*RNAlysis* can parse those .txt files into two tables: in the first each row is a genomic feature and each column is a condition or replicate (a single .txt file), 
-and in the second table each row represents a category of reads not mapped to genomic features (alignment not unique, low alignment quality, etc). 
+*RNAlysis* can parse those .txt files into two tables: in the first each row is a genomic feature and each column is a condition or replicate (a single .txt file),
+and in the second table each row represents a category of reads not mapped to genomic features (alignment not unique, low alignment quality, etc).
 
 This can be done by opening the "File" menu, entering the "New..." menu, and clicking on the "New table from folder" action:
 
 .. image:: /userguide_screenshots/user_guide_count_matrix_01.png
 
-Then, select the table containing your HTSeq-count text files. 
-*RNAlysis* will then offer you to automatically normalize your data to reads-per-million. After you make your choice, *RNAlysis* will load the table it created into a new tab (normalized or raw, depending on your choice earlier). 
+Then, select the table containing your HTSeq-count text files.
+*RNAlysis* will then offer you to automatically normalize your data to reads-per-million. After you make your choice, *RNAlysis* will load the table it created into a new tab (normalized or raw, depending on your choice earlier).
 
 Loading  a pre-made `csv` file
 ----------------------------------
-If you already have a count matrix file in `csv` or tsv format, you can directly load this table into *RNAlysis* as you would any other table. 
-If you're loading a count matrix that was already normalized, make sure to set the 'is_normalize' parameter to True. 
+If you already have a count matrix file in `csv` or tsv format, you can directly load this table into *RNAlysis* as you would any other table.
+If you're loading a count matrix that was already normalized, make sure to set the 'is_normalize' parameter to True.
 
 A valid count matrix would follow the following format:
 
@@ -397,7 +397,7 @@ Normalizing count matrices
 * Median of Ratios Normalization (MRN - 'normalize_mrn')
 * Reads Per Million (RPM - 'normalize_to_rpm')
 
-To normalize a count matrix with one of these functions, click on the 'Normalize' button, pick one of the normalization functions from the drop-down menu, and click 'Apply'. 
+To normalize a count matrix with one of these functions, click on the 'Normalize' button, pick one of the normalization functions from the drop-down menu, and click 'Apply'.
 
 To normalize a count matrix with user-generated scaling factors, you would need a separate `csv` table with the scaling factor for each sample:
 
@@ -407,7 +407,7 @@ To normalize a count matrix with user-generated scaling factors, you would need 
 |      0.96      |       1        |      0.78      |      1.23      |
 +----------------+----------------+----------------+----------------+
 
-We would then click on the 'Normalize' button, pick 'Normalize with pre-calculated scaling factors' from the drop-down list, load our scaling factor table, and click "Apply" at the bottom of the screen. 
+We would then click on the 'Normalize' button, pick 'Normalize with pre-calculated scaling factors' from the drop-down list, load our scaling factor table, and click "Apply" at the bottom of the screen.
 
 The resulting count matrix will be normalized with the scaling factors (dividing the value of each column by the value of the corresponding scaling factor).
 
@@ -428,7 +428,7 @@ To normalize a count matrix that originated from HTSeq-count to reads per millio
 | __not_aligned          | 109853  | 277653  | 88653   | 96012   |
 +------------------------+---------+---------+---------+---------+
 
-We would then click on the 'Normalize' button, pick 'Normalize to reads-per-million (RPM) - HTseq-count output' from the drop-down list, load our special counter table, and click "Apply" at the bottom of the screen. 
+We would then click on the 'Normalize' button, pick 'Normalize to reads-per-million (RPM) - HTseq-count output' from the drop-down list, load our special counter table, and click "Apply" at the bottom of the screen.
 The resulting count matrix will be normalized to RPM with the formula (1,000,000 * reads in cell) / (sum of aligned reads + __no_feature + __ambiguous + __alignment_no_unique)
 
 
@@ -436,9 +436,9 @@ Clustering of count matrices
 ----------------------------------
 *RNAlysis* supports a wide variety of clustering methods, which can group genes/genomic features into clusters according to their relative expression patterns across different samples.
 
-When clustering genomic features in a count matrix, *RNAlysis* will make a copy of the table and split the rows in it into different sub-tables, one new table for each cluster found in the analysis. 
-These tables will then be opened in new tabs, allowing you to save them or analyze them further. 
-*RNAlysis* will also generate an expression plot, depicting the average relative expression pattern within each cluster, as well as the variance of expression. 
+When clustering genomic features in a count matrix, *RNAlysis* will make a copy of the table and split the rows in it into different sub-tables, one new table for each cluster found in the analysis.
+These tables will then be opened in new tabs, allowing you to save them or analyze them further.
+*RNAlysis* will also generate an expression plot, depicting the average relative expression pattern within each cluster, as well as the variance of expression.
 Expression plots of the resulting clusters can be generated in one of multiple styles:
 
  .. figure:: /figures/kmeans_all.png
@@ -628,22 +628,22 @@ Moreover, ths modified version of the algorithm can cluster each batch of biolog
 
 Specialized clustering distance metrics
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-In addition to the commonly-used distance metrics, such as euclidean distance and spearman correlation, *RNAlysis* offers a selection of distance metrics that were either developed especially for transcriptomics clustering, or found to work particularly well for transcriptomics clustering. 
+In addition to the commonly-used distance metrics, such as euclidean distance and spearman correlation, *RNAlysis* offers a selection of distance metrics that were either developed especially for transcriptomics clustering, or found to work particularly well for transcriptomics clustering.
 Those methods include:
 
-1. jackknife distance - a modified Pearson dissimilarity coefficient. 
-Instead of measuring the linear correlation between expression levels of two genes, you measure the linear correlation coefficient N times (where N is the number of samples in the data), every time excluding a single sample from the correlation, and then taking the smallest correlation coefficient found. 
-The correlation score is then converted into a dissimilarity score. 
-This distance metric can detect linear correlation, like Pearson correlation, but is less sensitive to extreme values. 
-(see `Heyer, Kruglyak and Yooseph 1999 <https://doi.org/10.1101%2Fgr.9.11.1106>`_). 
-2. YR1 distance - a distance metric developed especially for time-series gene expression data. 
-This distance metric combines the Pearson dissimilarity, along with the positon of the minimal and maximal values of each sample, and the agreement of their slopes. These three values are combined into a single distance score. 
-This means that the YR1 metric captures more accurately the shape of the expression pattern of each gene, and ranks genes with similar expression patterns as more similar to one another. 
-(see `Son and Baek 2007 <https://doi.org/10.1016/j.patrec.2007.09.015>`_). 
-3. YS1 distance - a distance metric developed especially for time-series gene expression data. 
-This distance metric combines the Spearman dissimilarity, along with the positon of the minimal and maximal values of each sample, and the agreement of their slopes. These three values are combined into a single distance score. 
-This means that the YS1 metric captures more accurately the shape of the expression pattern of each gene, and ranks genes with similar expression patterns as more similar to one another. 
-(see `Son and Baek 2007 <https://doi.org/10.1016/j.patrec.2007.09.015>`_). 
+1. jackknife distance - a modified Pearson dissimilarity coefficient.
+Instead of measuring the linear correlation between expression levels of two genes, you measure the linear correlation coefficient N times (where N is the number of samples in the data), every time excluding a single sample from the correlation, and then taking the smallest correlation coefficient found.
+The correlation score is then converted into a dissimilarity score.
+This distance metric can detect linear correlation, like Pearson correlation, but is less sensitive to extreme values.
+(see `Heyer, Kruglyak and Yooseph 1999 <https://doi.org/10.1101%2Fgr.9.11.1106>`_).
+2. YR1 distance - a distance metric developed especially for time-series gene expression data.
+This distance metric combines the Pearson dissimilarity, along with the positon of the minimal and maximal values of each sample, and the agreement of their slopes. These three values are combined into a single distance score.
+This means that the YR1 metric captures more accurately the shape of the expression pattern of each gene, and ranks genes with similar expression patterns as more similar to one another.
+(see `Son and Baek 2007 <https://doi.org/10.1016/j.patrec.2007.09.015>`_).
+3. YS1 distance - a distance metric developed especially for time-series gene expression data.
+This distance metric combines the Spearman dissimilarity, along with the positon of the minimal and maximal values of each sample, and the agreement of their slopes. These three values are combined into a single distance score.
+This means that the YS1 metric captures more accurately the shape of the expression pattern of each gene, and ranks genes with similar expression patterns as more similar to one another.
+(see `Son and Baek 2007 <https://doi.org/10.1016/j.patrec.2007.09.015>`_).
 
 Data visualization and exploratory data analysis of count matrices
 ------------------------------------------------------------------------
@@ -684,7 +684,7 @@ With Clustergram, you can cluster your samples with hierarchical clustering acco
 
 Sequentially applying functions using Pipelines
 ============================================================
-A :term:`Pipeline` allows you to group together multiple functions from the main *RNAlysis* module (such as filtering, splitting, normalizing, visualizing, summarizing, or transforming your data), and apply this group of functions to tables of your choice in a specific and consistent order. 
+A :term:`Pipeline` allows you to group together multiple functions from the main *RNAlysis* module (such as filtering, splitting, normalizing, visualizing, summarizing, or transforming your data), and apply this group of functions to tables of your choice in a specific and consistent order.
 Pipelines make your workflow easier to read and understand, help you avoid repetitive actions, and makes your analyses more reproducible and less error-prone.
 
 Creating a new Pipeline
@@ -705,8 +705,8 @@ In the new window that opened, you can name the Pipeline, and choose the type of
   :width: 600
   :alt: Create Pipeline - choose table type
 
-Pipelines for specific types of tables will allow you to use functions specific to that table type. 
-If you're not sure what type of table to apply your Pipeline to, just choose "Other" - your Pipeline will then be applicable to any table type. 
+Pipelines for specific types of tables will allow you to use functions specific to that table type.
+If you're not sure what type of table to apply your Pipeline to, just choose "Other" - your Pipeline will then be applicable to any table type.
 After choosing a name and table type, click on the "Start" button to create the Pipeline.
 The window will now update to show a preview of the new (empty) Pipeline:
 
@@ -714,8 +714,8 @@ The window will now update to show a preview of the new (empty) Pipeline:
   :width: 600
   :alt: Create Pipeline - preview
 
-At this point, you can start adding functions to the Pipeline. 
-Adding functions to a Pipeline works very similarly to applying functions to tables. 
+At this point, you can start adding functions to the Pipeline.
+Adding functions to a Pipeline works very similarly to applying functions to tables.
 Click on one of the 5 function categories (such as "Visualization"), pick a function, set its parameters, and click on the "Add to Pipeline" button at the bottom of the screen:
 
 .. image:: /tutorial_screenshots/02d04_pipeline.png
@@ -726,29 +726,29 @@ Click on one of the 5 function categories (such as "Visualization"), pick a func
   :width: 600
   :alt: Create Pipeline - adding functions to Pipeline
 
-After adding a function to the Pipeline, the Pipeline overview will update to show the function added to it, and this is displayed in the log textbox as well. 
+After adding a function to the Pipeline, the Pipeline overview will update to show the function added to it, and this is displayed in the log textbox as well.
 
-The order in which you add functions to the Pipeline is the order in which they will be applied. 
-If a function at some point in the Pipeline generated multiple new tables (for example - a clustering function returning multiple clusters, or a function splitting your data table into 2 separate tables), 
-each downstream function will be applied to each new table separately. 
+The order in which you add functions to the Pipeline is the order in which they will be applied.
+If a function at some point in the Pipeline generated multiple new tables (for example - a clustering function returning multiple clusters, or a function splitting your data table into 2 separate tables),
+each downstream function will be applied to each new table separately.
 
-Note that the "inplace" parameter will be missing from all functions you add to the Pipeline. This is done on purpose - whenever you apply a Pipeline to a table, you can decide whether you want to apply it in-place or not. 
+Note that the "inplace" parameter will be missing from all functions you add to the Pipeline. This is done on purpose - whenever you apply a Pipeline to a table, you can decide whether you want to apply it in-place or not.
 
-If you want to remove functions from a Pipeline, you can click on the "Remove last function" button, which will remove the last function added to the Pipeline. 
+If you want to remove functions from a Pipeline, you can click on the "Remove last function" button, which will remove the last function added to the Pipeline.
 
-When you are happy with your Pipeline, you can click on the "save Pipeline" button to save it in the current *RNAlysis* session, and on the "Export Pipeline" button to export the Pipeline to your computer, allowing you to load it into any *RNAlysis* session and share it with others. 
+When you are happy with your Pipeline, you can click on the "save Pipeline" button to save it in the current *RNAlysis* session, and on the "Export Pipeline" button to export the Pipeline to your computer, allowing you to load it into any *RNAlysis* session and share it with others.
 
-You can always edit or delete a previously-saved Pipeline via the Pipelines menu. 
+You can always edit or delete a previously-saved Pipeline via the Pipelines menu.
 
 Importing a Pipeline
 ----------------------
-If you have previously exported a Pipeline, or you want to use a Pipeline that someone else exported, you can import Pipeline files into any *RNAlysis* session. 
-*RNAlysis* Pipelines are saved as YAML (.yaml) files. Those files contain the name of the Pipeline, the functions and parameters added to it, as well as some metadata such as the time it was exported. 
-To import a Pipeline into *RNAlysis*, open the Pipelines menu, click on "Import Pipeline...", and select your Pipeline file. 
+If you have previously exported a Pipeline, or you want to use a Pipeline that someone else exported, you can import Pipeline files into any *RNAlysis* session.
+*RNAlysis* Pipelines are saved as YAML (.yaml) files. Those files contain the name of the Pipeline, the functions and parameters added to it, as well as some metadata such as the time it was exported.
+To import a Pipeline into *RNAlysis*, open the Pipelines menu, click on "Import Pipeline...", and select your Pipeline file.
 
 Applying Pipelines to tables
 ------------------------------
-Once you have created or imported a Pipeline, you can apply it to any number of data tables in your *RNAlysis* session. 
+Once you have created or imported a Pipeline, you can apply it to any number of data tables in your *RNAlysis* session.
 To apply a Pipeline, open the "Pipelines" menu, hover on the "Apply Pipeline" sub-menu, and pick the Pipeline you want to apply:
 
 
@@ -756,23 +756,23 @@ To apply a Pipeline, open the "Pipelines" menu, hover on the "Apply Pipeline" su
   :width: 600
   :alt: Apply Pipeline
 
-Now, you will be prompted on whether you want to apply this Pipeline inplace or not. 
-Note that if your Pipeline contains splitting functions (functions that always return new tables, and cannot be applied inplace - e.g. clustering functions), you will not be able to apply your Pipeline inplace. 
+Now, you will be prompted on whether you want to apply this Pipeline inplace or not.
+Note that if your Pipeline contains splitting functions (functions that always return new tables, and cannot be applied inplace - e.g. clustering functions), you will not be able to apply your Pipeline inplace.
 
 .. image:: /tutorial_screenshots/02d09_pipeline.png
   :width: 300
   :alt: Apply Pipeline - not inplace
 
-Finally, you will be prompted to choose the tables to apply your Pipeline to. 
-You can apply your Pipeline to a single data table, or to multiple data tables. 
-Note that a Pipeline can only be applied to tables matching it's type (unless the Pipeline table type is "Other", in which case it can be applied to any table). 
+Finally, you will be prompted to choose the tables to apply your Pipeline to.
+You can apply your Pipeline to a single data table, or to multiple data tables.
+Note that a Pipeline can only be applied to tables matching it's type (unless the Pipeline table type is "Other", in which case it can be applied to any table).
 
 .. image:: /tutorial_screenshots/02d10_pipeline.png
   :width: 300
   :alt: Apply Pipeline - choose tables
 
-The Pipeline will be applied to all tables you selected one-by-one. 
-Note that Pipelines applied in-place can be undone through the "Command History" pane, just like any of the table-modifying function in *RNAlysis*. 
+The Pipeline will be applied to all tables you selected one-by-one.
+Note that Pipelines applied in-place can be undone through the "Command History" pane, just like any of the table-modifying function in *RNAlysis*.
 
 ****************************
 *RNAlysis* Gene Sets module
@@ -782,8 +782,8 @@ The *RNAlysis* Gene Sets module can be used to run various types of enrichment a
 
 Working with gene sets
 =========================================
-In addition to loading and analyzing data tables, *RNAlysis* can load and process gene sets. 
-A gene set is essentially a list of gene names/IDs with a specific name. 
+In addition to loading and analyzing data tables, *RNAlysis* can load and process gene sets.
+A gene set is essentially a list of gene names/IDs with a specific name.
 
 Importing gene sets into *RNAlysis*
 ------------------------------------
@@ -791,36 +791,36 @@ To import a gene set into *RNAlysis*, open the Gene Sets menu, and click on "Imp
 
 .. image:: /userguide_screenshots/user_guide_gene_sets_01.png
 
-You can then pick either a text file containing gene names/IDs (one gene ID per line), or a data table where the first column contains gene names/IDs. 
+You can then pick either a text file containing gene names/IDs (one gene ID per line), or a data table where the first column contains gene names/IDs.
 *RNAlysis* will then load this gene set into *RNAlysis*:
 
 .. image:: /userguide_screenshots/user_guide_gene_sets_02.png
 
-Similarly to data tables, *RNAlysis* will show you the number of features in the gene set, show you a preview of the gene set, and allow you to view the full gene set or rename it. 
+Similarly to data tables, *RNAlysis* will show you the number of features in the gene set, show you a preview of the gene set, and allow you to view the full gene set or rename it.
 
-If you want to load multiple gene sets at once, you can use the "Import Multiple Gene Sets..." action instead of "Import Gene Set...". 
+If you want to load multiple gene sets at once, you can use the "Import Multiple Gene Sets..." action instead of "Import Gene Set...".
 
 Copying gene sets from *RNAlysis*
 ------------------------------------
-Many online data-mining and data-analysis services require you to supply a list of gene names/IDs. 
-You make it easier to integrate those tools into analyses you perform with *RNAlysis*, you can easily copy a list of gene IDs from any *RNAlysis* table or gene set. 
+Many online data-mining and data-analysis services require you to supply a list of gene names/IDs.
+You make it easier to integrate those tools into analyses you perform with *RNAlysis*, you can easily copy a list of gene IDs from any *RNAlysis* table or gene set.
 
 To copy a list of gene IDs from an existing table/gene set in *RNAlysis*, go to that table/gene set's tab, open the "Gene Sets" menu, and click on "Copy Gene Set":
 
 .. image:: /userguide_screenshots/user_guide_gene_sets_03.png
 
-Alternatively, you can use the "Ctrl+C" shortcut to copy a list of gene names/IDs from the currently selected table/gene set. 
+Alternatively, you can use the "Ctrl+C" shortcut to copy a list of gene names/IDs from the currently selected table/gene set.
 
 Exporting gene sets from *RNAlysis*
 ------------------------------------
 To export a gene set from *RNAlysis*, you can use the "Save gene set" button.
 
-Alternatively, if you want to export the gene IDs of any table as a gene-set text file, open the "Gene Sets" menu and click on "Export Gene Set...". 
+Alternatively, if you want to export the gene IDs of any table as a gene-set text file, open the "Gene Sets" menu and click on "Export Gene Set...".
 
 
 Visualizing gene set and table intersections
 =============================================
-*RNAlysis* allows you to visualize the intersections between your gene sets and tables using Venn Diagrams and UpSet Plots. 
+*RNAlysis* allows you to visualize the intersections between your gene sets and tables using Venn Diagrams and UpSet Plots.
 To do that, open the "Gene sets" menu, and click on "Visualize Gene Sets...":
 
 .. image:: /tutorial_screenshots/02e01_gene_sets.png
@@ -828,14 +828,14 @@ To do that, open the "Gene sets" menu, and click on "Visualize Gene Sets...":
   :alt: Gene sets menu - Visualize Gene Sets
 
 A new window will open.
-On the left side of the window, you can choose which data tables/gene sets you want to visualize. 
-You can pick two or more items to visualize. 
+On the left side of the window, you can choose which data tables/gene sets you want to visualize.
+You can pick two or more items to visualize.
 
 .. image:: /tutorial_screenshots/02e02_gene_sets.png
   :width: 600
   :alt: Visualize Gene Sets - select gene sets
 
-Next, choose the type of graph you want to generate. 
+Next, choose the type of graph you want to generate.
 RNAlysis* supports Venn Diagrams for 2-3 gene sets, and `UpSet plots <https://doi.org/10.1109%2FTVCG.2014.2346248>`_ for any number of gene sets.
 
 After choosing a type of graph, the window will now update and display various parameters to modify your graph, and a preview of the graph on the right:
@@ -854,9 +854,9 @@ Once you are happy with the plot preview, click on the "Generate graph" button t
 
 Performing set operations on multiple tables and gene sets
 ================================================================
-*RNAlysis* can use set operations such as union, intersection, difference and symmetric difference to combine the gene IDs from multiple data tables and gene sets. 
-Those set operations can be applied to any type and number of tables, and can combine tables/gene sets of different types. 
-You can, for example, look at the intersection of gene IDs in a differential expression table, a count matrix, and a gene set. 
+*RNAlysis* can use set operations such as union, intersection, difference and symmetric difference to combine the gene IDs from multiple data tables and gene sets.
+Those set operations can be applied to any type and number of tables, and can combine tables/gene sets of different types.
+You can, for example, look at the intersection of gene IDs in a differential expression table, a count matrix, and a gene set.
 
 To apply set operations, open the "Gene sets" menu and click on "Set Operations...":
 
@@ -877,20 +877,20 @@ You can choose any two or more items from this list:
   :width: 600
   :alt: Set Operations - select gene sets
 
-You will now see a simplified Venn Diagram depicting the gene sets/tables you chose. 
-If you chose more than three gene sets, *RNAlysis* will instead draw an *UpSet Plot*, to make it easier to read. 
+You will now see a simplified Venn Diagram depicting the gene sets/tables you chose.
+If you chose more than three gene sets, *RNAlysis* will instead draw an *UpSet Plot*, to make it easier to read.
 You can now proceed to extract the subset you are interested in.
-You can do this in one of two different ways, which we will examine now. 
+You can do this in one of two different ways, which we will examine now.
 
-Firstly, you can choose a set operation from the multiple choice list: union, intersection, majority-vote intersection, difference, or symmetric difference. 
+Firstly, you can choose a set operation from the multiple choice list: union, intersection, majority-vote intersection, difference, or symmetric difference.
 
 Like filtering operations, some set operations (such as intersection and difference) can be applied 'inplace', filtering down an existing table instead of returning a new gene set.
-If you pick one of those operations, a drop-down menu will now appear, prompting us to pick the primary gene set in this operation. 
+If you pick one of those operations, a drop-down menu will now appear, prompting us to pick the primary gene set in this operation.
 *RNAlysis* wants to know what is your "primary set" for this set operation - meaning, if you were to apply it inplace, which table should it be applied to?
-your choice will only matter if we apply this set operation inplace. 
+your choice will only matter if we apply this set operation inplace.
 
-Notably, the set operation "difference" is a directional operation - meaning, difference between sets A and B is not the same is the difference between sets B and A. 
-In the case of this set operation in particular, your choice of primary set will also affect the results of the set operation itself, whether or not you apply it inplace. 
+Notably, the set operation "difference" is a directional operation - meaning, difference between sets A and B is not the same is the difference between sets B and A.
+In the case of this set operation in particular, your choice of primary set will also affect the results of the set operation itself, whether or not you apply it inplace.
 
 .. image:: /tutorial_screenshots/02f04_set_ops.png
   :width: 600
@@ -902,26 +902,26 @@ Once you pick a set operation and optionally a primary set, the subset represent
   :width: 600
   :alt: Set Operations - operation preview
 
-At this point, you can also modify optional parameters that appear on the window. 
+At this point, you can also modify optional parameters that appear on the window.
 Once you are happy with your choice, click on the "Apply" button to extract your gene set of interest. It will open in a new tab:
 
 .. image:: /tutorial_screenshots/02f06_set_ops.png
   :width: 600
   :alt: Set Operations - gene set output
 
-The second method to extract gene sets of interest is by directly picking them from the simplified Venn Diagram manually. 
+The second method to extract gene sets of interest is by directly picking them from the simplified Venn Diagram manually.
 To do that, simply click on the subsets you are interested in on the interactive Venn Diagram:
 
 .. image:: /tutorial_screenshots/02f08_set_ops.png
   :width: 600
   :alt: Set Operations - select subset
 
-Click on a subset to select it, and click on it a second time to de-select it. 
-Once you have selected all of the relevant subsets, click the "Apply" button to extract them. 
+Click on a subset to select it, and click on it a second time to de-select it.
+Once you have selected all of the relevant subsets, click the "Apply" button to extract them.
 
 Enrichment analysis
 ===========================
-To begin enrichment analysis, open the "Gene Sets" menu, and click on "Enrichment Analysis...". 
+To begin enrichment analysis, open the "Gene Sets" menu, and click on "Enrichment Analysis...".
 
 
 .. image:: /tutorial_screenshots/02h01_enrichment.png
@@ -934,16 +934,16 @@ First, you can define the test set for your enrichment analysis. To do that, sim
   :width: 600
   :alt: Enrichment analysis - choose gene sets
 
-The gene IDs/names in the gene set/table you chose will be the test set of your enrichment analysis. 
+The gene IDs/names in the gene set/table you chose will be the test set of your enrichment analysis.
 
-Next, you can define the background set for your enrichment analysis. 
+Next, you can define the background set for your enrichment analysis.
 In enrichment analysis, we test whether our set of genomic features is enriched/depleted for a certain attribute, in comparison to a more generalized set of genomic features that we determined as 'background'.
 This could be the set of all protein-coding genes, the set of all genomic features that show expression above a certain threshold, or any other set of background genes which you deem appropriate. Importantly, the background set must contain all of the genes in the enrichment set.
 
-Defining a background set is required for classical enrichment analysis. However, if you do not want to compare your gene set of interest to a background set, you can use a single-set (background-free) enrichment test. 
-You can read more about these in the :ref:`single-set-ref` section of the user guide. 
+Defining a background set is required for classical enrichment analysis. However, if you do not want to compare your gene set of interest to a background set, you can use a single-set (background-free) enrichment test.
+You can read more about these in the :ref:`single-set-ref` section of the user guide.
 
-To define the background set, simply choose an existing table or gene set from the drop-down menu. All of the genes/genomic features in that table will be used as the background set. 
+To define the background set, simply choose an existing table or gene set from the drop-down menu. All of the genes/genomic features in that table will be used as the background set.
 If some of the features in the background set or the enrichment set do not have any annotations associated with them, they will be ignored when calculating enrichment.
 
 
@@ -951,15 +951,15 @@ If some of the features in the background set or the enrichment set do not have 
   :width: 600
   :alt: Enrichment analysis - choose gene sets
 
-Enrichment analysis can be done using different types and sources of annotations: Gene Ontology (GO), Kyoto Encyclopedia of Genes and Genomes (KEGG) pathways, user-defined categorical attributes, or user-defined non-categorical attributes. 
+Enrichment analysis can be done using different types and sources of annotations: Gene Ontology (GO), Kyoto Encyclopedia of Genes and Genomes (KEGG) pathways, user-defined categorical attributes, or user-defined non-categorical attributes.
 You can select the annotation source from the top of the enrichment window:
 
 .. image:: /tutorial_screenshots/02h03_enrichment.png
   :width: 600
   :alt: Enrichment analysis - Choose enrichment dataset
 
-Once you choose an annotation source for enrichment, new options and parameters will appear. 
-We will now go over these four different annotation sources, and how enrichment analysis works for each of them. 
+Once you choose an annotation source for enrichment, new options and parameters will appear.
+We will now go over these four different annotation sources, and how enrichment analysis works for each of them.
 
 GO Enrichment
 ---------------
@@ -976,9 +976,9 @@ It is recommended to manually determine your organism's *NCBI Taxon ID* to avoid
 However, if you are not sure, *RNAlysis* will attempt to automatically determine the correct `organism` by default, based on the gene IDs in your FeatureSet.
 
 Furthermore, since different annotations use different gene ID types to annotate the same gene products (such as UniProtKB ID, Entrez Gene ID, or Wormbase WBGene), *RNAlysis* can translate gene IDs from one gene ID type to another.
-In order to do that, you need to specify which gene ID type your dataset uses. It is recommended to manually determine which gene ID type your data set uses, but if you are not sure, *RNAlysis* will attempt to automatically determine the correct `gene_id_type` by default. 
+In order to do that, you need to specify which gene ID type your dataset uses. It is recommended to manually determine which gene ID type your data set uses, but if you are not sure, *RNAlysis* will attempt to automatically determine the correct `gene_id_type` by default.
 
-Note that if you set both `organism` and `gene_id_type` to 'auto', finding a good value for both may take a particularly long time. 
+Note that if you set both `organism` and `gene_id_type` to 'auto', finding a good value for both may take a particularly long time.
 
 
 Choose the statistical test (optional)
@@ -1160,9 +1160,9 @@ It is recommended to manually determine your organism's *NCBI Taxon ID* to avoid
 However, if you are not sure, *RNAlysis* will attempt to automatically determine the correct `organism` by default, based on the gene IDs in your FeatureSet.
 
 Furthermore, since different annotations use different gene ID types to annotate the same gene products (such as UniProtKB ID, Entrez Gene ID, or Wormbase WBGene), *RNAlysis* can translate gene IDs from one gene ID type to another.
-In order to do that, you need to specify which gene ID type your dataset uses. It is recommended to manually determine which gene ID type your data set uses, but if you are not sure, *RNAlysis* will attempt to automatically determine the correct `gene_id_type` by default. 
+In order to do that, you need to specify which gene ID type your dataset uses. It is recommended to manually determine which gene ID type your data set uses, but if you are not sure, *RNAlysis* will attempt to automatically determine the correct `gene_id_type` by default.
 
-Note that if you set both `organism` and `gene_id_type` to 'auto', finding a good value for both may take a particularly long time. 
+Note that if you set both `organism` and `gene_id_type` to 'auto', finding a good value for both may take a particularly long time.
 
 
 Choose the statistical test (optional)
@@ -1230,17 +1230,17 @@ Running enrichment analysis will calculate enrichment for each of the KEGG pathw
 
 Enrichment analysis for user-defined attributes
 --------------------------------------------------
-Using the *enrichment* window, you can perform enrichment analysis for user-defined attributes (such as 'genes expressed in intestine', 'epigenetic genes', 'genes that have paralogs'). 
-To do that, you will first need to define those attributes in an `Attribute Reference Table`. You can read about those in the :ref:`reference-table-ref` section below. 
+Using the *enrichment* window, you can perform enrichment analysis for user-defined attributes (such as 'genes expressed in intestine', 'epigenetic genes', 'genes that have paralogs').
+To do that, you will first need to define those attributes in an `Attribute Reference Table`. You can read about those in the :ref:`reference-table-ref` section below.
 
 Choose which user-defined attributes to calculate enrichment for
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Our attributes should be defined in a Reference Table `csv` file. You can read more about Reference Tables and their format in the section :ref:`reference-table-ref`.
-Once we have a Reference Table, we can perform enrichment analysis for those attributes using *RNAlysis*. 
+Once we have a Reference Table, we can perform enrichment analysis for those attributes using *RNAlysis*.
 If your Reference Tables are set to be the default Reference Tables (as explained in :ref:`reference-table-ref`) you can just set the attribute reference table parameter to 'predefined'. Otherwise, you need to specify your Reference Table's path.
 
-The names of the attributes you want to calculate enrichment for can be specified as a list of names (for example, ['attribute1', 'attribute2']). 
-Alternatively, you can test enrichment for all of the attributes in your table by setting the attributes parameter to 'all'. 
+The names of the attributes you want to calculate enrichment for can be specified as a list of names (for example, ['attribute1', 'attribute2']).
+Alternatively, you can test enrichment for all of the attributes in your table by setting the attributes parameter to 'all'.
 
 Choose the statistical test (optional)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -1303,17 +1303,17 @@ Running enrichment analysis will calculate enrichment for each of the specified 
 
 Performing enrichment analysis for non-categorical user-defined attributes
 ---------------------------------------------------------------------------
-Instead of peforming enrichment analysis for categorical attributes ("genes which are expressed exclusively in neurons", "genes enriched in males", "epigenetic gene-products", etc), you can test whether your gene set is enriched for a non-categorical attribute ("number of paralogs", "gene length", "expression level in gut", or any other numeric attribute) using *RNAlysis*. 
+Instead of peforming enrichment analysis for categorical attributes ("genes which are expressed exclusively in neurons", "genes enriched in males", "epigenetic gene-products", etc), you can test whether your gene set is enriched for a non-categorical attribute ("number of paralogs", "gene length", "expression level in gut", or any other numeric attribute) using *RNAlysis*.
 
 Choose which user-defined non-categorical attributes to calculate enrichment for
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 The attributes should be defined in an Attribute Reference Table `csv` file. You can read more about Reference Tables and their format in the section :ref:`reference-table-ref`.
-Once we have an Attirubte Reference Table, we can perform enrichment analysis for those non-categorical attributes using *RNAlysis*. 
+Once we have an Attirubte Reference Table, we can perform enrichment analysis for those non-categorical attributes using *RNAlysis*.
 
 If your Reference Tables are set to be the default Reference Tables (as explained in :ref:`reference-table-ref`) you can just set the attribute reference table parameter to 'predefined'. Otherwise, you need to specify your Reference Table's path.
 
-The names of the attributes you want to calculate enrichment for can be specified as a list of names (for example, ['attribute1', 'attribute2']). 
-Alternatively, you can test enrichment for all of the attributes in your table by setting the attributes parameter to 'all'. 
+The names of the attributes you want to calculate enrichment for can be specified as a list of names (for example, ['attribute1', 'attribute2']).
+Alternatively, you can test enrichment for all of the attributes in your table by setting the attributes parameter to 'all'.
 
 Note that the variables you use for non-categorical enrichment analysis must be non-categorical, and must be defined for every gene/genomic feature in the background and test sets (meaning, no NaN values).
 
@@ -1378,12 +1378,122 @@ Running non-categorical enrichment analysis will calculate enrichment for each o
 Performing single-set enrichment analysis (enrichment without a background set)
 ---------------------------------------------------------------------------------
 Single-set enrichment analysis works much the same as normal enrichment analysis, with one key difference:
-when performing single-set enrichment you do not define a background set to comapre your enrichment gene set against. 
-Instead, you choose a data table as your test set. The genes/rows in the table should be sorted in an order that defines a meaningful ranking for your gene set. 
-*RNAlysis* then tests whether the top/bottom of the ranked gene table is enriched for specific attributes compared to the rest of the list (enrichment/depletion respectively). 
+when performing single-set enrichment you do not define a background set to comapre your enrichment gene set against.
+Instead, you choose a data table as your test set. The genes/rows in the table should be sorted in an order that defines a meaningful ranking for your gene set.
+*RNAlysis* then tests whether the top/bottom of the ranked gene table is enriched for specific attributes compared to the rest of the list (enrichment/depletion respectively).
 
-The most common use case for single-set enrichment analysis is following differential expression analysis - using an unfiltered differential expression table as the ranked gene list, 
-and sorting (ranking) the table by either the DE test statistic, or by log2 fold change. 
+The most common use case for single-set enrichment analysis is following differential expression analysis - using an unfiltered differential expression table as the ranked gene list,
+and sorting (ranking) the table by either the DE test statistic, or by log2 fold change.
+
+
+********************************************************
+*RNAlysis* interactive analysis reports
+********************************************************
+The auto-report feature in RNAlysis allows you to generate automatic, interactive HTML reports of your RNA sequencing data analysis.
+These reports can help you easily communicate your results and findings with others, provide a clear overview of the data analysis workflow, and conveniently share your graphs and data in a single file.
+
+You can find a sample of such report `here <https://raw.githubusercontent.com/GuyTeichman/RNAlysis/master/tests/test_files/sample_RNAlysis_report.zip>`_.
+
+Enable report generation
+===============================
+Before you can generate an interactive analysis report, you need to turn on the automatic report generation feature.
+This is done through the "File" menu within RNAlysis graphical interface.
+Please note that you must turn on the feature **before** beginning your analysis.
+
+Generate an analysis report
+===============================
+After you have turned on automatic report generation, you can analyze your RNA sequencing data as you normally would.
+Once you have completed your analysis, simply click on "Create session report" under the "File" menu to generate an automatic report of your analysis.
+RNAlysis will then compile your analysis data and outputs into an interactive HTML report.
+
+Viewing your analysis report
+===============================
+
+Open an analysis report
+--------------------------
+After clicking on "Create session report", the report should open automatically in your default internet browser.
+If you want to open it again, or want to open a report generated by someone else, follow these steps:
+
+1. If the report is currently compressed into a ZIP file, unzip it.
+2. Enter the "RNAlysis_report" directory.
+3. Double-click on the "report.html" file to open it in your internet browser.
+
+#TODO: image of zipped report
+
+#TODO: image of the directory unzipped
+
+#TODO: image of 'report.html' marked
+
+Interacting with the analysis report
+--------------------------------------
+The RNAlysis report provides a graphical representation of all the datasets that you loaded into the tool, along with the functions that were applied to them, the order in which they were applied, and the parameters that were used.
+The report also includes all the outputs generated during the analysis, such as graphs, data tables, gene sets, and other output data.
+The report captures all the intermediate steps of the analysis, so you can access the data at any point during the analysis.
+
+#TODO - sample image of an interactive report
+
+Each node in the report graph represents a dataset, an applied function, or the output of a function, and the arrows indicate the flow of information between them.
+For example, the arrows show which datasets were used in enrichment analysis or which table was filtered for statistically significant genes.
+
+#TODO - sample image of information flow
+
+The report includes a legend at the side of the window that shows you the types of different nodes, such as data tables, gene sets, functions, and other outputs.
+
+#TODO - image of legend
+
+You can move around the report using the arrow keys or by clicking, dragging, and using the cursor wheel.
+Alternatively, you can use the controls at the bottom-right of the screen to move around the report or readjust the display to show the entire report.
+
+#TODO - image of the controls at bottom right
+
+Additionally, you can rearrange the nodes of the graph by dragging and moving them around.
+
+#TODO - image of dragging the graph
+
+There are settings at the bottom of the screen that allow you to modify the appearance of the graph, such as the size of the nodes, distance between them, structure of the graph, and physics simulation.
+Note that any changes made to the graph settings are not saved when you close the report.
+
+#TODO - image of the graph settings
+
+You can hover over a node to see more information about it.
+For example, when hovering over a function node, you can see the name of the function as well as the exact parameters used when calling it.
+
+#TODO - image of hover on function node
+
+When hovering over an output node, you can see the generated graph or data table and also access the file itself.
+
+.. image:: /tutorial_screenshots/01i02_hover_node.png
+  :width: 600
+  :alt: Hover over a data node in the interactive report and click on the "Open file" link
+
+
+Access the session output files
+-----------------------------------
+The analysis reports generated by *RNAlysis* contain all of the data tables, gene sets, and figures generated during your analysis, including all of the intermediate analysis steps, and the parameters used in each function.
+There are two ways to access the data and figures in an analysis report:
+
+The first option is hover on a node in the interactive report, and once the description pane appears click on the "Open file" link:
+
+.. image:: /tutorial_screenshots/01i02_hover_node.png
+  :width: 600
+  :alt: Hover over a data node in the interactive report and click on the "Open file" link
+
+The second option is to open the report directory "RNAlysis_report", and then enter the report directory "data".
+There you will find all of the data files generated in the report, as well as a "session.rnal" session file that can be loaded into RNAlysis:
+
+.. image:: /tutorial_screenshots/01i03_data_files.png
+  :width: 600
+  :alt: Access the data files through the report directory.
+
+Sharing your analysis report
+===============================
+To share an analysis report generated with *RNAlysis*, follow these steps:
+
+1. Find the "RNAlysis_report" directory.
+2. Compress the directory into a ZIP file (or any other compressed format of your choice).
+3. Share the ZIP file with others.
+
+#TODO: image?
 
 ****************************
 *RNAlysis* settings
@@ -1395,8 +1505,8 @@ You can access the settings window through the "File" menu:
 
 .. image:: /userguide_screenshots/user_guide_settings_02.png
 
-The settings you set from here wil be saved for all future *RNAlysis* sessions. 
-You can always reset the settings back to their default values by clicking on the "Reset settings" button. 
+The settings you set from here wil be saved for all future *RNAlysis* sessions.
+You can always reset the settings back to their default values by clicking on the "Reset settings" button.
 
 .. _reference-table-ref:
 
@@ -1424,7 +1534,7 @@ User-defined attributes should be defined in an :term:`Attribute Reference Table
 
 What is a Biotype Reference Table?
 ---------------------------------------
-If you don't have access to your organism-specific GTF file, or want to use a different definition of biotypes for your dataset, 
+If you don't have access to your organism-specific GTF file, or want to use a different definition of biotypes for your dataset,
 you can perform filtering operations or generate background-sets for enrichment analysis based on user-annotated biotypes (such as 'protein_coding', 'pseudogene', 'piRNA', etc).
 User-annotated biotypes should be defined in a :term:`Biotype Reference Table` `csv` file. The format of the :term:`Biotype Reference Table` is one row for each gene/genomic feature, and a column titled 'biotype' (case insensitive). See example for a Biotype Reference Table below:
 
@@ -1444,4 +1554,4 @@ User-annotated biotypes should be defined in a :term:`Biotype Reference Table` `
 
 Set a Reference Table as default
 ----------------------------------
-Once you have an Attribute and/or Biotype Reference Table, you can set it to be the default reference table for all future uses of *RNAlysis* through the settings window. 
+Once you have an Attribute and/or Biotype Reference Table, you can set it to be the default reference table for all future uses of *RNAlysis* through the settings window.
