@@ -1,4 +1,4 @@
-﻿rnalysis.filtering.FoldChangeFilter
+rnalysis.filtering.FoldChangeFilter
 ===================================
 
 .. currentmodule:: rnalysis.filtering

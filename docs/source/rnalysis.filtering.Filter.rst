@@ -1,4 +1,4 @@
-﻿rnalysis.filtering.Filter
+rnalysis.filtering.Filter
 =========================
 
 .. currentmodule:: rnalysis.filtering
