@@ -188,6 +188,7 @@ Contributors
 * `Bipin Kumar <https://github.com/kbipinkumar>`_
 * Matthias Wilm
 * `sandyl27 <https://github.com/sandyl27>`_
+* `clockgene <https://github.com/clockgene>`_
 
 ----
 
