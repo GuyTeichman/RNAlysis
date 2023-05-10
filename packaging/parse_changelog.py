@@ -8,7 +8,7 @@ from typing_extensions import Literal
 
 
 def get_change_log_for(version: Union[str, Literal['latest']] = 'latest'):
-    regex_pattern = r'\d+\.\d+\.\d+'
+    regex_pattern = r'(\d+\.\d+\.\d+)\s+\(\d{4}-\d{2}-\d{2}\)\s*-+\s*'
     with open(Path(__file__).parent.parent.joinpath('HISTORY.rst')) as hfile:
         text = hfile.read()
 
