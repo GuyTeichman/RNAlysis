@@ -491,7 +491,7 @@ The report should open on its own once is was generated.
 
 Your report should look similar to this:
 
-.. image:: /tutorial_screenshots/01_i04_view_report.png
+.. image:: /tutorial_screenshots/01i04_view_report.png
   :width: 600
   :alt: View interactive analysis report
 
