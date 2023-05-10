@@ -1,4 +1,4 @@
-﻿rnalysis.filtering.DESeqFilter
+rnalysis.filtering.DESeqFilter
 ==============================
 
 .. currentmodule:: rnalysis.filtering

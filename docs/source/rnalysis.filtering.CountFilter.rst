@@ -1,4 +1,4 @@
-﻿rnalysis.filtering.CountFilter
+rnalysis.filtering.CountFilter
 ==============================
 
 .. currentmodule:: rnalysis.filtering

@@ -12,7 +12,7 @@
 
 .. autosummary::
     :toctree: .
-
+    
     CountFilter
     DESeqFilter
     Filter
