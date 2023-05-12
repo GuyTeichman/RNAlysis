@@ -1505,7 +1505,8 @@ def _fetch_sets(objs: dict, ref: Union[str, Path, Literal['predefined']] = 'pred
 
 def upset_plot(objs: Dict[str, Union[str, FeatureSet, Set[str]]], set_colors: param_typing.ColorList = ('black',),
                title: str = 'UpSet Plot', title_fontsize: float = 20, show_percentages: bool = True,
-               attr_ref_table_path: Union[str, Path, Literal['predefined']] = 'predefined', fig: plt.Figure = None):
+               attr_ref_table_path: Union[str, Path, Literal['predefined']] = 'predefined', fig: plt.Figure = None
+               ) -> plt.Figure:
     """
     Generate an UpSet plot of 2 or more sets, FeatureSets or attributes from the Attribute Reference Table.
 
@@ -1529,8 +1530,7 @@ def upset_plot(objs: Dict[str, Union[str, FeatureSet, Set[str]]], set_colors: pa
     :type attr_ref_table_path: str or pathlib.Path (default='predefined')
     :param fig: optionally, supply your own Figure to generate the plot onto.
     :type fig: matplotlib.Figure
-
-    :returns: a dictionary of matplotlib axes, where the keys are 'matrix', 'intersections', 'totals', 'shading'.
+    :returns: plt.Figure
 
 
         .. figure:: /figures/upsetplot.png
@@ -1571,7 +1571,7 @@ def upset_plot(objs: Dict[str, Union[str, FeatureSet, Set[str]]], set_colors: pa
     fig.suptitle(title, fontsize=title_fontsize)
 
     plt.show()
-    return upset_obj
+    return fig
 
 
 def _compare_ids(id1: Tuple[int, ...], id2: Tuple[int, ...]):
@@ -1601,7 +1601,7 @@ def venn_diagram(objs: Dict[str, Union[str, FeatureSet, Set[str]]], title: Union
                  transparency: param_typing.Fraction = 0.4, weighted: bool = True, add_outline: bool = True,
                  linecolor: param_typing.Color = 'black', linestyle: Literal['solid', 'dashed'] = 'solid',
                  linewidth: float = 2.0, title_fontsize: float = 14, set_fontsize: float = 12,
-                 subset_fontsize: float = 10, normalize_to: float = 1.0, fig: plt.Figure = None):
+                 subset_fontsize: float = 10, normalize_to: float = 1.0, fig: plt.Figure = None) -> plt.Figure:
     """
     Generate a Venn diagram of 2 to 3 sets, FeatureSets or attributes from the Attribute Reference Table.
 
@@ -1696,14 +1696,15 @@ def venn_diagram(objs: Dict[str, Union[str, FeatureSet, Set[str]]], title: Union
     ax.set_title(title, fontsize=title_fontsize)
 
     plt.show()
-    return plot_obj, circle_obj
+    return fig
 
 
 def gene_ontology_graph(aspect: Literal[param_typing.GO_ASPECTS], results_table_path: Union[str, Path],
                         enrichment_score_column: Union[
                             str, Literal['log2_enrichment_score', 'log2_fold_enrichment']] = 'log2_fold_enrichment',
                         title: Union[str, Literal['auto']] = 'auto', ylabel: str = r"$\log_2$(Fold Enrichment)",
-                        graph_format: Literal[param_typing.GRAPHVIZ_FORMATS] = 'none', dpi: PositiveInt = 300):
+                        graph_format: Literal[param_typing.GRAPHVIZ_FORMATS] = 'none', dpi: PositiveInt = 300
+                        ) -> Union[plt.Figure, None]:
     """
     Generate a GO enrichment ontology graph based on an enrichment results table.
 
@@ -1726,13 +1727,14 @@ def gene_ontology_graph(aspect: Literal[param_typing.GO_ASPECTS], results_table_
     results_df = io.load_csv(results_table_path, index_col=0)
     assert enrichment_score_column in results_df, f"Invalid enrichment_score_col '{enrichment_score_column}'"
     dag_tree = ontology.fetch_go_basic()
-    dag_tree.plot_ontology(aspect, results_df, enrichment_score_column, title, ylabel, graph_format, dpi)
+    return dag_tree.plot_ontology(aspect, results_df, enrichment_score_column, title, ylabel, graph_format, dpi)
 
 
 def kegg_pathway_graph(pathway_id: str, marked_genes: Union[Sequence[str], None],
                        gene_id_type: Union[str, Literal['auto'], Literal[get_gene_id_types()]] = 'auto',
                        title: Union[str, Literal['auto']] = 'auto', ylabel: str = '',
-                       graph_format: Literal[param_typing.GRAPHVIZ_FORMATS] = 'none', dpi: PositiveInt = 300):
+                       graph_format: Literal[param_typing.GRAPHVIZ_FORMATS] = 'none', dpi: PositiveInt = 300
+                       ) -> Union[plt.Figure, None]:
     """
     Generate a KEGG Pathway graph.
 
@@ -1763,4 +1765,4 @@ def kegg_pathway_graph(pathway_id: str, marked_genes: Union[Sequence[str], None]
             translator = io.map_gene_ids(parsing.data_to_tuple(marked_genes), 'KEGG', gene_id_type)
 
     pathway = ontology.fetch_kegg_pathway(pathway_id, translator)
-    pathway.plot_pathway(marked_genes, title, ylabel, graph_format, dpi)
+    return pathway.plot_pathway(marked_genes, title, ylabel, graph_format, dpi)

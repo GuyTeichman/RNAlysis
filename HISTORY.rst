@@ -2,6 +2,12 @@
 History
 =======
 
+3.8.1 (2023-05-??)
+------------------
+
+Fixed
+*******
+* Fixed bug where graphs generated through the Visualize Gene Sets window would not be added to automatic analysis report.
 
 3.8.0 (2023-05-07)
 ------------------
