@@ -14,7 +14,7 @@ from PyQt5 import QtCore, QtWidgets, QtGui
 
 from rnalysis import __version__
 from rnalysis.gui import gui_style, gui_widgets
-from rnalysis.utils import settings, io, generic
+from rnalysis.utils import settings, io, generic, parsing
 
 
 class CheckableFileSystemModel(QtWidgets.QFileSystemModel):
@@ -348,7 +348,7 @@ class GeneSetView(DataView):
         self.data_view.addItems([str(item) for item in self.data])
 
     def save(self):
-        default_name = str(self.name) + '.txt'
+        default_name = parsing.slugify(str(self.name)) + '.txt'
         filename, _ = QtWidgets.QFileDialog.getSaveFileName(self, "Save gene set",
                                                             str(Path.home().joinpath(default_name)),
                                                             "Text document (*.txt);;"
@@ -376,7 +376,7 @@ class DataFrameView(DataView):
         self.data_view.setModel(DataFrameModel(self.data))
 
     def save(self):
-        default_name = str(self.name) + '.csv'
+        default_name = parsing.slugify(self.name) + '.csv'
         filename, _ = QtWidgets.QFileDialog.getSaveFileName(self, "Save table",
                                                             str(Path.home().joinpath(default_name)),
                                                             "Comma-Separated Values (*.csv);;"
