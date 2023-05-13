@@ -1,4 +1,4 @@
-* sRNA analysis pipeline version:
+* RNAlysis version:
 * Python version:
 * Operating System:
 
