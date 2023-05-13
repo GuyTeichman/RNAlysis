@@ -1579,7 +1579,7 @@ class SetTabPage(TabPage):
         set_window.show()
 
     def save_file(self):
-        default_name = self.get_tab_name().rstrip("*") + '.txt'
+        default_name = parsing.slugify(self.get_tab_name().rstrip("*")) + '.txt'
         filename, _ = QtWidgets.QFileDialog.getSaveFileName(self, "Save gene set",
                                                             str(Path.home().joinpath(default_name)),
                                                             "Text document (*.txt);;"
@@ -2093,7 +2093,7 @@ class FilterTabPage(TabPage):
         if self.filter_obj is None:
             warnings.warn("Cannot save an empty tab!")
             return
-        default_name = str(self.filter_obj.fname).rstrip("*")
+        default_name = parsing.slugify(str(self.filter_obj.fname.stem).rstrip("*")) + '.csv'
         filename, _ = QtWidgets.QFileDialog.getSaveFileName(self, "Save filtering result",
                                                             str(Path.home().joinpath(default_name)),
                                                             "Comma-Separated Values (*.csv);;"
@@ -3366,7 +3366,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self._export_pipeline_from_obj(pipeline_name, pipeline)
 
     def _export_pipeline_from_obj(self, pipeline_name: str, pipeline: filtering.Pipeline):
-        default_name = pipeline_name + '.yaml'
+        default_name = parsing.slugify(pipeline_name) + '.yaml'
         filename, _ = QtWidgets.QFileDialog.getSaveFileName(self, "Save Pipeline",
                                                             str(Path.home().joinpath(default_name)),
                                                             "YAML file (*.yaml)")
@@ -3758,7 +3758,7 @@ class MainWindow(QtWidgets.QMainWindow):
         if gene_set is None:
             warnings.warn('Cannot export an empty gene set')
             return
-        default_name = self.tabs.tabText(self.tabs.currentIndex()).rstrip("*") + '.txt'
+        default_name = parsing.slugify(self.tabs.tabText(self.tabs.currentIndex()).rstrip("*")) + '.txt'
         filename, _ = QtWidgets.QFileDialog.getSaveFileName(self, "Save gene set",
                                                             str(Path.home().joinpath(default_name)),
                                                             "Text document (*.txt);;"
