@@ -2,7 +2,7 @@
 User guide - graphical interface
 #################################
 
-
+If you want to see more resources and exercises demonstrating how to use *RNAlysis*, please follow this `RNAlysis RNA-seq analysis guide <https://conwaymsserver.ucd.ie/guides/rnaseq_analysis/rnalysis.html>`_ as well, which was kindly provided by `Prof. Matthias Wilm <https://www.mwilm-conway-ucd.de/>`_.
 
 **************************************
 Analyzing data tables with *RNAlysis*
