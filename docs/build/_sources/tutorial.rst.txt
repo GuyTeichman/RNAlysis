@@ -11,6 +11,8 @@ In this A-to-Z tutorial, we are going to analyze two datasets step-by-step, with
 
 These analyses both focus on RNA sequencing data from nematodes, but the same principles can be applied to data from any organism.
 
+If you want to see more resources and exercises demonstrating how to use *RNAlysis*, please follow this `RNAlysis RNA-seq analysis guide <https://conwaymsserver.ucd.ie/guides/rnaseq_analysis/rnalysis.html>`_ as well, which was kindly provided by `Prof. Matthias Wilm <https://www.mwilm-conway-ucd.de/>`_.
+
 ****************************************
 Analysis #1 - time series RNA sequencing
 ****************************************
