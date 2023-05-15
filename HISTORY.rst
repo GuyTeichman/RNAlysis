@@ -2,6 +2,14 @@
 History
 =======
 
+3.8.1 (2023-05-??)
+------------------
+
+Fixed
+*******
+* Fixed bug where graphs generated through the Visualize Gene Sets window would not be added to automatic analysis report.
+* When saving a file through the graphical interface, automatically-suggested filenames no longer contain illegal characters.
+
 3.8.0 (2023-05-07)
 ------------------
 Version 3.8.0 of *RNAlysis* comes with several exciting new features, including the ability to generate interactive analysis reports automatically.
