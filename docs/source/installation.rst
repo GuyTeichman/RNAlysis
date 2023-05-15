@@ -53,6 +53,9 @@ The *RNAlysis* app should launch now - this may take a minute or two, so be pati
 After unzipping, open the "RNAlysis.dmg" file.
 The *RNAlysis* app should launch now - this may take a minute or two, so be patient!
 
+Further guidance
+^^^^^^^^^^^^^^^^^
+If you need further guidance with installing the stand-alone version of *RNAlysis*, please follow this `installation guide <https://conwaymsserver.ucd.ie/guides/rnaseq_analysis/rnalysis.html>`_ which was kindly provided by `Prof. Matthias Wilm <https://www.mwilm-conway-ucd.de/>`_.
 
 Install as a Python package with *pip* (best performance)
 ----------------------------------------------------------
