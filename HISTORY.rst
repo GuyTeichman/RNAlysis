@@ -9,6 +9,7 @@ Fixed
 *******
 * Fixed bug where graphs generated through the Visualize Gene Sets window would not be added to automatic analysis report.
 * When saving a file through the graphical interface, automatically-suggested filenames no longer contain illegal characters.
+* Improved clarity of error message when R installation folder is not found.
 
 3.8.0 (2023-05-07)
 ------------------

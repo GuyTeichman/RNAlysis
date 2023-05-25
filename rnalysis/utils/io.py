@@ -1406,10 +1406,15 @@ def run_r_script(script_path: Union[str, Path], r_installation_folder: Union[str
     assert Path(script_path).exists() and Path(
         script_path).is_file(), f"Could not find the requested R script: {script_path}"
 
-    return_code = run_subprocess([prefix, "--help"], False, False)
-    if return_code:
-        raise FileNotFoundError(f"Failed to find R executable (return code {return_code}). "
-                                "Please make sure your R installation folder is correct. ")
+    try:
+        return_code = run_subprocess([prefix, "--help"], False, False)
+        if return_code:
+            raise FileNotFoundError
+
+    except FileNotFoundError:
+        raise FileNotFoundError(f"Failed to find R executable. "
+                                "Please make sure your R installation folder is correct. \n"
+                                "(For example: 'C:/Program Files/R/R-4.2.3')")
 
     return_code = run_subprocess([prefix, script_path])
 
