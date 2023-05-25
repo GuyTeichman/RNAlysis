@@ -208,7 +208,8 @@ def test_SettingsWindow_get_defaults(qtbot, use_temp_settings_file):
     attr_truth = os.path.abspath('tests/test_files/counted.tsv')
     biotype_truth = os.path.abspath('tests/test_files/counted.csv')
 
-    settings.set_gui_settings(font_truth, int(font_size_truth), theme_truth.lower(), dbs_truth, show_tutorial_truth, auto_report_truth)
+    settings.set_gui_settings(font_truth, int(font_size_truth), theme_truth.lower(), dbs_truth, show_tutorial_truth,
+                              auto_report_truth)
     settings.set_table_settings(attr_truth, biotype_truth)
 
     qtbot, dialog = widget_setup(qtbot, SettingsWindow)
