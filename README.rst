@@ -157,8 +157,7 @@ If you use the *Limma-Voom* differential expression pipeline in your research, p
 
 If you use the *HDBSCAN* clustering feature in your research, please cite::
 
-     L. McInnes, J. Healy, S. Astels, hdbscan:
-    Hierarchical density based clustering In:
+     L. McInnes, J. Healy, S. Astels, hdbscan: Hierarchical density based clustering In:
     Journal of Open Source Software, The Open Journal, volume 2, number 11. 2017
     https://doi.org/10.1371/journal.pcbi.0030039
 
