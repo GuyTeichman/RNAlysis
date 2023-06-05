@@ -2,8 +2,12 @@
 History
 =======
 
-3.8.1 (2023-05-??)
+3.8.1 (2023-06-??)
 ------------------
+
+Added
+*******
+* Added additional parameters to enrichment bar plots (enrichment.enrichment_bar_plot), including a new plot style ('lollipop') and observed/expected labels on the graph.
 
 Fixed
 *******

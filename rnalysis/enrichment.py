@@ -1029,7 +1029,7 @@ class RankedSet(FeatureSet):
                             f"Instead got {type(ranked_genes)}.")
 
         super().__init__(ranked_genes, set_name)
-        assert len(self.ranked_genes) == len(self.gene_set), f"'ranked_genes' must have no repeating elements!"
+        assert len(self.ranked_genes) == len(self.gene_set), "'ranked_genes' must have no repeating elements!"
 
     def __copy__(self):
         obj = type(self)(self.ranked_genes.copy(), self.set_name)
@@ -1429,7 +1429,8 @@ def enrichment_bar_plot(results_table_path: Union[str, Path], alpha: param_typin
                         title: str = 'Enrichment results', center_bars: bool = True,
                         plot_horizontal: bool = True, ylabel: Union[str, Literal[
         r"$\log_2$(Fold Enrichment)", r"$\log_2$(Enrichment Score)"]] = r"$\log_2$(Fold Enrichment)",
-                        ylim: Union[float, Literal['auto']] = 'auto') -> plt.Figure:
+                        ylim: Union[float, Literal['auto']] = 'auto',
+                        plot_style: Literal['bar', 'lollipop'] = 'bar', show_expected: bool = False) -> plt.Figure:
     """
     Generate an enrichment bar-plot based on an enrichment results table. \
     For the clarity of display, complete depletion (linear enrichment = 0) \
@@ -1456,6 +1457,11 @@ def enrichment_bar_plot(results_table_path: Union[str, Path], alpha: param_typin
     :param ylim: set the Y-axis limits. If `ylim`='auto', determines the axis limits automatically based on the data. \
     If `ylim` is a number, set the Y-axis limits to [-ylim, ylim].
     :type ylim: float or 'auto' (default='auto')
+    :param plot_style: style for the plot. Either 'bar' for a bar plot or 'lollipop' for a lollipop plot \
+    in which the lollipop size indicates the size of the observed gene set.
+    :type plot_style: 'bar' or 'lollipop' (default='bar')
+    :param show_expected: if True, the observed/expected values will be shown on the plot.
+    :type show_expected: bool (default=False)
     :return: Figure object containing the bar plot
     :rtype: matplotlib.figure.Figure instance
     """
@@ -1464,7 +1470,8 @@ def enrichment_bar_plot(results_table_path: Union[str, Path], alpha: param_typin
                                                 plot_horizontal, '', False, 'hypergeometric', 'all')
     runner.en_score_col = enrichment_score_column
     runner.results = results_table
-    return runner.enrichment_bar_plot(n_bars, center_bars, ylabel, title, ylim)
+    return runner.enrichment_bar_plot(n_bars, center_bars, ylabel=ylabel, title=title, ylim=ylim, plot_style=plot_style,
+                                      show_expected=show_expected)
 
 
 def _fetch_sets(objs: dict, ref: Union[str, Path, Literal['predefined']] = 'predefined'):
