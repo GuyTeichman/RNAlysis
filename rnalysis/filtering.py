@@ -4636,7 +4636,7 @@ class CountFilter(Filter):
             dims = (15, 15 * (pc2_var / pc1_var))
         else:
             dims = (8, 8)
-        fig = plt.figure(figsize=dims)
+        fig = plt.figure(figsize=dims, constrained_layout=True)
         ax = fig.add_subplot(1, 1, 1)
         if proportional_axes:
             ax.set_aspect(pc2_var / pc1_var)
