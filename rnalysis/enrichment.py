@@ -1542,37 +1542,39 @@ def upset_plot(objs: Dict[str, Union[str, FeatureSet, Set[str]]], set_colors: pa
     """
 
     upset_df = parsing.generate_upset_series(_fetch_sets(objs=objs, ref=attr_ref_table_path))
-    upset_obj = upsetplot.UpSet(upset_df, sort_by='degree', sort_categories_by=None, show_percentages=show_percentages)
-    axes = upset_obj.plot(fig=fig)
-    if fig is None:
-        fig = plt.gcf()
+    with pd.option_context("mode.copy_on_write", False):
+        upset_obj = upsetplot.UpSet(upset_df, sort_by='degree', sort_categories_by=None,
+                                    show_percentages=show_percentages)
+        axes = upset_obj.plot(fig=fig)
+        if fig is None:
+            fig = plt.gcf()
 
-    set_colors = [matplotlib.colors.to_rgb(color) for color in parsing.data_to_list(set_colors)]
-    if len(set_colors) == 1:
-        set_colors = [set_colors[0]] * len(objs)
-    elif len(set_colors) > len(objs):
-        set_colors = set_colors[0:len(objs)]
-    elif len(set_colors) < len(objs):
-        set_colors = set_colors + [(0, 0, 0)] * (len(objs) - len(set_colors))
+        set_colors = [matplotlib.colors.to_rgb(color) for color in parsing.data_to_list(set_colors)]
+        if len(set_colors) == 1:
+            set_colors = [set_colors[0]] * len(objs)
+        elif len(set_colors) > len(objs):
+            set_colors = set_colors[0:len(objs)]
+        elif len(set_colors) < len(objs):
+            set_colors = set_colors + [(0, 0, 0)] * (len(objs) - len(set_colors))
 
-    for main_set in range(len(objs)):
-        color = set_colors[main_set]
-        axes['totals'].patches[main_set].set_facecolor(color)
+        for main_set in range(len(objs)):
+            color = set_colors[main_set]
+            axes['totals'].patches[main_set].set_facecolor(color)
 
-    patcn_ids = _get_tuple_patch_ids(len(objs))
-    for subset in range(len(upset_obj.subset_styles)):
-        id = patcn_ids[subset]
-        colors_to_mix = [set_colors[ind] for ind, is_present in enumerate(id) if is_present]
-        color = generic.mix_colors(*colors_to_mix)
-        upset_obj.subset_styles[subset]['facecolor'] = color
-        axes['intersections'].patches[subset].set_facecolor(color)
-    matrix_ax = axes['matrix']
-    matrix_ax.clear()
-    upset_obj.plot_matrix(matrix_ax)
-    fig.suptitle(title, fontsize=title_fontsize)
+        patcn_ids = _get_tuple_patch_ids(len(objs))
+        for subset in range(len(upset_obj.subset_styles)):
+            id = patcn_ids[subset]
+            colors_to_mix = [set_colors[ind] for ind, is_present in enumerate(id) if is_present]
+            color = generic.mix_colors(*colors_to_mix)
+            upset_obj.subset_styles[subset]['facecolor'] = color
+            axes['intersections'].patches[subset].set_facecolor(color)
+        matrix_ax = axes['matrix']
+        matrix_ax.clear()
+        upset_obj.plot_matrix(matrix_ax)
+        fig.suptitle(title, fontsize=title_fontsize)
 
-    plt.show()
-    return fig
+        plt.show()
+        return fig
 
 
 def _compare_ids(id1: Tuple[int, ...], id2: Tuple[int, ...]):

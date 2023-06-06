@@ -3,7 +3,7 @@ import functools
 import itertools
 from pathlib import Path
 from typing import List, Tuple, Callable
-
+import pandas as pd
 import matplotlib
 import matplotlib_venn
 import upsetplot
@@ -291,30 +291,32 @@ class UpSetInteractiveCanvas(BaseInteractiveCanvas):
     def __init__(self, gene_sets: dict, parent=None):
         super().__init__(gene_sets, parent, constrained_layout=False)
         self.upset_df = parsing.generate_upset_series(gene_sets)
-        self.upset = upsetplot.UpSet(self.upset_df, sort_by='degree', sort_categories_by=None)
-        self.subset_states = {i: self.DESELECTED_STATE for i in range(len(self.upset.subset_styles))}
+        with pd.option_context("mode.copy_on_write", False):
+            self.upset = upsetplot.UpSet(self.upset_df, sort_by='degree', sort_categories_by=None)
+            self.subset_states = {i: self.DESELECTED_STATE for i in range(len(self.upset.subset_styles))}
 
-        self.axes = self.upset.plot(self.fig)
-        for ax in self.axes.values():
-            generic.despine(ax)
+            self.axes = self.upset.plot(self.fig)
+            for ax in self.axes.values():
+                generic.despine(ax)
 
-        self.bounding_boxes = []
-        axis_ymax = self.axes['intersections'].dataLim.bounds[3]
-        for patch in self.axes['intersections'].patches:
-            x, y = patch.get_xy()
-            width = patch.get_width()
-            bbox = matplotlib.patches.Rectangle((x, y), width, axis_ymax, visible=False)
-            self.bounding_boxes.append(bbox)
+            self.bounding_boxes = []
+            axis_ymax = self.axes['intersections'].dataLim.bounds[3]
+            for patch in self.axes['intersections'].patches:
+                x, y = patch.get_xy()
+                width = patch.get_width()
+                bbox = matplotlib.patches.Rectangle((x, y), width, axis_ymax, visible=False)
+                self.bounding_boxes.append(bbox)
 
-        for bbox in self.bounding_boxes:
-            self.axes['intersections'].add_patch(bbox)
+            for bbox in self.bounding_boxes:
+                self.axes['intersections'].add_patch(bbox)
 
     def draw(self):
         # update matrix
-        matrix_ax = self.axes['matrix']
-        matrix_ax.clear()
-        self.upset.plot_matrix(matrix_ax)
-        super().draw()
+        with pd.option_context("mode.copy_on_write", False):
+            matrix_ax = self.axes['matrix']
+            matrix_ax.clear()
+            self.upset.plot_matrix(matrix_ax)
+            super().draw()
 
     def on_click(self, event):
         graph_modified = False
