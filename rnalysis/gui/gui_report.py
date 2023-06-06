@@ -7,7 +7,7 @@ from pathlib import Path
 
 import networkx
 from pyvis.network import Network
-from typing_extensions import Literal
+from typing import Literal
 
 from rnalysis import __version__
 from rnalysis.utils import parsing, io

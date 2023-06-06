@@ -1,14 +1,9 @@
 import hashlib
 import time
 from pathlib import Path
-from typing import Union, Iterable, Tuple
+from typing import Union, Iterable, Tuple, Literal
 
 from rnalysis.utils import io, generic
-
-try:
-    from typing import Literal
-except ImportError:
-    from typing_extensions import Literal
 
 
 def install_limma(r_installation_folder: Union[str, Path, Literal['auto']] = 'auto'):

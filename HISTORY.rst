@@ -14,6 +14,7 @@ Fixed
 * Fixed bug where graphs generated through the Visualize Gene Sets window would not be added to automatic analysis report.
 * When saving a file through the graphical interface, automatically-suggested filenames no longer contain illegal characters.
 * Improved clarity of error message when R installation folder is not found.
+* Fixed bug where some input parameter widgets in the RNAlysis graphical interface would not display properly.
 
 3.8.0 (2023-05-07)
 ------------------

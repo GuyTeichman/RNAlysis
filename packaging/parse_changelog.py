@@ -4,7 +4,7 @@ from pathlib import Path
 from typing import Union
 
 import rst_to_myst
-from typing_extensions import Literal
+from typing import Literal
 
 
 def get_change_log_for(version: Union[str, Literal['latest']] = 'latest'):

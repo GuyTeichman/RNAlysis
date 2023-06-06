@@ -5,7 +5,7 @@ import sys
 import warnings
 from functools import lru_cache
 from pathlib import Path
-from typing import Iterable, List, Tuple, Union, Collection, Set, Dict
+from typing import Iterable, List, Tuple, Union, Collection, Set, Dict, Literal
 
 import joblib
 import matplotlib.patches as mpatches
@@ -18,7 +18,6 @@ from mpl_toolkits.axes_grid1 import make_axes_locatable
 from scipy.stats import hypergeom, ttest_1samp, fisher_exact
 from statsmodels.stats.descriptivestats import sign_test
 from tqdm.auto import tqdm
-from typing_extensions import Literal
 
 from rnalysis.utils import ontology, io, parsing, settings, validation, generic, param_typing
 from rnalysis.utils.param_typing import PARALLEL_BACKENDS, GRAPHVIZ_FORMATS

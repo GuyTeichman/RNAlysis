@@ -21,10 +21,7 @@ from scipy.stats import spearmanr
 from scipy.stats.mstats import gmean
 from tqdm.auto import tqdm
 
-try:
-    from typing import Literal
-except ImportError:
-    from typing_extensions import Literal
+from typing import Literal
 
 import matplotlib.pyplot as plt
 import numpy as np

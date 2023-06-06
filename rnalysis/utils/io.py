@@ -20,7 +20,7 @@ from io import StringIO
 from itertools import chain
 from pathlib import Path
 from sys import executable
-from typing import List, Set, Union, Iterable, Tuple, Dict, Any, Callable
+from typing import List, Set, Union, Iterable, Tuple, Dict, Any, Callable, Literal
 from urllib.parse import urlparse, parse_qs, urlencode
 
 import aiohttp
@@ -35,12 +35,8 @@ from defusedxml import ElementTree
 from requests.adapters import HTTPAdapter, Retry
 from tqdm.auto import tqdm
 
-try:
-    from typing import Literal
-except ImportError:
-    from typing_extensions import Literal
-from rnalysis.utils import parsing, validation, __path__
 from rnalysis import __version__
+from rnalysis.utils import parsing, validation, __path__
 
 
 def get_gui_cache_dir() -> Path:

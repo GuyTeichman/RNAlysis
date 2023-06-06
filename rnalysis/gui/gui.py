@@ -3269,6 +3269,8 @@ class MainWindow(QtWidgets.QMainWindow):
     def update_report_spawn(self, name: str, spawn_id: int, predecessor_id: int,
                             spawn: Union[
                                 filtering.Filter, enrichment.FeatureSet, pd.DataFrame, plt.Figure, generic.GenericPipeline]):
+        if spawn is None:
+            return
         spawn_type = self._get_spawn_type(spawn)
         prefix = f'{spawn_id}_{name}' if spawn_type in ('Other output', 'Pipeline') else str(spawn_id)
         filename = self._cache_spawn(spawn, prefix)

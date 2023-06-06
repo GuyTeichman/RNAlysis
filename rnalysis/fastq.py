@@ -17,7 +17,7 @@ from typing import Union, List, Tuple
 
 import pandas as pd
 from tqdm.auto import tqdm
-from typing_extensions import Literal
+from typing import Literal
 
 from rnalysis import filtering
 from rnalysis.utils import validation, parsing, io, feature_counting, genome_annotation, generic

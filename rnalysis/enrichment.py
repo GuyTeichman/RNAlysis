@@ -9,18 +9,10 @@ import itertools
 import types
 import warnings
 from pathlib import Path
-from typing import Dict, Iterable, List, Set, Tuple, Union, Sequence
+from typing import Dict, Iterable, List, Set, Tuple, Union, Sequence, Literal
 
-from rnalysis.utils.param_typing import GO_ASPECTS, GO_EVIDENCE_TYPES, GO_QUALIFIERS, DEFAULT_ORGANISMS, \
-    PARALLEL_BACKENDS, get_gene_id_types, PositiveInt
-
-try:
-    from typing import Literal
-except ImportError:
-    from typing_extensions import Literal
-
-import matplotlib.pyplot as plt
 import matplotlib
+import matplotlib.pyplot as plt
 import matplotlib_venn as vn
 import numpy as np
 import pandas as pd
@@ -28,6 +20,8 @@ import upsetplot
 
 from rnalysis.filtering import Filter, readable_name
 from rnalysis.utils import io, parsing, settings, validation, enrichment_runner, generic, param_typing, ontology
+from rnalysis.utils.param_typing import GO_ASPECTS, GO_EVIDENCE_TYPES, GO_QUALIFIERS, DEFAULT_ORGANISMS, \
+    PARALLEL_BACKENDS, get_gene_id_types, PositiveInt
 
 
 class FeatureSet(set):

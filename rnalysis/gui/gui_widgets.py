@@ -6,14 +6,14 @@ import json
 import threading
 from pathlib import Path
 from queue import Queue
-from typing import List, Dict, Tuple, Sequence, Iterable, Union, Callable
+from typing import List, Dict, Tuple, Sequence, Iterable, Union, Callable, Literal
 
 import matplotlib
 import pandas as pd
 from PyQt5 import QtCore, QtWidgets, QtGui
 from joblib import Parallel, parallel_backend
 from tqdm.auto import tqdm
-from typing_extensions import Literal, get_origin, get_args
+from typing_extensions import get_origin, get_args
 
 from rnalysis.utils import parsing, validation, generic, param_typing, settings
 
