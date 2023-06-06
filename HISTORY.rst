@@ -12,6 +12,7 @@ Added
 Changed
 ********
 * Added new parameter to Principal Component Analysis plots (CountFilter.pca) 'plot_grid', which can enable or disable adding a grid to PCA plots.
+* Many of the functions in RNAlysis should now run faster.
 
 Fixed
 *******

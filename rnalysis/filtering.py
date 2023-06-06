@@ -2978,10 +2978,11 @@ class CountFilter(Filter):
         if log2:
             sample_df = np.log2(sample_df + 1)
 
-        pairplt = sns.pairplot(sample_df, corner=True,
-                               plot_kws=dict(alpha=0.25, edgecolors=(0.1, 0.5, 0.15), facecolors=(0.1, 0.5, 0.15),
-                                             s=3.5),
-                               diag_kws=dict(edgecolor=(0, 0, 0), facecolor=(0.1, 0.5, 0.15)))
+        with pd.option_context("mode.copy_on_write", False):
+            pairplt = sns.pairplot(sample_df, corner=True,
+                                   plot_kws=dict(alpha=0.25, edgecolors=(0.1, 0.5, 0.15), facecolors=(0.1, 0.5, 0.15),
+                                                 s=3.5),
+                                   diag_kws=dict(edgecolor=(0, 0, 0), facecolor=(0.1, 0.5, 0.15)))
 
         if title == 'auto':
             title = 'Pairplot' + log2 * ' (logarithmic scale)'
@@ -4360,9 +4361,9 @@ class CountFilter(Filter):
         if sample_names == 'all':
             sample_names = list(self.columns)
         print('Calculating clustergram...')
-        plt.style.use('seaborn-whitegrid')
-        clustergram = sns.clustermap(np.log2(self.df[sample_names] + 1), method=linkage, metric=metric,
-                                     cmap=sns.color_palette("RdBu_r", 12), yticklabels=False)
+        with pd.option_context("mode.copy_on_write", False):
+            clustergram = sns.clustermap(np.log2(self.df[sample_names] + 1), method=linkage, metric=metric,
+                                         cmap=sns.color_palette("RdBu_r", 12), yticklabels=False)
         if title == 'auto':
             title = f"Clustegram of {self.fname.stem}"
         clustergram.figure.suptitle(title, fontsize=title_fontsize)
