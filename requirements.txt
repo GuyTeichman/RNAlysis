@@ -1,7 +1,7 @@
 numpy>=1.24.0
 pandas[performance,clipboard]>=2.0.0
 matplotlib>=3.7.0
-seaborn>=0.12.0
+seaborn>=0.12.2
 statsmodels>=0.12.0
 scikit-learn>=1.2.0
 grid_strategy>=0.0.1
