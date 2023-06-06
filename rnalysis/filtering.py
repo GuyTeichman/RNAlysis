@@ -15,27 +15,22 @@ import re
 import types
 import warnings
 from pathlib import Path
-from typing import Any, Iterable, List, Tuple, Union, Callable, Sequence
-
-from scipy.stats import spearmanr
-from scipy.stats.mstats import gmean
-from tqdm.auto import tqdm
-
-from typing import Literal
+from typing import Any, Iterable, List, Tuple, Union, Callable, Sequence, Literal
 
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import seaborn as sns
 from grid_strategy import strategies
+from scipy.stats import spearmanr
+from scipy.stats.mstats import gmean
 from sklearn.decomposition import PCA
 from sklearn.preprocessing import PowerTransformer, StandardScaler
+from tqdm.auto import tqdm
 
 from rnalysis.utils import clustering, io, parsing, generic, ontology, settings, validation, differential_expression, \
     param_typing, genome_annotation
-
 from rnalysis.utils.generic import readable_name
-
 from rnalysis.utils.param_typing import BIOTYPES, BIOTYPE_ATTRIBUTE_NAMES, GO_EVIDENCE_TYPES, GO_QUALIFIERS, \
     DEFAULT_ORGANISMS, PARALLEL_BACKENDS, LEGAL_GENE_LENGTH_METHODS, K_CRITERIA, get_gene_id_types, PositiveInt, \
     NonNegativeInt
@@ -2936,8 +2931,6 @@ class CountFilter(Filter):
 
         return fcfilt
 
-
-
     @readable_name('Pair-plot')
     def pairplot(self, samples: Union[param_typing.GroupedColumns, Literal['all']] = 'all',
                  log2: bool = True, show_corr: bool = True, title: Union[str, Literal['auto']] = 'auto',
@@ -4522,7 +4515,7 @@ class CountFilter(Filter):
     def pca(self, samples: Union[param_typing.GroupedColumns, Literal['all']] = 'all', n_components: PositiveInt = 3,
             power_transform: bool = True, labels: bool = True, title: Union[str, Literal['auto']] = 'auto',
             title_fontsize: float = 20, label_fontsize: float = 16, tick_fontsize: float = 12,
-            proportional_axes: bool = False) -> Tuple[PCA, List[plt.Figure]]:
+            proportional_axes: bool = False, plot_grid: bool = True) -> Tuple[PCA, List[plt.Figure]]:
         """
         Performs Principal Component Analysis (PCA), visualizing the principal components that explain the most\
         variance between the different samples. The function will standardize the data prior to PCA, and then plot \
@@ -4553,6 +4546,8 @@ class CountFilter(Filter):
         :param proportional_axes: if True, the dimensions of the PCA plots will be proportional \
         to the percentage of variance explained by each principal component.
         :type proportional_axes: bool (default=False)
+        :param plot_grid: if True, will draw a grid on the PCA plot.
+        :type plot_grid: bool (default=True)
         :return: A tuple whose first element is an sklearn.decomposition.pca object, \
         and second element is a list of matplotlib.axis objects.
 
@@ -4589,7 +4584,7 @@ class CountFilter(Filter):
                         [f'Principal component {1 + first_pc}', f'Principal component {1 + second_pc}', 'lib']],
                     pc1_var=pc_var[first_pc], pc2_var=pc_var[second_pc], sample_grouping=samples, labels=labels,
                     label_fontsize=label_fontsize, title=title, title_fontsize=title_fontsize,
-                    tick_fontsize=tick_fontsize, proportional_axes=proportional_axes))
+                    tick_fontsize=tick_fontsize, proportional_axes=proportional_axes, plot_grid=plot_grid))
 
         return pca_obj, figs
 
@@ -4617,7 +4612,7 @@ class CountFilter(Filter):
     @staticmethod
     def _pca_plot(final_df: pd.DataFrame, pc1_var: float, pc2_var: float, sample_grouping: param_typing.GroupedColumns,
                   labels: bool, title: str, title_fontsize: float, label_fontsize: float, tick_fontsize: float,
-                  proportional_axes: bool) -> plt.Figure:
+                  proportional_axes: bool, plot_grid: bool) -> plt.Figure:
         """
         Internal method, used to plot the results from CountFilter.pca().
 
@@ -4641,7 +4636,6 @@ class CountFilter(Filter):
         if proportional_axes:
             ax.set_aspect(pc2_var / pc1_var)
 
-        ax.grid(True)
         ax.set_xlabel(f'{final_df.columns[0]} (explained {pc1_var * 100 :.2f}%)', fontsize=label_fontsize)
         ax.set_ylabel(f'{final_df.columns[1]} (explained {pc2_var * 100 :.2f}%)', fontsize=label_fontsize)
         ax.set_title(title, fontsize=title_fontsize)
@@ -4657,7 +4651,7 @@ class CountFilter(Filter):
                 ax.annotate(row[2], (row[0], row[1]), textcoords='offset pixels',
                             xytext=(label_fontsize, label_fontsize),
                             fontsize=label_fontsize, color=colors[i])
-        ax.grid(True)
+        ax.grid(plot_grid)
         ax.tick_params(axis='both', which='both', labelsize=tick_fontsize)
         plt.show()
         return fig

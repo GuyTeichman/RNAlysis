@@ -9,6 +9,10 @@ Added
 *******
 * Added additional parameters to enrichment bar plots (enrichment.enrichment_bar_plot), including a new plot style ('lollipop') and observed/expected labels on the graph.
 
+Changed
+********
+* Added new parameter to Principal Component Analysis plots (CountFilter.pca) 'plot_grid', which can enable or disable adding a grid to PCA plots.
+
 Fixed
 *******
 * Fixed bug where graphs generated through the Visualize Gene Sets window would not be added to automatic analysis report.
