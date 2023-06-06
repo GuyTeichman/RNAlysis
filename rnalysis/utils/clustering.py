@@ -955,6 +955,7 @@ class HDBSCANRunner(ClusteringRunner):
                  parallel_backend='loky'):
         self.return_probabilities = return_probabilities
         if not HAS_HDBSCAN:
+            self.parallel_backend = parallel_backend
             return
         assert isinstance(metric, str)
         assert isinstance(min_cluster_size, int) and min_cluster_size > 1

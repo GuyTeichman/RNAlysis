@@ -4148,7 +4148,7 @@ class MainWindow(QtWidgets.QMainWindow):
     def finish_clustering(self, worker_output: gui_widgets.WorkerOutput):
         if worker_output.raised_exception:
             raise worker_output.raised_exception
-        if len(worker_output.result) == 0:
+        if worker_output.result is None or len(worker_output.result) == 0:
             print("Done")
             return
         assert isinstance(worker_output, gui_widgets.WorkerOutput), f"invalid worker output: {worker_output}"
