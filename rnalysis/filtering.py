@@ -4365,8 +4365,13 @@ class CountFilter(Filter):
                                      cmap=sns.color_palette("RdBu_r", 12), yticklabels=False)
         if title == 'auto':
             title = f"Clustegram of {self.fname.stem}"
-        plt.title(title, fontsize=title_fontsize)
+        clustergram.figure.suptitle(title, fontsize=title_fontsize)
         plt.tick_params(axis='both', which='both', labelsize=tick_fontsize)
+        try:
+            clustergram.figure.set_layout_engine("compressed")
+        except AttributeError:
+            clustergram.figure.set_constrained_layout(True)
+
         plt.show()
         return clustergram.figure
 

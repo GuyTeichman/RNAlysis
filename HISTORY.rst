@@ -20,7 +20,7 @@ Fixed
 * Improved clarity of error message when R installation folder is not found.
 * Fixed bug where some input parameter widgets in the RNAlysis graphical interface would not display properly.
 * RNAlysis now provides a clearer warning message when attempting to run HDBSCAN clustering, if the hdbscan package is not installed.
-* Label text in PCA plots should no longer be cropped outside of the visible region of the plot.
+* Label text in PCA plots and hierarchical clustergrams should no longer be cropped outside of the visible region of the plot.
 * Fixed bug where some visualization functions, such as pair-plot (CountFilter.pairplot) would not display properly due to version mismatches between pandas and seaborn.
 
 3.8.0 (2023-05-07)
