@@ -1501,6 +1501,10 @@ def generate_base_call(command: str, installation_folder: Union[str, Path, Liter
     except FileNotFoundError:
         raise FileNotFoundError(f"RNAlysis could not find '{command}'. "
                                 'Please ensure that your installation folder is correct, or add it to PATH. ')
+    except OSError:
+        raise OSError(f"RNAlysis could not run '{call + [version_command]}'. \n"
+                      f"Please ensure that the installed version of {command} "
+                      f"matches your operating system and try again. ")
 
     return call
 
