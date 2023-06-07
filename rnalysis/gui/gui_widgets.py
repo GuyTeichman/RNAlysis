@@ -500,8 +500,6 @@ class ToggleSwitchCore(QtWidgets.QPushButton):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setCheckable(True)
-        self.setMinimumWidth((self.WIDTH + self.BORDER) * 2)
-        self.setMinimumHeight((self.RADIUS + self.BORDER) * 2)
         self.clicked.connect(self.state_changed)
 
     def state_changed(self):
@@ -515,9 +513,12 @@ class ToggleSwitchCore(QtWidgets.QPushButton):
         label = " True" if self.isChecked() else "False"
         bg_color = QtGui.QColor('#72e5bf') if self.isChecked() else QtGui.QColor('#e96e3a')
 
-        radius = self.RADIUS
-        width = self.WIDTH
+        radius = int(self.RADIUS * (self.font().pointSize() / 10))
+        width = int(self.WIDTH * (self.font().pointSize() / 10))
         center = self.rect().center()
+
+        self.setMinimumWidth((width + self.BORDER) * 2)
+        self.setMinimumHeight((radius + self.BORDER) * 2)
 
         painter = QtGui.QPainter(self)
         painter.setRenderHint(QtGui.QPainter.Antialiasing)

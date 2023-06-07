@@ -2642,8 +2642,6 @@ def test_MainWindow_toggle_history(state, qtbot, use_temp_settings_file, main_wi
     main_window.toggle_history_window(state)
 
 
-
-
 def test_MainWindow_save_session(qtbot, use_temp_settings_file, main_window, monkeypatch):
     monkeypatch.setattr(QtWidgets.QFileDialog, 'getOpenFileName',
                         lambda *args, **kwargs: ('tests/test_files/test_session.rnal', '.rnal'))
