@@ -24,6 +24,11 @@ Fixed
 * Label text in PCA plots and hierarchical clustergrams should no longer be cropped outside of the visible region of the plot.
 * Fixed bug where some visualization functions, such as pair-plot (CountFilter.pairplot) would not display properly due to version mismatches between pandas and seaborn.
 * Improved clarity of error messages when external apps' (kallisto, bowtie2, etc) installation folders are not found.
+* Fixed bug where running the RNAlysis graphical interface on a new computer would sometimes raise an error (thanks to `NeuroRookie <https://github.com/NeuroRookie>`_ in `#25 <https://github.com/GuyTeichman/RNAlysis/issues/25>`_).
+
+New Contributors
+*****************
+* `NeuroRookie`_ in `#25`_
 
 3.8.0 (2023-05-07)
 ------------------

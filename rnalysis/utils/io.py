@@ -147,7 +147,9 @@ def cache_gui_file(item: Union[pd.DataFrame, set, str], filename: str):
 
 
 def check_changed_version():  # pragma: no cover
-    filename = get_data_dir().joinpath('latest_version.txt')
+    data_dir = get_data_dir()
+    data_dir.mkdir(parents=True, exist_ok=True)
+    filename = data_dir.joinpath('latest_version.txt')
     if not filename.exists():
         ver = ''
     else:
@@ -1354,8 +1356,7 @@ async def _write_video_to_file(video_path: Path, content: bytes) -> None:  # pra
 
 async def get_gui_videos(video_filenames: Tuple[str, ...]):  # pragma: no cover
     video_dir_pth = get_tutorial_videos_dir()
-    if not video_dir_pth.exists():
-        video_dir_pth.mkdir(parents=True)
+    video_dir_pth.mkdir(parents=True, exist_ok=True)
 
     videos_to_download = []
     local_checksums = []
