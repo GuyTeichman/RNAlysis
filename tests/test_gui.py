@@ -2642,12 +2642,6 @@ def test_MainWindow_toggle_history(state, qtbot, use_temp_settings_file, main_wi
     main_window.toggle_history_window(state)
 
 
-def test_MainWindow_open_tutorial(qtbot, use_temp_settings_file, main_window):
-    main_window.open_tutorial()
-
-
-def test_MainWindow_open_faq(qtbot, use_temp_settings_file, main_window):
-    main_window.open_faq()
 
 
 def test_MainWindow_save_session(qtbot, use_temp_settings_file, main_window, monkeypatch):

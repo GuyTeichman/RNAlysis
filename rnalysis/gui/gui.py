@@ -2818,6 +2818,12 @@ class MainWindow(QtWidgets.QMainWindow):
     USER_GUIDE_URL = 'https://guyteichman.github.io/RNAlysis/build/user_guide_gui.html'
     TUTORIAL_URL = 'https://guyteichman.github.io/RNAlysis/build/tutorial.html'
     FAQ_URL = 'https://guyteichman.github.io/RNAlysis/build/faq.html'
+    BUGS_URL = 'https://github.com/GuyTeichman/RNAlysis/issues/new?assignees=&labels=' \
+               '&projects=&template=bug_report.md&title='
+    FEATURE_URL = 'https://github.com/GuyTeichman/RNAlysis/issues/new?assignees=&labels=' \
+                  '&projects=&template=feature_request.md&title='
+    QUESTION_URL = 'https://github.com/GuyTeichman/RNAlysis/discussions'
+
     jobQueued = QtCore.pyqtSignal()
 
     def __init__(self):
@@ -3648,11 +3654,17 @@ class MainWindow(QtWidgets.QMainWindow):
         self.quick_start_action = QtWidgets.QAction("&Quick-start guide", self)
         self.quick_start_action.triggered.connect(self.quickstart_window.show)
         self.user_guide_action = QtWidgets.QAction("&User Guide", self)
-        self.user_guide_action.triggered.connect(self.open_user_guide)
+        self.user_guide_action.triggered.connect(functools.partial(self.open_link, self.USER_GUIDE_URL))
         self.tutorial_action = QtWidgets.QAction("&Tutorial", self)
-        self.tutorial_action.triggered.connect(self.open_tutorial)
+        self.tutorial_action.triggered.connect(functools.partial(self.open_link, self.TUTORIAL_URL))
         self.faq_action = QtWidgets.QAction("&Frequently Asked Questions", self)
-        self.faq_action.triggered.connect(self.open_faq)
+        self.faq_action.triggered.connect(functools.partial(self.open_link, self.FAQ_URL))
+        self.bug_report_action = QtWidgets.QAction("Submit an &issue", self)
+        self.bug_report_action.triggered.connect(functools.partial(self.open_link, self.BUGS_URL))
+        self.request_feature_action = QtWidgets.QAction("&Request a feature", self)
+        self.request_feature_action.triggered.connect(functools.partial(self.open_link, self.FEATURE_URL))
+        self.ask_question_action = QtWidgets.QAction("Ask a &question", self)
+        self.ask_question_action.triggered.connect(functools.partial(self.open_link, self.QUESTION_URL))
         self.about_action = QtWidgets.QAction("&About", self)
         self.about_action.triggered.connect(self.about)
         self.cite_action = QtWidgets.QAction("How to &cite RNAlysis", self)
@@ -3769,20 +3781,10 @@ class MainWindow(QtWidgets.QMainWindow):
             io.save_gene_set(gene_set, filename)
             print(f"Successfully saved at {io.get_datetime()} under {filename}")
 
-    def open_user_guide(self):
-        url = QtCore.QUrl(self.USER_GUIDE_URL)
+    def open_link(self, link: str):
+        url = QtCore.QUrl(link)
         if not QtGui.QDesktopServices.openUrl(url):
-            QtGui.QMessageBox.warning(self, 'User Guide', 'Could not open User Guide')
-
-    def open_tutorial(self):
-        url = QtCore.QUrl(self.TUTORIAL_URL)
-        if not QtGui.QDesktopServices.openUrl(url):
-            QtGui.QMessageBox.warning(self, 'Tutorial', 'Could not open Tutorial')
-
-    def open_faq(self):
-        url = QtCore.QUrl(self.FAQ_URL)
-        if not QtGui.QDesktopServices.openUrl(url):
-            QtGui.QMessageBox.warning(self, 'FAQ', 'Could not open Frequently Asked Questions')
+            QtGui.QMessageBox.warning(self, 'Connection failed', 'Could not open link. Please try again later. ')
 
     def get_gene_set_by_ind(self, ind: int):
         gene_set = self.tabs.widget(ind).filter_obj if \
@@ -3931,6 +3933,7 @@ class MainWindow(QtWidgets.QMainWindow):
         help_menu = self.menu_bar.addMenu("&Help")
         help_menu.addActions(
             [self.quick_start_action, self.tutorial_action, self.user_guide_action, self.faq_action,
+             self.bug_report_action, self.request_feature_action, self.ask_question_action,
              self.check_update_action, self.about_action, self.cite_action])
 
     def _populate_pipelines(self, menu: QtWidgets.QMenu, func: Callable, pipeline_arg: bool = True,

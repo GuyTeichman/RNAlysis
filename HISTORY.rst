@@ -9,6 +9,7 @@ Added
 *******
 * Added additional parameters to enrichment bar plots (enrichment.enrichment_bar_plot), including a new plot style ('lollipop') and observed/expected labels on the graph.
 * RNAlysis can now load and save data tables in Parquet format (.parquet)
+* Added new actions to the Help menu, allowing users to report issues, suggest issues, or open discussions.
 
 Changed
 ********
