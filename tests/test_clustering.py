@@ -3,7 +3,7 @@ from collections import namedtuple
 import pytest
 
 from rnalysis.utils.clustering import *
-from rnalysis.utils.io import load_csv
+from rnalysis.utils.io import load_table
 
 
 @pytest.fixture
@@ -30,7 +30,7 @@ def invalid_clustering_solutions():
 def test_kmedoidsiter_api():
     truth = KMedoids(3, max_iter=300, init='k-medoids++', random_state=42)
     kmeds = KMedoidsIter(3, init='k-medoids++', max_iter=300, n_init=1, random_state=42)
-    df = load_csv('tests/test_files/counted.csv', 0)
+    df = load_table('tests/test_files/counted.csv', 0)
     truth.fit(df)
     kmeds.fit(df)
     assert np.all(truth.cluster_centers_ == kmeds.cluster_centers_)
@@ -50,7 +50,7 @@ def test_kmedoidsiter_api():
 
 def test_kmedoidsiter_iter():
     kmeds = KMedoidsIter(3, init='k-medoids++', max_iter=300, n_init=5, random_state=0)
-    df = load_csv('tests/test_files/counted.csv', 0)
+    df = load_table('tests/test_files/counted.csv', 0)
     kmeds.fit(df)
 
     inertias = []

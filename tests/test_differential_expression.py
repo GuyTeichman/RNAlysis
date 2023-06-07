@@ -46,11 +46,11 @@ def test_run_limma_analysis(comparisons, expected_paths):
     dfs = []
     for item in output_dir.iterdir():
         if item.is_file() and item.suffix == '.csv':
-            dfs.append(io.load_csv(item, index_col=0))
+            dfs.append(io.load_table(item, index_col=0))
 
     expected_dfs = []
     for item in expected_paths:
-        expected_dfs.append(io.load_csv(item, index_col=0))
+        expected_dfs.append(io.load_table(item, index_col=0))
 
     for out, truth in zip(dfs, expected_dfs):
         assert out.shape == truth.shape
@@ -98,11 +98,11 @@ def test_run_deseq2_analysis(comparisons, expected_paths):
     dfs = []
     for item in output_dir.iterdir():
         if item.is_file() and item.suffix == '.csv':
-            dfs.append(io.load_csv(item, index_col=0))
+            dfs.append(io.load_table(item, index_col=0))
 
     expected_dfs = []
     for item in expected_paths:
-        expected_dfs.append(io.load_csv(item, index_col=0))
+        expected_dfs.append(io.load_table(item, index_col=0))
 
     for out, truth in zip(dfs, expected_dfs):
         assert out.shape == truth.shape

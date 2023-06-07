@@ -293,7 +293,7 @@ class DiffExpWindow(gui_windows.FuncExternalWindow):
         self.param_widgets['load_design'].setEnabled(is_legal)
 
     def init_comparisons_ui(self):
-        self.design_mat = io.load_csv(self.param_widgets['design_matrix'].text(), index_col=0)
+        self.design_mat = io.load_table(self.param_widgets['design_matrix'].text(), index_col=0)
 
         if 'picker' in self.comparisons_widgets:
             self.comparisons_grid.removeWidget(self.comparisons_widgets['picker'])
@@ -1687,7 +1687,7 @@ class FuncTypeStack(QtWidgets.QWidget):
         self.func_combo.currentTextChanged.connect(self.update_parameter_ui)
 
     def _set_empty_tooltip(self):
-        txt = f"Choose a function from this list to read its description. "
+        txt = "Choose a function from this list to read its description. "
         self.func_combo.setToolTip(txt)
         self.func_help_button.connect_desc_help(txt)
 
@@ -1851,7 +1851,7 @@ class FilterTabPage(TabPage):
     def cache(self):
         base_str = str(time.time_ns()) + str(self.filter_obj.fname) + str(len(self.filter_obj.shape))
         hex_hash = hashlib.sha1(base_str.encode('utf-8')).hexdigest()
-        filename = f"{hex_hash}.csv"
+        filename = f"{hex_hash}.parquet"
         io.cache_gui_file(self.filter_obj.df, filename)
         return filename
 
@@ -2160,7 +2160,7 @@ class CreatePipelineWindow(gui_widgets.MinMaxDialog, FilterTabPage):
     def __init__(self, parent=None):
         super().__init__(parent=parent)
         self.setLayout(self.layout)
-        self.setWindowTitle(f'Create new Pipeline')
+        self.setWindowTitle('Create new Pipeline')
         self.setGeometry(500, 200, 900, 800)
         self.pipeline = None
         self.is_unsaved = False
@@ -2902,11 +2902,11 @@ class MainWindow(QtWidgets.QMainWindow):
                 assert cleared
                 print("Report generation turned on. ")
             except ImportError:
-                warnings.warn(f"The RNAlysis 'reports' module is not installed. Please install it and try again. ")
+                warnings.warn("The RNAlysis 'reports' module is not installed. Please install it and try again. ")
                 self._toggle_reporting(False)
             except AssertionError:
-                warnings.warn(f"You must clear the current session before turning report generation on. "
-                              f"Please clear your current session and try again. ")
+                warnings.warn("You must clear the current session before turning report generation on. "
+                              "Please clear your current session and try again. ")
                 self._toggle_reporting(False)
 
         else:
@@ -3349,8 +3349,8 @@ class MainWindow(QtWidgets.QMainWindow):
             self, 'Delete Pipeline', 'Choose Pipeline to delete:', self.pipelines.keys())
         if status:
             reply = QtWidgets.QMessageBox.question(self, 'Delete Pipeline?',
-                                                   f"Are you sure you want to delete this Pipeline? "
-                                                   f"This action cannot be undone!",
+                                                   "Are you sure you want to delete this Pipeline? "
+                                                   "This action cannot be undone!",
                                                    QtWidgets.QMessageBox.No | QtWidgets.QMessageBox.Yes)
             if reply == QtWidgets.QMessageBox.Yes:
                 self.pipelines.pop(pipeline_name)
@@ -4135,7 +4135,6 @@ class MainWindow(QtWidgets.QMainWindow):
             return
         assert isinstance(worker_output, gui_widgets.WorkerOutput), f"invalid worker output: {worker_output}"
         func_name: str = worker_output.emit_args[0]
-        return_val: tuple = worker_output.result
         self.tabs.currentWidget().process_outputs(worker_output.result, worker_output.job_id, func_name)
         self.tabs.currentWidget().update_tab()
 
@@ -4352,7 +4351,7 @@ async def run():  # pragma: no cover
     builtins.input = window.input
 
     try:
-        import numba
+        pass
     except ImportError:
         warnings.warn("RNAlysis can perform faster when package 'numba' is installed. \n"
                       "If you want to improve the performance of slow operations on RNAlysis, "

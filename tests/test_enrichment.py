@@ -36,7 +36,7 @@ up_feature_set = {'WBGene00021187', 'WBGene00195184', 'WBGene00012851', 'WBGene0
 
 
 def test_featureset_api():
-    up = FeatureSet(up_feature_set)
+    FeatureSet(up_feature_set)
 
 
 def test_featureset_copy():
@@ -160,7 +160,7 @@ def test_set_operations_with_set():
 
 
 def test_biotypes_from_ref_table():
-    truth = io.load_csv('tests/test_files/biotypes_truth.csv', 0)
+    truth = io.load_table('tests/test_files/biotypes_truth.csv', 0)
     genes = {'WBGene00048865', 'WBGene00000106', 'WBGene00000137', 'WBGene00199484', 'WBGene00268190', 'WBGene00048864',
              'WBGene00268189', 'WBGene00268195', 'WBGene00255734', 'WBGene00199485', 'WBGene00048863', 'WBGene00000019',
              'WBGene00268191', 'WBGene00000041', 'WBGene00199486', 'WBGene00255735', 'WBGene00000105',
@@ -227,7 +227,7 @@ def _enrichment_validity(res, truth):
 
 
 def test_enrichment_randomization_validity():
-    truth = io.load_csv('tests/test_files/enrichment_randomization_res.csv', 0)
+    truth = io.load_table('tests/test_files/enrichment_randomization_res.csv', 0)
     genes = {'WBGene00000041', 'WBGene00002074', 'WBGene00000105', 'WBGene00000106', 'WBGene00199484',
              'WBGene00001436', 'WBGene00000137', 'WBGene00001996', 'WBGene00014208', 'WBGene00001133'}
     attrs = ['attribute1', 'attribute2']
@@ -275,7 +275,7 @@ def test_enrichment_randomization_parallel_reliability():
 
 
 def test_enrichment_parallel_validity():
-    truth = io.load_csv('tests/test_files/enrichment_randomization_res.csv', 0)
+    truth = io.load_table('tests/test_files/enrichment_randomization_res.csv', 0)
     genes = {'WBGene00000041', 'WBGene00002074', 'WBGene00000105', 'WBGene00000106', 'WBGene00199484',
              'WBGene00001436', 'WBGene00000137', 'WBGene00001996', 'WBGene00014208', 'WBGene00001133'}
     attrs = ['attribute1', 'attribute2']
@@ -288,7 +288,7 @@ def test_enrichment_parallel_validity():
 
 
 def test_enrich_hypergeometric_pvalues():
-    truth = io.load_csv('tests/test_files/enrichment_hypergeometric_res.csv', 0)
+    truth = io.load_table('tests/test_files/enrichment_hypergeometric_res.csv', 0)
     genes = {'WBGene00000041', 'WBGene00002074', 'WBGene00000105', 'WBGene00000106', 'WBGene00199484',
              'WBGene00001436', 'WBGene00000137', 'WBGene00001996', 'WBGene00014208', 'WBGene00001133'}
     attrs = ['attribute1', 'attribute2']
@@ -647,7 +647,7 @@ def test_translate_gene_ids(map_to, map_from, remove_unmapped_genes, expected, e
         return io.GeneIDTranslator({})
 
     monkeypatch.setattr(io, 'map_gene_ids', mock_map_gene_ids)
-    truth = FeatureSet(parsing.data_to_set(io.load_csv(expected, index_col=0).index), set_name=expected_name)
+    truth = FeatureSet(parsing.data_to_set(io.load_table(expected, index_col=0).index), set_name=expected_name)
     s = FeatureSet(
         {'WBGene00044022', 'WBGene00007075', 'WBGene00007066', 'WBGene00043988', 'WBGene00044951', 'WBGene00077503',
          'WBGene00007076', 'WBGene00007063', 'WBGene00043990', 'WBGene00007074', 'WBGene00007067', 'WBGene00007079',

@@ -383,7 +383,7 @@ class DataFrameView(DataView):
                                                             "Tab-Separated Values (*.tsv);;"
                                                             "All Files (*)")
         if filename:
-            io.save_csv(self.data, filename)
+            io.save_table(self.data, filename)
             print(f"Successfully saved at {io.get_datetime()} under {filename}")
 
 

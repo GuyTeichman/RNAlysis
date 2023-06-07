@@ -430,7 +430,7 @@ def test_DESeqWindow_init(qtbot, deseq_window):
 
 def test_DESeqWindow_load_design_mat(qtbot, deseq_window):
     design_mat_path = 'tests/test_files/test_design_matrix.csv'
-    design_mat_truth = io.load_csv(design_mat_path, 0)
+    design_mat_truth = io.load_table(design_mat_path, 0)
     deseq_window.param_widgets['design_matrix'].setText(design_mat_path)
     qtbot.mouseClick(deseq_window.param_widgets['load_design'], LEFT_CLICK)
     assert deseq_window.design_mat.equals(design_mat_truth)
@@ -482,7 +482,7 @@ def test_LimmaWindow_init(qtbot, limma_window):
 
 def test_LimmaWindow_load_design_mat(qtbot, limma_window):
     design_mat_path = 'tests/test_files/test_design_matrix.csv'
-    design_mat_truth = io.load_csv(design_mat_path, 0)
+    design_mat_truth = io.load_table(design_mat_path, 0)
     limma_window.param_widgets['design_matrix'].setText(design_mat_path)
     qtbot.mouseClick(limma_window.param_widgets['load_design'], LEFT_CLICK)
     assert limma_window.design_mat.equals(design_mat_truth)
@@ -1428,8 +1428,8 @@ def test_FilterTabPage_cache(qtbot, monkeypatch):
     monkeypatch.setattr(io, 'cache_gui_file', mock_cache)
 
     fname = window.cache()
-    assert fname.endswith('.csv')
-    assert len(fname) == 44
+    assert fname.endswith('.parquet')
+    assert len(fname) == 48
 
     time.sleep(0.01)
     fname2 = window.cache()
@@ -2421,7 +2421,7 @@ def test_MainWindow_import_multiple_gene_sets(qtbot, main_window_with_tabs, monk
             with open(filename) as f:
                 truth_set = set(f.read().split())
         else:
-            df = io.load_csv(filename, index_col=0)
+            df = io.load_table(filename, index_col=0)
             truth_set = set(df.index)
         truth_featureset = enrichment.FeatureSet(truth_set, Path(filename).stem)
         truth.append(truth_featureset)
@@ -2445,7 +2445,7 @@ def test_MainWindow_import_gene_set(qtbot, main_window_with_tabs, monkeypatch, f
         with open(filename) as f:
             truth_set = enrichment.FeatureSet(set(f.read().split()), Path(filename).stem)
     else:
-        df = io.load_csv(filename, index_col=0)
+        df = io.load_table(filename, index_col=0)
         truth_set = enrichment.FeatureSet(set(df.index), Path(filename).stem)
 
     def mock_get_file(*args, **kwargs):

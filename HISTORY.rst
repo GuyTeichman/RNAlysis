@@ -2,17 +2,19 @@
 History
 =======
 
-3.8.1 (2023-06-??)
+3.9.0 (2023-06-??)
 ------------------
 
 Added
 *******
 * Added additional parameters to enrichment bar plots (enrichment.enrichment_bar_plot), including a new plot style ('lollipop') and observed/expected labels on the graph.
+* RNAlysis can now load and save data tables in Parquet format (.parquet)
 
 Changed
 ********
 * Added new parameter to Principal Component Analysis plots (CountFilter.pca) 'plot_grid', which can enable or disable adding a grid to PCA plots.
 * Many of the functions in RNAlysis should now run faster.
+* Font type, size, and color for help tooltips should now match the global font settings.
 
 Fixed
 *******

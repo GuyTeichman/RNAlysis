@@ -156,13 +156,13 @@ def _enrichment_get_ref_tests_setup(truth, bg_genes, **kwargs):
 
 
 def test_enrichment_get_ref_biotype():
-    truth = io.load_csv('tests/test_files/attr_ref_table_for_tests_biotype.csv', 0)
+    truth = io.load_table('tests/test_files/attr_ref_table_for_tests_biotype.csv', 0)
     bg_genes = 'protein_coding'
     _enrichment_get_ref_tests_setup(truth, bg_genes)
 
 
 def test_enrichment_get_ref_custom_background():
-    truth = io.load_csv('tests/test_files/attr_ref_table_for_tests_specified_bg.csv', 0)
+    truth = io.load_table('tests/test_files/attr_ref_table_for_tests_specified_bg.csv', 0)
     bg_genes = {'WBGene00003902', 'WBGene00000106', 'WBGene00001436', 'WBGene00000864', 'WBGene00011910',
                 'WBGene00000859', 'WBGene00268189', 'WBGene00000865', 'WBGene00003864', 'WBGene00048863',
                 'WBGene00000369', 'WBGene00000863', 'WBGene00002074', 'WBGene00000041', 'WBGene00199486',
@@ -170,16 +170,16 @@ def test_enrichment_get_ref_custom_background():
     _enrichment_get_ref_tests_setup(truth, bg_genes)
 
 def test_enrichment_get_ref_custom_background_include_unannotated():
-    truth = io.load_csv('tests/test_files/attr_ref_table_for_tests_specified_bg_unannotated.csv', 0)
+    truth = io.load_table('tests/test_files/attr_ref_table_for_tests_specified_bg_unannotated.csv', 0)
     bg_genes = {'WBGene00003902', 'WBGene00000106', 'WBGene00001436', 'WBGene00000864', 'WBGene00011910',
                 'WBGene00000859', 'WBGene00268189', 'WBGene00000865', 'WBGene00003864', 'WBGene00048863',
                 'WBGene00000369', 'WBGene00000863', 'WBGene00002074', 'WBGene00000041', 'WBGene00199486',
-                'WBGene00000105', 'WBGene00001131','gene1','gene2','gene3'}
+                'WBGene00000105', 'WBGene00001131', 'gene1', 'gene2', 'gene3'}
     _enrichment_get_ref_tests_setup(truth, bg_genes, exclude_unannotated_genes=False)
 
 
 def test_enrichment_get_ref_custom_background_from_featureset_object():
-    truth = io.load_csv('tests/test_files/attr_ref_table_for_tests_specified_bg.csv', 0)
+    truth = io.load_table('tests/test_files/attr_ref_table_for_tests_specified_bg.csv', 0)
     bg_genes = {'WBGene00003902', 'WBGene00000106', 'WBGene00001436', 'WBGene00000864', 'WBGene00011910',
                 'WBGene00000859', 'WBGene00268189', 'WBGene00000865', 'WBGene00003864', 'WBGene00048863',
                 'WBGene00000369', 'WBGene00000863', 'WBGene00002074', 'WBGene00000041', 'WBGene00199486',
@@ -188,7 +188,7 @@ def test_enrichment_get_ref_custom_background_from_featureset_object():
 
 
 def test_enrichment_get_ref_custom_background_from_filter_object():
-    truth = io.load_csv('tests/test_files/attr_ref_table_for_tests_specified_bg.csv', 0)
+    truth = io.load_table('tests/test_files/attr_ref_table_for_tests_specified_bg.csv', 0)
     bg_genes = filtering.CountFilter(r'tests/test_files/test_bg_genes_from_filter_object.csv')
     _enrichment_get_ref_tests_setup(truth, bg_genes)
 
@@ -327,7 +327,7 @@ def test_enrichment_runner_update_ranked_genes():
 def test_enrichment_runner_get_enrichment_func(test_input, expected):
     runner = EnrichmentRunner.__new__(EnrichmentRunner)
     if test_input.lower() == 'xlmhg' and not does_python_version_support_single_set():
-        assert runner._get_enrichment_func(test_input) == False
+        assert runner._get_enrichment_func(test_input) is False
         return
     assert runner._get_enrichment_func(test_input).__name__ == expected.__name__
     assert runner._get_enrichment_func(test_input.upper()).__name__ == expected.__name__
@@ -759,7 +759,7 @@ def test_enrichment_runner_enrichment_bar_plot(plot_horizontal, n_bars):
 
 
 def test_noncategorical_enrichment_runner_api():
-    runner = NonCategoricalEnrichmentRunner({'gene1', 'gene2', 'gene4'}, ['attr1', 'attr2'], 0.05, 'protein_coding',
+    NonCategoricalEnrichmentRunner({'gene1', 'gene2', 'gene4'}, ['attr1', 'attr2'], 0.05, 'protein_coding',
                                             {'gene1', 'gene2', 'gene3', 'gene4'}, 'path/to/attr/ref',
                                             'path/to/biotype/ref', False, 'fname', False, False, 'overlap', 5,
                                             'set_name', False, True)
@@ -909,7 +909,7 @@ def test_go_enrichment_runner_api(monkeypatch, single_list, genes, biotypes, pva
                                 biotypes, background_set, biotype_ref_path, exclude_unannotated, single_list,
                                 random_seed, **kwargs)
     if pval_func.lower() == 'xlmhg' and not does_python_version_support_single_set():
-        assert runner.enrichment_func == False
+        assert runner.enrichment_func is False
         return
     assert runner.dag_tree == 'dag_tree'
 
@@ -943,7 +943,7 @@ def test_go_enrichment_runner_get_enrichment_func(test_input, expected, propagat
     runner = GOEnrichmentRunner.__new__(GOEnrichmentRunner)
     runner.propagate_annotations = propagate_annotations
     if test_input.lower() == 'xlmhg' and not does_python_version_support_single_set():
-        assert runner._get_enrichment_func(test_input) == False
+        assert runner._get_enrichment_func(test_input) is False
         return
 
     assert runner._get_enrichment_func(test_input).__name__ == expected.__name__
@@ -1757,7 +1757,7 @@ def test_enrichment_runner_extract_xlmhg_results(pval_fwd, pval_rev, escore_fwd,
 def test_kegg_enrichment_runner_api(monkeypatch, single_list, genes, biotypes, pval_func, background_set,
                                     biotype_ref_path, random_seed, graph_format, kwargs, exclude_unannotated):
     monkeypatch.setattr(KEGGEnrichmentRunner, 'get_taxon_id', lambda *args: ('a', 'b'))
-    runner = KEGGEnrichmentRunner(genes, 'organism', 'gene_id_type', 0.05, True, False, 'fname', False, False, True,
+    KEGGEnrichmentRunner(genes, 'organism', 'gene_id_type', 0.05, True, False, 'fname', False, False, True,
                                   'set_name', False, pval_func, biotypes, background_set, biotype_ref_path,
                                   exclude_unannotated, single_list, random_seed, graph_format, **kwargs)
 

@@ -215,7 +215,7 @@ class EnrichmentRunner:
             self.ranked_genes = ranked_genes
 
     def results_to_csv(self):
-        io.save_csv(self.results, filename=self.fname if self.fname.endswith('.csv') else self.fname + '.csv')
+        io.save_table(self.results, filename=self.fname if self.fname.endswith('.csv') else self.fname + '.csv')
 
     def get_background_set(self):
         if self.background_set is None:
@@ -417,7 +417,7 @@ class EnrichmentRunner:
         if self.biotypes == 'all':
             self.background_set = parsing.data_to_set(self.annotation_df.index)
         else:
-            biotype_ref_df = io.load_csv(self.biotype_ref_path)
+            biotype_ref_df = io.load_table(self.biotype_ref_path)
             validation.validate_biotype_table(biotype_ref_df)
             biotype_ref_df.set_index('gene', inplace=True)
             self.biotypes = parsing.data_to_list(self.biotypes)
@@ -454,7 +454,7 @@ class EnrichmentRunner:
                 warnings.warn(warning)
 
     def fetch_annotations(self):
-        self.annotation_df = io.load_csv(self.attr_ref_path)
+        self.annotation_df = io.load_table(self.attr_ref_path)
         validation.validate_attr_table(self.annotation_df)
         self.annotation_df.set_index('gene', inplace=True)
 

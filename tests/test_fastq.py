@@ -591,8 +591,9 @@ def test_trim_adapters_paired_end_command(monkeypatch, fastq_1, fastq_2, output_
 
 def test_featurecounts_single_end():
     counts_truth = filtering.CountFilter('tests/test_files/featurecounts_tests/truth/single/featureCounts_counts.csv')
-    annotations_truth = io.load_csv('tests/test_files/featurecounts_tests/truth/single/featureCounts_annotation.csv', 0)
-    stats_truth = io.load_csv('tests/test_files/featurecounts_tests/truth/single/featureCounts_stats.csv', 0)
+    annotations_truth = io.load_table('tests/test_files/featurecounts_tests/truth/single/featureCounts_annotation.csv',
+                                      0)
+    stats_truth = io.load_table('tests/test_files/featurecounts_tests/truth/single/featureCounts_stats.csv', 0)
     truth_outdir = 'tests/test_files/featurecounts_tests/truth/single'
     outdir = 'tests/test_files/featurecounts_tests/outdir'
     gtf_file = 'tests/test_files/featurecounts_tests/single/bamfile_no_qualities.gtf'
@@ -610,8 +611,9 @@ def test_featurecounts_single_end():
 
 def test_featurecounts_paired_end():
     counts_truth = filtering.CountFilter('tests/test_files/featurecounts_tests/truth/paired/featureCounts_counts.csv')
-    annotations_truth = io.load_csv('tests/test_files/featurecounts_tests/truth/paired/featureCounts_annotation.csv', 0)
-    stats_truth = io.load_csv('tests/test_files/featurecounts_tests/truth/paired/featureCounts_stats.csv', 0)
+    annotations_truth = io.load_table('tests/test_files/featurecounts_tests/truth/paired/featureCounts_annotation.csv',
+                                      0)
+    stats_truth = io.load_table('tests/test_files/featurecounts_tests/truth/paired/featureCounts_stats.csv', 0)
     truth_outdir = 'tests/test_files/featurecounts_tests/truth/paired'
     outdir = 'tests/test_files/featurecounts_tests/outdir'
     try:

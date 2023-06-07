@@ -985,7 +985,7 @@ class FeatureSet(set):
         """
 
         ref = settings.get_biotype_ref_path(ref)
-        ref_df = io.load_csv(ref)
+        ref_df = io.load_table(ref)
         validation.validate_biotype_table(ref_df)
         ref_df.columns = ref_df.columns.str.lower()
         not_in_ref = pd.Index(self.gene_set).difference(set(ref_df['gene']))
@@ -1459,7 +1459,7 @@ def enrichment_bar_plot(results_table_path: Union[str, Path], alpha: param_typin
     :return: Figure object containing the bar plot
     :rtype: matplotlib.figure.Figure instance
     """
-    results_table = io.load_csv(results_table_path, 0)
+    results_table = io.load_table(results_table_path, 0)
     runner = enrichment_runner.EnrichmentRunner(set(), results_table.index, alpha, '', True, False, '', True,
                                                 plot_horizontal, '', False, 'hypergeometric', 'all')
     runner.en_score_col = enrichment_score_column
@@ -1485,7 +1485,7 @@ def _fetch_sets(objs: dict, ref: Union[str, Path, Literal['predefined']] = 'pred
     fetched_sets = dict()
 
     if validation.isinstanceiter_any(objs.values(), str):
-        attr_ref_table = io.load_csv(settings.get_attr_ref_path(ref))
+        attr_ref_table = io.load_table(settings.get_attr_ref_path(ref))
         validation.validate_attr_table(attr_ref_table)
         attr_ref_table.set_index('gene', inplace=True)
 
@@ -1727,7 +1727,7 @@ def gene_ontology_graph(aspect: Literal[param_typing.GO_ASPECTS], results_table_
     :param dpi: resolution of the ontology graph in DPI (dots per inch).
     :type dpi: int (default=300)
     """
-    results_df = io.load_csv(results_table_path, index_col=0)
+    results_df = io.load_table(results_table_path, index_col=0)
     assert enrichment_score_column in results_df, f"Invalid enrichment_score_col '{enrichment_score_column}'"
     dag_tree = ontology.fetch_go_basic()
     return dag_tree.plot_ontology(aspect, results_df, enrichment_score_column, title, ylabel, graph_format, dpi)
