@@ -49,7 +49,7 @@ class TableColumnPicker(QtWidgets.QPushButton):
     def init_ui(self):
         self.clicked.connect(self.open_dialog)
 
-        self.dialog.setWindowTitle(f"Choose table columns")
+        self.dialog.setWindowTitle("Choose table columns")
 
         self.select_all_button.clicked.connect(self.select_all)
         self.dialog_layout.addWidget(self.select_all_button, 5, 0, 1, 2)
@@ -618,28 +618,19 @@ class HelpButton(QtWidgets.QToolButton):
         self.param_name = ''
         self.desc = ''
 
-    def _disconnect_help(self):
-        try:
-            self.clicked.disconnect()
-        except TypeError:
-            pass
-
-    def connect_desc_help(self, desc: str):
-        self._disconnect_help()
-        self.clicked.connect(self._show_help_desc)
+    def set_desc_help(self, desc: str):
         self.desc = desc
+        self.setToolTip(self.desc)
 
-    def connect_param_help(self, param_name: str, desc: str):
-        self._disconnect_help()
-        self.clicked.connect(self._show_help_param)
+    def set_param_help(self, param_name: str, desc: str):
         self.param_name = param_name
         self.desc = desc
+        self.setToolTip(f"<b>{self.param_name}:</b> <br>{self.desc}")
 
-    def _show_help_param(self):
-        QtWidgets.QToolTip.showText(QtGui.QCursor.pos(), f"<b>{self.param_name}:</b> <br>{self.desc}")
-
-    def _show_help_desc(self):
-        QtWidgets.QToolTip.showText(QtGui.QCursor.pos(), self.desc)
+    def mouseReleaseEvent(self, event: QtGui.QMouseEvent):
+        super().mouseReleaseEvent(event)
+        help_event = QtGui.QHelpEvent(QtCore.QEvent.Type.ToolTip, event.pos(), event.globalPos())
+        self.event(help_event)
 
 
 class ColorPicker(QtWidgets.QWidget):

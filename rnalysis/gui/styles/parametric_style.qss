@@ -50,3 +50,7 @@ font: bold;
 font-size: $FONTSIZEPLACEHOLDER*1.5;
 }
 
+QToolTip {
+font: $FONTPLACEHOLDER;
+font-size: $FONTSIZEPLACEHOLDER*1;
+}

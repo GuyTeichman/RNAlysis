@@ -620,7 +620,7 @@ class EnrichmentWindow(gui_widgets.MinMaxDialog):
             self.plot_grid.addWidget(label, i, 0)
             self.plot_grid.addWidget(self.plot_widgets[name], i, 1)
             self.plot_grid.addWidget(help_button, i, 2)
-            help_button.connect_param_help(name, desc)
+            help_button.set_param_help(name, desc)
 
             i += 1
 
@@ -639,7 +639,7 @@ class EnrichmentWindow(gui_widgets.MinMaxDialog):
             self.parameter_grid.addWidget(help_button, i, 2)
             self.parameter_grid.addWidget(label, i, 0)
             self.parameter_grid.addWidget(self.parameter_widgets[name], i, 1)
-            help_button.connect_param_help(name, desc)
+            help_button.set_param_help(name, desc)
             i += 1
 
     def update_stats_ui(self):
@@ -673,7 +673,7 @@ class EnrichmentWindow(gui_widgets.MinMaxDialog):
                 self.stats_grid.addWidget(help_button, i, 4)
                 self.stats_grid.addWidget(label, i, 2)
                 self.stats_grid.addWidget(self.stats_widgets[name], i, 3)
-                help_button.connect_param_help(name, desc)
+                help_button.set_param_help(name, desc)
                 i += 1
 
     def is_single_set(self):
@@ -1689,7 +1689,7 @@ class FuncTypeStack(QtWidgets.QWidget):
     def _set_empty_tooltip(self):
         txt = "Choose a function from this list to read its description. "
         self.func_combo.setToolTip(txt)
-        self.func_help_button.connect_desc_help(txt)
+        self.func_help_button.set_desc_help(txt)
 
     def deselect(self):
         self.func_combo.setCurrentIndex(0)
@@ -1711,7 +1711,7 @@ class FuncTypeStack(QtWidgets.QWidget):
         signature = generic.get_method_signature(chosen_func_name, self.filter_obj)
         desc, param_desc = io.get_method_docstring(chosen_func_name, self.filter_obj)
         self.func_combo.setToolTip(desc)
-        self.func_help_button.connect_param_help(self.get_function_readable_name(), desc)
+        self.func_help_button.set_param_help(self.get_function_readable_name(), desc)
 
         i = 1
         for name, param in signature.items():
@@ -1725,7 +1725,7 @@ class FuncTypeStack(QtWidgets.QWidget):
                 label.setToolTip(param_desc[name])
                 help_button = gui_widgets.HelpButton()
                 self.parameter_grid.addWidget(help_button, i, 2)
-                help_button.connect_param_help(name, param_desc[name])
+                help_button.set_param_help(name, param_desc[name])
 
             self.parameter_grid.addWidget(label, i, 0)
             self.parameter_grid.addWidget(self.parameter_widgets[name], i, 1)
@@ -1938,7 +1938,7 @@ class FilterTabPage(TabPage):
                 label.setToolTip(param_desc[name])
                 help_button = gui_widgets.HelpButton()
                 self.basic_param_grid.addWidget(help_button, i, 2)
-                help_button.connect_param_help(name, param_desc[name])
+                help_button.set_param_help(name, param_desc[name])
 
             self.basic_param_grid.addWidget(label, i, 0)
             self.basic_param_grid.addWidget(self.basic_param_widgets[name], i, 1)
@@ -2560,7 +2560,7 @@ class MultiOpenWindow(QtWidgets.QDialog):
                 label.setToolTip(param_desc[name])
                 help_button = gui_widgets.HelpButton()
                 self.kwargs[file].addWidget(help_button, i, 2)
-                help_button.connect_param_help(name, param_desc[name])
+                help_button.set_param_help(name, param_desc[name])
 
             self.kwargs[file].addWidget(label, i, 0)
             self.kwargs[file].addWidget(self.kwargs_widgets[file][name], i, 1)

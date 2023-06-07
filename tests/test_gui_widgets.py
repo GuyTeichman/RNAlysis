@@ -249,7 +249,7 @@ def test_HelpButton_param_help(qtbot, monkeypatch):
     monkeypatch.setattr(QtWidgets.QToolTip, 'showText', mock_show_text)
 
     qtbot, widget = widget_setup(qtbot, HelpButton)
-    widget.connect_param_help(param_name, desc)
+    widget.set_param_help(param_name, desc)
 
     qtbot.mouseClick(widget, LEFT_CLICK)
 
@@ -268,7 +268,7 @@ def test_HelpButton_desc_help(qtbot, monkeypatch):
     monkeypatch.setattr(QtWidgets.QToolTip, 'showText', mock_show_text)
 
     qtbot, widget = widget_setup(qtbot, HelpButton)
-    widget.connect_desc_help(desc)
+    widget.set_desc_help(desc)
 
     qtbot.mouseClick(widget, LEFT_CLICK)
 
