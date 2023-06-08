@@ -2822,10 +2822,10 @@ class MainWindow(QtWidgets.QMainWindow):
     USER_GUIDE_URL = 'https://guyteichman.github.io/RNAlysis/build/user_guide_gui.html'
     TUTORIAL_URL = 'https://guyteichman.github.io/RNAlysis/build/tutorial.html'
     FAQ_URL = 'https://guyteichman.github.io/RNAlysis/build/faq.html'
-    BUGS_URL = 'https://github.com/GuyTeichman/RNAlysis/issues/new?assignees=&labels=' \
-               '&projects=&template=bug_report.md&title='
-    FEATURE_URL = 'https://github.com/GuyTeichman/RNAlysis/issues/new?assignees=&labels=' \
-                  '&projects=&template=feature_request.md&title='
+    BUGS_URL = 'https://github.com/GuyTeichman/RNAlysis/issues/new?assignees=&labels=bug+report&projects=' \
+               '&template=bug_report.yaml&title=Bug+Report%3A+'
+    FEATURE_URL = 'https://github.com/GuyTeichman/RNAlysis/issues/new?assignees=&labels=feature+request&projects=' \
+                  '&template=feature_request.yaml&title=Feature+Request%3A+'
     QUESTION_URL = 'https://github.com/GuyTeichman/RNAlysis/discussions'
 
     jobQueued = QtCore.pyqtSignal()
