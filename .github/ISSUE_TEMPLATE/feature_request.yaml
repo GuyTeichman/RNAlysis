@@ -1,0 +1,58 @@
+---
+name: Feature Request
+title: "Feature Request: FEATURE_NAME_HERE"
+description: "Suggest a new feature (function, algorithm, user interface changes, etc) for RNAlysis. "
+labels: feature request
+
+body:
+    -   type: textarea
+        attributes:
+            label: Is your feature request related to a problem?
+            description: |
+                A clear and concise description of what the problem is. Ex. I'm always frustrated when [...]
+        validations:
+            required: true
+
+    -   type: textarea
+        attributes:
+            label: Describe the solution you'd like
+            description: |
+                A clear and concise description of what you want to add or change.
+        validations:
+            required: true
+
+    -   type: textarea
+        attributes:
+            label: Describe alternatives you've considered
+            description: |
+                A clear and concise description of any alternative solutions or features you've considered.
+        validations:
+            required: true
+
+    -   type: textarea
+        attributes:
+            label: Describe alternatives you've considered
+            description: |
+                A clear and concise description of any alternative solutions or features you've considered.
+        validations:
+            required: true
+
+    -   type: textarea
+        attributes:
+            label: Additional context
+            description: |
+                Add any other context or screenshots about the feature request here.
+        validations:
+            required: false
+
+    -   type: dropdown
+        attributes:
+            label: Which version of RNAlysis do you typically use?
+            multiple: true
+            options:
+                - Stand-alone app
+                - installed via pip/Python
+                - ArchLinux
+                - Other
+        validations:
+            required: false
