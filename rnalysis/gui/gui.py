@@ -3235,7 +3235,9 @@ class MainWindow(QtWidgets.QMainWindow):
 
     @QtCore.pyqtSlot(set, int, str)
     @QtCore.pyqtSlot(set, int)
-    def new_tab_from_gene_set(self, gene_set: set, tab_id: int, gene_set_name: str = None):
+    def new_tab_from_gene_set(self, gene_set: enrichment.FeatureSet, tab_id: int, gene_set_name: str = None):
+        if gene_set_name is None and validation.isinstanceinh(gene_set, enrichment.FeatureSet):
+            gene_set_name = gene_set.set_name
         self.add_new_tab(gene_set_name, is_set=True)
         if tab_id == -1:
             tab_id = self.tabs.currentWidget().tab_id

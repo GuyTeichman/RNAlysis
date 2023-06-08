@@ -33,6 +33,7 @@ Fixed
 * Improved clarity of error messages when external apps' (kallisto, bowtie2, etc) installation folders are not found.
 * Fixed bug where running the RNAlysis graphical interface on a new computer would sometimes raise an error (thanks to `NeuroRookie <https://github.com/NeuroRookie>`_ in `#25 <https://github.com/GuyTeichman/RNAlysis/issues/25>`_).
 * Fixed a bug where the 'min_samples' parameter in HDBSCAN clustering could not be disabled.
+* Fixed a bug where applying a function to a gene set with inplace=False would cause the new gene set to be called 'New Table'.
 
 New Contributors
 *****************
