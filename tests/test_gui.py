@@ -1507,11 +1507,11 @@ def test_FilterTabPage_save_table(qtbot, monkeypatch):
         saved.append('got name')
         return fname, '.tsv'
 
-    def mock_save_csv(self, filename):
+    def mock_save_table(self, suffix, filename):
         saved.append(filename)
 
     monkeypatch.setattr(QtWidgets.QFileDialog, 'getSaveFileName', mock_get_save_name)
-    monkeypatch.setattr(filtering.Filter, 'save_csv', mock_save_csv)
+    monkeypatch.setattr(filtering.Filter, 'save_table', mock_save_table)
 
     qtbot, window = widget_setup(qtbot, FilterTabPage)
     filt = filtering.DESeqFilter('tests/test_files/test_deseq.csv')
