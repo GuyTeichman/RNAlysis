@@ -1787,8 +1787,8 @@ class FuncTypeStack(QtWidgets.QWidget):
 
 class FilterTabPage(TabPage):
     EXCLUDED_FUNCS = {'union', 'intersection', 'majority_vote_intersection', 'difference', 'symmetric_difference',
-                      'from_folder', 'from_folder_htseqcount', 'save_txt', 'save_csv', 'from_dataframe',
-                      'print_features'}
+                      'from_folder', 'from_folder_htseqcount', 'save_txt', 'save_csv', 'save_table', 'save_parquet',
+                      'from_dataframe', 'print_features'}
     CLUSTERING_FUNCS = {'split_kmeans': 'K-Means', 'split_kmedoids': 'K-Medoids',
                         'split_hierarchical': 'Hierarchical (Agglomerative)', 'split_hdbscan': 'HDBSCAN',
                         'split_clicom': 'CLICOM (Ensemble)'}
@@ -2098,9 +2098,11 @@ class FilterTabPage(TabPage):
                                                             str(Path.home().joinpath(default_name)),
                                                             "Comma-Separated Values (*.csv);;"
                                                             "Tab-Separated Values (*.tsv);;"
+                                                            "Parquet file (*.parquet);;"
                                                             "All Files (*)")
         if filename:
-            self.filter_obj.save_csv(filename)
+            suffix = Path(filename).suffix
+            self.filter_obj.save_table(suffix, filename)
             print(f"Successfully saved at {io.get_datetime()} under {filename}")
             self.tabSaved.emit()
 

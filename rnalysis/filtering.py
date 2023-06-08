@@ -205,6 +205,29 @@ class Filter:
             new_obj._update(df=new_df, fname=new_fname, **filter_update_kwargs)
             return new_obj
 
+    def save_table(self, suffix: Literal['.csv', '.tsv', '.parquet'] = '.csv',
+                   alt_filename: Union[None, str, Path] = None):
+
+        """
+        Save the current filtered data table.
+
+        :param suffix: the file suffix
+        :type suffix: '.csv', '.tsv', or '.parquet' (default='.csv')
+        :param alt_filename: If None, file name will be generated automatically \
+        according to the filtering methods used. \
+        If it's a string, it will be used as the name of the saved file. Example input: 'myfilename'
+        :type alt_filename: str, pathlib.Path, or None (default)
+
+        """
+        # save with the default filename if no alternative filename was given
+        if alt_filename is None:
+            alt_filename = self.fname.with_suffix(suffix)
+        else:
+            assert isinstance(alt_filename, (str, Path)), \
+                f"'alt_filename' must be a string or Path object. Instead got {type(alt_filename)}."
+            alt_filename = self.fname.parent.joinpath(alt_filename).with_suffix(suffix)
+        io.save_table(self.df, alt_filename)
+
     def save_csv(self, alt_filename: Union[None, str, Path] = None):
 
         """
@@ -216,19 +239,20 @@ class Filter:
         :type alt_filename: str, pathlib.Path, or None (default)
 
         """
-        suffix = '.csv'
-        # save with the default filename if no alternative filename was given
-        if alt_filename is None:
-            alt_filename = self.fname
-        else:
-            assert isinstance(alt_filename, (str, Path)), \
-                f"'alt_filename' must be a string or Path object. Instead got {type(alt_filename)}."
-            # make sure we don't add another suffix on top of an existing suffix
-            if (isinstance(alt_filename, str) and alt_filename.endswith(suffix)) or \
-                (isinstance(alt_filename, Path) and alt_filename.suffix == suffix):
-                suffix = ''
-            alt_filename = os.path.join(str(self.fname.parent), f"{alt_filename}{suffix}")
-        io.save_table(self.df, alt_filename)
+        self.save_table('.csv', alt_filename)
+
+    def save_parquet(self, alt_filename: Union[None, str, Path] = None):
+
+        """
+        Saves the current filtered data to a .parquet file.
+
+        :param alt_filename: If None, file name will be generated automatically \
+        according to the filtering methods used. \
+        If it's a string, it will be used as the name of the saved file. Example input: 'myfilename'
+        :type alt_filename: str, pathlib.Path, or None (default)
+
+        """
+        self.save_table('.parquet', alt_filename)
 
     @staticmethod
     def _from_string(msg: str = '', delimiter: str = '\n'):
