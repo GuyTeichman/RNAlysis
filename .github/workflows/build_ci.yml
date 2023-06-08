@@ -16,11 +16,11 @@ jobs:
                 python-version: [ 3.8, 3.9, '3.10', '3.11' ]
                 exclude:
                     -   os: macos-latest
-                        python-version:  3.9
+                        python-version: 3.9
                     -   os: macos-latest
-                        python-version:  '3.10'
+                        python-version: '3.10'
                     -   os: macos-latest
-                        python-version:  '3.11'
+                        python-version: '3.11'
 
         env:
             DISPLAY: ':99.0'
@@ -133,35 +133,23 @@ jobs:
             -   name: Test with pytest
                 run: |
                     coverage run --source=rnalysis/ -m pytest tests/
-
                 continue-on-error: false
-            -   name: Send coverage result to coveralls.io
-                env:
-                    GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-                    COVERALLS_PARALLEL: true
-                    COVERALLS_SERVICE_JOB_ID: ${{ github.run_id }}
-                run: |
-                    coveralls --service=github
-                    coverage report -m
+            -   name: Generate lcov file
+                run: coverage lcov
+            -   name: Coveralls Parallel
+                uses: coverallsapp/github-action@v2
+                with:
+                    flag-name: run-${{ join(matrix.*, '-') }}
+                    parallel: true
+                    path-to-lcov: ./coverage.lcov
 
     finish:
         name: Finish submitting coverage
         if: ${{ always() }}
         needs: build
-        runs-on: [ ubuntu-latest ]
+        runs-on: ubuntu-latest
         steps:
-            -   name: Get repository
-                uses: actions/checkout@v3
-            -   name: Set up Python
-                uses: actions/setup-python@v2
+            -   name: Coveralls Finished
+                uses: coverallsapp/github-action@v2
                 with:
-                    python-version: '3.10'
-                    cache: 'pip'
-            -   name: Install dependencies
-                run: |
-                    python -m pip install --upgrade -r requirements_dev.txt
-            -   name: Send coverage finish to coveralls.io
-                env:
-                    GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-                run: |
-                    coveralls --service=github --finish
+                    parallel-finished: true
