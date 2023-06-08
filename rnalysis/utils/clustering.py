@@ -58,9 +58,9 @@ class BinaryFormatClusters:
     def _validate_clustering_solutions(clustering_solutions: List[np.ndarray]):
         assert isinstance(clustering_solutions, list), \
             f"'clustering_solutions' must be a list; instead got {type(clustering_solutions)}"
-        assert len(clustering_solutions) > 0, f"'clustering_solutions' must contain at least one clustering solution"
+        assert len(clustering_solutions) > 0, "'clustering_solutions' must contain at least one clustering solution"
         assert validation.isinstanceiter(clustering_solutions, np.ndarray), \
-            f"'clustering_solutions' must exclusively contain numpy arrays"
+            "'clustering_solutions' must exclusively contain numpy arrays"
         for solution in clustering_solutions:
             # in each clustering solution, every feature must be included in one cluster at most
             # clustering algorithms such as HDBSCAN can classify some features as 'noise',
@@ -475,13 +475,16 @@ class ClusteringRunner:
         final_df['labels'] = pd.Series(labels)
 
         pc_var = pca_obj.explained_variance_ratio_
-
         pc1_var = pc_var[0]
         pc2_var = pc_var[1]
         final_df = final_df[final_df['labels'] != -1]
-        final_df = final_df[['Principal component 1', f'Principal component 2', 'labels']]
-        fig = plt.figure(figsize=(9, 9))
+        final_df = final_df[['Principal component 1', 'Principal component 2', 'labels']]
+
+        dims = (15, 15 * (pc2_var / pc1_var))
+        fig = plt.figure(figsize=dims, constrained_layout=True)
+
         ax = fig.add_subplot(1, 1, 1)
+        ax.set_aspect(pc2_var / pc1_var)
         ax.grid(True)
         ax.set_xlabel(f'{final_df.columns[0]} (explained {pc1_var * 100 :.2f}%)', fontsize=15)
         ax.set_ylabel(f'{final_df.columns[1]} (explained {pc2_var * 100 :.2f}%)', fontsize=15)
@@ -495,7 +498,6 @@ class ClusteringRunner:
                        label=f'Cluster {cluster + 1}', c=color_opts[cluster], s=20, alpha=0.4)
         ax.legend(title="Clusters", draggable=True)
         ax.grid(True)
-        plt.tight_layout()
         plt.show()
         return fig
 
