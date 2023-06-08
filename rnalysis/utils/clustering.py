@@ -996,7 +996,6 @@ class HDBSCANRunner(ClusteringRunner):
         # extract clustering result
         n_clusters = clusterer.n_clusters_
         probabilities = clusterer.probabilities_
-        unclustered = np.count_nonzero(clusterer.labels_ == -1)
 
         if n_clusters != 0:
             # generate standardized data for plots
