@@ -959,7 +959,7 @@ class HDBSCANRunner(ClusteringRunner):
             return
         assert isinstance(metric, str)
         assert isinstance(min_cluster_size, int) and min_cluster_size > 1
-        assert isinstance(min_samples, int) and min_samples >= 1
+        assert min_samples is None or (isinstance(min_samples, int) and min_samples >= 1)
         assert isinstance(cluster_selection_epsilon, (int, float))
         assert isinstance(cluster_selection_method, str) and cluster_selection_method.lower() in {'eom', 'leaf'}
 
