@@ -138,6 +138,7 @@ jobs:
                 run: coverage lcov
             -   name: Coveralls Parallel
                 uses: coverallsapp/github-action@v2
+                if: runner.os != 'macOS'
                 with:
                     flag-name: run-${{ join(matrix.*, '-') }}
                     parallel: true
