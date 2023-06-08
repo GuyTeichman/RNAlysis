@@ -18,6 +18,7 @@ Changed
 * Font type, size, and color for help tooltips should now match the global font settings.
 * True/False toggle switches now scale with font size.
 * When loading data tables into RNAlysis, you will now see only supported file formats by default.
+* The legend in clustering PCA plots is now draggable.
 
 Fixed
 *******

@@ -493,7 +493,7 @@ class ClusteringRunner:
             ax.scatter(final_df[final_df['labels'] == cluster].iloc[:, 0],
                        final_df[final_df['labels'] == cluster].iloc[:, 1],
                        label=f'Cluster {cluster + 1}', c=color_opts[cluster], s=20, alpha=0.4)
-        ax.legend(title="Clusters")
+        ax.legend(title="Clusters", draggable=True)
         ax.grid(True)
         plt.tight_layout()
         plt.show()
