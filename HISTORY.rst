@@ -17,6 +17,7 @@ Changed
 * Many of the functions in RNAlysis should now run faster.
 * Font type, size, and color for help tooltips should now match the global font settings.
 * True/False toggle switches now scale with font size.
+* When loading data tables into RNAlysis, you will now see only supported file formats by default.
 
 Fixed
 *******

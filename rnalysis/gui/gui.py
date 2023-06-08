@@ -1955,7 +1955,9 @@ class FilterTabPage(TabPage):
         self.basic_widgets['start_button'].clicked.connect(self.start)
         self.basic_widgets['start_button'].setEnabled(False)
 
-        self.basic_widgets['file_path'] = gui_widgets.PathLineEdit()
+        self.basic_widgets['file_path'] = gui_widgets.PathLineEdit(file_types="Data table "
+                                                                              "(*.csv;*.tsv;*.txt;*.parquet);;"
+                                                                              "All Files (*)")
         self.basic_widgets['file_path'].textChanged.connect(self._change_start_button_state)
 
         self.basic_widgets['table_name'] = QtWidgets.QLineEdit()

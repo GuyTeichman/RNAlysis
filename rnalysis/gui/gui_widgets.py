@@ -1064,14 +1064,17 @@ class PathLineEdit(QtWidgets.QWidget):
     __slots__ = {'file_path': 'line edit',
                  'open_button': 'open button',
                  'is_file': 'is the current text pointing to an exisintg file',
+                 'file_types': 'file types',
                  '_is_legal': 'is the current path legal',
                  'layout': 'layout'}
 
-    def __init__(self, contents: str = 'auto', button_text: str = 'Load', is_file: bool = True, parent=None):
+    def __init__(self, contents: str = 'auto', button_text: str = 'Load', is_file: bool = True,
+                 file_types: str = 'All Files (*)', parent=None):
         super().__init__(parent)
         self.file_path = QtWidgets.QLineEdit('', self)
         self.open_button = QtWidgets.QPushButton(button_text, self)
         self.is_file = is_file
+        self.file_types = file_types
         self._is_legal = False
 
         self.layout = QtWidgets.QGridLayout(self)
@@ -1129,7 +1132,7 @@ class PathLineEdit(QtWidgets.QWidget):
         super().setDisabled(to_disable)
 
     def choose_file(self):
-        filename, _ = QtWidgets.QFileDialog.getOpenFileName(self, "Choose a file")
+        filename, _ = QtWidgets.QFileDialog.getOpenFileName(self, "Choose a file", filter=self.file_types)
         if filename:
             self.file_path.setText(filename)
 
