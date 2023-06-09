@@ -1554,7 +1554,7 @@ def test_FilterTabPage_apply_split_clustering_function(qtbot, monkeypatch, count
 
     window, stack = countfiltertabpage_with_undo_stack
 
-    def my_slot(worker, func_name):
+    def my_slot(tab, worker, func_name):
         window.process_outputs(worker.run()[0], func_name)
 
     window.startedClustering.connect(my_slot)
