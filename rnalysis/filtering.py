@@ -82,6 +82,8 @@ class Filter:
         assert isinstance(fname, (str, Path))
         self.fname = Path(fname)
         self.df = io.load_table(fname, 0, squeeze=True, drop_columns=drop_columns)
+        if isinstance(self.df, pd.Series):
+            self.df = self.df.to_frame()
         # check for duplicate indices
         if self.df.index.has_duplicates:
             warnings.warn("This Filter object contains multiple rows with the same name/index.")
@@ -1991,6 +1993,7 @@ class FoldChangeFilter(Filter):
         :type suppress_warnings: bool (default=False)
         """
         super().__init__(fname)
+        self.df = self.df.squeeze(0)
         self.numerator = numerator_name
         self.denominator = denominator_name
         self.df.name = 'Fold Change'
