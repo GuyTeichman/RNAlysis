@@ -167,6 +167,7 @@ def test_enrichment_get_ref_custom_background():
                 'WBGene00000105', 'WBGene00001131'}
     _enrichment_get_ref_tests_setup(truth, bg_genes)
 
+
 def test_enrichment_get_ref_custom_background_include_unannotated():
     truth = io.load_table('tests/test_files/attr_ref_table_for_tests_specified_bg_unannotated.csv', 0)
     bg_genes = {'WBGene00003902', 'WBGene00000106', 'WBGene00001436', 'WBGene00000864', 'WBGene00011910',
@@ -747,20 +748,24 @@ def test_enrichment_runner_plot_results(monkeypatch, single_list):
 
 @pytest.mark.parametrize('n_bars', ['all', 2])
 @pytest.mark.parametrize('plot_horizontal', [True, False])
-def test_enrichment_runner_enrichment_bar_plot(plot_horizontal, n_bars):
+@pytest.mark.parametrize('show_expected', [True, False])
+@pytest.mark.parametrize('plot_style', ['bar', 'lollipop'])
+def test_enrichment_runner_enrichment_bar_plot(plot_horizontal, n_bars, plot_style, show_expected):
     runner = EnrichmentRunner.__new__(EnrichmentRunner)
     runner.results = pd.read_csv('tests/test_files/enrichment_hypergeometric_res.csv')
     runner.en_score_col = 'log2_fold_enrichment'
     runner.alpha = 0.05
     runner.plot_horizontal = plot_horizontal
+    runner.show_expected = show_expected
+    runner.plot_style = plot_style
     runner.enrichment_bar_plot(n_bars=n_bars)
 
 
 def test_noncategorical_enrichment_runner_api():
     NonCategoricalEnrichmentRunner({'gene1', 'gene2', 'gene4'}, ['attr1', 'attr2'], 0.05, 'protein_coding',
-                                            {'gene1', 'gene2', 'gene3', 'gene4'}, 'path/to/attr/ref',
-                                            'path/to/biotype/ref', False, 'fname', False, False, 'overlap', 5,
-                                            'set_name', False, True)
+                                   {'gene1', 'gene2', 'gene3', 'gene4'}, 'path/to/attr/ref',
+                                   'path/to/biotype/ref', False, 'fname', False, False, 'overlap', 5,
+                                   'set_name', False, True)
 
 
 @pytest.mark.parametrize("test_input,expected", [
@@ -1756,8 +1761,8 @@ def test_kegg_enrichment_runner_api(monkeypatch, single_list, genes, biotypes, p
                                     biotype_ref_path, random_seed, graph_format, kwargs, exclude_unannotated):
     monkeypatch.setattr(KEGGEnrichmentRunner, 'get_taxon_id', lambda *args: ('a', 'b'))
     KEGGEnrichmentRunner(genes, 'organism', 'gene_id_type', 0.05, True, False, 'fname', False, False, True,
-                                  'set_name', False, pval_func, biotypes, background_set, biotype_ref_path,
-                                  exclude_unannotated, single_list, random_seed, graph_format, **kwargs)
+                         'set_name', False, pval_func, biotypes, background_set, biotype_ref_path,
+                         exclude_unannotated, single_list, random_seed, graph_format, **kwargs)
 
 
 @pytest.mark.parametrize('got_gene_id_type', (True, False))
