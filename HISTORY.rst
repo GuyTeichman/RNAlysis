@@ -34,6 +34,7 @@ Fixed
 * Fixed bug where running the RNAlysis graphical interface on a new computer would sometimes raise an error (thanks to `NeuroRookie <https://github.com/NeuroRookie>`_ in `#25 <https://github.com/GuyTeichman/RNAlysis/issues/25>`_).
 * Fixed a bug where the 'min_samples' parameter in HDBSCAN clustering could not be disabled.
 * Fixed a bug where applying a function to a gene set with inplace=False would cause the new gene set to be called 'New Table'.
+* Fixed a bug where RNAlysis would display the message "Pipeline saved successfully", even when the user cancels the save operation.
 
 New Contributors
 *****************

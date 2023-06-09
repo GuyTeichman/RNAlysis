@@ -2349,7 +2349,6 @@ class CreatePipelineWindow(gui_widgets.MinMaxDialog, FilterTabPage):
     def save_file(self):
         try:
             self.pipelineSaved.emit(self._get_pipeline_name(), self.pipeline)
-            print(f"Successfully saved Pipeline '{self.basic_widgets['pipeline_name'].text()}'")
             self.is_unsaved = False
         except Exception as e:
             print("Failed to save Pipeline")
@@ -3539,6 +3538,7 @@ class MainWindow(QtWidgets.QMainWindow):
                     self.update_report_spawn(pipeline_name, new_pipeline_id, self.pipelines[pipeline_name][1], pipeline)
 
             self.pipelines[pipeline_name] = (pipeline, new_pipeline_id)
+            print(f"Successfully saved Pipeline '{self.basic_widgets['pipeline_name'].text()}'")
 
     def settings(self):
         self.settings_window.exec()
