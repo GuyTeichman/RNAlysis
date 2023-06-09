@@ -101,8 +101,12 @@ class ReportGenerator:
                                 font={'size': 16}, widthConstraint=100, **kwargs)
             y += step
 
-    def add_node(self, name: str, node_id: int, predecessors: typing.List[int] = (0,), popup_element: str = '',
+    def add_node(self, name: str, node_id: int, predecessors: typing.List[int] = tuple(), popup_element: str = '',
                  node_type: Literal[tuple(NODE_STYLES)] = 'Other table', filename: str = None):
+        # parentless nodes should be attached to the root node
+        if len(predecessors) == 0 and node_id > 0:
+            predecessors = [0]
+
         if node_id in self.nodes:
             if self.nodes[node_id].is_active:
                 return
