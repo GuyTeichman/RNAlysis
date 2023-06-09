@@ -2,8 +2,13 @@
 History
 =======
 
-3.9.0 (2023-06-??)
+3.9.0 (2023-06-09)
 ------------------
+Version 3.9.0 of RNALysis introduces several enhancements and fixes to improve your experience.
+The release includes additional enrichment plot styles, a new option for PCA plots,
+the ability to load and save data tables in Parquet format, and new actions in the Help menu for reporting issues and suggesting improvements.
+The update also improves the performance of various functions, ensures consistency in font and theme settings,
+and addresses multiple bug fixes, including issues with automatic session reports and visualization functions.
 
 Added
 *******
