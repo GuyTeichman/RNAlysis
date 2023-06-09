@@ -1799,7 +1799,7 @@ class FilterTabPage(TabPage):
                      'average_replicate_samples', 'drop_columns', 'differential_expression_limma_voom'}
     THREADED_FUNCS = {'translate_gene_ids', 'differential_expression_deseq2', 'filter_by_kegg_annotations',
                       'filter_by_go_annotations', 'differential_expression_limma_voom'}
-    startedClustering = QtCore.pyqtSignal(object, object)
+    startedClustering = QtCore.pyqtSignal(object, object, object)
     widthChanged = QtCore.pyqtSignal()
 
     def __init__(self, parent=None, undo_stack: QtWidgets.QUndoStack = None, tab_id: int = None):
@@ -2060,7 +2060,7 @@ class FilterTabPage(TabPage):
             predecessors = predecessors if isinstance(predecessors, list) else []
             worker = gui_widgets.Worker(partial, JOB_COUNTER.get_id(), predecessors + [self.tab_id], func_name)
             worker.finished.connect(self.functionApplied.emit)
-            self.startedClustering.emit(worker, finish_slot)
+            self.startedClustering.emit(self, worker, finish_slot)
             return
 
         return super()._apply_function_from_params(func_name, args, kwargs, finish_slot, job_id, predecessors)
@@ -4149,13 +4149,13 @@ class MainWindow(QtWidgets.QMainWindow):
         self.tabs.currentWidget().process_outputs(worker_output.result, worker_output.job_id, func_name)
         self.tabs.currentWidget().update_tab()
 
-    @QtCore.pyqtSlot(object, object)
-    def start_clustering(self, worker: gui_widgets.Worker, finish_slot: Union[Callable, None]):
-        slots = (self.finish_clustering, finish_slot)
+    @QtCore.pyqtSlot(object, object, object)
+    def start_clustering(self, tab: FilterTabPage, worker: gui_widgets.Worker, finish_slot: Union[Callable, None]):
+        slots = (functools.partial(self.finish_clustering, tab), finish_slot)
         self.queue_worker(worker, slots)
 
     @QtCore.pyqtSlot(gui_widgets.WorkerOutput)
-    def finish_clustering(self, worker_output: gui_widgets.WorkerOutput):
+    def finish_clustering(self, tab: FilterTabPage, worker_output: gui_widgets.WorkerOutput):
         if worker_output.raised_exception:
             raise worker_output.raised_exception
         if worker_output.result is None or len(worker_output.result) == 0:
@@ -4168,9 +4168,9 @@ class MainWindow(QtWidgets.QMainWindow):
         return_val: clustering.ClusteringRunner = worker_output.result[0]
         job_id = worker_output.job_id
         figs = clustering_runner.plot_clustering()
-        self.tabs.currentWidget().process_outputs(figs, job_id, func_name)
-        self.tabs.currentWidget().process_outputs(return_val, job_id, func_name)
-        self.tabs.currentWidget().update_tab()
+        tab.process_outputs(figs, job_id, func_name)
+        tab.process_outputs(return_val, job_id, func_name)
+        tab.update_tab()
 
     @QtCore.pyqtSlot(object, object)
     def start_enrichment(self, worker: gui_widgets.Worker, finish_slot: Union[Callable, None]):
