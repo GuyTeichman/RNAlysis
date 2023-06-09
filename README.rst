@@ -188,6 +188,7 @@ Contributors
 * Matthias Wilm
 * `sandyl27 <https://github.com/sandyl27>`_
 * `clockgene <https://github.com/clockgene>`_
+* `NeuroRookie <https://github.com/NeuroRookie>`_
 
 ----
 
