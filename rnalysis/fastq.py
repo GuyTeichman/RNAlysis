@@ -13,11 +13,10 @@ import types
 import typing
 import warnings
 from pathlib import Path
-from typing import Union, List, Tuple
+from typing import Union, List, Tuple, Literal
 
 import pandas as pd
 from tqdm.auto import tqdm
-from typing import Literal
 
 from rnalysis import filtering
 from rnalysis.utils import validation, parsing, io, feature_counting, genome_annotation, generic
@@ -1371,6 +1370,8 @@ def _sum_transcripts_to_genes(tpm: pd.DataFrame, counts: pd.DataFrame, gtf_path:
                         continue
                     scaled_tpm = tpm_by_gene.multiply(library_sizes, axis=1)
                     pbar.update(8)
+                    if isinstance(scaled_tpm, pd.Series):
+                        scaled_tpm = scaled_tpm.to_frame()
                     return scaled_tpm
 
     raise ValueError("Failed to map transcripts to genes with the given GTF file!")
