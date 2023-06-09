@@ -13,13 +13,13 @@ and addresses multiple bug fixes, including issues with automatic session report
 Added
 *******
 * Added additional parameters to enrichment bar plots (enrichment.enrichment_bar_plot), including a new plot style ('lollipop') and observed/expected labels on the graph.
-* Added new parameter to Principal Component Analysis plots (CountFilter.pca) 'plot_grid', which can enable or disable adding a grid to PCA plots.
+* Added a new parameter to Principal Component Analysis plots (CountFilter.pca) 'plot_grid', which can enable or disable adding a grid to PCA plots.
 * RNAlysis can now load and save data tables in Parquet format (.parquet)
 * Added new actions to the Help menu, allowing users to report issues, suggest issues, or open discussions.
 
 Changed
 ********
-* Functions in the FASTQ model are now added to automatic session report.
+* Functions in the FASTQ model are now added to automatic session reports.
 * Many of the functions in RNAlysis should now run faster.
 * Font type, size, and color for help tooltips should now match the global font settings.
 * True/False toggle switches now scale with font size.

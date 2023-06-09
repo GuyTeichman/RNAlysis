@@ -1,4 +1,4 @@
-rnalysis.filtering.FoldChangeFilter
+﻿rnalysis.filtering.FoldChangeFilter
 ===================================
 
 .. currentmodule:: rnalysis.filtering
@@ -41,6 +41,8 @@ rnalysis.filtering.FoldChangeFilter
     FoldChangeFilter.print_features
     FoldChangeFilter.randomization_test
     FoldChangeFilter.save_csv
+    FoldChangeFilter.save_parquet
+    FoldChangeFilter.save_table
     FoldChangeFilter.sort
     FoldChangeFilter.split_by_attribute
     FoldChangeFilter.split_by_percentile
