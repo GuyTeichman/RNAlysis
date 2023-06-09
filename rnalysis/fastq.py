@@ -32,6 +32,8 @@ try:
 
 except ImportError:  # pragma: no cover
     HAS_CUTADAPT = False
+
+
     def cutadapt_main(x):
         return None
 
@@ -45,12 +47,6 @@ def _func_type(func_type: Literal['single', 'paired', 'both']):
 
 
 class _FASTQPipeline(generic.GenericPipeline, abc.ABC):
-    __slots__ = {'_is_paired_end': 'indicates whether it is single-end or paired-end Pipeline'}
-
-    def __init__(self, is_paired_end: bool = False):
-        self._is_paired_end = is_paired_end
-        super().__init__()
-
     def __str__(self):
         string = ''
         if len(self) > 0:
@@ -68,7 +64,7 @@ class _FASTQPipeline(generic.GenericPipeline, abc.ABC):
 
     @property
     def is_paired_end(self):
-        return self._is_paired_end
+        raise NotImplementedError
 
     @staticmethod
     def _is_paired_end_func(func: typing.Callable):
@@ -95,9 +91,6 @@ class _FASTQPipeline(generic.GenericPipeline, abc.ABC):
 
 
 class SingleEndPipeline(_FASTQPipeline):
-    def __init__(self):
-        super().__init__(is_paired_end=False)
-
     def __str__(self):
         return "Pipeline for sequence files (single-end)" + super().__str__()
 
@@ -136,11 +129,12 @@ class SingleEndPipeline(_FASTQPipeline):
 
         return parsing.data_to_tuple(return_values)
 
+    @property
+    def is_paired_end(self):
+        return False
+
 
 class PairedEndPipeline(_FASTQPipeline):
-    def __init__(self):
-        super().__init__(is_paired_end=True)
-
     def __str__(self):
         return "Pipeline for sequence files (paired-end)" + super().__str__()
 
@@ -151,6 +145,10 @@ class PairedEndPipeline(_FASTQPipeline):
         d = super()._get_pipeline_dict()
         d['metadata']['pipeline_type'] = 'paired'
         return d
+
+    @property
+    def is_paired_end(self):
+        return True
 
     @readable_name('Apply Pipeline to paired-end sequencing data')
     def apply_to(self, r1_files: List[str], r2_files: List[str], output_folder: Union[str, Path]):
