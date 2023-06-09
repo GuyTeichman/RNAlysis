@@ -139,6 +139,7 @@ jobs:
             -   name: Coveralls Parallel
                 uses: coverallsapp/github-action@v2
                 if: runner.os != 'macOS'
+                continue-on-error: true
                 with:
                     flag-name: run-${{ join(matrix.*, '-') }}
                     parallel: true
@@ -152,5 +153,6 @@ jobs:
         steps:
             -   name: Coveralls Finished
                 uses: coverallsapp/github-action@v2
+                continue-on-error: true
                 with:
                     parallel-finished: true

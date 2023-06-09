@@ -62,6 +62,8 @@ rnalysis.filtering.CountFilter
     CountFilter.plot_expression
     CountFilter.print_features
     CountFilter.save_csv
+    CountFilter.save_parquet
+    CountFilter.save_table
     CountFilter.scatter_sample_vs_sample
     CountFilter.sort
     CountFilter.split_by_attribute

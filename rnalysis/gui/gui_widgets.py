@@ -6,14 +6,14 @@ import json
 import threading
 from pathlib import Path
 from queue import Queue
-from typing import List, Dict, Tuple, Sequence, Iterable, Union, Callable
+from typing import List, Dict, Tuple, Sequence, Iterable, Union, Callable, Literal
 
 import matplotlib
 import pandas as pd
 from PyQt5 import QtCore, QtWidgets, QtGui
 from joblib import Parallel, parallel_backend
 from tqdm.auto import tqdm
-from typing_extensions import Literal, get_origin, get_args
+from typing_extensions import get_origin, get_args
 
 from rnalysis.utils import parsing, validation, generic, param_typing, settings
 
@@ -49,7 +49,7 @@ class TableColumnPicker(QtWidgets.QPushButton):
     def init_ui(self):
         self.clicked.connect(self.open_dialog)
 
-        self.dialog.setWindowTitle(f"Choose table columns")
+        self.dialog.setWindowTitle("Choose table columns")
 
         self.select_all_button.clicked.connect(self.select_all)
         self.dialog_layout.addWidget(self.select_all_button, 5, 0, 1, 2)
@@ -500,8 +500,6 @@ class ToggleSwitchCore(QtWidgets.QPushButton):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setCheckable(True)
-        self.setMinimumWidth((self.WIDTH + self.BORDER) * 2)
-        self.setMinimumHeight((self.RADIUS + self.BORDER) * 2)
         self.clicked.connect(self.state_changed)
 
     def state_changed(self):
@@ -515,9 +513,12 @@ class ToggleSwitchCore(QtWidgets.QPushButton):
         label = " True" if self.isChecked() else "False"
         bg_color = QtGui.QColor('#72e5bf') if self.isChecked() else QtGui.QColor('#e96e3a')
 
-        radius = self.RADIUS
-        width = self.WIDTH
+        radius = int(self.RADIUS * (self.font().pointSize() / 10))
+        width = int(self.WIDTH * (self.font().pointSize() / 10))
         center = self.rect().center()
+
+        self.setMinimumWidth((width + self.BORDER) * 2)
+        self.setMinimumHeight((radius + self.BORDER) * 2)
 
         painter = QtGui.QPainter(self)
         painter.setRenderHint(QtGui.QPainter.Antialiasing)
@@ -618,28 +619,19 @@ class HelpButton(QtWidgets.QToolButton):
         self.param_name = ''
         self.desc = ''
 
-    def _disconnect_help(self):
-        try:
-            self.clicked.disconnect()
-        except TypeError:
-            pass
-
-    def connect_desc_help(self, desc: str):
-        self._disconnect_help()
-        self.clicked.connect(self._show_help_desc)
+    def set_desc_help(self, desc: str):
         self.desc = desc
+        self.setToolTip(self.desc)
 
-    def connect_param_help(self, param_name: str, desc: str):
-        self._disconnect_help()
-        self.clicked.connect(self._show_help_param)
+    def set_param_help(self, param_name: str, desc: str):
         self.param_name = param_name
         self.desc = desc
+        self.setToolTip(f"<b>{self.param_name}:</b> <br>{self.desc}")
 
-    def _show_help_param(self):
-        QtWidgets.QToolTip.showText(QtGui.QCursor.pos(), f"<b>{self.param_name}:</b> <br>{self.desc}")
-
-    def _show_help_desc(self):
-        QtWidgets.QToolTip.showText(QtGui.QCursor.pos(), self.desc)
+    def mouseReleaseEvent(self, event: QtGui.QMouseEvent):
+        super().mouseReleaseEvent(event)
+        help_event = QtGui.QHelpEvent(QtCore.QEvent.Type.ToolTip, event.pos(), event.globalPos())
+        self.event(help_event)
 
 
 class ColorPicker(QtWidgets.QWidget):
@@ -1072,14 +1064,17 @@ class PathLineEdit(QtWidgets.QWidget):
     __slots__ = {'file_path': 'line edit',
                  'open_button': 'open button',
                  'is_file': 'is the current text pointing to an exisintg file',
+                 'file_types': 'file types',
                  '_is_legal': 'is the current path legal',
                  'layout': 'layout'}
 
-    def __init__(self, contents: str = 'auto', button_text: str = 'Load', is_file: bool = True, parent=None):
+    def __init__(self, contents: str = 'auto', button_text: str = 'Load', is_file: bool = True,
+                 file_types: str = 'All Files (*)', parent=None):
         super().__init__(parent)
         self.file_path = QtWidgets.QLineEdit('', self)
         self.open_button = QtWidgets.QPushButton(button_text, self)
         self.is_file = is_file
+        self.file_types = file_types
         self._is_legal = False
 
         self.layout = QtWidgets.QGridLayout(self)
@@ -1137,7 +1132,7 @@ class PathLineEdit(QtWidgets.QWidget):
         super().setDisabled(to_disable)
 
     def choose_file(self):
-        filename, _ = QtWidgets.QFileDialog.getOpenFileName(self, "Choose a file")
+        filename, _ = QtWidgets.QFileDialog.getOpenFileName(self, "Choose a file", filter=self.file_types)
         if filename:
             self.file_path.setText(filename)
 

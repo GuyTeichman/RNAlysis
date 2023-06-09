@@ -27,7 +27,7 @@ copyright = '2021, Guy Teichman'
 author = 'Guy Teichman'
 
 # The full version, including alpha/beta/rc tags
-release = '3.8.0'
+release = '3.9.0'
 
 # -- General configuration ---------------------------------------------------
 

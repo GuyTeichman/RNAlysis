@@ -38,6 +38,8 @@ rnalysis.filtering.Filter
     Filter.number_filters
     Filter.print_features
     Filter.save_csv
+    Filter.save_parquet
+    Filter.save_table
     Filter.sort
     Filter.split_by_attribute
     Filter.split_by_percentile

@@ -9,18 +9,10 @@ import itertools
 import types
 import warnings
 from pathlib import Path
-from typing import Dict, Iterable, List, Set, Tuple, Union, Sequence
+from typing import Dict, Iterable, List, Set, Tuple, Union, Sequence, Literal
 
-from rnalysis.utils.param_typing import GO_ASPECTS, GO_EVIDENCE_TYPES, GO_QUALIFIERS, DEFAULT_ORGANISMS, \
-    PARALLEL_BACKENDS, get_gene_id_types, PositiveInt
-
-try:
-    from typing import Literal
-except ImportError:
-    from typing_extensions import Literal
-
-import matplotlib.pyplot as plt
 import matplotlib
+import matplotlib.pyplot as plt
 import matplotlib_venn as vn
 import numpy as np
 import pandas as pd
@@ -28,6 +20,8 @@ import upsetplot
 
 from rnalysis.filtering import Filter, readable_name
 from rnalysis.utils import io, parsing, settings, validation, enrichment_runner, generic, param_typing, ontology
+from rnalysis.utils.param_typing import GO_ASPECTS, GO_EVIDENCE_TYPES, GO_QUALIFIERS, DEFAULT_ORGANISMS, \
+    PARALLEL_BACKENDS, get_gene_id_types, PositiveInt
 
 
 class FeatureSet(set):
@@ -479,6 +473,7 @@ class FeatureSet(set):
                       excluded_qualifiers: Union[Literal[GO_QUALIFIERS], Iterable[Literal[GO_QUALIFIERS]]] = 'not',
                       exclude_unannotated_genes: bool = True, return_nonsignificant: bool = False,
                       save_csv: bool = False, fname=None, return_fig: bool = False, plot_horizontal: bool = True,
+                      show_expected: bool = False, plot_style: Literal['bar', 'lollipop'] = 'bar',
                       plot_ontology_graph: bool = True,
                       ontology_graph_format: Literal[param_typing.GRAPHVIZ_FORMATS] = 'none',
                       randomization_reps: PositiveInt = 10000, random_seed: Union[int, None] = None,
@@ -579,6 +574,11 @@ class FeatureSet(set):
         :type plot_horizontal: bool (default=True)
         :param plot_horizontal: if True, results will be plotted with a horizontal bar plot. \
         Otherwise, results will be plotted with a vertical plot.
+        :param show_expected: if True, the observed/expected values will be shown on the plot.
+        :type show_expected: bool (default=False)
+        :param plot_style: style for the plot. Either 'bar' for a bar plot or 'lollipop' for a lollipop plot \
+        in which the lollipop size indicates the size of the observed gene set.
+        :type plot_style: 'bar' or 'lollipop' (default='bar')
         :type random_seed: non-negative integer (default=None)
         :type random_seed: if using a randomization test, determine the random seed used to initialize \
         the pseudorandom generator for the randomization test. \
@@ -632,7 +632,8 @@ class FeatureSet(set):
                                                       fname, return_fig, plot_horizontal, plot_ontology_graph,
                                                       self.set_name, parallel_backend, statistical_test, biotype,
                                                       background_genes, biotype_ref_path, exclude_unannotated_genes,
-                                                      ontology_graph_format=ontology_graph_format, **kwargs)
+                                                      ontology_graph_format=ontology_graph_format,
+                                                      plot_style=plot_style, show_expected=show_expected, **kwargs)
 
         if gui_mode:
             return runner.run(plot=False), runner
@@ -648,6 +649,7 @@ class FeatureSet(set):
                         biotype_ref_path: Union[str, Path, Literal['predefined']] = 'predefined',
                         exclude_unannotated_genes: bool = True, return_nonsignificant: bool = False,
                         save_csv: bool = False, fname=None, return_fig: bool = False, plot_horizontal: bool = True,
+                        show_expected: bool = False, plot_style: Literal['bar', 'lollipop'] = 'bar',
                         plot_pathway_graphs: bool = True,
                         pathway_graphs_format: Literal[param_typing.GRAPHVIZ_FORMATS] = 'none',
                         randomization_reps: PositiveInt = 10000, random_seed: Union[int, None] = None,
@@ -706,6 +708,11 @@ class FeatureSet(set):
         :type plot_horizontal: bool (default=True)
         :param plot_horizontal: if True, results will be plotted with a horizontal bar plot. \
         Otherwise, results will be plotted with a vertical plot.
+        :param show_expected: if True, the observed/expected values will be shown on the plot.
+        :type show_expected: bool (default=False)
+        :param plot_style: style for the plot. Either 'bar' for a bar plot or 'lollipop' for a lollipop plot \
+        in which the lollipop size indicates the size of the observed gene set.
+        :type plot_style: 'bar' or 'lollipop' (default='bar')
         :type plot_pathway_graphs: bool (default=True)
         :param plot_pathway_graphs: if True, will generate pathway graphs depicting the significant KEGG pathways.
         :type pathway_graphs_format: 'pdf', 'png', 'svg', or None (default=None)
@@ -755,7 +762,8 @@ class FeatureSet(set):
                                                         plot_horizontal, plot_pathway_graphs, self.set_name,
                                                         parallel_backend, statistical_test, biotype, background_genes,
                                                         biotype_ref_path, exclude_unannotated_genes,
-                                                        pathway_graphs_format=pathway_graphs_format, **kwargs)
+                                                        pathway_graphs_format=pathway_graphs_format,
+                                                        plot_style=plot_style, show_expected=show_expected, **kwargs)
 
         if gui_mode:
             return runner.run(plot=False), runner
@@ -771,11 +779,12 @@ class FeatureSet(set):
                                 biotype_ref_path: Union[str, Path, Literal['predefined']] = 'predefined',
                                 exclude_unannotated_genes: bool = True, return_nonsignificant: bool = True,
                                 save_csv: bool = False, fname=None, return_fig: bool = False,
-                                plot_horizontal: bool = True, randomization_reps: PositiveInt = 10000,
+                                plot_horizontal: bool = True,
+                                show_expected: bool = False, plot_style: Literal['bar', 'lollipop'] = 'bar',
+                                randomization_reps: PositiveInt = 10000,
                                 random_seed: Union[int, None] = None,
                                 parallel_backend: Literal[PARALLEL_BACKENDS] = 'loky',
-                                gui_mode: bool = False
-                                ) -> Union[pd.DataFrame, Tuple[pd.DataFrame, plt.Figure]]:
+                                gui_mode: bool = False) -> Union[pd.DataFrame, Tuple[pd.DataFrame, plt.Figure]]:
         """
         Calculates enrichment and depletion of the FeatureSet for user-defined attributes against a background set.\
         The attributes are drawn from an Attribute Reference Table. \
@@ -827,6 +836,11 @@ class FeatureSet(set):
         :type plot_horizontal: bool (default=True)
         :param plot_horizontal: if True, results will be plotted with a horizontal bar plot. Otherwise, results \
         will be plotted with a vertical plot.
+        :param show_expected: if True, the observed/expected values will be shown on the plot.
+        :type show_expected: bool (default=False)
+        :param plot_style: style for the plot. Either 'bar' for a bar plot or 'lollipop' for a lollipop plot \
+        in which the lollipop size indicates the size of the observed gene set.
+        :type plot_style: 'bar' or 'lollipop' (default='bar')
         :type random_seed: non-negative integer (default=None)
         :type random_seed: if using a randomization test, determine the random seed used to initialize \
         the pseudorandom generator for the randomization test. \
@@ -871,7 +885,8 @@ class FeatureSet(set):
                                                     return_nonsignificant, save_csv, fname, return_fig, plot_horizontal,
                                                     self.set_name, parallel_backend, statistical_test, biotype,
                                                     background_genes, biotype_ref_path, exclude_unannotated_genes,
-                                                    single_set=False, random_seed=random_seed, **kwargs)
+                                                    single_set=False, random_seed=random_seed, plot_style=plot_style,
+                                                    show_expected=show_expected, **kwargs)
         if gui_mode:
             return runner.run(plot=False), runner
         return runner.run()
@@ -991,7 +1006,7 @@ class FeatureSet(set):
         """
 
         ref = settings.get_biotype_ref_path(ref)
-        ref_df = io.load_csv(ref)
+        ref_df = io.load_table(ref)
         validation.validate_biotype_table(ref_df)
         ref_df.columns = ref_df.columns.str.lower()
         not_in_ref = pd.Index(self.gene_set).difference(set(ref_df['gene']))
@@ -1029,7 +1044,7 @@ class RankedSet(FeatureSet):
                             f"Instead got {type(ranked_genes)}.")
 
         super().__init__(ranked_genes, set_name)
-        assert len(self.ranked_genes) == len(self.gene_set), f"'ranked_genes' must have no repeating elements!"
+        assert len(self.ranked_genes) == len(self.gene_set), "'ranked_genes' must have no repeating elements!"
 
     def __copy__(self):
         obj = type(self)(self.ranked_genes.copy(), self.set_name)
@@ -1109,6 +1124,7 @@ class RankedSet(FeatureSet):
                                  exclude_unannotated_genes: bool = True, return_nonsignificant: bool = False,
                                  save_csv: bool = False, fname=None,
                                  return_fig: bool = False, plot_horizontal: bool = True,
+                                 show_expected: bool = False, plot_style: Literal['bar', 'lollipop'] = 'bar',
                                  plot_ontology_graph: bool = True,
                                  ontology_graph_format: Literal[param_typing.GRAPHVIZ_FORMATS] = 'none',
                                  parallel_backend: Literal[PARALLEL_BACKENDS] = 'loky',
@@ -1196,6 +1212,11 @@ class RankedSet(FeatureSet):
         :type plot_horizontal: bool (default=True)
         :param plot_horizontal: if True, results will be plotted with a horizontal bar plot. \
         Otherwise, results will be plotted with a vertical plot.
+        :param show_expected: if True, the observed/expected values will be shown on the plot.
+        :type show_expected: bool (default=False)
+        :param plot_style: style for the plot. Either 'bar' for a bar plot or 'lollipop' for a lollipop plot \
+        in which the lollipop size indicates the size of the observed gene set.
+        :type plot_style: 'bar' or 'lollipop' (default='bar')
         :type plot_ontology_graph: bool (default=True)
         :param plot_ontology_graph: if True, will generate an ontology graph depicting the \
         significant GO terms and their parent nodes.
@@ -1239,7 +1260,8 @@ class RankedSet(FeatureSet):
                                                       self.set_name,
                                                       parallel_backend=parallel_backend, enrichment_func_name='xlmhg',
                                                       exclude_unannotated_genes=exclude_unannotated_genes,
-                                                      single_set=True, ontology_graph_format=ontology_graph_format)
+                                                      single_set=True, ontology_graph_format=ontology_graph_format,
+                                                      plot_style=plot_style, show_expected=show_expected)
 
         if gui_mode:
             return runner.run(plot=False), runner
@@ -1252,6 +1274,7 @@ class RankedSet(FeatureSet):
                                    alpha: param_typing.Fraction = 0.05, exclude_unannotated_genes: bool = True,
                                    return_nonsignificant: bool = False, save_csv: bool = False,
                                    fname=None, return_fig: bool = False, plot_horizontal: bool = True,
+                                   show_expected: bool = False, plot_style: Literal['bar', 'lollipop'] = 'bar',
                                    plot_pathway_graphs: bool = True,
                                    pathway_graphs_format: Literal[param_typing.GRAPHVIZ_FORMATS] = 'none',
                                    parallel_backend: Literal[PARALLEL_BACKENDS] = 'loky', gui_mode: bool = False
@@ -1297,6 +1320,11 @@ class RankedSet(FeatureSet):
         :type plot_horizontal: bool (default=True)
         :param plot_horizontal: if True, results will be plotted with a horizontal bar plot. \
         Otherwise, results will be plotted with a vertical plot.
+        :param show_expected: if True, the observed/expected values will be shown on the plot.
+        :type show_expected: bool (default=False)
+        :param plot_style: style for the plot. Either 'bar' for a bar plot or 'lollipop' for a lollipop plot \
+        in which the lollipop size indicates the size of the observed gene set.
+        :type plot_style: 'bar' or 'lollipop' (default='bar')
         :type plot_pathway_graphs: bool (default=True)
         :param plot_pathway_graphs: if True, will generate pathway graphs depicting the significant KEGG pathways.
         :type pathway_graphs_format: 'pdf', 'png', 'svg', or None (default=None)
@@ -1336,7 +1364,8 @@ class RankedSet(FeatureSet):
                                                         plot_horizontal, plot_pathway_graphs, self.set_name,
                                                         parallel_backend=parallel_backend, enrichment_func_name='xlmhg',
                                                         exclude_unannotated_genes=exclude_unannotated_genes,
-                                                        single_set=True, pathway_graphs_format=pathway_graphs_format)
+                                                        single_set=True, pathway_graphs_format=pathway_graphs_format,
+                                                        plot_style=plot_style, show_expected=show_expected)
 
         if gui_mode:
             return runner.run(plot=False), runner
@@ -1348,7 +1377,9 @@ class RankedSet(FeatureSet):
                               attr_ref_path: Union[str, Path, Literal['predefined']] = 'predefined',
                               exclude_unannotated_genes: bool = True, return_nonsignificant: bool = True,
                               save_csv: bool = False, fname=None, return_fig: bool = False,
-                              plot_horizontal: bool = True, parallel_backend: Literal[PARALLEL_BACKENDS] = 'loky',
+                              plot_horizontal: bool = True,
+                              show_expected: bool = False, plot_style: Literal['bar', 'lollipop'] = 'bar',
+                              parallel_backend: Literal[PARALLEL_BACKENDS] = 'loky',
                               gui_mode: bool = False):
         """
         Calculates enrichment and depletion of the sorted RankedSet for user-defined attributes \
@@ -1412,11 +1443,11 @@ class RankedSet(FeatureSet):
 
         """
         runner = enrichment_runner.EnrichmentRunner(self.ranked_genes, attributes, alpha, attr_ref_path,
-                                                    return_nonsignificant, save_csv,
-                                                    fname, return_fig, plot_horizontal, self.set_name,
-                                                    parallel_backend=parallel_backend, enrichment_func_name='xlmhg',
-                                                    single_set=True,
-                                                    exclude_unannotated_genes=exclude_unannotated_genes)
+                                                    return_nonsignificant, save_csv, fname, return_fig, plot_horizontal,
+                                                    self.set_name, parallel_backend=parallel_backend,
+                                                    enrichment_func_name='xlmhg',
+                                                    exclude_unannotated_genes=exclude_unannotated_genes,
+                                                    single_set=True, plot_style=plot_style, show_expected=show_expected)
         if gui_mode:
             return runner.run(plot=False), runner
         return runner.run()
@@ -1429,7 +1460,8 @@ def enrichment_bar_plot(results_table_path: Union[str, Path], alpha: param_typin
                         title: str = 'Enrichment results', center_bars: bool = True,
                         plot_horizontal: bool = True, ylabel: Union[str, Literal[
         r"$\log_2$(Fold Enrichment)", r"$\log_2$(Enrichment Score)"]] = r"$\log_2$(Fold Enrichment)",
-                        ylim: Union[float, Literal['auto']] = 'auto') -> plt.Figure:
+                        ylim: Union[float, Literal['auto']] = 'auto',
+                        plot_style: Literal['bar', 'lollipop'] = 'bar', show_expected: bool = False) -> plt.Figure:
     """
     Generate an enrichment bar-plot based on an enrichment results table. \
     For the clarity of display, complete depletion (linear enrichment = 0) \
@@ -1456,15 +1488,21 @@ def enrichment_bar_plot(results_table_path: Union[str, Path], alpha: param_typin
     :param ylim: set the Y-axis limits. If `ylim`='auto', determines the axis limits automatically based on the data. \
     If `ylim` is a number, set the Y-axis limits to [-ylim, ylim].
     :type ylim: float or 'auto' (default='auto')
+    :param plot_style: style for the plot. Either 'bar' for a bar plot or 'lollipop' for a lollipop plot \
+    in which the lollipop size indicates the size of the observed gene set.
+    :type plot_style: 'bar' or 'lollipop' (default='bar')
+    :param show_expected: if True, the observed/expected values will be shown on the plot.
+    :type show_expected: bool (default=False)
     :return: Figure object containing the bar plot
     :rtype: matplotlib.figure.Figure instance
     """
-    results_table = io.load_csv(results_table_path, 0)
+    results_table = io.load_table(results_table_path, 0)
     runner = enrichment_runner.EnrichmentRunner(set(), results_table.index, alpha, '', True, False, '', True,
-                                                plot_horizontal, '', False, 'hypergeometric', 'all')
+                                                plot_horizontal, '', False, 'hypergeometric', 'all',
+                                                plot_style=plot_style, show_expected=show_expected)
     runner.en_score_col = enrichment_score_column
     runner.results = results_table
-    return runner.enrichment_bar_plot(n_bars, center_bars, ylabel, title, ylim)
+    return runner.enrichment_bar_plot(n_bars, center_bars, ylabel=ylabel, title=title, ylim=ylim)
 
 
 def _fetch_sets(objs: dict, ref: Union[str, Path, Literal['predefined']] = 'predefined'):
@@ -1484,7 +1522,7 @@ def _fetch_sets(objs: dict, ref: Union[str, Path, Literal['predefined']] = 'pred
     fetched_sets = dict()
 
     if validation.isinstanceiter_any(objs.values(), str):
-        attr_ref_table = io.load_csv(settings.get_attr_ref_path(ref))
+        attr_ref_table = io.load_table(settings.get_attr_ref_path(ref))
         validation.validate_attr_table(attr_ref_table)
         attr_ref_table.set_index('gene', inplace=True)
 
@@ -1541,37 +1579,39 @@ def upset_plot(objs: Dict[str, Union[str, FeatureSet, Set[str]]], set_colors: pa
     """
 
     upset_df = parsing.generate_upset_series(_fetch_sets(objs=objs, ref=attr_ref_table_path))
-    upset_obj = upsetplot.UpSet(upset_df, sort_by='degree', sort_categories_by=None, show_percentages=show_percentages)
-    axes = upset_obj.plot(fig=fig)
-    if fig is None:
-        fig = plt.gcf()
+    with pd.option_context("mode.copy_on_write", False):
+        upset_obj = upsetplot.UpSet(upset_df, sort_by='degree', sort_categories_by=None,
+                                    show_percentages=show_percentages)
+        axes = upset_obj.plot(fig=fig)
+        if fig is None:
+            fig = plt.gcf()
 
-    set_colors = [matplotlib.colors.to_rgb(color) for color in parsing.data_to_list(set_colors)]
-    if len(set_colors) == 1:
-        set_colors = [set_colors[0]] * len(objs)
-    elif len(set_colors) > len(objs):
-        set_colors = set_colors[0:len(objs)]
-    elif len(set_colors) < len(objs):
-        set_colors = set_colors + [(0, 0, 0)] * (len(objs) - len(set_colors))
+        set_colors = [matplotlib.colors.to_rgb(color) for color in parsing.data_to_list(set_colors)]
+        if len(set_colors) == 1:
+            set_colors = [set_colors[0]] * len(objs)
+        elif len(set_colors) > len(objs):
+            set_colors = set_colors[0:len(objs)]
+        elif len(set_colors) < len(objs):
+            set_colors = set_colors + [(0, 0, 0)] * (len(objs) - len(set_colors))
 
-    for main_set in range(len(objs)):
-        color = set_colors[main_set]
-        axes['totals'].patches[main_set].set_facecolor(color)
+        for main_set in range(len(objs)):
+            color = set_colors[main_set]
+            axes['totals'].patches[main_set].set_facecolor(color)
 
-    patcn_ids = _get_tuple_patch_ids(len(objs))
-    for subset in range(len(upset_obj.subset_styles)):
-        id = patcn_ids[subset]
-        colors_to_mix = [set_colors[ind] for ind, is_present in enumerate(id) if is_present]
-        color = generic.mix_colors(*colors_to_mix)
-        upset_obj.subset_styles[subset]['facecolor'] = color
-        axes['intersections'].patches[subset].set_facecolor(color)
-    matrix_ax = axes['matrix']
-    matrix_ax.clear()
-    upset_obj.plot_matrix(matrix_ax)
-    fig.suptitle(title, fontsize=title_fontsize)
+        patcn_ids = _get_tuple_patch_ids(len(objs))
+        for subset in range(len(upset_obj.subset_styles)):
+            id = patcn_ids[subset]
+            colors_to_mix = [set_colors[ind] for ind, is_present in enumerate(id) if is_present]
+            color = generic.mix_colors(*colors_to_mix)
+            upset_obj.subset_styles[subset]['facecolor'] = color
+            axes['intersections'].patches[subset].set_facecolor(color)
+        matrix_ax = axes['matrix']
+        matrix_ax.clear()
+        upset_obj.plot_matrix(matrix_ax)
+        fig.suptitle(title, fontsize=title_fontsize)
 
-    plt.show()
-    return fig
+        plt.show()
+        return fig
 
 
 def _compare_ids(id1: Tuple[int, ...], id2: Tuple[int, ...]):
@@ -1724,7 +1764,7 @@ def gene_ontology_graph(aspect: Literal[param_typing.GO_ASPECTS], results_table_
     :param dpi: resolution of the ontology graph in DPI (dots per inch).
     :type dpi: int (default=300)
     """
-    results_df = io.load_csv(results_table_path, index_col=0)
+    results_df = io.load_table(results_table_path, index_col=0)
     assert enrichment_score_column in results_df, f"Invalid enrichment_score_col '{enrichment_score_column}'"
     dag_tree = ontology.fetch_go_basic()
     return dag_tree.plot_ontology(aspect, results_df, enrichment_score_column, title, ylabel, graph_format, dpi)

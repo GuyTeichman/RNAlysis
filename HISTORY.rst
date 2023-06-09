@@ -2,13 +2,50 @@
 History
 =======
 
-3.8.1 (2023-05-??)
+3.9.0 (2023-06-09)
 ------------------
+Version 3.9.0 of RNALysis introduces several enhancements and fixes to improve your experience.
+The release includes additional enrichment plot styles, a new option for PCA plots,
+the ability to load and save data tables in Parquet format, and new actions in the Help menu for reporting issues and suggesting improvements.
+The update also improves the performance of various functions, ensures consistency in font and theme settings,
+and addresses multiple bug fixes, including issues with automatic session reports and visualization functions.
+
+Added
+*******
+* Added additional parameters to enrichment bar plots (enrichment.enrichment_bar_plot), including a new plot style ('lollipop') and observed/expected labels on the graph.
+* Added a new parameter to Principal Component Analysis plots (CountFilter.pca) 'plot_grid', which can enable or disable adding a grid to PCA plots.
+* RNAlysis can now load and save data tables in Parquet format (.parquet)
+* Added new actions to the Help menu, allowing users to report issues, suggest issues, or open discussions.
+
+Changed
+********
+* Functions in the FASTQ model are now added to automatic session reports.
+* Many of the functions in RNAlysis should now run faster.
+* Font type, size, and color for help tooltips should now match the global font settings.
+* True/False toggle switches now scale with font size.
+* When loading data tables into RNAlysis, you will now see only supported file formats by default.
+* Clustering PCA plots are now plotted in proportion to the % variance explained by each PC.
+* The legend in clustering PCA plots is now draggable.
 
 Fixed
 *******
+* Fixed bug where data tables generated through the FASTQ model would not display properly in automatic session reports.
 * Fixed bug where graphs generated through the Visualize Gene Sets window would not be added to automatic analysis report.
 * When saving a file through the graphical interface, automatically-suggested filenames no longer contain illegal characters.
+* Improved clarity of error message when R installation folder is not found.
+* Fixed bug where some input parameter widgets in the RNAlysis graphical interface would not display properly.
+* RNAlysis now provides a clearer warning message when attempting to run HDBSCAN clustering, if the hdbscan package is not installed.
+* Label text in PCA plots and hierarchical clustergrams should no longer be cropped outside of the visible region of the plot.
+* Fixed bug where some visualization functions, such as pair-plot (CountFilter.pairplot) would not display properly due to version mismatches between pandas and seaborn.
+* Improved clarity of error messages when external apps' (kallisto, bowtie2, etc) installation folders are not found.
+* Fixed bug where running the RNAlysis graphical interface on a new computer would sometimes raise an error (thanks to `NeuroRookie <https://github.com/NeuroRookie>`_ in `#25 <https://github.com/GuyTeichman/RNAlysis/issues/25>`_).
+* Fixed a bug where the 'min_samples' parameter in HDBSCAN clustering could not be disabled.
+* Fixed a bug where applying a function to a gene set with inplace=False would cause the new gene set to be called 'New Table'.
+* Fixed a bug where RNAlysis would display the message "Pipeline saved successfully", even when the user cancels the save operation.
+
+New Contributors
+*****************
+* `NeuroRookie`_ in `#25`_
 
 3.8.0 (2023-05-07)
 ------------------

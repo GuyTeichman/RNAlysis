@@ -68,7 +68,7 @@ def test_filter_len(filter_obj):
 def test_filter_inplace():
     d = DESeqFilter('tests/test_files/test_deseq_no_nans.csv')
     d_copy = DESeqFilter('tests/test_files/test_deseq_no_nans.csv')
-    truth = io.load_csv('tests/test_files/counted.csv')
+    truth = io.load_table('tests/test_files/counted.csv')
     d_inplace_false = d._inplace(truth, opposite=False, inplace=False, suffix='suffix')
     assert np.all(d_inplace_false.df == truth)
     assert np.all(d.df == d_copy.df)
@@ -77,33 +77,33 @@ def test_filter_inplace():
 
 
 def test_head():
-    df = io.load_csv('tests/test_files/test_deseq.csv', 0)
+    df = io.load_table('tests/test_files/test_deseq.csv', 0)
     d = DESeqFilter('tests/test_files/test_deseq.csv')
     assert np.all(df.head(7) == d.head(7))
     assert np.all(df.head(1) == d.head(1))
 
-    df2 = io.load_csv('tests/test_files/counted.csv', 0)
+    df2 = io.load_table('tests/test_files/counted.csv', 0)
     f = Filter('tests/test_files/counted.csv')
     assert np.all(df2.head() == f.head())
     assert np.all(df2.head(1000) == f.head(1000))
 
 
 def test_tail():
-    df = io.load_csv('tests/test_files/test_deseq.csv', 0)
+    df = io.load_table('tests/test_files/test_deseq.csv', 0)
     d = DESeqFilter('tests/test_files/test_deseq.csv')
     assert np.all(df.tail(7) == d.tail(7))
     assert np.all(df.tail(1) == d.tail(1))
 
-    df2 = io.load_csv('tests/test_files/counted.csv', 0)
+    df2 = io.load_table('tests/test_files/counted.csv', 0)
     f = Filter('tests/test_files/counted.csv')
     assert np.all(df2.tail() == f.tail())
     assert np.all(df2.tail(1000) == f.tail(1000))
 
 
 def test_describe():
-    fc_df = io.load_csv('tests/test_files/fc_1.csv', 0, squeeze=True)
-    count_df = io.load_csv('tests/test_files/counted.csv', 0)
-    deseq_df = io.load_csv('tests/test_files/test_deseq.csv', 0)
+    fc_df = io.load_table('tests/test_files/fc_1.csv', 0, squeeze=True)
+    count_df = io.load_table('tests/test_files/counted.csv', 0)
+    deseq_df = io.load_table('tests/test_files/test_deseq.csv', 0)
 
     fc = FoldChangeFilter('tests/test_files/fc_1.csv', 'a', 'b')
     count = CountFilter('tests/test_files/counted.csv')
@@ -142,7 +142,7 @@ def test_filter_translate_gene_ids(map_to, map_from, remove_unmapped_genes, expe
         return io.GeneIDTranslator({})
 
     monkeypatch.setattr(io, 'map_gene_ids', mock_map_gene_ids)
-    truth = io.load_csv(expected, index_col=0)
+    truth = io.load_table(expected, index_col=0)
     f = Filter('tests/test_files/counted.csv')
 
     res = f.translate_gene_ids(map_to, map_from, remove_unmapped_genes, inplace=False)
@@ -152,7 +152,7 @@ def test_filter_translate_gene_ids(map_to, map_from, remove_unmapped_genes, expe
 
 
 def test_countfilter_normalize_to_rpm_htseqcount():
-    truth = io.load_csv(r"tests/test_files/test_norm_reads_rpm_htseqcount.csv", 0)
+    truth = io.load_table(r"tests/test_files/test_norm_reads_rpm_htseqcount.csv", 0)
     h = CountFilter("tests/test_files/counted.csv")
     not_inplace, factors = h.normalize_to_rpm_htseqcount("tests/test_files/uncounted.csv", inplace=False,
                                                          return_scaling_factors=True)
@@ -166,7 +166,7 @@ def test_countfilter_normalize_to_rpm_htseqcount():
 
 
 def test_countfilter_normalize_to_rpm():
-    truth = io.load_csv(r"tests/test_files/test_norm_to_rpm.csv", 0)
+    truth = io.load_table(r"tests/test_files/test_norm_to_rpm.csv", 0)
     h = CountFilter("tests/test_files/counted.csv")
     not_inplace, factors = h.normalize_to_rpm(inplace=False, return_scaling_factors=True)
     assert np.isclose(truth, not_inplace.df).all()
@@ -194,7 +194,7 @@ def test_countfilter_normalize_to_rpkm(monkeypatch, gtf_path, feature_type, meth
             return json.load(f)
 
     monkeypatch.setattr(genome_annotation, 'get_genomic_feature_lengths', mock_get_feature_lengths)
-    truth = io.load_csv(r"tests/test_files/test_norm_to_rpkm.csv", 0)
+    truth = io.load_table(r"tests/test_files/test_norm_to_rpkm.csv", 0)
     h = CountFilter("tests/test_files/counted.csv")
     not_inplace, factors = h.normalize_to_rpkm(gtf_path, feature_type, method, inplace=False,
                                                return_scaling_factors=True)
@@ -223,7 +223,7 @@ def test_countfilter_normalize_to_tpm(monkeypatch, gtf_path, feature_type, metho
             return json.load(f)
 
     monkeypatch.setattr(genome_annotation, 'get_genomic_feature_lengths', mock_get_feature_lengths)
-    truth = io.load_csv(r"tests/test_files/test_norm_to_tpm.csv", 0)
+    truth = io.load_table(r"tests/test_files/test_norm_to_tpm.csv", 0)
     h = CountFilter("tests/test_files/counted.csv")
     not_inplace, factors = h.normalize_to_tpm(gtf_path, feature_type, method, inplace=False,
                                               return_scaling_factors=True)
@@ -237,7 +237,7 @@ def test_countfilter_normalize_to_tpm(monkeypatch, gtf_path, feature_type, metho
 
 
 def test_countfilter_normalize_rle():
-    truth = io.load_csv(r"tests/test_files/test_norm_rle.csv", 0)
+    truth = io.load_table(r"tests/test_files/test_norm_rle.csv", 0)
     h = CountFilter("tests/test_files/counted.csv")
     not_inplace, factors = h.normalize_rle(inplace=False, return_scaling_factors=True)
     assert np.isclose(truth, not_inplace.df).all()
@@ -249,7 +249,7 @@ def test_countfilter_normalize_rle():
 
 
 def test_countfilter_normalize_tmm():
-    truth = io.load_csv(r"tests/test_files/test_norm_tmm.csv", 0)
+    truth = io.load_table(r"tests/test_files/test_norm_tmm.csv", 0)
     h = CountFilter("tests/test_files/counted.csv")
     not_inplace, factors = h.normalize_tmm(ref_column='cond1', inplace=False, return_scaling_factors=True)
     assert np.isclose(truth, not_inplace.df).all()
@@ -262,7 +262,7 @@ def test_countfilter_normalize_tmm():
 
 
 def test_countfilter_normalize_median_of_ratios():
-    truth = io.load_csv(r"tests/test_files/test_norm_mrn.csv", 0)
+    truth = io.load_table(r"tests/test_files/test_norm_mrn.csv", 0)
     h = CountFilter("tests/test_files/counted.csv")
     not_inplace, factors = h.normalize_median_of_ratios([['cond1', 'cond2'], ['cond3', 'cond4']], inplace=False,
                                                         return_scaling_factors=True)
@@ -280,7 +280,7 @@ def test_countfilter_normalize_median_of_ratios():
     (0.32, "tests/test_files/test_norm_quantile_32.csv"),
 ])
 def test_countfilter_normalize_to_quantile(quantile, truth_path):
-    truth = io.load_csv(truth_path, 0)
+    truth = io.load_table(truth_path, 0)
     h = CountFilter("tests/test_files/counted.csv")
     not_inplace, factors = h.normalize_to_quantile(quantile, inplace=False, return_scaling_factors=True)
     assert np.isclose(truth, not_inplace.df).all()
@@ -293,9 +293,9 @@ def test_countfilter_normalize_to_quantile(quantile, truth_path):
 
 
 def test_countfilter_norm_reads_with_scaling_factors():
-    truth = io.load_csv(r"tests/test_files/test_norm_scaling_factors.csv", 0)
+    truth = io.load_table(r"tests/test_files/test_norm_scaling_factors.csv", 0)
     h = CountFilter("tests/test_files/counted.csv")
-    factors = io.load_csv("tests/test_files/scaling_factors.csv")
+    factors = io.load_table("tests/test_files/scaling_factors.csv")
     h_norm = h.normalize_with_scaling_factors("tests/test_files/scaling_factors.csv", inplace=False)
     h.normalize_with_scaling_factors(factors)
     assert np.isclose(truth, h.df).all()
@@ -303,7 +303,7 @@ def test_countfilter_norm_reads_with_scaling_factors():
 
 
 def test_filter_low_reads():
-    truth = io.load_csv("tests/test_files/counted_low_rpm_truth.csv", 0)
+    truth = io.load_table("tests/test_files/counted_low_rpm_truth.csv", 0)
     h = CountFilter("tests/test_files/counted_low_rpm.csv")
     h.filter_low_reads(threshold=5)
     assert np.isclose(truth, h.df).all()
@@ -311,7 +311,7 @@ def test_filter_low_reads():
 
 def test_filter_low_reads_reverse():
     h = CountFilter("tests/test_files/counted.csv")
-    low_truth = io.load_csv(r"tests/test_files/counted_below60_rpm.csv", 0)
+    low_truth = io.load_table(r"tests/test_files/counted_below60_rpm.csv", 0)
     h.filter_low_reads(threshold=60, opposite=True)
     h.df.sort_index(inplace=True)
     low_truth.sort_index(inplace=True)
@@ -440,14 +440,14 @@ def _filter_biotype_from_table_tester(filter_obj, truth_protein_coding, truth_pi
 
 
 def test_htcount_filter_biotype_from_ref_table():
-    truth_protein_coding = io.load_csv('tests/test_files/counted_biotype_protein_coding.csv', 0)
-    truth_pirna = io.load_csv('tests/test_files/counted_biotype_piRNA.csv', 0)
+    truth_protein_coding = io.load_table('tests/test_files/counted_biotype_protein_coding.csv', 0)
+    truth_pirna = io.load_table('tests/test_files/counted_biotype_piRNA.csv', 0)
     h = CountFilter("tests/test_files/counted_biotype.csv")
     _filter_biotype_from_table_tester(h, truth_protein_coding=truth_protein_coding, truth_pirna=truth_pirna)
 
 
 def test_htcount_filter_biotype_from_ref_table_opposite():
-    truth_no_pirna = io.load_csv(r'tests/test_files/counted_biotype_no_piRNA.csv', 0)
+    truth_no_pirna = io.load_table(r'tests/test_files/counted_biotype_no_piRNA.csv', 0)
     h = CountFilter("tests/test_files/counted_biotype.csv")
     h.filter_biotype_from_ref_table('piRNA', ref=__biotype_ref__, opposite=True, inplace=True)
     h.df.sort_index(inplace=True)
@@ -456,7 +456,7 @@ def test_htcount_filter_biotype_from_ref_table_opposite():
 
 
 def test_filter_by_attribute():
-    truth = io.load_csv('tests/test_files/test_deseq_filter_by_attr1.csv', 0)
+    truth = io.load_table('tests/test_files/test_deseq_filter_by_attr1.csv', 0)
     d = DESeqFilter('tests/test_files/test_deseq.csv')
     d_notinplace = d.filter_by_attribute('attribute1', ref=__attr_ref__, inplace=False)
     d.filter_by_attribute('attribute1', ref=__attr_ref__)
@@ -469,7 +469,7 @@ def test_filter_by_attribute():
 
 def test_filter_by_attribute_from_string(monkeypatch):
     monkeypatch.setattr('builtins.input', lambda x: 'attribute1\nattribute2\n')
-    union_truth = io.load_csv('tests/test_files/counted_filter_by_bigtable_union_truth.csv', 0)
+    union_truth = io.load_table('tests/test_files/counted_filter_by_bigtable_union_truth.csv', 0)
     h = CountFilter('tests/test_files/counted_filter_by_bigtable.csv')
     assert np.all(union_truth.sort_index() == h.filter_by_attribute(mode='union',
                                                                     ref=__attr_ref__,
@@ -481,14 +481,14 @@ def test_filter_by_attribute_from_string(monkeypatch):
                                                                     inplace=False).df.sort_index())
 
     monkeypatch.setattr('builtins.input', lambda x: 'attribute1')
-    deseq_truth = io.load_csv('tests/test_files/test_deseq_filter_by_attr1.csv', 0)
+    deseq_truth = io.load_table('tests/test_files/test_deseq_filter_by_attr1.csv', 0)
     d = DESeqFilter('tests/test_files/test_deseq.csv')
     assert np.all(
         deseq_truth.sort_index() == d.filter_by_attribute(ref=__attr_ref__, inplace=False).df.sort_index())
 
 
 def test_filter_by_attribute_union():
-    union_truth = io.load_csv('tests/test_files/counted_filter_by_bigtable_union_truth.csv', 0)
+    union_truth = io.load_table('tests/test_files/counted_filter_by_bigtable_union_truth.csv', 0)
     h = CountFilter('tests/test_files/counted_filter_by_bigtable.csv')
     union = h.filter_by_attribute(['attribute1', 'attribute2'], mode='union',
                                   ref=__attr_ref__, inplace=False)
@@ -496,7 +496,7 @@ def test_filter_by_attribute_union():
 
 
 def test_filter_by_attribute_intersection():
-    intersection_truth = io.load_csv(r'tests/test_files/counted_filter_by_bigtable_intersect_truth.csv', 0)
+    intersection_truth = io.load_table(r'tests/test_files/counted_filter_by_bigtable_intersect_truth.csv', 0)
     h = CountFilter('tests/test_files/counted_filter_by_bigtable.csv')
     intersection = h.filter_by_attribute(['attribute1', 'attribute2'], mode='intersection',
                                          ref=__attr_ref__,
@@ -556,14 +556,14 @@ def test_split_by_attribute_faulty_attributes():
 
 
 def test_deseq_filter_significant():
-    truth = io.load_csv("tests/test_files/test_deseq_sig_truth.csv", 0)
+    truth = io.load_table("tests/test_files/test_deseq_sig_truth.csv", 0)
     d = DESeqFilter("tests/test_files/test_deseq_sig.csv")
     d.filter_significant(alpha=0.05)
     assert np.all(d.df == truth)
 
 
 def test_deseq_filter_significant_opposite():
-    truth = io.load_csv(r'tests/test_files/test_deseq_not_sig_truth.csv', 0).sort_index()
+    truth = io.load_table(r'tests/test_files/test_deseq_not_sig_truth.csv', 0).sort_index()
     d = DESeqFilter("tests/test_files/test_deseq_sig.csv")
     d.filter_significant(alpha=0.05, opposite=True)
     d.df.sort_index(inplace=True)
@@ -571,7 +571,7 @@ def test_deseq_filter_significant_opposite():
 
 
 def test_filter_top_n_ascending_number():
-    truth = io.load_csv("tests/test_files/test_deseq_top10.csv", 0).sort_index()
+    truth = io.load_table("tests/test_files/test_deseq_top10.csv", 0).sort_index()
     d = DESeqFilter("tests/test_files/test_deseq.csv")
     d.filter_top_n('padj', 10)
     d.df.sort_index(inplace=True)
@@ -579,7 +579,7 @@ def test_filter_top_n_ascending_number():
 
 
 def test_filter_top_n_ascending_text():
-    truth = io.load_csv("tests/test_files/test_deseq_top10_text_ascend.csv", 0).sort_index()
+    truth = io.load_table("tests/test_files/test_deseq_top10_text_ascend.csv", 0).sort_index()
     d = DESeqFilter("tests/test_files/test_deseq_textcol.csv")
     print(d.sort('textcol', inplace=False).df)
     d.filter_top_n('textcol', 10, True)
@@ -588,7 +588,7 @@ def test_filter_top_n_ascending_text():
 
 
 def test_filter_top_n_multiple_columns():
-    truth = io.load_csv("tests/test_files/test_deseq_textcol_top15_text_basemean.csv", 0).sort_index()
+    truth = io.load_table("tests/test_files/test_deseq_textcol_top15_text_basemean.csv", 0).sort_index()
     d = DESeqFilter("tests/test_files/test_deseq_textcol.csv")
     d.filter_top_n(['textcol', 'baseMean'], 15, True)
     d.df.sort_index(inplace=True)
@@ -596,7 +596,7 @@ def test_filter_top_n_multiple_columns():
 
 
 def test_filter_top_n_descending_number():
-    truth = io.load_csv("tests/test_files/test_deseq_bottom7.csv", 0).sort_index()
+    truth = io.load_table("tests/test_files/test_deseq_bottom7.csv", 0).sort_index()
     d = DESeqFilter("tests/test_files/test_deseq.csv")
     d.filter_top_n('log2FoldChange', 7, False)
     d.df.sort_index(inplace=True)
@@ -604,7 +604,7 @@ def test_filter_top_n_descending_number():
 
 
 def test_filter_top_n_descending_text():
-    truth = io.load_csv("tests/test_files/test_deseq_bottom10_text_descend.csv", 0).sort_index()
+    truth = io.load_table("tests/test_files/test_deseq_bottom10_text_descend.csv", 0).sort_index()
     d = DESeqFilter("tests/test_files/test_deseq_textcol.csv")
     d.filter_top_n('textcol', 10, False)
     d.df.sort_index(inplace=True)
@@ -621,7 +621,7 @@ def test_filter_top_n_nonexisting_column():
 
 
 def test_deseq_filter_abs_log2_fold_change():
-    truth = io.load_csv("tests/test_files/test_deseq_fc_4_truth.csv", 0)
+    truth = io.load_table("tests/test_files/test_deseq_fc_4_truth.csv", 0)
     d = DESeqFilter("tests/test_files/test_deseq_fc.csv")
     fc4 = d.filter_abs_log2_fold_change(4, inplace=False)
     fc4.df.sort_index(inplace=True)
@@ -630,8 +630,8 @@ def test_deseq_filter_abs_log2_fold_change():
 
 
 def test_deseq_filter_fold_change_direction():
-    pos_truth = io.load_csv("tests/test_files/test_deseq_fc_pos_truth.csv", 0)
-    neg_truth = io.load_csv("tests/test_files/test_deseq_fc_neg_truth.csv", 0)
+    pos_truth = io.load_table("tests/test_files/test_deseq_fc_pos_truth.csv", 0)
+    neg_truth = io.load_table("tests/test_files/test_deseq_fc_neg_truth.csv", 0)
     d = DESeqFilter("tests/test_files/test_deseq_fc.csv")
     pos = d.filter_fold_change_direction('pos', inplace=False)
     neg = d.filter_fold_change_direction('neg', inplace=False)
@@ -641,8 +641,8 @@ def test_deseq_filter_fold_change_direction():
 
 def test_deseq_split_fold_change():
     d = DESeqFilter("tests/test_files/test_deseq_fc.csv")
-    pos_truth = io.load_csv("tests/test_files/test_deseq_fc_pos_truth.csv", 0)
-    neg_truth = io.load_csv("tests/test_files/test_deseq_fc_neg_truth.csv", 0)
+    pos_truth = io.load_table("tests/test_files/test_deseq_fc_pos_truth.csv", 0)
+    neg_truth = io.load_table("tests/test_files/test_deseq_fc_neg_truth.csv", 0)
     d = DESeqFilter("tests/test_files/test_deseq_fc.csv")
     pos, neg = d.split_fold_change_direction()
     assert np.all(pos.df == pos_truth)
@@ -793,15 +793,15 @@ def test_htcount_threshold_invalid():
 
 def test_htcount_split_by_reads():
     h = CountFilter("tests/test_files/counted.csv")
-    high_truth = io.load_csv(r"tests/test_files/counted_above60_rpm.csv", 0)
-    low_truth = io.load_csv(r"tests/test_files/counted_below60_rpm.csv", 0)
+    high_truth = io.load_table(r"tests/test_files/counted_above60_rpm.csv", 0)
+    low_truth = io.load_table(r"tests/test_files/counted_below60_rpm.csv", 0)
     high, low = h.split_by_reads(threshold=60)
     assert np.all(high.df == high_truth)
     assert np.all(low.df == low_truth)
 
 
 def test_filter_percentile():
-    truth = io.load_csv(r'tests/test_files/test_deseq_percentile_0.25.csv', 0)
+    truth = io.load_table(r'tests/test_files/test_deseq_percentile_0.25.csv', 0)
     h = DESeqFilter(r'tests/test_files/test_deseq_percentile.csv')
     h.filter_percentile(0.25, 'padj', inplace=True)
     h.df.sort_index(inplace=True)
@@ -825,8 +825,8 @@ def test_filter_percentile_bad_input():
 
 
 def test_split_by_percentile():
-    truth_below = io.load_csv(r'tests/test_files/test_deseq_percentile_0.25.csv', 0)
-    truth_above = io.load_csv(r'tests/test_files/test_deseq_percentile_0.75.csv', 0)
+    truth_below = io.load_table(r'tests/test_files/test_deseq_percentile_0.25.csv', 0)
+    truth_above = io.load_table(r'tests/test_files/test_deseq_percentile_0.75.csv', 0)
     h = DESeqFilter(r'tests/test_files/test_deseq_percentile.csv')
     below, above = h.split_by_percentile(0.25, 'padj')
     for i in [truth_below, truth_above, below.df, above.df]:
@@ -836,7 +836,7 @@ def test_split_by_percentile():
 
 
 def test_htcount_filter_biotype_from_ref_table_multiple():
-    truth = io.load_csv('tests/test_files/counted_biotype_piRNA_protein_coding.csv', 0)
+    truth = io.load_table('tests/test_files/counted_biotype_piRNA_protein_coding.csv', 0)
     h = CountFilter("tests/test_files/counted_biotype.csv")
     both = h.filter_biotype_from_ref_table(['protein_coding', 'piRNA'], ref=__biotype_ref__,
                                            inplace=False)
@@ -846,7 +846,7 @@ def test_htcount_filter_biotype_from_ref_table_multiple():
 
 
 def test_htcount_filter_biotype_from_ref_table_multiple_opposite():
-    truth = io.load_csv('tests/test_files/counted_biotype_piRNA_protein_coding_opposite.csv', 0)
+    truth = io.load_table('tests/test_files/counted_biotype_piRNA_protein_coding_opposite.csv', 0)
     h = CountFilter("tests/test_files/counted_biotype.csv")
     neither = h.filter_biotype_from_ref_table(['protein_coding', 'piRNA'], ref=__biotype_ref__,
                                               inplace=False,
@@ -857,14 +857,14 @@ def test_htcount_filter_biotype_from_ref_table_multiple_opposite():
 
 
 def test_deseq_filter_biotype_from_ref_table():
-    truth_protein_coding = io.load_csv('tests/test_files/test_deseq_biotype_protein_coding.csv', 0)
-    truth_pirna = io.load_csv('tests/test_files/test_deseq_biotype_piRNA.csv', 0)
+    truth_protein_coding = io.load_table('tests/test_files/test_deseq_biotype_protein_coding.csv', 0)
+    truth_pirna = io.load_table('tests/test_files/test_deseq_biotype_piRNA.csv', 0)
     d = DESeqFilter("tests/test_files/test_deseq_biotype.csv")
     _filter_biotype_from_table_tester(d, truth_protein_coding=truth_protein_coding, truth_pirna=truth_pirna)
 
 
 def test_deseq_filter_biotype_from_ref_table_opposite():
-    truth_no_pirna = io.load_csv(r'tests/test_files/test_deseq_biotype_piRNA_opposite.csv', 0)
+    truth_no_pirna = io.load_table(r'tests/test_files/test_deseq_biotype_piRNA_opposite.csv', 0)
     d = DESeqFilter("tests/test_files/test_deseq_biotype.csv")
     d.filter_biotype_from_ref_table('piRNA', ref=__biotype_ref__, opposite=True, inplace=True)
     d.df.sort_index(inplace=True)
@@ -873,7 +873,7 @@ def test_deseq_filter_biotype_from_ref_table_opposite():
 
 
 def test_deseq_filter_biotype_from_ref_table_multiple():
-    truth = io.load_csv('tests/test_files/test_deseq_biotype_piRNA_protein_coding.csv', 0)
+    truth = io.load_table('tests/test_files/test_deseq_biotype_piRNA_protein_coding.csv', 0)
     d = DESeqFilter("tests/test_files/test_deseq_biotype.csv")
     both = d.filter_biotype_from_ref_table(['protein_coding', 'piRNA'], ref=__biotype_ref__,
                                            inplace=False)
@@ -883,7 +883,7 @@ def test_deseq_filter_biotype_from_ref_table_multiple():
 
 
 def test_deseq_filter_biotype_from_ref_table_multiple_opposite():
-    truth = io.load_csv('tests/test_files/test_deseq_biotype_piRNA_protein_coding_opposite.csv', 0)
+    truth = io.load_table('tests/test_files/test_deseq_biotype_piRNA_protein_coding_opposite.csv', 0)
     d = DESeqFilter("tests/test_files/test_deseq_biotype.csv")
     neither = d.filter_biotype_from_ref_table(['protein_coding', 'piRNA'], ref=__biotype_ref__,
                                               inplace=False,
@@ -940,8 +940,8 @@ def test_deseqfilter_difference_multiple():
 
 
 def test_intersection_inplace():
-    set1_truth = io.load_csv('tests/test_files/test_deseq_set_ops_1_inplace_intersection.csv', 0)
-    set2_truth = io.load_csv('tests/test_files/test_deseq_set_ops_2_inplace_intersection.csv', 0)
+    set1_truth = io.load_table('tests/test_files/test_deseq_set_ops_1_inplace_intersection.csv', 0)
+    set2_truth = io.load_table('tests/test_files/test_deseq_set_ops_2_inplace_intersection.csv', 0)
     set1 = DESeqFilter('tests/test_files/test_deseq_set_ops_1.csv')
     set2 = DESeqFilter('tests/test_files/test_deseq_set_ops_2.csv')
     set1_int = set1.__copy__()
@@ -958,8 +958,8 @@ def test_intersection_inplace():
 
 
 def test_difference_inplace():
-    set1_truth = io.load_csv('tests/test_files/test_deseq_set_ops_1_inplace_difference.csv', 0)
-    set2_truth = io.load_csv('tests/test_files/test_deseq_set_ops_2_inplace_difference.csv', 0)
+    set1_truth = io.load_table('tests/test_files/test_deseq_set_ops_1_inplace_difference.csv', 0)
+    set2_truth = io.load_table('tests/test_files/test_deseq_set_ops_2_inplace_difference.csv', 0)
     set1 = DESeqFilter('tests/test_files/test_deseq_set_ops_1.csv')
     set2 = DESeqFilter('tests/test_files/test_deseq_set_ops_2.csv')
     set1_diff = set1.__copy__()
@@ -978,7 +978,7 @@ def test_difference_inplace():
 def test_htcount_fold_change():
     truth_num_name = f"Mean of {['cond1_rep1', 'cond1_rep2']}"
     truth_denom_name = f"Mean of {['cond2_rep1', 'cond2_rep2']}"
-    truth = io.load_csv(r'tests/test_files/counted_fold_change_truth.csv', 0)
+    truth = io.load_table(r'tests/test_files/counted_fold_change_truth.csv', 0)
     truth = truth.squeeze()
     h = CountFilter(r'tests/test_files/counted_fold_change.csv')
     fc = h.fold_change(['cond1_rep1', 'cond1_rep2'], ['cond2_rep1', 'cond2_rep2'])
@@ -988,7 +988,7 @@ def test_htcount_fold_change():
 
 
 def test_fcfilter_filter_abs_fc():
-    truth = io.load_csv('tests/test_files/fcfilter_abs_fold_change_truth.csv', 0)
+    truth = io.load_table('tests/test_files/fcfilter_abs_fold_change_truth.csv', 0)
     truth = truth.squeeze()
     truth.sort_index(inplace=True)
     f = FoldChangeFilter('tests/test_files/counted_fold_change_truth.csv', 'numer', 'denom')
@@ -1000,8 +1000,8 @@ def test_fcfilter_filter_abs_fc():
 
 
 def test_fcfilter_fold_change_direction():
-    truth_pos = io.load_csv('tests/test_files/fc_1_pos_fc.csv', 0, squeeze=True)
-    truth_neg = io.load_csv('tests/test_files/fc_1_neg_fc.csv', 0, squeeze=True)
+    truth_pos = io.load_table('tests/test_files/fc_1_pos_fc.csv', 0, squeeze=True)
+    truth_neg = io.load_table('tests/test_files/fc_1_neg_fc.csv', 0, squeeze=True)
     fc = FoldChangeFilter('tests/test_files/fc_1.csv', 'name', 'name')
     pos = fc.filter_fold_change_direction('pos', inplace=False)
     neg = fc.filter_fold_change_direction('neg', inplace=False)
@@ -1010,8 +1010,8 @@ def test_fcfilter_fold_change_direction():
 
 
 def test_fcfilter_split_fold_change_direction():
-    truth_pos = io.load_csv('tests/test_files/fc_1_pos_fc.csv', 0, squeeze=True)
-    truth_neg = io.load_csv('tests/test_files/fc_1_neg_fc.csv', 0, squeeze=True)
+    truth_pos = io.load_table('tests/test_files/fc_1_pos_fc.csv', 0, squeeze=True)
+    truth_neg = io.load_table('tests/test_files/fc_1_neg_fc.csv', 0, squeeze=True)
     fc = FoldChangeFilter('tests/test_files/fc_1.csv', 'name', 'name')
     pos, neg = fc.split_fold_change_direction()
     assert truth_pos.equals(pos.df)
@@ -1025,7 +1025,7 @@ def test_fcfilter_filter_fold_change_direction_bad_input():
 
 
 def test_number_filters_gt():
-    truth = io.load_csv(r'tests/test_files/test_deseq_gt.csv', 0)
+    truth = io.load_table(r'tests/test_files/test_deseq_gt.csv', 0)
     d = DESeqFilter(r'tests/test_files/test_deseq.csv')
     filt_1 = d.number_filters('baseMean', '>', 1000, inplace=False)
     filt_2 = d.number_filters('baseMean', 'GT', 1000, inplace=False)
@@ -1040,7 +1040,7 @@ def test_number_filters_gt():
 
 
 def test_number_filters_lt():
-    truth = io.load_csv(r'tests/test_files/test_deseq_lt.csv', 0)
+    truth = io.load_table(r'tests/test_files/test_deseq_lt.csv', 0)
     d = DESeqFilter(r'tests/test_files/test_deseq.csv')
     filt_1 = d.number_filters('lfcSE', 'Lesser than', 0.2, inplace=False)
     filt_2 = d.number_filters('lfcSE', 'lt', 0.2, inplace=False)
@@ -1055,7 +1055,7 @@ def test_number_filters_lt():
 
 
 def test_number_filters_eq():
-    truth = io.load_csv(r'tests/test_files/counted_eq.csv', 0)
+    truth = io.load_table(r'tests/test_files/counted_eq.csv', 0)
     d = CountFilter(r'tests/test_files/counted.csv')
     filt_1 = d.number_filters('cond2', 'eQ', 0, inplace=False)
     filt_2 = d.number_filters('cond2', '=', 0, inplace=False)
@@ -1080,7 +1080,7 @@ def test_number_filters_invalid_input():
 
 
 def test_text_filters_eq():
-    truth = io.load_csv('tests/test_files/text_filters_eq.csv', 0)
+    truth = io.load_table('tests/test_files/text_filters_eq.csv', 0)
     d = CountFilter('tests/test_files/text_filters.csv')
     filt_1 = d.text_filters('class', 'eQ', 'B', inplace=False)
     filt_2 = d.text_filters('class', '=', 'B', inplace=False)
@@ -1095,7 +1095,7 @@ def test_text_filters_eq():
 
 
 def test_text_filters_ct():
-    truth = io.load_csv('tests/test_files/text_filters_ct.csv', 0)
+    truth = io.load_table('tests/test_files/text_filters_ct.csv', 0)
     d = CountFilter('tests/test_files/text_filters.csv')
     filt_1 = d.text_filters('name', 'ct', 'C3.', inplace=False)
     filt_2 = d.text_filters('name', 'IN', 'C3.', inplace=False)
@@ -1110,7 +1110,7 @@ def test_text_filters_ct():
 
 
 def test_text_filters_sw():
-    truth = io.load_csv('tests/test_files/text_filters_sw.csv', 0)
+    truth = io.load_table('tests/test_files/text_filters_sw.csv', 0)
     d = CountFilter('tests/test_files/text_filters.csv')
     filt_1 = d.text_filters('name', 'sw', '2R', inplace=False)
     filt_2 = d.text_filters('name', 'Starts With', '2R', inplace=False)
@@ -1123,7 +1123,7 @@ def test_text_filters_sw():
 
 
 def test_text_filters_ew():
-    truth = io.load_csv('tests/test_files/text_filters_ew.csv', 0)
+    truth = io.load_table('tests/test_files/text_filters_ew.csv', 0)
     d = CountFilter('tests/test_files/text_filters.csv')
     filt_1 = d.text_filters('name', 'ew', '3', inplace=False)
     filt_2 = d.text_filters('name', 'ends With', '3', inplace=False)
@@ -1149,8 +1149,8 @@ def test_count_filter_from_folder():
     counted_fname = '__allexpr_temporary_testfile.csv'
     uncounted_fname = '__allfeature_temporary_testfile.csv'
 
-    truth_all_expr = io.load_csv('tests/test_files/test_count_from_folder_all_expr.csv', 0).sort_index()
-    truth_all_feature = io.load_csv('tests/test_files/test_count_from_folder_all_feature.csv', 0).sort_index()
+    truth_all_expr = io.load_table('tests/test_files/test_count_from_folder_all_expr.csv', 0).sort_index()
+    truth_all_feature = io.load_table('tests/test_files/test_count_from_folder_all_feature.csv', 0).sort_index()
     counts = CountFilter.from_folder_htseqcount('tests/test_files/test_count_from_folder', norm_to_rpm=False,
                                                 save_csv=True,
                                                 counted_fname=counted_fname, uncounted_fname=uncounted_fname)
@@ -1162,7 +1162,7 @@ def test_count_filter_from_folder():
         print(truth_all_expr)
         assert np.all(np.isclose(counts.df.sort_index(), truth_all_expr, atol=0, rtol=0.0001))
 
-        all_feature = io.load_csv(f'tests/test_files/test_count_from_folder/{uncounted_fname}', 0).sort_index()
+        all_feature = io.load_table(f'tests/test_files/test_count_from_folder/{uncounted_fname}', 0).sort_index()
         assert all_feature.equals(truth_all_feature)
 
     finally:
@@ -1183,14 +1183,14 @@ def test_count_filter_from_folder_save_without_suffix():
 
 
 def test_count_filter_from_folder_norm():
-    truth_norm = io.load_csv('tests/test_files/test_count_from_folder_norm.csv', 0)
+    truth_norm = io.load_table('tests/test_files/test_count_from_folder_norm.csv', 0)
     counts_norm = CountFilter.from_folder_htseqcount('tests/test_files/test_count_from_folder', norm_to_rpm=True,
                                                      save_csv=False)
     assert np.all(np.isclose(counts_norm.df, truth_norm, atol=0, rtol=0.0001))
 
 
 def test_biotypes_from_ref_table():
-    truth = io.load_csv('tests/test_files/biotypes_truth.csv', 0).sort_index()
+    truth = io.load_table('tests/test_files/biotypes_truth.csv', 0).sort_index()
     c = CountFilter('tests/test_files/counted_biotype.csv')
     df = c.biotypes_from_ref_table(ref=__biotype_ref__).sort_index()
     print('\n')
@@ -1207,7 +1207,7 @@ def test_biotypes_from_ref_table_long_form():
 
 
 def test_filter_by_row_sum():
-    truth = io.load_csv('tests/test_files/test_filter_row_sum.csv', 0)
+    truth = io.load_table('tests/test_files/test_filter_row_sum.csv', 0)
     h = CountFilter('tests/test_files/counted.csv')
     h.filter_by_row_sum(29)
     h.df.sort_index(inplace=True)
@@ -1223,22 +1223,22 @@ def test_sort_inplace():
 
 def test_sort_not_inplace():
     c = CountFilter('tests/test_files/counted.csv')
-    c_copy = io.load_csv('tests/test_files/counted.csv', 0)
+    c_copy = io.load_table('tests/test_files/counted.csv', 0)
     c_sorted = c.sort(by='cond3', ascending=True, inplace=False)
     assert c_sorted.df['cond3'].is_monotonic_increasing
     assert np.all(c.df == c_copy)
 
 
 def test_sort_by_multiple_columns():
-    truth = io.load_csv('tests/test_files/counted_sorted_multiple_truth.csv', 0)
+    truth = io.load_table('tests/test_files/counted_sorted_multiple_truth.csv', 0)
     c = CountFilter('tests/test_files/counted.csv')
     c.sort(by=['cond3', 'cond4', 'cond1', 'cond2'], ascending=[True, False, True, False], inplace=True)
     assert np.all(truth == c.df)
 
 
 def test_sort_with_na_first():
-    truth_first = io.load_csv('tests/test_files/test_deseq_with_nan_sorted_nanfirst_truth.csv', 0)
-    truth_last = io.load_csv('tests/test_files/test_deseq_with_nan_sorted_nanlast_truth.csv', 0)
+    truth_first = io.load_table('tests/test_files/test_deseq_with_nan_sorted_nanfirst_truth.csv', 0)
+    truth_last = io.load_table('tests/test_files/test_deseq_with_nan_sorted_nanlast_truth.csv', 0)
     c = CountFilter('tests/test_files/test_deseq_with_nan.csv')
     c.sort(by='padj', ascending=True, na_position='first', inplace=True)
     assert truth_first.equals(c.df)
@@ -1253,14 +1253,14 @@ def test_sort_descending():
 
 
 def test_filter_missing_values():
-    truth = io.load_csv('tests/test_files/test_deseq_with_nan_all_removed.csv', 0)
+    truth = io.load_table('tests/test_files/test_deseq_with_nan_all_removed.csv', 0)
     f = Filter('tests/test_files/test_deseq_with_nan.csv')
     f.filter_missing_values()
     assert np.all(f.df.sort_index() == truth.sort_index())
 
 
 def test_filter_missing_values_foldchangefilter():
-    truth = io.load_csv('tests/test_files/fc_1_nan_removed.csv', 0, squeeze=True)
+    truth = io.load_table('tests/test_files/fc_1_nan_removed.csv', 0, squeeze=True)
     f = FoldChangeFilter('tests/test_files/fc_1_nan.csv', 'num', 'denom')
     res_all = f.filter_missing_values(inplace=False)
     assert truth.equals(res_all.df)
@@ -1269,7 +1269,7 @@ def test_filter_missing_values_foldchangefilter():
 
 
 def test_filter_missing_values_one_columns():
-    truth = io.load_csv('tests/test_files/test_deseq_with_nan_basemean_removed.csv', 0)
+    truth = io.load_table('tests/test_files/test_deseq_with_nan_basemean_removed.csv', 0)
     f = Filter('tests/test_files/test_deseq_with_nan.csv')
     f.filter_missing_values('baseMean')
     print(f.df.sort_index())
@@ -1279,7 +1279,7 @@ def test_filter_missing_values_one_columns():
 
 
 def test_filter_missing_values_multiple_columns():
-    truth = io.load_csv('tests/test_files/test_deseq_with_nan_basemean_pvalue_removed.csv', 0)
+    truth = io.load_table('tests/test_files/test_deseq_with_nan_basemean_pvalue_removed.csv', 0)
     f = Filter('tests/test_files/test_deseq_with_nan.csv')
     f.filter_missing_values(['baseMean', 'pvalue'])
     print(f.df.sort_index())
@@ -1304,8 +1304,8 @@ def test_filter_missing_values_nonexistent_column():
 
 def test_pipeline_api():
     pl = Pipeline()
-    pl_count = Pipeline('countfilter')
-    pl_deseq = Pipeline(DESeqFilter)
+    Pipeline('countfilter')
+    Pipeline(DESeqFilter)
     pl = Pipeline(filter_type='FoldChangeFilter')
     assert pl.__len__() == 0
 
@@ -1435,14 +1435,14 @@ def test_pipeline_apply_to_with_multiple_functions():
 def test_pipeline_apply_to_invalid_object():
     pl = Pipeline('deseqfilter')
     pl.add_function(DESeqFilter.filter_significant, alpha=10 ** -70)
-    cnt = io.load_csv('tests/test_files/counted.csv', 0)
+    cnt = io.load_table('tests/test_files/counted.csv', 0)
     with pytest.raises(AssertionError):
         pl.apply_to(cnt)
 
 
 def test_pipeline_init_invalid_filter_type():
     with pytest.raises(AssertionError):
-        pl = Pipeline(filter_type='otherFilter')
+        Pipeline(filter_type='otherFilter')
 
     class otherFilter:
         def __init__(self):
@@ -1450,11 +1450,11 @@ def test_pipeline_init_invalid_filter_type():
             self.othervalue = 'othervalue'
 
     with pytest.raises(AssertionError):
-        pl = Pipeline(filter_type=otherFilter)
+        Pipeline(filter_type=otherFilter)
     with pytest.raises(AssertionError):
-        pl = Pipeline(filter_type=max)
+        Pipeline(filter_type=max)
     with pytest.raises(AssertionError):
-        pl = Pipeline(filter_type=5)
+        Pipeline(filter_type=5)
 
 
 def test_pipeline_add_function_out_of_module():
@@ -1749,7 +1749,7 @@ def _test_correct_clustering_split(counts, res, missing_indices: bool = False):
 
 
 def test_fc_randomization():
-    truth = io.load_csv('tests/test_files/fc_randomization_truth.csv')
+    truth = io.load_table('tests/test_files/fc_randomization_truth.csv')
     fc1 = FoldChangeFilter("tests/test_files/fc_1.csv", 'a', 'b')
     fc2 = FoldChangeFilter("tests/test_files/fc_2.csv", "c", "d")
     res = fc1.randomization_test(fc2, random_seed=0)
@@ -1818,7 +1818,7 @@ def test_set_ops_wrong_type():
                           (['cond1', 'cond2', 'cond3', 'cond4'], 'tests/test_files/counted.csv')])
 def test_avg_subsamples(sample_list, truth_path):
     counts = CountFilter('tests/test_files/counted.csv')
-    truth = io.load_csv(truth_path, 0)
+    truth = io.load_table(truth_path, 0)
     res = counts._avg_subsamples(sample_list)
 
     assert np.all(res.columns == truth.columns)
@@ -1936,7 +1936,7 @@ def test_filter_by_principal_components(components, gene_fraction, truth_paths):
 
 ])
 def test_filter_by_kegg_annotations(monkeypatch, ids, mode, truth_path):
-    truth = io.load_csv(truth_path, index_col=0)
+    truth = io.load_table(truth_path, index_col=0)
 
     def annotation_iter(self):
         annotations = [
@@ -1971,7 +1971,7 @@ def test_filter_by_kegg_annotations(monkeypatch, ids, mode, truth_path):
 
 ])
 def test_filter_by_go_annotations(monkeypatch, ids, mode, truth_path):
-    truth = io.load_csv(truth_path, index_col=0)
+    truth = io.load_table(truth_path, index_col=0)
 
     class MockGOTerm:
         def __init__(self, go_id: str):
@@ -2048,7 +2048,7 @@ def test_differential_expression_deseq2(monkeypatch, comparisons, expected_paths
         assert r_installation_folder == 'auto'
         assert comps == comparisons
         assert CountFilter(data_path) == c
-        assert io.load_csv(design_mat_path, 0).equals(io.load_csv(sample_table_path, 0))
+        assert io.load_table(design_mat_path, 0).equals(io.load_table(sample_table_path, 0))
 
         return Path(script_path).parent
 
@@ -2082,7 +2082,7 @@ def test_differential_expression_limma(monkeypatch, comparisons, expected_paths,
         assert r_installation_folder == 'auto'
         assert comps == comparisons
         assert CountFilter(data_path) == c
-        assert io.load_csv(design_mat_path, 0).equals(io.load_csv(sample_table_path, 0))
+        assert io.load_table(design_mat_path, 0).equals(io.load_table(sample_table_path, 0))
 
         return Path(script_path).parent
 
@@ -2104,7 +2104,7 @@ def test_differential_expression_limma(monkeypatch, comparisons, expected_paths,
 ])
 def test_filter_duplicate_ids(keep, exp_path):
     f = Filter('tests/test_files/counted_duplicates.csv')
-    truth = io.load_csv(exp_path, 0)
+    truth = io.load_table(exp_path, 0)
     res = f.filter_duplicate_ids(keep, inplace=False)
     assert res.df.equals(truth)
     f.filter_duplicate_ids(keep)
@@ -2114,7 +2114,7 @@ def test_filter_duplicate_ids(keep, exp_path):
 def test_filter_by_row_name():
     names = ['WBGene00044951', 'WBGene00014997', 'WBGene00007069']
     f = Filter('tests/test_files/counted_duplicates.csv')
-    truth = io.load_csv('tests/test_files/counted_drop_names.csv', 0)
+    truth = io.load_table('tests/test_files/counted_drop_names.csv', 0)
     res = f.filter_by_row_name(names, inplace=False)
     assert res.df.equals(truth)
     f.filter_by_row_name(names)

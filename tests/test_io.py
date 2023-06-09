@@ -40,7 +40,7 @@ class MockResponse(object):
 def test_load_csv_bad_input():
     invalid_input = 2349
     with pytest.raises(AssertionError):
-        a = load_csv(invalid_input)
+        load_table(invalid_input)
 
 
 @pytest.mark.parametrize('pth', ("tests/test_files/test_load_csv.csv", "tests/test_files/test_load_csv.tsv",
@@ -49,30 +49,30 @@ def test_load_csv_bad_input():
 def test_load_csv(pth):
     truth = pd.DataFrame({'idxcol': ['one', 'two', 'three'], 'othercol': [4, 5, 6]})
     truth.set_index('idxcol', inplace=True)
-    loaded = load_csv(pth, 0)
+    loaded = load_table(pth, 0)
     assert loaded.equals(truth)
 
 
 def test_load_csv_drop_columns():
-    loaded = load_csv('tests/test_files/counted.csv', 0, drop_columns='cond1')
+    loaded = load_table('tests/test_files/counted.csv', 0, drop_columns='cond1')
     print(loaded)
     assert list(loaded.columns) == ['cond2', 'cond3', 'cond4']
 
-    loaded = load_csv('tests/test_files/counted.csv', 0, drop_columns=['cond2', 'cond4'])
+    loaded = load_table('tests/test_files/counted.csv', 0, drop_columns=['cond2', 'cond4'])
     assert list(loaded.columns) == ['cond1', 'cond3']
 
     with pytest.raises(IndexError):
-        load_csv('tests/test_files/counted.csv', 0, drop_columns=['cond1', 'cond6'])
+        load_table('tests/test_files/counted.csv', 0, drop_columns=['cond1', 'cond6'])
 
 
 def test_save_csv():
     try:
         df = pd.read_csv('tests/test_files/enrichment_hypergeometric_res.csv', index_col=0)
-        save_csv(df, 'tests/test_files/tmp_test_save_csv.csv')
+        save_table(df, 'tests/test_files/tmp_test_save_csv.csv')
         df_loaded = pd.read_csv('tests/test_files/tmp_test_save_csv.csv', index_col=0)
         assert df.equals(df_loaded)
         df = pd.read_csv('tests/test_files/enrichment_hypergeometric_res.csv')
-        save_csv(df, 'tests/test_files/tmp_test_save_csv.csv', '_2', index=False)
+        save_table(df, 'tests/test_files/tmp_test_save_csv.csv', '_2', index=False)
         df_loaded = pd.read_csv('tests/test_files/tmp_test_save_csv_2.csv', index_col=0)
         df = pd.read_csv('tests/test_files/enrichment_hypergeometric_res.csv', index_col=0)
         assert df.equals(df_loaded)
@@ -148,7 +148,7 @@ def test_golr_annotation_iterator_api(monkeypatch):
     monkeypatch.setattr(GOlrAnnotationIterator, '_parse_go_aspects', parse_method)
     monkeypatch.setattr(GOlrAnnotationIterator, '_parse_evidence_types', parse_method)
 
-    golr = GOlrAnnotationIterator(1234)
+    GOlrAnnotationIterator(1234)
 
 
 @pytest.mark.parametrize("test_input,expected", [
@@ -173,7 +173,7 @@ def test_golr_annotation_iterator_get_n_annotations(monkeypatch):
         assert isinstance(self, GOlrAnnotationIterator)
         assert isinstance(params, dict)
         assert cached_filename == 'test.json'
-        with open(f'tests/test_files/golr_header.txt') as f:
+        with open('tests/test_files/golr_header.txt') as f:
             return f.readline()
 
     monkeypatch.setattr(GOlrAnnotationIterator, '_golr_request', fake_request)
@@ -265,7 +265,7 @@ def test_golr_annotation_iterator_parsing(monkeypatch):
         "rows": 5,  # how many rows to return
         # how many annotations to fetch (fetch 0 to find n_annotations, then fetch in iter_size increments
         "start": 0,  # from which annotation number to start fetching
-        "fq": [f'document_category:"annotation"', 'taxon:"NCBITaxon:6239"'],  # search query
+        "fq": ['document_category:"annotation"', 'taxon:"NCBITaxon:6239"'],  # search query
         "fl": "source,bioentity_internal_id,annotation_class",  # fields
         "omitHeader": 'true'}
 
@@ -279,7 +279,7 @@ def test_golr_annotation_iterator_parsing(monkeypatch):
         assert isinstance(self, GOlrAnnotationIterator)
         assert params == truth_params
         assert cached_filename == 'test.json'
-        with open(f'tests/test_files/golr_response.txt') as f:
+        with open('tests/test_files/golr_response.txt') as f:
             return f.readline()
 
     monkeypatch.setattr(GOlrAnnotationIterator, '_golr_request', fake_request)
@@ -290,7 +290,7 @@ def test_golr_annotation_iterator_parsing(monkeypatch):
         "wt": "json",  # return format
         "rows": 5,  # how many rows to return
         # how many annotations to fetch (fetch 0 to find n_annotations, then fetch in iter_size increments
-        "fq": [f'document_category:"annotation"', 'taxon:"NCBITaxon:6239"'],  # search query
+        "fq": ['document_category:"annotation"', 'taxon:"NCBITaxon:6239"'],  # search query
         "fl": "source,bioentity_internal_id,annotation_class"}  # fields
 
     golr = GOlrAnnotationIterator.__new__(GOlrAnnotationIterator)

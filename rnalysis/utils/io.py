@@ -20,7 +20,7 @@ from io import StringIO
 from itertools import chain
 from pathlib import Path
 from sys import executable
-from typing import List, Set, Union, Iterable, Tuple, Dict, Any, Callable
+from typing import List, Set, Union, Iterable, Tuple, Dict, Any, Callable, Literal
 from urllib.parse import urlparse, parse_qs, urlencode
 
 import aiohttp
@@ -35,12 +35,8 @@ from defusedxml import ElementTree
 from requests.adapters import HTTPAdapter, Retry
 from tqdm.auto import tqdm
 
-try:
-    from typing import Literal
-except ImportError:
-    from typing_extensions import Literal
-from rnalysis.utils import parsing, validation, __path__
 from rnalysis import __version__
+from rnalysis.utils import parsing, validation, __path__
 
 
 def get_gui_cache_dir() -> Path:
@@ -105,7 +101,8 @@ def clear_gui_cache():
     clear_directory(directory)
 
 
-def load_cached_gui_file(filename: str, load_as_obj: bool = True) -> Union[str, set, pd.DataFrame, bytes, None]:
+def load_cached_gui_file(filename: Union[str, Path], load_as_obj: bool = True) -> Union[
+    str, set, pd.DataFrame, bytes, None]:
     """
     Load a cached file from the GUI cache directory.
 
@@ -119,8 +116,8 @@ def load_cached_gui_file(filename: str, load_as_obj: bool = True) -> Union[str, 
     directory = get_gui_cache_dir()
     file_path = directory.joinpath(filename)
     if file_path.exists():
-        if file_path.suffix in {'.csv', '.tsv'} and load_as_obj:
-            return load_csv(file_path, index_col=0)
+        if file_path.suffix in {'.csv', '.tsv', '.parquet'} and load_as_obj:
+            return load_table(file_path, index_col=0)
         elif file_path.suffix in {'.txt'} and load_as_obj:
             with open(file_path) as f:
                 return {item.strip() for item in f.readlines()}
@@ -138,7 +135,7 @@ def cache_gui_file(item: Union[pd.DataFrame, set, str], filename: str):
         directory.mkdir(parents=True)
     file_path = directory.joinpath(filename)
     if isinstance(item, (pd.DataFrame, pd.Series)):
-        save_csv(item, file_path, index=True)
+        save_table(item, file_path, index=True)
     elif isinstance(item, set):
         save_gene_set(item, file_path)
     elif isinstance(item, str):
@@ -151,7 +148,9 @@ def cache_gui_file(item: Union[pd.DataFrame, set, str], filename: str):
 
 
 def check_changed_version():  # pragma: no cover
-    filename = get_data_dir().joinpath('latest_version.txt')
+    data_dir = get_data_dir()
+    data_dir.mkdir(parents=True, exist_ok=True)
+    filename = data_dir.joinpath('latest_version.txt')
     if not filename.exists():
         ver = ''
     else:
@@ -245,10 +244,10 @@ def load_gui_session(session_filename: Union[str, Path]):
     return items, item_names, item_types, item_properties, pipeline_names, pipeline_files
 
 
-def load_csv(filename: Union[str, Path], index_col: int = None, drop_columns: Union[str, List[str]] = False,
-             squeeze=False, comment: str = None):
+def load_table(filename: Union[str, Path], index_col: int = None, drop_columns: Union[str, List[str]] = False,
+               squeeze=False, comment: str = None):
     """
-    loads a csv df into a pandas dataframe.
+    loads a csv/parquet table into a pandas dataframe.
 
     :type filename: str or pathlib.Path
     :param filename: name of the csv file to be loaded
@@ -268,15 +267,18 @@ def load_csv(filename: Union[str, Path], index_col: int = None, drop_columns: Un
                       (str, Path)), f"Filename must be of type str or pathlib.Path, is instead {type(filename)}."
     filename = Path(filename)
     assert filename.exists() and filename.is_file(), f"File '{filename.as_posix()}' does not exist!"
-    assert filename.suffix.lower() in {'.csv', '.tsv', '.txt'}, \
+    assert filename.suffix.lower() in {'.csv', '.tsv', '.txt', '.parquet'}, \
         f"RNAlysis cannot load files of type '{filename.suffix}'. " \
-        f"Please convert your file to a .csv, .tsv, or .txt file and try again."
+        f"Please convert your file to a .csv, .tsv, .txt, or .parquet file and try again."
 
-    encoding = 'ISO-8859-1'
-    kwargs = dict(sep=None, engine='python', encoding=encoding, comment=comment, skipinitialspace=True)
-    if index_col is not None:
-        kwargs['index_col'] = index_col
-    df = pd.read_csv(filename, **kwargs)
+    if filename.suffix.lower() == '.parquet':
+        df = pd.read_parquet(filename)
+    else:
+        kwargs = dict(sep=None, engine='python', encoding='ISO-8859-1', comment=comment, skipinitialspace=True)
+        if index_col is not None:
+            kwargs['index_col'] = index_col
+        df = pd.read_csv(filename, **kwargs)
+
     if squeeze:
         df = df.squeeze("columns")
 
@@ -309,23 +311,28 @@ def load_csv(filename: Union[str, Path], index_col: int = None, drop_columns: Un
     return df
 
 
-def save_csv(df: pd.DataFrame, filename: Union[str, Path], suffix: str = None, index: bool = True):
+def save_table(df: pd.DataFrame, filename: Union[str, Path], postfix: str = None, index: bool = True):
     """
-    save a pandas DataFrame to csv.
+    save a pandas DataFrame to csv/parquet file.
 
     :param df: pandas DataFrame to be saved
     :param filename: a string or pathlib.Path object stating the original name of the file
-    :type suffix: str, default None
-    :param suffix: A suffix to be added to the original name of the file. If None, no suffix will be added.
+    :type postfix: str, default None
+    :param postfix: A postfix to be added to the original name of the file. If None, no postfix will be added.
     :param index: if True, saves the DataFrame with the indices. If false, ignores the index.
     """
     fname = Path(filename)
-    if suffix is None:
-        suffix = ''
+    if postfix is None:
+        postfix = ''
     else:
-        assert isinstance(suffix, str), "'suffix' must be either str or None!"
-    new_fname = os.path.join(fname.parent.absolute(), f"{fname.stem}{suffix}{fname.suffix}")
-    df.to_csv(new_fname, header=True, index=index)
+        assert isinstance(postfix, str), "'postfix' must be either str or None!"
+    new_fname = os.path.join(fname.parent.absolute(), f"{fname.stem}{postfix}{fname.suffix}")
+    if fname.suffix.lower() == '.parquet':
+        if isinstance(df, pd.Series):
+            df = df.to_frame()
+        df.to_parquet(new_fname, index=index)
+    else:
+        df.to_csv(new_fname, header=True, index=index)
 
 
 class KEGGAnnotationIterator:
@@ -346,7 +353,7 @@ class KEGGAnnotationIterator:
             self.pathway_names, self.n_annotations = self.get_pathways()
         else:
             pathways = parsing.data_to_list(pathways)
-            assert len(pathways) > 0, f"No KEGG pathway IDs were given!"
+            assert len(pathways) > 0, "No KEGG pathway IDs were given!"
             self.pathway_names = {pathway: None for pathway in pathways}
             self.n_annotations = len(self.pathway_names)
         self.pathway_annotations = None
@@ -719,7 +726,7 @@ class GOlrAnnotationIterator:
         Generate a Solr filter query (fq=...) to filter annotations based on the user's input.
         """
         # add fields with known legal inputs and cardinality >= 1 to query (taxon ID, aspect, evidence type)
-        query = [f'document_category:"annotation"',
+        query = ['document_category:"annotation"',
                  f'taxon:"NCBITaxon:{self.taxon_id}"',
                  ' OR '.join([f'aspect:"{aspect}"' for aspect in self.aspects]),
                  ' OR '.join([f'evidence_type:"{evidence_type}"' for evidence_type in self.evidence_types])]
@@ -849,8 +856,8 @@ def infer_taxon_from_gene_ids(gene_ids: Iterable[str], gene_id_type: str = None)
     chosen_species = list(species.keys())[0]
     chosen_species_n = species[chosen_species]
     if len(species) > 1:
-        warnings.warn(f"The given gene IDs match more than one species. "
-                      f"Picking the species that fits the majority of gene IDs.")
+        warnings.warn("The given gene IDs match more than one species. "
+                      "Picking the species that fits the majority of gene IDs.")
         for s in species:
             if species[s] > chosen_species_n:
                 chosen_species = s
@@ -1120,7 +1127,7 @@ def map_gene_ids(ids: Union[str, Iterable[str]], map_from: str, map_to: str = 'U
 
         if results is None or len(results) <= 1:
             if verbose:
-                warnings.warn(f"No entries were mapped successfully.")
+                warnings.warn("No entries were mapped successfully.")
             return GeneIDTranslator({})
 
         df = pd.DataFrame([line.split('\t') for line in results[1:]], columns=results[0].split('\t'))
@@ -1358,8 +1365,7 @@ async def _write_video_to_file(video_path: Path, content: bytes) -> None:  # pra
 
 async def get_gui_videos(video_filenames: Tuple[str, ...]):  # pragma: no cover
     video_dir_pth = get_tutorial_videos_dir()
-    if not video_dir_pth.exists():
-        video_dir_pth.mkdir(parents=True)
+    video_dir_pth.mkdir(parents=True, exist_ok=True)
 
     videos_to_download = []
     local_checksums = []
@@ -1406,10 +1412,15 @@ def run_r_script(script_path: Union[str, Path], r_installation_folder: Union[str
     assert Path(script_path).exists() and Path(
         script_path).is_file(), f"Could not find the requested R script: {script_path}"
 
-    return_code = run_subprocess([prefix, "--help"], False, False)
-    if return_code:
-        raise FileNotFoundError(f"Failed to find R executable (return code {return_code}). "
-                                "Please make sure your R installation folder is correct. ")
+    try:
+        return_code = run_subprocess([prefix, "--help"], False, False)
+        if return_code:
+            raise FileNotFoundError
+
+    except FileNotFoundError:
+        raise FileNotFoundError("Failed to find R executable. "
+                                "Please make sure your R installation folder is correct. \n"
+                                "(For example: 'C:/Program Files/R/R-4.2.3')")
 
     return_code = run_subprocess([prefix, script_path])
 
@@ -1500,6 +1511,10 @@ def generate_base_call(command: str, installation_folder: Union[str, Path, Liter
     except FileNotFoundError:
         raise FileNotFoundError(f"RNAlysis could not find '{command}'. "
                                 'Please ensure that your installation folder is correct, or add it to PATH. ')
+    except OSError:
+        raise OSError(f"RNAlysis could not run '{call + [version_command]}'. \n"
+                      f"Please ensure that the installed version of {command} "
+                      f"matches your operating system and try again. ")
 
     return call
 

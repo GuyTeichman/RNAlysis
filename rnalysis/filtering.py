@@ -15,30 +15,22 @@ import re
 import types
 import warnings
 from pathlib import Path
-from typing import Any, Iterable, List, Tuple, Union, Callable, Sequence
-
-from scipy.stats import spearmanr
-from scipy.stats.mstats import gmean
-from tqdm.auto import tqdm
-
-try:
-    from typing import Literal
-except ImportError:
-    from typing_extensions import Literal
+from typing import Any, Iterable, List, Tuple, Union, Callable, Sequence, Literal
 
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import seaborn as sns
 from grid_strategy import strategies
+from scipy.stats import spearmanr
+from scipy.stats.mstats import gmean
 from sklearn.decomposition import PCA
 from sklearn.preprocessing import PowerTransformer, StandardScaler
+from tqdm.auto import tqdm
 
 from rnalysis.utils import clustering, io, parsing, generic, ontology, settings, validation, differential_expression, \
     param_typing, genome_annotation
-
 from rnalysis.utils.generic import readable_name
-
 from rnalysis.utils.param_typing import BIOTYPES, BIOTYPE_ATTRIBUTE_NAMES, GO_EVIDENCE_TYPES, GO_QUALIFIERS, \
     DEFAULT_ORGANISMS, PARALLEL_BACKENDS, LEGAL_GENE_LENGTH_METHODS, K_CRITERIA, get_gene_id_types, PositiveInt, \
     NonNegativeInt
@@ -89,7 +81,9 @@ class Filter:
         # init from a file (load the csv into a DataFrame/Series)
         assert isinstance(fname, (str, Path))
         self.fname = Path(fname)
-        self.df = io.load_csv(fname, 0, squeeze=True, drop_columns=drop_columns)
+        self.df = io.load_table(fname, 0, squeeze=True, drop_columns=drop_columns)
+        if isinstance(self.df, pd.Series):
+            self.df = self.df.to_frame()
         # check for duplicate indices
         if self.df.index.has_duplicates:
             warnings.warn("This Filter object contains multiple rows with the same name/index.")
@@ -213,6 +207,29 @@ class Filter:
             new_obj._update(df=new_df, fname=new_fname, **filter_update_kwargs)
             return new_obj
 
+    def save_table(self, suffix: Literal['.csv', '.tsv', '.parquet'] = '.csv',
+                   alt_filename: Union[None, str, Path] = None):
+
+        """
+        Save the current filtered data table.
+
+        :param suffix: the file suffix
+        :type suffix: '.csv', '.tsv', or '.parquet' (default='.csv')
+        :param alt_filename: If None, file name will be generated automatically \
+        according to the filtering methods used. \
+        If it's a string, it will be used as the name of the saved file. Example input: 'myfilename'
+        :type alt_filename: str, pathlib.Path, or None (default)
+
+        """
+        # save with the default filename if no alternative filename was given
+        if alt_filename is None:
+            alt_filename = self.fname.with_suffix(suffix)
+        else:
+            assert isinstance(alt_filename, (str, Path)), \
+                f"'alt_filename' must be a string or Path object. Instead got {type(alt_filename)}."
+            alt_filename = self.fname.parent.joinpath(alt_filename).with_suffix(suffix)
+        io.save_table(self.df, alt_filename)
+
     def save_csv(self, alt_filename: Union[None, str, Path] = None):
 
         """
@@ -224,19 +241,20 @@ class Filter:
         :type alt_filename: str, pathlib.Path, or None (default)
 
         """
-        suffix = '.csv'
-        # save with the default filename if no alternative filename was given
-        if alt_filename is None:
-            alt_filename = self.fname
-        else:
-            assert isinstance(alt_filename, (str, Path)), \
-                f"'alt_filename' must be a string or Path object. Instead got {type(alt_filename)}."
-            # make sure we don't add another suffix on top of an existing suffix
-            if (isinstance(alt_filename, str) and alt_filename.endswith(suffix)) or \
-                (isinstance(alt_filename, Path) and alt_filename.suffix == suffix):
-                suffix = ''
-            alt_filename = os.path.join(str(self.fname.parent), f"{alt_filename}{suffix}")
-        io.save_csv(self.df, alt_filename)
+        self.save_table('.csv', alt_filename)
+
+    def save_parquet(self, alt_filename: Union[None, str, Path] = None):
+
+        """
+        Saves the current filtered data to a .parquet file.
+
+        :param alt_filename: If None, file name will be generated automatically \
+        according to the filtering methods used. \
+        If it's a string, it will be used as the name of the saved file. Example input: 'myfilename'
+        :type alt_filename: str, pathlib.Path, or None (default)
+
+        """
+        self.save_table('.parquet', alt_filename)
 
     @staticmethod
     def _from_string(msg: str = '', delimiter: str = '\n'):
@@ -572,7 +590,7 @@ class Filter:
         biotype = parsing.data_to_list(biotype, sort=True)
         # make sure 'biotype' is a list of strings
         assert validation.isinstanceiter(biotype, str), "biotype must be a string or a list of strings!"
-        assert Path(gtf_path).exists(), f"the given gtf path does not exist!"
+        assert Path(gtf_path).exists(), "the given gtf path does not exist!"
         suffix = f"_{'_'.join(biotype)}"
 
         ref_srs = self._get_ref_srs_from_gtf(gtf_path, attribute_name, feature_type)
@@ -627,7 +645,7 @@ class Filter:
         suffix = f"_{'_'.join(biotype)}"
         # load the biotype reference table
         ref = settings.get_biotype_ref_path(ref)
-        ref_df = io.load_csv(ref)
+        ref_df = io.load_table(ref)
         validation.validate_biotype_table(ref_df)
         ref_df.set_index('gene', inplace=True)
         # generate set of legal inputs
@@ -732,7 +750,7 @@ class Filter:
         for go_id in go_ids.copy():
             if go_id in dag_tree:
                 continue
-            assert isinstance(go_id, str), f"'go_ids' must all be strings!"
+            assert isinstance(go_id, str), "'go_ids' must all be strings!"
             stripped_id = go_id.strip()
             if stripped_id in dag_tree:
                 go_ids.remove(go_id)
@@ -978,7 +996,7 @@ class Filter:
         assert mode in {'union', 'intersection'}, \
             f"Illegal mode '{mode}': mode must be either 'union' or 'intersection'"
         # load the Attribute Reference Table
-        attr_ref_table = io.load_csv(settings.get_attr_ref_path(ref))
+        attr_ref_table = io.load_table(settings.get_attr_ref_path(ref))
         validation.validate_attr_table(attr_ref_table)
         attr_ref_table.set_index('gene', inplace=True)
         # generate list of the indices that are positive for each attribute
@@ -1293,7 +1311,7 @@ class Filter:
         """
         # load the Biotype Reference Table
         ref = settings.get_biotype_ref_path(ref)
-        ref_df = io.load_csv(ref)
+        ref_df = io.load_table(ref)
         validation.validate_biotype_table(ref_df)
         # find which genes from tne Filter object don't appear in the Biotype Reference Table
         not_in_ref = self.df.index.difference(ref_df['gene'])
@@ -1364,7 +1382,7 @@ class Filter:
         assert operator in operator_dict, f"Invalid operator {operator}"
         op = operator_dict[operator]
         # determine that 'value' is a number
-        assert isinstance(value, (int, float)), f"'value' must be a number!"
+        assert isinstance(value, (int, float)), "'value' must be a number!"
         # determine that the column is legal
         assert column in self.columns, f"column {column} not in DataFrame!"
 
@@ -1419,7 +1437,7 @@ class Filter:
         assert operator in operator_dict, f"Invalid operator {operator}"
         op = operator_dict[operator]
         # determine that 'value' is a string
-        assert isinstance(value, str), f"'value' must be a string!"
+        assert isinstance(value, str), "'value' must be a string!"
         # determine that the column is legal
         assert column in self.columns, f"column {column} not in DataFrame!"
 
@@ -1761,7 +1779,7 @@ class Filter:
         """
         # if intersection is performed inplace, apply it to the self
         if inplace:
-            suffix = f"_intersection"
+            suffix = "_intersection"
             new_set = parsing.data_to_list(self._set_ops(others, 'set', set.intersection))
             return self._inplace(self.df.loc[new_set], opposite=False, inplace=inplace, suffix=suffix)
         # if intersection is not performed inplace, return a set/string according to user's request
@@ -1880,7 +1898,7 @@ class Filter:
         """
         # if difference is performed inplace, apply it to the self
         if inplace:
-            suffix = f"_difference"
+            suffix = "_difference"
             new_set = parsing.data_to_list(self._set_ops(others, 'set', set.difference))
             return self._inplace(self.df.loc[new_set], opposite=False, inplace=inplace, suffix=suffix)
         # if difference is not performed inplace, return a set/string according to user's request
@@ -1975,6 +1993,7 @@ class FoldChangeFilter(Filter):
         :type suppress_warnings: bool (default=False)
         """
         super().__init__(fname)
+        self.df = self.df.squeeze(1)
         self.numerator = numerator_name
         self.denominator = denominator_name
         self.df.name = 'Fold Change'
@@ -2085,7 +2104,7 @@ class FoldChangeFilter(Filter):
         res_df['significant'] = res_df['pval'] <= alpha
         # save the output DataFrame if requested
         if save_csv:
-            io.save_csv(res_df, fname)
+            io.save_table(res_df, fname)
         print(res_df)
 
         return res_df
@@ -2581,7 +2600,7 @@ class DESeqFilter(Filter):
             log2fc_threshold = 0
         else:
             assert isinstance(log2fc_threshold, (int, float)) and log2fc_threshold >= 0, \
-                f"'log2fc_threshold' must be a non-negative number!"
+                "'log2fc_threshold' must be a non-negative number!"
 
         if interactive:
             fig = plt.figure(constrained_layout=True, FigureClass=generic.InteractiveScatterFigure,
@@ -2757,7 +2776,7 @@ class CountFilter(Filter):
         """
         if output_folder is not None:
             output_folder = Path(output_folder)
-            assert output_folder.exists(), f'Output folder does not exist!'
+            assert output_folder.exists(), 'Output folder does not exist!'
 
         self._validate_is_normalized(expect_normalized=True)
         data_path = io.get_todays_cache_dir().joinpath(self.fname.name)
@@ -2769,9 +2788,9 @@ class CountFilter(Filter):
 
         if not io.get_todays_cache_dir().exists():
             io.get_todays_cache_dir().mkdir(parents=True)
-        io.save_csv(self.df.round(), data_path)
+        io.save_table(self.df.round(), data_path)
         # use Pandas to automatically detect file delimiter type, then export it as a CSV file.
-        design_mat_df = io.load_csv(design_matrix, index_col=0)
+        design_mat_df = io.load_table(design_matrix, index_col=0)
         assert design_mat_df.shape[0] == self.shape[1], f"The number of items in the design matrix " \
                                                         f"({design_mat_df.shape[0]}) does not match the number of " \
                                                         f"columns in the count matrix ({self.shape[1]})."
@@ -2780,7 +2799,7 @@ class CountFilter(Filter):
                                                                     f"{sorted(design_mat_df.index)} != " \
                                                                     f"{sorted(self.columns)}"
 
-        io.save_csv(design_mat_df, design_mat_path)
+        io.save_table(design_mat_df, design_mat_path)
 
         r_output_dir = differential_expression.run_limma_analysis(data_path, design_mat_path, comparisons,
                                                                   r_installation_folder)
@@ -2836,7 +2855,7 @@ class CountFilter(Filter):
         """
         if output_folder is not None:
             output_folder = Path(output_folder)
-            assert output_folder.exists(), f'Output folder does not exist!'
+            assert output_folder.exists(), 'Output folder does not exist!'
 
         self._validate_is_normalized(expect_normalized=False)
         data_path = io.get_todays_cache_dir().joinpath(self.fname.name)
@@ -2848,9 +2867,9 @@ class CountFilter(Filter):
 
         if not io.get_todays_cache_dir().exists():
             io.get_todays_cache_dir().mkdir(parents=True)
-        io.save_csv(self.df.round(), data_path)
+        io.save_table(self.df.round(), data_path)
         # use Pandas to automatically detect file delimiter type, then export it as a CSV file.
-        design_mat_df = io.load_csv(design_matrix, index_col=0)
+        design_mat_df = io.load_table(design_matrix, index_col=0)
         assert design_mat_df.shape[0] == self.shape[1], f"The number of items in the design matrix " \
                                                         f"({design_mat_df.shape[0]}) does not match the number of " \
                                                         f"columns in the count matrix ({self.shape[1]})."
@@ -2859,7 +2878,7 @@ class CountFilter(Filter):
                                                                     f"{sorted(design_mat_df.index)} != " \
                                                                     f"{sorted(self.columns)}"
 
-        io.save_csv(design_mat_df, design_mat_path)
+        io.save_table(design_mat_df, design_mat_path)
 
         r_output_dir = differential_expression.run_deseq2_analysis(data_path, design_mat_path, comparisons,
                                                                    r_installation_folder)
@@ -2939,8 +2958,6 @@ class CountFilter(Filter):
 
         return fcfilt
 
-
-
     @readable_name('Pair-plot')
     def pairplot(self, samples: Union[param_typing.GroupedColumns, Literal['all']] = 'all',
                  log2: bool = True, show_corr: bool = True, title: Union[str, Literal['auto']] = 'auto',
@@ -2988,10 +3005,11 @@ class CountFilter(Filter):
         if log2:
             sample_df = np.log2(sample_df + 1)
 
-        pairplt = sns.pairplot(sample_df, corner=True,
-                               plot_kws=dict(alpha=0.25, edgecolors=(0.1, 0.5, 0.15), facecolors=(0.1, 0.5, 0.15),
-                                             s=3.5),
-                               diag_kws=dict(edgecolor=(0, 0, 0), facecolor=(0.1, 0.5, 0.15)))
+        with pd.option_context("mode.copy_on_write", False):
+            pairplt = sns.pairplot(sample_df, corner=True,
+                                   plot_kws=dict(alpha=0.25, edgecolors=(0.1, 0.5, 0.15),
+                                                 facecolors=(0.1, 0.5, 0.15), s=3.5),
+                                   diag_kws=dict(edgecolor=(0, 0, 0), facecolor=(0.1, 0.5, 0.15)))
 
         if title == 'auto':
             title = 'Pairplot' + log2 * ' (logarithmic scale)'
@@ -3065,10 +3083,10 @@ class CountFilter(Filter):
         :return: a pandas DataFrame containing samples/averaged subsamples according to the specified sample_list.
 
         """
-        assert isinstance(function, str), f"'function' must be a string!"
+        assert isinstance(function, str), "'function' must be a string!"
         function = function.lower()
         assert function in {'mean', 'median', 'geometric_mean'}, \
-            f"'function' must be 'mean', 'median', or 'geometric_mean'!"
+            "'function' must be 'mean', 'median', or 'geometric_mean'!"
 
         averaged_df = pd.DataFrame(index=self.df.index)
         if new_column_names == 'auto':
@@ -3080,7 +3098,7 @@ class CountFilter(Filter):
                     new_column_names.append(",".join(group))
         else:
             assert validation.isiterable(new_column_names) and validation.isinstanceiter(new_column_names, str), \
-                f"'new_column_names' must be either 'auto' or a list of strings!"
+                "'new_column_names' must be either 'auto' or a list of strings!"
             assert len(new_column_names) == len(sample_grouping), \
                 f"The number of new column names {len(new_column_names)} " \
                 f"does not match the number of sample groups {len(sample_grouping)}!"
@@ -3163,7 +3181,7 @@ class CountFilter(Filter):
         scaling_factors = {}
 
         if isinstance(special_counter_fname, (str, Path)):
-            features = io.load_csv(special_counter_fname, 0)
+            features = io.load_table(special_counter_fname, 0)
         elif isinstance(special_counter_fname, pd.DataFrame):
             features = special_counter_fname
         else:
@@ -3398,10 +3416,10 @@ class CountFilter(Filter):
             >>> c.normalize_tmm()
            Normalized 22 features. Normalized inplace.
         """
-        assert 0 <= log_ratio_trim < 0.5, f"'log_ratio_trim' must be a value in the range 0 <= log_ratio_trim < 5"
-        assert 0 <= sum_trim < 0.5, f"'sum_trim' must be a value in the range 0 <= sum_trim < 5"
+        assert 0 <= log_ratio_trim < 0.5, "'log_ratio_trim' must be a value in the range 0 <= log_ratio_trim < 5"
+        assert 0 <= sum_trim < 0.5, "'sum_trim' must be a value in the range 0 <= sum_trim < 5"
 
-        suffix = f'_normTMM'
+        suffix = '_normTMM'
 
         if isinstance(ref_column, str) and ref_column.lower() == 'auto':
             upper_quartiles = self.df[self._numeric_columns].quantile(0.75, axis=0)
@@ -3463,7 +3481,7 @@ class CountFilter(Filter):
             >>> c.normalize_rle()
            Normalized 22 features. Normalized inplace.
         """
-        suffix = f'_normRLE'
+        suffix = '_normRLE'
         data = self.df[self._numeric_columns].dropna(axis=0)
         with np.errstate(invalid='ignore', divide='ignore'):
             pseudo_sample = pd.Series(gmean(data, axis=1), index=data.index)
@@ -3522,7 +3540,7 @@ class CountFilter(Filter):
         assert reference_group < len(sample_grouping), f"'reference_group' value {reference_group} " \
                                                        f"is larger than the number of sample groups!"
 
-        suffix = f'_normMRN'
+        suffix = '_normMRN'
         data = self.df[self._numeric_columns]
         weighed_expression = data / data.sum(axis=0)
         weighted_means = []
@@ -3569,7 +3587,7 @@ class CountFilter(Filter):
         """
         suffix = '_normwithscalingfactors'
         if isinstance(scaling_factor_fname, (str, Path)):
-            scaling_factors = io.load_csv(scaling_factor_fname).squeeze()
+            scaling_factors = io.load_table(scaling_factor_fname).squeeze()
         elif isinstance(scaling_factor_fname, pd.DataFrame):
             scaling_factors = scaling_factor_fname.squeeze()
         elif isinstance(scaling_factor_fname, pd.Series):
@@ -4181,7 +4199,7 @@ class CountFilter(Filter):
             replicate_grouping = [self.columns]
         else:
             assert validation.isinstanceiter(replicate_grouping,
-                                             list), f"'replicate_grouping' must contain only lists of strings!"
+                                             list), "'replicate_grouping' must contain only lists of strings!"
             for grp in replicate_grouping:
                 for cond in grp:
                     assert cond in self.columns, f"column '{cond}' does not exist!"
@@ -4370,13 +4388,18 @@ class CountFilter(Filter):
         if sample_names == 'all':
             sample_names = list(self.columns)
         print('Calculating clustergram...')
-        plt.style.use('seaborn-whitegrid')
-        clustergram = sns.clustermap(np.log2(self.df[sample_names] + 1), method=linkage, metric=metric,
-                                     cmap=sns.color_palette("RdBu_r", 12), yticklabels=False)
+        with pd.option_context("mode.copy_on_write", False):
+            clustergram = sns.clustermap(np.log2(self.df[sample_names] + 1), method=linkage, metric=metric,
+                                         cmap=sns.color_palette("RdBu_r", 12), yticklabels=False)
         if title == 'auto':
             title = f"Clustegram of {self.fname.stem}"
-        plt.title(title, fontsize=title_fontsize)
+        clustergram.figure.suptitle(title, fontsize=title_fontsize)
         plt.tick_params(axis='both', which='both', labelsize=tick_fontsize)
+        try:
+            clustergram.figure.set_layout_engine("compressed")
+        except AttributeError:
+            clustergram.figure.set_constrained_layout(True)
+
         plt.show()
         return clustergram.figure
 
@@ -4492,11 +4515,11 @@ class CountFilter(Filter):
         :type power_transform: bool (default=True)
         """
         components = parsing.data_to_list(components)
-        assert validation.isinstanceiter(components, int), f"'components' must be a list of integers!"
+        assert validation.isinstanceiter(components, int), "'components' must be a list of integers!"
         assert all([0 < component <= self.shape[0] for component in components]), \
-            f"'components' must be larger than 0 and equal or lower than the number of genes in the table!"
+            "'components' must be larger than 0 and equal or lower than the number of genes in the table!"
         assert isinstance(gene_fraction, float) and 0 <= gene_fraction <= 1, \
-            f"'gene_fraction' must be a number between 0 and 1!"
+            "'gene_fraction' must be a number between 0 and 1!"
 
         n_components = max(components)
         n_genes = int(np.floor(gene_fraction * self.shape[0] * 0.5))
@@ -4525,7 +4548,7 @@ class CountFilter(Filter):
     def pca(self, samples: Union[param_typing.GroupedColumns, Literal['all']] = 'all', n_components: PositiveInt = 3,
             power_transform: bool = True, labels: bool = True, title: Union[str, Literal['auto']] = 'auto',
             title_fontsize: float = 20, label_fontsize: float = 16, tick_fontsize: float = 12,
-            proportional_axes: bool = False) -> Tuple[PCA, List[plt.Figure]]:
+            proportional_axes: bool = False, plot_grid: bool = True) -> Tuple[PCA, List[plt.Figure]]:
         """
         Performs Principal Component Analysis (PCA), visualizing the principal components that explain the most\
         variance between the different samples. The function will standardize the data prior to PCA, and then plot \
@@ -4556,6 +4579,8 @@ class CountFilter(Filter):
         :param proportional_axes: if True, the dimensions of the PCA plots will be proportional \
         to the percentage of variance explained by each principal component.
         :type proportional_axes: bool (default=False)
+        :param plot_grid: if True, will draw a grid on the PCA plot.
+        :type plot_grid: bool (default=True)
         :return: A tuple whose first element is an sklearn.decomposition.pca object, \
         and second element is a list of matplotlib.axis objects.
 
@@ -4592,7 +4617,7 @@ class CountFilter(Filter):
                         [f'Principal component {1 + first_pc}', f'Principal component {1 + second_pc}', 'lib']],
                     pc1_var=pc_var[first_pc], pc2_var=pc_var[second_pc], sample_grouping=samples, labels=labels,
                     label_fontsize=label_fontsize, title=title, title_fontsize=title_fontsize,
-                    tick_fontsize=tick_fontsize, proportional_axes=proportional_axes))
+                    tick_fontsize=tick_fontsize, proportional_axes=proportional_axes, plot_grid=plot_grid))
 
         return pca_obj, figs
 
@@ -4620,7 +4645,7 @@ class CountFilter(Filter):
     @staticmethod
     def _pca_plot(final_df: pd.DataFrame, pc1_var: float, pc2_var: float, sample_grouping: param_typing.GroupedColumns,
                   labels: bool, title: str, title_fontsize: float, label_fontsize: float, tick_fontsize: float,
-                  proportional_axes: bool) -> plt.Figure:
+                  proportional_axes: bool, plot_grid: bool) -> plt.Figure:
         """
         Internal method, used to plot the results from CountFilter.pca().
 
@@ -4639,12 +4664,11 @@ class CountFilter(Filter):
             dims = (15, 15 * (pc2_var / pc1_var))
         else:
             dims = (8, 8)
-        fig = plt.figure(figsize=dims)
+        fig = plt.figure(figsize=dims, constrained_layout=True)
         ax = fig.add_subplot(1, 1, 1)
         if proportional_axes:
             ax.set_aspect(pc2_var / pc1_var)
 
-        ax.grid(True)
         ax.set_xlabel(f'{final_df.columns[0]} (explained {pc1_var * 100 :.2f}%)', fontsize=label_fontsize)
         ax.set_ylabel(f'{final_df.columns[1]} (explained {pc2_var * 100 :.2f}%)', fontsize=label_fontsize)
         ax.set_title(title, fontsize=title_fontsize)
@@ -4660,7 +4684,7 @@ class CountFilter(Filter):
                 ax.annotate(row[2], (row[0], row[1]), textcoords='offset pixels',
                             xytext=(label_fontsize, label_fontsize),
                             fontsize=label_fontsize, color=colors[i])
-        ax.grid(True)
+        ax.grid(plot_grid)
         ax.tick_params(axis='both', which='both', labelsize=tick_fontsize)
         plt.show()
         return fig
@@ -5017,7 +5041,7 @@ class CountFilter(Filter):
         assert not counts.empty, f"No valid files with the suffix '{input_format}' were found in '{folder_path}'."
 
         if save_csv:
-            io.save_csv(df=counts, filename=counted_fname)
+            io.save_table(df=counts, filename=counted_fname)
 
         fname = counted_fname if save_csv else os.path.join(folder.absolute(), folder.name + file_suffix)
         count_filter_obj = cls.from_dataframe(counts, Path(fname))
@@ -5088,8 +5112,8 @@ class CountFilter(Filter):
         counts = df.drop(uncounted.index, inplace=False)
 
         if save_csv:
-            io.save_csv(df=counts, filename=counted_fname)
-            io.save_csv(df=uncounted, filename=uncounted_fname)
+            io.save_table(df=counts, filename=counted_fname)
+            io.save_table(df=uncounted, filename=uncounted_fname)
 
         fname = counted_fname if save_csv else os.path.join(folder.absolute(), folder.name + file_suffix)
         count_filter_obj = cls.from_dataframe(counts, Path(fname))
@@ -5141,7 +5165,7 @@ class Pipeline(generic.GenericPipeline):
     def __str__(self):
         string = f"Pipeline for {self.filter_type.readable_name}"
         if len(self) > 0:
-            string += f":\n\t" + '\n\t'.join(
+            string += ":\n\t" + '\n\t'.join(
                 self._readable_func_signature(func, params[0], params[1]) for func, params in
                 zip(self.functions, self.params))
         return string

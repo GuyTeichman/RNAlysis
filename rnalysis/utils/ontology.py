@@ -14,7 +14,7 @@ import numpy as np
 import pandas as pd
 from defusedxml import ElementTree
 from matplotlib.cm import ScalarMappable
-from typing_extensions import Literal
+from typing import Literal
 
 from rnalysis.utils import parsing, io, param_typing
 

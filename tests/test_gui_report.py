@@ -13,7 +13,7 @@ def test_Node():
     assert node.popup_element == 'popup'
     assert node.node_type == 'Count matrix'
     assert node.is_active is True
-    assert node.filename == 'filename.txt'
+    assert node.filename == Path('filename.txt')
 
     # Test setting and getting is_active property
     node.set_active(False)

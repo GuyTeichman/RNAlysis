@@ -293,7 +293,7 @@ class DiffExpWindow(gui_windows.FuncExternalWindow):
         self.param_widgets['load_design'].setEnabled(is_legal)
 
     def init_comparisons_ui(self):
-        self.design_mat = io.load_csv(self.param_widgets['design_matrix'].text(), index_col=0)
+        self.design_mat = io.load_table(self.param_widgets['design_matrix'].text(), index_col=0)
 
         if 'picker' in self.comparisons_widgets:
             self.comparisons_grid.removeWidget(self.comparisons_widgets['picker'])
@@ -424,9 +424,11 @@ class EnrichmentWindow(gui_widgets.MinMaxDialog):
                              True: {'alpha'},
                              False: {'alpha'}}
 
-    PLOT_ARGS = {'user_defined': {'plot_horizontal'},
-                 'go': {'plot_horizontal', 'plot_ontology_graph', 'ontology_graph_format'},
-                 'kegg': {'plot_horizontal', 'plot_pathway_graphs', 'pathway_graphs_format'},
+    PLOT_ARGS = {'user_defined': {'plot_horizontal', 'plot_style', 'show_expected'},
+                 'go': {'plot_horizontal', 'plot_style', 'show_expected', 'plot_ontology_graph',
+                        'ontology_graph_format'},
+                 'kegg': {'plot_horizontal', 'plot_style', 'show_expected', 'plot_pathway_graphs',
+                          'pathway_graphs_format'},
                  'non_categorical': {'plot_log_scale', 'plot_style', 'n_bins'}}
 
     enrichmentStarted = QtCore.pyqtSignal(object, object)
@@ -620,7 +622,7 @@ class EnrichmentWindow(gui_widgets.MinMaxDialog):
             self.plot_grid.addWidget(label, i, 0)
             self.plot_grid.addWidget(self.plot_widgets[name], i, 1)
             self.plot_grid.addWidget(help_button, i, 2)
-            help_button.connect_param_help(name, desc)
+            help_button.set_param_help(name, desc)
 
             i += 1
 
@@ -639,7 +641,7 @@ class EnrichmentWindow(gui_widgets.MinMaxDialog):
             self.parameter_grid.addWidget(help_button, i, 2)
             self.parameter_grid.addWidget(label, i, 0)
             self.parameter_grid.addWidget(self.parameter_widgets[name], i, 1)
-            help_button.connect_param_help(name, desc)
+            help_button.set_param_help(name, desc)
             i += 1
 
     def update_stats_ui(self):
@@ -673,7 +675,7 @@ class EnrichmentWindow(gui_widgets.MinMaxDialog):
                 self.stats_grid.addWidget(help_button, i, 4)
                 self.stats_grid.addWidget(label, i, 2)
                 self.stats_grid.addWidget(self.stats_widgets[name], i, 3)
-                help_button.connect_param_help(name, desc)
+                help_button.set_param_help(name, desc)
                 i += 1
 
     def is_single_set(self):
@@ -1227,7 +1229,7 @@ class TabPage(QtWidgets.QWidget):
     itemSpawned = QtCore.pyqtSignal(str, int, int, object)
     filterObjectCreated = QtCore.pyqtSignal(object, int)
     featureSetCreated = QtCore.pyqtSignal(object, int)
-    startedJob = QtCore.pyqtSignal(object, object)
+    startedJob = QtCore.pyqtSignal(object, object, object)
     tabNameChange = QtCore.pyqtSignal(str, bool, int, int)
     tabSaved = QtCore.pyqtSignal()
     changeIcon = QtCore.pyqtSignal(str)
@@ -1399,13 +1401,13 @@ class TabPage(QtWidgets.QWidget):
         job_id = JOB_COUNTER.get_id() if job_id is None else job_id
         predecessors = predecessors if isinstance(predecessors, list) else []
         worker = gui_widgets.Worker(partial, job_id, predecessors + [self.tab_id], source_name)
-        worker.finished.connect(self.functionApplied.emit)
 
         if func_name in self.THREADED_FUNCS and (not kwargs.get('inplace', False)):
-            self.startedJob.emit(worker, finish_slot)
+            self.startedJob.emit(self, worker, [self.functionApplied.emit, finish_slot])
             return
 
         prev_name = self.get_tab_name()
+        worker.finished.connect(self.functionApplied.emit)
         result = worker.run()
         if kwargs.get('inplace', False):
             self.tab_id = JOB_COUNTER.get_id()
@@ -1687,9 +1689,9 @@ class FuncTypeStack(QtWidgets.QWidget):
         self.func_combo.currentTextChanged.connect(self.update_parameter_ui)
 
     def _set_empty_tooltip(self):
-        txt = f"Choose a function from this list to read its description. "
+        txt = "Choose a function from this list to read its description. "
         self.func_combo.setToolTip(txt)
-        self.func_help_button.connect_desc_help(txt)
+        self.func_help_button.set_desc_help(txt)
 
     def deselect(self):
         self.func_combo.setCurrentIndex(0)
@@ -1711,7 +1713,7 @@ class FuncTypeStack(QtWidgets.QWidget):
         signature = generic.get_method_signature(chosen_func_name, self.filter_obj)
         desc, param_desc = io.get_method_docstring(chosen_func_name, self.filter_obj)
         self.func_combo.setToolTip(desc)
-        self.func_help_button.connect_param_help(self.get_function_readable_name(), desc)
+        self.func_help_button.set_param_help(self.get_function_readable_name(), desc)
 
         i = 1
         for name, param in signature.items():
@@ -1725,7 +1727,7 @@ class FuncTypeStack(QtWidgets.QWidget):
                 label.setToolTip(param_desc[name])
                 help_button = gui_widgets.HelpButton()
                 self.parameter_grid.addWidget(help_button, i, 2)
-                help_button.connect_param_help(name, param_desc[name])
+                help_button.set_param_help(name, param_desc[name])
 
             self.parameter_grid.addWidget(label, i, 0)
             self.parameter_grid.addWidget(self.parameter_widgets[name], i, 1)
@@ -1787,8 +1789,8 @@ class FuncTypeStack(QtWidgets.QWidget):
 
 class FilterTabPage(TabPage):
     EXCLUDED_FUNCS = {'union', 'intersection', 'majority_vote_intersection', 'difference', 'symmetric_difference',
-                      'from_folder', 'from_folder_htseqcount', 'save_txt', 'save_csv', 'from_dataframe',
-                      'print_features'}
+                      'from_folder', 'from_folder_htseqcount', 'save_txt', 'save_csv', 'save_table', 'save_parquet',
+                      'from_dataframe', 'print_features'}
     CLUSTERING_FUNCS = {'split_kmeans': 'K-Means', 'split_kmedoids': 'K-Medoids',
                         'split_hierarchical': 'Hierarchical (Agglomerative)', 'split_hdbscan': 'HDBSCAN',
                         'split_clicom': 'CLICOM (Ensemble)'}
@@ -1797,7 +1799,7 @@ class FilterTabPage(TabPage):
                      'average_replicate_samples', 'drop_columns', 'differential_expression_limma_voom'}
     THREADED_FUNCS = {'translate_gene_ids', 'differential_expression_deseq2', 'filter_by_kegg_annotations',
                       'filter_by_go_annotations', 'differential_expression_limma_voom'}
-    startedClustering = QtCore.pyqtSignal(object, object)
+    startedClustering = QtCore.pyqtSignal(object, object, object)
     widthChanged = QtCore.pyqtSignal()
 
     def __init__(self, parent=None, undo_stack: QtWidgets.QUndoStack = None, tab_id: int = None):
@@ -1851,7 +1853,7 @@ class FilterTabPage(TabPage):
     def cache(self):
         base_str = str(time.time_ns()) + str(self.filter_obj.fname) + str(len(self.filter_obj.shape))
         hex_hash = hashlib.sha1(base_str.encode('utf-8')).hexdigest()
-        filename = f"{hex_hash}.csv"
+        filename = f"{hex_hash}.parquet"
         io.cache_gui_file(self.filter_obj.df, filename)
         return filename
 
@@ -1938,7 +1940,7 @@ class FilterTabPage(TabPage):
                 label.setToolTip(param_desc[name])
                 help_button = gui_widgets.HelpButton()
                 self.basic_param_grid.addWidget(help_button, i, 2)
-                help_button.connect_param_help(name, param_desc[name])
+                help_button.set_param_help(name, param_desc[name])
 
             self.basic_param_grid.addWidget(label, i, 0)
             self.basic_param_grid.addWidget(self.basic_param_widgets[name], i, 1)
@@ -1955,7 +1957,9 @@ class FilterTabPage(TabPage):
         self.basic_widgets['start_button'].clicked.connect(self.start)
         self.basic_widgets['start_button'].setEnabled(False)
 
-        self.basic_widgets['file_path'] = gui_widgets.PathLineEdit()
+        self.basic_widgets['file_path'] = gui_widgets.PathLineEdit(file_types="Data table "
+                                                                              "(*.csv;*.tsv;*.txt;*.parquet);;"
+                                                                              "All Files (*)")
         self.basic_widgets['file_path'].textChanged.connect(self._change_start_button_state)
 
         self.basic_widgets['table_name'] = QtWidgets.QLineEdit()
@@ -2056,7 +2060,7 @@ class FilterTabPage(TabPage):
             predecessors = predecessors if isinstance(predecessors, list) else []
             worker = gui_widgets.Worker(partial, JOB_COUNTER.get_id(), predecessors + [self.tab_id], func_name)
             worker.finished.connect(self.functionApplied.emit)
-            self.startedClustering.emit(worker, finish_slot)
+            self.startedClustering.emit(self, worker, finish_slot)
             return
 
         return super()._apply_function_from_params(func_name, args, kwargs, finish_slot, job_id, predecessors)
@@ -2098,9 +2102,11 @@ class FilterTabPage(TabPage):
                                                             str(Path.home().joinpath(default_name)),
                                                             "Comma-Separated Values (*.csv);;"
                                                             "Tab-Separated Values (*.tsv);;"
+                                                            "Parquet file (*.parquet);;"
                                                             "All Files (*)")
         if filename:
-            self.filter_obj.save_csv(filename)
+            suffix = Path(filename).suffix
+            self.filter_obj.save_table(suffix, filename)
             print(f"Successfully saved at {io.get_datetime()} under {filename}")
             self.tabSaved.emit()
 
@@ -2160,7 +2166,7 @@ class CreatePipelineWindow(gui_widgets.MinMaxDialog, FilterTabPage):
     def __init__(self, parent=None):
         super().__init__(parent=parent)
         self.setLayout(self.layout)
-        self.setWindowTitle(f'Create new Pipeline')
+        self.setWindowTitle('Create new Pipeline')
         self.setGeometry(500, 200, 900, 800)
         self.pipeline = None
         self.is_unsaved = False
@@ -2343,7 +2349,6 @@ class CreatePipelineWindow(gui_widgets.MinMaxDialog, FilterTabPage):
     def save_file(self):
         try:
             self.pipelineSaved.emit(self._get_pipeline_name(), self.pipeline)
-            print(f"Successfully saved Pipeline '{self.basic_widgets['pipeline_name'].text()}'")
             self.is_unsaved = False
         except Exception as e:
             print("Failed to save Pipeline")
@@ -2560,7 +2565,7 @@ class MultiOpenWindow(QtWidgets.QDialog):
                 label.setToolTip(param_desc[name])
                 help_button = gui_widgets.HelpButton()
                 self.kwargs[file].addWidget(help_button, i, 2)
-                help_button.connect_param_help(name, param_desc[name])
+                help_button.set_param_help(name, param_desc[name])
 
             self.kwargs[file].addWidget(label, i, 0)
             self.kwargs[file].addWidget(self.kwargs_widgets[file][name], i, 1)
@@ -2818,6 +2823,12 @@ class MainWindow(QtWidgets.QMainWindow):
     USER_GUIDE_URL = 'https://guyteichman.github.io/RNAlysis/build/user_guide_gui.html'
     TUTORIAL_URL = 'https://guyteichman.github.io/RNAlysis/build/tutorial.html'
     FAQ_URL = 'https://guyteichman.github.io/RNAlysis/build/faq.html'
+    BUGS_URL = 'https://github.com/GuyTeichman/RNAlysis/issues/new?assignees=&labels=bug+report&projects=' \
+               '&template=bug_report.yaml&title=Bug+Report%3A+'
+    FEATURE_URL = 'https://github.com/GuyTeichman/RNAlysis/issues/new?assignees=&labels=feature+request&projects=' \
+                  '&template=feature_request.yaml&title=Feature+Request%3A+'
+    QUESTION_URL = 'https://github.com/GuyTeichman/RNAlysis/discussions'
+
     jobQueued = QtCore.pyqtSignal()
 
     def __init__(self):
@@ -2902,11 +2913,11 @@ class MainWindow(QtWidgets.QMainWindow):
                 assert cleared
                 print("Report generation turned on. ")
             except ImportError:
-                warnings.warn(f"The RNAlysis 'reports' module is not installed. Please install it and try again. ")
+                warnings.warn("The RNAlysis 'reports' module is not installed. Please install it and try again. ")
                 self._toggle_reporting(False)
             except AssertionError:
-                warnings.warn(f"You must clear the current session before turning report generation on. "
-                              f"Please clear your current session and try again. ")
+                warnings.warn("You must clear the current session before turning report generation on. "
+                              "Please clear your current session and try again. ")
                 self._toggle_reporting(False)
 
         else:
@@ -3225,7 +3236,9 @@ class MainWindow(QtWidgets.QMainWindow):
 
     @QtCore.pyqtSlot(set, int, str)
     @QtCore.pyqtSlot(set, int)
-    def new_tab_from_gene_set(self, gene_set: set, tab_id: int, gene_set_name: str = None):
+    def new_tab_from_gene_set(self, gene_set: enrichment.FeatureSet, tab_id: int, gene_set_name: str = None):
+        if gene_set_name is None and validation.isinstanceinh(gene_set, enrichment.FeatureSet):
+            gene_set_name = gene_set.set_name
         self.add_new_tab(gene_set_name, is_set=True)
         if tab_id == -1:
             tab_id = self.tabs.currentWidget().tab_id
@@ -3267,13 +3280,25 @@ class MainWindow(QtWidgets.QMainWindow):
         self.update_report(name, worker_output.job_id, worker_output.predecessor_ids, desc, 'Function')
 
     def update_report_spawn(self, name: str, spawn_id: int, predecessor_id: int,
-                            spawn: Union[
-                                filtering.Filter, enrichment.FeatureSet, pd.DataFrame, plt.Figure, generic.GenericPipeline]):
+                            spawn: Union[filtering.Filter, enrichment.FeatureSet,
+                            pd.DataFrame, plt.Figure, generic.GenericPipeline]):
+        if spawn is None:
+            return
+        assert self.is_valid_spawn(spawn), f"Invalid spawn type '{type(spawn)}'!"
         spawn_type = self._get_spawn_type(spawn)
         prefix = f'{spawn_id}_{name}' if spawn_type in ('Other output', 'Pipeline') else str(spawn_id)
         filename = self._cache_spawn(spawn, prefix)
         desc = self._format_report_desc(spawn, filename, spawn_type)
         self.update_report(name, spawn_id, [predecessor_id], desc, spawn_type, filename)
+
+    @staticmethod
+    def is_valid_spawn(spawn: object):
+        if validation.isinstanceinh(spawn, filtering.Filter) \
+            or validation.isinstanceinh(spawn, enrichment.FeatureSet) \
+            or isinstance(spawn, (pd.Series, pd.DataFrame, plt.Figure)) \
+            or validation.isinstanceinh(spawn, generic.GenericPipeline):
+            return True
+        return False
 
     @staticmethod
     def _get_spawn_type(spawn: Union[filtering.Filter, enrichment.FeatureSet, pd.DataFrame, plt.Figure]):
@@ -3347,8 +3372,8 @@ class MainWindow(QtWidgets.QMainWindow):
             self, 'Delete Pipeline', 'Choose Pipeline to delete:', self.pipelines.keys())
         if status:
             reply = QtWidgets.QMessageBox.question(self, 'Delete Pipeline?',
-                                                   f"Are you sure you want to delete this Pipeline? "
-                                                   f"This action cannot be undone!",
+                                                   "Are you sure you want to delete this Pipeline? "
+                                                   "This action cannot be undone!",
                                                    QtWidgets.QMessageBox.No | QtWidgets.QMessageBox.Yes)
             if reply == QtWidgets.QMessageBox.Yes:
                 self.pipelines.pop(pipeline_name)
@@ -3501,7 +3526,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.pipeline_window.exec()
         self.pipeline_window = None
 
-    @QtCore.pyqtSlot(str, filtering.Pipeline)
+    @QtCore.pyqtSlot(str, generic.GenericPipeline)
     def save_pipeline(self, pipeline_name: str, pipeline: filtering.Pipeline):
         if pipeline_name in self.pipelines:
             is_new = False
@@ -3523,6 +3548,7 @@ class MainWindow(QtWidgets.QMainWindow):
                     self.update_report_spawn(pipeline_name, new_pipeline_id, self.pipelines[pipeline_name][1], pipeline)
 
             self.pipelines[pipeline_name] = (pipeline, new_pipeline_id)
+            print(f"Successfully saved Pipeline '{self.basic_widgets['pipeline_name'].text()}'")
 
     def settings(self):
         self.settings_window.exec()
@@ -3646,11 +3672,17 @@ class MainWindow(QtWidgets.QMainWindow):
         self.quick_start_action = QtWidgets.QAction("&Quick-start guide", self)
         self.quick_start_action.triggered.connect(self.quickstart_window.show)
         self.user_guide_action = QtWidgets.QAction("&User Guide", self)
-        self.user_guide_action.triggered.connect(self.open_user_guide)
+        self.user_guide_action.triggered.connect(functools.partial(self.open_link, self.USER_GUIDE_URL))
         self.tutorial_action = QtWidgets.QAction("&Tutorial", self)
-        self.tutorial_action.triggered.connect(self.open_tutorial)
+        self.tutorial_action.triggered.connect(functools.partial(self.open_link, self.TUTORIAL_URL))
         self.faq_action = QtWidgets.QAction("&Frequently Asked Questions", self)
-        self.faq_action.triggered.connect(self.open_faq)
+        self.faq_action.triggered.connect(functools.partial(self.open_link, self.FAQ_URL))
+        self.bug_report_action = QtWidgets.QAction("Submit an &issue", self)
+        self.bug_report_action.triggered.connect(functools.partial(self.open_link, self.BUGS_URL))
+        self.request_feature_action = QtWidgets.QAction("&Request a feature", self)
+        self.request_feature_action.triggered.connect(functools.partial(self.open_link, self.FEATURE_URL))
+        self.ask_question_action = QtWidgets.QAction("Ask a &question", self)
+        self.ask_question_action.triggered.connect(functools.partial(self.open_link, self.QUESTION_URL))
         self.about_action = QtWidgets.QAction("&About", self)
         self.about_action.triggered.connect(self.about)
         self.cite_action = QtWidgets.QAction("How to &cite RNAlysis", self)
@@ -3767,20 +3799,10 @@ class MainWindow(QtWidgets.QMainWindow):
             io.save_gene_set(gene_set, filename)
             print(f"Successfully saved at {io.get_datetime()} under {filename}")
 
-    def open_user_guide(self):
-        url = QtCore.QUrl(self.USER_GUIDE_URL)
+    def open_link(self, link: str):
+        url = QtCore.QUrl(link)
         if not QtGui.QDesktopServices.openUrl(url):
-            QtGui.QMessageBox.warning(self, 'User Guide', 'Could not open User Guide')
-
-    def open_tutorial(self):
-        url = QtCore.QUrl(self.TUTORIAL_URL)
-        if not QtGui.QDesktopServices.openUrl(url):
-            QtGui.QMessageBox.warning(self, 'Tutorial', 'Could not open Tutorial')
-
-    def open_faq(self):
-        url = QtCore.QUrl(self.FAQ_URL)
-        if not QtGui.QDesktopServices.openUrl(url):
-            QtGui.QMessageBox.warning(self, 'FAQ', 'Could not open Frequently Asked Questions')
+            QtGui.QMessageBox.warning(self, 'Connection failed', 'Could not open link. Please try again later. ')
 
     def get_gene_set_by_ind(self, ind: int):
         gene_set = self.tabs.widget(ind).filter_obj if \
@@ -3929,6 +3951,7 @@ class MainWindow(QtWidgets.QMainWindow):
         help_menu = self.menu_bar.addMenu("&Help")
         help_menu.addActions(
             [self.quick_start_action, self.tutorial_action, self.user_guide_action, self.faq_action,
+             self.bug_report_action, self.request_feature_action, self.ask_question_action,
              self.check_update_action, self.about_action, self.cite_action])
 
     def _populate_pipelines(self, menu: QtWidgets.QMenu, func: Callable, pipeline_arg: bool = True,
@@ -3965,7 +3988,8 @@ class MainWindow(QtWidgets.QMainWindow):
             dialog = gui_windows.PairedFuncExternalWindow('Pipeline', pipeline.apply_to, None,
                                                           {'self', 'r1_files', 'r2_files'}, parent=self)
         dialog.paramsAccepted.connect(
-            functools.partial(self.start_generic_job_from_params, pipeline_name, pipeline.apply_to))
+            functools.partial(self.start_generic_job_from_params, pipeline_name, pipeline.apply_to,
+                              predecessor=pipeline_id))
         dialog.paramsAccepted.connect(dialog.deleteLater)
         dialog.init_ui()
         self.external_windows['fastq_pipeline'] = dialog
@@ -4114,18 +4138,22 @@ class MainWindow(QtWidgets.QMainWindow):
         else:
             event.ignore()
 
-    @QtCore.pyqtSlot(object, object)
-    def start_generic_job(self, worker: gui_widgets.Worker, finish_slot: Union[Callable, None]):
-        slots = (self.finish_generic_job, finish_slot)
+    @QtCore.pyqtSlot(object, object, object)
+    def start_generic_job(self, parent_tab: Union[FilterTabPage, None], worker: gui_widgets.Worker,
+                          finish_slots: Union[Callable, List[Callable], None]):
+        slots = [functools.partial(self.finish_generic_job, parent_tab=parent_tab)] + parsing.data_to_list(finish_slots)
         self.queue_worker(worker, slots)
 
-    def start_generic_job_from_params(self, func_name, func, args, kwargs, finish_slot: Union[Callable, None]):
+    def start_generic_job_from_params(self, func_name, func, args, kwargs,
+                                      finish_slots: Union[Callable, List[Callable], None],
+                                      predecessor: Union[int, None] = None):
         partial = functools.partial(func, *args, **kwargs)
-        worker = gui_widgets.Worker(partial, JOB_COUNTER.get_id(), [], func_name)
-        self.start_generic_job(worker, finish_slot)
+        worker = gui_widgets.Worker(partial, JOB_COUNTER.get_id(), [] if predecessor is None else [predecessor],
+                                    func_name)
+        self.start_generic_job(None, worker, finish_slots)
 
-    @QtCore.pyqtSlot(gui_widgets.WorkerOutput)
-    def finish_generic_job(self, worker_output: gui_widgets.WorkerOutput):
+    @QtCore.pyqtSlot(gui_widgets.WorkerOutput, object)
+    def finish_generic_job(self, worker_output: gui_widgets.WorkerOutput, parent_tab: TabPage = None):
         if worker_output.raised_exception:
             raise worker_output.raised_exception
         if worker_output.result is None or len(worker_output.result) == 0:
@@ -4133,20 +4161,37 @@ class MainWindow(QtWidgets.QMainWindow):
             return
         assert isinstance(worker_output, gui_widgets.WorkerOutput), f"invalid worker output: {worker_output}"
         func_name: str = worker_output.emit_args[0]
-        return_val: tuple = worker_output.result
-        self.tabs.currentWidget().process_outputs(worker_output.result, worker_output.job_id, func_name)
-        self.tabs.currentWidget().update_tab()
+        job_id = worker_output.job_id
 
-    @QtCore.pyqtSlot(object, object)
-    def start_clustering(self, worker: gui_widgets.Worker, finish_slot: Union[Callable, None]):
-        slots = (self.finish_clustering, finish_slot)
+        if parent_tab is not None:
+            parent_tab.process_outputs(worker_output.result, job_id, func_name)
+            parent_tab.update_tab()
+        else:
+            source_name = generic.get_method_readable_name(worker_output.partial.func)
+            if self._generate_report:
+                self.update_report_from_worker(worker_output)
+            for output in parsing.data_to_list(worker_output.result):
+                output_id = JOB_COUNTER.get_id()
+                if self._generate_report and self.is_valid_spawn(output):
+                    self.update_report_spawn(source_name, output_id, job_id, output)
+
+                if validation.isinstanceinh(output, filtering.Filter):
+                    self.new_tab_from_filter_obj(output, output_id)
+                elif isinstance(output, pd.DataFrame):
+                    self.tabs.currentWidget().object_views.append(gui_windows.DataFrameView(output, source_name))
+                    self.tabs.currentWidget().object_views[-1].show()
+
+    @QtCore.pyqtSlot(object, object, object)
+    def start_clustering(self, parent_tab: FilterTabPage, worker: gui_widgets.Worker,
+                         finish_slot: Union[Callable, None]):
+        slots = (functools.partial(self.finish_clustering, parent_tab=parent_tab), finish_slot)
         self.queue_worker(worker, slots)
 
     @QtCore.pyqtSlot(gui_widgets.WorkerOutput)
-    def finish_clustering(self, worker_output: gui_widgets.WorkerOutput):
+    def finish_clustering(self, worker_output: gui_widgets.WorkerOutput, parent_tab: FilterTabPage):
         if worker_output.raised_exception:
             raise worker_output.raised_exception
-        if len(worker_output.result) == 0:
+        if worker_output.result is None or len(worker_output.result) == 0:
             print("Done")
             return
         assert isinstance(worker_output, gui_widgets.WorkerOutput), f"invalid worker output: {worker_output}"
@@ -4156,9 +4201,9 @@ class MainWindow(QtWidgets.QMainWindow):
         return_val: clustering.ClusteringRunner = worker_output.result[0]
         job_id = worker_output.job_id
         figs = clustering_runner.plot_clustering()
-        self.tabs.currentWidget().process_outputs(figs, job_id, func_name)
-        self.tabs.currentWidget().process_outputs(return_val, job_id, func_name)
-        self.tabs.currentWidget().update_tab()
+        parent_tab.process_outputs(figs, job_id, func_name)
+        parent_tab.process_outputs(return_val, job_id, func_name)
+        parent_tab.update_tab()
 
     @QtCore.pyqtSlot(object, object)
     def start_enrichment(self, worker: gui_widgets.Worker, finish_slot: Union[Callable, None]):
@@ -4274,7 +4319,7 @@ class MainWindow(QtWidgets.QMainWindow):
         #  Connect signals and slots
         self.current_worker.startProgBar.connect(self.start_progress_bar)
         self.thread.started.connect(self.current_worker.run)
-        for slot in parsing.data_to_tuple(output_slots):
+        for slot in parsing.data_to_list(output_slots):
             if slot is not None:
                 self.current_worker.finished.connect(slot)
         self.current_worker.finished.connect(self.run_threaded_workers)
@@ -4350,7 +4395,7 @@ async def run():  # pragma: no cover
     builtins.input = window.input
 
     try:
-        import numba
+        pass
     except ImportError:
         warnings.warn("RNAlysis can perform faster when package 'numba' is installed. \n"
                       "If you want to improve the performance of slow operations on RNAlysis, "

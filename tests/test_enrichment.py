@@ -36,7 +36,7 @@ up_feature_set = {'WBGene00021187', 'WBGene00195184', 'WBGene00012851', 'WBGene0
 
 
 def test_featureset_api():
-    up = FeatureSet(up_feature_set)
+    FeatureSet(up_feature_set)
 
 
 def test_featureset_copy():
@@ -160,7 +160,7 @@ def test_set_operations_with_set():
 
 
 def test_biotypes_from_ref_table():
-    truth = io.load_csv('tests/test_files/biotypes_truth.csv', 0)
+    truth = io.load_table('tests/test_files/biotypes_truth.csv', 0)
     genes = {'WBGene00048865', 'WBGene00000106', 'WBGene00000137', 'WBGene00199484', 'WBGene00268190', 'WBGene00048864',
              'WBGene00268189', 'WBGene00268195', 'WBGene00255734', 'WBGene00199485', 'WBGene00048863', 'WBGene00000019',
              'WBGene00268191', 'WBGene00000041', 'WBGene00199486', 'WBGene00255735', 'WBGene00000105',
@@ -181,21 +181,18 @@ def test_enrichment_randomization_reliability():
     random_seed = 0
 
     for i in range(2):
-        res1 = en.user_defined_enrichment(attrs, statistical_test='randomization', randomization_reps=10000,
-                                          biotype='all',
-                                          attr_ref_path=__attr_ref__,
-                                          biotype_ref_path=__biotype_ref__,
-                                          random_seed=random_seed, parallel_backend='sequential')
-        res2 = en.user_defined_enrichment(attrs, statistical_test='randomization', randomization_reps=10000,
-                                          biotype='all',
-                                          attr_ref_path=__attr_ref__,
-                                          biotype_ref_path=__biotype_ref__,
-                                          random_seed=random_seed + 1, parallel_backend='sequential')
-        res3 = en.user_defined_enrichment(attrs, statistical_test='randomization', randomization_reps=10000,
-                                          biotype='all',
-                                          attr_ref_path=__attr_ref__,
-                                          biotype_ref_path=__biotype_ref__,
-                                          random_seed=random_seed + 2, parallel_backend='sequential')
+        res1 = en.user_defined_enrichment(attrs, statistical_test='randomization', biotype='all',
+                                          attr_ref_path=__attr_ref__, biotype_ref_path=__biotype_ref__,
+                                          randomization_reps=10000, random_seed=random_seed,
+                                          parallel_backend='sequential')
+        res2 = en.user_defined_enrichment(attrs, statistical_test='randomization', biotype='all',
+                                          attr_ref_path=__attr_ref__, biotype_ref_path=__biotype_ref__,
+                                          randomization_reps=10000, random_seed=random_seed + 1,
+                                          parallel_backend='sequential')
+        res3 = en.user_defined_enrichment(attrs, statistical_test='randomization', biotype='all',
+                                          attr_ref_path=__attr_ref__, biotype_ref_path=__biotype_ref__,
+                                          randomization_reps=10000, random_seed=random_seed + 2,
+                                          parallel_backend='sequential')
         random_seed += 3
         plt.close('all')
         for col in ['samples', 'obs', 'exp', 'log2_fold_enrichment']:
@@ -227,14 +224,14 @@ def _enrichment_validity(res, truth):
 
 
 def test_enrichment_randomization_validity():
-    truth = io.load_csv('tests/test_files/enrichment_randomization_res.csv', 0)
+    truth = io.load_table('tests/test_files/enrichment_randomization_res.csv', 0)
     genes = {'WBGene00000041', 'WBGene00002074', 'WBGene00000105', 'WBGene00000106', 'WBGene00199484',
              'WBGene00001436', 'WBGene00000137', 'WBGene00001996', 'WBGene00014208', 'WBGene00001133'}
     attrs = ['attribute1', 'attribute2']
     en = FeatureSet(gene_set=genes, set_name='test_set')
-    res = en.user_defined_enrichment(attrs, statistical_test='randomization', randomization_reps=100000, biotype='all',
-                                     attr_ref_path=__attr_ref__,
-                                     biotype_ref_path=__biotype_ref__, random_seed=0, parallel_backend='sequential')
+    res = en.user_defined_enrichment(attrs, statistical_test='randomization', biotype='all', attr_ref_path=__attr_ref__,
+                                     biotype_ref_path=__biotype_ref__, randomization_reps=100000, random_seed=0,
+                                     parallel_backend='sequential')
     plt.close('all')
     _enrichment_validity(res, truth)
 
@@ -247,21 +244,17 @@ def test_enrichment_randomization_parallel_reliability():
     random_seed = 0
 
     for i in range(2):
-        res1 = en.user_defined_enrichment(attrs, statistical_test='randomization', randomization_reps=5000,
-                                          biotype='all',
-                                          attr_ref_path=__attr_ref__,
-                                          biotype_ref_path=__biotype_ref__,
-                                          random_seed=random_seed, parallel_backend='loky')
-        res2 = en.user_defined_enrichment(attrs, statistical_test='randomization', randomization_reps=5000,
-                                          biotype='all',
-                                          attr_ref_path=__attr_ref__,
-                                          biotype_ref_path=__biotype_ref__,
-                                          random_seed=random_seed + 1, parallel_backend='multiprocessing')
-        res3 = en.user_defined_enrichment(attrs, statistical_test='randomization', randomization_reps=5000,
-                                          biotype='all',
-                                          attr_ref_path=__attr_ref__,
-                                          biotype_ref_path=__biotype_ref__,
-                                          random_seed=random_seed + 2, parallel_backend='threading')
+        res1 = en.user_defined_enrichment(attrs, statistical_test='randomization', biotype='all',
+                                          attr_ref_path=__attr_ref__, biotype_ref_path=__biotype_ref__,
+                                          randomization_reps=5000, random_seed=random_seed, parallel_backend='loky')
+        res2 = en.user_defined_enrichment(attrs, statistical_test='randomization', biotype='all',
+                                          attr_ref_path=__attr_ref__, biotype_ref_path=__biotype_ref__,
+                                          randomization_reps=5000, random_seed=random_seed + 1,
+                                          parallel_backend='multiprocessing')
+        res3 = en.user_defined_enrichment(attrs, statistical_test='randomization', biotype='all',
+                                          attr_ref_path=__attr_ref__, biotype_ref_path=__biotype_ref__,
+                                          randomization_reps=5000, random_seed=random_seed + 2,
+                                          parallel_backend='threading')
         random_seed += 3
         plt.close('all')
         for col in ['samples', 'obs', 'exp', 'log2_fold_enrichment']:
@@ -275,26 +268,26 @@ def test_enrichment_randomization_parallel_reliability():
 
 
 def test_enrichment_parallel_validity():
-    truth = io.load_csv('tests/test_files/enrichment_randomization_res.csv', 0)
+    truth = io.load_table('tests/test_files/enrichment_randomization_res.csv', 0)
     genes = {'WBGene00000041', 'WBGene00002074', 'WBGene00000105', 'WBGene00000106', 'WBGene00199484',
              'WBGene00001436', 'WBGene00000137', 'WBGene00001996', 'WBGene00014208', 'WBGene00001133'}
     attrs = ['attribute1', 'attribute2']
     en = FeatureSet(gene_set=genes, set_name='test_set')
-    res = en.user_defined_enrichment(attrs, statistical_test='randomization', randomization_reps=100000, biotype='all',
-                                     attr_ref_path=__attr_ref__,
-                                     biotype_ref_path=__biotype_ref__, random_seed=0, parallel_backend="loky")
+    res = en.user_defined_enrichment(attrs, statistical_test='randomization', biotype='all', attr_ref_path=__attr_ref__,
+                                     biotype_ref_path=__biotype_ref__, randomization_reps=100000, random_seed=0,
+                                     parallel_backend="loky")
     plt.close('all')
     _enrichment_validity(res, truth)
 
 
 def test_enrich_hypergeometric_pvalues():
-    truth = io.load_csv('tests/test_files/enrichment_hypergeometric_res.csv', 0)
+    truth = io.load_table('tests/test_files/enrichment_hypergeometric_res.csv', 0)
     genes = {'WBGene00000041', 'WBGene00002074', 'WBGene00000105', 'WBGene00000106', 'WBGene00199484',
              'WBGene00001436', 'WBGene00000137', 'WBGene00001996', 'WBGene00014208', 'WBGene00001133'}
     attrs = ['attribute1', 'attribute2']
     en = FeatureSet(gene_set=genes, set_name='test_set')
     res = en.user_defined_enrichment(attrs, statistical_test='hypergeometric', biotype='all',
-                                     attr_ref_path=__attr_ref__, biotype_ref_path=__biotype_ref__, )
+                                     attr_ref_path=__attr_ref__, biotype_ref_path=__biotype_ref__)
     plt.close('all')
     _enrichment_validity(res, truth)
 
@@ -523,8 +516,8 @@ def test_go_enrichment_single_set_api(organism, propagate_annotations, return_no
                     'WBGene00004920', 'WBGene00011910', 'WBGene00014208']
 
     en = RankedSet(genes_ranked, set_name='test_set')
-    _ = en.single_set_go_enrichment(organism, 'WBGene', evidence_types='experimental', databases='WB',
-                                    aspects='biological_process', propagate_annotations=propagate_annotations,
+    _ = en.single_set_go_enrichment(organism, 'WBGene', propagate_annotations=propagate_annotations,
+                                    aspects='biological_process', evidence_types='experimental', databases='WB',
                                     return_nonsignificant=return_nonsignificant)
     plt.close('all')
 
@@ -537,10 +530,9 @@ def test_go_enrichment_single_set_api(organism, propagate_annotations, return_no
 def test_go_enrichment_api(organism, statistical_test, propagate_annotations, kwargs):
     genes = {'WBGene00048865', 'WBGene00000864', 'WBGene00000105', 'WBGene00001996', 'WBGene00011910', 'WBGene00268195'}
     en = FeatureSet(gene_set=genes, set_name='test_set')
-    _ = en.go_enrichment(organism, 'WBGene', statistical_test=statistical_test,
-                         propagate_annotations=propagate_annotations, evidence_types='IMP',
-                         aspects='biological_process', databases='WB', biotype='protein_coding',
-                         biotype_ref_path=__biotype_ref__, **kwargs)
+    _ = en.go_enrichment(organism, 'WBGene', statistical_test=statistical_test, biotype='protein_coding',
+                         biotype_ref_path=__biotype_ref__, propagate_annotations=propagate_annotations,
+                         aspects='biological_process', evidence_types='IMP', databases='WB', **kwargs)
     plt.close('all')
 
 
@@ -647,7 +639,7 @@ def test_translate_gene_ids(map_to, map_from, remove_unmapped_genes, expected, e
         return io.GeneIDTranslator({})
 
     monkeypatch.setattr(io, 'map_gene_ids', mock_map_gene_ids)
-    truth = FeatureSet(parsing.data_to_set(io.load_csv(expected, index_col=0).index), set_name=expected_name)
+    truth = FeatureSet(parsing.data_to_set(io.load_table(expected, index_col=0).index), set_name=expected_name)
     s = FeatureSet(
         {'WBGene00044022', 'WBGene00007075', 'WBGene00007066', 'WBGene00043988', 'WBGene00044951', 'WBGene00077503',
          'WBGene00007076', 'WBGene00007063', 'WBGene00043990', 'WBGene00007074', 'WBGene00007067', 'WBGene00007079',

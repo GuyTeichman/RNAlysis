@@ -1,14 +1,9 @@
 import hashlib
 import time
 from pathlib import Path
-from typing import Union, Iterable, Tuple
+from typing import Union, Iterable, Tuple, Literal
 
 from rnalysis.utils import io, generic
-
-try:
-    from typing import Literal
-except ImportError:
-    from typing_extensions import Literal
 
 
 def install_limma(r_installation_folder: Union[str, Path, Literal['auto']] = 'auto'):
@@ -35,7 +30,7 @@ def create_limma_script(data_path: Union[str, Path], design_mat_path: Union[str,
 
     with open(save_path, 'w') as outfile:
         baselines = {}
-        design_mat_df = io.load_csv(design_mat_path, index_col=0)
+        design_mat_df = io.load_table(design_mat_path, index_col=0)
 
         factor_names = {}
         factors_str = ''
@@ -103,7 +98,7 @@ def create_deseq2_script(data_path: Union[str, Path], design_mat_path: Union[str
         export_template = f.read()
 
     with open(save_path, 'w') as outfile:
-        design_mat_df = io.load_csv(design_mat_path, index_col=0)
+        design_mat_df = io.load_table(design_mat_path, index_col=0)
         formula = "~ " + " + ".join(design_mat_df.columns)
 
         run_template = run_template.replace("$COUNT_MATRIX", Path(data_path).as_posix())

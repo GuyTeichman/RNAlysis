@@ -2,13 +2,16 @@
 
 """Top-level package for RNA sequencing analysis pipeline."""
 import warnings
+import pandas as pd
+
+pd.set_option("mode.copy_on_write", True)
 
 __all__ = ['general', 'filtering', 'enrichment', '__attr_file_key__', '__biotype_file_key__', '__font_key__',
-           '__font_size_key__', '__stylesheet_key__', '__show_tutorial_key__','__databases_key__']
+           '__font_size_key__', '__stylesheet_key__', '__show_tutorial_key__', '__databases_key__']
 __name__ = "rnalysis"
 __author__ = "Guy Teichman"
 __email__ = "guyteichman@gmail.com"
-__version__ = "3.8.0"
+__version__ = "3.9.0"
 __license__ = "MIT"
 __attr_file_key__ = "attribute_reference_table"
 __biotype_file_key__ = "biotype_reference_table"

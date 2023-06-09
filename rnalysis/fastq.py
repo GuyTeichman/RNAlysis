@@ -13,11 +13,10 @@ import types
 import typing
 import warnings
 from pathlib import Path
-from typing import Union, List, Tuple
+from typing import Union, List, Tuple, Literal
 
 import pandas as pd
 from tqdm.auto import tqdm
-from typing_extensions import Literal
 
 from rnalysis import filtering
 from rnalysis.utils import validation, parsing, io, feature_counting, genome_annotation, generic
@@ -26,14 +25,16 @@ from rnalysis.utils.param_typing import PositiveInt, NonNegativeInt, Fraction, L
     LEGAL_BOWTIE2_PRESETS, LEGAL_BOWTIE2_MODES, LEGAL_QUAL_SCORE_TYPES, LEGAL_ALIGNMENT_SUFFIXES
 
 try:
-    import cutadapt
     from cutadapt.cli import main as cutadapt_main
 
     HAS_CUTADAPT = True
 
 except ImportError:  # pragma: no cover
     HAS_CUTADAPT = False
-    cutadapt_main = lambda x: None
+
+
+    def cutadapt_main(x):
+        return None
 
 
 def _func_type(func_type: Literal['single', 'paired', 'both']):
@@ -45,16 +46,10 @@ def _func_type(func_type: Literal['single', 'paired', 'both']):
 
 
 class _FASTQPipeline(generic.GenericPipeline, abc.ABC):
-    __slots__ = {'_is_paired_end': 'indicates whether it is single-end or paired-end Pipeline'}
-
-    def __init__(self, is_paired_end: bool = False):
-        self._is_paired_end = is_paired_end
-        super().__init__()
-
     def __str__(self):
         string = ''
         if len(self) > 0:
-            string += f":\n\t" + '\n\t'.join(
+            string += ":\n\t" + '\n\t'.join(
                 self._readable_func_signature(func, params[0], params[1]) for func, params in
                 zip(self.functions, self.params))
         return string
@@ -68,7 +63,7 @@ class _FASTQPipeline(generic.GenericPipeline, abc.ABC):
 
     @property
     def is_paired_end(self):
-        return self._is_paired_end
+        raise NotImplementedError
 
     @staticmethod
     def _is_paired_end_func(func: typing.Callable):
@@ -95,9 +90,6 @@ class _FASTQPipeline(generic.GenericPipeline, abc.ABC):
 
 
 class SingleEndPipeline(_FASTQPipeline):
-    def __init__(self):
-        super().__init__(is_paired_end=False)
-
     def __str__(self):
         return "Pipeline for sequence files (single-end)" + super().__str__()
 
@@ -115,8 +107,8 @@ class SingleEndPipeline(_FASTQPipeline):
         output_folder = Path(output_folder)
         return_values = []
 
-        assert input_folder.exists() and input_folder.is_dir(), f"input_folder does not exist!"
-        assert output_folder.exists() and output_folder.is_dir(), f"output_folder does not exist!"
+        assert input_folder.exists() and input_folder.is_dir(), "input_folder does not exist!"
+        assert output_folder.exists() and output_folder.is_dir(), "output_folder does not exist!"
 
         current_in_dir = input_folder
         for i, (func, (args, kwargs)) in enumerate(zip(self.functions, self.params)):
@@ -136,11 +128,12 @@ class SingleEndPipeline(_FASTQPipeline):
 
         return parsing.data_to_tuple(return_values)
 
+    @property
+    def is_paired_end(self):
+        return False
+
 
 class PairedEndPipeline(_FASTQPipeline):
-    def __init__(self):
-        super().__init__(is_paired_end=True)
-
     def __str__(self):
         return "Pipeline for sequence files (paired-end)" + super().__str__()
 
@@ -152,12 +145,16 @@ class PairedEndPipeline(_FASTQPipeline):
         d['metadata']['pipeline_type'] = 'paired'
         return d
 
+    @property
+    def is_paired_end(self):
+        return True
+
     @readable_name('Apply Pipeline to paired-end sequencing data')
     def apply_to(self, r1_files: List[str], r2_files: List[str], output_folder: Union[str, Path]):
         output_folder = Path(output_folder)
         return_values = []
 
-        assert output_folder.exists() and output_folder.is_dir(), f"output_folder does not exist!"
+        assert output_folder.exists() and output_folder.is_dir(), "output_folder does not exist!"
 
         current_r1, current_r2 = r1_files, r2_files
         current_in_dir = output_folder.joinpath('00_input')
@@ -281,7 +278,7 @@ def featurecounts_single_end(input_folder: Union[str, Path], output_folder: Unio
     :rtype: (filtering.CountFilter, pd.DataFrame, pd.DataFrame)
     """
     output_folder = Path(output_folder)
-    assert output_folder.exists(), f'Output folder does not exist!'
+    assert output_folder.exists(), 'Output folder does not exist!'
     kwargs = _parse_featurecounts_misc_args(input_folder, output_folder, gtf_file, gtf_feature_type, gtf_attr_name,
                                             stranded, min_mapping_quality, count_multi_mapping_reads,
                                             count_multi_overlapping_reads, ignore_secondary, count_fractionally,
@@ -382,7 +379,7 @@ def featurecounts_paired_end(input_folder: Union[str, Path], output_folder: Unio
     :rtype: (filtering.CountFilter, pd.DataFrame, pd.DataFrame)
     """
     output_folder = Path(output_folder)
-    assert output_folder.exists(), f'Output folder does not exist!'
+    assert output_folder.exists(), 'Output folder does not exist!'
 
     kwargs = _parse_featurecounts_misc_args(input_folder, output_folder, gtf_file, gtf_feature_type, gtf_attr_name,
                                             stranded, min_mapping_quality, count_multi_mapping_reads,
@@ -414,10 +411,10 @@ def _parse_featurecounts_misc_args(input_folder: Union[str, Path], output_folder
         f"Invalid value for 'report_read_asignment': {report_read_assignment}"
 
     gtf_file = Path(gtf_file)
-    assert gtf_file.exists() and gtf_file.is_file(), f"'gtf_file' does not exist!"
+    assert gtf_file.exists() and gtf_file.is_file(), "'gtf_file' does not exist!"
 
     input_folder = Path(input_folder)
-    assert input_folder.exists() and input_folder.is_dir(), f"input_folder does not exist!"
+    assert input_folder.exists() and input_folder.is_dir(), "input_folder does not exist!"
     files = []
     for item in _get_legal_samples(input_folder, 'alignment'):
         files.append(item.as_posix())
@@ -453,14 +450,14 @@ def _process_featurecounts_output(output_folder, new_sample_names):
 
     counts = filtering.CountFilter(counts_path)
     counts.df.columns = new_sample_names
-    io.save_csv(counts.df, counts_path)  # re-save to reflect changes in column names
+    io.save_table(counts.df, counts_path)  # re-save to reflect changes in column names
 
-    annotation = io.load_csv(annotation_path, 0)
-    io.save_csv(annotation, annotation_path)  # re-save to reflect changes in column names
+    annotation = io.load_table(annotation_path, 0)
+    io.save_table(annotation, annotation_path)  # re-save to reflect changes in column names
 
-    stats = io.load_csv(stats_path, 0)
+    stats = io.load_table(stats_path, 0)
     stats.columns = ['Status'] + new_sample_names
-    io.save_csv(stats, stats_path)  # re-save to reflect changes in column names
+    io.save_table(stats, stats_path)  # re-save to reflect changes in column names
 
     return counts, annotation, stats
 
@@ -512,10 +509,10 @@ def bowtie2_create_index(genome_fastas: List[Union[str, Path]], output_folder: U
     call = io.generate_base_call(command, bowtie2_installation_folder, shell=True, args=['--wrapper', 'basic-0'])
 
     if random_seed is not None:
-        assert isinstance(random_seed, int) and random_seed >= 0, f"'random_seed' must be an integer >=0 !"
+        assert isinstance(random_seed, int) and random_seed >= 0, "'random_seed' must be an integer >=0 !"
         call.extend(['--seed', str(random_seed)])
 
-    assert isinstance(threads, int) and threads > 0, f"'threads' must be an integer >0 !"
+    assert isinstance(threads, int) and threads > 0, "'threads' must be an integer >0 !"
     call.extend(['--threads', str(threads)])
 
     genome_fastas = [Path(pth) for pth in parsing.data_to_list(genome_fastas)]
@@ -524,7 +521,7 @@ def bowtie2_create_index(genome_fastas: List[Union[str, Path]], output_folder: U
     call.append(','.join([fasta.as_posix() for fasta in genome_fastas]))
 
     output_folder = Path(output_folder)
-    assert output_folder.exists(), f"output_folder does not exist!"
+    assert output_folder.exists(), "output_folder does not exist!"
 
     if index_name == 'auto':
         index_name = parsing.remove_suffixes(genome_fastas[0]).stem
@@ -704,7 +701,7 @@ def shortstack_align_smallrna(fastq_folder: Union[str, Path], output_folder: Uni
         call.append('--show_secondaries')
 
     if loci_file is not None:
-        assert locus is None, f"Cannot specify both 'loci_file' and 'locus'!"
+        assert locus is None, "Cannot specify both 'loci_file' and 'locus'!"
         loci_file = Path(loci_file)
         assert loci_file.exists() and loci_file.is_file(), \
             f"File 'loci_file' at {loci_file.as_posix()} does not exist!"
@@ -748,7 +745,7 @@ def shortstack_align_smallrna(fastq_folder: Union[str, Path], output_folder: Uni
     assert isinstance(pad, int) and pad > 0, "'pad' must be a positive integer!"
     call.extend(['--pad', str(pad)])
 
-    assert isinstance(threads, int) and threads >= 0, f"'threads' must be a non-negative int!"
+    assert isinstance(threads, int) and threads >= 0, "'threads' must be a non-negative int!"
     call.extend(['--threads', str(threads)])
 
     legal_samples = _get_legal_samples(fastq_folder)
@@ -947,9 +944,9 @@ def bowtie2_align_paired_end(r1_files: List[str], r2_files: List[str], output_fo
                                     ignore_qualities, quality_score_type, random_seed, threads)
 
     assert isinstance(min_fragment_length, int) and min_fragment_length >= 0, \
-        f"'min_fragment_len' must be a non-negative int!"
+        "'min_fragment_len' must be a non-negative int!"
     assert isinstance(max_fragment_length, int) and max_fragment_length >= 0, \
-        f"'max_fragment_len' must be a non-negative int!"
+        "'max_fragment_len' must be a non-negative int!"
     call.extend(['-I', str(min_fragment_length)])
     call.extend(['-X', str(max_fragment_length)])
 
@@ -1012,9 +1009,9 @@ def _parse_bowtie2_misc_args(output_folder, index_file: str, bowtie2_installatio
     if ignore_qualities:
         call.append('--ignore-quals')
 
-    assert isinstance(random_seed, int) and random_seed >= 0, f"'random_seed' must be a non-negative int!"
+    assert isinstance(random_seed, int) and random_seed >= 0, "'random_seed' must be a non-negative int!"
     call.extend(['--seed', str(random_seed)])
-    assert isinstance(threads, int) and threads >= 0, f"'threads' must be a non-negative int!"
+    assert isinstance(threads, int) and threads >= 0, "'threads' must be a non-negative int!"
     call.extend(['--threads', str(threads)])
 
     call.extend(['-x', index_file.as_posix()])
@@ -1045,7 +1042,7 @@ def kallisto_create_index(transcriptome_fasta: Union[str, Path],
     :type make_unique: bool (default=False)
     """
     assert isinstance(kmer_length, int), f"parameter 'kmer_length' must be an integer. Instead, got {type(kmer_length)}"
-    assert 0 < kmer_length <= 31 and kmer_length % 2 == 1, f"'kmer_length' must be an odd integer between 1 and 31"
+    assert 0 < kmer_length <= 31 and kmer_length % 2 == 1, "'kmer_length' must be an odd integer between 1 and 31"
 
     call = io.generate_base_call('kallisto', kallisto_installation_folder, 'version')
     call.append('index')
@@ -1288,9 +1285,9 @@ def _process_kallisto_outputs(output_folder, gtf_file):
     counts, tpm = _merge_kallisto_outputs(output_folder)
     genes_scaled_tpm = _sum_transcripts_to_genes(tpm, counts, gtf_file)
 
-    io.save_csv(counts, output_folder.joinpath('transcript_counts.csv'))
-    io.save_csv(tpm, output_folder.joinpath('transcript_tpm.csv'))
-    io.save_csv(genes_scaled_tpm, output_folder.joinpath('kallisto_output_scaled_per_gene.csv'))
+    io.save_table(counts, output_folder.joinpath('transcript_counts.csv'))
+    io.save_table(tpm, output_folder.joinpath('transcript_tpm.csv'))
+    io.save_table(genes_scaled_tpm, output_folder.joinpath('kallisto_output_scaled_per_gene.csv'))
 
     return filtering.CountFilter.from_dataframe(genes_scaled_tpm, 'kallisto_output_scaled_per_gene',
                                                 is_normalized=False)
@@ -1302,7 +1299,7 @@ def _parse_kallisto_misc_args(output_folder, index_file: str, kallisto_installat
     output_folder = Path(output_folder)
     index_file = Path(index_file)
     assert output_folder.exists(), "supplied 'output_folder' does not exist!"
-    assert index_file.exists(), f"supplied 'index_file' does not exist!"
+    assert index_file.exists(), "supplied 'index_file' does not exist!"
     assert isinstance(stranded, str) and stranded.lower() in ["no", "forward", "reverse"], \
         f"invalid value for parameter 'stranded': {stranded}"
 
@@ -1346,7 +1343,7 @@ def _merge_kallisto_outputs(output_folder: Union[str, Path]):
         if item.is_dir():
             abundance_path = item.joinpath('abundance.tsv')
             if abundance_path.exists():
-                this_df = io.load_csv(abundance_path, index_col=0)
+                this_df = io.load_table(abundance_path, index_col=0)
                 sample_name = item.name
                 counts[sample_name] = this_df['est_counts']
                 tpm[sample_name] = this_df['tpm']
@@ -1373,6 +1370,8 @@ def _sum_transcripts_to_genes(tpm: pd.DataFrame, counts: pd.DataFrame, gtf_path:
                         continue
                     scaled_tpm = tpm_by_gene.multiply(library_sizes, axis=1)
                     pbar.update(8)
+                    if isinstance(scaled_tpm, pd.Series):
+                        scaled_tpm = scaled_tpm.to_frame()
                     return scaled_tpm
 
     raise ValueError("Failed to map transcripts to genes with the given GTF file!")
@@ -1433,9 +1432,9 @@ def trim_adapters_single_end(fastq_folder: Union[str, Path], output_folder: Unio
     :type gzip_output: bool (default=False)
     """
     if not HAS_CUTADAPT:
-        warnings.warn(f"Python package 'cutadapt' is not installed. \n"
-                      f"If you want to use the adapter trimming feature, "
-                      f"please install python package 'cutadapt' and try again. ")
+        warnings.warn("Python package 'cutadapt' is not installed. \n"
+                      "If you want to use the adapter trimming feature, "
+                      "please install python package 'cutadapt' and try again. ")
         return
 
     try:
@@ -1564,9 +1563,9 @@ def trim_adapters_paired_end(r1_files: List[Union[str, Path]], r2_files: List[Un
     :type gzip_output: bool (default=False)
     """
     if not HAS_CUTADAPT:
-        warnings.warn(f"Python package 'cutadapt' is not installed. \n"
-                      f"If you want to use the adapter trimming feature, "
-                      f"please install python package 'cutadapt' and try again. ")
+        warnings.warn("Python package 'cutadapt' is not installed. \n"
+                      "If you want to use the adapter trimming feature, "
+                      "please install python package 'cutadapt' and try again. ")
         return
     assert len(r1_files) == len(r2_files), f"Got an uneven number of R1 and R2 files: " \
                                            f"{len(r1_files)} and {len(r2_files)} respectively"

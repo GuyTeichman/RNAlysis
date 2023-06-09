@@ -92,7 +92,7 @@ def reset_settings_file():
         print("No local settings file exists. ")
     else:
         settings_pth.unlink()
-        print(f"Local settings file was deleted. ")
+        print("Local settings file was deleted. ")
 
 
 def set_attr_ref_table_path(path: str = None):
@@ -155,8 +155,8 @@ def save_to_csv(df: Union[pd.DataFrame, Filter], filename: str):
     :param filename: name for the saved file. Specify full path to control the directory where the file will be saved.
     """
     if isinstance(df, pd.DataFrame):
-        io.save_csv(df, filename)
+        io.save_table(df, filename)
     elif validation.isinstanceinh(df, Filter):
-        io.save_csv(df.df, filename)
+        io.save_table(df.df, filename)
     else:
         raise TypeError(f"Object of type {type(df)} cannot be saved to csv")

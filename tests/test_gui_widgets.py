@@ -238,49 +238,32 @@ def test_get_val_from_widget_bad_widget(qtbot, widget_class):
 def test_HelpButton_param_help(qtbot, monkeypatch):
     param_name = 'myparam'
     desc = 'mydesc'
-    help_shown = []
-
-    def mock_show_text(pos, text):
-        assert param_name in text
-        assert desc in text
-        assert pos == QtGui.QCursor.pos()
-        help_shown.append(1)
-
-    monkeypatch.setattr(QtWidgets.QToolTip, 'showText', mock_show_text)
 
     qtbot, widget = widget_setup(qtbot, HelpButton)
-    widget.connect_param_help(param_name, desc)
+    widget.set_param_help(param_name, desc)
 
-    qtbot.mouseClick(widget, LEFT_CLICK)
-
-    assert help_shown == [1]
+    assert widget.toolTip() == '<b>myparam:</b> <br>mydesc'
 
 
 def test_HelpButton_desc_help(qtbot, monkeypatch):
     desc = 'mydesc'
-    help_shown = []
 
-    def mock_show_text(pos, text):
-        assert text == desc
-        assert pos == QtGui.QCursor.pos()
-        help_shown.append(1)
 
-    monkeypatch.setattr(QtWidgets.QToolTip, 'showText', mock_show_text)
 
     qtbot, widget = widget_setup(qtbot, HelpButton)
-    widget.connect_desc_help(desc)
+    widget.set_desc_help(desc)
 
     qtbot.mouseClick(widget, LEFT_CLICK)
 
-    assert help_shown == [1]
+    assert widget.toolTip() == desc
 
 
 def test_ComparisonPicker_init(qtbot):
-    _ = widget_setup(qtbot, ComparisonPicker, io.load_csv('tests/test_files/test_design_matrix.csv', 0))
+    _ = widget_setup(qtbot, ComparisonPicker, io.load_table('tests/test_files/test_design_matrix.csv', 0))
 
 
 def test_ComparisonPicker_get_value(qtbot):
-    qtbot, widget = widget_setup(qtbot, ComparisonPicker, io.load_csv('tests/test_files/test_design_matrix.csv', 0))
+    qtbot, widget = widget_setup(qtbot, ComparisonPicker, io.load_table('tests/test_files/test_design_matrix.csv', 0))
     assert widget.value() == ('condition', 'cond1', 'cond1')
 
     widget.factor.setCurrentText('replicate')
@@ -291,12 +274,12 @@ def test_ComparisonPicker_get_value(qtbot):
 
 
 def test_ComparisonPickerGroup_init(qtbot):
-    _ = widget_setup(qtbot, ComparisonPickerGroup, io.load_csv('tests/test_files/test_design_matrix.csv', 0))
+    _ = widget_setup(qtbot, ComparisonPickerGroup, io.load_table('tests/test_files/test_design_matrix.csv', 0))
 
 
 def test_ComparisonPickerGroup_add_widget(qtbot):
     qtbot, widget = widget_setup(qtbot, ComparisonPickerGroup,
-                                 io.load_csv('tests/test_files/test_design_matrix.csv', 0))
+                                 io.load_table('tests/test_files/test_design_matrix.csv', 0))
     widget.add_comparison_widget()
     assert len(widget.inputs) == 2
     widget.add_comparison_widget()
@@ -305,7 +288,7 @@ def test_ComparisonPickerGroup_add_widget(qtbot):
 
 def test_ComparisonPickerGroup_remove_widget(qtbot):
     qtbot, widget = widget_setup(qtbot, ComparisonPickerGroup,
-                                 io.load_csv('tests/test_files/test_design_matrix.csv', 0))
+                                 io.load_table('tests/test_files/test_design_matrix.csv', 0))
     widget.remove_comparison_widget()
     assert len(widget.inputs) == 0
     widget.remove_comparison_widget()
@@ -314,7 +297,7 @@ def test_ComparisonPickerGroup_remove_widget(qtbot):
 
 def test_ComparisonPickerGroup_get_comparison_values(qtbot):
     qtbot, widget = widget_setup(qtbot, ComparisonPickerGroup,
-                                 io.load_csv('tests/test_files/test_design_matrix.csv', 0))
+                                 io.load_table('tests/test_files/test_design_matrix.csv', 0))
     widget.add_comparison_widget()
 
     widget.inputs[0].factor.setCurrentText('replicate')
@@ -1168,7 +1151,7 @@ def test_worker_output_error():
     predecessor_ids = [2, 3]
     args_to_emit = ('foo', 'bar')
     output = WorkerOutput(None, partial, job_id, predecessor_ids, *args_to_emit, err=ZeroDivisionError())
-    assert output.raised_exception != False and isinstance(output.raised_exception, Exception)
+    assert output.raised_exception is not False and isinstance(output.raised_exception, Exception)
 
 
 def test_worker():
@@ -1233,7 +1216,7 @@ def test_AltTqdm_iter_signals(qtbot):
     bar_updates = []
     iterator = AltTQDM(range(5))
     iterator.barUpdate.connect(bar_updates.append)
-    with qtbot.waitSignal(iterator.barFinished) as blocker:
+    with qtbot.waitSignal(iterator.barFinished):
         for i in iterator:
             assert len(bar_updates) == i + 1
             if i == 0:
@@ -1273,7 +1256,7 @@ def test_AltParallel_signals(qtbot):
     bar_updates = []
     parallel = AltParallel(n_jobs=1, desc='description', total=5)
     parallel.barUpdate.connect(bar_updates.append)
-    with qtbot.waitSignal(parallel.barFinished) as blocker:
+    with qtbot.waitSignal(parallel.barFinished):
         res = parallel(joblib.delayed(_power)(a, b) for a, b in zip(range(5), [2, 2, 2, 2, 2]))
     assert bar_updates == [1, 1, 1, 1, 1]
     assert res == [0, 1, 4, 9, 16]

@@ -41,6 +41,8 @@ rnalysis.filtering.DESeqFilter
     DESeqFilter.number_filters
     DESeqFilter.print_features
     DESeqFilter.save_csv
+    DESeqFilter.save_parquet
+    DESeqFilter.save_table
     DESeqFilter.sort
     DESeqFilter.split_by_attribute
     DESeqFilter.split_by_percentile

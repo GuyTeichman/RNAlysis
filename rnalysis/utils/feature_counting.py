@@ -1,7 +1,7 @@
 from pathlib import Path
 from typing import Union
 
-from typing_extensions import Literal
+from typing import Literal
 
 from rnalysis.utils import io, parsing
 

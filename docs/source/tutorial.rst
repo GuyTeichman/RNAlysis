@@ -445,7 +445,7 @@ Let's set the statistical test to 'hypergeometric', the organism to 'Caenorhabdi
 
 We will leave the rest of the settings on the default values, but keep in mind that you can customize the analysis to a significant degree: using different statistical tests (including a statistical test that doesn't require a background gene set), using only specific types of GO annotations, propagating the annotations differently, etc'. You can read more about these options in the complete user guide.
 
-Scroll to the bottom of thw window and click on the "run" button to run the analysis:
+Scroll to the bottom of the window and click on the "run" button to run the analysis:
 
 .. image:: /tutorial_screenshots/01h04_go_enrichment.png
   :width: 600
@@ -1144,7 +1144,7 @@ Let's set the statistical test to 'randomization', and then set the name of our 
   :width: 600
   :alt: Enrichment analysis - set the attributes to enrich for
 
-Scroll to the bottom of thw window and click on the "run" button to run the analysis:
+Scroll to the bottom of the window and click on the "run" button to run the analysis:
 
 .. image:: /tutorial_screenshots/02h06_enrichment.png
   :width: 600

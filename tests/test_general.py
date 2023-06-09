@@ -87,7 +87,7 @@ def test_reset_settings_file():
 
 
 def test_save_to_csv(monkeypatch):
-    monkeypatch.setattr('rnalysis.utils.io.save_csv',
+    monkeypatch.setattr('rnalysis.utils.io.save_table',
                         lambda x, y: None if isinstance(x, pd.DataFrame) else (_ for _ in ()).throw(AssertionError))
     df = pd.DataFrame([[1, 2, 3], [4, 5, 6]])
     save_to_csv(df, 'filename')

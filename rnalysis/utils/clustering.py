@@ -58,9 +58,9 @@ class BinaryFormatClusters:
     def _validate_clustering_solutions(clustering_solutions: List[np.ndarray]):
         assert isinstance(clustering_solutions, list), \
             f"'clustering_solutions' must be a list; instead got {type(clustering_solutions)}"
-        assert len(clustering_solutions) > 0, f"'clustering_solutions' must contain at least one clustering solution"
+        assert len(clustering_solutions) > 0, "'clustering_solutions' must contain at least one clustering solution"
         assert validation.isinstanceiter(clustering_solutions, np.ndarray), \
-            f"'clustering_solutions' must exclusively contain numpy arrays"
+            "'clustering_solutions' must exclusively contain numpy arrays"
         for solution in clustering_solutions:
             # in each clustering solution, every feature must be included in one cluster at most
             # clustering algorithms such as HDBSCAN can classify some features as 'noise',
@@ -475,13 +475,16 @@ class ClusteringRunner:
         final_df['labels'] = pd.Series(labels)
 
         pc_var = pca_obj.explained_variance_ratio_
-
         pc1_var = pc_var[0]
         pc2_var = pc_var[1]
         final_df = final_df[final_df['labels'] != -1]
-        final_df = final_df[['Principal component 1', f'Principal component 2', 'labels']]
-        fig = plt.figure(figsize=(9, 9))
+        final_df = final_df[['Principal component 1', 'Principal component 2', 'labels']]
+
+        dims = (15, 15 * (pc2_var / pc1_var))
+        fig = plt.figure(figsize=dims, constrained_layout=True)
+
         ax = fig.add_subplot(1, 1, 1)
+        ax.set_aspect(pc2_var / pc1_var)
         ax.grid(True)
         ax.set_xlabel(f'{final_df.columns[0]} (explained {pc1_var * 100 :.2f}%)', fontsize=15)
         ax.set_ylabel(f'{final_df.columns[1]} (explained {pc2_var * 100 :.2f}%)', fontsize=15)
@@ -493,9 +496,8 @@ class ClusteringRunner:
             ax.scatter(final_df[final_df['labels'] == cluster].iloc[:, 0],
                        final_df[final_df['labels'] == cluster].iloc[:, 1],
                        label=f'Cluster {cluster + 1}', c=color_opts[cluster], s=20, alpha=0.4)
-        ax.legend(title="Clusters")
+        ax.legend(title="Clusters", draggable=True)
         ax.grid(True)
-        plt.tight_layout()
         plt.show()
         return fig
 
@@ -713,7 +715,7 @@ class ClusteringRunnerWithNClusters(ClusteringRunner, ABC):
     def _plot_gap_statistic(n_clusters_range, log_disp_obs, log_disp_exp, gap_scores, gap_error, n_clusters: int,
                             n_clusters_ind
                             ) -> plt.Figure:
-        fig, (ax_inertia, ax) = plt.subplots(1, 2, figsize=(14, 9))
+        fig, (ax_inertia, ax) = plt.subplots(1, 2, figsize=(14, 9), constrained_layout=True)
         ax_inertia.plot(n_clusters_range, log_disp_obs, '-o')
         ax_inertia.plot(n_clusters_range, log_disp_exp, '-o')
         ax_inertia.legend(['Observed', 'Expected'])
@@ -729,8 +731,8 @@ class ClusteringRunnerWithNClusters(ClusteringRunner, ABC):
                     xytext=(n_clusters, (gap_scores[n_clusters_ind] - gap_error[n_clusters_ind]) / 1.2),
                     arrowprops=dict(facecolor='black'))
         ax.set_xticks(n_clusters_range)
-        sns.despine()
-        plt.tight_layout()
+        generic.despine(ax)
+        generic.despine(ax_inertia)
         plt.show()
         return fig
 
@@ -846,7 +848,7 @@ class KMedoidsRunner(ClusteringRunnerWithNClusters):
         self.max_iter = max_iter
         self.clusterer_kwargs = dict(n_init=self.n_init, max_iter=self.max_iter, random_state=self.random_seed)
         super(KMedoidsRunner, self).__init__(data, power_transform, n_clusters, max_n_clusters_estimate, plot_style,
-                                             split_plots,  metric, parallel_backend)
+                                             split_plots, metric, parallel_backend)
 
     def _run(self, plot: bool = True) -> List[ArbitraryClusterer]:
         self.clusterers = []
@@ -955,10 +957,11 @@ class HDBSCANRunner(ClusteringRunner):
                  parallel_backend='loky'):
         self.return_probabilities = return_probabilities
         if not HAS_HDBSCAN:
+            self.parallel_backend = parallel_backend
             return
         assert isinstance(metric, str)
         assert isinstance(min_cluster_size, int) and min_cluster_size > 1
-        assert isinstance(min_samples, int) and min_samples >= 1
+        assert min_samples is None or (isinstance(min_samples, int) and min_samples >= 1)
         assert isinstance(cluster_selection_epsilon, (int, float))
         assert isinstance(cluster_selection_method, str) and cluster_selection_method.lower() in {'eom', 'leaf'}
 
@@ -969,12 +972,12 @@ class HDBSCANRunner(ClusteringRunner):
         self.clusterer_kwargs = dict(min_cluster_size=self.min_cluster_size, min_samples=self.min_samples,
                                      cluster_selection_epsilon=self.cluster_selection_epsilon,
                                      cluster_selection_method=self.cluster_selection_method)
-        super().__init__(data, power_transform,  metric, plot_style, split_plots, parallel_backend)
+        super().__init__(data, power_transform, metric, plot_style, split_plots, parallel_backend)
 
     @staticmethod
     def _missing_dependency_warning():
-        warnings.warn(f"Package 'hdbscan' is not installed. \n"
-                      f"If you want to use HDBSCAN clustering, please install package 'hdbscan' and try again. ")
+        warnings.warn("Package 'hdbscan' is not installed. \n"
+                      "If you want to use HDBSCAN clustering, please install package 'hdbscan' and try again. ")
 
     def _run(self, plot: bool = True) -> Union[
         List[ArbitraryClusterer], Tuple[List[ArbitraryClusterer], np.ndarray], List[None]]:
@@ -993,7 +996,6 @@ class HDBSCANRunner(ClusteringRunner):
         # extract clustering result
         n_clusters = clusterer.n_clusters_
         probabilities = clusterer.probabilities_
-        unclustered = np.count_nonzero(clusterer.labels_ == -1)
 
         if n_clusters != 0:
             # generate standardized data for plots

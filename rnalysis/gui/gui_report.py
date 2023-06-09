@@ -4,10 +4,10 @@ import shutil
 import typing
 import webbrowser
 from pathlib import Path
+from typing import Literal
 
 import networkx
 from pyvis.network import Network
-from typing_extensions import Literal
 
 from rnalysis import __version__
 from rnalysis.utils import parsing, io
@@ -27,7 +27,6 @@ class Node:
         self._node_type = node_type
         self._is_active = True
         self._filename = None if filename is None else Path(filename)
-        self._filename = filename
         if node_type in self.DATA_TYPES:
             self._node_name += f' (#{node_id})'
 
@@ -56,7 +55,7 @@ class Node:
         return self._is_active
 
     @property
-    def filename(self) -> str:
+    def filename(self) -> typing.Union[None, Path]:
         return self._filename
 
     def set_active(self, is_active: bool):
@@ -102,8 +101,12 @@ class ReportGenerator:
                                 font={'size': 16}, widthConstraint=100, **kwargs)
             y += step
 
-    def add_node(self, name: str, node_id: int, predecessors: typing.List[int] = (0,), popup_element: str = '',
+    def add_node(self, name: str, node_id: int, predecessors: typing.List[int] = tuple(), popup_element: str = '',
                  node_type: Literal[tuple(NODE_STYLES)] = 'Other table', filename: str = None):
+        # parentless nodes should be attached to the root node
+        if len(predecessors) == 0 and node_id > 0:
+            predecessors = [0]
+
         if node_id in self.nodes:
             if self.nodes[node_id].is_active:
                 return
@@ -220,9 +223,17 @@ class ReportGenerator:
         for ind, node in self.nodes.items():
             if ind == 0:  # skip the root node
                 continue
-            if node.is_active and node.filename is not None:
-                content: bytes = io.load_cached_gui_file(node.filename, load_as_obj=False)
-                if content is not None:
-                    with open(data_path.joinpath(node.filename), 'wb') as f:
-                        f.write(content)
+            if not node.is_active or node.filename is None:  # skip inactive nodes, or nodes with no data file
+                continue
+
+            outfile_path = data_path.joinpath(node.filename)
+            suffix = node.filename.suffix.lower()
+            if suffix == '.parquet':  # convert parquet files to csv files so users can open them with Excel and such
+                df = io.load_cached_gui_file(node.filename)
+                io.save_table(df, outfile_path.with_suffix('.csv'))
+
+            content: bytes = io.load_cached_gui_file(node.filename, load_as_obj=False)
+            if content is not None:
+                with open(outfile_path, 'wb') as f:
+                    f.write(content)
         webbrowser.open(save_file)

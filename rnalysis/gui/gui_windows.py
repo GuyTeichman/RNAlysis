@@ -383,7 +383,7 @@ class DataFrameView(DataView):
                                                             "Tab-Separated Values (*.tsv);;"
                                                             "All Files (*)")
         if filename:
-            io.save_csv(self.data, filename)
+            io.save_table(self.data, filename)
             print(f"Successfully saved at {io.get_datetime()} under {filename}")
 
 
@@ -841,7 +841,7 @@ class FuncExternalWindow(gui_widgets.MinMaxDialog):
             self.param_grid.addWidget(help_button, i, 2)
             self.param_grid.addWidget(label, i, 0)
             self.param_grid.addWidget(self.param_widgets[name], i, 1)
-            help_button.connect_param_help(name, this_desc)
+            help_button.set_param_help(name, this_desc)
             i += 1
 
         self.param_grid.setRowStretch(i, 1)
