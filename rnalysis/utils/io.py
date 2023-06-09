@@ -328,6 +328,8 @@ def save_table(df: pd.DataFrame, filename: Union[str, Path], postfix: str = None
         assert isinstance(postfix, str), "'postfix' must be either str or None!"
     new_fname = os.path.join(fname.parent.absolute(), f"{fname.stem}{postfix}{fname.suffix}")
     if fname.suffix.lower() == '.parquet':
+        if isinstance(df, pd.Series):
+            df = df.to_frame()
         df.to_parquet(new_fname, index=index)
     else:
         df.to_csv(new_fname, header=True, index=index)
