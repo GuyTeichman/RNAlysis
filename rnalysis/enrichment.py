@@ -473,6 +473,7 @@ class FeatureSet(set):
                       excluded_qualifiers: Union[Literal[GO_QUALIFIERS], Iterable[Literal[GO_QUALIFIERS]]] = 'not',
                       exclude_unannotated_genes: bool = True, return_nonsignificant: bool = False,
                       save_csv: bool = False, fname=None, return_fig: bool = False, plot_horizontal: bool = True,
+                      show_expected: bool = False, plot_style: Literal['bar', 'lollipop'] = 'bar',
                       plot_ontology_graph: bool = True,
                       ontology_graph_format: Literal[param_typing.GRAPHVIZ_FORMATS] = 'none',
                       randomization_reps: PositiveInt = 10000, random_seed: Union[int, None] = None,
@@ -573,6 +574,11 @@ class FeatureSet(set):
         :type plot_horizontal: bool (default=True)
         :param plot_horizontal: if True, results will be plotted with a horizontal bar plot. \
         Otherwise, results will be plotted with a vertical plot.
+        :param show_expected: if True, the observed/expected values will be shown on the plot.
+        :type show_expected: bool (default=False)
+        :param plot_style: style for the plot. Either 'bar' for a bar plot or 'lollipop' for a lollipop plot \
+        in which the lollipop size indicates the size of the observed gene set.
+        :type plot_style: 'bar' or 'lollipop' (default='bar')
         :type random_seed: non-negative integer (default=None)
         :type random_seed: if using a randomization test, determine the random seed used to initialize \
         the pseudorandom generator for the randomization test. \
@@ -626,7 +632,8 @@ class FeatureSet(set):
                                                       fname, return_fig, plot_horizontal, plot_ontology_graph,
                                                       self.set_name, parallel_backend, statistical_test, biotype,
                                                       background_genes, biotype_ref_path, exclude_unannotated_genes,
-                                                      ontology_graph_format=ontology_graph_format, **kwargs)
+                                                      ontology_graph_format=ontology_graph_format,
+                                                      plot_style=plot_style, show_expected=show_expected, **kwargs)
 
         if gui_mode:
             return runner.run(plot=False), runner
@@ -642,6 +649,7 @@ class FeatureSet(set):
                         biotype_ref_path: Union[str, Path, Literal['predefined']] = 'predefined',
                         exclude_unannotated_genes: bool = True, return_nonsignificant: bool = False,
                         save_csv: bool = False, fname=None, return_fig: bool = False, plot_horizontal: bool = True,
+                        show_expected: bool = False, plot_style: Literal['bar', 'lollipop'] = 'bar',
                         plot_pathway_graphs: bool = True,
                         pathway_graphs_format: Literal[param_typing.GRAPHVIZ_FORMATS] = 'none',
                         randomization_reps: PositiveInt = 10000, random_seed: Union[int, None] = None,
@@ -700,6 +708,11 @@ class FeatureSet(set):
         :type plot_horizontal: bool (default=True)
         :param plot_horizontal: if True, results will be plotted with a horizontal bar plot. \
         Otherwise, results will be plotted with a vertical plot.
+        :param show_expected: if True, the observed/expected values will be shown on the plot.
+        :type show_expected: bool (default=False)
+        :param plot_style: style for the plot. Either 'bar' for a bar plot or 'lollipop' for a lollipop plot \
+        in which the lollipop size indicates the size of the observed gene set.
+        :type plot_style: 'bar' or 'lollipop' (default='bar')
         :type plot_pathway_graphs: bool (default=True)
         :param plot_pathway_graphs: if True, will generate pathway graphs depicting the significant KEGG pathways.
         :type pathway_graphs_format: 'pdf', 'png', 'svg', or None (default=None)
@@ -749,7 +762,8 @@ class FeatureSet(set):
                                                         plot_horizontal, plot_pathway_graphs, self.set_name,
                                                         parallel_backend, statistical_test, biotype, background_genes,
                                                         biotype_ref_path, exclude_unannotated_genes,
-                                                        pathway_graphs_format=pathway_graphs_format, **kwargs)
+                                                        pathway_graphs_format=pathway_graphs_format,
+                                                        plot_style=plot_style, show_expected=show_expected, **kwargs)
 
         if gui_mode:
             return runner.run(plot=False), runner
@@ -765,11 +779,12 @@ class FeatureSet(set):
                                 biotype_ref_path: Union[str, Path, Literal['predefined']] = 'predefined',
                                 exclude_unannotated_genes: bool = True, return_nonsignificant: bool = True,
                                 save_csv: bool = False, fname=None, return_fig: bool = False,
-                                plot_horizontal: bool = True, randomization_reps: PositiveInt = 10000,
+                                plot_horizontal: bool = True,
+                                show_expected: bool = False, plot_style: Literal['bar', 'lollipop'] = 'bar',
+                                randomization_reps: PositiveInt = 10000,
                                 random_seed: Union[int, None] = None,
                                 parallel_backend: Literal[PARALLEL_BACKENDS] = 'loky',
-                                gui_mode: bool = False
-                                ) -> Union[pd.DataFrame, Tuple[pd.DataFrame, plt.Figure]]:
+                                gui_mode: bool = False) -> Union[pd.DataFrame, Tuple[pd.DataFrame, plt.Figure]]:
         """
         Calculates enrichment and depletion of the FeatureSet for user-defined attributes against a background set.\
         The attributes are drawn from an Attribute Reference Table. \
@@ -821,6 +836,11 @@ class FeatureSet(set):
         :type plot_horizontal: bool (default=True)
         :param plot_horizontal: if True, results will be plotted with a horizontal bar plot. Otherwise, results \
         will be plotted with a vertical plot.
+        :param show_expected: if True, the observed/expected values will be shown on the plot.
+        :type show_expected: bool (default=False)
+        :param plot_style: style for the plot. Either 'bar' for a bar plot or 'lollipop' for a lollipop plot \
+        in which the lollipop size indicates the size of the observed gene set.
+        :type plot_style: 'bar' or 'lollipop' (default='bar')
         :type random_seed: non-negative integer (default=None)
         :type random_seed: if using a randomization test, determine the random seed used to initialize \
         the pseudorandom generator for the randomization test. \
@@ -865,7 +885,8 @@ class FeatureSet(set):
                                                     return_nonsignificant, save_csv, fname, return_fig, plot_horizontal,
                                                     self.set_name, parallel_backend, statistical_test, biotype,
                                                     background_genes, biotype_ref_path, exclude_unannotated_genes,
-                                                    single_set=False, random_seed=random_seed, **kwargs)
+                                                    single_set=False, random_seed=random_seed, plot_style=plot_style,
+                                                    show_expected=show_expected, **kwargs)
         if gui_mode:
             return runner.run(plot=False), runner
         return runner.run()
@@ -1103,6 +1124,7 @@ class RankedSet(FeatureSet):
                                  exclude_unannotated_genes: bool = True, return_nonsignificant: bool = False,
                                  save_csv: bool = False, fname=None,
                                  return_fig: bool = False, plot_horizontal: bool = True,
+                                 show_expected: bool = False, plot_style: Literal['bar', 'lollipop'] = 'bar',
                                  plot_ontology_graph: bool = True,
                                  ontology_graph_format: Literal[param_typing.GRAPHVIZ_FORMATS] = 'none',
                                  parallel_backend: Literal[PARALLEL_BACKENDS] = 'loky',
@@ -1190,6 +1212,11 @@ class RankedSet(FeatureSet):
         :type plot_horizontal: bool (default=True)
         :param plot_horizontal: if True, results will be plotted with a horizontal bar plot. \
         Otherwise, results will be plotted with a vertical plot.
+        :param show_expected: if True, the observed/expected values will be shown on the plot.
+        :type show_expected: bool (default=False)
+        :param plot_style: style for the plot. Either 'bar' for a bar plot or 'lollipop' for a lollipop plot \
+        in which the lollipop size indicates the size of the observed gene set.
+        :type plot_style: 'bar' or 'lollipop' (default='bar')
         :type plot_ontology_graph: bool (default=True)
         :param plot_ontology_graph: if True, will generate an ontology graph depicting the \
         significant GO terms and their parent nodes.
@@ -1233,7 +1260,8 @@ class RankedSet(FeatureSet):
                                                       self.set_name,
                                                       parallel_backend=parallel_backend, enrichment_func_name='xlmhg',
                                                       exclude_unannotated_genes=exclude_unannotated_genes,
-                                                      single_set=True, ontology_graph_format=ontology_graph_format)
+                                                      single_set=True, ontology_graph_format=ontology_graph_format,
+                                                      plot_style=plot_style, show_expected=show_expected)
 
         if gui_mode:
             return runner.run(plot=False), runner
@@ -1246,6 +1274,7 @@ class RankedSet(FeatureSet):
                                    alpha: param_typing.Fraction = 0.05, exclude_unannotated_genes: bool = True,
                                    return_nonsignificant: bool = False, save_csv: bool = False,
                                    fname=None, return_fig: bool = False, plot_horizontal: bool = True,
+                                   show_expected: bool = False, plot_style: Literal['bar', 'lollipop'] = 'bar',
                                    plot_pathway_graphs: bool = True,
                                    pathway_graphs_format: Literal[param_typing.GRAPHVIZ_FORMATS] = 'none',
                                    parallel_backend: Literal[PARALLEL_BACKENDS] = 'loky', gui_mode: bool = False
@@ -1291,6 +1320,11 @@ class RankedSet(FeatureSet):
         :type plot_horizontal: bool (default=True)
         :param plot_horizontal: if True, results will be plotted with a horizontal bar plot. \
         Otherwise, results will be plotted with a vertical plot.
+        :param show_expected: if True, the observed/expected values will be shown on the plot.
+        :type show_expected: bool (default=False)
+        :param plot_style: style for the plot. Either 'bar' for a bar plot or 'lollipop' for a lollipop plot \
+        in which the lollipop size indicates the size of the observed gene set.
+        :type plot_style: 'bar' or 'lollipop' (default='bar')
         :type plot_pathway_graphs: bool (default=True)
         :param plot_pathway_graphs: if True, will generate pathway graphs depicting the significant KEGG pathways.
         :type pathway_graphs_format: 'pdf', 'png', 'svg', or None (default=None)
@@ -1330,7 +1364,8 @@ class RankedSet(FeatureSet):
                                                         plot_horizontal, plot_pathway_graphs, self.set_name,
                                                         parallel_backend=parallel_backend, enrichment_func_name='xlmhg',
                                                         exclude_unannotated_genes=exclude_unannotated_genes,
-                                                        single_set=True, pathway_graphs_format=pathway_graphs_format)
+                                                        single_set=True, pathway_graphs_format=pathway_graphs_format,
+                                                        plot_style=plot_style, show_expected=show_expected)
 
         if gui_mode:
             return runner.run(plot=False), runner
@@ -1342,7 +1377,9 @@ class RankedSet(FeatureSet):
                               attr_ref_path: Union[str, Path, Literal['predefined']] = 'predefined',
                               exclude_unannotated_genes: bool = True, return_nonsignificant: bool = True,
                               save_csv: bool = False, fname=None, return_fig: bool = False,
-                              plot_horizontal: bool = True, parallel_backend: Literal[PARALLEL_BACKENDS] = 'loky',
+                              plot_horizontal: bool = True,
+                              show_expected: bool = False, plot_style: Literal['bar', 'lollipop'] = 'bar',
+                              parallel_backend: Literal[PARALLEL_BACKENDS] = 'loky',
                               gui_mode: bool = False):
         """
         Calculates enrichment and depletion of the sorted RankedSet for user-defined attributes \
@@ -1406,11 +1443,11 @@ class RankedSet(FeatureSet):
 
         """
         runner = enrichment_runner.EnrichmentRunner(self.ranked_genes, attributes, alpha, attr_ref_path,
-                                                    return_nonsignificant, save_csv,
-                                                    fname, return_fig, plot_horizontal, self.set_name,
-                                                    parallel_backend=parallel_backend, enrichment_func_name='xlmhg',
-                                                    single_set=True,
-                                                    exclude_unannotated_genes=exclude_unannotated_genes)
+                                                    return_nonsignificant, save_csv, fname, return_fig, plot_horizontal,
+                                                    self.set_name, parallel_backend=parallel_backend,
+                                                    enrichment_func_name='xlmhg',
+                                                    exclude_unannotated_genes=exclude_unannotated_genes,
+                                                    single_set=True, plot_style=plot_style, show_expected=show_expected)
         if gui_mode:
             return runner.run(plot=False), runner
         return runner.run()
@@ -1461,11 +1498,11 @@ def enrichment_bar_plot(results_table_path: Union[str, Path], alpha: param_typin
     """
     results_table = io.load_table(results_table_path, 0)
     runner = enrichment_runner.EnrichmentRunner(set(), results_table.index, alpha, '', True, False, '', True,
-                                                plot_horizontal, '', False, 'hypergeometric', 'all')
+                                                plot_horizontal, '', False, 'hypergeometric', 'all',
+                                                plot_style=plot_style, show_expected=show_expected)
     runner.en_score_col = enrichment_score_column
     runner.results = results_table
-    return runner.enrichment_bar_plot(n_bars, center_bars, ylabel=ylabel, title=title, ylim=ylim, plot_style=plot_style,
-                                      show_expected=show_expected)
+    return runner.enrichment_bar_plot(n_bars, center_bars, ylabel=ylabel, title=title, ylim=ylim)
 
 
 def _fetch_sets(objs: dict, ref: Union[str, Path, Literal['predefined']] = 'predefined'):

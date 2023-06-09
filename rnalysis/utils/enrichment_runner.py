@@ -107,16 +107,18 @@ class EnrichmentRunner:
                  'random_seed': 'random seed to be used when non-deterministic functions are used',
                  'en_score_col': 'name of the enrichment score column in the results DataFrame',
                  'ranked_genes': 'the set of genes/genomic features whose enrichment to calculate, '
-                                 'pre-sorted and ranked by the user'}
+                                 'pre-sorted and ranked by the user',
+                 'plot_style': 'plot style',
+                 'show_expected': 'show observed/expected values on plot'}
     printout_params = "appear in the Attribute Reference Table"
 
     def __init__(self, genes: Union[set, np.ndarray], attributes: Union[Iterable, str, int],
-                 alpha: param_typing.Fraction,
-                 attr_ref_path: str, return_nonsignificant: bool, save_csv: bool, fname: str, return_fig: bool,
-                 plot_horizontal: bool, set_name: str,
+                 alpha: param_typing.Fraction, attr_ref_path: str, return_nonsignificant: bool, save_csv: bool,
+                 fname: str, return_fig: bool, plot_horizontal: bool, set_name: str,
                  parallel_backend: Literal[PARALLEL_BACKENDS], enrichment_func_name: str, biotypes=None,
                  background_set: set = None, biotype_ref_path: str = None, exclude_unannotated_genes: bool = True,
-                 single_set: bool = False, random_seed: int = None, **pvalue_kwargs):
+                 single_set: bool = False, random_seed: int = None, plot_style: Literal['bar', 'lollipop'] = 'bar',
+                 show_expected: bool = False, **pvalue_kwargs):
         self.results: pd.DataFrame = pd.DataFrame()
         self.annotation_df: pd.DataFrame = pd.DataFrame()
         self.gene_set = parsing.data_to_set(genes)
@@ -134,6 +136,8 @@ class EnrichmentRunner:
                 self.fname = str(fname)
         self.return_fig = return_fig
         self.plot_horizontal = plot_horizontal
+        self.plot_style = plot_style
+        self.show_expected = show_expected
         self.set_name = set_name
         self.parallel_backend = parallel_backend
         self.enrichment_func = self._get_enrichment_func(enrichment_func_name)
@@ -543,10 +547,9 @@ class EnrichmentRunner:
         return self.enrichment_bar_plot(ylabel=self.ENRICHMENT_SCORE_YLABEL,
                                         title=f"Enrichment for gene set '{self.set_name}'")
 
-    def enrichment_bar_plot(self, n_bars: int = 'all', center_bars: bool = True, show_expected=False,
+    def enrichment_bar_plot(self, n_bars: int = 'all', center_bars: bool = True,
                             ylabel: str = r"$\log_2$(Fold Enrichment)", title: str = 'Enrichment results',
-                            ylim: Union[float, Literal['auto']] = 'auto',
-                            plot_style: Literal['bar', 'lollipop'] = 'bar') -> plt.Figure:
+                            ylim: Union[float, Literal['auto']] = 'auto', ) -> plt.Figure:
 
         """
         Receives a DataFrame output from an enrichment function and plots it in a bar plot. \
@@ -565,15 +568,10 @@ class EnrichmentRunner:
         :param ylim: set the Y-axis limits. If `ylim`='auto', determines the axis limits automatically based on the data. \
         If `ylim` is a number, set the Y-axis limits to [-ylim, ylim].
         :type ylim: float or 'auto' (default='auto')
-        :param plot_style: style for the plot. Either 'bar' for a bar plot or 'lollipop' for a lollipop plot \
-        in which the lollipop size indicates the size of the observed gene set.
-        :type plot_style: 'bar' or 'lollipop' (default='bar')
-        :param show_expected: if True, the observed/expected values will be shown on the plot.
-        :type show_expected: bool (default=False)
         :return: Figure object containing the bar plot
         :rtype: matplotlib.figure.Figure instance
         """
-        assert plot_style in ['bar', 'lollipop'], \
+        assert self.plot_style in ['bar', 'lollipop'], \
             f"'plot_style' must be 'bar' or 'lollipop', instaed got '{plot_style}'."
 
         # determine number of entries/bars to plot
@@ -595,7 +593,7 @@ class EnrichmentRunner:
         # choose functions and parameters according to the graph's orientation (horizontal vs vertical)
         if self.plot_horizontal:
             figsize = [10.5, 0.4 * (4.8 + self.results.shape[0])]
-            bar_func = plt.Axes.barh if plot_style == 'bar' else plt.Axes.hlines
+            bar_func = plt.Axes.barh if self.plot_style == 'bar' else plt.Axes.hlines
             line_func = plt.Axes.axvline
 
             cbar_location = 'bottom'
@@ -608,7 +606,7 @@ class EnrichmentRunner:
                 lst.reverse()
         else:
             figsize = [0.5 * (4.8 + self.results.shape[0]), 4.2]
-            bar_func = plt.Axes.bar if plot_style == 'bar' else plt.Axes.vlines
+            bar_func = plt.Axes.bar if self.plot_style == 'bar' else plt.Axes.vlines
             line_func = plt.Axes.axhline
             cbar_location = 'left'
             cbar_orientation = 'vertical'
@@ -644,14 +642,14 @@ class EnrichmentRunner:
         # generate bar plot
         fig, ax = plt.subplots(tight_layout=True, figsize=figsize)
 
-        args = (ax, range(len(enrichment_names)), enrichment_scores) if plot_style == 'bar' else (
+        args = (ax, range(len(enrichment_names)), enrichment_scores) if self.plot_style == 'bar' else (
             ax, range(len(enrichment_names)), 0, enrichment_scores)
-        kwargs = dict(linewidth=1, edgecolor='black') if plot_style == 'bar' else dict(linewidth=5)
+        kwargs = dict(linewidth=1, edgecolor='black') if self.plot_style == 'bar' else dict(linewidth=5)
 
         graph = bar_func(*args, color=colors, zorder=2, **kwargs)
         graph.tick_labels = enrichment_names
 
-        if plot_style == 'lollipop':
+        if self.plot_style == 'lollipop':
             x, y = (enrichment_scores, range(len(enrichment_names))) if self.plot_horizontal else (range(
                 len(enrichment_names)), enrichment_scores)
             ax.scatter(x, y, color=colors, zorder=3, s=dot_scaling_func(results['obs']))
@@ -696,7 +694,7 @@ class EnrichmentRunner:
                 rotation = 0
                 rotation_mode = 'default'
 
-            if show_expected:
+            if self.show_expected:
                 extra_text = f"{results['obs'].iloc[i]}/{results['exp'].iloc[i]:.1f}"
                 asterisks = f"{extra_text}\n{asterisks}" if self.plot_horizontal or np.sign(
                     score) == 1 else f"{asterisks}\n{extra_text}"
@@ -756,10 +754,10 @@ class NonCategoricalEnrichmentRunner(EnrichmentRunner):
         'plot_style': 'indicates the style of histogram to plot the results in',
         'n_bins': 'number of bins in histogram plot of results'}
 
-    def __init__(self, genes: set, attributes: Union[Iterable, str, int], alpha: float, biotypes, background_set: set,
-                 attr_ref_path: str, biotype_ref_path: str, save_csv: bool, fname: str,
-                 return_fig: bool, plot_log_scale: bool, plot_style: str, n_bins: int, set_name: str,
-                 parallel_backend: Literal[PARALLEL_BACKENDS], parametric_test: bool):
+    def __init__(self, genes: set, attributes: Union[Iterable, str, int], alpha: param_typing.Fraction, biotypes,
+                 background_set: set, attr_ref_path: str, biotype_ref_path: str, save_csv: bool, fname: str,
+                 return_fig: bool, plot_log_scale: bool, plot_style: Literal['interleaved', 'overlap'],
+                 n_bins: int, set_name: str, parallel_backend: Literal[PARALLEL_BACKENDS], parametric_test: bool):
 
         assert isinstance(plot_log_scale, bool), f"Invalid type for 'plot_log_scale': '{plot_log_scale}'."
         assert plot_style in {'interleaved', 'overlap'}, f"Invalid value for 'plot_style': '{plot_style}'."
@@ -767,13 +765,13 @@ class NonCategoricalEnrichmentRunner(EnrichmentRunner):
                           int) and n_bins > 0, f"'n_bins' must be a positive integer. Instead got {type(n_bins)}."
 
         enrichment_func_name = 't_test' if parametric_test else 'sign_test'
+        super().__init__(genes, attributes, alpha, attr_ref_path, True, save_csv, fname, return_fig, True, set_name,
+                         parallel_backend, enrichment_func_name, biotypes, background_set, biotype_ref_path,
+                         exclude_unannotated_genes=True, single_set=False)
         self.parametric_test = parametric_test
         self.plot_log_scale = plot_log_scale
         self.plot_style = plot_style
         self.n_bins = n_bins
-        super().__init__(genes, attributes, alpha, attr_ref_path, True, save_csv, fname, return_fig, True, set_name,
-                         parallel_backend, enrichment_func_name, biotypes, background_set, biotype_ref_path,
-                         single_set=False, exclude_unannotated_genes=True)
 
     def _get_enrichment_func(self, pval_func_name: str):
         assert isinstance(pval_func_name, str), f"Invalid type for 'pval_func_name': {type(pval_func_name)}."
@@ -902,10 +900,11 @@ class KEGGEnrichmentRunner(EnrichmentRunner):
                  parallel_backend: Literal[PARALLEL_BACKENDS], enrichment_func_name: str,
                  biotypes=None, background_set: set = None, biotype_ref_path: str = None,
                  exclude_unannotated_genes: bool = True, single_set: bool = False, random_seed: int = None,
-                 pathway_graphs_format: Literal[GRAPHVIZ_FORMATS] = 'none', **pvalue_kwargs):
+                 pathway_graphs_format: Literal[GRAPHVIZ_FORMATS] = 'none',
+                 plot_style: Literal['bar', 'lollipop'] = 'bar', show_expected: bool = False, **pvalue_kwargs):
         super().__init__(genes, [], alpha, '', return_nonsignificant, save_csv, fname, return_fig, plot_horizontal,
                          set_name, parallel_backend, enrichment_func_name, biotypes, background_set, biotype_ref_path,
-                         exclude_unannotated_genes, single_set, random_seed, **pvalue_kwargs)
+                         exclude_unannotated_genes, single_set, random_seed, plot_style, show_expected, **pvalue_kwargs)
         if not self.enrichment_func:
             return
         self.gene_id_type = gene_id_type
@@ -1069,12 +1068,14 @@ class GOEnrichmentRunner(EnrichmentRunner):
                  plot_ontology_graph: bool, set_name: str, parallel_backend: Literal[PARALLEL_BACKENDS],
                  enrichment_func_name: str, biotypes=None, background_set: set = None, biotype_ref_path: str = None,
                  exclude_unannotated_genes: bool = True, single_set: bool = False, random_seed: int = None,
-                 ontology_graph_format: Literal[GRAPHVIZ_FORMATS] = 'none', **pvalue_kwargs):
+                 ontology_graph_format: Literal[GRAPHVIZ_FORMATS] = 'none',
+                 plot_style: Literal['bar', 'lollipop'] = 'bar',
+                 show_expected: bool = False, **pvalue_kwargs):
 
         self.propagate_annotations = propagate_annotations.lower()
         super().__init__(genes, [], alpha, '', return_nonsignificant, save_csv, fname, return_fig, plot_horizontal,
                          set_name, parallel_backend, enrichment_func_name, biotypes, background_set, biotype_ref_path,
-                         exclude_unannotated_genes, single_set, random_seed, **pvalue_kwargs)
+                         exclude_unannotated_genes, single_set, random_seed, plot_style, show_expected, **pvalue_kwargs)
         if not self.enrichment_func:
             return
         self.dag_tree: ontology.DAGTree = ontology.fetch_go_basic()

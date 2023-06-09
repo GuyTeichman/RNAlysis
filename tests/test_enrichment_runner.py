@@ -91,8 +91,7 @@ def test_enrichment_get_attrs_all_attributes():
     genes = {'WBGene00000041', 'WBGene00002074', 'WBGene00000105', 'WBGene00000106', 'WBGene00199484',
              'WBGene00001436', 'WBGene00000137', 'WBGene00001996', 'WBGene00014208', 'WBGene00001133'}
     e = EnrichmentRunner(genes, 'all', 0.05, __attr_ref__, True, False, '', False, True, 'test_set', False,
-                         'hypergeometric',
-                         'all', None, __biotype_ref__)
+                         'hypergeometric', 'all', None, __biotype_ref__)
     e.fetch_annotations()
     e.fetch_attributes()
     e.get_background_set()
@@ -109,8 +108,7 @@ def test_enrichment_get_attrs_from_string(monkeypatch):
     genes = {'WBGene00000041', 'WBGene00002074', 'WBGene00000105', 'WBGene00000106', 'WBGene00199484',
              'WBGene00001436', 'WBGene00000137', 'WBGene00001996', 'WBGene00014208', 'WBGene00001133'}
     e = EnrichmentRunner(genes, None, 0.05, __attr_ref__, True, False, '', False, True, 'test_set', False,
-                         'hypergeometric',
-                         'all', None, __biotype_ref__)
+                         'hypergeometric', 'all', None, __biotype_ref__)
     e.fetch_annotations()
     e.fetch_attributes()
     e.get_background_set()
@@ -463,8 +461,8 @@ def test_enrichment_runner_api(exclude_unannotated, return_nonsignificant, save_
     monkeypatch.setattr('builtins.input', lambda x: 'fname')
 
     runner = EnrichmentRunner(genes, ['attr1', 'attr2'], 0.05, 'path/to/attr/ref', return_nonsignificant, save_csv,
-                              fname, False, False, 'set_name', False, pval_func, biotypes,
-                              background_set, biotype_ref_path, exclude_unannotated, single_list, random_seed, **kwargs)
+                              fname, False, False, 'set_name', False, pval_func, biotypes, background_set,
+                              biotype_ref_path, exclude_unannotated, single_list, random_seed, **kwargs)
     if save_csv:
         assert runner.fname == 'fname'
     else:

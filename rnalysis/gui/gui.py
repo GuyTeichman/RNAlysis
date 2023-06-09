@@ -424,9 +424,11 @@ class EnrichmentWindow(gui_widgets.MinMaxDialog):
                              True: {'alpha'},
                              False: {'alpha'}}
 
-    PLOT_ARGS = {'user_defined': {'plot_horizontal'},
-                 'go': {'plot_horizontal', 'plot_ontology_graph', 'ontology_graph_format'},
-                 'kegg': {'plot_horizontal', 'plot_pathway_graphs', 'pathway_graphs_format'},
+    PLOT_ARGS = {'user_defined': {'plot_horizontal', 'plot_style', 'show_expected'},
+                 'go': {'plot_horizontal', 'plot_style', 'show_expected', 'plot_ontology_graph',
+                        'ontology_graph_format'},
+                 'kegg': {'plot_horizontal', 'plot_style', 'show_expected', 'plot_pathway_graphs',
+                          'pathway_graphs_format'},
                  'non_categorical': {'plot_log_scale', 'plot_style', 'n_bins'}}
 
     enrichmentStarted = QtCore.pyqtSignal(object, object)
