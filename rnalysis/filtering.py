@@ -1993,7 +1993,7 @@ class FoldChangeFilter(Filter):
         :type suppress_warnings: bool (default=False)
         """
         super().__init__(fname)
-        self.df = self.df.squeeze(0)
+        self.df = self.df.squeeze(1)
         self.numerator = numerator_name
         self.denominator = denominator_name
         self.df.name = 'Fold Change'
