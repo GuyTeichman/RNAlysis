@@ -14,6 +14,7 @@ Added
 
 Changed
 ********
+* Functions in the FASTQ model are now added to automatic session report.
 * Many of the functions in RNAlysis should now run faster.
 * Font type, size, and color for help tooltips should now match the global font settings.
 * True/False toggle switches now scale with font size.
@@ -23,6 +24,7 @@ Changed
 
 Fixed
 *******
+* Fixed bug where data tables generated through the FASTQ model would not display properly in automatic session reports.
 * Fixed bug where graphs generated through the Visualize Gene Sets window would not be added to automatic analysis report.
 * When saving a file through the graphical interface, automatically-suggested filenames no longer contain illegal characters.
 * Improved clarity of error message when R installation folder is not found.
