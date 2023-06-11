@@ -82,7 +82,7 @@ All of *RNAlysis*'s dependencies can be installed automatically via PyPI.
 * `pyyaml <https://github.com/yaml/pyyaml>`_
 * `UpSetPlot <https://github.com/jnothman/UpSetPlot>`_
 * `matplotlib-venn <https://github.com/konstantint/matplotlib-venn>`_
-* `xlmhg <https://github.com/flo-compbio/xlmhg>`_
+* `xlmhglite <https://github.com/GuyTeichman/xlmhglite>`_
 * `pairwisedist <https://github.com/GuyTeichman/pairwisedist/>`_
 * `typing_extensions <https://github.com/python/typing_extensions>`_
 * `PyQt5 <https://www.riverbankcomputing.com/software/pyqt/>`_

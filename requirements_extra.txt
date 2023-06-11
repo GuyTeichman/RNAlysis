@@ -4,7 +4,7 @@
 # package[version_required]: tag1, tag2, ...
 
 hdbscan>=0.8.29:    hdbscan
-xlmhg>=2.5.4:       single-set
+xlmhglite>=1.0.1:   single-set
 numba>=0.57.0:      randomization
 cutadapt>=4.4:      fastq
 pyvis>=0.3.2:       reports

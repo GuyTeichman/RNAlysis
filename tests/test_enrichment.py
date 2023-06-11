@@ -6,7 +6,6 @@ import statsmodels.stats.multitest as multitest
 
 from rnalysis.enrichment import *
 from rnalysis.enrichment import _fetch_sets
-from rnalysis.utils.enrichment_runner import does_python_version_support_single_set
 from tests import __attr_ref__, __biotype_ref__, is_uniprot_available, is_ensembl_available
 
 matplotlib.use('Agg')
@@ -483,8 +482,6 @@ def test_enrich_non_categorical_nan_values():
     plt.close('all')
 
 
-@pytest.mark.skipif(not does_python_version_support_single_set(),
-                    reason=f"Package 'xlmhg' cannot run this python version ({sys.version})")
 def test_enrich_single_set_api():
     genes_ranked = ['WBGene00000019', 'WBGene00000041', 'WBGene00000105', 'WBGene00000106', 'WBGene00000137',
                     'WBGene00001436', 'WBGene00001996', 'WBGene00002074', 'WBGene00003864', 'WBGene00003865',
@@ -606,9 +603,9 @@ def test_kegg_enrichment_api(organism, statistical_test, kwargs):
 @pytest.mark.skipif(not ENSEMBL_AVAILABLE, reason='Ensembl REST API is not available at the moment')
 @pytest.mark.skipif(not UNIPROT_AVAILABLE, reason='UniProt REST API is not available at the moment')
 def test_kegg_enrichment_single_list_api():
-    genes = ['WBGene00048865', 'WBGene00000864', 'WBGene00000105', 'WBGene00001996', 'WBGene00011910', 'WBGene00268195']
+    genes = ['WBGene00004049', 'WBGene00000864', 'WBGene00004050', 'WBGene00004930', 'WBGene00001686', 'WBGene00268195']
     en = RankedSet(genes, set_name='test_set')
-    _ = en.single_set_kegg_enrichment(6239, 'WormBase', pathway_graphs_format='pdf')
+    _ = en.single_set_kegg_enrichment(6239, 'WormBase', pathway_graphs_format='pdf', parallel_backend='sequential')
     plt.close('all')
 
 

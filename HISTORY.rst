@@ -2,6 +2,19 @@
 History
 =======
 
+
+3.9.1 (2023-06-20)
+------------------
+
+Changed
+********
+* RNAlysis single-set enrichment analysis using the XL-mHG test now supports Python versions >= 3.8.
+* RNAlysis stand-alone app is now built on Python 3.11, improving overall performance.
+
+Fixed
+*******
+* Fixed bug where enrichment analysis would raise an error when running enrichment analysis on a gene set with no relevant annotations, or a gene set that does not intersect at all with the background gene set.
+
 3.9.0 (2023-06-09)
 ------------------
 Version 3.9.0 of *RNAlysis* introduces several enhancements and fixes to improve your experience.

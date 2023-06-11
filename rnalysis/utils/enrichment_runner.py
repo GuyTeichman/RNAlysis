@@ -1,7 +1,6 @@
 import collections
 import itertools
 import logging
-import sys
 import warnings
 from functools import lru_cache
 from pathlib import Path
@@ -23,9 +22,7 @@ from rnalysis.utils import ontology, io, parsing, settings, validation, generic,
 from rnalysis.utils.param_typing import PARALLEL_BACKENDS, GRAPHVIZ_FORMATS
 
 try:
-    import xlmhg
-
-    xlmhg.test.np.float = np.float64
+    import xlmhglite
 
     logging.getLogger('xlmhg').setLevel(50)  # suppress warnings from xlmhg module
     HAS_XLMHG = True
@@ -34,25 +31,12 @@ except ImportError:  # pragma: no cover
     HAS_XLMHG = False
 
 
-    class xlmhg:  # pragma: no cover
+    class xlmhglite:  # pragma: no cover
         class mHGResult:
             pass
 
         def get_xlmhg_test_result(self):
             pass
-
-
-def does_python_version_support_single_set():
-    # currently, only python versions below 3.9 can run the xlmhg package.
-    version = sys.version_info
-    if version[0] != 3:
-        return False
-    if version[1] > 8:
-        return False
-    return True
-
-
-XLMHG_SUPPORTED = does_python_version_support_single_set()
 
 
 class Size:
@@ -189,6 +173,11 @@ class EnrichmentRunner:
         if not self.single_set:
             self.get_background_set()
         self.update_gene_set()
+        if len(self.gene_set) == 0:
+            warnings.warn('After removing unannotated genes and/or genes not in the background set, '
+                          'the enrichment set is empty. '
+                          'Therefore, RNAlysis will not proceed with enrichment analysis. ')
+            return pd.DataFrame()
         self.filter_annotations()
         unformatted_results = self.calculate_enrichment()
         self.format_results(unformatted_results)
@@ -258,18 +247,14 @@ class EnrichmentRunner:
         elif pval_func_name == 'hypergeometric':
             return self._hypergeometric_enrichment
         elif pval_func_name == 'xlmhg':
-            if HAS_XLMHG and XLMHG_SUPPORTED:
+            if HAS_XLMHG:
                 return self._xlmhg_enrichment
             else:
                 if not HAS_XLMHG:
                     warnings.warn("Package 'xlmhg' is not installed. \n"
                                   "If you want to run single-set enrichment analysis, "
                                   "please install package 'xlmhg' and try again. ")
-                if not XLMHG_SUPPORTED:
-                    python_version = sys.version_info
-                    warnings.warn(f"Your version of Python ({python_version[0]}.{python_version[1]}) "
-                                  f"does not support single-set enrichment analysis. "
-                                  f"Please install RNAlysis with a Python version below 3.9 and try again. ")
+
                 return False
         else:
             raise ValueError(f"Unknown enrichment function '{pval_func_name}'.")
@@ -302,14 +287,15 @@ class EnrichmentRunner:
         index_vec, rev_index_vec = self._generate_xlmhg_index_vectors(attribute)
         n, X, L, table = self._get_xlmhg_parameters(index_vec)
 
-        res_obj_fwd = xlmhg.get_xlmhg_test_result(N=n, indices=index_vec, X=X, L=L, table=table)
-        res_obj_rev = xlmhg.get_xlmhg_test_result(N=n, indices=rev_index_vec, X=X, L=L, table=table)
+        res_obj_fwd = xlmhglite.get_xlmhg_test_result(N=n, indices=index_vec, X=X, L=L, table=table)
+        res_obj_rev = xlmhglite.get_xlmhg_test_result(N=n, indices=rev_index_vec, X=X, L=L, table=table)
 
         en_score, pval = self._extract_xlmhg_results(res_obj_fwd, res_obj_rev)
         return [attribute, n, en_score, pval]
 
     @staticmethod
-    def _extract_xlmhg_results(result_obj_fwd: xlmhg.mHGResult, result_obj_rev: xlmhg.mHGResult) -> Tuple[float, float]:
+    def _extract_xlmhg_results(result_obj_fwd: xlmhglite.mHGResult, result_obj_rev: xlmhglite.mHGResult
+                               ) -> Tuple[float, float]:
         if result_obj_fwd.pval <= result_obj_rev.pval:
             pval = result_obj_fwd.pval
             en_score = result_obj_fwd.escore if not np.isnan(result_obj_fwd.escore) else 1
@@ -1530,8 +1516,8 @@ class GOEnrichmentRunner(EnrichmentRunner):
         index_vec, rev_index_vec = self._generate_xlmhg_index_vectors(go_id, mod_df_ind)
         n, X, L, table = self._get_xlmhg_parameters(index_vec)
 
-        res_obj_fwd = xlmhg.get_xlmhg_test_result(N=n, indices=index_vec, X=X, L=L, table=table)
-        res_obj_rev = xlmhg.get_xlmhg_test_result(N=n, indices=rev_index_vec, X=X, L=L, table=table)
+        res_obj_fwd = xlmhglite.get_xlmhg_test_result(N=n, indices=index_vec, X=X, L=L, table=table)
+        res_obj_rev = xlmhglite.get_xlmhg_test_result(N=n, indices=rev_index_vec, X=X, L=L, table=table)
 
         en_score, pval = self._extract_xlmhg_results(res_obj_fwd, res_obj_rev)
         return [go_name, n, en_score, pval]

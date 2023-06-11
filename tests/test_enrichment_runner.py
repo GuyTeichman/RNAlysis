@@ -325,9 +325,6 @@ def test_enrichment_runner_update_ranked_genes():
     ('XLmHG', EnrichmentRunner._xlmhg_enrichment)])
 def test_enrichment_runner_get_enrichment_func(test_input, expected):
     runner = EnrichmentRunner.__new__(EnrichmentRunner)
-    if test_input.lower() == 'xlmhg' and not does_python_version_support_single_set():
-        assert runner._get_enrichment_func(test_input) is False
-        return
     assert runner._get_enrichment_func(test_input).__name__ == expected.__name__
     assert runner._get_enrichment_func(test_input.upper()).__name__ == expected.__name__
     assert runner._get_enrichment_func(test_input.lower()).__name__ == expected.__name__
@@ -531,7 +528,7 @@ def test_enrichment_runner_xlmhg_enrichment(monkeypatch, attr, index_vector, pva
         n_calls_xlmhg_test[0] += 1
         return ResultObject(pval, escore)
 
-    monkeypatch.setattr(xlmhg, 'get_xlmhg_test_result', _xlmhg_test_validate_parameters)
+    monkeypatch.setattr(xlmhglite, 'get_xlmhg_test_result', _xlmhg_test_validate_parameters)
 
     if mode == 'GOEnrichmentRunner':
         runner = GOEnrichmentRunner.__new__(GOEnrichmentRunner)
@@ -911,9 +908,7 @@ def test_go_enrichment_runner_api(monkeypatch, single_list, genes, biotypes, pva
                                 None, False, False, 'fname', False, False, False, 'set_name', False, pval_func,
                                 biotypes, background_set, biotype_ref_path, exclude_unannotated, single_list,
                                 random_seed, **kwargs)
-    if pval_func.lower() == 'xlmhg' and not does_python_version_support_single_set():
-        assert runner.enrichment_func is False
-        return
+
     assert runner.dag_tree == 'dag_tree'
 
 
@@ -945,9 +940,6 @@ def test_go_enrichment_runner_run(monkeypatch):
 def test_go_enrichment_runner_get_enrichment_func(test_input, expected, propagate_annotations):
     runner = GOEnrichmentRunner.__new__(GOEnrichmentRunner)
     runner.propagate_annotations = propagate_annotations
-    if test_input.lower() == 'xlmhg' and not does_python_version_support_single_set():
-        assert runner._get_enrichment_func(test_input) is False
-        return
 
     assert runner._get_enrichment_func(test_input).__name__ == expected.__name__
     assert runner._get_enrichment_func(test_input.upper()).__name__ == expected.__name__
@@ -1957,16 +1949,3 @@ def test_kegg_enrichment_runner_pathway_plot(single_set, graph_format, monkeypat
     runner.pathway_graphs_format = graph_format
     runner.gene_id_translator = translator_truth
     runner.pathway_plot(pathway_id_truth)
-
-
-@pytest.mark.parametrize('version,expected', [
-    ([3, 8, 1], True),
-    ([3, 8, 0], True),
-    ([2, 7, 5], False),
-    ([3, 7, 5], True),
-    ([3, 9, 0], False),
-    ([3, 11, 0], False)
-])
-def test_does_python_version_support_single_set(monkeypatch, version, expected):
-    monkeypatch.setattr(sys, 'version_info', version)
-    assert does_python_version_support_single_set() == expected
