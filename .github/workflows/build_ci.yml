@@ -64,7 +64,7 @@ jobs:
                 run: brew install libxml2
             -   name: update gcc on MacOS
                 if: runner.os == 'macOS'
-                run: brew install mongodb
+                run: brew install gcc
             -   name: Export SDKROOT on MacOS
                 if: runner.os == 'macOS'
                 run: export SDKROOT=$(xcrun --sdk macosx --show-sdk-path)
