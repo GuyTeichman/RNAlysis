@@ -1419,6 +1419,11 @@ class RankedSet(FeatureSet):
         :type plot_horizontal: bool (default=True)
         :param plot_horizontal: if True, results will be plotted with a horizontal bar plot. Otherwise, results \
         will be plotted with a vertical plot.
+        :param show_expected: if True, the observed/expected values will be shown on the plot.
+        :type show_expected: bool (default=False)
+        :param plot_style: style for the plot. Either 'bar' for a bar plot or 'lollipop' for a lollipop plot \
+        in which the lollipop size indicates the size of the observed gene set.
+        :type plot_style: 'bar' or 'lollipop' (default='bar')
         :type parallel_backend: Literal[PARALLEL_BACKENDS] (default='loky')
         :param parallel_backend: Determines the babckend used to run the analysis. \
         if parallel_backend not 'sequential', will calculate the statistical tests using parallel processing. \

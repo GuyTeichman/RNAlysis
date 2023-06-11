@@ -14,6 +14,7 @@ Changed
 Fixed
 *******
 * Fixed bug where enrichment analysis would raise an error when running enrichment analysis on a gene set with no relevant annotations, or a gene set that does not intersect at all with the background gene set.
+* Added missing documentation for plotting parameters in some enrichment functions.
 
 3.9.0 (2023-06-09)
 ------------------
