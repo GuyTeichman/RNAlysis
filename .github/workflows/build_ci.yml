@@ -59,9 +59,12 @@ jobs:
             -   name: Install libxml on MacOS
                 if: runner.os == 'macOS'
                 run: brew install libxml2
-            -   name: update gcc on MacOS
+            -   name: command line tools on MacOS
                 if: runner.os == 'macOS'
-                run: brew install gcc
+                run: |
+                    sudo xcode-select --switch /Library/Developer/CommandLineTools
+                    gcc -v -xc++ /dev/null -fsyntax-only
+                    echo gcc -v -xc++ /dev/null -fsyntax-only
             -   name: Export SDKROOT on MacOS
                 if: runner.os == 'macOS'
                 run: export SDKROOT=$(xcrun --sdk macosx --show-sdk-path)
