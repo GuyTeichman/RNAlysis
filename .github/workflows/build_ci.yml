@@ -22,6 +22,10 @@ jobs:
             -   name: brew update (macOS)
                 if: runner.os == 'MacOS'
                 run: brew update
+            -   name: command line tools on MacOS
+                if: runner.os == 'macOS'
+                run: |
+                    gcc -v -xc++ /dev/null -fsyntax-only
             -   name: Setup Qt requirements for Linux
                 uses: tlambert03/setup-qt-libs@v1
             -   name: Setup Graphviz
