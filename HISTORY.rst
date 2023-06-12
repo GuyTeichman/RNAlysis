@@ -6,6 +6,10 @@ History
 3.9.1 (2023-06-20)
 ------------------
 
+Added
+*******
+* Added new optional parameters to single-set enrichment functions, allowing users to determine the top and bottom cutoffs for the XL-mHG test ("X" and "L").
+
 Changed
 ********
 * RNAlysis single-set enrichment analysis using the XL-mHG test now supports Python versions >= 3.8.
@@ -15,6 +19,7 @@ Fixed
 *******
 * Fixed bug where enrichment analysis would raise an error when running enrichment analysis on a gene set with no relevant annotations, or a gene set that does not intersect at all with the background gene set.
 * Added missing documentation for plotting parameters in some enrichment functions.
+* Depracation Warning should no longer appear when generating a box-plot or enhanced box-plot with scatter=True (CountFilter.box_plot, CountFilter.enhanced_box_plot)
 
 3.9.0 (2023-06-09)
 ------------------

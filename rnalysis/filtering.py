@@ -4867,7 +4867,7 @@ class CountFilter(Filter):
         palette = sns.color_palette([next(color_gen) for _ in range(samples_df.shape[1])], n_colors=samples_df.shape[1])
         ax = sns.boxplot(data=np.log10(samples_df + 1), notch=notch, palette=palette)
         if scatter:
-            _ = sns.stripplot(data=np.log10(samples_df + 1), color=(0.25, 0.25, 0.25), size=3)
+            _ = sns.stripplot(data=np.log10(samples_df + 1), palette='dark:#404040', size=3)
 
         if title == 'auto':
             title = f"Box plot of {self.fname.stem}"
@@ -4932,7 +4932,7 @@ class CountFilter(Filter):
 
         ax = sns.boxenplot(data=samples_df, palette=palette)
         if scatter:
-            _ = sns.stripplot(data=samples_df, color=(0.25, 0.25, 0.25), size=3)
+            _ = sns.stripplot(data=samples_df, palette='dark:#404040', size=3)
         if title == 'auto':
             title = f"Enhanced Box plot of {self.fname.stem}"
         ax.set_title(title, fontsize=title_fontsize)
