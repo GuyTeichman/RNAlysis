@@ -97,18 +97,6 @@ jobs:
                          exit 1
                     fi
                 shell: bash
-            -   name: display PATH
-                run: echo ${PATH}
-                shell: bash
-            -   name: test prints (Windows)
-                if: runner.os == 'Windows'
-                run: |
-                    where bowtie2
-                    echo %PATH%
-                    where bowtie2-build
-                    where bowtie2-build-s
-                    echo %COMSPEC%
-                shell: cmd
             -   name: Test bowtie2 installation
                 run: |
                     bowtie2 --version
