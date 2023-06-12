@@ -2,9 +2,6 @@ name: Build CI
 
 on: [ push, pull_request ]
 
-env:
-    HOMEBREW_NO_INSTALLED_DEPENDENTS_CHECK: 1
-
 jobs:
     build:
 
