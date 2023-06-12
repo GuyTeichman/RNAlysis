@@ -32,12 +32,14 @@ jobs:
             -   name: Setup Graphviz
                 uses: ts-graphviz/setup-graphviz@v1
             -   name: Cache LLVM and Clang
+                if: runner.os != 'macOS'
                 id: cache-llvm
                 uses: actions/cache@v2
                 with:
                     path: ${{ runner.temp }}/llvm
                     key: llvm-9
             -   name: Install LLVM and Clang
+                if: runner.os != 'macOS'
                 uses: KyleMayes/install-llvm-action@v1
                 with:
                     version: "9.0"
@@ -62,9 +64,7 @@ jobs:
             -   name: command line tools on MacOS
                 if: runner.os == 'macOS'
                 run: |
-                    sudo xcode-select --switch /Library/Developer/CommandLineTools
                     gcc -v -xc++ /dev/null -fsyntax-only
-                    echo gcc -v -xc++ /dev/null -fsyntax-only
             -   name: Export SDKROOT on MacOS
                 if: runner.os == 'macOS'
                 run: export SDKROOT=$(xcrun --sdk macosx --show-sdk-path)
