@@ -38,8 +38,6 @@ with open('HISTORY.rst') as history_file:
 with open('requirements.txt') as requirements_file:
     requirements = requirements_file.read().split('\n')
 
-setup_requirements = ['pytest-runner', ]
-
 test_requirements = ['pytest', 'pytest-qt']
 
 extras_require = get_extra_requires('requirements_extra.txt')
@@ -71,7 +69,6 @@ setup(
     keywords='RNAlysis',
     name='RNAlysis',
     packages=find_packages(exclude=['tests', 'packaging']),
-    setup_requires=setup_requirements,
     test_suite='tests',
     tests_require=test_requirements,
     extras_require=extras_require,
