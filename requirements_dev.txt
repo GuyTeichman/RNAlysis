@@ -12,6 +12,7 @@ pytest-runner
 sphinx_rtd_theme
 pytest-qt
 pytest-xvfb
+pytest-random-order
 typing_extensions
 pyinstaller
 pyinstaller-hooks-contrib

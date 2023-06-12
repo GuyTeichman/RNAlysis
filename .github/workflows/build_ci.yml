@@ -116,7 +116,7 @@ jobs:
                     python -m pip install .[all]
             -   name: Test with pytest
                 run: |
-                    coverage run --source=rnalysis/ -m pytest tests/
+                    coverage run --source=rnalysis/ -m pytest --random-order tests/
                 continue-on-error: false
             -   name: Generate lcov file
                 run: coverage lcov
