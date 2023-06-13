@@ -207,7 +207,7 @@ class PairedEndPipeline(_FASTQPipeline):
 
 @_func_type('single')
 @readable_name('featureCounts count (single-end reads)')
-def featurecounts_single_end(input_folder: Union[str, Path], output_folder: Union[str, Path, None],
+def featurecounts_single_end(input_folder: Union[str, Path], output_folder: Union[str, Path],
                              gtf_file: Union[str, Path],
                              gtf_feature_type: str = 'exon', gtf_attr_name: str = 'gene_id',
                              r_installation_folder: Union[str, Path, Literal['auto']] = 'auto',
