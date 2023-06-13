@@ -418,7 +418,7 @@ class EnrichmentWindow(gui_widgets.MinMaxDialog):
     STATISTICAL_TEST_ARGS = {'randomization': {'alpha', 'randomization_reps', 'random_seed'},
                              'fisher': {'alpha'},
                              'hypergeometric': {'alpha'},
-                             'single_set': {'alpha'},
+                             'single_set': {'alpha', 'min_positive_genes', 'lowest_cutoff'},
                              'non_categorical': {'alpha'},
                              None: {},
                              True: {'alpha'},
@@ -542,10 +542,13 @@ class EnrichmentWindow(gui_widgets.MinMaxDialog):
         else:
             self._set_background_select_mode(True)
 
-    def update_uis(self):
-        self.parameters_signature = {}
-        self.stats_signature = {}
-        self.plot_signature = {}
+    def _update_signatures(self, update_params: bool = True, update_stats: bool = True, update_plot: bool = True):
+        if update_params:
+            self.parameters_signature = {}
+        if update_stats:
+            self.stats_signature = {}
+        if update_plot:
+            self.plot_signature = {}
 
         analysis_type = self.get_current_analysis_type()
         chosen_func = self.get_current_func()
@@ -555,12 +558,15 @@ class EnrichmentWindow(gui_widgets.MinMaxDialog):
             this_desc = param_desc.get(name, '')
             if name in self.EXCLUDED_PARAMS:
                 continue
-            elif name in self.PLOT_ARGS[analysis_type]:
+            elif update_plot and name in self.PLOT_ARGS[analysis_type]:
                 self.plot_signature[name] = (param, this_desc)
-            elif name in set.union(*self.STATISTICAL_TEST_ARGS.values()):
+            elif update_stats and name in set.union(*self.STATISTICAL_TEST_ARGS.values()):
                 self.stats_signature[name] = (param, this_desc)
-            else:
+            elif update_params:
                 self.parameters_signature[name] = (param, this_desc)
+
+    def update_uis(self):
+        self._update_signatures()
 
         self.update_parameters_ui()
         self.update_stats_ui()
@@ -645,6 +651,7 @@ class EnrichmentWindow(gui_widgets.MinMaxDialog):
             i += 1
 
     def update_stats_ui(self):
+        self._update_signatures(False, True, False)
         self.stats_group.setVisible(True)
         prev_test = self._get_statistical_test()
         prev_test_name = self._get_statistical_test_name()
