@@ -268,22 +268,23 @@ class EnrichmentRunner:
 
     def _get_xlmhg_parameters(self, index_vec):
         n = len(self.ranked_genes)
-        # X = the minimal amount of 'positive' elements above the hypergeometric cutoffs out of all of the positive
-        # elements in the ranked set. Determined to be the minimum between x_min and ceil(x_frac * k),
-        # where 'k' is the number of 'positive' elements in the ranked set.
-        x_frac = 0.5
-        x_min = 10
-        X = min(x_min, int(np.ceil(x_frac * len(index_vec)))) if 'X' not in self.pvalue_kwargs \
-            else self.pvalue_kwargs['X']
+        # X = the minimal amount of 'positive' elements above the hypergeometric cutoffs out of all the positive
+        # elements in the ranked set.
+        X = 10 if 'x' not in self.pvalue_kwargs else self.pvalue_kwargs['x']
+        X = min(X, n)
         # L = the lowest possible cutoff (n) to be tested out of the entire list.
-        # Determined to be floor(l_frac * N), where 'N' is total number of elements in the ranked set (n).
-        l_frac = 0.1
-        L = int(np.floor(l_frac * n)) if 'L' not in self.pvalue_kwargs else self.pvalue_kwargs['L']
+        # Determined to be floor(l_fraction * N), where 'N' is total number of elements in the ranked set (n).
+        if 'l_fraction' in self.pvalue_kwargs and self.pvalue_kwargs['l_fraction'] is not None:
+            l_fraction = self.pvalue_kwargs['l_fraction']
+        else:
+            l_fraction = 0.1
+        L = int(np.floor(l_fraction * n))
+        L = min(L, n)
         # pre-allocate empty array to speed up computation
         table = np.empty((len(index_vec) + 1, n - len(index_vec) + 1), dtype=np.longdouble)
         return n, X, L, table
 
-    def _xlmhg_enrichment(self, attribute: str) -> list:
+    def _xlmhg_enrichment(self, attribute: str, **_) -> list:
         index_vec, rev_index_vec = self._generate_xlmhg_index_vectors(attribute)
         n, X, L, table = self._get_xlmhg_parameters(index_vec)
 
@@ -1511,7 +1512,7 @@ class GOEnrichmentRunner(EnrichmentRunner):
         pval = self._calc_randomization_pval(n, log2_fold_enrichment, bg_df.values, reps, mod_observed_fraction)
         return [go_name, n, int(n * observed_fraction), n * expected_fraction, log2_fold_enrichment, pval]
 
-    def _xlmhg_enrichment(self, go_id: str, mod_df_ind: int = None) -> list:
+    def _xlmhg_enrichment(self, go_id: str, mod_df_ind: int = None, **_) -> list:
         go_name = self.dag_tree[go_id].name
         index_vec, rev_index_vec = self._generate_xlmhg_index_vectors(go_id, mod_df_ind)
         n, X, L, table = self._get_xlmhg_parameters(index_vec)

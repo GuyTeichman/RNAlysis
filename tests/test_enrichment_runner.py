@@ -497,11 +497,11 @@ def test_enrichment_runner_format_results_single_list(monkeypatch):
 @pytest.mark.parametrize('mode', ['EnrichmentRunner', 'GOEnrichmentRunner'])
 @pytest.mark.parametrize('attr,index_vector, pvalue_kwargs,p_values,e_scores,params_truth',
                          [('attr1', [3, 5, 2], {}, (0.05, 0.9), (2, 1.5),
-                           {'L': 1, 'X': 2, 'N': 10, 'table': np.empty((3 + 1, 10 - 3 + 1), dtype=np.longdouble)}),
-                          ('attr 2', [1, 2, 3, 4], {'L': 2, 'X': 7}, (0, 0), (0, 0),
+                           {'L': 1, 'X': 10, 'N': 10, 'table': np.empty((3 + 1, 10 - 3 + 1), dtype=np.longdouble)}),
+                          ('attr 2', [1, 2, 3, 4], {'l_fraction': 0.2, 'x': 7}, (0, 0), (0, 0),
                            {'L': 2, 'X': 7, 'N': 10, 'table': np.empty((4 + 1, 10 - 4 + 1), dtype=np.longdouble)}),
                           ('attr,3', [2, 9], {'other_arg': 13}, (0.8, 0.1), (1, 1.2),
-                           {'L': 1, 'X': 1, 'N': 10, 'table': np.empty((2 + 1, 10 - 2 + 1), dtype=np.longdouble)})])
+                           {'L': 1, 'X': 10, 'N': 10, 'table': np.empty((2 + 1, 10 - 2 + 1), dtype=np.longdouble)})])
 def test_enrichment_runner_xlmhg_enrichment(monkeypatch, attr, index_vector, pvalue_kwargs, p_values, e_scores,
                                             params_truth, mode):
     n_calls_xlmhg_test = [0]
@@ -519,9 +519,9 @@ def test_enrichment_runner_xlmhg_enrichment(monkeypatch, attr, index_vector, pva
 
     def _xlmhg_test_validate_parameters(**kwargs):
         for key in ['X', 'L', 'N', 'indices']:
-            assert params_truth[key] == kwargs[key]
-        assert params_truth['table'].shape == kwargs['table'].shape
-        assert params_truth['table'].dtype == kwargs['table'].dtype
+            assert kwargs[key] == params_truth[key]
+        assert kwargs['table'].shape == params_truth['table'].shape
+        assert kwargs['table'].dtype == params_truth['table'].dtype
 
         pval = p_values[n_calls_xlmhg_test[0]]
         escore = e_scores[n_calls_xlmhg_test[0]]

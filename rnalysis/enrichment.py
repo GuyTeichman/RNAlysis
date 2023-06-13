@@ -1108,6 +1108,8 @@ class RankedSet(FeatureSet):
     def single_set_go_enrichment(self, organism: Union[str, int, Literal['auto'], Literal[DEFAULT_ORGANISMS]] = 'auto',
                                  gene_id_type: Union[str, Literal['auto'], Literal[get_gene_id_types()]] = 'auto',
                                  alpha: param_typing.Fraction = 0.05,
+                                 min_positive_genes: param_typing.PositiveInt = 10,
+                                 lowest_cutoff: param_typing.Fraction = 0.25,
                                  propagate_annotations: Literal['classic', 'elim', 'weight', 'all.m', 'no'] = 'elim',
                                  aspects: Union[Literal[('any',) + GO_ASPECTS], Iterable[Literal[GO_ASPECTS]]] = 'any',
                                  evidence_types: Union[
@@ -1154,6 +1156,17 @@ class RankedSet(FeatureSet):
         :type gene_id_type: str or 'auto' (default='auto')
         :type alpha: float between 0 and 1
         :param alpha: Indicates the FDR threshold for significance.
+        :param min_positive_genes: the minimum number of 'positive' genes (genes that match the given attribute) \
+        for the enrichment to be considered a valid enrichment. All hypergeometric cutoffs with a smaller number of \
+        'positive' genes will not be tested. This is the 'X' parameter of the XL-mHG nonparametric test. \
+        For example: a value of 10 means that a valid enrichment must have at least 10 'positive' genes \
+        to be considered real enrichment.
+        :type min_positive_genes: a positive int (default=10)
+        :param lowest_cutoff: the lowest cutoff of the hypergeometric that will be tested. \
+        This determines the 'L' parameter of the XL-mHG nonparametric test. For example: \
+        a value of 1 means that every cutoff will be tested. A value of 0.25 means that every cutoff that compares \
+        the top 25% or smaller of the list to the rest of the list will be tested.
+        :type lowest_cutoff: float between 0 and 1 (default=0.25)
         :param propagate_annotations: determines the propagation method of GO annotations. \
         'no' does not propagate annotations at all; 'classic' propagates all annotations up to the DAG tree's root; \
         'elim' terminates propagation at nodes which show significant enrichment; 'weight' performs propagation in a \
@@ -1261,7 +1274,8 @@ class RankedSet(FeatureSet):
                                                       parallel_backend=parallel_backend, enrichment_func_name='xlmhg',
                                                       exclude_unannotated_genes=exclude_unannotated_genes,
                                                       single_set=True, ontology_graph_format=ontology_graph_format,
-                                                      plot_style=plot_style, show_expected=show_expected)
+                                                      plot_style=plot_style, show_expected=show_expected,
+                                                      x=min_positive_genes, l_fraction=lowest_cutoff)
 
         if gui_mode:
             return runner.run(plot=False), runner
@@ -1271,7 +1285,9 @@ class RankedSet(FeatureSet):
     def single_set_kegg_enrichment(self,
                                    organism: Union[str, int, Literal['auto'], Literal[DEFAULT_ORGANISMS]] = 'auto',
                                    gene_id_type: Union[str, Literal['auto'], Literal[get_gene_id_types()]] = 'auto',
-                                   alpha: param_typing.Fraction = 0.05, exclude_unannotated_genes: bool = True,
+                                   alpha: param_typing.Fraction = 0.05,
+                                   min_positive_genes: param_typing.PositiveInt = 10,
+                                   lowest_cutoff: param_typing.Fraction = 0.25, exclude_unannotated_genes: bool = True,
                                    return_nonsignificant: bool = False, save_csv: bool = False,
                                    fname=None, return_fig: bool = False, plot_horizontal: bool = True,
                                    show_expected: bool = False, plot_style: Literal['bar', 'lollipop'] = 'bar',
@@ -1301,6 +1317,28 @@ class RankedSet(FeatureSet):
         :type gene_id_type: str or 'auto' (default='auto')
         :type alpha: float between 0 and 1
         :param alpha: Indicates the FDR threshold for significance.
+        :param min_positive_genes: the minimum number of 'positive' genes (genes that match the given attribute) \
+        for the enrichment to be considered a valid enrichment. All hypergeometric cutoffs with a smaller number of \
+        'positive' genes will not be tested. This is the 'X' parameter of the XL-mHG nonparametric test. \
+        For example: a value of 10 means that a valid enrichment must have at least 10 'positive' genes \
+        to be considered real enrichment.
+        :type min_positive_genes: a positive int (default=10)
+        :param lowest_cutoff: the lowest cutoff of the hypergeometric that will be tested. \
+        This determines the 'L' parameter of the XL-mHG nonparametric test. For example: \
+        a value of 1 means that every cutoff will be tested. A value of 0.25 means that every cutoff that compares \
+        the top 25% or smaller of the list to the rest of the list will be tested.
+        :type lowest_cutoff: float between 0 and 1 (default=0.25)
+        :param min_positive_genes: the minimum number of 'positive' genes (genes that match the given attribute) \
+        for the enrichment to be considered a valid enrichment. All hypergeometric cutoffs with a smaller number of \
+        'positive' genes will not be tested. This is the 'X' parameter of the XL-mHG nonparametric test. \
+        For example: a value of 10 means that a valid enrichment must have at least 10 'positive' genes \
+        to be considered real enrichment.
+        :type min_positive_genes: a positive int (default=10)
+        :param lowest_cutoff: the lowest cutoff of the hypergeometric that will be tested. \
+        This determines the 'L' parameter of the XL-mHG nonparametric test. For example: \
+        a value of 1 means that every cutoff will be tested. A value of 0.25 means that every cutoff that compares \
+        the top 25% or smaller of the list to the rest of the list will be tested.
+        :type lowest_cutoff: float between 0 and 1 (default=0.25)
         :param exclude_unannotated_genes: if True, genes that have no annotation associated with them will be \
         excluded from the enrichment analysis. This is the recommended practice for enrichment analysis, since \
         keeping unannotated genes in the analysis increases the chance of discovering spurious enrichment results.
@@ -1365,7 +1403,8 @@ class RankedSet(FeatureSet):
                                                         parallel_backend=parallel_backend, enrichment_func_name='xlmhg',
                                                         exclude_unannotated_genes=exclude_unannotated_genes,
                                                         single_set=True, pathway_graphs_format=pathway_graphs_format,
-                                                        plot_style=plot_style, show_expected=show_expected)
+                                                        plot_style=plot_style, show_expected=show_expected,
+                                                        x=min_positive_genes, l_fraction=lowest_cutoff)
 
         if gui_mode:
             return runner.run(plot=False), runner
@@ -1373,7 +1412,8 @@ class RankedSet(FeatureSet):
 
     @readable_name("Single-Set Enrichment for user-defined attributes")
     def single_set_enrichment(self, attributes: Union[List[str], str, List[int], int, Literal['all']],
-                              alpha: param_typing.Fraction = 0.05,
+                              alpha: param_typing.Fraction = 0.05, min_positive_genes: param_typing.PositiveInt = 10,
+                              lowest_cutoff: param_typing.Fraction = 0.25,
                               attr_ref_path: Union[str, Path, Literal['predefined']] = 'predefined',
                               exclude_unannotated_genes: bool = True, return_nonsignificant: bool = True,
                               save_csv: bool = False, fname=None, return_fig: bool = False,
@@ -1452,7 +1492,8 @@ class RankedSet(FeatureSet):
                                                     self.set_name, parallel_backend=parallel_backend,
                                                     enrichment_func_name='xlmhg',
                                                     exclude_unannotated_genes=exclude_unannotated_genes,
-                                                    single_set=True, plot_style=plot_style, show_expected=show_expected)
+                                                    single_set=True, plot_style=plot_style, show_expected=show_expected,
+                                                    x=min_positive_genes, l_fraction=lowest_cutoff)
         if gui_mode:
             return runner.run(plot=False), runner
         return runner.run()
