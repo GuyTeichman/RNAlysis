@@ -798,6 +798,7 @@ def test_kegg_annotation_iterator_get_taxon_tree_cached(monkeypatch):
 class MockProcess:
     def __init__(self, returncode: int):
         self.stdout = [b'things', b'to', b'print']
+        self.stderr = [b'more', b'things']
         self.returncode = returncode
 
     def __enter__(self):
@@ -806,6 +807,8 @@ class MockProcess:
     def __exit__(self, exc_type, exc_val, exc_tb):
         return
 
+    def wait(self):
+        return
 
 @pytest.mark.parametrize('r_path,expected', [
     ('auto', ['Rscript', "tests/test_files/test_r_script.R"]),
@@ -814,21 +817,27 @@ class MockProcess:
 def test_run_r_script(monkeypatch, r_path, expected):
     script_path = 'tests/test_files/test_r_script.R'
 
+    ran = []
+
     def mock_popen(process, stdout, stderr, shell=False):
-        assert process == expected
+        if ran:
+            assert process == expected
+            ran.append(2)
+        else:
+            assert process == [expected[0], '--help']
+            ran.append(1)
         return MockProcess(0)
 
     monkeypatch.setattr(subprocess, 'Popen', mock_popen)
-    monkeypatch.setattr(subprocess, 'run', lambda *args, **kwargs: MockProcess(0))
 
     run_r_script(script_path, r_path)
-
+    assert ran == [1, 2]
 
 def test_run_r_script_not_installed(monkeypatch):
-    def mock_run(process, stdout, stderr, shell=False):
+    def mock_popen(process, stdout, stderr, shell=False):
         return MockProcess(1)
 
-    monkeypatch.setattr(subprocess, 'run', mock_run)
+    monkeypatch.setattr(subprocess, 'Popen', mock_popen)
     with pytest.raises(FileNotFoundError):
         run_r_script('tests/test_files/test_r_script.R')
 
