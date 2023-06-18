@@ -3,8 +3,12 @@ History
 =======
 
 
-3.9.1 (2023-06-20)
+3.9.1 (2023-06-19)
 ------------------
+
+Version 3.9.1 of RNAL=lysis introduces several improvements and fixes to further improve your analysis experience.
+The release includes new optional parameters for single-set enrichment functions, compatibility improvements with newer Python versions,
+improved error messaging for R scripts, and adresses minor issues related to enrichment analysis, documentation, plotting parameters, and Pipeline saving.
 
 Added
 *******
@@ -14,7 +18,7 @@ Changed
 ********
 * RNAlysis single-set enrichment analysis using the XL-mHG test now supports Python versions >= 3.8.
 * RNAlysis stand-alone app is now built on Python 3.11, improving overall performance.
-* Error messages caused by running R tools such as DESeq2, Limma-Voom, and FeatureCounts will now cleaarly state the reason the script failed, making it easier to understand what went wrong.
+* Error messages caused by running R tools such as DESeq2, Limma-Voom, and FeatureCounts will now clearly state the reason the script failed, making it easier to understand what went wrong.
 
 Fixed
 *******
