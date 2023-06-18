@@ -1,5 +1,6 @@
 import asyncio
 import concurrent.futures
+import contextlib
 import functools
 import gzip
 import hashlib
@@ -11,6 +12,7 @@ import re
 import shlex
 import shutil
 import subprocess
+import threading
 import time
 import typing
 import warnings
@@ -1413,7 +1415,7 @@ def run_r_script(script_path: Union[str, Path], r_installation_folder: Union[str
         script_path).is_file(), f"Could not find the requested R script: {script_path}"
 
     try:
-        return_code = run_subprocess([prefix, "--help"], False, False)
+        return_code, _ = run_subprocess([prefix, "--help"], False, False)
         if return_code:
             raise FileNotFoundError
 
@@ -1422,13 +1424,49 @@ def run_r_script(script_path: Union[str, Path], r_installation_folder: Union[str
                                 "Please make sure your R installation folder is correct. \n"
                                 "(For example: 'C:/Program Files/R/R-4.2.3')")
 
-    return_code = run_subprocess([prefix, script_path])
+    return_code, stderr = run_subprocess([prefix, script_path])
+    if return_code:
+        full_err = 'See R log below. \n' + '\n'.join([s.rstrip() for s in stderr])
+        short_err = stderr[-1].rstrip()
+        for i, s in enumerate(stderr):
+            if s.startswith('Error'):
+                short_err = s.rstrip() + stderr[i + 1].rstrip()
+                break
+        raise ChildProcessError(
+            f"R script failed to execute: '{short_err}'. See full error report below.") from RuntimeError(full_err)
 
-    assert not return_code, f"R script failed to execute (return code {return_code}). "
+
+def stdout_reader(pipe, log_filename, lock, print_output: bool = True):
+    with open(log_filename, 'a') if log_filename is not None else contextlib.nullcontext() as logfile:
+        for line in iter(pipe.readline, b''):
+            decoded_line = line.decode('utf8', errors="ignore")
+
+            if print_output:
+                print(decoded_line)
+
+            if log_filename is not None:
+                with lock:
+                    logfile.write(decoded_line)
+    pipe.close()
+
+
+def stderr_reader(pipe, stderr_record, log_filename, lock, print_output: bool = True):
+    with open(log_filename, 'a') if log_filename is not None else contextlib.nullcontext() as logfile:
+        for line in iter(pipe.readline, b''):
+            decoded_line = line.decode('utf8', errors="ignore")
+            stderr_record.append(decoded_line)
+
+            if print_output:
+                print(decoded_line)
+
+            if log_filename is not None:
+                with lock:
+                    logfile.write(decoded_line)
+    pipe.close()
 
 
 def run_subprocess(args: List[str], print_stdout: bool = True, print_stderr: bool = True,
-                   log_filename: Union[str, None] = None, shell: bool = False):
+                   log_filename: Union[str, None] = None, shell: bool = False) -> Tuple[int, List[str]]:
     # join List of args into a string of args when running in shell mode
     if shell:
         try:
@@ -1436,34 +1474,24 @@ def run_subprocess(args: List[str], print_stdout: bool = True, print_stderr: boo
         except AttributeError:
             args = ' '.join([shlex.quote(arg) for arg in args])
 
-    if print_stdout or print_stderr:
-        if print_stdout and print_stderr:
-            stdout = subprocess.PIPE
-            stderr = subprocess.STDOUT
-        elif print_stdout:
-            stdout = subprocess.PIPE
-            stderr = subprocess.DEVNULL
-        else:
-            stdout = subprocess.DEVNULL
-            stderr = subprocess.PIPE
+    stderr_record = []
+    lock = threading.Lock()
+    stdout = subprocess.PIPE
+    stderr = subprocess.PIPE
 
-        with subprocess.Popen(args, stdout=stdout, stderr=stderr, shell=shell) as process:
-            stream = process.stdout if print_stdout else process.stderr
-            if log_filename is not None:
-                with open(log_filename, 'w') as logfile:
-                    for line in stream:
-                        text = line.decode('utf8', errors="ignore")
-                        print(text)
-                        logfile.write(text)
-            else:
-                for line in stream:
-                    text = line.decode('utf8', errors="ignore")
-                    print(text)
-        return_code = process.returncode
-    else:
-        return_code = subprocess.run(args, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, shell=shell).returncode
+    process = subprocess.Popen(args, stdout=stdout, stderr=stderr, shell=shell)
 
-    return return_code
+    stdout_thread = threading.Thread(target=stdout_reader, args=(process.stdout, log_filename, lock, print_stdout))
+    stderr_thread = threading.Thread(target=stderr_reader,
+                                     args=(process.stderr, stderr_record, log_filename, lock, print_stderr))
+
+    stdout_thread.start()
+    stderr_thread.start()
+    stdout_thread.join()
+    stderr_thread.join()
+    process.wait()
+
+    return process.returncode, stderr_record
 
 
 def is_rnalysis_outdated():

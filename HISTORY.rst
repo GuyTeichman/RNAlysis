@@ -14,6 +14,7 @@ Changed
 ********
 * RNAlysis single-set enrichment analysis using the XL-mHG test now supports Python versions >= 3.8.
 * RNAlysis stand-alone app is now built on Python 3.11, improving overall performance.
+* Error messages caused by running R tools such as DESeq2, Limma-Voom, and FeatureCounts will now cleaarly state the reason the script failed, making it easier to understand what went wrong.
 
 Fixed
 *******
