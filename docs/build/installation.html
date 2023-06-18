@@ -4,7 +4,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Installation &mdash; RNAlysis 3.9.0 documentation</title>
+  <title>Installation &mdash; RNAlysis 3.9.1 documentation</title>
       <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
     <link rel="shortcut icon" href="_static/favicon.ico"/>
@@ -31,12 +31,16 @@
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
-            <a href="index.html">
-            <img src="_static/logo.png" class="logo" alt="Logo"/>
+
+          
+          
+          <a href="index.html">
+            
+              <img src="_static/logo.png" class="logo" alt="Logo"/>
           </a>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
-    <input type="text" name="q" placeholder="Search docs" />
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
     <input type="hidden" name="check_keywords" value="yes" />
     <input type="hidden" name="area" value="default" />
   </form>
@@ -111,8 +115,8 @@
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
-      <li>Installation</li>
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Installation</li>
       <li class="wy-breadcrumbs-aside">
             <a href="_sources/installation.rst.txt" rel="nofollow"> View page source</a>
       </li>
@@ -170,12 +174,12 @@ you should first install <a class="reference external" href="https://graphviz.or
 To do so on Debian/ubuntu systems, use the command <cite>sudo apt install qt5-image-formats-plugins</cite>.
 To do so on Red Hat-based distros such as Fedora, use the command <cite>dnf install qt5-qtimageformats</cite>.</p>
 <p>After installing these external dependencies, you can install <em>RNAlysis</em> by typing the following command in your terminal window:</p>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>pip install RNAlysis<span class="o">[</span>all<span class="o">]</span>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span>RNAlysis<span class="o">[</span>all<span class="o">]</span>
 </pre></div>
 </div>
 <p>If you’re having trouble installing the full version of <em>RNAlysis</em>, you can install the basic version first.
 To install the basic version of <em>RNAlysis</em>, use the following command in your terminal window:</p>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>pip install RNAlysis
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span>RNAlysis
 </pre></div>
 </div>
 <p>You can also install <em>RNAlysis</em> with only some of the following additional features:</p>
@@ -187,7 +191,7 @@ To install the basic version of <em>RNAlysis</em>, use the following command in 
 <li><p><cite>reports</cite> - automatically generate interactive analysis reports</p></li>
 </ul>
 <p>by calling the install command with one or more additional features inside the square brackets, separated by commas. For example:</p>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>pip install RNAlysis<span class="o">[</span>fastq,single-set<span class="o">]</span>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span>RNAlysis<span class="o">[</span>fastq,single-set<span class="o">]</span>
 </pre></div>
 </div>
 <p>will install the basic version of <em>RNAlysis</em>, along with the <cite>fastq</cite> and <cite>single-set</cite> additional features.</p>
@@ -196,8 +200,8 @@ To install the basic version of <em>RNAlysis</em>, use the following command in 
 <h3>How to run it<a class="headerlink" href="#id2" title="Permalink to this heading"></a></h3>
 <p>If you installed <em>RNAlysis</em> with <em>pip</em>, you can open the <em>RNAlysis</em> app by executing the command <cite>rnalysis-gui</cite> from your terminal.</p>
 <p>Alternatively, you can open the <em>RNAlysis</em> app by typing the following code into a Python console:</p>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>&gt;&gt;&gt; from rnalysis import gui
-&gt;&gt;&gt; gui.run_gui<span class="o">()</span>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>&gt;&gt;&gt;<span class="w"> </span>from<span class="w"> </span>rnalysis<span class="w"> </span>import<span class="w"> </span>gui
+&gt;&gt;&gt;<span class="w"> </span>gui.run_gui<span class="o">()</span>
 </pre></div>
 </div>
 <p>In addition, you can write Python code that uses <em>RNAlysis</em> functions as described in the <a class="reference external" href="https://guyteichman.github.io/RNAlysis/build/user_guide.html">programmatic interface user guide</a>.</p>
@@ -209,15 +213,15 @@ To install the basic version of <em>RNAlysis</em>, use the following command in 
 <section id="id3">
 <h3>How to install it<a class="headerlink" href="#id3" title="Permalink to this heading"></a></h3>
 <p>First, clone the public repository:</p>
-<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>git clone git://github.com/GuyTeichman/rnalysis
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>git<span class="w"> </span>clone<span class="w"> </span>git://github.com/GuyTeichman/rnalysis
 </pre></div>
 </div>
 <p>Once you have a copy of the source, you can install the basic version of <em>RNAlysis</em> with:</p>
-<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>python -m pip setup.py install
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>python<span class="w"> </span>-m<span class="w"> </span>pip<span class="w"> </span>setup.py<span class="w"> </span>install
 </pre></div>
 </div>
 <p>Or you can install the full version of <em>RNAlysis</em> with:</p>
-<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>python -m pip setup.py install .<span class="o">[</span>all<span class="o">]</span>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>python<span class="w"> </span>-m<span class="w"> </span>pip<span class="w"> </span>setup.py<span class="w"> </span>install<span class="w"> </span>.<span class="o">[</span>all<span class="o">]</span>
 </pre></div>
 </div>
 </section>
@@ -225,8 +229,8 @@ To install the basic version of <em>RNAlysis</em>, use the following command in 
 <h3>How to run it<a class="headerlink" href="#id4" title="Permalink to this heading"></a></h3>
 <p>If you installed <em>RNAlysis</em> from source, you can open the <em>RNAlysis</em> app by executing the command <cite>rnalysis-gui</cite> from your terminal.</p>
 <p>Alternatively, you can open the <em>RNAlysis</em> app by typing the following code into a Python console:</p>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>&gt;&gt;&gt; from rnalysis import gui
-&gt;&gt;&gt; gui.run_gui<span class="o">()</span>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>&gt;&gt;&gt;<span class="w"> </span>from<span class="w"> </span>rnalysis<span class="w"> </span>import<span class="w"> </span>gui
+&gt;&gt;&gt;<span class="w"> </span>gui.run_gui<span class="o">()</span>
 </pre></div>
 </div>
 <p>In addition, you can write Python code that uses <em>RNAlysis</em> functions as described in the <a class="reference external" href="https://guyteichman.github.io/RNAlysis/build/user_guide.html">programmatic interface user guide</a>.</p>
