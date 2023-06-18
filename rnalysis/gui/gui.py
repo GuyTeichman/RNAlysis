@@ -3555,7 +3555,7 @@ class MainWindow(QtWidgets.QMainWindow):
                     self.update_report_spawn(pipeline_name, new_pipeline_id, self.pipelines[pipeline_name][1], pipeline)
 
             self.pipelines[pipeline_name] = (pipeline, new_pipeline_id)
-            print(f"Successfully saved Pipeline '{self.basic_widgets['pipeline_name'].text()}'")
+            print(f"Successfully saved Pipeline '{pipeline_name}'")
 
     def settings(self):
         self.settings_window.exec()

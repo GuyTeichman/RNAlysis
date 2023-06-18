@@ -21,6 +21,7 @@ Fixed
 * Added missing documentation for plotting parameters in some enrichment functions.
 * Depracation Warning should no longer appear when generating a box-plot or enhanced box-plot with scatter=True (CountFilter.box_plot, CountFilter.enhanced_box_plot)
 * Fixed bug in featureCounts single-end mode where the 'output_folder' parameter could appear as disabled.
+* Fixed bug where RNAlysis would raise an error message after saving a Pipeline, even when the Pipeline was saved successfully.
 
 3.9.0 (2023-06-09)
 ------------------
