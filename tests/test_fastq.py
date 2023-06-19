@@ -31,11 +31,12 @@ def test_bowtie2_create_index_command(monkeypatch, genome_fastas, output_folder,
     def mock_run_subprocess(args, print_stdout=True, print_stderr=True, log_filename: str = None, shell: bool = False):
         assert shell
         if args[-1] == '--version':
-            return 0
+            return 0, []
         assert args == expected_command
         assert print_stdout
         assert print_stderr
         index_created.append(True)
+        return 0, []
 
     monkeypatch.setattr(io, 'run_subprocess', mock_run_subprocess)
 
@@ -79,12 +80,13 @@ def test_bowtie2_align_paired_end_command(monkeypatch, r1_files, r2_files, outpu
     def mock_run_subprocess(args, print_stdout=True, print_stderr=True, log_filename: str = None, shell: bool = False):
         assert shell
         if args[1] == '--version':
-            return 0
+            return 0, []
 
         assert args == expected_command
         pairs_covered.append(pairs_to_cover[0])
         assert print_stdout
         assert print_stderr
+        return 0, []
 
     monkeypatch.setattr(io, 'run_subprocess', mock_run_subprocess)
 
@@ -121,7 +123,7 @@ def test_bowtie2_align_single_end_command(monkeypatch, fastq_folder, output_fold
     def mock_run_subprocess(args, print_stdout=True, print_stderr=True, log_filename: str = None, shell: bool = False):
         assert shell
         if args[1] == '--version':
-            return 0
+            return 0, []
         for i in range(len(files_to_cover)):
             if files_to_cover[i] in args[-3]:
                 exp = expected_command.copy()
@@ -136,7 +138,7 @@ def test_bowtie2_align_single_end_command(monkeypatch, fastq_folder, output_fold
                 break
         assert print_stdout
         assert print_stderr
-
+        return 0, []
     monkeypatch.setattr(io, 'run_subprocess', mock_run_subprocess)
 
     bowtie2_align_single_end(fastq_folder, output_folder, index_file,
@@ -186,7 +188,7 @@ def test_shortstack_command(monkeypatch, fastq_folder, output_folder, genome_fas
     def mock_run_subprocess(args, print_stdout=True, print_stderr=True, log_filename: str = None, shell: bool = False):
         assert shell
         if args[1] == '--version':
-            return 0
+            return 0, []
         for i in range(len(files_to_cover)):
             if files_to_cover[i] in args[-3]:
                 exp = expected_command.copy()
@@ -201,7 +203,7 @@ def test_shortstack_command(monkeypatch, fastq_folder, output_folder, genome_fas
                 break
         assert print_stdout
         assert print_stderr
-
+        return 0, []
     monkeypatch.setattr(io, 'run_subprocess', mock_run_subprocess)
 
     shortstack_align_smallrna(fastq_folder, output_folder, genome_fasta, shortstack_installation_folder,
@@ -265,7 +267,7 @@ def test_kallisto_create_index_command(monkeypatch, transcriptome_fasta, kallist
     def mock_run_subprocess(args, print_stdout=True, print_stderr=True, log_filename: str = None, shell: bool = False):
         assert not shell
         if args[-1] == 'version':
-            return 0
+            return 0, []
         assert args == expected_command
         assert print_stdout
         assert print_stderr
@@ -275,7 +277,7 @@ def test_kallisto_create_index_command(monkeypatch, transcriptome_fasta, kallist
 
     kallisto_create_index(transcriptome_fasta, kallisto_installation_folder, kmer_length, make_unique)
     assert index_created == [True]
-
+    return 0, []
 
 def test_kallisto_create_index():
     out_path = 'tests/test_files/kallisto_tests/transcripts.idx'
@@ -355,7 +357,7 @@ def test_kallisto_quantify_single_end_command(monkeypatch, fastq_folder, output_
     def mock_run_subprocess(args, print_stdout=True, print_stderr=True, log_filename: str = None, shell: bool = False):
         assert not shell
         if args[1] == 'version':
-            return 0
+            return 0, []
         for i in range(len(files_to_cover)):
             if files_to_cover[i] in args[-1]:
                 exp = expected_command.copy()
@@ -369,7 +371,7 @@ def test_kallisto_quantify_single_end_command(monkeypatch, fastq_folder, output_
                 break
         assert print_stdout
         assert print_stderr
-
+        return 0, []
     def mock_process_outputs(out_folder, gtf):
         assert Path(gtf_file) == Path(gtf)
         assert Path(out_folder) == Path(output_folder)
@@ -413,7 +415,7 @@ def test_kallisto_quantify_paired_end_command(monkeypatch, r1_files, r2_files, o
     def mock_run_subprocess(args, print_stdout=True, print_stderr=True, log_filename: str = None, shell: bool = False):
         assert not shell
         if args[1] == 'version':
-            return 0
+            return 0, []
 
         for i in range(len(pairs_to_cover)):
             if pairs_to_cover[i][-1] in args[-1]:
@@ -429,6 +431,7 @@ def test_kallisto_quantify_paired_end_command(monkeypatch, r1_files, r2_files, o
                 break
         assert print_stdout
         assert print_stderr
+        return 0, []
 
     def mock_process_outputs(out_folder, gtf):
         assert Path(gtf_file) == Path(gtf)
@@ -523,6 +526,7 @@ def test_trim_adapters_single_end_command(monkeypatch, fastq_folder, output_fold
                 break
         assert print_stdout
         assert print_stderr
+        return 0, []
 
     monkeypatch.setattr(io, 'run_subprocess', mock_run_subprocess)
     monkeypatch.setattr(io, 'generate_base_call', lambda *args, **kwargs: ['cutadapt'])
@@ -577,6 +581,7 @@ def test_trim_adapters_paired_end_command(monkeypatch, fastq_1, fastq_2, output_
                 break
         assert print_stdout
         assert print_stderr
+        return 0, []
 
     monkeypatch.setattr(io, 'run_subprocess', mock_run_subprocess)
     monkeypatch.setattr(io, 'generate_base_call', lambda *args, **kwargs: ['cutadapt'])
