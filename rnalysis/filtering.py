@@ -2737,6 +2737,19 @@ class CountFilter(Filter):
                           f'Appending the remaining {n_cols % multiplier} as an inncomplete triplicate.')
         return triplicate
 
+    def _diff_exp_assertions(self, design_mat_df: pd.DataFrame):
+        assert design_mat_df.shape[0] == self.shape[1], f"The number of items in the design matrix " \
+                                                        f"({design_mat_df.shape[0]}) does not match the number of " \
+                                                        f"columns in the count matrix ({self.shape[1]})."
+        assert sorted(design_mat_df.index) == sorted(self.columns), f"The sample names in the design matrix do not " \
+                                                                    f"match the sample names in the count matrix: " \
+                                                                    f"{sorted(design_mat_df.index)} != " \
+                                                                    f"{sorted(self.columns)}"
+
+        for factor in design_mat_df.columns:
+            assert parsing.slugify(factor) == factor, f"Invalid factor name '{factor}': contains invalid characters." \
+                                                      f" \nSuggested alternative name: '{parsing.slugify(factor)}'. "
+
     @readable_name('Run Limma-Voom differential expression')
     def differential_expression_limma_voom(self, design_matrix: Union[str, Path],
                                            comparisons: Iterable[Tuple[str, str, str]],
@@ -2791,14 +2804,7 @@ class CountFilter(Filter):
         io.save_table(self.df.round(), data_path)
         # use Pandas to automatically detect file delimiter type, then export it as a CSV file.
         design_mat_df = io.load_table(design_matrix, index_col=0)
-        assert design_mat_df.shape[0] == self.shape[1], f"The number of items in the design matrix " \
-                                                        f"({design_mat_df.shape[0]}) does not match the number of " \
-                                                        f"columns in the count matrix ({self.shape[1]})."
-        assert sorted(design_mat_df.index) == sorted(self.columns), f"The sample names in the design matrix do not " \
-                                                                    f"match the sample names in the count matrix: " \
-                                                                    f"{sorted(design_mat_df.index)} != " \
-                                                                    f"{sorted(self.columns)}"
-
+        self._diff_exp_assertions(design_mat_df)
         io.save_table(design_mat_df, design_mat_path)
 
         r_output_dir = differential_expression.run_limma_analysis(data_path, design_mat_path, comparisons,
@@ -2870,14 +2876,7 @@ class CountFilter(Filter):
         io.save_table(self.df.round(), data_path)
         # use Pandas to automatically detect file delimiter type, then export it as a CSV file.
         design_mat_df = io.load_table(design_matrix, index_col=0)
-        assert design_mat_df.shape[0] == self.shape[1], f"The number of items in the design matrix " \
-                                                        f"({design_mat_df.shape[0]}) does not match the number of " \
-                                                        f"columns in the count matrix ({self.shape[1]})."
-        assert sorted(design_mat_df.index) == sorted(self.columns), f"The sample names in the design matrix do not " \
-                                                                    f"match the sample names in the count matrix: " \
-                                                                    f"{sorted(design_mat_df.index)} != " \
-                                                                    f"{sorted(self.columns)}"
-
+        self._diff_exp_assertions(design_mat_df)
         io.save_table(design_mat_df, design_mat_path)
 
         r_output_dir = differential_expression.run_deseq2_analysis(data_path, design_mat_path, comparisons,

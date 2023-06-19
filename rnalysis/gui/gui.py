@@ -293,8 +293,11 @@ class DiffExpWindow(gui_windows.FuncExternalWindow):
         self.param_widgets['load_design'].setEnabled(is_legal)
 
     def init_comparisons_ui(self):
-        self.design_mat = io.load_table(self.param_widgets['design_matrix'].text(), index_col=0)
-
+        design_mat = io.load_table(self.param_widgets['design_matrix'].text(), index_col=0)
+        for factor in design_mat.columns:
+            assert parsing.slugify(factor) == factor, f"Invalid factor name '{factor}': contains invalid characters." \
+                                                      f" \nSuggested alternative name: '{parsing.slugify(factor)}'. "
+        self.design_mat = design_mat
         if 'picker' in self.comparisons_widgets:
             self.comparisons_grid.removeWidget(self.comparisons_widgets['picker'])
             self.comparisons_widgets['picker'].deleteLater()

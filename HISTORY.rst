@@ -2,6 +2,13 @@
 History
 =======
 
+3.9.2 (2023-??-??)
+------------------
+
+Changed
+********
+* When loading a differential expression design matrix, RNAlysis now issues an error if the design matrix column names contain invalid characters.
+
 
 3.9.1 (2023-06-19)
 ------------------
