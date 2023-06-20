@@ -9,6 +9,9 @@ Changed
 ********
 * When loading a differential expression design matrix, RNAlysis now issues an error if the design matrix column names contain invalid characters.
 
+Fixed
+*******
+* Fixed bug where an error message would sometimes appear after RNAlysis finishes generating an automatic session report on the stand-alone app.
 
 3.9.1 (2023-06-19)
 ------------------
