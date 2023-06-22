@@ -559,7 +559,7 @@ class EnrichmentRunner:
         :rtype: matplotlib.figure.Figure instance
         """
         assert self.plot_style in ['bar', 'lollipop'], \
-            f"'plot_style' must be 'bar' or 'lollipop', instaed got '{plot_style}'."
+            f"'plot_style' must be 'bar' or 'lollipop', instaed got '{self.plot_style}'."
 
         # determine number of entries/bars to plot
         if n_bars != 'all':
@@ -576,6 +576,8 @@ class EnrichmentRunner:
             enrichment_names = results.index.values.tolist()
         enrichment_scores = results[self.en_score_col].values.tolist()
         enrichment_pvalue = results['padj'].values.tolist()
+        enrichment_obs = results['obs'].values.tolist()
+        enrichment_exp = results['exp'].values.tolist()
 
         # choose functions and parameters according to the graph's orientation (horizontal vs vertical)
         if self.plot_horizontal:
@@ -589,7 +591,7 @@ class EnrichmentRunner:
             ticklabels_func = plt.Axes.set_yticklabels
             ticklabels_kwargs = dict(fontsize=13, rotation=0)
 
-            for lst in (enrichment_names, enrichment_scores, enrichment_pvalue):
+            for lst in (enrichment_names, enrichment_scores, enrichment_pvalue, enrichment_obs, enrichment_exp):
                 lst.reverse()
         else:
             figsize = [0.5 * (4.8 + self.results.shape[0]), 4.2]
@@ -639,7 +641,7 @@ class EnrichmentRunner:
         if self.plot_style == 'lollipop':
             x, y = (enrichment_scores, range(len(enrichment_names))) if self.plot_horizontal else (range(
                 len(enrichment_names)), enrichment_scores)
-            ax.scatter(x, y, color=colors, zorder=3, s=dot_scaling_func(results['obs']))
+            ax.scatter(x, y, color=colors, zorder=3, s=dot_scaling_func(enrichment_obs))
 
             legend_sizes = [Size(i) for i in [1, 10, 100, 1000]]
             ax.legend(legend_sizes, [f"observed={i.size}" for i in legend_sizes],
@@ -664,7 +666,8 @@ class EnrichmentRunner:
         # title
         ax.set_title(title, fontsize=18)
         # add significance asterisks
-        for i, (score, sig) in enumerate(zip(enrichment_scores, enrichment_pvalue)):
+        for i, (score, sig, obs, exp) in enumerate(
+            zip(enrichment_scores, enrichment_pvalue, enrichment_obs, enrichment_exp)):
             asterisks, fontweight = self._get_pval_asterisk(sig, self.alpha)
             if self.plot_horizontal:
                 x = score
@@ -682,7 +685,7 @@ class EnrichmentRunner:
                 rotation_mode = 'default'
 
             if self.show_expected:
-                extra_text = f"{results['obs'].iloc[i]}/{results['exp'].iloc[i]:.1f}"
+                extra_text = f"{obs}/{exp:.1f}"
                 asterisks = f"{extra_text}\n{asterisks}" if self.plot_horizontal or np.sign(
                     score) == 1 else f"{asterisks}\n{extra_text}"
             ax.text(x=x, y=y, s=asterisks, fontname='DejaVu Sans',

@@ -12,6 +12,7 @@ Changed
 Fixed
 *******
 * Fixed bug where an error message would sometimes appear after RNAlysis finishes generating an automatic session report on the stand-alone app.
+* Fixed bug where enrichment lollipop plots in horizontal mode would display the observed/expected values in reverse order.
 
 3.9.1 (2023-06-19)
 ------------------
