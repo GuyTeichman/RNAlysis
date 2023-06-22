@@ -8,6 +8,7 @@ History
 Changed
 ********
 * When loading a differential expression design matrix, RNAlysis now issues an error if the design matrix column names contain invalid characters.
+* Updated the scaling of enrichment lollipop plots to make small 'observed' values easier to discern.
 
 Fixed
 *******

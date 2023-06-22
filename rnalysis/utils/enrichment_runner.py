@@ -45,7 +45,7 @@ class Size:
 
 
 def dot_scaling_func(values: Union[float, np.ndarray, pd.Series]):
-    return np.sqrt(values) * 12
+    return 8 * np.array(values) ** 0.75
 
 
 class sizeHandler:
@@ -643,9 +643,9 @@ class EnrichmentRunner:
                 len(enrichment_names)), enrichment_scores)
             ax.scatter(x, y, color=colors, zorder=3, s=dot_scaling_func(enrichment_obs))
 
-            legend_sizes = [Size(i) for i in [1, 10, 100, 1000]]
+            legend_sizes = [Size(i) for i in [10, 50, 250, 500]]
             ax.legend(legend_sizes, [f"observed={i.size}" for i in legend_sizes],
-                      labelspacing=1.5, borderpad=1.5, draggable=True,
+                      labelspacing=3.2, borderpad=2.5, draggable=True,
                       handler_map={size: sizeHandler(size.size) for size in legend_sizes}, loc='lower right')
 
         # determine bounds, and enlarge the bound by a small margin (0.5%) so nothing gets cut out of the figure
