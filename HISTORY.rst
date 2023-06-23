@@ -2,8 +2,10 @@
 History
 =======
 
-3.9.2 (2023-??-??)
+3.9.2 (2023-06-23)
 ------------------
+This patch contains bug fixes and improved functionality for enrichment lollipop plots,
+as well as bug fixes for issues with the stand-alone version.
 
 Changed
 ********
