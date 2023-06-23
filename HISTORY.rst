@@ -22,7 +22,7 @@ Fixed
 3.9.1 (2023-06-19)
 ------------------
 
-Version 3.9.1 of RNAL=lysis introduces several improvements and fixes to further improve your analysis experience.
+Version 3.9.1 of RNAlysis introduces several improvements and fixes to further improve your analysis experience.
 The release includes new optional parameters for single-set enrichment functions, compatibility improvements with newer Python versions,
 improved error messaging for R scripts, and adresses minor issues related to enrichment analysis, documentation, plotting parameters, and Pipeline saving.
 
