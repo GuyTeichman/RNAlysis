@@ -73,7 +73,7 @@ setup(
     tests_require=test_requirements,
     extras_require=extras_require,
     url='https://github.com/GuyTeichman/RNAlysis',
-    version='3.9.1',
+    version='3.9.2',
     zip_safe=False,
     entry_points={
         'console_scripts': [
