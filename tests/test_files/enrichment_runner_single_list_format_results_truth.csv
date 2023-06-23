@@ -1,4 +1,4 @@
-name,samples,colName,pval
-name1,50,2.3,0.05
-name2,17,0,1.0
-name3,1,-0.7,NaN
+name,samples,obs,exp,colName,pval
+name1,50,5,10,2.3,0.05
+name2,17,17,0.56,0,1.0
+name3,1,2,3.14,-0.7,NaN

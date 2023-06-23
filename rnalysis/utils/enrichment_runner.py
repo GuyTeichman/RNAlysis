@@ -291,23 +291,27 @@ class EnrichmentRunner:
         res_obj_fwd = xlmhglite.get_xlmhg_test_result(N=n, indices=index_vec, X=X, L=L, table=table)
         res_obj_rev = xlmhglite.get_xlmhg_test_result(N=n, indices=rev_index_vec, X=X, L=L, table=table)
 
-        en_score, pval = self._extract_xlmhg_results(res_obj_fwd, res_obj_rev)
-        return [attribute, n, en_score, pval]
+        obs, exp, en_score, pval = self._extract_xlmhg_results(res_obj_fwd, res_obj_rev)
+        return [attribute, n, obs, exp, en_score, pval]
 
     @staticmethod
     def _extract_xlmhg_results(result_obj_fwd: xlmhglite.mHGResult, result_obj_rev: xlmhglite.mHGResult
-                               ) -> Tuple[float, float]:
+                               ) -> Tuple[int, float, float, float]:
         if result_obj_fwd.pval <= result_obj_rev.pval:
+            obs = result_obj_fwd.k
+            exp = result_obj_fwd.K * (result_obj_fwd.cutoff / float(result_obj_fwd.N))
             pval = result_obj_fwd.pval
             en_score = result_obj_fwd.escore if not np.isnan(result_obj_fwd.escore) else 1
         else:
+            obs = result_obj_rev.k
+            exp = result_obj_rev.K * (result_obj_rev.cutoff / float(result_obj_rev.N))
             pval = result_obj_rev.pval
             en_score = 1 / result_obj_rev.escore if not np.isnan(result_obj_rev.escore) else 1
         pval = pval if not np.isnan(pval) else 1
         en_score = en_score if not np.isnan(en_score) else 1
         log2_en_score = np.log2(en_score) if en_score > 0 else -np.inf
 
-        return log2_en_score, pval
+        return obs, exp, log2_en_score, pval
 
     def _generate_xlmhg_index_vectors(self, attribute) -> Tuple[np.ndarray, np.ndarray]:
         n = len(self.ranked_genes)
@@ -509,10 +513,7 @@ class EnrichmentRunner:
         return result
 
     def format_results(self, unformatted_results_list: list):
-        if self.single_set:
-            columns = ['name', 'samples', self.en_score_col, 'pval']
-        else:
-            columns = ['name', 'samples', 'obs', 'exp', self.en_score_col, 'pval']
+        columns = ['name', 'samples', 'obs', 'exp', self.en_score_col, 'pval']
         self.results = pd.DataFrame(unformatted_results_list, columns=columns).set_index('name')
         self._correct_multiple_comparisons()
 
@@ -918,10 +919,7 @@ class KEGGEnrichmentRunner(EnrichmentRunner):
         return io.KEGGAnnotationIterator(self.taxon_id)
 
     def format_results(self, unformatted_results_list: list):
-        if self.single_set:
-            columns = ['KEGG ID', 'name', 'samples', self.en_score_col, 'pval']
-        else:
-            columns = ['KEGG ID', 'name', 'samples', 'obs', 'exp', self.en_score_col, 'pval']
+        columns = ['KEGG ID', 'name', 'samples', 'obs', 'exp', self.en_score_col, 'pval']
         named_results_list = [[entry[0], self.pathway_names_dict[entry[0]]] + entry[1:] for entry in
                               unformatted_results_list]
         self.results = pd.DataFrame(named_results_list, columns=columns).set_index('KEGG ID')
@@ -1247,10 +1245,7 @@ class GOEnrichmentRunner(EnrichmentRunner):
         return figs
 
     def format_results(self, unformatted_results_dict: dict):
-        if self.single_set:
-            columns = ['name', 'samples', self.en_score_col, 'pval']
-        else:
-            columns = ['name', 'samples', 'obs', 'exp', self.en_score_col, 'pval']
+        columns = ['name', 'samples', 'obs', 'exp', self.en_score_col, 'pval']
         self.results = pd.DataFrame.from_dict(unformatted_results_dict, orient='index', columns=columns)
         self._correct_multiple_comparisons()
         # filter non-significant results
@@ -1523,8 +1518,8 @@ class GOEnrichmentRunner(EnrichmentRunner):
         res_obj_fwd = xlmhglite.get_xlmhg_test_result(N=n, indices=index_vec, X=X, L=L, table=table)
         res_obj_rev = xlmhglite.get_xlmhg_test_result(N=n, indices=rev_index_vec, X=X, L=L, table=table)
 
-        en_score, pval = self._extract_xlmhg_results(res_obj_fwd, res_obj_rev)
-        return [go_name, n, en_score, pval]
+        obs, exp, en_score, pval = self._extract_xlmhg_results(res_obj_fwd, res_obj_rev)
+        return [go_name, n, obs, exp, en_score, pval]
 
     def _generate_xlmhg_index_vectors(self, attribute: str, mod_df_ind: int = None) -> Tuple[np.ndarray, np.ndarray]:
         n = len(self.ranked_genes)

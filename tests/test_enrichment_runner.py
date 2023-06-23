@@ -484,7 +484,7 @@ def test_enrichment_runner_format_results(monkeypatch):
 def test_enrichment_runner_format_results_single_list(monkeypatch):
     monkeypatch.setattr(EnrichmentRunner, '_correct_multiple_comparisons', lambda self: None)
     runner = EnrichmentRunner.__new__(EnrichmentRunner)
-    results_list = [['name1', 50, 2.3, 0.05], ['name2', 17, 0, 1], ['name3', 1, -0.7, np.nan]]
+    results_list = [['name1', 50, 5, 10, 2.3, 0.05], ['name2', 17, 17, 0.56, 0, 1], ['name3', 1, 2, 3.14, -0.7, np.nan]]
     truth = pd.read_csv('tests/test_files/enrichment_runner_single_list_format_results_truth.csv', index_col=0)
     runner.en_score_col = 'colName'
     runner.single_set = True
@@ -506,11 +506,17 @@ def test_enrichment_runner_xlmhg_enrichment(monkeypatch, attr, index_vector, pva
                                             params_truth, mode):
     n_calls_xlmhg_test = [0]
     params_truth['indices'] = index_vector
+    obs = 2
+    exp = 5 * (0.5 / float(10))
 
     class ResultObject:
         def __init__(self, pval, escore):
             self.pval = pval
             self.escore = escore
+            self.k = 2
+            self.K = 5
+            self.N = 10
+            self.cutoff = 0.5
 
     monkeypatch.setattr(EnrichmentRunner, '_generate_xlmhg_index_vectors',
                         lambda self, attribute: (index_vector, index_vector))
@@ -546,8 +552,8 @@ def test_enrichment_runner_xlmhg_enrichment(monkeypatch, attr, index_vector, pva
     runner.pvalue_kwargs = pvalue_kwargs
 
     log2fc = np.log2(e_scores[0] if p_values[0] <= p_values[1] else (1 / e_scores[1]))
-    output_truth = [attr + '_name' if mode == 'GOEnrichmentRunner' else attr, len(runner.ranked_genes), log2fc,
-                    min(p_values)]
+    output_truth = [attr + '_name' if mode == 'GOEnrichmentRunner' else attr, len(runner.ranked_genes), obs, exp,
+                    log2fc, min(p_values)]
 
     result = runner._xlmhg_enrichment(attr)
     assert result == output_truth
@@ -1725,22 +1731,28 @@ def test_go_enrichment_runner_parallel_over_grouping(monkeypatch, grouping, inds
     assert res == truth
 
 
+@pytest.mark.parametrize('obs_truth,exp_truth', [(5, 2.3), (7, 92)])
 @pytest.mark.parametrize('pval_fwd,pval_rev,escore_fwd,escore_rev,pval_truth,log2escore_truth',
                          [(0.05, 0.7, 2, 0.5, 0.05, 1), (0.6, 0.3, 1.2, 4, 0.3, -2),
                           (np.nan, np.nan, 2, np.inf, 1, -np.inf)])
 def test_enrichment_runner_extract_xlmhg_results(pval_fwd, pval_rev, escore_fwd, escore_rev, pval_truth,
-                                                 log2escore_truth):
+                                                 log2escore_truth, obs_truth, exp_truth):
     class XLmHGResultObject:
         def __init__(self, pval, escore):
             self.pval = pval
             self.escore = escore
+            self.k = obs_truth
+            self.cutoff = 1
+            self.K = exp_truth
+            self.N = 1
 
-    log2escore, pval = EnrichmentRunner._extract_xlmhg_results(XLmHGResultObject(pval_fwd, escore_fwd),
-                                                               XLmHGResultObject(pval_rev, escore_rev))
+    obs, exp, log2escore, pval = EnrichmentRunner._extract_xlmhg_results(XLmHGResultObject(pval_fwd, escore_fwd),
+                                                                         XLmHGResultObject(pval_rev, escore_rev))
 
     assert pval == pval_truth
     assert log2escore == log2escore_truth
-
+    assert obs == obs_truth
+    assert exp == exp_truth
 
 @pytest.mark.parametrize('exclude_unannotated', [True, False])
 @pytest.mark.parametrize(

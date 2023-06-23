@@ -7,6 +7,7 @@ History
 
 Changed
 ********
+* Single-set enrichment result tables now contain observed/expected values based on the XL-mHG test cutoff.
 * When loading a differential expression design matrix, RNAlysis now issues an error if the design matrix column names contain invalid characters.
 * Updated the scaling of enrichment lollipop plots to make small 'observed' values easier to discern.
 
@@ -14,6 +15,7 @@ Fixed
 *******
 * Fixed bug where an error message would sometimes appear after RNAlysis finishes generating an automatic session report on the stand-alone app.
 * Fixed bug where enrichment lollipop plots in horizontal mode would display the observed/expected values in reverse order.
+* Fixed bug where enrichment lollipop plots and the 'show_exp' parameter would not work on single-set enrichment data.
 
 3.9.1 (2023-06-19)
 ------------------
