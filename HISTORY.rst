@@ -18,6 +18,7 @@ Fixed
 * Fixed bug where an error message would sometimes appear after RNAlysis finishes generating an automatic session report on the stand-alone app.
 * Fixed bug where enrichment lollipop plots in horizontal mode would display the observed/expected values in reverse order.
 * Fixed bug where enrichment lollipop plots and the 'show_exp' parameter would not work on single-set enrichment data.
+* Fixed bug where sometimes the tab label of clustering/differential expression output tables would not match the name of the generated table.
 
 3.9.1 (2023-06-19)
 ------------------

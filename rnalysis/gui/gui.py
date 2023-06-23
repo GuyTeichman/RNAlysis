@@ -2053,8 +2053,8 @@ class FilterTabPage(TabPage):
             return
         self.update_filter_obj_shape()
         self.update_table_preview()
-        self.tabNameChange.emit(self.filter_obj.fname.stem, is_unsaved, -1, -1)
-        self.name = str(self.filter_obj.fname.stem)
+        self.name = str(self.filter_obj.fname.name)
+        self.tabNameChange.emit(self.name, is_unsaved, -1, -1)
         self.update_table_name_label()
 
     def _apply_function_from_params(self, func_name, args: list, kwargs: dict, finish_slot=None, job_id: int = None,
@@ -2469,7 +2469,7 @@ class MultiKeepWindow(gui_widgets.MinMaxDialog):
                 obj = self.objs[file]
                 if new_names[file] != '':
                     if validation.isinstanceinh(obj, (filtering.Filter, fastq.filtering.Filter)):
-                        obj.fname = Path(new_names[file])
+                        obj.fname = Path(f"{new_names[file]}.csv")
                     else:
                         obj.set_name = new_names[file]
                 out.append(obj)
@@ -4174,8 +4174,8 @@ class MainWindow(QtWidgets.QMainWindow):
         job_id = worker_output.job_id
 
         if parent_tab is not None:
-            parent_tab.process_outputs(worker_output.result, job_id, func_name)
             parent_tab.update_tab()
+            parent_tab.process_outputs(worker_output.result, job_id, func_name)
         else:
             source_name = generic.get_method_readable_name(worker_output.partial.func)
             if self._generate_report:
@@ -4211,9 +4211,9 @@ class MainWindow(QtWidgets.QMainWindow):
         return_val: clustering.ClusteringRunner = worker_output.result[0]
         job_id = worker_output.job_id
         figs = clustering_runner.plot_clustering()
+        parent_tab.update_tab()
         parent_tab.process_outputs(figs, job_id, func_name)
         parent_tab.process_outputs(return_val, job_id, func_name)
-        parent_tab.update_tab()
 
     @QtCore.pyqtSlot(object, object)
     def start_enrichment(self, worker: gui_widgets.Worker, finish_slot: Union[Callable, None]):
