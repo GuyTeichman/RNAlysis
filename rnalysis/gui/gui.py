@@ -1835,7 +1835,12 @@ class FilterTabPage(TabPage):
         return self.filter_obj
 
     def obj_name(self):
-        return self.filter_obj.fname.name
+        name = self.filter_obj.fname.name
+        for suffix in ['.csv', '.tsv', '.txt', '.parquet']:
+            if self.filter_obj.fname.suffix == suffix:
+                name = self.filter_obj.fname.stem
+                break
+        return name
 
     def update_obj(self, obj: filtering.Filter):
         self.filter_obj = obj
@@ -2053,7 +2058,7 @@ class FilterTabPage(TabPage):
             return
         self.update_filter_obj_shape()
         self.update_table_preview()
-        self.name = str(self.filter_obj.fname.name)
+        self.name = str(self.obj_name())
         self.tabNameChange.emit(self.name, is_unsaved, -1, -1)
         self.update_table_name_label()
 
