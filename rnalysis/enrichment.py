@@ -1848,7 +1848,7 @@ def kegg_pathway_graph(pathway_id: str, marked_genes: Union[Sequence[str], None]
         if gene_id_type.lower() == 'auto':
             translator, _, _ = io.find_best_gene_mapping(parsing.data_to_tuple(marked_genes), ('KEGG',), None)
         else:
-            translator = io.map_gene_ids(parsing.data_to_tuple(marked_genes), 'KEGG', gene_id_type)
+            translator = io.GeneIDTranslator('KEGG', gene_id_type).run(parsing.data_to_tuple(marked_genes))
 
     pathway = ontology.fetch_kegg_pathway(pathway_id, translator)
     return pathway.plot_pathway(marked_genes, title, ylabel, graph_format, dpi)

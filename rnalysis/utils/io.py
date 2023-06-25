@@ -902,7 +902,38 @@ def map_taxon_id(taxon_name: Union[str, int]) -> Tuple[int, str]:
     return taxon_id, scientific_name
 
 
-class GeneIDTranslator:
+class OrthologyDict:
+    """
+    A dictionary-like class used for mapping genes to their ortholog in a different organism.
+    """
+
+    __slots__ = {'mapping_dict': 'dictionary mapping gene IDs from one species to another based on orthology'}
+
+    def __init__(self, mapping_dict: Union[dict, None] = None):
+        """
+        :param mapping_dict: a dictionary mapping gene IDs from one type to another. \
+        If mappping_dict is None, gene IDs will be automatically mapped to themselves.
+        :type mapping_dict: dict or None (default None)
+        """
+        self.mapping_dict = mapping_dict
+
+    def __len__(self):
+        if self.mapping_dict is None:
+            return 0
+        return len(self.mapping_dict)
+
+    def __getitem__(self, key):
+        return self.mapping_dict[key]
+
+    def __contains__(self, item):
+        try:
+            _ = self[item]
+            return True
+        except KeyError:
+            return False
+
+
+class GeneIDDict:
     """
     A dictionary-like class used for mapping gene IDs from one type to another \
     (for example, from UniProtKB Accession to Entrez Gene ID), or from one type to itself.
@@ -942,126 +973,15 @@ class GeneIDTranslator:
             return False
 
 
-def submit_id_mapping(session: requests.Session, url: str, from_db: str, to_db: str, ids: List[str]):
-    req = session.post(f"{url}/idmapping/run", data={"from": from_db, "to": to_db, "ids": ",".join(ids)})
-    req.raise_for_status()
-    return req.json()["jobId"]
+class GeneIDTranslator:
+    UNIPROTKB_FROM = "UniProtKB_from"
+    UNIPROTKB_TO = "UniProtKB_to"
+    API_URL = "https://rest.uniprot.org"
+    POLLING_INTERVAL = 3
+    RETRIES = Retry(total=5, backoff_factor=0.25, status_forcelist=[500, 502, 503, 504])
 
-
-def get_next_link(headers: dict):
-    re_next_link = re.compile(r'<(.+)>; rel="next"')
-    if "Link" in headers:
-        match = re_next_link.match(headers["Link"])
-        if match:
-            return match.group(1)
-
-
-def check_id_mapping_results_ready(session, url: str, job_id: str, polling_interval: float, verbose: bool = True):
-    while True:
-        r = session.get(f"{url}/idmapping/status/{job_id}")
-        r.raise_for_status()
-        j = r.json()
-        if "jobStatus" in j:
-            if j["jobStatus"] in {"RUNNING", "NEW"}:
-                if verbose:
-                    print(f"Retrying in {polling_interval}s")
-                time.sleep(polling_interval)
-            else:
-                raise Exception(j["jobStatus"])
-        else:
-            return bool(j.get("results", False) or j.get("failedIds", False))
-
-
-def get_batch(session: requests.Session, batch_response: requests.Response, file_format: Literal['json', 'tsv']):
-    batch_url = get_next_link(batch_response.headers)
-    while batch_url:
-        batch_response = session.get(batch_url)
-        batch_response.raise_for_status()
-        yield decode_results(batch_response, file_format)
-        batch_url = get_next_link(batch_response.headers)
-
-
-def combine_batches(all_results, batch_results, file_format: Literal['json', 'tsv']):
-    if file_format == "json":
-        for key in ("results", "failedIds"):
-            if batch_results[key]:
-                all_results[key] += batch_results[key]
-    elif file_format == "tsv":
-        return all_results + batch_results[1:]  # dump the table header line
-    else:
-        return all_results + batch_results
-    return all_results
-
-
-def get_id_mapping_results_link(session: requests.Session, url: str, job_id):
-    url = f"{url}/idmapping/details/{job_id}"
-    r = session.get(url)
-    r.raise_for_status()
-    return r.json()["redirectURL"]
-
-
-def decode_results(response: requests.Response, file_format: Literal['json', 'tsv']):
-    if file_format == "json":
-        return response.json()
-    elif file_format == "tsv":
-        return [line for line in response.text.split("\n") if line]
-    return response.text
-
-
-def get_id_mapping_results_search(session: requests.Session, url: str, verbose: bool = True):
-    parsed = urlparse(url)
-    query = parse_qs(parsed.query)
-    query["fields"] = 'accession,annotation_score'
-    query["format"] = "tsv"
-    file_format = 'tsv'
-    # file_format = query["format"][0] if "format" in query else "json"
-    if "size" in query:
-        size = int(query["size"][0])
-    else:
-        size = 500
-        query["size"] = size
-
-    parsed = parsed._replace(query=urlencode(query, doseq=True))
-    url = parsed.geturl()
-    r = session.get(url)
-    r.raise_for_status()
-    results = decode_results(r, file_format)
-    try:
-        total = int(r.headers["x-total-results"])
-    except KeyError:
-        return ''
-    if verbose:
-        print_progress_batches(0, size, total)
-    for i, batch in enumerate(get_batch(session, r, file_format)):
-        results = combine_batches(results, batch, file_format)
-        if verbose:
-            print_progress_batches(i + 1, size, total)
-    return results
-
-
-def print_progress_batches(batch_index: int, size: int, total: int):
-    n = min((batch_index + 1) * size, total)
-    print(f"Fetched: {n} / {total}")
-
-
-def get_mapping_results(api_url: str, from_db: str, to_db: str, ids: List[str], polling_interval: float,
-                        session: requests.Session, verbose: bool = True):
-    job_id = submit_id_mapping(session, api_url, from_db=from_db, to_db=to_db, ids=ids)
-    if check_id_mapping_results_ready(session, api_url, job_id, polling_interval, verbose=verbose):
-        link = get_id_mapping_results_link(session, api_url, job_id)
-        results = get_id_mapping_results_search(session, link, verbose)
-        return results
-
-
-def map_gene_ids(ids: Union[str, Iterable[str]], map_from: str, map_to: str = 'UniProtKB AC',
-                 verbose: bool = True) -> GeneIDTranslator:
-    """
-    Map gene IDs from one identifier type to another using the UniProt ID Mapping service. \
-    If some IDs cannot be mapped uniquely, duplicate mappings will be resolved by their UniProtKB Annotation Score. \
-    Gene IDs that could not be mapped or were not recognized will be dropped from the output.
-
-    :param ids: gene IDs to be mapped
-    :type ids: str or an Iterable of strings
+    def __init__(self, map_from: str, map_to: str = 'UniProtKB AC', verbose: bool = True):
+        """
     :param map_from: identifier type to map from (for example 'UniProtKB AC' or 'WormBase')
     :type map_from: str
     :param map_to: identifier type to map to (for example 'UniProtKB AC' or 'WormBase'). \
@@ -1069,69 +989,150 @@ def map_gene_ids(ids: Union[str, Iterable[str]], map_from: str, map_to: str = 'U
     :type map_to: str
     :param verbose: if False, verbose reports of mapping success/failure will be suppressed.
     :type verbose: bool (default=True)
-    :return:a GeneIDTranslator object that uniquely maps each given gene ID in 'map_from' identifier type \
-    to its matching gene ID in 'map_to' identifier type.
-    :rtype: GeneIDTranslator
     """
-    UNIPROTKB_FROM = "UniProtKB_from"
-    UNIPROTKB_TO = "UniProtKB_to"
+        self.verbose = verbose
+        self.map_from = map_from
+        self.map_to = map_to
+        self.id_dicts = _get_id_abbreviation_dicts()
 
-    if len(ids) == 0:
-        if verbose:
-            warnings.warn('No IDs were given')
-        return GeneIDTranslator({})
+        id_dict_to, id_dict_from = self.id_dicts
+        if id_dict_to[self.map_to] == id_dict_from[self.map_from]:
+            self.to_from_identical = True
+        else:
+            self.to_from_identical = False
 
-    # if map_from and map_to are the same, return an empty GeneIDTranslator (which will map any given gene ID to itself)
-    id_dicts = _get_id_abbreviation_dicts()
-    validation.validate_uniprot_dataset_name(id_dicts, parsing.data_to_list(map_to), parsing.data_to_list(map_from))
-    id_dict_to, id_dict_from = id_dicts
-    if id_dict_to[map_to] == id_dict_from[map_from]:
-        return GeneIDTranslator()
+        validation.validate_uniprot_dataset_name(self.id_dicts, parsing.data_to_list(self.map_to),
+                                                 parsing.data_to_list(self.map_from))
+        if self.map_to in ["UniProtKB", "UniProtKB AC/ID"]:
+            self.map_to = self.UNIPROTKB_TO
+        if self.map_from in ["UniProtKB", "UniProtKB AC/ID"]:
+            self.map_from = self.UNIPROTKB_FROM
 
-    if map_to in ["UniProtKB", "UniProtKB AC/ID"]:
-        map_to = UNIPROTKB_TO
-    if map_from in ["UniProtKB", "UniProtKB AC/ID"]:
-        map_from = UNIPROTKB_FROM
-
-    ids = parsing.data_to_list(ids)
-    n_queries = len(ids)
-
-    # since the Uniprot service can only translate to or from 'UniProtKB' identifier type,
-    # if we need to map gene IDs between two other identifier types,
-    # then we will map from 'map_from' to 'UniProtKB' and then from 'UniProtKB' to 'map_to'.
-    if verbose:
-        print(f"Mapping {n_queries} entries from '{map_from}' to '{map_to}'...")
-
-    if id_dict_to[map_to] != id_dict_to[UNIPROTKB_TO] and id_dict_from[map_from] != id_dict_from[UNIPROTKB_FROM]:
-        to_uniprot = map_gene_ids(ids, map_from, UNIPROTKB_TO, verbose=verbose).mapping_dict
-        if to_uniprot is None:
-            to_uniprot = {}
-        from_uniprot = map_gene_ids(to_uniprot.values(), UNIPROTKB_FROM, map_to, verbose=verbose).mapping_dict
-        if from_uniprot is None:
-            from_uniprot = {}
-        output_dict = {key: from_uniprot[val] for key, val in zip(to_uniprot.keys(), to_uniprot.values()) if
-                       val in from_uniprot}
-
-    # make sure that 'map_from' and 'map_to' are recognized identifier types
-    elif id_dict_to[map_to] != 'Null' and id_dict_from[map_from] != 'Null':
-        POLLING_INTERVAL = 3
-        API_URL = "https://rest.uniprot.org"
-
-        retries = Retry(total=5, backoff_factor=0.25, status_forcelist=[500, 502, 503, 504])
+    @staticmethod
+    def get_session():
         session = requests.Session()
-        adapter = HTTPAdapter(max_retries=retries)
+        adapter = HTTPAdapter(max_retries=GeneIDTranslator.RETRIES)
         session.mount("http://", adapter)
         session.mount("https://", adapter)
+        return session
 
-        results = get_mapping_results(api_url=API_URL, from_db=id_dict_from[map_from], to_db=id_dict_to[map_to],
-                                      ids=ids,
-                                      polling_interval=POLLING_INTERVAL, session=session, verbose=verbose)
+    def get_mapping_results(self, map_to: str, map_from: str, ids: List[str], session: requests.Session):
+        id_dict_to, id_dict_from = self.id_dicts
+        to_db = id_dict_to[map_to]
+        from_db = id_dict_from[map_from]
 
-        if results is None or len(results) <= 1:
-            if verbose:
-                warnings.warn("No entries were mapped successfully.")
-            return GeneIDTranslator({})
+        job_id = self.submit_id_mapping(session, to_db, from_db, ids)
 
+        if self.check_id_mapping_results_ready(session, job_id, self.POLLING_INTERVAL):
+            link = self.get_id_mapping_results_link(session, job_id)
+            results = self.get_id_mapping_results_search(session, link)
+            return results
+
+    @staticmethod
+    def submit_id_mapping(from_db: str, to_db: str, session: requests.Session, ids: List[str]):
+        req = session.post(f"{GeneIDTranslator.API_URL}/idmapping/run",
+                           data={"from": to_db, "to": from_db, "ids": ",".join(ids)})
+        req.raise_for_status()
+        return req.json()["jobId"]
+
+    @staticmethod
+    def get_next_link(headers: dict):
+        re_next_link = re.compile(r'<(.+)>; rel="next"')
+        if "Link" in headers:
+            match = re_next_link.match(headers["Link"])
+            if match:
+                return match.group(1)
+
+    @staticmethod
+    def check_id_mapping_results_ready(session, job_id: str, polling_interval: float, verbose: bool = True):
+        while True:
+            r = session.get(f"{GeneIDTranslator.API_URL}/idmapping/status/{job_id}")
+            r.raise_for_status()
+            j = r.json()
+            if "jobStatus" in j:
+                if j["jobStatus"] in {"RUNNING", "NEW"}:
+                    if verbose:
+                        print(f"Retrying in {polling_interval}s")
+                    time.sleep(polling_interval)
+                else:
+                    raise Exception(j["jobStatus"])
+            else:
+                return bool(j.get("results", False) or j.get("failedIds", False))
+
+    @staticmethod
+    def get_batch(session: requests.Session, batch_response: requests.Response, file_format: Literal['json', 'tsv']):
+        batch_url = GeneIDTranslator.get_next_link(batch_response.headers)
+        while batch_url:
+            batch_response = session.get(batch_url)
+            batch_response.raise_for_status()
+            yield GeneIDTranslator.decode_results(batch_response, file_format)
+            batch_url = GeneIDTranslator.get_next_link(batch_response.headers)
+
+    @staticmethod
+    def combine_batches(all_results, batch_results, file_format: Literal['json', 'tsv']):
+        if file_format == "json":
+            for key in ("results", "failedIds"):
+                if batch_results[key]:
+                    all_results[key] += batch_results[key]
+        elif file_format == "tsv":
+            return all_results + batch_results[1:]  # dump the table header line
+        else:
+            return all_results + batch_results
+        return all_results
+
+    @staticmethod
+    def get_id_mapping_results_link(session: requests.Session, job_id):
+        url = f"{GeneIDTranslator.API_URL}/idmapping/details/{job_id}"
+        r = session.get(url)
+        r.raise_for_status()
+        return r.json()["redirectURL"]
+
+    @staticmethod
+    def decode_results(response: requests.Response, file_format: Literal['json', 'tsv']):
+        if file_format == "json":
+            return response.json()
+        elif file_format == "tsv":
+            return [line for line in response.text.split("\n") if line]
+        return response.text
+
+    def get_id_mapping_results_search(self, session: requests.Session, link):
+        parsed = urlparse(link)
+        query = parse_qs(parsed.query)
+        query["fields"] = 'accession,annotation_score'
+        query["format"] = "tsv"
+        file_format = 'tsv'
+        # file_format = query["format"][0] if "format" in query else "json"
+        if "size" in query:
+            size = int(query["size"][0])
+        else:
+            size = 500
+            query["size"] = size
+
+        parsed = parsed._replace(query=urlencode(query, doseq=True))
+        url = parsed.geturl()
+        r = session.get(url)
+        r.raise_for_status()
+        results = self.decode_results(r, file_format)
+        try:
+            total = int(r.headers["x-total-results"])
+        except KeyError:
+            return ''
+        if self.verbose:
+            self.print_progress_batches(0, size, total)
+
+        for i, batch in enumerate(self.get_batch(session, r, file_format)):
+            results = self.combine_batches(results, batch, file_format)
+            if self.verbose:
+                self.print_progress_batches(i + 1, size, total)
+        return results
+
+    @staticmethod
+    def print_progress_batches(batch_index: int, size: int, total: int):
+        n = min((batch_index + 1) * size, total)
+        print(f"Fetched: {n} / {total}")
+
+    @staticmethod
+    def format_annotations(results):
         df = pd.DataFrame([line.split('\t') for line in results[1:]], columns=results[0].split('\t'))
         # sort annotations by decreasing annotation score, so that the most relevant annotations are at the top
         if 'Annotation' in df.columns:
@@ -1151,10 +1152,12 @@ def map_gene_ids(ids: Union[str, Iterable[str]], map_from: str, map_to: str = 'U
                 duplicates[match_from].append(match_to)
             else:
                 output_dict[match_from] = match_to
+        return output_dict, duplicates
 
+    def handle_duplicates(self, output_dict: dict, duplicates: dict, session: requests.Session):
         # handle duplicates
         if len(duplicates) > 0:
-            if map_to == UNIPROTKB_TO:
+            if self.map_to == self.UNIPROTKB_TO:
                 for match_from, match_to_options in duplicates.items():
                     output_dict[match_from] = match_to_options[0]
                 duplicates_chosen = {match_from: match_to[0] for match_from, match_to in duplicates.items()}
@@ -1163,12 +1166,11 @@ def map_gene_ids(ids: Union[str, Iterable[str]], map_from: str, map_to: str = 'U
             else:
                 ids_to_rev_map = parsing.flatten(parsing.data_to_list(duplicates.values()))
 
-                rev_results = get_mapping_results(api_url=API_URL, from_db=id_dict_to[map_to],
-                                                  to_db=id_dict_from[UNIPROTKB_TO], ids=ids_to_rev_map,
-                                                  polling_interval=POLLING_INTERVAL, session=session, verbose=verbose)
+                rev_results = self.get_mapping_results(self.UNIPROTKB_TO, self.map_to, ids_to_rev_map, session)
                 # TODO: if job fails?
                 rev_df = pd.DataFrame([line.split('\t') for line in rev_results[1:]],
                                       columns=rev_results[0].split('\t'))
+                print(rev_df)
                 rev_df['Annotation'] = (rev_df['Annotation']).astype(float)
                 rev_df = rev_df.sort_values('Annotation', ascending=False)
                 duplicates_chosen = {}
@@ -1178,20 +1180,84 @@ def map_gene_ids(ids: Union[str, Iterable[str]], map_from: str, map_to: str = 'U
                     if match_to_rev not in output_dict:
                         output_dict[match_to_rev] = match_from_rev
                         duplicates_chosen[match_to_rev] = match_from_rev
-            if verbose:
+            if self.verbose:
                 warnings.warn(f"Duplicate mappings were found for {len(duplicates)} genes.  The following mapping "
                               f"was chosen for them based on their annotation score: {duplicates_chosen}")
-    else:
-        output_dict = {}
-    if len(output_dict) < n_queries and verbose:
-        warnings.warn(f"Failed to map {n_queries - len(output_dict)} entries from '{map_from}' to '{map_to}'. "
-                      f"Returning {len(output_dict)} successfully-mapped entries.")
 
-    if map_to == 'Ensembl':
-        for key, val in output_dict.items():
-            output_dict[key] = re.sub('(\.\d+)$', '', val)
+    def reformat_ids(self, output_dict: dict):
+        if self.map_to == 'Ensembl':
+            for key, val in output_dict.items():
+                output_dict[key] = re.sub('(\.\d+)$', '', val)
 
-    return GeneIDTranslator(output_dict)
+    def run(self, ids: Union[str, Iterable[str]]) -> GeneIDDict:
+        """
+        Map gene IDs from one identifier type to another using the UniProt ID Mapping service. \
+        If some IDs cannot be mapped uniquely, duplicate mappings will be resolved by their UniProtKB Annotation Score.\
+         Gene IDs that could not be mapped or were not recognized will be dropped from the output.
+
+        :param ids: gene IDs to be mapped
+        :type ids: str or an Iterable of strings
+        :return:a GeneIDTranslator object that uniquely maps each given gene ID in 'map_from' identifier type \
+        to its matching gene ID in 'map_to' identifier type.
+        :rtype: GeneIDDict
+        """
+        if len(ids) == 0:
+            if self.verbose:
+                warnings.warn('No IDs were given')
+            return GeneIDDict({})
+
+        # if self.map_from and self.map_to are the same, return an empty GeneIDTranslator (which will map any given gene ID to itself)
+        if self.to_from_identical:
+            return GeneIDDict()
+
+        ids = parsing.data_to_list(ids)
+        n_queries = len(ids)
+
+        # since the Uniprot service can only translate to or from 'UniProtKB' identifier type,
+        # if we need to map gene IDs between two other identifier types,
+        # then we will map from 'self.map_from' to 'UniProtKB' and then from 'UniProtKB' to 'self.map_to'.
+        if self.verbose:
+            print(f"Mapping {n_queries} entries from '{self.map_from}' to '{self.map_to}'...")
+
+        id_dict_to, id_dict_from = self.id_dicts
+        if id_dict_to[self.map_to] != id_dict_to[self.UNIPROTKB_TO] and \
+            id_dict_from[self.map_from] != id_dict_from[self.UNIPROTKB_FROM]:
+
+            to_translator = GeneIDTranslator(self.map_from, self.UNIPROTKB_TO, verbose=self.verbose)
+            to_uniprot = to_translator.run(ids).mapping_dict
+            if to_uniprot is None:
+                to_uniprot = {}
+
+            from_translator = GeneIDTranslator(self.UNIPROTKB_FROM, self.map_to, verbose=self.verbose)
+            from_uniprot = from_translator.run(to_uniprot.values()).mapping_dict
+            if from_uniprot is None:
+                from_uniprot = {}
+
+            output_dict = {key: from_uniprot[val] for key, val in zip(to_uniprot.keys(), to_uniprot.values()) if
+                           val in from_uniprot}
+
+        # make sure that 'self.map_from' and 'self.map_to' are recognized identifier types
+        elif id_dict_to[self.map_to] != 'Null' and id_dict_from[self.map_from] != 'Null':
+            session = self.get_session()
+            results = self.get_mapping_results(self.map_to, self.map_from, ids, session)
+
+            if results is None or len(results) <= 1:
+                if self.verbose:
+                    warnings.warn("No entries were mapped successfully.")
+                return GeneIDDict({})
+
+            output_dict, duplicates = self.format_annotations(results)
+            self.handle_duplicates(output_dict, duplicates, session)
+        else:
+            output_dict = {}
+
+        if len(output_dict) < n_queries and self.verbose:
+            warnings.warn(
+                f"Failed to map {n_queries - len(output_dict)} entries from '{self.map_from}' to '{self.map_to}'. "
+                f"Returning {len(output_dict)} successfully-mapped entries.")
+
+        self.reformat_ids(output_dict)
+        return GeneIDDict(output_dict)
 
 
 def _format_ids_iter(ids: Union[str, int, list, set], chunk_size: int = 250):
@@ -1222,9 +1288,9 @@ def find_best_gene_mapping(ids: Tuple[str, ...], map_from_options: Union[Tuple[s
 
     def map_gene_ids_ignore_httpexception(ids: Tuple[str], map_from: str, map_to: str):
         try:
-            return map_gene_ids(ids, map_from, map_to, verbose=False), map_from, map_to
+            return GeneIDTranslator(map_from, map_to, verbose=False).run(ids), map_from, map_to
         except requests.exceptions.HTTPError:
-            return GeneIDTranslator({}), map_from, map_to
+            return GeneIDDict({}), map_from, map_to
 
     with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
         processes = []

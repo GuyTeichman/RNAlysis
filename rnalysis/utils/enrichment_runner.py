@@ -987,8 +987,8 @@ class KEGGEnrichmentRunner(EnrichmentRunner):
             translator, _, self.gene_id_type = io.find_best_gene_mapping(
                 parsing.data_to_tuple(sparse_annotation_dict.keys()), (source,), None)
         else:
-            translator = io.map_gene_ids(parsing.data_to_tuple(sparse_annotation_dict.keys()), source,
-                                         self.gene_id_type)
+            translator = io.GeneIDTranslator(source, self.gene_id_type).run(
+                parsing.data_to_tuple(sparse_annotation_dict.keys()))
         self.gene_id_translator = translator
         for gene_id in sparse_annotation_dict:
             if gene_id in translator:
@@ -1177,7 +1177,7 @@ class GOEnrichmentRunner(EnrichmentRunner):
                                                                 ('UniProtKB',))
         for source in source_to_gene_id_dict:
             try:
-                translator = io.map_gene_ids(source_to_gene_id_dict[source], source, self.gene_id_type)
+                translator = io.GeneIDTranslator(source, self.gene_id_type).run(source_to_gene_id_dict[source])
                 for gene_id in sparse_dict_cp.copy():
                     if gene_id in translator:
                         translated_sparse_annotation_dict[translator[gene_id]] = sparse_dict_cp.pop(gene_id)

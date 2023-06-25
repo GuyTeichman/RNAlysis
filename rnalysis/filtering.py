@@ -446,7 +446,7 @@ class Filter:
         if translate_from.lower() == 'auto':
             translator, translate_from, _ = io.find_best_gene_mapping(gene_ids, None, (translate_to,))
         else:
-            translator = io.map_gene_ids(gene_ids, translate_from, translate_to)
+            translator = io.GeneIDTranslator(translate_from, translate_to).run(gene_ids)
 
         new_df[translate_to] = pd.Series(translator.mapping_dict)
         if remove_unmapped_genes:
@@ -805,7 +805,7 @@ class Filter:
             _, gene_id_type, _ = io.find_best_gene_mapping(parsing.data_to_tuple(self.index_set), None, ('UniProtKB',))
 
         for source in source_to_genes:
-            translator = io.map_gene_ids(parsing.data_to_tuple(source_to_genes[source]), source, gene_id_type)
+            translator = io.GeneIDTranslator(source, gene_id_type).run(parsing.data_to_tuple(source_to_genes[source]))
             for go_id in go_to_genes:
                 if go_id not in go_to_translated_genes:
                     continue
@@ -896,7 +896,7 @@ class Filter:
             translator, _, gene_id_type = io.find_best_gene_mapping(parsing.data_to_tuple(genes_to_translate),
                                                                     ('KEGG',), None)
         else:
-            translator = io.map_gene_ids(parsing.data_to_tuple(genes_to_translate), 'KEGG', gene_id_type)
+            translator = io.GeneIDTranslator('KEGG', gene_id_type).run(parsing.data_to_tuple(genes_to_translate))
         for kegg_id in kegg_to_genes:
             kegg_to_translated_genes[kegg_id] = set()
             for gene_id in kegg_to_genes[kegg_id]:

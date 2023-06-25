@@ -5,7 +5,7 @@ import re
 import warnings
 from functools import lru_cache
 from pathlib import Path
-from typing import Dict, List, Union, Tuple, Iterable, Set
+from typing import Dict, List, Union, Tuple, Iterable, Set, Literal
 
 import graphviz
 import matplotlib.image as mpimg
@@ -14,7 +14,6 @@ import numpy as np
 import pandas as pd
 from defusedxml import ElementTree
 from matplotlib.cm import ScalarMappable
-from typing import Literal
 
 from rnalysis.utils import parsing, io, param_typing
 
@@ -727,7 +726,7 @@ class DAGTree:
 
 
 @lru_cache(maxsize=128)
-def fetch_kegg_pathway(pathway_id: str, gene_id_translator: Union[io.GeneIDTranslator, None] = None) -> KEGGPathway:
+def fetch_kegg_pathway(pathway_id: str, gene_id_translator: Union[io.GeneIDDict, None] = None) -> KEGGPathway:
     kgml_tree = io.KEGGAnnotationIterator.get_pathway_kgml(pathway_id)
     compounds = io.KEGGAnnotationIterator.get_compounds()
     return KEGGPathway(kgml_tree, compounds, gene_id_translator)

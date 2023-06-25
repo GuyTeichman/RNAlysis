@@ -99,25 +99,25 @@ def test_format_ids_iter():
 
 
 def test_gene_id_translator_api():
-    _ = GeneIDTranslator({1: 2, 3: 4})
-    _ = GeneIDTranslator()
+    _ = GeneIDDict({1: 2, 3: 4})
+    _ = GeneIDDict()
 
 
 def test_gene_id_translator_getitem():
-    translator = GeneIDTranslator({1: 2, 3: 4})
+    translator = GeneIDDict({1: 2, 3: 4})
     assert translator[1] == 2
     assert translator[3] == 4
-    translator = GeneIDTranslator(None)
+    translator = GeneIDDict(None)
     for something in [2, 3, '1', False, True, {}, 3.141592]:
         assert translator[something] == something
 
 
 def test_gene_id_translator_contains():
-    translator = GeneIDTranslator({1: 2, 3: 4})
+    translator = GeneIDDict({1: 2, 3: 4})
     assert 1 in translator and 3 in translator
     for invalid in [2, 4, '1', False]:
         assert invalid not in translator
-    translator = GeneIDTranslator(None)
+    translator = GeneIDDict(None)
     for something in [2, 3, '1', False, True, {}, 3.141592]:
         assert something in translator
 
@@ -415,7 +415,7 @@ mapped_ids_truth_rev = {b: a for a, b in zip(mapped_ids_truth.keys(), mapped_ids
                           (wb_to_entrez_truth.keys(), 'WormBase', 'Entrez Gene ID', wb_to_entrez_truth)])
 @pytest.mark.skipif(not UNIPROT_AVAILABLE, reason='UniProt REST API is not available at the moment')
 def test_map_gene_ids_connectivity(ids, map_from, map_to, expected_dict):
-    mapped_ids = map_gene_ids(ids, map_from, map_to)
+    mapped_ids = GeneIDTranslator(map_from, map_to).run(ids)
     for geneid in ids:
         assert geneid in mapped_ids
         assert mapped_ids[geneid] == expected_dict[geneid]
@@ -424,7 +424,7 @@ def test_map_gene_ids_connectivity(ids, map_from, map_to, expected_dict):
 
 @pytest.mark.parametrize('id_type', ['UniProtKB', 'Entrez', 'WormBase'])
 def test_map_gene_ids_to_same_set(id_type):
-    mapper = map_gene_ids(['it', 'doesnt', 'matter', 'what', 'is', 'in', 'here'], id_type, id_type)
+    mapper = GeneIDTranslator(id_type, id_type).run(['it', 'doesnt', 'matter', 'what', 'is', 'in', 'here'])
     assert mapper.mapping_dict is None
     for i in ['it', 'not', False, 42, 3.14]:
         assert i in mapper
@@ -454,7 +454,7 @@ def test_map_gene_ids_request(monkeypatch, ids, map_from, map_to, req_from, req_
 
     monkeypatch.setattr(requests, 'get', mock_get)
     monkeypatch.setattr(io, 'get_legal_gene_id_types', lambda: legal_types)
-    res = map_gene_ids(ids, map_from, map_to)
+    res = GeneIDTranslator(map_from, map_to).run(ids)
     for gene_id in truth:
         assert res[gene_id] == truth[gene_id]
 
@@ -477,20 +477,19 @@ def test_map_gene_ids_with_duplicates(monkeypatch, ids, map_from, map_to, txt, r
              'UniProtKB': 'UniProtKB'}
         return d, d
 
-    def mock_get_mapping_results(api_url: str, from_db: str, to_db: str, ids: List[str], polling_interval: float,
-                                 session, verbose):
+    def mock_get_mapping_results(self, to_db: str, from_db: str, ids: List[str], session):
         mock_abbrev_dict_to, mock_abbrev_dict_from = mock_abbrev_dict()
-        if to_db == mock_abbrev_dict_to['UniProtKB_to']:
+        if to_db == 'UniProtKB_to':
             return_txt = txt if map_to == 'UniProtKB' else rev_txt
-        elif from_db == mock_abbrev_dict_from['UniProtKB_from']:
+        elif from_db == 'UniProtKB_from':
             return_txt = txt if map_from == 'UniProtKB' else rev_txt
         else:
-            raise ValueError(to_db, from_db)
+            raise ValueError(self.map_to, self.map_from)
         return return_txt.split('\n')
 
     monkeypatch.setattr(io, '_get_id_abbreviation_dicts', mock_abbrev_dict)
-    monkeypatch.setattr(io, 'get_mapping_results', mock_get_mapping_results)
-    res = map_gene_ids(ids, map_from, map_to)
+    monkeypatch.setattr(GeneIDTranslator, 'get_mapping_results', mock_get_mapping_results)
+    res = GeneIDTranslator(map_from, map_to).run(ids)
     for gene_id in truth:
         assert res[gene_id] == truth[gene_id]
 
@@ -810,6 +809,7 @@ class MockProcess:
     def wait(self):
         return
 
+
 @pytest.mark.parametrize('r_path,expected', [
     ('auto', ['Rscript', "tests/test_files/test_r_script.R"]),
     ('D:/Program Files/R', ["D:/Program Files/R/bin/Rscript", "tests/test_files/test_r_script.R"])
@@ -832,6 +832,7 @@ def test_run_r_script(monkeypatch, r_path, expected):
 
     run_r_script(script_path, r_path)
     assert ran == [1, 2]
+
 
 def test_run_r_script_not_installed(monkeypatch):
     def mock_popen(process, stdout, stderr, shell=False):
@@ -918,16 +919,16 @@ def test_load_cached_gui_file(item, filename, load_as_obj, expected_output):
 
 
 def test_get_next_link():
-    headers = {"Link": '<https://www.example.com/next-batch>; rel="next"'}
-    result = get_next_link(headers)
-    assert result == "https://www.example.com/next-batch"
+    headers = {"Link": '<https://www.rest.uniprot.org/next-batch>; rel="next"'}
+    result = GeneIDTranslator.get_next_link(headers)
+    assert result == "https://www.rest.uniprot.org/next-batch"
 
 
 def test_combine_batches_json():
     all_results = {"results": [], "failedIds": []}
     batch_results = {"results": [{"accession": "P29307", "identifier": "7157"}], "failedIds": []}
     file_format = "json"
-    assert combine_batches(all_results, batch_results, file_format) == {
+    assert GeneIDTranslator.combine_batches(all_results, batch_results, file_format) == {
         "results": [{"accession": "P29307", "identifier": "7157"}], "failedIds": []}
 
 
@@ -935,7 +936,7 @@ def test_combine_batches_tsv():
     all_results = ["accession\tannotation_score", "P12345\t1.0"]
     batch_results = ["accession\tannotation_score", "Q67890\t0.8", "P12355\t1.0"]
     file_format = "tsv"
-    combined_results = combine_batches(all_results, batch_results, file_format)
+    combined_results = GeneIDTranslator.combine_batches(all_results, batch_results, file_format)
     assert combined_results == ["accession\tannotation_score", "P12345\t1.0", "Q67890\t0.8", "P12355\t1.0"]
 
 
@@ -943,7 +944,7 @@ def test_combine_batches_other():
     all_results = "some text"
     batch_results = "more text"
     file_format = "unknown"
-    combined_results = combine_batches(all_results, batch_results, file_format)
+    combined_results = GeneIDTranslator.combine_batches(all_results, batch_results, file_format)
     assert combined_results == "some textmore text"
 
 
@@ -952,7 +953,7 @@ def test_decode_results_json():
     response_mock.text = '{"id": 1, "name": "John"}'
     response_mock.json.return_value = {'id': 1, 'name': 'John'}
 
-    result = decode_results(response_mock, 'json')
+    result = GeneIDTranslator.decode_results(response_mock, 'json')
     assert result == {'id': 1, 'name': 'John'}
 
 
@@ -960,7 +961,7 @@ def test_decode_results_tsv():
     response_mock = MagicMock(spec=requests.Response)
     response_mock.text = "id\tname\n1\tJohn\n2\tJane\n"
 
-    result = decode_results(response_mock, 'tsv')
+    result = GeneIDTranslator.decode_results(response_mock, 'tsv')
     assert result == ['id\tname', '1\tJohn', '2\tJane']
 
 
@@ -968,17 +969,17 @@ def test_decode_results_with_invalid_file_format():
     response_mock = MagicMock(spec=requests.Response)
     response_mock.text = 'Invalid format'
 
-    result = decode_results(response_mock, 'csv')
+    result = GeneIDTranslator.decode_results(response_mock, 'csv')
     assert result == 'Invalid format'
 
 
 def test_check_id_mapping_results_ready_with_results():
     with requests_mock.Mocker() as m:
         # Mock the response from the server
-        m.get("http://example.com/idmapping/status/123", json={"results": ['content']})
+        m.get("https://rest.uniprot.org/idmapping/status/123", json={"results": ['content']})
         # Call the function
         session = requests.Session()
-        ready = check_id_mapping_results_ready(session, "http://example.com", "123", 0.1)
+        ready = GeneIDTranslator.check_id_mapping_results_ready(session, "123", 0.1)
         # Check the result
         assert ready
 
@@ -986,10 +987,10 @@ def test_check_id_mapping_results_ready_with_results():
 def test_check_id_mapping_results_ready_with_failed_ids():
     with requests_mock.Mocker() as m:
         # Mock the response from the server
-        m.get("http://example.com/idmapping/status/123", json={"failedIds": ['content']})
+        m.get("https://rest.uniprot.org/idmapping/status/123", json={"failedIds": ['content']})
         # Call the function
         session = requests.Session()
-        ready = check_id_mapping_results_ready(session, "http://example.com", "123", 0.1)
+        ready = GeneIDTranslator.check_id_mapping_results_ready(session, "123", 0.1)
         # Check the result
         assert ready
 
@@ -1007,11 +1008,11 @@ def test_check_id_mapping_results_ready_running():
             else:
                 return {"results": ['data'], "status_code": 200}
 
-        m.get("http://example.com/idmapping/status/123", json=request_callback)
+        m.get("https://rest.uniprot.org/idmapping/status/123", json=request_callback)
 
         # Call the function
         session = requests.Session()
-        ready = check_id_mapping_results_ready(session, "http://example.com", "123", 0.1)
+        ready = GeneIDTranslator.check_id_mapping_results_ready(session, "123", 0.1)
         # Check the result
         assert ready
         assert count == 5
@@ -1020,11 +1021,11 @@ def test_check_id_mapping_results_ready_running():
 def test_check_id_mapping_results_ready_error():
     with requests_mock.Mocker() as m:
         # Mock the response from the server
-        m.get("http://example.com/idmapping/status/123", json={"jobStatus": "ERROR"})
+        m.get("https://rest.uniprot.org/idmapping/status/123", json={"jobStatus": "ERROR"})
 
         # Call the function
         session = requests.Session()
 
         # Check that an exception is raised
         with pytest.raises(Exception):
-            check_id_mapping_results_ready(session, "http://example.com", "123", 0.1)
+            GeneIDTranslator.check_id_mapping_results_ready(session, "https://rest.uniprot.org", "123", 0.1)
