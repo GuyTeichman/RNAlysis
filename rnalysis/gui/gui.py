@@ -36,6 +36,9 @@ FROZEN_ENV = getattr(sys, 'frozen', False) and hasattr(sys, '_MEIPASS')
 
 JOB_COUNTER = gui_widgets.JobCounter()
 
+def check_run_success(result: gui_widgets.WorkerOutput):
+    if result.raised_exception:
+        raise result.raised_exception
 
 class BarPlotWindow(gui_windows.FuncExternalWindow):
     EXCLUDED_PARAMS = set()
@@ -1417,6 +1420,7 @@ class TabPage(QtWidgets.QWidget):
             return
 
         prev_name = self.get_tab_name()
+        worker.finished.connect(check_run_success)
         worker.finished.connect(self.functionApplied.emit)
         result = worker.run()
         if kwargs.get('inplace', False):
@@ -2098,6 +2102,7 @@ class FilterTabPage(TabPage):
         job_id = JOB_COUNTER.get_id() if job_id is None else job_id
         predecessors = predecessors if isinstance(predecessors, list) else []
         worker = gui_widgets.Worker(partial, job_id, predecessors + [self.tab_id], f"Pipeline '{pipeline_name}'")
+        worker.finished.connect(check_run_success)
         worker.finished.connect(self.functionApplied.emit)
         prev_name = self.get_tab_name()
         result = worker.run()
@@ -2793,8 +2798,10 @@ class SetOpInplacCommand(InplaceCommand):
             first_obj = filtering.Filter.from_dataframe(pd.DataFrame(index=first_obj), 'placeholder')
         partial = functools.partial(getattr(first_obj, self.func_name), *self.args, **self.kwargs)
         worker = gui_widgets.Worker(partial, self.new_job_id, self.predecessors + [self.prev_job_id])
+        worker.finished.connect(check_run_success)
         worker.finished.connect(self.tab.functionApplied.emit)
-        worker.run()
+        result = worker.run()
+
         if not is_filter_obj:
             self.tab.update_obj(first_obj.index_set)
         self.tab.update_tab()

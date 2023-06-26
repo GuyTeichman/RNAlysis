@@ -14,6 +14,10 @@ Changed
 ********
 * RNAlysis now issues a warning when users run PCA or PCA-based functions on an unnormalized count matrix.
 
+Fixed
+*******
+* Fixed bug where functions would sometimes fail to run without displaying an error message.
+
 3.9.2 (2023-06-23)
 ------------------
 This patch contains bug fixes and improved functionality for enrichment lollipop plots,
