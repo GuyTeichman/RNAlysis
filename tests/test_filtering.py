@@ -132,8 +132,8 @@ def test_from_string(monkeypatch):
     ('UniProtKB', 'auto', True, 'tests/test_files/counted_translated_remove_unmapped.csv'),
 ])
 def test_filter_translate_gene_ids(map_to, map_from, remove_unmapped_genes, expected, monkeypatch):
-    def mock_map_gene_ids(ids, trans_from, trans_to='UniProtKB AC', verbose=True):
-        if trans_from == 'WormBase':
+    def mock_map_gene_ids(self, ids):
+        if self.map_from == 'WormBase':
             return io.GeneIDDict(
                 {'WBGene00007063': 'A0A0K3AWR5', 'WBGene00007064': 'A0A2X0T1Z3', 'WBGene00007067': 'D3NQA2',
                  'WBGene00077503': 'H2L2B5', 'WBGene00007071': 'Q17405', 'WBGene00014997': 'Q7JNR0',
@@ -141,7 +141,7 @@ def test_filter_translate_gene_ids(map_to, map_from, remove_unmapped_genes, expe
                  'WBGene00007076': 'G5EFZ2'})
         return io.GeneIDDict({})
 
-    monkeypatch.setattr(io, 'map_gene_ids', mock_map_gene_ids)
+    monkeypatch.setattr(io.GeneIDTranslator, 'run', mock_map_gene_ids)
     truth = io.load_table(expected, index_col=0)
     f = Filter('tests/test_files/counted.csv')
 

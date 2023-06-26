@@ -1076,7 +1076,8 @@ def test_go_enrichment_runner_propagate_annotation(monkeypatch, propagate, gene_
     ({'gene1': 'gene1_translated', 'gene2': 'gene2_translated', 'gene3': 'gene3_translated'},
      {'gene1_translated': {'GO1', 'GO2'}, 'gene2_translated': {'GO1'}, 'gene3_translated': {'GO2'}})])
 def test_go_enrichment_runner_translate_gene_ids(monkeypatch, mapping_dict, truth):
-    monkeypatch.setattr(io, 'map_gene_ids', lambda gene_id, source, gene_id_type: mapping_dict)
+    monkeypatch.setattr(io.GeneIDTranslator, '__init__', lambda *args: None)
+    monkeypatch.setattr(io.GeneIDTranslator, 'run', lambda *args: mapping_dict)
     source_to_gene_id_dict = {'source1': {'gene1', 'gene3'}, 'source2': {'gene2'}}
     sparse_annotation_dict = {'gene1': {'GO1', 'GO2'}, 'gene2': {'GO1'}, 'gene3': {'GO2'}}
 
@@ -1899,7 +1900,9 @@ def test_kegg_enrichment_runner_process_annotations(monkeypatch):
     ({'gene1': 'gene1_translated', 'gene2': 'gene2_translated', 'gene3': 'gene3_translated'},
      {'gene1_translated': {'GO1', 'GO2'}, 'gene2_translated': {'GO1'}, 'gene3_translated': {'GO2'}})])
 def test_kegg_enrichment_runner_translate_gene_ids(monkeypatch, mapping_dict, truth):
-    monkeypatch.setattr(io, 'map_gene_ids', lambda gene_id, source, gene_id_type: mapping_dict)
+    monkeypatch.setattr(io.GeneIDTranslator, '__init__', lambda *args: None)
+    monkeypatch.setattr(io.GeneIDTranslator, 'run', lambda *args: mapping_dict)
+
     sparse_annotation_dict = {'gene1': {'GO1', 'GO2'}, 'gene2': {'GO1'}, 'gene3': {'GO2'}}
 
     runner = KEGGEnrichmentRunner.__new__(KEGGEnrichmentRunner)
