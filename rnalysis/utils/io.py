@@ -1040,7 +1040,7 @@ class GeneIDTranslator:
         to_db = id_dict_to[map_to]
         from_db = id_dict_from[map_from]
 
-        job_id = self.submit_id_mapping(session, to_db, from_db, ids)
+        job_id = self.submit_id_mapping(to_db, from_db, session, ids)
 
         if self.check_id_mapping_results_ready(session, job_id, self.POLLING_INTERVAL):
             link = self.get_id_mapping_results_link(session, job_id)
@@ -1048,9 +1048,9 @@ class GeneIDTranslator:
             return results
 
     @staticmethod
-    def submit_id_mapping(from_db: str, to_db: str, session: requests.Session, ids: List[str]):
+    def submit_id_mapping(to_db: str, from_db: str, session: requests.Session, ids: List[str]):
         req = session.post(f"{GeneIDTranslator.API_URL}/idmapping/run",
-                           data={"from": to_db, "to": from_db, "ids": ",".join(ids)})
+                           data={"to": to_db, "from": from_db, "ids": ",".join(ids)})
         req.raise_for_status()
         return req.json()["jobId"]
 
