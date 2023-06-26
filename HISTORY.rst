@@ -8,6 +8,7 @@ History
 
 Added
 *******
+* Added a new parameter called 'legend' to 'Principal Component Analysis (PCA) plot' (CountFilter.pca), which allows users to display a legend on the PCA plot with a name for each sample group/color.
 * Added new function 'Sort table by contribution to a Principal Component (PCA)' (CountFilter.sort_by_principal_component), which allows sorting of genes in a count matrix by their contribution (gene loadings) to a principal component.
 
 Changed

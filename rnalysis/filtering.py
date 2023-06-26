@@ -4582,7 +4582,8 @@ class CountFilter(Filter):
     def pca(self, samples: Union[param_typing.GroupedColumns, Literal['all']] = 'all', n_components: PositiveInt = 3,
             power_transform: bool = True, labels: bool = True, title: Union[str, Literal['auto']] = 'auto',
             title_fontsize: float = 20, label_fontsize: float = 16, tick_fontsize: float = 12,
-            proportional_axes: bool = False, plot_grid: bool = True) -> Tuple[PCA, List[plt.Figure]]:
+            proportional_axes: bool = False, plot_grid: bool = True, legend: Union[List[str], None] = None) -> Tuple[
+        PCA, List[plt.Figure]]:
         """
         Performs Principal Component Analysis (PCA), visualizing the principal components that explain the most\
         variance between the different samples. The function will standardize the data prior to PCA, and then plot \
@@ -4615,6 +4616,9 @@ class CountFilter(Filter):
         :type proportional_axes: bool (default=False)
         :param plot_grid: if True, will draw a grid on the PCA plot.
         :type plot_grid: bool (default=True)
+        :param legend: if enabled, display a legend on the PCA plot. Each entry in the 'legend' parameter \
+        corresponds to one group of samples (one color on the graph), as defined by the parameter 'samples'
+        :type legend: list of str, or None (default=None)
         :return: A tuple whose first element is an sklearn.decomposition.pca object, \
         and second element is a list of matplotlib.axis objects.
 
@@ -4652,7 +4656,7 @@ class CountFilter(Filter):
                     final_df=final_df[
                         [f'Principal component {1 + first_pc}', f'Principal component {1 + second_pc}', 'lib']],
                     pc1_var=pc_var[first_pc], pc2_var=pc_var[second_pc], sample_grouping=samples, labels=labels,
-                    label_fontsize=label_fontsize, title=title, title_fontsize=title_fontsize,
+                    label_fontsize=label_fontsize, title=title, title_fontsize=title_fontsize, legend=legend,
                     tick_fontsize=tick_fontsize, proportional_axes=proportional_axes, plot_grid=plot_grid))
 
         return pca_obj, figs
@@ -4681,7 +4685,7 @@ class CountFilter(Filter):
     @staticmethod
     def _pca_plot(final_df: pd.DataFrame, pc1_var: float, pc2_var: float, sample_grouping: param_typing.GroupedColumns,
                   labels: bool, title: str, title_fontsize: float, label_fontsize: float, tick_fontsize: float,
-                  proportional_axes: bool, plot_grid: bool) -> plt.Figure:
+                  proportional_axes: bool, plot_grid: bool, legend: Union[List[str], None]) -> plt.Figure:
         """
         Internal method, used to plot the results from CountFilter.pca().
 
@@ -4710,16 +4714,29 @@ class CountFilter(Filter):
         ax.set_title(title, fontsize=title_fontsize)
 
         color_generator = generic.color_generator()
-        color_opts = [next(color_generator) for _ in range(len(sample_grouping))]
-        colors = parsing.flatten(
-            [[color_opts[i]] * len(parsing.data_to_list(grp)) for i, grp in enumerate(sample_grouping)])
+        colors = [next(color_generator) for _ in range(len(sample_grouping))]
+        colors_per_row = parsing.flatten(
+            [[colors[i]] * len(parsing.data_to_list(grp)) for i, grp in enumerate(sample_grouping)])
+        sample_names = final_df['lib'].to_list()
 
-        ax.scatter(final_df.iloc[:, 0], final_df.iloc[:, 1], c=colors, s=50)
+        for i, grp in enumerate(sample_grouping):
+            label = f'Group {i + 1}' if (legend is None or i >= len(legend)) else legend[i]
+
+            grp = parsing.data_to_list(grp)
+            item_inds = []
+            for item in grp:
+                item_inds.append(sample_names.index(item))
+            ax.scatter(final_df.iloc[item_inds, 0], final_df.iloc[item_inds, 1], c=colors[i], label=label, s=75)
+
+        if legend is not None:
+            ax.legend(title="Legend", draggable=True)
+
         if labels:
             for i, (_, row) in enumerate(final_df.iterrows()):
                 ax.annotate(row[2], (row[0], row[1]), textcoords='offset pixels',
                             xytext=(label_fontsize, label_fontsize),
-                            fontsize=label_fontsize, color=colors[i])
+                            fontsize=label_fontsize, color=colors_per_row[i])
+
         ax.grid(plot_grid)
         ax.tick_params(axis='both', which='both', labelsize=tick_fontsize)
         plt.show()
