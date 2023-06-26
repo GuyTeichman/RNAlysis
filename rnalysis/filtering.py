@@ -1584,12 +1584,12 @@ class Filter:
 
         :type by: str or list of str
         :param by: Names of the column or columns to sort by.
-        :type ascending: bool or list of bool, default True
+        :type ascending: bool or list of bool (default=True)
         :param ascending: Sort ascending vs. descending. Specify list for multiple sort orders. \
         If this is a list of bools, it must have the same length as 'by'.
         :type na_position: 'first' or 'last', default 'last'
         :param na_position: If 'first', puts NaNs at the beginning; if 'last', puts NaNs at the end.
-        :type inplace: bool, default True
+        :type inplace: bool (default=True)
         :param inplace: If True, perform operation in-place. \
         Otherwise, returns a sorted copy of the Filter object without modifying the original.
         :return: None if inplace=True, a sorted Filter object otherwise.
@@ -4490,13 +4490,47 @@ class CountFilter(Filter):
         plt.show()
         return fig
 
+    @readable_name('Sort table by contribution to a Principal Component (PCA)')
+    def sort_by_principal_component(self, component: PositiveInt, ascending: bool = True, power_transform: bool = True,
+                                    inplace: bool = True):
+        """
+         Performs Principal Component Analysis (PCA), and sort the table based on the contribution (loadings) \
+         of genes to a specific Principal Component. This type of analysis can help you understand which genes \
+         contribute the most to each principal component, particularly using single-list enrichment analysis. .
+
+        :param component: the Principal Component the table should be sorted by.
+        :type component: positive int
+        :type ascending: bool (default=Trle)
+        :param ascending: Sort order: ascending (negative loadings at the top of the list) \
+         versus descending (positive loadings at the top of the list).
+        :param power_transform: if True, RNAlysis will apply a power transform (Box-Cox) \
+        to the data prior to standartization and principal component analysis.
+        :type power_transform: bool (default=True)
+        :type inplace: bool (default=True)
+        :param inplace: If True, perform the operation in-place. \
+        Otherwise, returns a sorted copy of the Filter object without modifying the original.
+        :return: None if inplace=True, a sorted Filter object otherwise.
+        """
+        assert 0 < component <= self.shape[0], \
+            "'component' must be larger than 0 and equal or lower than the number of genes in the table!"
+        self._validate_is_normalized()
+        suffix = f'_sortbyPC{component}' + 'powertransform' * bool(power_transform)
+        data = self.df[self._numeric_columns].transpose()
+        data_standardized = generic.standard_box_cox(data) if power_transform else generic.standardize(data)
+        pca_obj = PCA(component)
+        pca_obj.fit(data_standardized)
+        loadings = pd.DataFrame(pca_obj.components_.T, columns=[i + 1 for i in range(component)], index=self.df.index)
+        loading = loadings[component].sort_values(ascending=ascending)
+        new_df = self.df.reindex(loading.index)
+        return self._inplace(new_df, False, inplace, suffix, 'sort')
+
     @readable_name('Split table by contribution to Principal Components (PCA)')
     def split_by_principal_components(self, components: Union[PositiveInt, List[PositiveInt]],
                                       gene_fraction: param_typing.Fraction = 0.1, power_transform: bool = True
                                       ) -> Union[
         Tuple['CountFilter', 'CountFilter'], Tuple[Tuple['CountFilter', 'CountFilter'], ...]]:
         """
-         Performs Principal Component Analysis (PCA), and split the table base on the contribution (loadings) \
+         Performs Principal Component Analysis (PCA), and split the table based on the contribution (loadings) \
          of genes to specific Principal Components. For each Principal Component specified, *RNAlysis* will find the \
          X% most influential genes on the Principal Component based on their loadings (where X is gene_fraction), \
          (X/2)% from the top and (X/2)% from the bottom. This type of analysis can help you understand which genes \
@@ -4519,6 +4553,7 @@ class CountFilter(Filter):
             "'components' must be larger than 0 and equal or lower than the number of genes in the table!"
         assert isinstance(gene_fraction, float) and 0 <= gene_fraction <= 1, \
             "'gene_fraction' must be a number between 0 and 1!"
+        self._validate_is_normalized()
 
         n_components = max(components)
         n_genes = int(np.floor(gene_fraction * self.shape[0] * 0.5))
@@ -4592,6 +4627,8 @@ class CountFilter(Filter):
         """
         assert isinstance(n_components, int) and n_components >= 2, \
             f"'n_components' must be an integer >=2. Instead got {n_components}."
+        self._validate_is_normalized()
+
         if samples == 'all':
             samples = [[col] for col in self._numeric_columns]
         data = self.df[parsing.flatten(samples)].transpose()

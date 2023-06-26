@@ -973,6 +973,25 @@ class GeneIDDict:
             return False
 
 
+class OrthologyMapper:
+    QUERY_SIZE = 10  # as specified in the Panther API site
+
+    def __init__(self, map_to_organism, map_from_organism='auto', gene_id_type='auto'):
+        self.gene_id_type = gene_id_type
+        self.map_from_organism = map_from_organism
+        self.map_to_organism = map_to_organism
+
+    @staticmethod
+    def get_supported_genomes():
+        raise NotImplementedError
+
+    def get_orthologs(self, ids: List[str], ortholog_type: Literal['least_diverged', 'all'] = 'least_diverged'):
+        pass
+
+    def get_paralogs(self, ids: List[str]):
+        pass
+
+
 class GeneIDTranslator:
     UNIPROTKB_FROM = "UniProtKB_from"
     UNIPROTKB_TO = "UniProtKB_to"

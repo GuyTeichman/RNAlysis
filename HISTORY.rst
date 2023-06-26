@@ -8,7 +8,11 @@ History
 
 Added
 *******
+* Added new function 'Sort table by contribution to a Principal Component (PCA)' (CountFilter.sort_by_principal_component), which allows sorting of genes in a count matrix by their contribution (gene loadings) to a principal component.
 
+Changed
+********
+* RNAlysis now issues a warning when users run PCA or PCA-based functions on an unnormalized count matrix.
 
 3.9.2 (2023-06-23)
 ------------------

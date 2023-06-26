@@ -1916,7 +1916,7 @@ def test_export_pipeline():
 @pytest.mark.parametrize('components,gene_fraction,truth_paths', [
     (1, 0.32, ['tests/test_files/counted_pc1_0.32_top.csv', 'tests/test_files/counted_pc1_0.32_bottom.csv'])
 ])
-def test_filter_by_principal_components(components, gene_fraction, truth_paths):
+def test_split_by_principal_components(components, gene_fraction, truth_paths):
     truth = [CountFilter(pth) for pth in truth_paths]
     c = CountFilter('tests/test_files/counted.csv')
     c.filter_low_reads(1)
