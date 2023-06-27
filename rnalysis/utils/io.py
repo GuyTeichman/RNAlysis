@@ -1155,7 +1155,7 @@ class GeneIDTranslator:
         df = pd.DataFrame([line.split('\t') for line in results[1:]], columns=results[0].split('\t'))
         # sort annotations by decreasing annotation score, so that the most relevant annotations are at the top
         if 'Annotation' in df.columns:
-            df['Annotation'][df['Annotation'] == ''] = '0'
+            df.loc[df['Annotation'] == '', 'Annotation'] = '0'
             df['Annotation'] = (df['Annotation']).astype(float)
             df = df.sort_values('Annotation', ascending=False)
         output_dict = {}
