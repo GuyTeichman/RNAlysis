@@ -210,7 +210,10 @@ def test_golr_annotation_iterator_generate_query():
 
 def test_golr_annotation_iterator_golr_request_connectivity(monkeypatch):
     fake_params = {'param': 'value', 'other_param': 'other_value'}
-    assert isinstance(GOlrAnnotationIterator._golr_request(fake_params), str)
+    session = get_session(GOlrAnnotationIterator.RETRIES)
+    golr_it = GOlrAnnotationIterator.__new__(GOlrAnnotationIterator)
+    golr_it.session = session
+    assert isinstance(golr_it._golr_request(fake_params), str)
 
 
 def remove_cached_test_file(cached_filename: str):
@@ -227,33 +230,36 @@ def test_golr_annotation_iterator_golr_request(monkeypatch):
     correct_url = GOlrAnnotationIterator.URL
     correct_params = {'param': 'value', 'other_param': 'other_value'}
 
-    def mock_get(url, params: dict):
+    def mock_get(self, url, params: dict):
         assert url == correct_url
         assert params == correct_params
         return MockResponse(text='the correct text')
 
-    monkeypatch.setattr(requests, 'get', mock_get)
+    monkeypatch.setattr(requests.Session, 'get', mock_get)
     monkeypatch.setattr(GOlrAnnotationIterator, '_generate_cached_filename', lambda self, start: 'test.json')
-    assert GOlrAnnotationIterator._golr_request(correct_params, cached_filename) == 'the correct text'
+    session = get_session(GOlrAnnotationIterator.RETRIES)
+    golr_it = GOlrAnnotationIterator.__new__(GOlrAnnotationIterator)
+    golr_it.session = session
+    assert golr_it._golr_request(correct_params, cached_filename) == 'the correct text'
 
-    def mock_get_uncached(url, params: dict):
+    def mock_get_uncached(self, url, params: dict):
         raise AssertionError("This function should not be called if a cached file was found!")
 
-    monkeypatch.setattr(requests, 'get', mock_get_uncached)
+    monkeypatch.setattr(requests.Session, 'get', mock_get_uncached)
     try:
-        assert GOlrAnnotationIterator._golr_request(correct_params, cached_filename) == 'the correct text'
+        assert golr_it._golr_request(correct_params, cached_filename) == 'the correct text'
     finally:
         remove_cached_test_file(cached_filename)
 
-    def mock_get_failed(url, params: dict):
+    def mock_get_failed(self, url, params: dict):
         assert url == correct_url
         assert params == correct_params
         return MockResponse(text='the correct text', status_code=404)
 
-    monkeypatch.setattr(requests, 'get', mock_get_failed)
+    monkeypatch.setattr(requests.Session, 'get', mock_get_failed)
     try:
         with pytest.raises(ConnectionError):
-            _ = GOlrAnnotationIterator._golr_request(correct_params)
+            _ = golr_it._golr_request(correct_params)
     finally:
         remove_cached_test_file(cached_filename)
 
@@ -358,7 +364,7 @@ def test_map_taxon_id_no_connection(monkeypatch):
 def test_ensmbl_lookup_post_request(monkeypatch):
     ids = ('id1', 'id2', 'id3')
 
-    def mock_post_request(url, headers, data):
+    def mock_post_request(self, url, headers, data):
         assert url == 'https://rest.ensembl.org/lookup/id'
         assert headers == {"Content-Type": "application/json", "Accept": "application/json"}
         assert isinstance(data, str)
@@ -366,7 +372,7 @@ def test_ensmbl_lookup_post_request(monkeypatch):
 
         return MockResponse(json_output={this_id: {} for this_id in ids})
 
-    monkeypatch.setattr(requests, 'post', mock_post_request)
+    monkeypatch.setattr(requests.Session, 'post', mock_post_request)
     assert _ensmbl_lookup_post_request(ids) == {'id1': {}, 'id2': {}, 'id3': {}}
 
 
@@ -575,14 +581,15 @@ def test_kegg_annotation_iterator_kegg_request(monkeypatch, arguments, url_truth
         assert content == truth
         cached.append(True)
 
-    def mock_get(url):
+    def mock_get(self, url):
         assert url == url_truth
         return MockResponse(text=truth)
 
     monkeypatch.setattr(io, 'load_cached_file', mock_get_cached_file)
-    monkeypatch.setattr(requests, 'get', mock_get)
+    monkeypatch.setattr(requests.Session, 'get', mock_get)
     monkeypatch.setattr(io, 'cache_file', mock_cache_file)
-    assert KEGGAnnotationIterator._kegg_request('operation', arguments, 'cached_filename.csv') == (
+    session = get_session(KEGGAnnotationIterator.RETRIES)
+    assert KEGGAnnotationIterator._kegg_request(session, 'operation', arguments, 'cached_filename.csv') == (
         truth, False)
     assert cached == [True]
 
@@ -594,7 +601,9 @@ def test_kegg_annotation_iterator_kegg_request_cached(monkeypatch):
         return truth
 
     monkeypatch.setattr(io, 'load_cached_file', mock_get_cached_file)
-    assert KEGGAnnotationIterator._kegg_request('operation', 'argument', 'cached_filename.csv') == (truth, True)
+    session = get_session(KEGGAnnotationIterator.RETRIES)
+    assert KEGGAnnotationIterator._kegg_request(session, 'operation', 'argument', 'cached_filename.csv') == (
+        truth, True)
 
 
 PATHWAY_NAMES_TRUTH = {'cel00010': 'Glycolysis / Gluconeogenesis - Caenorhabditis elegans (nematode)',
@@ -609,7 +618,7 @@ def test_kegg_annotation_iterator_get_pathways(monkeypatch):
     truth = (PATHWAY_NAMES_TRUTH, 6)
     organism_code = 'cel'
 
-    def mock_kegg_request(self, operation, arguments, cached_filename=None):
+    def mock_kegg_request(self, session, operation, arguments, cached_filename=None):
         assert operation == 'list'
         assert arguments == ['pathway', organism_code]
         assert cached_filename == KEGGAnnotationIterator.PATHWAY_NAMES_CACHED_FILENAME
@@ -621,6 +630,7 @@ def test_kegg_annotation_iterator_get_pathways(monkeypatch):
 
     kegg = KEGGAnnotationIterator.__new__(KEGGAnnotationIterator)
     kegg.organism_code = organism_code
+    kegg.session = get_session(kegg.RETRIES)
     assert kegg.get_pathways() == truth
 
 
@@ -639,7 +649,7 @@ def test_kegg_annotation_iterator_get_compounds(monkeypatch):
              'C00011': 'CO2',
              'C00012': 'Peptide', }
 
-    def mock_kegg_request(operation, arguments, cached_filename=None):
+    def mock_kegg_request(session, operation, arguments, cached_filename=None):
         assert operation == 'list'
         assert len(arguments) == 1
         if arguments[0] == 'compound':
@@ -653,6 +663,7 @@ def test_kegg_annotation_iterator_get_compounds(monkeypatch):
     monkeypatch.setattr(KEGGAnnotationIterator, '_kegg_request', mock_kegg_request)
 
     kegg = KEGGAnnotationIterator.__new__(KEGGAnnotationIterator)
+    kegg.session = get_session(kegg.RETRIES)
     res = kegg.get_compounds()
     assert res == truth
     assert sorted(reqs_made) == ['compound', 'glycan']
@@ -673,7 +684,7 @@ def test_kegg_annotation_iterator_get_pathway_kgml(monkeypatch, pathway_id, expe
     with open(pth) as f:
         truth = ElementTree.parse(f)
 
-    def mock_kegg_request(operation, arguments, cached_filename=None):
+    def mock_kegg_request(session, operation, arguments, cached_filename=None):
         assert operation == 'get'
         assert arguments == [pathway_id, 'kgml']
         assert cached_filename == expected_fname
@@ -683,6 +694,7 @@ def test_kegg_annotation_iterator_get_pathway_kgml(monkeypatch, pathway_id, expe
     monkeypatch.setattr(KEGGAnnotationIterator, '_kegg_request', mock_kegg_request)
 
     kegg = KEGGAnnotationIterator.__new__(KEGGAnnotationIterator)
+    kegg.session = get_session(kegg.RETRIES)
     assert are_xml_elements_equal(kegg.get_pathway_kgml(pathway_id).getroot(), truth.getroot())
 
 
@@ -712,7 +724,7 @@ def test_kegg_annotation_iterator_get_pathway_annotations(monkeypatch):
              'cel00052': ['Galactose metabolism - Caenorhabditis elegans (nematode)', {'cel:CELE_C01B4.6'}]}
     args_truth = ['cel00010+cel00020+cel00030', 'cel00040+cel00051+cel00052']
 
-    def mock_kegg_request(self, operation, arguments, fname):
+    def mock_kegg_request(self, session, operation, arguments, fname):
         assert operation == 'get'
         assert arguments == args_truth[0] or arguments == args_truth[1]
         if arguments == args_truth[0]:
@@ -728,6 +740,7 @@ def test_kegg_annotation_iterator_get_pathway_annotations(monkeypatch):
     kegg.pathway_annotations = None
     kegg.taxon_id = 6239
     kegg.organism_code = 'cel'
+    kegg.session = get_session(kegg.RETRIES)
     kegg.pathway_names = PATHWAY_NAMES_TRUTH
     assert {key: [name, ann] for key, name, ann in kegg.get_pathway_annotations()} == truth
 
@@ -749,13 +762,13 @@ def test_kegg_annotation_iterator_get_pathway_annotations_cached():
     (6238, 'cbr')
 ])
 def test_kegg_annotation_iterator_get_kegg_organism_code(monkeypatch, taxon_id, truth):
-    def mock_get_tree():
+    def mock_get_tree(_):
         with open('tests/test_files/kegg_taxon_tree_truth.json') as f:
             return json.loads(f.read())
 
     monkeypatch.setattr(KEGGAnnotationIterator, '_get_taxon_tree', mock_get_tree)
-
-    assert KEGGAnnotationIterator.get_kegg_organism_code(taxon_id) == truth
+    session = get_session(KEGGAnnotationIterator.RETRIES)
+    assert KEGGAnnotationIterator.get_kegg_organism_code(taxon_id, session) == truth
 
 
 def test_kegg_annotation_iterator_get_taxon_tree(monkeypatch):
@@ -771,16 +784,17 @@ def test_kegg_annotation_iterator_get_taxon_tree(monkeypatch):
         assert content == truth_text
         cached.append(True)
 
-    def mock_get(url, params):
+    def mock_get(self, url, params):
         assert url == 'https://www.genome.jp/kegg-bin/download_htext?htext=br08610'
         assert params == {'format': 'json'}
         return MockResponse(content=truth_text)
 
     monkeypatch.setattr(io, 'load_cached_file', mock_get_cached_file)
-    monkeypatch.setattr(requests, 'get', mock_get)
+    monkeypatch.setattr(requests.Session, 'get', mock_get)
     monkeypatch.setattr(io, 'cache_file', mock_cache_file)
 
-    assert KEGGAnnotationIterator._get_taxon_tree() == truth
+    session = get_session(KEGGAnnotationIterator.RETRIES)
+    assert KEGGAnnotationIterator._get_taxon_tree(session) == truth
     assert cached == [True]
 
 
@@ -791,7 +805,8 @@ def test_kegg_annotation_iterator_get_taxon_tree_cached(monkeypatch):
         return '{"sample":"json","lorem":"ipsum"}'
 
     monkeypatch.setattr(io, 'load_cached_file', mock_get_cached_file)
-    assert KEGGAnnotationIterator._get_taxon_tree() == truth
+    session = get_session(KEGGAnnotationIterator.RETRIES)
+    assert KEGGAnnotationIterator._get_taxon_tree(session) == truth
 
 
 class MockProcess:

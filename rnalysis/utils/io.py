@@ -337,11 +337,20 @@ def save_table(df: pd.DataFrame, filename: Union[str, Path], postfix: str = None
         df.to_csv(new_fname, header=True, index=index)
 
 
+def get_session(retries: Retry):
+    session = requests.Session()
+    adapter = HTTPAdapter(max_retries=retries)
+    session.mount("http://", adapter)
+    session.mount("https://", adapter)
+    return session
+
+
 class KEGGAnnotationIterator:
     URL = 'https://rest.kegg.jp/'
     TAXON_MAPPING_URL = 'https://www.genome.jp/kegg-bin/download_htext?htext=br08610'
     REQUEST_DELAY_MILLIS = 250
     REQ_MAX_ENTRIES = 10
+    RETRIES = Retry(total=5, backoff_factor=0.25, status_forcelist=[500, 502, 503, 504])
     TAXON_TREE_CACHED_FILENAME = 'kegg_taxon_tree.json'
     PATHWAY_NAMES_CACHED_FILENAME = 'kegg_pathway_list.txt'
     COMPOUND_LIST_CACHED_FILENAME = 'kegg_compound_list.txt'
@@ -350,7 +359,8 @@ class KEGGAnnotationIterator:
     def __init__(self, taxon_id: int, pathways: Union[str, List[str], Literal['all']] = 'all'):
         self.pathway_names = {}
         self.taxon_id = taxon_id
-        self.organism_code = self.get_kegg_organism_code(taxon_id)
+        self.session = get_session(self.RETRIES)
+        self.organism_code = self.get_kegg_organism_code(taxon_id, self.session)
         if pathways == 'all':
             self.pathway_names, self.n_annotations = self.get_pathways()
         else:
@@ -361,8 +371,8 @@ class KEGGAnnotationIterator:
         self.pathway_annotations = None
 
     @staticmethod
-    def _kegg_request(operation: str, arguments: Union[str, List[str]], cached_filename: Union[str, None] = None
-                      ) -> Tuple[str, bool]:
+    def _kegg_request(session: requests.Session, operation: str, arguments: Union[str, List[str]],
+                      cached_filename: Union[str, None] = None, ) -> Tuple[str, bool]:
         if cached_filename is not None:
             cached_file = load_cached_file(cached_filename)
             if cached_file is not None:
@@ -370,8 +380,8 @@ class KEGGAnnotationIterator:
                 return cached_file, is_cached
 
         is_cached = False
-        address = KEGGAnnotationIterator.URL + operation + '/' + '/'.join(parsing.data_to_list(arguments))
-        response = requests.get(address)
+        address = KEGGAnnotationIterator.URL + f'{operation}/' + '/'.join(parsing.data_to_list(arguments))
+        response = session.get(address)
         if not response.ok:
             response.raise_for_status()
         if cached_filename is not None:
@@ -383,7 +393,7 @@ class KEGGAnnotationIterator:
         return fname
 
     @staticmethod
-    def _get_taxon_tree():
+    def _get_taxon_tree(session):
         cached_filename = KEGGAnnotationIterator.TAXON_TREE_CACHED_FILENAME
         cached_file = load_cached_file(cached_filename)
         if cached_file is not None:
@@ -392,7 +402,7 @@ class KEGGAnnotationIterator:
                 return taxon_tree
             except json.decoder.JSONDecodeError:
                 pass
-        with requests.get(KEGGAnnotationIterator.TAXON_MAPPING_URL, params=dict(format='json')) as req:
+        with session.get(KEGGAnnotationIterator.TAXON_MAPPING_URL, params=dict(format='json')) as req:
             content = req.content.decode('utf8')
             cache_file(content, cached_filename)
             taxon_tree = json.loads(content)
@@ -401,9 +411,10 @@ class KEGGAnnotationIterator:
     @staticmethod
     def get_compounds() -> Dict[str, str]:
         compounds = {}
-        data = KEGGAnnotationIterator._kegg_request('list', ['compound'],
+        session = get_session(KEGGAnnotationIterator.RETRIES)
+        data = KEGGAnnotationIterator._kegg_request(session, 'list', ['compound'],
                                                     KEGGAnnotationIterator.COMPOUND_LIST_CACHED_FILENAME)[0] + '\n' + \
-               KEGGAnnotationIterator._kegg_request('list', ['glycan'],
+               KEGGAnnotationIterator._kegg_request(session, 'list', ['glycan'],
                                                     KEGGAnnotationIterator.GLYCAN_LIST_CACHED_FILENAME)[0]
         data = data.split('\n')
         for line in data:
@@ -417,8 +428,8 @@ class KEGGAnnotationIterator:
 
     @staticmethod
     @functools.lru_cache(1024)
-    def get_kegg_organism_code(taxon_id: int) -> str:
-        taxon_tree = KEGGAnnotationIterator._get_taxon_tree()
+    def get_kegg_organism_code(taxon_id: int, session: requests.Session) -> str:
+        taxon_tree = KEGGAnnotationIterator._get_taxon_tree(session)
         q = queue.Queue()
         q.put(taxon_tree)
         while not q.empty():
@@ -435,7 +446,8 @@ class KEGGAnnotationIterator:
 
     def get_pathways(self) -> Tuple[Dict[str, str], int]:
         pathway_names = {}
-        data, _ = self._kegg_request('list', ['pathway', self.organism_code], self.PATHWAY_NAMES_CACHED_FILENAME)
+        data, _ = self._kegg_request(self.session, 'list', ['pathway', self.organism_code],
+                                     self.PATHWAY_NAMES_CACHED_FILENAME)
         data = data.split('\n')
         for line in data:
             split = line.split('\t')
@@ -449,7 +461,8 @@ class KEGGAnnotationIterator:
     @staticmethod
     def get_pathway_kgml(pathway_id: str) -> ElementTree:
         cached_filename = f'kgml_{pathway_id}.xml'
-        data, _ = KEGGAnnotationIterator._kegg_request('get', [pathway_id, 'kgml'], cached_filename)
+        session = get_session(KEGGAnnotationIterator.RETRIES)
+        data, _ = KEGGAnnotationIterator._kegg_request(session, 'get', [pathway_id, 'kgml'], cached_filename)
         cache_file(data, cached_filename)
         return ElementTree.parse(StringIO(data))
 
@@ -463,7 +476,8 @@ class KEGGAnnotationIterator:
             partitioned_pathways = parsing.partition_list(list(self.pathway_names.keys()), self.REQ_MAX_ENTRIES)
             for chunk in partitioned_pathways:
                 prev_time = time.time()
-                data, was_cached = self._kegg_request('get', '+'.join(chunk), self._generate_cached_filename(chunk))
+                data, was_cached = self._kegg_request(self.session, 'get', '+'.join(chunk),
+                                                      self._generate_cached_filename(chunk))
                 entries = data.split('ENTRY')[1:]
                 for entry in entries:
                     entry_split = entry.split('\n')
@@ -518,8 +532,10 @@ class GOlrAnnotationIterator:
                  'evidence_types': 'the evidence types for which GO Annotations should be fetched',
                  'excluded_evidence_types': 'the evidence types for which GO Annotations should NOT be fetched',
                  'default_params': 'the default parameters for GET requests',
-                 'n_annotations': 'number of annotations matching the filtering criteria'}
+                 'n_annotations': 'number of annotations matching the filtering criteria',
+                 'session': 'session'}
     URL = 'http://golr-aux.geneontology.io/solr/select?'
+    RETRIES = Retry(total=5, backoff_factor=0.25, status_forcelist=[500, 502, 503, 504])
 
     _EXPERIMENTAL_EVIDENCE = {'EXP', 'IDA', 'IPI', 'IMP', 'IGI', 'IEP', 'HTP', 'HDA', 'HMP', 'HGI', 'HEP'}
     _PHYLOGENETIC_EVIDENCE = {'IBA', 'IBD', 'IKR', 'IRD'}
@@ -611,6 +627,7 @@ class GOlrAnnotationIterator:
             "fl": "source,bioentity_internal_id,annotation_class"  # fields
         }
 
+        self.session = get_session(self.RETRIES)
         self.n_annotations = self._get_n_annotations()
 
     def _get_n_annotations(self) -> int:
@@ -634,8 +651,7 @@ class GOlrAnnotationIterator:
             for item in field:
                 assert item in legals, f"Illegal item {item}. Legal items are {legals}."
 
-    @staticmethod
-    def _golr_request(params: dict, cached_filename: Union[str, None] = None) -> str:
+    def _golr_request(self, params: dict, cached_filename: Union[str, None] = None) -> str:
         """
         Run a get request to the GOlr server with the specified parameters, and return the server's text response.
         :param params: the get request's parameters.
@@ -646,7 +662,7 @@ class GOlrAnnotationIterator:
             if cached_file is not None:
                 return cached_file
 
-        response = requests.get(GOlrAnnotationIterator.URL, params=params)
+        response = self.session.get(GOlrAnnotationIterator.URL, params=params)
         if not response.ok:
             response.raise_for_status()
         if cached_filename is not None:
@@ -797,18 +813,22 @@ def _ensmbl_lookup_post_request(gene_ids: Tuple[str]) -> Dict[str, Dict[str, Any
     data_chunks = parsing.partition_list(gene_ids, 1000)
     output = {}
     processes = []
+    retries = Retry(total=5, backoff_factor=0.25, status_forcelist=[500, 502, 503, 504])
+    session = get_session(retries)
     with concurrent.futures.ThreadPoolExecutor() as executor:
-        for chunk in data_chunks:
+        for chunk in tqdm(data_chunks, desc='Submitting jobs...', unit='jobs'):
             data = {"ids": parsing.data_to_list(chunk)}
             processes.append(
-                executor.submit(requests.post, url, headers=headers, data=data.__repr__().replace("'", '"')))
+                executor.submit(session.post, url, headers=headers, data=data.__repr__().replace("'", '"')))
 
-    # req = requests.post(url, headers=headers, data=data.__repr__().replace("'", '"'))
-    for task in concurrent.futures.as_completed(processes):
-        req = task.result()
-        if not req.ok:
-            req.raise_for_status()
-        output.update(req.json())
+    with tqdm('Finding the best-matching species...', total=len(processes) + 1) as pbar:
+        pbar.update()
+        for task in concurrent.futures.as_completed(processes):
+            req = task.result()
+            if not req.ok:
+                req.raise_for_status()
+            output.update(req.json())
+            pbar.update()
     return output
 
 
@@ -997,9 +1017,12 @@ class GeneIDTranslator:
     UNIPROTKB_TO = "UniProtKB_to"
     API_URL = "https://rest.uniprot.org"
     POLLING_INTERVAL = 3
+    REQUEST_DELAY_MILLIS = 250
+    REQ_MAX_ENTRIES = 10
     RETRIES = Retry(total=5, backoff_factor=0.25, status_forcelist=[500, 502, 503, 504])
 
-    def __init__(self, map_from: str, map_to: str = 'UniProtKB AC', verbose: bool = True):
+    def __init__(self, map_from: str, map_to: str = 'UniProtKB AC', verbose: bool = True,
+                 session: Union[requests.Session, None] = None):
         """
     :param map_from: identifier type to map from (for example 'UniProtKB AC' or 'WormBase')
     :type map_from: str
@@ -1027,13 +1050,7 @@ class GeneIDTranslator:
         if self.map_from in ["UniProtKB", "UniProtKB AC/ID"]:
             self.map_from = self.UNIPROTKB_FROM
 
-    @staticmethod
-    def get_session():
-        session = requests.Session()
-        adapter = HTTPAdapter(max_retries=GeneIDTranslator.RETRIES)
-        session.mount("http://", adapter)
-        session.mount("https://", adapter)
-        return session
+        self.session = get_session(self.RETRIES) if session is None else session
 
     def get_mapping_results(self, map_to: str, map_from: str, ids: List[str], session: requests.Session):
         id_dict_to, id_dict_from = self.id_dicts
@@ -1189,7 +1206,6 @@ class GeneIDTranslator:
                 # TODO: if job fails?
                 rev_df = pd.DataFrame([line.split('\t') for line in rev_results[1:]],
                                       columns=rev_results[0].split('\t'))
-                print(rev_df)
                 rev_df['Annotation'] = (rev_df['Annotation']).astype(float)
                 rev_df = rev_df.sort_values('Annotation', ascending=False)
                 duplicates_chosen = {}
@@ -1242,12 +1258,12 @@ class GeneIDTranslator:
         if id_dict_to[self.map_to] != id_dict_to[self.UNIPROTKB_TO] and \
             id_dict_from[self.map_from] != id_dict_from[self.UNIPROTKB_FROM]:
 
-            to_translator = GeneIDTranslator(self.map_from, self.UNIPROTKB_TO, verbose=self.verbose)
+            to_translator = GeneIDTranslator(self.map_from, self.UNIPROTKB_TO, self.verbose, self.session)
             to_uniprot = to_translator.run(ids).mapping_dict
             if to_uniprot is None:
                 to_uniprot = {}
 
-            from_translator = GeneIDTranslator(self.UNIPROTKB_FROM, self.map_to, verbose=self.verbose)
+            from_translator = GeneIDTranslator(self.UNIPROTKB_FROM, self.map_to, self.verbose, self.session)
             from_uniprot = from_translator.run(to_uniprot.values()).mapping_dict
             if from_uniprot is None:
                 from_uniprot = {}
@@ -1257,7 +1273,7 @@ class GeneIDTranslator:
 
         # make sure that 'self.map_from' and 'self.map_to' are recognized identifier types
         elif id_dict_to[self.map_to] != 'Null' and id_dict_from[self.map_from] != 'Null':
-            session = self.get_session()
+            session = self.session
             results = self.get_mapping_results(self.map_to, self.map_from, ids, session)
 
             if results is None or len(results) <= 1:
