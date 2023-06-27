@@ -1300,9 +1300,7 @@ def find_best_gene_mapping(ids: Tuple[str, ...], map_from_options: Union[Tuple[s
         map_from_options = all_map_from_options
 
     def _key_func(items: Tuple[int, str, str]):
-        key = [items[0]]
-        key.append(list(map_from_options).index(items[1]))
-        key.append(list(map_to_options).index(items[2]))
+        key = [items[0], list(map_from_options).index(items[1]), list(map_to_options).index(items[2])]
         return key
 
     def map_gene_ids_ignore_httpexception(ids: Tuple[str], map_from: str, map_to: str):
