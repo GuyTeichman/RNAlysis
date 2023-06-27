@@ -18,6 +18,7 @@ Changed
 Fixed
 *******
 * Fixed bug where functions would sometimes fail to run without displaying an error message.
+* Fixed bug where progress bars in the graphical interface would sometimes not disappear after reaching 100% completion.
 
 3.9.2 (2023-06-23)
 ------------------

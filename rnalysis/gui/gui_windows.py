@@ -1049,6 +1049,8 @@ class StatusBar(QtWidgets.QStatusBar):
         self.progbar_completed_items += value
         self.update_time()
         self.progress_bar.setValue(self.progbar_completed_items)
+        if self.progbar_completed_items >= self.progbar_total:
+            self.reset_progress()
 
 
 class TaskQueueWindow(gui_widgets.MinMaxDialog):
