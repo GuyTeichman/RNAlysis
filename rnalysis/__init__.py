@@ -2,6 +2,7 @@
 
 """Top-level package for RNA sequencing analysis pipeline."""
 import warnings
+
 import pandas as pd
 
 pd.set_option("mode.copy_on_write", True)
@@ -30,3 +31,4 @@ def _simple_warning_format(msg, *args, **kwargs):
 
 warnings.formatwarning = _simple_warning_format
 warnings.simplefilter('always', UserWarning)
+warnings.filterwarnings('ignore', message='.*layout not applied.*')
