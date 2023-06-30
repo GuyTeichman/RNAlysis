@@ -4383,6 +4383,7 @@ def customwarn(message, category, filename, lineno, file=None, line=None):  # pr
 
 
 async def run():  # pragma: no cover
+    warnings.showwarning = customwarn
     # close built-in splash screen in frozen app version of RNAlysis
     if '_PYIBoot_SPLASH' in os.environ and importlib.util.find_spec("pyi_splash"):
         import pyi_splash
@@ -4418,7 +4419,6 @@ async def run():  # pragma: no cover
         splash.showMessage(base_message + 'loading application', QtCore.Qt.AlignBottom | QtCore.Qt.AlignHCenter)
     matplotlib.use('Qt5Agg')
     window = MainWindow()
-    warnings.showwarning = customwarn
     sys.excepthook = window.excepthook
     builtins.input = window.input
 
