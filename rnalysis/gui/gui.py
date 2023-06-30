@@ -3941,11 +3941,16 @@ class MainWindow(QtWidgets.QMainWindow):
         view_menu = self.menu_bar.addMenu("&View")
         view_menu.addActions([self.show_history_action, self.task_queue_action, self.close_figs_action])
 
-        fastq_menu = self.menu_bar.addMenu("&FASTQ")
-        self.trimming_menu = fastq_menu.addMenu('&Adapter trimming')
+        fastq_menu = self.menu_bar.addMenu("&FASTQ/SAM")
+        self.quality_menu = fastq_menu.addMenu('&Quality control')
+        self.preprocess_menu = fastq_menu.addMenu('&Pre-processing')
+        self.trimming_menu = fastq_menu.addMenu('Adapter &trimming')
         self.kallisto_menu = fastq_menu.addMenu("RNA-sequencing &quantification")
-        self.alignment_menu = fastq_menu.addMenu("Read alignment")
-        self.count_menu = fastq_menu.addMenu("Feature counting")
+        self.alignment_menu = fastq_menu.addMenu("Read &alignment")
+        self.convert_menu = fastq_menu.addMenu('&Conversion')
+        self.process_menu = fastq_menu.addMenu('P&ost-processing')
+        self.filtering_menu = fastq_menu.addMenu('&Filtering')
+        self.count_menu = fastq_menu.addMenu("&Feature counting")
 
         self.trimming_menu.addActions([self.cutadapt_single_action, self.cutadapt_paired_action])
         self.kallisto_menu.addActions(
