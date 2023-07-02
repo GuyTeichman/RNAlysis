@@ -414,6 +414,60 @@ class Filter:
         new_df = self.df.drop(columns, axis=1)
         return self._inplace(new_df, False, inplace, suffix, 'transform')
 
+    @readable_name('Find paralogs within specie (using PantherDB)')
+    def find_paralogs_panther(self, organism: Union[Literal['auto'], str, int, Literal[get_panther_taxons()]] = 'auto',
+                              gene_id_type: Union[str, Literal['auto'], Literal[get_gene_id_types()]] = 'auto'):
+        (taxon_id, organism), gene_id_type = io.get_taxon_and_id_type(organism, gene_id_type, self.index_set)
+        pass
+
+    @readable_name('Find paralogs within specie (using Ensembl)')
+    def find_paralogs_ensembl(self, organism: Union[Literal['auto'], str, int, Literal[get_ensembl_taxons()]] = 'auto',
+                              gene_id_type: Union[str, Literal['auto'], Literal[get_gene_id_types()]] = 'auto'):
+        (taxon_id, organism), gene_id_type = io.get_taxon_and_id_type(organism, gene_id_type, self.index_set)
+        pass
+
+    @readable_name('Map genes to nearest orthologs (using PantherDB)')
+    def map_orthologs_panther(self, map_to_taxon: Union[str, int, Literal[get_panther_taxons()]],
+                              map_from_taxon: Union[Literal['auto'], str, int, Literal[get_panther_taxons()]] = 'auto',
+                              gene_id_type: Union[str, Literal['auto'], Literal[get_gene_id_types()]] = 'auto',
+                              ortholog_type: Literal['least_diverged', 'all'] = 'least_diverged'):
+        taxon_id_to = io.map_taxon_id(map_to_taxon)[0]
+        (taxon_id_from, organism), gene_id_type = io.get_taxon_and_id_type(map_from_taxon, gene_id_type, self.index_set)
+
+        pass
+
+    @readable_name('Map genes to nearest orthologs (using Ensembl)')
+    def map_orthologs_ensembl(self, map_to_taxon: Union[str, int, Literal[get_ensembl_taxons()]],
+                              map_from_taxon: Union[Literal['auto'], str, int, Literal[get_ensembl_taxons()]] = 'auto',
+                              gene_id_type: Union[str, Literal['auto'], Literal[get_gene_id_types()]] = 'auto',
+                              ortholog_type: Literal['percent_identity', 'all'] = 'percent_identity'):
+        taxon_id_to = io.map_taxon_id(map_to_taxon)[0]
+        (taxon_id_from, organism), gene_id_type = io.get_taxon_and_id_type(map_from_taxon, gene_id_type, self.index_set)
+
+        pass
+
+    @readable_name('Map genes to nearest orthologs (using PhylomeDB)')
+    def map_orthologs_phylomedb(self, map_to_taxon: Union[str, int, Literal[get_phylomedb_taxons()]],
+                                map_from_taxon: Union[
+                                    Literal['auto'], str, int, Literal[get_phylomedb_taxons()]] = 'auto',
+                                gene_id_type: Union[str, Literal['auto'], Literal[get_gene_id_types()]] = 'auto',
+                                ortholog_type: Literal['consistency_score', 'all'] = 'consistency_score'):
+        taxon_id_to = io.map_taxon_id(map_to_taxon)[0]
+        (taxon_id_from, organism), gene_id_type = io.get_taxon_and_id_type(map_from_taxon, gene_id_type, self.index_set)
+
+        pass
+
+    @readable_name('Map genes to nearest orthologs (using OrthoInspector)')
+    def map_orthologs_orthoinspector(self, map_to_taxon: Union[str, int, Literal[get_panther_taxons()]],
+                                     map_from_taxon: Union[
+                                         Literal['auto'], str, int, Literal[get_panther_taxons()]] = 'auto',
+                                     gene_id_type: Union[str, Literal['auto'], Literal[get_gene_id_types()]] = 'auto',
+                                     ortholog_type: Literal['first', 'random', 'all'] = 'all'):
+        taxon_id_to = io.map_taxon_id(map_to_taxon)[0]
+        (taxon_id_from, organism), gene_id_type = io.get_taxon_and_id_type(map_from_taxon, gene_id_type, self.index_set)
+
+        pass
+
     @readable_name('Translate gene IDs')
     def translate_gene_ids(self, translate_to: Union[str, Literal[get_gene_id_types()]],
                            translate_from: Union[str, Literal['auto'], Literal[get_gene_id_types()]] = 'auto',

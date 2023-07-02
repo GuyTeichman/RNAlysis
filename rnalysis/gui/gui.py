@@ -36,9 +36,11 @@ FROZEN_ENV = getattr(sys, 'frozen', False) and hasattr(sys, '_MEIPASS')
 
 JOB_COUNTER = gui_widgets.JobCounter()
 
+
 def check_run_success(result: gui_widgets.WorkerOutput):
     if result.raised_exception:
         raise result.raised_exception
+
 
 class BarPlotWindow(gui_windows.FuncExternalWindow):
     EXCLUDED_PARAMS = set()
@@ -1517,7 +1519,8 @@ class TabPage(QtWidgets.QWidget):
 class SetTabPage(TabPage):
     EXCLUDED_FUNCS = {'union', 'intersection', 'majority_vote_intersection', 'difference', 'symmetric_difference'}
     SUMMARY_FUNCS = {'biotypes_from_ref_table', 'biotypes_from_gtf'}
-    GENERAL_FUNCS = {'translate_gene_ids'}
+    GENERAL_FUNCS = {'translate_gene_ids', 'map_orthologs_phylomedb', 'map_orthologs_orthoinspector',
+                     'map_orthologs_ensembl', 'map_orthologs_panther', 'find_paralogs_panther'}
     THREADED_FUNCS = {'translate_gene_ids', 'filter_by_kegg_annotations', 'filter_by_go_annotations'}
 
     def __init__(self, set_name: str, gene_set: typing.Union[set, enrichment.FeatureSet] = None, parent=None,
@@ -1811,7 +1814,8 @@ class FilterTabPage(TabPage):
     SUMMARY_FUNCS = {'describe', 'head', 'tail', 'biotypes_from_ref_table', 'biotypes_from_gtf', 'print_features'}
     GENERAL_FUNCS = {'sort', 'sort_by_principal_component', 'transform', 'translate_gene_ids',
                      'differential_expression_deseq2', 'fold_change', 'average_replicate_samples', 'drop_columns',
-                     'differential_expression_limma_voom'}
+                     'differential_expression_limma_voom', 'map_orthologs_phylomedb', 'map_orthologs_orthoinspector',
+                     'map_orthologs_ensembl', 'map_orthologs_panther', 'find_paralogs_panther'}
     THREADED_FUNCS = {'translate_gene_ids', 'differential_expression_deseq2', 'filter_by_kegg_annotations',
                       'filter_by_go_annotations', 'differential_expression_limma_voom'}
     startedClustering = QtCore.pyqtSignal(object, object, object)
