@@ -1949,9 +1949,10 @@ def test_filter_by_kegg_annotations(monkeypatch, ids, mode, truth_path):
 
     monkeypatch.setattr(io.KEGGAnnotationIterator, 'get_kegg_organism_code', lambda *args, **kwargs: 'cel')
     monkeypatch.setattr(io.KEGGAnnotationIterator, 'get_pathway_annotations', annotation_iter)
+    monkeypatch.setattr(io, 'get_taxon_and_id_type', lambda *args, **kwargs: ((6239, 'elegans'), 'KEGG'))
 
     f = Filter('tests/test_files/counted.csv')
-    res = f.filter_by_kegg_annotations(ids, mode, gene_id_type='KEGG', inplace=False)
+    res = f.filter_by_kegg_annotations(ids, mode, gene_id_type='WormBase', inplace=False)
 
     try:
         assert res.df.sort_index().equals(truth.sort_index())

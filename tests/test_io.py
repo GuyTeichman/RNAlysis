@@ -5,7 +5,7 @@ import requests_mock
 
 from rnalysis.utils import io
 from rnalysis.utils.io import *
-from rnalysis.utils.io import _format_ids_iter, _ensmbl_lookup_post_request
+from rnalysis.utils.io import _format_ids_iter, _ensembl_lookup_post_request
 from tests import is_uniprot_available, is_ensembl_available
 
 ENSEMBL_AVAILABLE = is_ensembl_available()
@@ -35,6 +35,17 @@ class MockResponse(object):
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         return
+
+
+class AsyncMockResponse(MockResponse):
+    async def __aenter__(self):
+        return self
+
+    async def __aexit__(self, exc_type, exc_val, exc_tb):
+        pass
+
+    async def json(self):
+        return self._json
 
 
 def test_load_csv_bad_input():
@@ -370,10 +381,10 @@ def test_ensmbl_lookup_post_request(monkeypatch):
         assert isinstance(data, str)
         assert json.loads(data) == {'ids': list(ids)}
 
-        return MockResponse(json_output={this_id: {} for this_id in ids})
+        return AsyncMockResponse(json_output={this_id: {} for this_id in ids})
 
-    monkeypatch.setattr(requests.Session, 'post', mock_post_request)
-    assert _ensmbl_lookup_post_request(ids) == {'id1': {}, 'id2': {}, 'id3': {}}
+    monkeypatch.setattr(aiohttp.ClientSession, 'post', mock_post_request)
+    assert _ensembl_lookup_post_request(ids) == {'id1': {}, 'id2': {}, 'id3': {}}
 
 
 @pytest.mark.parametrize("gene_id_info,truth", [
@@ -385,7 +396,7 @@ def test_ensmbl_lookup_post_request(monkeypatch):
     ({}, {})
 ])
 def test_infer_sources_from_gene_ids(monkeypatch, gene_id_info, truth):
-    monkeypatch.setattr(io, '_ensmbl_lookup_post_request', lambda x: gene_id_info)
+    monkeypatch.setattr(io, '_ensembl_lookup_post_request', lambda x: gene_id_info)
     assert infer_sources_from_gene_ids([]) == truth
 
 
@@ -395,13 +406,13 @@ def test_infer_sources_from_gene_ids(monkeypatch, gene_id_info, truth):
      'm musculus')])
 def test_infer_taxon_from_gene_ids(monkeypatch, gene_id_info, truth):
     monkeypatch.setattr(io, 'map_taxon_id', lambda x: x)
-    monkeypatch.setattr(io, '_ensmbl_lookup_post_request', lambda x: gene_id_info)
+    monkeypatch.setattr(io, '_ensembl_lookup_post_request', lambda x: gene_id_info)
     assert infer_taxon_from_gene_ids([])[0] == truth
 
 
 def test_infer_taxon_from_gene_ids_no_species(monkeypatch):
     gene_id_info = {'id1': None, 'id2': None}
-    monkeypatch.setattr(io, '_ensmbl_lookup_post_request', lambda x: gene_id_info)
+    monkeypatch.setattr(io, '_ensembl_lookup_post_request', lambda x: gene_id_info)
     with pytest.raises(ValueError):
         infer_taxon_from_gene_ids([])
 

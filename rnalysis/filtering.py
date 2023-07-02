@@ -745,6 +745,9 @@ class Filter:
         assert mode in {'union', 'intersection'}, \
             f"Illegal mode '{mode}': mode must be either 'union' or 'intersection'"
 
+        (taxon_id, organism), gene_id_type = io.get_taxon_and_id_type(organism, gene_id_type, self.index_set,
+                                                                      'UniProtKB')
+
         dag_tree = ontology.fetch_go_basic()
         # make sure all GO IDs are valid
         for go_id in go_ids.copy():
@@ -760,7 +763,7 @@ class Filter:
         # find the minimal set of GO aspects that need to be fetched
         aspects = {dag_tree[go_id].namespace for go_id in go_ids}
 
-        annotations = io.GOlrAnnotationIterator(io.map_taxon_id(organism)[0], aspects,
+        annotations = io.GOlrAnnotationIterator(taxon_id, aspects,
                                                 evidence_types, excluded_evidence_types,
                                                 databases, excluded_databases,
                                                 qualifiers, excluded_qualifiers)
@@ -801,8 +804,6 @@ class Filter:
 
         # translate gene IDs
         go_to_translated_genes = {go_id: set() for go_id in go_ids if go_id in go_to_genes}
-        if gene_id_type == 'auto':
-            _, gene_id_type, _ = io.find_best_gene_mapping(parsing.data_to_tuple(self.index_set), None, ('UniProtKB',))
 
         for source in source_to_genes:
             translator = io.GeneIDTranslator(source, gene_id_type).run(parsing.data_to_tuple(source_to_genes[source]))
@@ -875,8 +876,10 @@ class Filter:
         assert mode in {'union', 'intersection'}, \
             f"Illegal mode '{mode}': mode must be either 'union' or 'intersection'"
 
+        (taxon_id, organism), gene_id_type = io.get_taxon_and_id_type(organism, gene_id_type, self.index_set, 'KEGG')
+
         # fetch KEGG annotations for the specified KEGG IDs
-        annotations = io.KEGGAnnotationIterator(io.map_taxon_id(organism)[0], list(kegg_ids))
+        annotations = io.KEGGAnnotationIterator(taxon_id, list(kegg_ids))
         kegg_to_genes = {}
         for pathway_id, _, genes in tqdm(annotations, desc='Fetching KEGG annotations',
                                          total=annotations.n_annotations, unit=' annotations'):
@@ -892,11 +895,7 @@ class Filter:
             genes_to_translate.update(grp)
 
         kegg_to_translated_genes = {}
-        if gene_id_type == 'auto':
-            translator, _, gene_id_type = io.find_best_gene_mapping(parsing.data_to_tuple(genes_to_translate),
-                                                                    ('KEGG',), None)
-        else:
-            translator = io.GeneIDTranslator('KEGG', gene_id_type).run(parsing.data_to_tuple(genes_to_translate))
+        translator = io.GeneIDTranslator('KEGG', gene_id_type).run(parsing.data_to_tuple(genes_to_translate))
         for kegg_id in kegg_to_genes:
             kegg_to_translated_genes[kegg_id] = set()
             for gene_id in kegg_to_genes[kegg_id]:

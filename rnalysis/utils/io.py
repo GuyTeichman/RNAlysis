@@ -800,7 +800,7 @@ def get_obo_basic_stream():
 
 # TODO: cache this! save and load gene IDs individually
 @lru_cache(maxsize=32, typed=False)
-def _ensmbl_lookup_post_request(gene_ids: Tuple[str]) -> Dict[str, Dict[str, Any]]:
+def _ensembl_lookup_post_request(gene_ids: Tuple[str]) -> Dict[str, Dict[str, Any]]:
     """
     Perform an Ensembl 'lookup/id' POST request to find the species and database for several identifiers. \
     See full POST API at https://rest.ensembl.org/documentation/info/lookup_post
@@ -809,27 +809,20 @@ def _ensmbl_lookup_post_request(gene_ids: Tuple[str]) -> Dict[str, Dict[str, Any
     :type gene_ids: tuple of str
     :return: a dictionary with gene IDs as keys and dictionaries of attributes as values
     """
-    url = 'https://rest.ensembl.org/lookup/id'
-    headers = {"Content-Type": "application/json", "Accept": "application/json"}
+    endpoint = 'lookup/id'
+    req_type = 'post'
     # split the gene IDs into chunks of 1000 (the maximum allowed POST request size)
     data_chunks = parsing.partition_list(gene_ids, 1000)
     output = {}
-    processes = []
-    retries = Retry(total=5, backoff_factor=0.25, status_forcelist=[500, 502, 503, 504])
-    session = get_session(retries)
-    with concurrent.futures.ThreadPoolExecutor() as executor:
-        for chunk in tqdm(data_chunks, desc='Submitting jobs...', unit='jobs'):
-            data = {"ids": parsing.data_to_list(chunk)}
-            processes.append(
-                executor.submit(session.post, url, headers=headers, data=data.__repr__().replace("'", '"')))
+    client = EnsemblRestClient()
+    for chunk in tqdm(data_chunks, desc='Submitting jobs...', unit='jobs'):
+        data = {"ids": parsing.data_to_list(chunk)}
+        client.queue_action(req_type, endpoint, params=repr(data).replace("'", '"'))
 
-    with tqdm('Finding the best-matching species...', total=len(processes) + 1) as pbar:
+    with tqdm('Finding the best-matching species...', total=client.queue.qsize() + 1) as pbar:
         pbar.update()
-        for task in concurrent.futures.as_completed(processes):
-            req = task.result()
-            if not req.ok:
-                req.raise_for_status()
-            output.update(req.json())
+        for json_res in client.run():
+            output.update(json_res)
             pbar.update()
     return output
 
@@ -845,7 +838,7 @@ def infer_sources_from_gene_ids(gene_ids: Iterable[str]) -> Dict[str, Set[str]]:
     """
     translator, map_from, _ = find_best_gene_mapping(parsing.data_to_tuple(gene_ids), map_from_options=None,
                                                      map_to_options=('Ensembl', 'Ensembl Genomes'))
-    output = _ensmbl_lookup_post_request(parsing.data_to_tuple(translator.mapping_dict.values()))
+    output = _ensembl_lookup_post_request(parsing.data_to_tuple(translator.mapping_dict.values()))
     sources = {}
     for gene_id in output:
         if output[gene_id] is not None:
@@ -870,7 +863,7 @@ def infer_taxon_from_gene_ids(gene_ids: Iterable[str], gene_id_type: str = None)
         gene_id_type = parsing.data_to_tuple(gene_id_type)
     translator, map_from, _ = find_best_gene_mapping(parsing.data_to_tuple(gene_ids), map_from_options=gene_id_type,
                                                      map_to_options=('Ensembl', 'Ensembl Genomes'))
-    output = _ensmbl_lookup_post_request(parsing.data_to_tuple(translator.mapping_dict.values()))
+    output = _ensembl_lookup_post_request(parsing.data_to_tuple(translator.mapping_dict.values()))
     species = dict()
     for gene_id in output:
         if output[gene_id] is not None:
@@ -887,6 +880,52 @@ def infer_taxon_from_gene_ids(gene_ids: Iterable[str], gene_id_type: str = None)
                 chosen_species = s
                 chosen_species_n = species[s]
     return map_taxon_id(chosen_species.replace('_', ' ')), map_from
+
+
+def get_taxon_and_id_type(organism, gene_id_type, gene_set, map_to_options=('Ensembl', 'Ensembl Genomes')):
+    """
+    Determines the taxon and gene id type for a given organism and set of genes. \
+    If 'auto' is provided as the organism, the taxon will be inferred from the gene set. If 'auto' is provided as the \
+    gene id type, the function will either use the inferred type (if available) or find the best gene mapping.
+
+    :param organism: The organism to get the taxon and id type for. If 'auto', the taxon will \
+    be inferred from the gene set. This can be of type str, int, or Literal['auto'].
+    :type organism: Union[str, int, Literal['auto']]
+    :param gene_id_type: The gene id type. If 'auto', the id type will be inferred or the best \
+    gene mapping will be found. This can be of type str or Literal['auto'].
+    :type gene_id_type: Union[str, Literal['auto']]
+    :param gene_set: A set of gene ids.
+    :type gene_set: Set[str]
+    :param map_to_options: The options for mapping to. Defaults to ('Ensembl', 'Ensembl Genomes'). \
+    This can be a single string or a tuple of strings.
+    :type map_to_options: Union[str, Tuple[str]], optional
+    :return: A tuple containing the taxon and the gene id type.
+    :rtype: tuple
+    """
+    # Convert map_to_options to tuple if necessary
+    map_to_options = parsing.data_to_tuple(map_to_options)
+
+    # If organism is 'auto', infer taxon from gene IDs
+    if isinstance(organism, str) and organism.lower() == 'auto':
+        id_type = None if gene_id_type.lower() == 'auto' else gene_id_type
+        taxon, map_from = infer_taxon_from_gene_ids(gene_set, id_type)
+
+        # If gene_id_type is also 'auto', use inferred type
+        if gene_id_type.lower() == 'auto':
+            gene_id_type = map_from
+
+    else:
+        # If organism is known and gene_id_type is 'auto', find the best gene mapping
+        if gene_id_type.lower() == 'auto':
+            _, gene_id_type, _ = find_best_gene_mapping(
+                parsing.data_to_tuple(gene_set),
+                map_from_options=None,
+                map_to_options=map_to_options)
+
+        # Map taxon ID
+        taxon = map_taxon_id(organism)
+
+    return taxon, gene_id_type
 
 
 @lru_cache(maxsize=32, typed=False)
@@ -995,8 +1034,168 @@ class GeneIDDict:
             return False
 
 
-class OrthologyMapper:
-    QUERY_SIZE = 10  # as specified in the Panther API site
+class EnsemblRestClient:
+    SERVER = 'https://rest.ensembl.org/'
+    REQS_PER_SEQ = 100
+    HEADERS = {"Content-Type": "application/json", "Accept": "application/json"}
+    RETRIES = Retry(total=5, backoff_factor=0.25, status_forcelist=[500, 502, 503, 504])
+    SEMAPHORE = asyncio.Semaphore(value=REQS_PER_SEQ)
+    LIMITER = aiolimiter.AsyncLimiter(REQS_PER_SEQ, 1)
+
+    def __init__(self):
+        self.queue = queue.Queue()
+        self.session = None
+
+    def queue_action(self, req_type: Literal['get', 'post'], endpoint: str, hdrs=None, params=None):
+        self.queue.put((req_type, endpoint, hdrs, params))
+
+    def run(self):
+        res = asyncio.run(self._run())
+        return res
+
+    async def _run(self):
+        tasks = []
+        async with aiohttp.ClientSession() as self.session:
+            while not self.queue.empty():
+                req_type, endpoint, hdrs, params = self.queue.get()
+                tasks.append(self.perform_api_action(req_type, endpoint, hdrs, params))
+
+            return await asyncio.gather(*tasks)
+
+    async def perform_api_action(self, req_type: Literal['get', 'post'], endpoint: str, hdrs=None, params=None):
+        # TODO: implement retries
+        if hdrs is None:
+            hdrs = self.HEADERS
+
+        if 'Content-Type' not in hdrs:
+            hdrs['Content-Type'] = 'application/json'
+
+        content = None
+        try:
+            await self.SEMAPHORE.acquire()
+            async with self.LIMITER:
+                if req_type == 'get':
+                    request_func = self.session.get
+                    kwargs = dict(params=params) if params else {}
+                elif req_type == 'post':
+                    request_func = self.session.post
+                    kwargs = dict(data=params) if params else {}
+                else:
+                    raise ValueError(f"Invalid request type '{req_type}'. ")
+                async with request_func(self.SERVER + endpoint, headers=hdrs, **kwargs) as response:
+                    response.raise_for_status()
+                    content = await response.json()
+                    self.SEMAPHORE.release()
+
+        except (aiohttp.ClientConnectorError, asyncio.TimeoutError) as e:
+            # check if we are being rate limited by the server
+            if e.errno == 429:
+                if 'Retry-After' in e.request.headers:
+                    retry = e.request.headers['Retry-After']
+                    await asyncio.sleep(float(retry))
+                    return await self.perform_api_action(req_type, endpoint, hdrs, params)
+            else:
+                raise e
+        return content
+
+
+class PhylomeDBOrthologMapper:
+    URL = 'ftp.phylomedb.org'
+
+    def __init__(self, map_to_organism, map_from_organism='auto', gene_id_type='auto'):
+        self.gene_id_type = gene_id_type
+        self.map_from_organism = map_from_organism
+        self.map_to_organism = map_to_organism
+
+    def get_orthologs(self, ids: List[str], ortholog_type: Literal['consistency_score', 'all'] = 'consistency_score'):
+        ftp = self._connect()
+
+    @staticmethod
+    def _get_taxon_file(taxon_id: int):
+        cache_file = get_todays_cache_dir().joinpath(f'phylomedb_{taxon_id}.parquet')
+        if cache_file.exists():
+            df = load_table(cache_file, squeeze=True, index_col=0)
+        else:
+            pass
+        return df
+
+    @staticmethod
+    def _parse_taxon_file(path: Path):
+        pass
+
+    @staticmethod
+    def _connect():
+        ftp = ftplib.FTP(PhylomeDBOrthologMapper.URL)
+        ftp.login()
+        ftp.cwd('/metaphors/latest')
+        return ftp
+
+    @staticmethod
+    @lru_cache(maxsize=2)
+    def get_legal_species():
+        cache_dir = get_todays_cache_dir()
+        file_path = "/metaphors/latest/species.txt.gz"
+        local_zip_file = cache_dir.joinpath("species.txt.gz")
+        cache_file = cache_dir.joinpath("phylomedb_species.parquet")
+
+        if cache_file.exists():
+            df = load_table(cache_file, squeeze=True, index_col=0)
+        else:
+            ftp = PhylomeDBOrthologMapper._connect()
+            # Download the file
+            with open(local_zip_file, 'wb') as fp:
+                ftp.retrbinary('RETR ' + file_path, fp.write)
+            ftp.quit()
+
+            # Unzip the file
+            with gzip.open(local_zip_file, 'rb') as f_in:
+                with open(cache_file, 'wb') as f_out:
+                    shutil.copyfileobj(f_in, f_out)
+
+            # Remove the zipped file
+            os.remove(local_zip_file)
+
+            # Load into pandas dataframe
+            df = pd.read_csv(cache_file, sep='\t', index_col=3)
+
+            # Extract necessary columns and sort by name
+            df = df['#specieTaxId'].sort_index()
+
+            # cache file locally
+            save_table(df, cache_file)
+        return df
+
+
+class OrthoInspectorOrthologMapper:
+    DATABASES = {'Eukaryota', 'Bacteria', 'Archea', 'Transverse'}
+
+
+class EnsemblOrthologMapper:
+    RETRIES = Retry(total=5, backoff_factor=0.25, status_forcelist=[500, 502, 503, 504])
+    API_URL = 'https://rest.ensembl.org/homology/id/'
+
+    def __init__(self, map_to_organism, map_from_organism='auto', gene_id_type='auto'):
+        self.gene_id_type = gene_id_type
+        self.map_from_organism = map_from_organism
+        self.map_to_organism = map_to_organism
+
+    def get_orthologs(self, ids: List[str], ortholog_type: Literal['least_diverged', 'all'] = 'least_diverged'):
+        session = get_session(self.RETRIES)
+        url = self.API_URL
+        headers = {"Content-Type": "application/json"}
+        for gene_id in ids:
+            req = session.get(url, headers=headers,
+                              data=dict(geneInputList=gene_id, organism=str(self.map_from_organism),
+                                        targetOrganism=str(self.map_to_organism),
+                                        orthologType='all' if ortholog_type == 'all' else 'LDO'))
+            req.raise_for_status()
+            print(req.json())
+
+
+class PantherOrthologMapper:
+    API_URL = 'http://www.pantherdb.org'
+    CHUNK_SIZE = 10  # as specified in the Panther API site
+    RETRIES = Retry(total=5, backoff_factor=0.25, status_forcelist=[500, 502, 503, 504])
 
     def __init__(self, map_to_organism, map_from_organism='auto', gene_id_type='auto'):
         self.gene_id_type = gene_id_type
