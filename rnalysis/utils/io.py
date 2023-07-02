@@ -59,7 +59,9 @@ def get_tutorial_videos_dir() -> Path:
 def get_todays_cache_dir() -> Path:
     today = date.today().strftime('%Y_%m_%d')
     cache_dir = Path(appdirs.user_cache_dir('RNAlysis'))
-    return cache_dir.joinpath(today)
+    todays_dir = cache_dir.joinpath(today)
+    todays_dir.mkdir(parents=True, exist_ok=True)
+    return todays_dir
 
 
 def load_cached_file(filename: str):

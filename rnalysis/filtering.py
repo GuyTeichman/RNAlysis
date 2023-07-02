@@ -2799,8 +2799,6 @@ class CountFilter(Filter):
             design_mat_path = io.get_todays_cache_dir().joinpath(f'design_mat_{i}.csv')
             i += 1
 
-        if not io.get_todays_cache_dir().exists():
-            io.get_todays_cache_dir().mkdir(parents=True)
         io.save_table(self.df.round(), data_path)
         # use Pandas to automatically detect file delimiter type, then export it as a CSV file.
         design_mat_df = io.load_table(design_matrix, index_col=0)
@@ -2871,8 +2869,6 @@ class CountFilter(Filter):
             design_mat_path = io.get_todays_cache_dir().joinpath(f'design_mat_{i}.csv')
             i += 1
 
-        if not io.get_todays_cache_dir().exists():
-            io.get_todays_cache_dir().mkdir(parents=True)
         io.save_table(self.df.round(), data_path)
         # use Pandas to automatically detect file delimiter type, then export it as a CSV file.
         design_mat_df = io.load_table(design_matrix, index_col=0)
