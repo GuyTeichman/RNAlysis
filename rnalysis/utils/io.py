@@ -1557,6 +1557,32 @@ def find_best_gene_mapping(ids: Tuple[str, ...], map_from_options: Union[Tuple[s
 
 
 @functools.lru_cache(maxsize=2)
+def get_legal_panther_taxons():
+    URL = 'http://www.pantherdb.org/services/oai/pantherdb/supportedgenomes'
+    req = requests.post(URL)
+    req.raise_for_status()
+    entries = json.loads(req.text)['search']['output']['genomes']['genome']
+    taxons = tuple(sorted(d['long_name'] for d in entries))
+    return taxons
+
+
+@functools.lru_cache(maxsize=2)
+def get_legal_ensembl_taxons():
+    endpoint = 'info/species'
+    client = EnsemblRestClient()
+    client.queue_action('get', endpoint, params=dict(hide_strain_info=1))
+    results = client.run()[0]['species']
+    return tuple(sorted(res['name'].replace('_', ' ').capitalize() for res in results))
+
+
+@functools.lru_cache(maxsize=2)
+def get_legal_phylomedb_taxons():
+    entries = PhylomeDBOrthologMapper.get_legal_species()
+    taxons = tuple(name for name in entries.index.unique() if name[0].isupper())
+    return taxons
+
+
+@functools.lru_cache(maxsize=2)
 def get_legal_gene_id_types():
     URL = 'https://rest.uniprot.org/configure/idmapping/fields'
     GROUP_PRIORITIZATION = ['UniProt',

@@ -31,9 +31,7 @@ from tqdm.auto import tqdm
 from rnalysis.utils import clustering, io, parsing, generic, ontology, settings, validation, differential_expression, \
     param_typing, genome_annotation
 from rnalysis.utils.generic import readable_name
-from rnalysis.utils.param_typing import BIOTYPES, BIOTYPE_ATTRIBUTE_NAMES, GO_EVIDENCE_TYPES, GO_QUALIFIERS, \
-    DEFAULT_ORGANISMS, PARALLEL_BACKENDS, LEGAL_GENE_LENGTH_METHODS, K_CRITERIA, get_gene_id_types, PositiveInt, \
-    NonNegativeInt
+from rnalysis.utils.param_typing import *
 
 
 @readable_name('Generic table')
