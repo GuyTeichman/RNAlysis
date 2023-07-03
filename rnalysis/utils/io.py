@@ -964,7 +964,7 @@ def map_taxon_id(taxon_name: Union[str, int]) -> Tuple[int, str]:
     return taxon_id, scientific_name
 
 
-class OrthologyDict:
+class OrthologDict:
     """
     A dictionary-like class used for mapping genes to their ortholog in a different organism.
     """
@@ -1172,25 +1172,54 @@ class OrthoInspectorOrthologMapper:
 
 
 class EnsemblOrthologMapper:
-    RETRIES = Retry(total=5, backoff_factor=0.25, status_forcelist=[500, 502, 503, 504])
-    API_URL = 'https://rest.ensembl.org/homology/id/'
+    ENDPOINT = 'homology/id/'
 
-    def __init__(self, map_to_organism, map_from_organism='auto', gene_id_type='auto'):
+    def __init__(self, map_to_organism, map_from_organism, gene_id_type,
+                 ortholog_type: Literal['all', 'percent_identity'] = 'percent_identity'):
         self.gene_id_type = gene_id_type
         self.map_from_organism = map_from_organism
         self.map_to_organism = map_to_organism
+        self.ortholog_type = ortholog_type
 
-    def get_orthologs(self, ids: List[str], ortholog_type: Literal['least_diverged', 'all'] = 'least_diverged'):
-        session = get_session(self.RETRIES)
-        url = self.API_URL
-        headers = {"Content-Type": "application/json"}
-        for gene_id in ids:
-            req = session.get(url, headers=headers,
-                              data=dict(geneInputList=gene_id, organism=str(self.map_from_organism),
-                                        targetOrganism=str(self.map_to_organism),
-                                        orthologType='all' if ortholog_type == 'all' else 'LDO'))
-            req.raise_for_status()
-            print(req.json())
+    def get_orthologs(self, ids: List[str]) -> Tuple[OrthologDict, OrthologDict]:
+        translator = GeneIDTranslator(self.gene_id_type, 'Ensembl Genomes').run(ids)
+        translated_ids = {translator[item] for item in ids if item in translator}
+        client = EnsemblRestClient()
+        mapping_one2one = {}
+        mapping_one2many = {}
+
+        for gene_id in tqdm(translated_ids, 'Submitting requests', unit='requests'):
+            client.queue_action('get', f'{self.ENDPOINT}{gene_id}',
+                                params=dict(target_taxon=self.map_to_organism, type='orthologues',
+                                            sequence='none', cigar_line=0))
+
+        with tqdm('Mapping orthologs...', total=client.queue.qsize() + 1) as pbar:
+            pbar.update()
+            for json_res in client.run():
+                req_output = json_res['data'][0]
+                if len(req_output['homologies']) == 0:
+                    continue
+
+                this_id = req_output['id']
+                mapping_one2many[this_id] = [(homology['target']['id'], homology['source']['perc_id']) for homology in
+                                             req_output['homologies']]
+
+                if self.ortholog_type == 'all':
+                    mapping_one2one[this_id] = req_output['homologies'][0]['target']['id']
+                elif self.ortholog_type == 'percent_identity':
+                    max_score = 0
+                    best_match = None
+                    for homology in req_output['homologies']:
+                        current_score = homology['source']['perc_id']
+                        if current_score > max_score:
+                            max_score = current_score
+                            best_match = homology['target']['id']
+                    mapping_one2one[this_id] = best_match
+                else:
+                    raise ValueError(f"Invalid 'ortholog_type': '{self.ortholog_type}'.")
+                pbar.update()
+
+        return OrthologDict(mapping_one2one), OrthologDict(mapping_one2many)
 
 
 class PantherOrthologMapper:
