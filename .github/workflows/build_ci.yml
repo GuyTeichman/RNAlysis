@@ -72,9 +72,11 @@ jobs:
             -   name: Install kallisto
                 run: |
                     if [ "$RUNNER_OS" == "Linux" ]; then
-                         brew install kallisto@0.48.0
+                         brew install kallisto
+                         brew change kallisto 0.48.0
                     elif [ "$RUNNER_OS" == "macOS" ]; then
-                         brew install kallisto@0.48.0
+                         brew install kallisto
+                         brew change kallisto 0.48.0
                     elif [ "$RUNNER_OS" == "Windows" ]; then
                          choco install wget -y
                          wget  https://github.com/pachterlab/kallisto/releases/download/v0.48.0/kallisto_windows-v0.48.0.zip
