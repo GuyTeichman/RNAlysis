@@ -1130,11 +1130,13 @@ def kallisto_quantify_single_end(fastq_folder: Union[str, Path], output_folder: 
     pseudoaligns to the reverse strand of a transcript.
     :type stranded: 'no', 'forward', 'reverse' (default='no')
     :param learn_bias: if True, kallisto learns parameters for a model of sequences specific bias \
-    and corrects the abundances accordlingly.
+    and corrects the abundances accordlingly. \
+    Note that this feature is not supported by kallisto versions beyond 0.48.0.
     :type learn_bias: bool (default=False)
     :param seek_fusion_genes: if True, does normal quantification, but additionally looks for reads that do not \
     pseudoalign because they are potentially from fusion genes. \
-    All output is written to the file fusion.txt in the output folder.
+    All output is written to the file fusion.txt in the output folder. \
+    Note that this feature is not supported by kallisto versions beyond 0.48.0.
     :type seek_fusion_genes: bool (default=False)
     :param bootstrap_samples: Number of bootstrap samples to be generated. Bootstrap samples do not affect the \
     estimated count values, but generates an additional .hdf5 output file which contains \
@@ -1235,11 +1237,13 @@ def kallisto_quantify_paired_end(r1_files: List[str], r2_files: List[str], outpu
     pseudoaligns to the reverse strand of a transcript.
     :type stranded: 'no', 'forward', 'reverse' (default='no')
     :param learn_bias: if True, kallisto learns parameters for a model of sequences specific bias \
-    and corrects the abundances accordlingly.
+    and corrects the abundances accordlingly. \
+    Note that this feature is not supported by kallisto versions beyond 0.48.0.
     :type learn_bias: bool (default=False)
     :param seek_fusion_genes: if True, does normal quantification, but additionally looks for reads that do not \
     pseudoalign because they are potentially from fusion genes. \
-    All output is written to the file fusion.txt in the output folder.
+    All output is written to the file fusion.txt in the output folder. \
+    Note that this feature is not supported by kallisto versions beyond 0.48.0.
     :type seek_fusion_genes: bool (default=False)
     :param bootstrap_samples: Number of bootstrap samples to be generated. Bootstrap samples do not affect the \
     estimated count values, but generates an additional .hdf5 output file which contains \
