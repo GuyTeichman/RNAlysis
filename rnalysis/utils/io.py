@@ -1368,7 +1368,77 @@ class GeneIDTranslator:
 
         self.session = get_session(self.RETRIES) if session is None else session
 
-    def get_mapping_results(self, map_to: str, map_from: str, ids: List[str], session: requests.Session):
+    def run(self, ids: Union[str, Iterable[str]]) -> GeneIDDict:
+        """
+        Map gene IDs from one identifier type to another using the UniProt ID Mapping service. \
+        If some IDs cannot be mapped uniquely, duplicate mappings will be resolved by their UniProtKB Annotation Score.\
+         Gene IDs that could not be mapped or were not recognized will be dropped from the output.
+
+        :param ids: gene IDs to be mapped
+        :type ids: str or an Iterable of strings
+        :return:a GeneIDTranslator object that uniquely maps each given gene ID in 'map_from' identifier type \
+        to its matching gene ID in 'map_to' identifier type.
+        :rtype: GeneIDDict
+        """
+        if len(ids) == 0:
+            if self.verbose:
+                warnings.warn('No IDs were given')
+            return GeneIDDict({})
+
+        # if self.map_from and self.map_to are the same, return an empty GeneIDTranslator (which will map any given gene ID to itself)
+        if self.to_from_identical:
+            return GeneIDDict()
+
+        ids = parsing.data_to_list(ids)
+        n_queries = len(ids)
+
+        # since the Uniprot service can only translate to or from 'UniProtKB' identifier type,
+        # if we need to map gene IDs between two other identifier types,
+        # then we will map from 'self.map_from' to 'UniProtKB' and then from 'UniProtKB' to 'self.map_to'.
+        if self.verbose:
+            print(f"Mapping {n_queries} entries from '{self.map_from}' to '{self.map_to}'...")
+
+        id_dict_to, id_dict_from = self.id_dicts
+        if id_dict_to[self.map_to] != id_dict_to[self.UNIPROTKB_TO] and \
+            id_dict_from[self.map_from] != id_dict_from[self.UNIPROTKB_FROM]:
+
+            to_translator = GeneIDTranslator(self.map_from, self.UNIPROTKB_TO, self.verbose, self.session)
+            to_uniprot = to_translator.run(ids).mapping_dict
+            if to_uniprot is None:
+                to_uniprot = {}
+
+            from_translator = GeneIDTranslator(self.UNIPROTKB_FROM, self.map_to, self.verbose, self.session)
+            from_uniprot = from_translator.run(to_uniprot.values()).mapping_dict
+            if from_uniprot is None:
+                from_uniprot = {}
+
+            output_dict = {key: from_uniprot[val] for key, val in zip(to_uniprot.keys(), to_uniprot.values()) if
+                           val in from_uniprot}
+
+        # make sure that 'self.map_from' and 'self.map_to' are recognized identifier types
+        elif id_dict_to[self.map_to] != 'Null' and id_dict_from[self.map_from] != 'Null':
+            session = self.session
+            results = self.get_mapping_results(self.map_to, self.map_from, ids, session)
+
+            if results is None or len(results) <= 1:
+                if self.verbose:
+                    warnings.warn("No entries were mapped successfully.")
+                return GeneIDDict({})
+
+            output_dict, duplicates = self.format_annotations(results)
+            self.handle_duplicates(output_dict, duplicates, session)
+        else:
+            output_dict = {}
+
+        if len(output_dict) < n_queries and self.verbose:
+            warnings.warn(
+                f"Failed to map {n_queries - len(output_dict)} entries from '{self.map_from}' to '{self.map_to}'. "
+                f"Returning {len(output_dict)} successfully-mapped entries.")
+
+        self.reformat_ids(output_dict)
+        return GeneIDDict(output_dict)
+
+    def get_mapping_results(self, map_to: str, map_from: str, ids: Tuple[str, ...], session: requests.Session):
         id_dict_to, id_dict_from = self.id_dicts
         to_db = id_dict_to[map_to]
         from_db = id_dict_from[map_from]
@@ -1381,7 +1451,7 @@ class GeneIDTranslator:
             return results
 
     @staticmethod
-    def submit_id_mapping(to_db: str, from_db: str, session: requests.Session, ids: List[str]):
+    def submit_id_mapping(to_db: str, from_db: str, session: requests.Session, ids: Tuple[str, ...]):
         req = session.post(f"{GeneIDTranslator.API_URL}/idmapping/run",
                            data={"to": to_db, "from": from_db, "ids": ",".join(ids)})
         req.raise_for_status()
@@ -1539,76 +1609,6 @@ class GeneIDTranslator:
         if self.map_to == 'Ensembl':
             for key, val in output_dict.items():
                 output_dict[key] = re.sub('(\.\d+)$', '', val)
-
-    def run(self, ids: Union[str, Iterable[str]]) -> GeneIDDict:
-        """
-        Map gene IDs from one identifier type to another using the UniProt ID Mapping service. \
-        If some IDs cannot be mapped uniquely, duplicate mappings will be resolved by their UniProtKB Annotation Score.\
-         Gene IDs that could not be mapped or were not recognized will be dropped from the output.
-
-        :param ids: gene IDs to be mapped
-        :type ids: str or an Iterable of strings
-        :return:a GeneIDTranslator object that uniquely maps each given gene ID in 'map_from' identifier type \
-        to its matching gene ID in 'map_to' identifier type.
-        :rtype: GeneIDDict
-        """
-        if len(ids) == 0:
-            if self.verbose:
-                warnings.warn('No IDs were given')
-            return GeneIDDict({})
-
-        # if self.map_from and self.map_to are the same, return an empty GeneIDTranslator (which will map any given gene ID to itself)
-        if self.to_from_identical:
-            return GeneIDDict()
-
-        ids = parsing.data_to_list(ids)
-        n_queries = len(ids)
-
-        # since the Uniprot service can only translate to or from 'UniProtKB' identifier type,
-        # if we need to map gene IDs between two other identifier types,
-        # then we will map from 'self.map_from' to 'UniProtKB' and then from 'UniProtKB' to 'self.map_to'.
-        if self.verbose:
-            print(f"Mapping {n_queries} entries from '{self.map_from}' to '{self.map_to}'...")
-
-        id_dict_to, id_dict_from = self.id_dicts
-        if id_dict_to[self.map_to] != id_dict_to[self.UNIPROTKB_TO] and \
-            id_dict_from[self.map_from] != id_dict_from[self.UNIPROTKB_FROM]:
-
-            to_translator = GeneIDTranslator(self.map_from, self.UNIPROTKB_TO, self.verbose, self.session)
-            to_uniprot = to_translator.run(ids).mapping_dict
-            if to_uniprot is None:
-                to_uniprot = {}
-
-            from_translator = GeneIDTranslator(self.UNIPROTKB_FROM, self.map_to, self.verbose, self.session)
-            from_uniprot = from_translator.run(to_uniprot.values()).mapping_dict
-            if from_uniprot is None:
-                from_uniprot = {}
-
-            output_dict = {key: from_uniprot[val] for key, val in zip(to_uniprot.keys(), to_uniprot.values()) if
-                           val in from_uniprot}
-
-        # make sure that 'self.map_from' and 'self.map_to' are recognized identifier types
-        elif id_dict_to[self.map_to] != 'Null' and id_dict_from[self.map_from] != 'Null':
-            session = self.session
-            results = self.get_mapping_results(self.map_to, self.map_from, ids, session)
-
-            if results is None or len(results) <= 1:
-                if self.verbose:
-                    warnings.warn("No entries were mapped successfully.")
-                return GeneIDDict({})
-
-            output_dict, duplicates = self.format_annotations(results)
-            self.handle_duplicates(output_dict, duplicates, session)
-        else:
-            output_dict = {}
-
-        if len(output_dict) < n_queries and self.verbose:
-            warnings.warn(
-                f"Failed to map {n_queries - len(output_dict)} entries from '{self.map_from}' to '{self.map_to}'. "
-                f"Returning {len(output_dict)} successfully-mapped entries.")
-
-        self.reformat_ids(output_dict)
-        return GeneIDDict(output_dict)
 
 
 def _format_ids_iter(ids: Union[str, int, list, set], chunk_size: int = 250):
