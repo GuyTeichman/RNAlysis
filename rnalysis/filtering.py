@@ -418,55 +418,141 @@ class Filter:
     def find_paralogs_panther(self, organism: Union[Literal['auto'], str, int, Literal[get_panther_taxons()]] = 'auto',
                               gene_id_type: Union[str, Literal['auto'], Literal[get_gene_id_types()]] = 'auto'):
         (taxon_id, organism), gene_id_type = io.get_taxon_and_id_type(organism, gene_id_type, self.index_set)
+
+        mapper = io.PantherOrthologMapper(taxon_id, taxon_id, gene_id_type)
+        ids = parsing.data_to_tuple(self.index_set)
+        ortho_dict_one2many = mapper.get_paralogs(ids)
         pass
+
+    # TODO: generate and return one2many table
 
     @readable_name('Find paralogs within specie (using Ensembl)')
     def find_paralogs_ensembl(self, organism: Union[Literal['auto'], str, int, Literal[get_ensembl_taxons()]] = 'auto',
-                              gene_id_type: Union[str, Literal['auto'], Literal[get_gene_id_types()]] = 'auto'):
+                              gene_id_type: Union[str, Literal['auto'], Literal[get_gene_id_types()]] = 'auto',
+                              ortholog_type: Literal['all', 'percent_identity'] = 'percent_identity'):
         (taxon_id, organism), gene_id_type = io.get_taxon_and_id_type(organism, gene_id_type, self.index_set)
+
+        mapper = io.EnsemblOrthologMapper(taxon_id, taxon_id, gene_id_type)
+        ids = parsing.data_to_tuple(self.index_set)
+        ortho_dict_one2many = mapper.get_paralogs(ids)
         pass
+
+    # TODO: generate and return one2many table
 
     @readable_name('Map genes to nearest orthologs (using PantherDB)')
     def map_orthologs_panther(self, map_to_taxon: Union[str, int, Literal[get_panther_taxons()]],
                               map_from_taxon: Union[Literal['auto'], str, int, Literal[get_panther_taxons()]] = 'auto',
                               gene_id_type: Union[str, Literal['auto'], Literal[get_gene_id_types()]] = 'auto',
-                              ortholog_type: Literal['least_diverged', 'all'] = 'least_diverged'):
+                              ortholog_type: Literal['least_diverged', 'all'] = 'least_diverged',
+                              remove_unmapped_genes: bool = False, inplace: bool = True):
         taxon_id_to = io.map_taxon_id(map_to_taxon)[0]
         (taxon_id_from, organism), gene_id_type = io.get_taxon_and_id_type(map_from_taxon, gene_id_type, self.index_set)
 
-        pass
+        mapper = io.PantherOrthologMapper(taxon_id_to, taxon_id_from, gene_id_type)
+        ids = parsing.data_to_tuple(self.index_set)
+        ortho_dict_one2one, ortho_dict_one2many = mapper.get_orthologs(ids, ortholog_type)
+        new_df = self.df.copy(deep=True)
+
+        new_df['orthologs'] = pd.Series(ortho_dict_one2one.mapping_dict)
+        if remove_unmapped_genes:
+            new_df = new_df[new_df['orthologs'].notna()]
+        else:
+            new_df.loc[new_df['orthologs'].isna(), 'orthologs'] = new_df['orthologs'][
+                new_df['orthologs'].isna()].index
+
+        new_df = new_df.set_index('orthologs', drop=True)
+
+        suffix = f'_orthologsPanther{taxon_id_to}'
+        return self._inplace(new_df, False, inplace, suffix, 'translate')
+
+    # TODO: generate and return one2many table
 
     @readable_name('Map genes to nearest orthologs (using Ensembl)')
     def map_orthologs_ensembl(self, map_to_taxon: Union[str, int, Literal[get_ensembl_taxons()]],
                               map_from_taxon: Union[Literal['auto'], str, int, Literal[get_ensembl_taxons()]] = 'auto',
                               gene_id_type: Union[str, Literal['auto'], Literal[get_gene_id_types()]] = 'auto',
-                              ortholog_type: Literal['percent_identity', 'all'] = 'percent_identity'):
+                              ortholog_type: Literal['percent_identity', 'all'] = 'percent_identity',
+                              remove_unmapped_genes: bool = False, inplace: bool = True):
         taxon_id_to = io.map_taxon_id(map_to_taxon)[0]
         (taxon_id_from, organism), gene_id_type = io.get_taxon_and_id_type(map_from_taxon, gene_id_type, self.index_set)
 
-        pass
+        mapper = io.EnsemblOrthologMapper(taxon_id_to, taxon_id_from, gene_id_type)
+        ids = parsing.data_to_tuple(self.index_set)
+        ortho_dict_one2one, ortho_dict_one2many = mapper.get_orthologs(ids, ortholog_type)
+        new_df = self.df.copy(deep=True)
+
+        new_df['orthologs'] = pd.Series(ortho_dict_one2one.mapping_dict)
+        if remove_unmapped_genes:
+            new_df = new_df[new_df['orthologs'].notna()]
+        else:
+            new_df.loc[new_df['orthologs'].isna(), 'orthologs'] = new_df['orthologs'][
+                new_df['orthologs'].isna()].index
+
+        new_df = new_df.set_index('orthologs', drop=True)
+
+        suffix = f'_orthologsEnsembl{taxon_id_to}'
+        return self._inplace(new_df, False, inplace, suffix, 'translate')
+
+    # TODO: generate and return one2many table
 
     @readable_name('Map genes to nearest orthologs (using PhylomeDB)')
     def map_orthologs_phylomedb(self, map_to_taxon: Union[str, int, Literal[get_phylomedb_taxons()]],
                                 map_from_taxon: Union[
                                     Literal['auto'], str, int, Literal[get_phylomedb_taxons()]] = 'auto',
                                 gene_id_type: Union[str, Literal['auto'], Literal[get_gene_id_types()]] = 'auto',
-                                ortholog_type: Literal['consistency_score', 'all'] = 'consistency_score'):
+                                ortholog_type: Literal['consistency_score', 'all'] = 'consistency_score',
+                                remove_unmapped_genes: bool = False, inplace: bool = True):
         taxon_id_to = io.map_taxon_id(map_to_taxon)[0]
         (taxon_id_from, organism), gene_id_type = io.get_taxon_and_id_type(map_from_taxon, gene_id_type, self.index_set)
 
-        pass
+        mapper = io.PhylomeDBOrthologMapper(taxon_id_to, taxon_id_from, gene_id_type)
+        ids = parsing.data_to_tuple(self.index_set)
+        ortho_dict_one2one, ortho_dict_one2many = mapper.get_orthologs(ids, ortholog_type)
+        new_df = self.df.copy(deep=True)
+
+        new_df['orthologs'] = pd.Series(ortho_dict_one2one.mapping_dict)
+        if remove_unmapped_genes:
+            new_df = new_df[new_df['orthologs'].notna()]
+        else:
+            new_df.loc[new_df['orthologs'].isna(), 'orthologs'] = new_df['orthologs'][
+                new_df['orthologs'].isna()].index
+
+        new_df = new_df.set_index('orthologs', drop=True)
+
+        suffix = f'_orthologsPhylomeDB{taxon_id_to}'
+        return self._inplace(new_df, False, inplace, suffix, 'translate')
+
+    # TODO: generate and return one2many table
 
     @readable_name('Map genes to nearest orthologs (using OrthoInspector)')
     def map_orthologs_orthoinspector(self, map_to_taxon: Union[str, int, Literal[get_panther_taxons()]],
                                      map_from_taxon: Union[
                                          Literal['auto'], str, int, Literal[get_panther_taxons()]] = 'auto',
                                      gene_id_type: Union[str, Literal['auto'], Literal[get_gene_id_types()]] = 'auto',
-                                     ortholog_type: Literal['first', 'random', 'all'] = 'all'):
+                                     ortholog_type: Literal['first', 'random', 'all'] = 'all',
+                                     remove_unmapped_genes: bool = False, inplace: bool = True):
         taxon_id_to = io.map_taxon_id(map_to_taxon)[0]
         (taxon_id_from, organism), gene_id_type = io.get_taxon_and_id_type(map_from_taxon, gene_id_type, self.index_set)
 
-        pass
+        mapper = io.OrthoInspectorOrthologMapper(taxon_id_to, taxon_id_from, gene_id_type)
+        ids = parsing.data_to_tuple(self.index_set)
+        ortho_dict_one2one, ortho_dict_one2many = mapper.get_orthologs(ids, ortholog_type)
+        new_df = self.df.copy(deep=True)
+
+        new_df['orthologs'] = pd.Series(ortho_dict_one2one.mapping_dict)
+        if remove_unmapped_genes:
+            new_df = new_df[new_df['orthologs'].notna()]
+        else:
+            new_df.loc[new_df['orthologs'].isna(), 'orthologs'] = new_df['orthologs'][
+                new_df['orthologs'].isna()].index
+
+        new_df = new_df.set_index('orthologs', drop=True)
+
+        suffix = f'_orthologsOrthoInspector{taxon_id_to}'
+        return self._inplace(new_df, False, inplace, suffix, 'translate')
+
+    # TODO: generate and return one2many table
+
 
     @readable_name('Translate gene IDs')
     def translate_gene_ids(self, translate_to: Union[str, Literal[get_gene_id_types()]],
