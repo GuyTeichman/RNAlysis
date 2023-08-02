@@ -1227,8 +1227,8 @@ class EnsemblOrthologMapper:
 
 class PantherOrthologMapper:
     API_URL = 'http://www.pantherdb.org'
-    CHUNK_SIZE = 10  # as specified in the Panther API site
     RETRIES = Retry(total=5, backoff_factor=0.25, status_forcelist=[500, 502, 503, 504])
+    HEADERS = {'accept': 'application/json'}
 
     def __init__(self, map_to_organism, map_from_organism='auto', gene_id_type='auto'):
         self.gene_id_type = gene_id_type
@@ -1237,13 +1237,95 @@ class PantherOrthologMapper:
 
     @staticmethod
     def get_supported_genomes():
-        raise NotImplementedError
+        raise NotImplementedError  # TODO
 
-    def get_orthologs(self, ids: List[str], ortholog_type: Literal['least_diverged', 'all'] = 'least_diverged'):
-        pass
+    def translate_ids(self, ids: Tuple[str, ...], session=None) -> Tuple[List[str], List[str]]:
+        if self.gene_id_type == 'auto':
+            translator, self.gene_id_type, _ = find_best_gene_mapping(ids, None, map_to_options=('UniProtKB',))
+        else:
+            translator = GeneIDTranslator(self.gene_id_type, 'UniProtKB', session=session).run(ids)
 
-    def get_paralogs(self, ids: List[str]):
-        pass
+        ids = [this_id for this_id in ids if this_id in translator]
+        translated_ids = [translator[this_id] for this_id in ids]
+
+        return ids, translated_ids
+
+    def get_orthologs(self, ids: Tuple[str, ...], ortholog_type: Literal['least_diverged', 'all'] = 'least_diverged'):
+        url = f'{self.API_URL}/services/oai/pantherdb/ortholog/matchortho'
+        session = get_session(self.RETRIES)
+        mapping_one2one = {}
+        mapping_one2many = {}
+
+        ids, translated_ids = self.translate_ids(ids, session)
+        n_mapped = 0
+        for from_id in tqdm(translated_ids, 'Mapping orthologs', unit='genes'):
+            req_data = dict(geneInputList=from_id, organism=str(self.map_from_organism),
+                            targetOrganism=str(self.map_to_organism),
+                            orthologType='all' if ortholog_type == 'all' else 'LDO')
+            req = session.post(url, headers=self.HEADERS, params=req_data)
+            req.raise_for_status()
+            try:
+                req_output = req.json()['search']['mapping']['mapped']
+                for mapping in parsing.data_to_list(req_output):
+                    if len(mapping) <= 1:
+                        continue
+
+                    to_id = parsing.parse_uniprot_id(mapping['target_gene'])
+                    if to_id is None:
+                        continue
+
+                    if from_id not in mapping_one2many:
+                        n_mapped += 1
+                        mapping_one2many[from_id] = []
+                    mapping_one2many[from_id].append((to_id, mapping['ortholog']))
+
+            except KeyError:
+                pass
+        if n_mapped < len(translated_ids):
+            warnings.warn(f"Ortholog mapping found for only {n_mapped} out of {len(translated_ids)} gene IDs.")
+
+        for from_id, mappings in mapping_one2many.items():
+            if len(mappings) == 1:
+                mapping_one2one[from_id] = mappings[0][0]
+            else:
+                mapping_one2one[from_id] = max(mappings, key=lambda x: 1 if x[1] == 'LDO' else 0)[0]
+
+        return OrthologDict(mapping_one2one), OrthologDict({k: v[0] for k, v in mapping_one2many.items()})
+
+    def get_paralogs(self, ids: Tuple[str, ...]):
+        session = get_session(self.RETRIES)
+        url = f'{self.API_URL}/services/oai/pantherdb/ortholog/homologOther'
+
+        mapping_one2many = {}
+        ids, translated_ids = self.translate_ids(ids, session)
+
+        n_mapped = 0
+        for from_id in tqdm(translated_ids, 'Mapping paralogs', unit='genes'):
+            req_data = dict(geneInputList=from_id, organism=str(self.map_from_organism), homologType='P')
+            req = session.post(url, params=req_data)
+            req.raise_for_status()
+
+            try:
+                req_output = req.json()['search']['mapping']['mapped']
+                for mapping in parsing.data_to_list(req_output):
+                    if len(mapping) <= 1:
+                        continue
+
+                    to_id = parsing.parse_uniprot_id(mapping['target_gene'])
+                    if to_id is None:
+                        continue
+
+                    if from_id not in mapping_one2many:
+                        n_mapped += 1
+                        mapping_one2many[from_id] = []
+                    mapping_one2many[from_id].append(to_id)
+
+            except KeyError:
+                pass
+        if n_mapped < len(translated_ids):
+            warnings.warn(f"Paralob mapping found for only {n_mapped} out of {len(translated_ids)} gene IDs.")
+
+        return OrthologDict(mapping_one2many)
 
 
 class GeneIDTranslator:
