@@ -1174,14 +1174,17 @@ class OrthoInspectorOrthologMapper:
 class EnsemblOrthologMapper:
     ENDPOINT = 'homology/id/'
 
-    def __init__(self, map_to_organism, map_from_organism, gene_id_type,
-                 ortholog_type: Literal['all', 'percent_identity'] = 'percent_identity'):
+    def __init__(self, map_to_organism, map_from_organism, gene_id_type):
         self.gene_id_type = gene_id_type
         self.map_from_organism = map_from_organism
         self.map_to_organism = map_to_organism
-        self.ortholog_type = ortholog_type
 
-    def get_orthologs(self, ids: List[str]) -> Tuple[OrthologDict, OrthologDict]:
+    def get_paralogs(self, ids: Tuple[str, ...]):
+        pass  # TODO
+
+    def get_orthologs(self, ids: Tuple[str, ...],
+                      ortholog_type: Literal['all', 'percent_identity'] = 'percent_identity') -> \
+        Tuple[OrthologDict, OrthologDict]:
         translator = GeneIDTranslator(self.gene_id_type, 'Ensembl Genomes').run(ids)
         translated_ids = {translator[item] for item in ids if item in translator}
         client = EnsemblRestClient()
@@ -1204,9 +1207,9 @@ class EnsemblOrthologMapper:
                 mapping_one2many[this_id] = [(homology['target']['id'], homology['source']['perc_id']) for homology in
                                              req_output['homologies']]
 
-                if self.ortholog_type == 'all':
+                if ortholog_type == 'all':
                     mapping_one2one[this_id] = req_output['homologies'][0]['target']['id']
-                elif self.ortholog_type == 'percent_identity':
+                elif ortholog_type == 'percent_identity':
                     max_score = 0
                     best_match = None
                     for homology in req_output['homologies']:
@@ -1216,10 +1219,10 @@ class EnsemblOrthologMapper:
                             best_match = homology['target']['id']
                     mapping_one2one[this_id] = best_match
                 else:
-                    raise ValueError(f"Invalid 'ortholog_type': '{self.ortholog_type}'.")
+                    raise ValueError(f"Invalid 'ortholog_type': '{ortholog_type}'.")
                 pbar.update()
 
-        return OrthologDict(mapping_one2one), OrthologDict(mapping_one2many)
+        return OrthologDict(mapping_one2one), OrthologDict({k: v[0] for k, v in mapping_one2many.items()})
 
 
 class PantherOrthologMapper:
