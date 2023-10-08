@@ -1521,8 +1521,11 @@ class SetTabPage(TabPage):
     EXCLUDED_FUNCS = {'union', 'intersection', 'majority_vote_intersection', 'difference', 'symmetric_difference'}
     SUMMARY_FUNCS = {'biotypes_from_ref_table', 'biotypes_from_gtf'}
     GENERAL_FUNCS = {'translate_gene_ids', 'map_orthologs_phylomedb', 'map_orthologs_orthoinspector',
-                     'map_orthologs_ensembl', 'map_orthologs_panther', 'find_paralogs_panther'}
-    THREADED_FUNCS = {'translate_gene_ids', 'filter_by_kegg_annotations', 'filter_by_go_annotations'}
+                     'map_orthologs_ensembl', 'map_orthologs_panther', 'find_paralogs_panther', 'find_paralogs_ensembl'}
+    THREADED_FUNCS = {'translate_gene_ids', 'filter_by_kegg_annotations', 'filter_by_go_annotations',
+                      'map_orthologs_phylomedb', 'map_orthologs_orthoinspector',
+                      'map_orthologs_ensembl', 'map_orthologs_panther', 'find_paralogs_panther', 'find_paralogs_ensembl'
+                      }
 
     def __init__(self, set_name: str, gene_set: typing.Union[set, enrichment.FeatureSet] = None, parent=None,
                  undo_stack: QtWidgets.QUndoStack = None, tab_id: int = None):
@@ -1818,7 +1821,10 @@ class FilterTabPage(TabPage):
                      'differential_expression_limma_voom', 'map_orthologs_phylomedb', 'map_orthologs_orthoinspector',
                      'map_orthologs_ensembl', 'map_orthologs_panther', 'find_paralogs_panther'}
     THREADED_FUNCS = {'translate_gene_ids', 'differential_expression_deseq2', 'filter_by_kegg_annotations',
-                      'filter_by_go_annotations', 'differential_expression_limma_voom'}
+                      'filter_by_go_annotations', 'differential_expression_limma_voom', 'map_orthologs_phylomedb',
+                      'map_orthologs_orthoinspector',
+                      'map_orthologs_ensembl', 'map_orthologs_panther', 'find_paralogs_panther',
+                      'find_paralogs_ensembl'}
     startedClustering = QtCore.pyqtSignal(object, object, object)
     widthChanged = QtCore.pyqtSignal()
 
