@@ -13,7 +13,6 @@ import copy
 import os
 import re
 import types
-import warnings
 from pathlib import Path
 from typing import Any, Iterable, List, Tuple, Union, Callable, Sequence, Literal
 
@@ -28,7 +27,7 @@ from sklearn.decomposition import PCA
 from sklearn.preprocessing import PowerTransformer, StandardScaler
 from tqdm.auto import tqdm
 
-from rnalysis.utils import clustering, io, parsing, generic, ontology, settings, validation, differential_expression, \
+from rnalysis.utils import clustering, generic, ontology, settings, validation, differential_expression, \
     param_typing, genome_annotation
 from rnalysis.utils.generic import readable_name
 from rnalysis.utils.param_typing import *
@@ -414,43 +413,123 @@ class Filter:
         new_df = self.df.drop(columns, axis=1)
         return self._inplace(new_df, False, inplace, suffix, 'transform')
 
-    @readable_name('Find paralogs within specie (using PantherDB)')
+    @staticmethod
+    def _create_one2many_table(one2many_dict: io.OrthologDict, mode: Literal['ortholog', 'paralog'] = 'ortholog'):
+        pairs = []
+        for key, vals in one2many_dict.mapping_dict.items():
+            for val in vals:
+                pairs.append((key, val))
+        one2many_table = pd.DataFrame(pairs, columns=['gene', mode])
+        return one2many_table
+
+    @readable_name('Find paralogs within species (using PantherDB)')
     def find_paralogs_panther(self, organism: Union[Literal['auto'], str, int, Literal[get_panther_taxons()]] = 'auto',
                               gene_id_type: Union[str, Literal['auto'], Literal[get_gene_id_types()]] = 'auto'):
+        """
+        Find paralogs within the same species using the PantherDB database.
+
+        :param organism: organism name or NCBI taxon ID of the input genes' source species.
+        :type organism: str or int
+        :param gene_id_type: the identifier type of the genes/features in the FeatureSet object \
+        (for example: 'UniProtKB', 'WormBase', 'RNACentral', 'Entrez Gene ID'). \
+        If the annotations fetched from the KEGG server do not match your gene_id_type, RNAlysis will attempt to map \
+        the annotations' gene IDs to your identifier type. \
+        For a full list of legal 'gene_id_type' names, see the UniProt website: \
+        https://www.uniprot.org/help/api_idmapping
+        :type gene_id_type: str or 'auto' (default='auto')
+        :return: DataFrame describing all discovered paralog mappings.
+        """
         (taxon_id, organism), gene_id_type = io.get_taxon_and_id_type(organism, gene_id_type, self.index_set)
 
         mapper = io.PantherOrthologMapper(taxon_id, taxon_id, gene_id_type)
         ids = parsing.data_to_tuple(self.index_set)
         ortho_dict_one2many = mapper.get_paralogs(ids)
-        pass
 
-    # TODO: generate and return one2many table
+        one2many_table = self._create_one2many_table(ortho_dict_one2many, 'paralog')
+        return one2many_table
 
-    @readable_name('Find paralogs within specie (using Ensembl)')
+    @readable_name('Find paralogs within species (using Ensembl)')
     def find_paralogs_ensembl(self, organism: Union[Literal['auto'], str, int, Literal[get_ensembl_taxons()]] = 'auto',
                               gene_id_type: Union[str, Literal['auto'], Literal[get_gene_id_types()]] = 'auto',
-                              ortholog_type: Literal['all', 'percent_identity'] = 'percent_identity'):
+                              filter_percent_identity: bool = True):
+        """
+        Find paralogs within the same species using the Ensembl database.
+
+        :param organism: organism name or NCBI taxon ID of the input genes' source species.
+        :type organism: str or int
+        :param gene_id_type: the identifier type of the genes/features in the FeatureSet object \
+        (for example: 'UniProtKB', 'WormBase', 'RNACentral', 'Entrez Gene ID'). \
+        If the annotations fetched from the KEGG server do not match your gene_id_type, RNAlysis will attempt to map \
+        the annotations' gene IDs to your identifier type. \
+        For a full list of legal 'gene_id_type' names, see the UniProt website: \
+        https://www.uniprot.org/help/api_idmapping
+        :type gene_id_type: str or 'auto' (default='auto')
+        :param filter_percent_identity: if True (default), when encountering non-unique ortholog mappings, \
+        *RNAlysis* will only keep the mappings with the highest percent_identity score.
+        :type filter_percent_identity: bool (default=True)
+        :return: DataFrame describing all discovered paralog mappings.
+        """
         (taxon_id, organism), gene_id_type = io.get_taxon_and_id_type(organism, gene_id_type, self.index_set)
 
         mapper = io.EnsemblOrthologMapper(taxon_id, taxon_id, gene_id_type)
         ids = parsing.data_to_tuple(self.index_set)
-        ortho_dict_one2many = mapper.get_paralogs(ids)
-        pass
-
-    # TODO: generate and return one2many table
+        ortho_dict_one2many = mapper.get_paralogs(ids, filter_percent_identity)
+        one2many_table = self._create_one2many_table(ortho_dict_one2many)
+        return one2many_table
 
     @readable_name('Map genes to nearest orthologs (using PantherDB)')
-    def map_orthologs_panther(self, map_to_taxon: Union[str, int, Literal[get_panther_taxons()]],
-                              map_from_taxon: Union[Literal['auto'], str, int, Literal[get_panther_taxons()]] = 'auto',
+    def map_orthologs_panther(self, map_to_organism: Union[str, int, Literal[get_panther_taxons()]],
+                              map_from_organism: Union[
+                                  Literal['auto'], str, int, Literal[get_panther_taxons()]] = 'auto',
                               gene_id_type: Union[str, Literal['auto'], Literal[get_gene_id_types()]] = 'auto',
-                              ortholog_type: Literal['least_diverged', 'all'] = 'least_diverged',
+                              filter_least_diverged: bool = True,
+                              non_unique_mode: Literal[ORTHOLOG_NON_UNIQUE_MODES] = 'first',
                               remove_unmapped_genes: bool = False, inplace: bool = True):
-        taxon_id_to = io.map_taxon_id(map_to_taxon)[0]
-        (taxon_id_from, organism), gene_id_type = io.get_taxon_and_id_type(map_from_taxon, gene_id_type, self.index_set)
+        """
+        Map genes to their nearest orthologs in a different species using the PantherDB database. \
+        This function generates a table describing all matching discovered ortholog pairs (both unique and non-unique) \
+        and returns it, and can also translate the genes in this data table into their nearest ortholog, \
+        as well as remove unmapped genes.
+
+        :param map_to_organism: organism name or NCBI taxon ID of the target species for ortholog mapping.
+        :type map_to_organism: str or int
+        :param map_from_organism: organism name or NCBI taxon ID of the input genes' source species.
+        :type map_from_organism: str or int
+        :param gene_id_type: the identifier type of the genes/features in the FeatureSet object \
+        (for example: 'UniProtKB', 'WormBase', 'RNACentral', 'Entrez Gene ID'). \
+        If the annotations fetched from the KEGG server do not match your gene_id_type, RNAlysis will attempt to map \
+        the annotations' gene IDs to your identifier type. \
+        For a full list of legal 'gene_id_type' names, see the UniProt website: \
+        https://www.uniprot.org/help/api_idmapping
+        :type gene_id_type: str or 'auto' (default='auto')
+        :param filter_least_diverged: if True (default), *RNAlysis* will only fetch ortholog mappings that were \
+        flagged as a 'least diverged ortholog' on the PantherDB database. \
+        You can read more about this flag on the PantherDB website: https://www.pantherdb.org/genes/
+        :type filter_least_diverged: bool (default=True)
+        :param non_unique_mode: How to handle non-unique mappings. 'first' will keep the first mapping found for each \
+        gene; 'last' will keep the last; 'random' will keep a random mapping; \
+        and 'none' will discard all non-unique mappings.
+        :type non_unique_mode: 'first', 'last', 'random', or 'none' (default='first')
+        :param remove_unmapped_genes: if True, rows with gene names/IDs that could not be mapped to an ortholog \
+        will be dropped from the table. \
+        Otherwise, they will remain in the table with their original gene name/ID.
+        :type remove_unmapped_genes: bool (default=False)
+        :type inplace: bool (default=True)
+        :param inplace: If True (default), filtering will be applied to the current Filter object. If False, \
+        the function will return a new Filter instance and the current instance will not be affected.
+        :return: DataFrame describing all discovered mappings (unique and otherwise). If inplace=True, \
+        returns a filtered instance of the Filter object as well.
+        """
+        taxon_id_to = io.map_taxon_id(map_to_organism)[0]
+        (taxon_id_from, organism), gene_id_type = io.get_taxon_and_id_type(map_from_organism, gene_id_type,
+                                                                           self.index_set)
 
         mapper = io.PantherOrthologMapper(taxon_id_to, taxon_id_from, gene_id_type)
         ids = parsing.data_to_tuple(self.index_set)
-        ortho_dict_one2one, ortho_dict_one2many = mapper.get_orthologs(ids, ortholog_type)
+        ortho_dict_one2one, ortho_dict_one2many = mapper.get_orthologs(ids, non_unique_mode, filter_least_diverged)
+
+        one2many_table = self._create_one2many_table(ortho_dict_one2many)
+
         new_df = self.df.copy(deep=True)
 
         new_df['orthologs'] = pd.Series(ortho_dict_one2one.mapping_dict)
@@ -463,22 +542,59 @@ class Filter:
         new_df = new_df.set_index('orthologs', drop=True)
 
         suffix = f'_orthologsPanther{taxon_id_to}'
-        return self._inplace(new_df, False, inplace, suffix, 'translate')
-
-    # TODO: generate and return one2many table
+        return self._inplace(new_df, False, inplace, suffix, 'translate'), one2many_table
 
     @readable_name('Map genes to nearest orthologs (using Ensembl)')
-    def map_orthologs_ensembl(self, map_to_taxon: Union[str, int, Literal[get_ensembl_taxons()]],
-                              map_from_taxon: Union[Literal['auto'], str, int, Literal[get_ensembl_taxons()]] = 'auto',
+    def map_orthologs_ensembl(self, map_to_organism: Union[str, int, Literal[get_ensembl_taxons()]],
+                              map_from_organism: Union[
+                                  Literal['auto'], str, int, Literal[get_ensembl_taxons()]] = 'auto',
                               gene_id_type: Union[str, Literal['auto'], Literal[get_gene_id_types()]] = 'auto',
-                              ortholog_type: Literal['percent_identity', 'all'] = 'percent_identity',
+                              filter_percent_identity: bool = True,
+                              non_unique_mode: Literal[ORTHOLOG_NON_UNIQUE_MODES] = 'first',
                               remove_unmapped_genes: bool = False, inplace: bool = True):
-        taxon_id_to = io.map_taxon_id(map_to_taxon)[0]
-        (taxon_id_from, organism), gene_id_type = io.get_taxon_and_id_type(map_from_taxon, gene_id_type, self.index_set)
+        """
+        Map genes to their nearest orthologs in a different species using the Ensembl database. \
+        This function generates a table describing all matching discovered ortholog pairs (both unique and non-unique) \
+        and returns it, and can also translate the genes in this data table into their nearest ortholog, \
+        as well as remove unmapped genes.
+
+        :param map_to_organism: organism name or NCBI taxon ID of the target species for ortholog mapping.
+        :type map_to_organism: str or int
+        :param map_from_organism: organism name or NCBI taxon ID of the input genes' source species.
+        :type map_from_organism: str or int
+        :param gene_id_type: the identifier type of the genes/features in the FeatureSet object \
+        (for example: 'UniProtKB', 'WormBase', 'RNACentral', 'Entrez Gene ID'). \
+        If the annotations fetched from the KEGG server do not match your gene_id_type, RNAlysis will attempt to map \
+        the annotations' gene IDs to your identifier type. \
+        For a full list of legal 'gene_id_type' names, see the UniProt website: \
+        https://www.uniprot.org/help/api_idmapping
+        :type gene_id_type: str or 'auto' (default='auto')
+        :param filter_percent_identity: if True (default), when encountering non-unique ortholog mappings, \
+        *RNAlysis* will only keep the mappings with the highest percent_identity score.
+        :type filter_percent_identity: bool (default=True)
+        :param non_unique_mode: How to handle non-unique mappings. 'first' will keep the first mapping found for each \
+        gene; 'last' will keep the last; 'random' will keep a random mapping; \
+        and 'none' will discard all non-unique mappings.
+        :type non_unique_mode: 'first', 'last', 'random', or 'none' (default='first')
+        :param remove_unmapped_genes: if True, rows with gene names/IDs that could not be mapped to an ortholog \
+        will be dropped from the table. \
+        Otherwise, they will remain in the table with their original gene name/ID.
+        :type remove_unmapped_genes: bool (default=False)
+        :type inplace: bool (default=True)
+        :param inplace: If True (default), filtering will be applied to the current Filter object. If False, \
+        the function will return a new Filter instance and the current instance will not be affected.
+        :return: DataFrame describing all discovered mappings (unique and otherwise). If inplace=True, \
+        returns a filtered instance of the Filter object as well.
+        """
+        taxon_id_to = io.map_taxon_id(map_to_organism)[0]
+        (taxon_id_from, organism), gene_id_type = io.get_taxon_and_id_type(map_from_organism, gene_id_type,
+                                                                           self.index_set)
 
         mapper = io.EnsemblOrthologMapper(taxon_id_to, taxon_id_from, gene_id_type)
         ids = parsing.data_to_tuple(self.index_set)
-        ortho_dict_one2one, ortho_dict_one2many = mapper.get_orthologs(ids, ortholog_type)
+        ortho_dict_one2one, ortho_dict_one2many = mapper.get_orthologs(ids, non_unique_mode, filter_percent_identity)
+        one2many_table = self._create_one2many_table(ortho_dict_one2many)
+
         new_df = self.df.copy(deep=True)
 
         new_df['orthologs'] = pd.Series(ortho_dict_one2one.mapping_dict)
@@ -491,23 +607,65 @@ class Filter:
         new_df = new_df.set_index('orthologs', drop=True)
 
         suffix = f'_orthologsEnsembl{taxon_id_to}'
-        return self._inplace(new_df, False, inplace, suffix, 'translate')
-
-    # TODO: generate and return one2many table
+        return self._inplace(new_df, False, inplace, suffix, 'translate'), one2many_table
 
     @readable_name('Map genes to nearest orthologs (using PhylomeDB)')
-    def map_orthologs_phylomedb(self, map_to_taxon: Union[str, int, Literal[get_phylomedb_taxons()]],
-                                map_from_taxon: Union[
+    def map_orthologs_phylomedb(self, map_to_organism: Union[str, int, Literal[get_phylomedb_taxons()]],
+                                map_from_organism: Union[
                                     Literal['auto'], str, int, Literal[get_phylomedb_taxons()]] = 'auto',
                                 gene_id_type: Union[str, Literal['auto'], Literal[get_gene_id_types()]] = 'auto',
-                                ortholog_type: Literal['consistency_score', 'all'] = 'consistency_score',
+                                consistency_score_threshold: Fraction = 0.5, filter_consistency_score: bool = True,
+                                non_unique_mode: Literal[ORTHOLOG_NON_UNIQUE_MODES] = 'first',
                                 remove_unmapped_genes: bool = False, inplace: bool = True):
-        taxon_id_to = io.map_taxon_id(map_to_taxon)[0]
-        (taxon_id_from, organism), gene_id_type = io.get_taxon_and_id_type(map_from_taxon, gene_id_type, self.index_set)
+        """
+        Map genes to their nearest orthologs in a different species using the PhylomeDB database. \
+        This function generates a table describing all matching discovered ortholog pairs (both unique and non-unique) \
+        and returns it, and can also translate the genes in this data table into their nearest ortholog, \
+        as well as remove unmapped genes.
+
+        :param map_to_organism: organism name or NCBI taxon ID of the target species for ortholog mapping.
+        :type map_to_organism: str or int
+        :param map_from_organism: organism name or NCBI taxon ID of the input genes' source species.
+        :type map_from_organism: str or int
+        :param gene_id_type: the identifier type of the genes/features in the FeatureSet object \
+        (for example: 'UniProtKB', 'WormBase', 'RNACentral', 'Entrez Gene ID'). \
+        If the annotations fetched from the KEGG server do not match your gene_id_type, RNAlysis will attempt to map \
+        the annotations' gene IDs to your identifier type. \
+        For a full list of legal 'gene_id_type' names, see the UniProt website: \
+        https://www.uniprot.org/help/api_idmapping
+        :type gene_id_type: str or 'auto' (default='auto')
+    `   :param consistency_score_threshold: the minimum consistency score required for an ortholog mapping to be \
+        considered valid. Consistency scores are calculated by PhylomeDB and represent the confidence of the \
+        ortholog mapping. setting consistency_score_threshold to 0 will keep all mappings. You can read more about \
+        PhylomeDB consistency score on the PhylomeDB website: orthology.phylomedb.org/help
+        :type consistency_score_threshold: float between 0 and 1 (default=0.5)
+        :param filter_consistency_score: if True (default), when encountering non-unique ortholog mappings, \
+        *RNAlysis* will only keep the mappings with the highest consistency score.
+        :type filter_consistency_score: bool (default=True)
+        :param non_unique_mode: How to handle non-unique mappings. 'first' will keep the first mapping found for each \
+        gene; 'last' will keep the last; 'random' will keep a random mapping; \
+        and 'none' will discard all non-unique mappings.
+        :type non_unique_mode: 'first', 'last', 'random', or 'none' (default='first')
+        :param remove_unmapped_genes: if True, rows with gene names/IDs that could not be mapped to an ortholog \
+        will be dropped from the table. \
+        Otherwise, they will remain in the table with their original gene name/ID.
+        :type remove_unmapped_genes: bool (default=False)
+        :type inplace: bool (default=True)
+        :param inplace: If True (default), filtering will be applied to the current Filter object. If False, \
+        the function will return a new Filter instance and the current instance will not be affected.
+        :return: DataFrame describing all discovered mappings (unique and otherwise). If inplace=True, \
+        returns a filtered instance of the Filter object as well.
+        """
+        taxon_id_to = io.map_taxon_id(map_to_organism)[0]
+        (taxon_id_from, organism), gene_id_type = io.get_taxon_and_id_type(map_from_organism, gene_id_type,
+                                                                           self.index_set)
 
         mapper = io.PhylomeDBOrthologMapper(taxon_id_to, taxon_id_from, gene_id_type)
         ids = parsing.data_to_tuple(self.index_set)
-        ortho_dict_one2one, ortho_dict_one2many = mapper.get_orthologs(ids, ortholog_type)
+        ortho_dict_one2one, ortho_dict_one2many = mapper.get_orthologs(ids, non_unique_mode,
+                                                                       consistency_score_threshold,
+                                                                       filter_consistency_score)
+        one2many_table = self._create_one2many_table(ortho_dict_one2many)
         new_df = self.df.copy(deep=True)
 
         new_df['orthologs'] = pd.Series(ortho_dict_one2one.mapping_dict)
@@ -520,25 +678,55 @@ class Filter:
         new_df = new_df.set_index('orthologs', drop=True)
 
         suffix = f'_orthologsPhylomeDB{taxon_id_to}'
-        return self._inplace(new_df, False, inplace, suffix, 'translate')
-
-    # TODO: generate and return one2many table
+        return self._inplace(new_df, False, inplace, suffix, 'translate'), one2many_table
 
     @readable_name('Map genes to nearest orthologs (using OrthoInspector)')
-    def map_orthologs_orthoinspector(self, map_to_taxon: Union[str, int, Literal[get_panther_taxons()]],
-                                     map_from_taxon: Union[
+    def map_orthologs_orthoinspector(self, map_to_organism: Union[str, int, Literal[get_panther_taxons()]],
+                                     map_from_organism: Union[
                                          Literal['auto'], str, int, Literal[get_panther_taxons()]] = 'auto',
                                      gene_id_type: Union[str, Literal['auto'], Literal[get_gene_id_types()]] = 'auto',
-                                     ortholog_type: Literal['first', 'random', 'all'] = 'all',
+                                     non_unique_mode: Literal[ORTHOLOG_NON_UNIQUE_MODES] = 'first',
                                      remove_unmapped_genes: bool = False, inplace: bool = True):
-        taxon_id_to = io.map_taxon_id(map_to_taxon)[0]
-        (taxon_id_from, organism), gene_id_type = io.get_taxon_and_id_type(map_from_taxon, gene_id_type, self.index_set)
+        """
+        Map genes to their nearest orthologs in a different species using the OrthoInspector database. \
+        This function generates a table describing all matching discovered ortholog pairs (both unique and non-unique) \
+        and returns it, and can also translate the genes in this data table into their nearest ortholog, \
+        as well as remove unmapped genes.
+
+        :param map_to_organism: organism name or NCBI taxon ID of the target species for ortholog mapping.
+        :type map_to_organism: str or int
+        :param map_from_organism: organism name or NCBI taxon ID of the input genes' source species.
+        :type map_from_organism: str or int
+        :param gene_id_type: the identifier type of the genes/features in the FeatureSet object \
+        (for example: 'UniProtKB', 'WormBase', 'RNACentral', 'Entrez Gene ID'). \
+        If the annotations fetched from the KEGG server do not match your gene_id_type, RNAlysis will attempt to map \
+        the annotations' gene IDs to your identifier type. \
+        For a full list of legal 'gene_id_type' names, see the UniProt website: \
+        https://www.uniprot.org/help/api_idmapping
+        :type gene_id_type: str or 'auto' (default='auto')
+        :param non_unique_mode: How to handle non-unique mappings. 'first' will keep the first mapping found for each \
+        gene; 'last' will keep the last; 'random' will keep a random mapping; \
+        and 'none' will discard all non-unique mappings.
+        :type non_unique_mode: 'first', 'last', 'random', or 'none' (default='first')
+        :param remove_unmapped_genes: if True, rows with gene names/IDs that could not be mapped to an ortholog \
+        will be dropped from the table. \
+        Otherwise, they will remain in the table with their original gene name/ID.
+        :type remove_unmapped_genes: bool (default=False)
+        :type inplace: bool (default=True)
+        :param inplace: If True (default), filtering will be applied to the current Filter object. If False, \
+        the function will return a new Filter instance and the current instance will not be affected.
+        :return: DataFrame describing all discovered mappings (unique and otherwise). If inplace=True, \
+        returns a filtered instance of the Filter object as well.
+        """
+        taxon_id_to = io.map_taxon_id(map_to_organism)[0]
+        (taxon_id_from, organism), gene_id_type = io.get_taxon_and_id_type(map_from_organism, gene_id_type,
+                                                                           self.index_set)
 
         mapper = io.OrthoInspectorOrthologMapper(taxon_id_to, taxon_id_from, gene_id_type)
         ids = parsing.data_to_tuple(self.index_set)
-        ortho_dict_one2one, ortho_dict_one2many = mapper.get_orthologs(ids, ortholog_type)
+        ortho_dict_one2one, ortho_dict_one2many = mapper.get_orthologs(ids, non_unique_mode)
+        one2many_table = self._create_one2many_table(ortho_dict_one2many)
         new_df = self.df.copy(deep=True)
-
         new_df['orthologs'] = pd.Series(ortho_dict_one2one.mapping_dict)
         if remove_unmapped_genes:
             new_df = new_df[new_df['orthologs'].notna()]
@@ -549,10 +737,7 @@ class Filter:
         new_df = new_df.set_index('orthologs', drop=True)
 
         suffix = f'_orthologsOrthoInspector{taxon_id_to}'
-        return self._inplace(new_df, False, inplace, suffix, 'translate')
-
-    # TODO: generate and return one2many table
-
+        return self._inplace(new_df, False, inplace, suffix, 'translate'), one2many_table
 
     @readable_name('Translate gene IDs')
     def translate_gene_ids(self, translate_to: Union[str, Literal[get_gene_id_types()]],

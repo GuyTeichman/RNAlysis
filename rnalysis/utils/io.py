@@ -9,6 +9,7 @@ import inspect
 import json
 import os
 import queue
+import random
 import re
 import shlex
 import shutil
@@ -29,6 +30,7 @@ from urllib.parse import urlparse, parse_qs, urlencode
 import aiohttp
 import aiolimiter
 import appdirs
+import bidict
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
@@ -36,7 +38,7 @@ import requests
 import yaml
 from defusedxml import ElementTree
 from requests.adapters import HTTPAdapter, Retry
-from tqdm.auto import tqdm
+from tqdm import tqdm
 
 from rnalysis import __version__
 from rnalysis.utils import parsing, validation, __path__
@@ -1025,7 +1027,9 @@ class GeneIDDict:
     def __getitem__(self, key):
         if self.mapping_dict is None:
             return key
-        return self.mapping_dict[key]
+        if key in self.mapping_dict:
+            return self.mapping_dict[key]
+        raise KeyError(f"Gene ID '{key}' not found in mapping dictionary.")
 
     def __contains__(self, item):
         try:
@@ -1037,7 +1041,7 @@ class GeneIDDict:
 
 class EnsemblRestClient:
     SERVER = 'https://rest.ensembl.org/'
-    REQS_PER_SEQ = 100
+    REQS_PER_SEQ = 10
     HEADERS = {"Content-Type": "application/json", "Accept": "application/json"}
     RETRIES = Retry(total=5, backoff_factor=0.25, status_forcelist=[500, 502, 503, 504])
     SEMAPHORE = asyncio.Semaphore(value=REQS_PER_SEQ)
@@ -1100,25 +1104,167 @@ class EnsemblRestClient:
         return content
 
 
+def translate_mappings(ids: list, translated_ids: list, mapping_one2one: dict,
+                       mapping_one2many: dict):
+    requested = parsing.data_to_set(translated_ids)
+    mapping_one2one_translated = {}
+    mapping_one2many_translated = {}
+    for from_id, trans_from_id in zip(ids, translated_ids):
+        if trans_from_id in mapping_one2one and trans_from_id in requested:
+            mapping_one2one_translated[from_id] = mapping_one2one[trans_from_id]
+
+        if trans_from_id in mapping_one2many and trans_from_id in requested:
+            mapping_one2many_translated[from_id] = mapping_one2many[trans_from_id]
+
+    return mapping_one2one_translated, mapping_one2many_translated
+
+
 class PhylomeDBOrthologMapper:
     URL = 'ftp.phylomedb.org'
 
     def __init__(self, map_to_organism, map_from_organism='auto', gene_id_type='auto'):
+        legal_species = self.get_legal_species()
+        assert map_from_organism in legal_species, f"organism with taxon id {map_from_organism} is not supported by PhylomeDB. "
+        assert map_to_organism in legal_species, f"organism with taxon id {map_to_organism} is not supported by PhylomeDB. "
         self.gene_id_type = gene_id_type
         self.map_from_organism = map_from_organism
         self.map_to_organism = map_to_organism
 
-    def get_orthologs(self, ids: List[str], ortholog_type: Literal['consistency_score', 'all'] = 'consistency_score'):
-        ftp = self._connect()
+    def translate_ids(self, ids: Tuple[str, ...]) -> Tuple[List[str], List[str]]:
+        if self.gene_id_type == 'auto':
+            translator, self.gene_id_type, _ = find_best_gene_mapping(ids, None, map_to_options=('UniProtKB',))
+        else:
+            translator = GeneIDTranslator(self.gene_id_type, 'UniProtKB').run(ids)
+
+        ids = [this_id for this_id in ids if this_id in translator]
+        translated_ids = [translator[this_id] for this_id in ids]
+
+        return ids, translated_ids
+
+    def get_orthologs(self, ids: Tuple[str, ...], non_unique_mode: str, consistency_score_threshold: float,
+                      filter_consistency_score: bool = True):
+        mapping_one2one = {}
+        mapping_one2many = {}
+
+        taxon_table = self._get_taxon_file(self.map_from_organism)
+        taxon_table = taxon_table[taxon_table['taxid2'] == self.map_to_organism]
+        conversion_dict = self._get_id_conversion_map()
+        ids, translated_ids = self.translate_ids(ids)
+
+        n_mapped = 0
+        for from_id in tqdm(translated_ids, 'Mapping orthologs', unit='genes'):
+            if from_id not in conversion_dict:
+                continue
+            from_id_conv = conversion_dict[from_id]
+            if from_id_conv not in taxon_table:
+                continue
+            to_id_conv = taxon_table.loc[from_id_conv, 'protid2']
+            if isinstance(to_id_conv, pd.Series):
+                for this_to_id_conv in to_id_conv:
+                    if this_to_id_conv not in conversion_dict:
+                        continue
+                    if from_id not in mapping_one2many:
+                        mapping_one2many[from_id] = []
+
+                    to_id = conversion_dict[this_to_id_conv]
+                    score = taxon_table.loc[from_id_conv, 'cs']
+                    # filter by consistency score
+                    if score < consistency_score_threshold:
+                        continue
+
+                    mapping_one2many[from_id] = [(to_id, score)]
+                if filter_consistency_score:
+                    mapping_one2one[from_id] = max(mapping_one2many[from_id], key=lambda x: x[1])[0]
+                else:
+                    if non_unique_mode == 'first':
+                        mapping_one2one[from_id] = mapping_one2many[from_id][0][0]
+                    elif non_unique_mode == 'last':
+                        mapping_one2one[from_id] = mapping_one2many[from_id][-1][0]
+                    elif non_unique_mode == 'random':
+                        mapping_one2one[from_id] = random.choice(mapping_one2many[from_id])[0]
+                n_mapped += 1
+            else:
+                if to_id_conv not in conversion_dict.inverse:
+                    print(f"{to_id_conv} not in conversion dict.")
+                    continue
+                to_id = conversion_dict.inverse[to_id_conv]
+                score = taxon_table.loc[from_id_conv, 'cs']
+                # filter by consistency score
+                if score < consistency_score_threshold:
+                    continue
+
+                mapping_one2one[from_id] = to_id
+                mapping_one2many[from_id] = [(to_id, score)]
+                n_mapped += 1
+
+        mapping_one2one, mapping_one2many = translate_mappings(ids, translated_ids, mapping_one2one, mapping_one2many)
+
+        if n_mapped < len(translated_ids):
+            warnings.warn(f"Ortholog mapping found for only {n_mapped} out of {len(translated_ids)} gene IDs.")
+
+        return OrthologDict(mapping_one2one), OrthologDict({k: v[0] for k, v in mapping_one2many.items()})
 
     @staticmethod
     def _get_taxon_file(taxon_id: int):
-        cache_file = get_todays_cache_dir().joinpath(f'phylomedb_{taxon_id}.parquet')
+        cache_dir = get_todays_cache_dir()
+        cache_file = cache_dir.joinpath(f'phylomedb_{taxon_id}.parquet')
+        file_path = f"/metaphors/latest/orthologs/{taxon_id}.txt.gz"
+        local_zip_file = cache_dir.joinpath(f"{taxon_id}.txt.gz")
         if cache_file.exists():
             df = load_table(cache_file, squeeze=True, index_col=0)
         else:
-            pass
+            ftp = PhylomeDBOrthologMapper._connect()
+            # Download the file
+            with open(local_zip_file, 'wb') as fp:
+                ftp.retrbinary('RETR ' + file_path, fp.write)
+            ftp.quit()
+
+            # Unzip the file
+            with gzip.open(local_zip_file, 'rb') as f_in:
+                with open(cache_file.with_suffix('.txt'), 'wb') as f_out:
+                    shutil.copyfileobj(f_in, f_out)
+
+            # Remove the zipped file
+            os.remove(local_zip_file)
+
+            # Load into pandas dataframe
+            df = pd.read_csv(cache_file.with_suffix('.txt'), sep='\t', index_col=1)
+
+            # cache file locally
+            save_table(df, cache_file)
         return df
+
+    @staticmethod
+    def _get_id_conversion_map() -> bidict.bidict:
+        cache_dir = get_todays_cache_dir()
+        cache_file = cache_dir.joinpath(f'phylomedb_id_conversion.parquet')
+        file_path = "/metaphors/latest/id_conversion.txt.gz"
+        local_zip_file = cache_dir.joinpath("id_conversion.txt.gz")
+
+        if cache_file.exists():
+            data = load_table(cache_file, squeeze=True, index_col=0).to_dict(into=bidict.bidict())
+        else:
+            ftp = PhylomeDBOrthologMapper._connect()
+            # Download the file
+            with open(local_zip_file, 'wb') as fp:
+                ftp.retrbinary('RETR ' + file_path, fp.write)
+            ftp.quit()
+
+            # Unzip the file
+            with gzip.open(local_zip_file, 'rb') as f_in:
+                with open(cache_file.with_suffix('.txt'), 'wb') as f_out:
+                    shutil.copyfileobj(f_in, f_out)
+
+            # Remove the zipped file
+            os.remove(local_zip_file)
+
+            # Load into pandas dataframe
+            df = pd.read_csv(cache_file.with_suffix('.txt'), index_col=0, sep=r'\s+').drop('db', axis=1).squeeze()
+            data = df.to_dict(into=bidict.bidict)
+
+            # cache file locally
+            save_table(df, cache_file)
+        return data
 
     @staticmethod
     def _parse_taxon_file(path: Path):
@@ -1141,6 +1287,7 @@ class PhylomeDBOrthologMapper:
 
         if cache_file.exists():
             df = load_table(cache_file, squeeze=True, index_col=0)
+            df.index = df.index.astype(int)
         else:
             ftp = PhylomeDBOrthologMapper._connect()
             # Download the file
@@ -1150,17 +1297,18 @@ class PhylomeDBOrthologMapper:
 
             # Unzip the file
             with gzip.open(local_zip_file, 'rb') as f_in:
-                with open(cache_file, 'wb') as f_out:
+                with open(cache_file.with_suffix('.txt'), 'wb') as f_out:
                     shutil.copyfileobj(f_in, f_out)
 
             # Remove the zipped file
             os.remove(local_zip_file)
 
             # Load into pandas dataframe
-            df = pd.read_csv(cache_file, sep='\t', index_col=3)
+            df = pd.read_csv(cache_file.with_suffix('.txt'), sep='\t', index_col=0).dropna()
 
             # Extract necessary columns and sort by name
-            df = df['#specieTaxId'].sort_index()
+            df.index = df.index.astype(int)
+            df = df['name'].sort_index()
 
             # cache file locally
             save_table(df, cache_file)
@@ -1168,7 +1316,134 @@ class PhylomeDBOrthologMapper:
 
 
 class OrthoInspectorOrthologMapper:
-    DATABASES = {'Eukaryota', 'Bacteria', 'Archea', 'Transverse'}
+    API_URL = 'https://lbgi.fr/api/orthoinspector'
+    RETRIES = Retry(total=5, backoff_factor=0.25, status_forcelist=[500, 502, 503, 504])
+    HEADERS = {'accept': 'application/json'}
+
+    def __init__(self, map_to_organism, map_from_organism, gene_id_type):
+        self.gene_id_type = gene_id_type
+        self.map_from_organism = map_from_organism
+        self.map_to_organism = map_to_organism
+
+    def translate_ids(self, ids: Tuple[str, ...], session=None) -> Tuple[List[str], List[str]]:
+        if self.gene_id_type == 'auto':
+            translator, self.gene_id_type, _ = find_best_gene_mapping(ids, None, map_to_options=('UniProtKB',))
+        else:
+            translator = GeneIDTranslator(self.gene_id_type, 'UniProtKB', session=session).run(ids)
+
+        ids = [this_id for this_id in ids if this_id in translator]
+        translated_ids = [translator[this_id] for this_id in ids]
+
+        return ids, translated_ids
+
+    @functools.lru_cache(maxsize=2)
+    @staticmethod
+    def get_databases():
+        url = f'{OrthoInspectorOrthologMapper.API_URL}/databases'
+        req = requests.get(url)
+        req.raise_for_status()
+        databases = req.json()['data']
+        return databases
+
+    @functools.lru_cache(maxsize=2)
+    @staticmethod
+    def get_database_organisms():
+        # get list of databases
+        databases = OrthoInspectorOrthologMapper.get_databases()
+        db_organisms = {}
+        for database in databases:
+            url = f'{OrthoInspectorOrthologMapper.API_URL}/{database}/species'
+            req = requests.get(url)
+            req.raise_for_status()
+            content = req.json()['data']
+            species = frozenset({d['id'] for d in content})
+            db_organisms[database] = species
+        return db_organisms
+
+    def get_cache_filename(self):
+        return f'orthoinspector_{self.map_from_organism}_{self.map_to_organism}.json'
+
+    def get_orthologs(self, ids: Tuple[str, ...], non_unique_mode: str, database: str = 'auto'):
+        # find a valid database, or ensure that given database is valid
+        if database == 'auto':
+            database = None
+            database_organisms = OrthoInspectorOrthologMapper.get_database_organisms()
+            dbs_by_size = sorted(database_organisms.keys(), key=lambda x: len(database_organisms[x]), reverse=True)
+
+            for db in dbs_by_size:
+                if self.map_from_organism in database_organisms[db] and self.map_to_organism in database_organisms[db]:
+                    database = db
+                    break
+            if database is None:
+                raise ValueError(
+                    f'No database found that supports mapping from {self.map_from_organism} to {self.map_to_organism}. ')
+
+        else:
+            databases = self.get_databases()
+            assert database in databases, f"Invalid database: {database}. Valid databases are: {databases}."
+
+        session = get_session(self.RETRIES)
+        mapping_one2one = {}
+        mapping_one2many = {}
+        ids, translated_ids = self.translate_ids(ids, session=session)
+        # TODO: progress bars on both download and parsing
+        # if a large number of genes is requested, download the entire pairwise dataset and filter it
+        cached = load_cached_file(self.get_cache_filename())
+        if cached is None:
+            url = f'{self.API_URL}/{database}/species/{self.map_from_organism}/orthologs/{self.map_to_organism}'
+            req = session.get(url)
+            req.raise_for_status()
+            content = req.json()['data']
+            cache_file(json.dumps(content), self.get_cache_filename())
+        else:
+            content = json.loads(cached)
+
+        for annotation in content:
+            rel_type = annotation['type'].lower()
+            if rel_type == 'one-to-one':
+                to_id = annotation['orthologs']
+                from_id = annotation['query']
+                mapping_one2many[from_id] = [to_id]
+                mapping_one2one[from_id] = to_id
+            elif rel_type == 'one-to-many':
+                to_ids = annotation['orthologs']
+                from_id = annotation['query']
+                mapping_one2many[from_id] = to_ids
+                if non_unique_mode == 'first':
+                    mapping_one2one[from_id] = to_ids[0]
+                elif non_unique_mode == 'last':
+                    mapping_one2one[from_id] = to_ids[-1]
+                elif non_unique_mode == 'random':
+                    mapping_one2one[from_id] = random.choice(to_ids)
+
+            elif rel_type == 'many-to-one':
+                to_id = annotation['orthologs']
+                from_ids = annotation['query']
+                for from_id in from_ids:
+                    mapping_one2many[from_id] = [to_id]
+                    mapping_one2one[from_id] = to_id
+            elif rel_type == 'many-to-many':
+                to_ids = annotation['orthologs']
+                from_ids = annotation['query']
+                for from_id in from_ids:
+                    mapping_one2many[from_id] = to_ids
+                    if non_unique_mode == 'first':
+                        mapping_one2one[from_id] = to_ids[0]
+                    elif non_unique_mode == 'last':
+                        mapping_one2one[from_id] = to_ids[-1]
+                    elif non_unique_mode == 'random':
+                        mapping_one2one[from_id] = random.choice(to_ids)
+
+
+            else:
+                raise ValueError(f'Unknown ortholog type: "{annotation["type"]}"')
+
+        mapping_one2one, mapping_one2many = translate_mappings(ids, translated_ids, mapping_one2one, mapping_one2many)
+        n_mapped = len(mapping_one2one)
+        if n_mapped < len(translated_ids):
+            warnings.warn(f"Ortholog mapping found for only {n_mapped} out of {len(translated_ids)} gene IDs.")
+
+        return OrthologDict(mapping_one2one), OrthologDict(mapping_one2many)
 
 
 class EnsemblOrthologMapper:
@@ -1179,14 +1454,67 @@ class EnsemblOrthologMapper:
         self.map_from_organism = map_from_organism
         self.map_to_organism = map_to_organism
 
-    def get_paralogs(self, ids: Tuple[str, ...]):
-        pass  # TODO
+    def translate_ids(self, ids: Tuple[str, ...]) -> Tuple[List[str], List[str]]:
+        if self.gene_id_type == 'auto':
+            translator, self.gene_id_type, _ = find_best_gene_mapping(ids, None, map_to_options=('Ensembl Genomes',))
+        else:
+            translator = GeneIDTranslator(self.gene_id_type, 'Ensembl Genomes').run(ids)
 
-    def get_orthologs(self, ids: Tuple[str, ...],
-                      ortholog_type: Literal['all', 'percent_identity'] = 'percent_identity') -> \
-        Tuple[OrthologDict, OrthologDict]:
-        translator = GeneIDTranslator(self.gene_id_type, 'Ensembl Genomes').run(ids)
-        translated_ids = {translator[item] for item in ids if item in translator}
+        ids = [this_id for this_id in ids if this_id in translator]
+        translated_ids = [translator[this_id] for this_id in ids]
+
+        return ids, translated_ids
+
+    def get_paralogs(self, ids: Tuple[str, ...], filter_percent_identity: bool = True):
+        ids, translated_ids = self.translate_ids(ids)
+        client = EnsemblRestClient()
+        mapping_one2one = {}
+        mapping_one2many = {}
+
+        for gene_id in tqdm(translated_ids, 'Submitting requests', unit='requests'):
+            client.queue_action('get', f'{self.ENDPOINT}{gene_id}',
+                                params=dict(target_taxon=self.map_to_organism, type='paralogues',
+                                            sequence='none', cigar_line=0))
+
+        with tqdm('Mapping paralogs...', total=client.queue.qsize() + 1) as pbar:
+            pbar.update()
+            for json_res in client.run():
+                req_output = json_res['data'][0]
+                if len(req_output['homologies']) == 0:
+                    continue
+
+                this_id = req_output['id']
+
+                if filter_percent_identity:
+                    max_score = 0
+                    best_match = None
+                    matches = []
+                    for homology in req_output['homologies']:
+                        current_score = homology['source']['perc_id']
+                        if current_score > max_score:
+                            max_score = current_score
+                            best_match = homology['target']['id']
+                            matches = [best_match]
+                        elif current_score == max_score:
+                            matches.append(homology['target']['id'])
+
+                    mapping_one2many[this_id] = best_match
+                else:
+                    mapping_one2many[this_id] = [homology['target']['id'] for homologyn in req_output['homologies']]
+                pbar.update()
+
+        _, mapping_one2many = translate_mappings(ids, translated_ids, {}, mapping_one2many)
+
+        n_mapped = len(mapping_one2many)
+        if n_mapped < len(translated_ids):
+            warnings.warn(f"Paralog mapping found for only {n_mapped} out of {len(translated_ids)} gene IDs.")
+
+        return OrthologDict(mapping_one2many)
+
+
+def get_orthologs(self, ids: Tuple[str, ...], non_unique_mode: str, filter_percent_identity: bool = True) -> \
+    Tuple[OrthologDict, OrthologDict]:
+    ids, translated_ids = self.translate_ids(ids)
         client = EnsemblRestClient()
         mapping_one2one = {}
         mapping_one2many = {}
@@ -1207,20 +1535,37 @@ class EnsemblOrthologMapper:
                 mapping_one2many[this_id] = [(homology['target']['id'], homology['source']['perc_id']) for homology in
                                              req_output['homologies']]
 
-                if ortholog_type == 'all':
-                    mapping_one2one[this_id] = req_output['homologies'][0]['target']['id']
-                elif ortholog_type == 'percent_identity':
+                if filter_percent_identity:
                     max_score = 0
                     best_match = None
+                    matches = []
                     for homology in req_output['homologies']:
                         current_score = homology['source']['perc_id']
                         if current_score > max_score:
                             max_score = current_score
                             best_match = homology['target']['id']
-                    mapping_one2one[this_id] = best_match
+                            matches = [best_match]
+                        elif current_score == max_score:
+                            matches.append(homology['target']['id'])
+
+                    if len(matches) > 1:
+                        if non_unique_mode == 'first':
+                            mapping_one2one[this_id] = matches[0]
+                        elif non_unique_mode == 'last':
+                            mapping_one2one[this_id] = matches[-1]
+                        elif non_unique_mode == 'random':
+                            mapping_one2one[this_id] = random.choice(matches)
+                    else:
+                        mapping_one2one[this_id] = best_match
                 else:
-                    raise ValueError(f"Invalid 'ortholog_type': '{ortholog_type}'.")
+                    mapping_one2one[this_id] = req_output['homologies'][0]['target']['id']
                 pbar.update()
+
+    mapping_one2one, mapping_one2many = translate_mappings(ids, translated_ids, mapping_one2one, mapping_one2many)
+
+    n_mapped = len(mapping_one2many)
+    if n_mapped < len(translated_ids):
+        warnings.warn(f"Ortholog mapping found for only {n_mapped} out of {len(translated_ids)} gene IDs.")
 
         return OrthologDict(mapping_one2one), OrthologDict({k: v[0] for k, v in mapping_one2many.items()})
 
@@ -1235,10 +1580,6 @@ class PantherOrthologMapper:
         self.map_from_organism = map_from_organism
         self.map_to_organism = map_to_organism
 
-    @staticmethod
-    def get_supported_genomes():
-        raise NotImplementedError  # TODO
-
     def translate_ids(self, ids: Tuple[str, ...], session=None) -> Tuple[List[str], List[str]]:
         if self.gene_id_type == 'auto':
             translator, self.gene_id_type, _ = find_best_gene_mapping(ids, None, map_to_options=('UniProtKB',))
@@ -1250,7 +1591,7 @@ class PantherOrthologMapper:
 
         return ids, translated_ids
 
-    def get_orthologs(self, ids: Tuple[str, ...], ortholog_type: Literal['least_diverged', 'all'] = 'least_diverged'):
+    def get_orthologs(self, ids: Tuple[str, ...], non_unique_mode: str, filter_least_diverged: bool = True):
         url = f'{self.API_URL}/services/oai/pantherdb/ortholog/matchortho'
         session = get_session(self.RETRIES)
         mapping_one2one = {}
@@ -1261,7 +1602,7 @@ class PantherOrthologMapper:
         for from_id in tqdm(translated_ids, 'Mapping orthologs', unit='genes'):
             req_data = dict(geneInputList=from_id, organism=str(self.map_from_organism),
                             targetOrganism=str(self.map_to_organism),
-                            orthologType='all' if ortholog_type == 'all' else 'LDO')
+                            orthologType='all' if filter_least_diverged else 'LDO')
             req = session.post(url, headers=self.HEADERS, params=req_data)
             req.raise_for_status()
             try:
@@ -1281,16 +1622,27 @@ class PantherOrthologMapper:
 
             except KeyError:
                 pass
-        if n_mapped < len(translated_ids):
-            warnings.warn(f"Ortholog mapping found for only {n_mapped} out of {len(translated_ids)} gene IDs.")
 
         for from_id, mappings in mapping_one2many.items():
+            if filter_least_diverged:
+                mappings_filtered = [this_mapping for this_mapping in mappings if this_mapping[1] == 'LDO']
+                mappings = mappings_filtered if len(mappings_filtered) > 0 else mappings
             if len(mappings) == 1:
                 mapping_one2one[from_id] = mappings[0][0]
             else:
-                mapping_one2one[from_id] = max(mappings, key=lambda x: 1 if x[1] == 'LDO' else 0)[0]
+                if non_unique_mode == 'first':
+                    mapping_one2one[from_id] = mappings[0][0]
+                elif non_unique_mode == 'last':
+                    mapping_one2one[from_id] = mappings[-1][0]
+                elif non_unique_mode == 'random':
+                    mapping_one2one[from_id] = random.choice(mappings)[0]
 
-        return OrthologDict(mapping_one2one), OrthologDict({k: v[0] for k, v in mapping_one2many.items()})
+        mapping_one2one, mapping_one2many = translate_mappings(ids, translated_ids, mapping_one2one, mapping_one2many)
+        if n_mapped < len(translated_ids):
+            warnings.warn(f"Ortholog mapping found for only {n_mapped} out of {len(translated_ids)} gene IDs.")
+            print({k: [this_v[0] for this_v in v] for k, v in mapping_one2many.items()})
+        return OrthologDict(mapping_one2one), OrthologDict(
+            {k: [this_v[0] for this_v in v] for k, v in mapping_one2many.items()})
 
     def get_paralogs(self, ids: Tuple[str, ...]):
         session = get_session(self.RETRIES)
@@ -1322,6 +1674,9 @@ class PantherOrthologMapper:
 
             except KeyError:
                 pass
+
+        _, mapping_one2many = translate_mappings(ids, translated_ids, {}, mapping_one2many)
+
         if n_mapped < len(translated_ids):
             warnings.warn(f"Paralob mapping found for only {n_mapped} out of {len(translated_ids)} gene IDs.")
 
@@ -1693,7 +2048,7 @@ def get_legal_ensembl_taxons():
 @functools.lru_cache(maxsize=2)
 def get_legal_phylomedb_taxons():
     entries = PhylomeDBOrthologMapper.get_legal_species()
-    taxons = tuple(name for name in entries.index.unique() if name[0].isupper())
+    taxons = tuple(name for name in entries.unique() if name[0].isupper())
     return taxons
 
 
