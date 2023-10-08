@@ -4529,7 +4529,7 @@ class CountFilter(Filter):
         plt.tick_params(axis='both', which='both', labelsize=tick_fontsize)
         try:
             clustergram.figure.set_layout_engine("compressed")
-        except AttributeError:
+        except (AttributeError, RuntimeError) as e:
             clustergram.figure.set_constrained_layout(True)
 
         plt.show()
