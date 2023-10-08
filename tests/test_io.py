@@ -1053,3 +1053,33 @@ def test_check_id_mapping_results_ready_error():
         # Check that an exception is raised
         with pytest.raises(Exception):
             GeneIDTranslator.check_id_mapping_results_ready(session, "https://rest.uniprot.org", "123", 0.1)
+
+
+# Test cases for the OrthologDict class
+class TestOrthologDict:
+
+    # Test the initialization of OrthologDict
+    def test_init(self):
+        ortholog_dict = OrthologDict()
+        assert len(ortholog_dict) == 0  # Check that it's empty when initialized without mapping_dict
+
+        mapping_dict = {'gene1': 'ortho1', 'gene2': 'ortho2'}
+        ortholog_dict = OrthologDict(mapping_dict)
+        assert len(ortholog_dict) == len(mapping_dict)  # Check that it contains the correct number of items
+        assert 'gene1' in ortholog_dict  # Check that a key is present in the mapping
+
+    # Test getting an item from OrthologDict
+    def test_getitem(self):
+        mapping_dict = {'gene1': 'ortho1', 'gene2': 'ortho2'}
+        ortholog_dict = OrthologDict(mapping_dict)
+        assert ortholog_dict['gene1'] == 'ortho1'  # Check that we can get an item
+
+        with pytest.raises(KeyError):
+            _ = ortholog_dict['gene3']  # Check that getting a non-existent item raises a KeyError
+
+    # Test checking for item existence in OrthologDict
+    def test_contains(self):
+        mapping_dict = {'gene1': 'ortho1', 'gene2': 'ortho2'}
+        ortholog_dict = OrthologDict(mapping_dict)
+        assert 'gene1' in ortholog_dict  # Check that an existing key is in the OrthologDict
+        assert 'gene3' not in ortholog_dict  # Check that a non-existent key is not in the OrthologDict
