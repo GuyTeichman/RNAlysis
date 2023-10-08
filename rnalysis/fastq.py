@@ -1076,8 +1076,8 @@ def kallisto_quantify_single_end(fastq_folder: Union[str, Path], output_folder: 
                                  kallisto_installation_folder: Union[str, Path, Literal['auto']] = 'auto',
                                  new_sample_names: Union[List[str], Literal['auto']] = 'auto',
                                  stranded: Literal['no', 'forward', 'reverse'] = 'no',
-                                 learn_bias: bool = False, seek_fusion_genes: bool = False,
-                                 bootstrap_samples: Union[PositiveInt, None] = None) -> filtering.CountFilter:
+                                 bootstrap_samples: Union[PositiveInt, None] = None,
+                                 **legacy_args) -> filtering.CountFilter:
     """
     Quantify transcript abundance in single-end mRNA sequencing data using \
     `kallisto <https://pachterlab.github.io/kallisto/>`_. \
@@ -1144,6 +1144,9 @@ def kallisto_quantify_single_end(fastq_folder: Union[str, Path], output_folder: 
     differential expression analysis, but not for more traditional tools such as DESeq2 and edgeR.
     :type bootstrap_samples: int >0 or None (default=None)
     """
+    # handle legacy arguments
+    learn_bias = legacy_args.get('learn_bias', False)
+    seek_fusion_genes = legacy_args.get('seek_fusion_genes', False)
     if new_sample_names != 'auto':
         new_sample_names = parsing.data_to_list(new_sample_names)
     output_folder = Path(output_folder)
@@ -1187,9 +1190,9 @@ def kallisto_quantify_paired_end(r1_files: List[str], r2_files: List[str], outpu
                                  index_file: Union[str, Path], gtf_file: Union[str, Path],
                                  kallisto_installation_folder: Union[str, Path, Literal['auto']] = 'auto',
                                  new_sample_names: Union[List[str], Literal['auto']] = 'auto',
-                                 stranded: Literal['no', 'forward', 'reverse'] = 'no', learn_bias: bool = False,
-                                 seek_fusion_genes: bool = False,
-                                 bootstrap_samples: Union[PositiveInt, None] = None) -> filtering.CountFilter:
+                                 stranded: Literal['no', 'forward', 'reverse'] = 'no',
+                                 bootstrap_samples: Union[PositiveInt, None] = None,
+                                 **legacy_args) -> filtering.CountFilter:
     """
     Quantify transcript abundance in paired-end mRNA sequencing data using \
     `kallisto <https://pachterlab.github.io/kallisto/>`_. \
@@ -1258,6 +1261,10 @@ def kallisto_quantify_paired_end(r1_files: List[str], r2_files: List[str], outpu
     assert (new_sample_names == 'auto') or (len(new_sample_names) == len(r1_files)), \
         f'Number of samples ({len(r1_files)}) does not match number of sample names ({len(new_sample_names)})!'
 
+    # handle legacy arguments
+    learn_bias = legacy_args.get('learn_bias', False)
+    seek_fusion_genes = legacy_args.get('seek_fusion_genes', False)
+
     output_folder = Path(output_folder)
     call = _parse_kallisto_misc_args(output_folder, index_file, kallisto_installation_folder, stranded, learn_bias,
                                      seek_fusion_genes, bootstrap_samples)
@@ -1300,6 +1307,12 @@ def _process_kallisto_outputs(output_folder, gtf_file):
 def _parse_kallisto_misc_args(output_folder, index_file: str, kallisto_installation_folder: Union[str, Path],
                               stranded: Literal['no', 'forward', 'reverse'] = 'no', learn_bias: bool = False,
                               seek_fusion_genes: bool = False, bootstrap_samples: Union[int, None] = None):
+    # handle legacy arguments
+    if learn_bias:
+        warnings.warn("The 'learn_bias' argument is no longer supported by kallisto versions beyond 0.48.0. ")
+    if seek_fusion_genes:
+        warnings.warn("The 'seek_fusion_genes' argument is no longer supported by kallisto versions beyond 0.48.0. ")
+
     output_folder = Path(output_folder)
     index_file = Path(index_file)
     assert output_folder.exists(), "supplied 'output_folder' does not exist!"

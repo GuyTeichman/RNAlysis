@@ -193,7 +193,7 @@ class KallistoIndexWindow(gui_windows.FuncExternalWindow):
 
 
 class KallistoSingleWindow(gui_windows.FuncExternalWindow):
-    EXCLUDED_PARAMS = set()
+    EXCLUDED_PARAMS = {'legacy_args'}
     __slots__ = {}
 
     def __init__(self, parent=None):
@@ -208,6 +208,7 @@ class KallistoSingleWindow(gui_windows.FuncExternalWindow):
 
 
 class KallistoPairedWindow(gui_windows.PairedFuncExternalWindow):
+    EXCLUDED_PARAMS = {'legacy_args'}
     __slots__ = {}
 
     def __init__(self, parent=None):
