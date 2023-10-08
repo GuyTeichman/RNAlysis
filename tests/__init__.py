@@ -52,7 +52,7 @@ def are_dir_trees_equal(dir1, dir2, compare_contents: bool = True):
                 except UnicodeDecodeError:
                     with open(pth, 'rb') as f:
                         txt = f.read()
-                    items.append(txt)
+                items.append(txt)
             if items[0] != items[1]:
                 for i in items:
                     print(i)
