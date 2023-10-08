@@ -1345,8 +1345,8 @@ class OrthoInspectorOrthologMapper:
         databases = req.json()['data']
         return databases
 
-    @functools.lru_cache(maxsize=2)
     @staticmethod
+    @functools.lru_cache(maxsize=2)
     def get_database_organisms():
         # get list of databases
         databases = OrthoInspectorOrthologMapper.get_databases()
