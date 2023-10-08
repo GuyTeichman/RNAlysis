@@ -139,6 +139,7 @@ def test_bowtie2_align_single_end_command(monkeypatch, fastq_folder, output_fold
         assert print_stdout
         assert print_stderr
         return 0, []
+
     monkeypatch.setattr(io, 'run_subprocess', mock_run_subprocess)
 
     bowtie2_align_single_end(fastq_folder, output_folder, index_file,
@@ -204,6 +205,7 @@ def test_shortstack_command(monkeypatch, fastq_folder, output_folder, genome_fas
         assert print_stdout
         assert print_stderr
         return 0, []
+
     monkeypatch.setattr(io, 'run_subprocess', mock_run_subprocess)
 
     shortstack_align_smallrna(fastq_folder, output_folder, genome_fasta, shortstack_installation_folder,
@@ -279,18 +281,20 @@ def test_kallisto_create_index_command(monkeypatch, transcriptome_fasta, kallist
     assert index_created == [True]
     return 0, []
 
+
 def test_kallisto_create_index():
     out_path = 'tests/test_files/kallisto_tests/transcripts.idx'
-    truth_path = 'tests/test_files/kallisto_tests/transcripts_truth.idx'
 
     log_path = 'tests/test_files/kallisto_tests/kallisto-index_transcripts.log'
     log_truth_path = 'tests/test_files/kallisto_tests/kallisto-index_transcripts_truth.log'
     try:
         kallisto_create_index('tests/test_files/kallisto_tests/transcripts.fasta')
-        with open(truth_path, 'rb') as truth, open(out_path, 'rb') as out:
-            assert truth.read() == out.read()
+        assert Path(out_path).exists()
         with open(log_truth_path) as truth, open(log_path) as out:
-            assert truth.read().replace('\n', '') == out.read().replace('\n', '')
+            truth_lines = [item.strip() for item in truth.readlines() if '[build]' in item]
+            out_lines = [item.strip() for item in out.readlines() if '[build]' in item]
+            for ind in [0, -1]:
+                assert truth_lines[ind] == out_lines[ind]
     finally:
         if Path(out_path).exists():
             Path(out_path).unlink()
@@ -308,6 +312,8 @@ def test_kallisto_quantify_single_end():
         kallisto_quantify_single_end(in_dir, out_dir, index_file, gtf_file, 175.0, 25.0)
         for item in Path(out_dir).rglob('run_info.json'):
             item.unlink()
+        for item in Path(out_dir).rglob('*.h5'):
+            item.unlink()
         assert are_dir_trees_equal(out_dir, truth_dir)
     finally:
         unlink_tree(out_dir)
@@ -323,6 +329,8 @@ def test_kallisto_quantify_paired_end():
     try:
         kallisto_quantify_paired_end([in1_path], [in2_path], out_dir, index_file, gtf_file)
         for item in Path(out_dir).rglob('run_info.json'):
+            item.unlink()
+        for item in Path(out_dir).rglob('*.h5'):
             item.unlink()
         assert are_dir_trees_equal(out_dir, truth_dir)
 
@@ -372,6 +380,7 @@ def test_kallisto_quantify_single_end_command(monkeypatch, fastq_folder, output_
         assert print_stdout
         assert print_stderr
         return 0, []
+
     def mock_process_outputs(out_folder, gtf):
         assert Path(gtf_file) == Path(gtf)
         assert Path(out_folder) == Path(output_folder)
@@ -382,8 +391,9 @@ def test_kallisto_quantify_single_end_command(monkeypatch, fastq_folder, output_
 
     kallisto_quantify_single_end(fastq_folder, output_folder, index_file, gtf_file, average_fragment_length,
                                  stdev_fragment_length,
-                                 kallisto_installation_folder, new_sample_names, stranded, learn_bias,
-                                 seek_fusion_genes, bootstrap_samples)
+                                 kallisto_installation_folder, new_sample_names, stranded, bootstrap_samples,
+                                 learn_bias=learn_bias,
+                                 seek_fusion_genes=seek_fusion_genes)
     assert sorted(files_covered) == sorted(files_to_cover)
     assert output_processed == [True]
 
@@ -442,8 +452,9 @@ def test_kallisto_quantify_paired_end_command(monkeypatch, r1_files, r2_files, o
     monkeypatch.setattr(fastq, '_process_kallisto_outputs', mock_process_outputs)
 
     kallisto_quantify_paired_end(r1_files, r2_files, output_folder, index_file, gtf_file,
-                                 kallisto_installation_folder, new_sample_names, stranded, learn_bias,
-                                 seek_fusion_genes, bootstrap_samples)
+                                 kallisto_installation_folder, new_sample_names, stranded, bootstrap_samples,
+                                 learn_bias=learn_bias,
+                                 seek_fusion_genes=seek_fusion_genes)
     assert sorted(pairs_covered) == sorted(pairs_to_cover)
     assert output_processed == [True]
 

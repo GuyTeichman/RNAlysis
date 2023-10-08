@@ -46,8 +46,13 @@ def are_dir_trees_equal(dir1, dir2, compare_contents: bool = True):
             items = []
             for this_dir in [dir1, dir2]:
                 pth = Path(this_dir).joinpath(item)
-                with open(pth) as f:
-                    items.append(f.read())
+                try:
+                    with open(pth) as f:
+                        txt = f.read()
+                except UnicodeDecodeError:
+                    with open(pth, 'rb') as f:
+                        txt = f.read()
+                    items.append(txt)
             if items[0] != items[1]:
                 for i in items:
                     print(i)
