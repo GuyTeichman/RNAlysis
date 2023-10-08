@@ -1336,8 +1336,8 @@ class OrthoInspectorOrthologMapper:
 
         return ids, translated_ids
 
-    @functools.lru_cache(maxsize=2)
     @staticmethod
+    @functools.lru_cache(maxsize=2)
     def get_databases():
         url = f'{OrthoInspectorOrthologMapper.API_URL}/databases'
         req = requests.get(url)
