@@ -4528,7 +4528,7 @@ class CountFilter(Filter):
         clustergram.figure.suptitle(title, fontsize=title_fontsize)
         plt.tick_params(axis='both', which='both', labelsize=tick_fontsize)
         try:
-            clustergram.figure.set_constrained_layout(True)
+            clustergram.figure.set_tight_layout(True)
         except AttributeError:
             pass
 

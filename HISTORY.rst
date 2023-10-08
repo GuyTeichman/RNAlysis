@@ -21,6 +21,7 @@ Fixed
 * Fixed bug where functions would sometimes fail to run without displaying an error message.
 * Fixed bug where progress bars in the graphical interface would sometimes not disappear after reaching 100% completion.
 * RNAlysis should no longer display warning messages about graph layout when graphs are scaled down.
+* Fixed bug where the clustergram function (CountFilter.clustergram) would raise an error with specific sets of dependecy versions.
 
 3.9.2 (2023-06-23)
 ------------------
