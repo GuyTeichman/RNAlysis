@@ -25,3 +25,5 @@ aiodns>=3.0.0
 Brotli>=1.0.9
 aiolimiter>=1.0.0
 bamnostic>=1.1.10
+install-jdk>=1.0.0
+bidict>=0.22.0

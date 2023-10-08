@@ -40,6 +40,8 @@ DEFAULT_ORGANISMS = tuple(sorted(['Caenorhabditis elegans',
                                   'Saccharomyces cerevisiae',
                                   'Schizosaccharomyces pombe']))
 
+ORTHOLOG_NON_UNIQUE_MODES = ('first', 'last', 'random', 'none')
+
 Fraction = typing.NewType('Fraction', float)
 PositiveInt = typing.NewType('PositiveInt', int)
 NegativeInt = typing.NewType('NegativeInt', int)
