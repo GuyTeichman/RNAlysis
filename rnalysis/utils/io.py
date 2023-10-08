@@ -1511,10 +1511,9 @@ class EnsemblOrthologMapper:
 
         return OrthologDict(mapping_one2many)
 
-
-def get_orthologs(self, ids: Tuple[str, ...], non_unique_mode: str, filter_percent_identity: bool = True) -> \
-    Tuple[OrthologDict, OrthologDict]:
-    ids, translated_ids = self.translate_ids(ids)
+    def get_orthologs(self, ids: Tuple[str, ...], non_unique_mode: str, filter_percent_identity: bool = True) -> \
+        Tuple[OrthologDict, OrthologDict]:
+        ids, translated_ids = self.translate_ids(ids)
         client = EnsemblRestClient()
         mapping_one2one = {}
         mapping_one2many = {}
@@ -1561,13 +1560,13 @@ def get_orthologs(self, ids: Tuple[str, ...], non_unique_mode: str, filter_perce
                     mapping_one2one[this_id] = req_output['homologies'][0]['target']['id']
                 pbar.update()
 
-    mapping_one2one, mapping_one2many = translate_mappings(ids, translated_ids, mapping_one2one, mapping_one2many)
+        mapping_one2one, mapping_one2many = translate_mappings(ids, translated_ids, mapping_one2one, mapping_one2many)
 
-    n_mapped = len(mapping_one2many)
-    if n_mapped < len(translated_ids):
-        warnings.warn(f"Ortholog mapping found for only {n_mapped} out of {len(translated_ids)} gene IDs.")
+        n_mapped = len(mapping_one2many)
+        if n_mapped < len(translated_ids):
+            warnings.warn(f"Ortholog mapping found for only {n_mapped} out of {len(translated_ids)} gene IDs.")
 
-        return OrthologDict(mapping_one2one), OrthologDict({k: v[0] for k, v in mapping_one2many.items()})
+            return OrthologDict(mapping_one2one), OrthologDict({k: v[0] for k, v in mapping_one2many.items()})
 
 
 class PantherOrthologMapper:
