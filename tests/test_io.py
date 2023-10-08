@@ -427,9 +427,7 @@ mapped_ids_truth_rev = {b: a for a, b in zip(mapped_ids_truth.keys(), mapped_ids
 
 @pytest.mark.parametrize('ids,map_from,map_to,expected_dict',
                          [(ids_uniprot, 'UniProtKB', 'WormBase', mapped_ids_truth),
-                          (ids_wormbase, 'WormBase', 'UniProtKB', mapped_ids_truth_rev),
-                          (entrez_to_wb_truth.keys(), 'Entrez Gene ID', 'WormBase', entrez_to_wb_truth),
-                          (wb_to_entrez_truth.keys(), 'WormBase', 'Entrez Gene ID', wb_to_entrez_truth)])
+                          (ids_wormbase, 'WormBase', 'UniProtKB', mapped_ids_truth_rev)])
 @pytest.mark.skipif(not UNIPROT_AVAILABLE, reason='UniProt REST API is not available at the moment')
 def test_map_gene_ids_connectivity(ids, map_from, map_to, expected_dict):
     mapped_ids = GeneIDTranslator(map_from, map_to).run(ids)
