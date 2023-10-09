@@ -1083,3 +1083,61 @@ class TestOrthologDict:
         ortholog_dict = OrthologDict(mapping_dict)
         assert 'gene1' in ortholog_dict  # Check that an existing key is in the OrthologDict
         assert 'gene3' not in ortholog_dict  # Check that a non-existent key is not in the OrthologDict
+
+
+@pytest.mark.parametrize(
+    "translated_ids, mapping_one2one, mapping_one2many, expected_one2one, expected_one2many",
+    [
+        # Both mappings are empty
+        (['trans1', 'trans2'], {}, {}, {}, {}),
+
+        # One-to-one mapping contains keys, one-to-many mapping is empty
+        (
+            ['trans1', 'trans2'], {'trans1': 'ortho1', 'trans2': 'ortho2'}, {}, {'gene1': 'ortho1', 'gene2': 'ortho2'},
+            {}),
+
+        # One-to-many mapping contains keys, one-to-one mapping is empty
+        (['trans1', 'trans2'], {}, {'trans1': ['ortho1', 'ortho3'], 'trans2': ['ortho2']}, {},
+         {'gene1': ['ortho1', 'ortho3'], 'gene2': ['ortho2']}),
+
+        # Both mappings contain the same keys
+        (['trans1', 'trans2'], {'trans1': 'ortho1', 'trans2': 'ortho2'},
+         {'trans1': ['ortho1', 'ortho3'], 'trans2': ['ortho2']},
+         {'gene1': 'ortho1', 'gene2': 'ortho2'}, {'gene1': ['ortho1', 'ortho3'], 'gene2': ['ortho2']}),
+
+        # One-to-one mapping has extra keys
+        (['trans1', 'trans2'], {'trans1': 'ortho1', 'trans2': 'ortho2', 'trans3': 'ortho3'},
+         {'trans1': ['ortho1', 'ortho3'], 'trans2': ['ortho2']},
+         {'gene1': 'ortho1', 'gene2': 'ortho2'}, {'gene1': ['ortho1', 'ortho3'], 'gene2': ['ortho2']}),
+
+        # One-to-many mapping has extra keys
+        (['trans1', 'trans2'], {'trans1': 'ortho1', 'trans2': 'ortho2'},
+         {'trans1': ['ortho1', 'ortho3'], 'trans2': ['ortho2'], 'trans3': ['ortho4']},
+         {'gene1': 'ortho1', 'gene2': 'ortho2'}, {'gene1': ['ortho1', 'ortho3'], 'gene2': ['ortho2']}),
+
+        # Both mappings have extra keys
+        (['trans1', 'trans2'], {'trans1': 'ortho1', 'trans2': 'ortho2', 'trans3': 'ortho3'},
+         {'trans1': ['ortho1', 'ortho3'], 'trans2': ['ortho2'], 'trans4': ['ortho4']},
+         {'gene1': 'ortho1', 'gene2': 'ortho2'}, {'gene1': ['ortho1', 'ortho3'], 'gene2': ['ortho2']}),
+
+        # Both mappings are empty, translated_ids contain unmapped IDs
+        (['trans1', 'trans3'], {}, {}, {}, {}),
+
+        # One-to-one mapping contains keys, translated_ids contain unmapped IDs
+        (['trans1', 'trans3'], {'trans1': 'ortho1', 'trans2': 'ortho2'}, {}, {'gene1': 'ortho1'}, {}),
+
+        # One-to-many mapping contains keys, translated_ids contain unmapped IDs
+        (['trans1', 'trans3'], {}, {'trans1': ['ortho1', 'ortho3'], 'trans2': ['ortho2']}, {},
+         {'gene1': ['ortho1', 'ortho3']}),
+
+        # Both mappings contain the same keys, translated_ids contain unmapped IDs
+        (['trans1', 'trans3'], {'trans1': 'ortho1', 'trans2': 'ortho2'},
+         {'trans1': ['ortho1', 'ortho3'], 'trans2': ['ortho2']},
+         {'gene1': 'ortho1'}, {'gene1': ['ortho1', 'ortho3']}),
+    ]
+)
+def test_translate_mappings(translated_ids, mapping_one2one, mapping_one2many, expected_one2one, expected_one2many):
+    ids = ['gene1', 'gene2']
+    result_one2one, result_one2many = translate_mappings(ids, translated_ids, mapping_one2one, mapping_one2many)
+    assert result_one2one == expected_one2one
+    assert result_one2many == expected_one2many
