@@ -1299,7 +1299,11 @@ class TestOrthoInspectorOrthologMapper:
 
         assert isinstance(ortholog_one2one, OrthologDict)
         assert isinstance(ortholog_one2many, OrthologDict)
-        # Add assertions specific to the expected behavior of get_orthologs
+
+        assert list(ortholog_one2one.mapping_dict.keys()) == ['G5EDF7', 'P34544']
+        assert list(ortholog_one2many.mapping_dict.keys()) == ['G5EDF7', 'P34544']
+
+        assert ortholog_one2one.mapping_dict == {'G5EDF7': 'P52564', 'P34544': 'Q15047'}
 
     # Test the get_cache_filename method
     def test_get_cache_filename(self, ortholog_mapper):
@@ -1368,7 +1372,12 @@ class TestPantherOrthologMapper:
 
         assert isinstance(ortholog_one2one, OrthologDict)
         assert isinstance(ortholog_one2many, OrthologDict)
-        # Add assertions specific to the expected behavior of get_orthologs
+
+        assert list(ortholog_one2one.mapping_dict.keys()) == ['G5EDF7', 'P34544']
+        assert list(ortholog_one2many.mapping_dict.keys()) == ['G5EDF7', 'P34544']
+
+        assert ortholog_one2one['G5EDF7'] == 'P46734'
+        assert ortholog_one2one['P34544'] == 'Q15047'
 
     # Test the get_paralogs method
     def test_get_paralogs(self):
@@ -1392,4 +1401,3 @@ class TestPantherOrthologMapper:
 
         assert isinstance(paralogs, OrthologDict)
         assert paralogs.mapping_dict == truth
-        # Add assertions specific to the expected behavior of get_paralogs
