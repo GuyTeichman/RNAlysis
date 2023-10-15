@@ -1247,3 +1247,72 @@ class TestPhylomeDBOrthologMapper:
     def test_connect(self):
         ftp = PhylomeDBOrthologMapper._connect()
         ftp.quit()
+
+
+class TestOrthoInspectorOrthologMapper:
+
+    # Define a fixture to create an instance of OrthoInspectorOrthologMapper for testing
+    @pytest.fixture
+    def ortholog_mapper(self):
+        # Supply legal species and a valid database for testing
+        legal_species = {'organism1', 'organism2'}  # Replace with valid species
+        return OrthoInspectorOrthologMapper(map_to_organism='organism1', map_from_organism='organism2',
+                                            gene_id_type='gene_type')
+
+    # Test the constructor of OrthoInspectorOrthologMapper
+    def test_constructor(self, ortholog_mapper):
+        assert ortholog_mapper.map_to_organism == 'organism1'  # Replace with valid organism
+        assert ortholog_mapper.map_from_organism == 'organism2'  # Replace with valid organism
+        assert ortholog_mapper.gene_id_type == 'gene_type'
+
+    # Test the translate_ids method
+    def test_translate_ids(self, ortholog_mapper, monkeypatch):
+        ids = ('gene1', 'gene2')
+
+        # Monkeypatch GeneIDTranslator to return the same translation
+        class MockGeneIDTranslator:
+            def __init__(self, gene_id_type, target_gene_id_type, session=None):
+                assert gene_id_type == 'gene_type'
+                assert target_gene_id_type == 'UniProtKB AC/ID'
+                assert session is None or isinstance(session, requests.Session)
+
+            def run(self, ids):
+                assert ids == ('gene1', 'gene2')
+                return GeneIDDict({'gene1': 'trans_gene1', 'gene2': 'trans_gene2'})
+
+        monkeypatch.setattr(io, 'GeneIDTranslator', MockGeneIDTranslator)
+
+        translated_ids = ortholog_mapper.translate_ids(ids)
+        assert isinstance(translated_ids, tuple)
+        assert isinstance(translated_ids[0], list)
+        assert isinstance(translated_ids[1], list)
+        assert translated_ids == (['gene1', 'gene2'], ['trans_gene1', 'trans_gene2'])
+
+    # Test the get_orthologs method
+    def test_get_orthologs(self, ortholog_mapper):
+        ortholog_mapper = OrthoInspectorOrthologMapper(map_to_organism=9606, map_from_organism=6239,
+                                                       gene_id_type='UniProtKB AC/ID')
+        ids = ('G5EDF7', 'P34544')
+        non_unique_mode = 'first'
+
+        ortholog_one2one, ortholog_one2many = ortholog_mapper.get_orthologs(ids, non_unique_mode)
+
+        assert isinstance(ortholog_one2one, OrthologDict)
+        assert isinstance(ortholog_one2many, OrthologDict)
+        # Add assertions specific to the expected behavior of get_orthologs
+
+    # Test the get_cache_filename method
+    def test_get_cache_filename(self, ortholog_mapper):
+        filename = ortholog_mapper.get_cache_filename()
+        assert isinstance(filename, str)
+        assert filename == 'orthoinspector_organism1_organism2.json'
+
+    # Test the get_databases method
+    def test_get_databases(self, ortholog_mapper):
+        databases = ortholog_mapper.get_databases()
+        assert isinstance(databases, list)
+
+    # Test the get_database_organisms method
+    def test_get_database_organisms(self, ortholog_mapper):
+        db_organisms = ortholog_mapper.get_database_organisms()
+        assert isinstance(db_organisms, dict)
