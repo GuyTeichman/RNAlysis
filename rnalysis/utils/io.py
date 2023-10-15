@@ -1472,7 +1472,6 @@ class EnsemblOrthologMapper:
     def get_paralogs(self, ids: Tuple[str, ...], filter_percent_identity: bool = True):
         ids, translated_ids = self.translate_ids(ids)
         client = EnsemblRestClient()
-        mapping_one2one = {}
         mapping_one2many = {}
 
         for gene_id in tqdm(translated_ids, 'Submitting requests', unit='requests'):
