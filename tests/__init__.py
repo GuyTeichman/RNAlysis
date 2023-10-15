@@ -1,6 +1,7 @@
 import filecmp
 import os
 import shutil
+import socket
 from pathlib import Path
 
 import requests
@@ -78,6 +79,16 @@ def is_ensembl_available():
     if str(req.status_code)[0] == '5':
         return False
     return True
+
+
+def is_phylomedb_available():
+    try:
+        host = socket.gethostbyname('ftp.phylomedb.org')
+        s = socket.create_connection((host, 21), timeout=5)
+        s.close()
+        return True
+    except (socket.gaierror, ConnectionError):
+        return False
 
 
 if os.getcwd().endswith('tests'):

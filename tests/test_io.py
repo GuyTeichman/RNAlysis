@@ -6,10 +6,11 @@ import requests_mock
 from rnalysis.utils import io
 from rnalysis.utils.io import *
 from rnalysis.utils.io import _format_ids_iter, _ensembl_lookup_post_request
-from tests import is_uniprot_available, is_ensembl_available
+from tests import is_uniprot_available, is_ensembl_available, is_phylomedb_available
 
 ENSEMBL_AVAILABLE = is_ensembl_available()
 UNIPROT_AVAILABLE = is_uniprot_available()
+PHYLOMEDB_AVAILABLE = is_phylomedb_available()
 
 
 class MockResponse(object):
@@ -1141,3 +1142,108 @@ def test_translate_mappings(translated_ids, mapping_one2one, mapping_one2many, e
     result_one2one, result_one2many = translate_mappings(ids, translated_ids, mapping_one2one, mapping_one2many)
     assert result_one2one == expected_one2one
     assert result_one2many == expected_one2many
+
+
+class TestPhylomeDBOrthologMapper:
+
+    # Define a fixture to create an instance of PhylomeDBOrthologMapper for testing
+    @pytest.fixture
+    def ortholog_mapper(self):
+        # Supply legal species
+        legal_species = PhylomeDBOrthologMapper.get_legal_species()
+        map_to_organism = legal_species.index[0]  # Use the first legal species
+        map_from_organism = legal_species.index[1]  # Use the second legal species
+        return PhylomeDBOrthologMapper(map_to_organism=map_to_organism, map_from_organism=map_from_organism,
+                                       gene_id_type='gene_type')
+
+    @staticmethod
+    def mock_translate_ids(self, ids):
+        return ['gene1', 'gene2'], ['trans_gene1', 'trans_gene2']
+
+    # Check if internet connection is available before running the tests
+    if not PHYLOMEDB_AVAILABLE:
+        pytest.skip("No internet connection or FTP server is down. Skipping PhylomeDBOrthologMapper tests.")
+
+    # Test the constructor of PhylomeDBOrthologMapper
+    def test_constructor(self, ortholog_mapper):
+        assert ortholog_mapper.map_to_organism in PhylomeDBOrthologMapper.get_legal_species()
+        assert ortholog_mapper.map_from_organism in PhylomeDBOrthologMapper.get_legal_species()
+        assert ortholog_mapper.gene_id_type == 'gene_type'
+
+    # Test the translate_ids method
+    def test_translate_ids(self, ortholog_mapper, monkeypatch):
+        ids = ('gene1', 'gene2')
+
+        # Monkeypatch GeneIDTranslator to return the same translation
+        class MockGeneIDTranslator:
+            def __init__(self, gene_id_type, target_gene_id_type):
+                assert gene_id_type == 'gene_type'
+                assert target_gene_id_type == 'UniProtKB AC/ID'
+
+            def run(self, ids):
+                assert ids == ('gene1', 'gene2')
+                return GeneIDDict({'gene1': 'trans_gene1', 'gene2': 'trans_gene2'})
+
+        monkeypatch.setattr(io, 'GeneIDTranslator', MockGeneIDTranslator)
+
+        translated_ids = ortholog_mapper.translate_ids(ids)
+        assert isinstance(translated_ids, tuple)
+        assert isinstance(translated_ids[0], list)
+        assert isinstance(translated_ids[1], list)
+        assert translated_ids == (['gene1', 'gene2'], ['trans_gene1', 'trans_gene2'])
+
+    # Test the get_orthologs method
+    def test_get_orthologs(self):
+        ortholog_mapper = PhylomeDBOrthologMapper(map_to_organism=9606, map_from_organism=6239,
+                                                  gene_id_type='UniProtKB AC/ID')
+        ids = ('G5EDF7', 'P34544')
+        non_unique_mode = 'first'
+        consistency_score_threshold = 0.5
+        filter_consistency_score = True
+        ortholog_one2one, ortholog_one2many = ortholog_mapper.get_orthologs(
+            ids, non_unique_mode, consistency_score_threshold, filter_consistency_score)
+
+        assert isinstance(ortholog_one2one, OrthologDict)
+        assert isinstance(ortholog_one2many, OrthologDict)
+
+        assert list(ortholog_one2one.mapping_dict.keys()) == ['G5EDF7', 'P34544']
+        assert list(ortholog_one2many.mapping_dict.keys()) == ['G5EDF7', 'P34544']
+
+        assert ortholog_one2one['G5EDF7'] == 'P52564'
+        assert ortholog_one2one['P34544'] == 'Q15047'
+
+    # Test the _get_taxon_file method
+    @pytest.mark.parametrize('taxon_ind', [0, -1])
+    def test_get_taxon_file(self, ortholog_mapper, taxon_ind):
+        legal_species = PhylomeDBOrthologMapper.get_legal_species()
+        taxon_id = legal_species.index[taxon_ind]
+        df = ortholog_mapper._get_taxon_file(taxon_id)
+        assert isinstance(df, pd.DataFrame)
+        assert list(df.columns) == ['#taxid1', 'taxid2', 'protid2', 'CS', 'sources']
+        assert (df['#taxid1'] == taxon_id).all()
+
+        cached_df = ortholog_mapper._get_taxon_file(taxon_id)
+        assert df.equals(cached_df)
+
+    # Test the get_legal_species method
+    def test_get_legal_species(self, ortholog_mapper):
+        species = ortholog_mapper.get_legal_species()
+        assert species.index.dtype == int
+        assert 6239 in species.index
+
+        species_cached = ortholog_mapper.get_legal_species()
+        assert species.equals(species_cached)
+
+    # Test the _get_id_conversion_maps method
+    def test_get_id_conversion_map(self, ortholog_mapper):
+        map_fwd, map_rev = ortholog_mapper._get_id_conversion_maps()
+        assert map_fwd.shape == map_rev.shape
+
+        map_fwd_cache, map_rev_cache = ortholog_mapper._get_id_conversion_maps()
+        assert map_fwd_cache.shape == map_rev_cache.shape
+        assert map_fwd.shape == map_fwd_cache.shape
+
+    # Test the _connect method
+    def test_connect(self):
+        ftp = PhylomeDBOrthologMapper._connect()
+        ftp.quit()
