@@ -30,7 +30,6 @@ from urllib.parse import urlparse, parse_qs, urlencode
 import aiohttp
 import aiolimiter
 import appdirs
-import bidict
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
@@ -252,7 +251,7 @@ def load_gui_session(session_filename: Union[str, Path]):
 
 
 def load_table(filename: Union[str, Path], index_col: int = None, drop_columns: Union[str, List[str]] = False,
-               squeeze=False, comment: str = None):
+               squeeze=False, comment: str = None, engine: Literal['pyarrow', None] = None):
     """
     loads a csv/parquet table into a pandas dataframe.
 
@@ -279,9 +278,10 @@ def load_table(filename: Union[str, Path], index_col: int = None, drop_columns: 
         f"Please convert your file to a .csv, .tsv, .txt, or .parquet file and try again."
 
     if filename.suffix.lower() == '.parquet':
-        df = pd.read_parquet(filename)
+        df = pd.read_parquet(filename, engine=engine)
     else:
-        kwargs = dict(sep=None, engine='python', encoding='ISO-8859-1', comment=comment, skipinitialspace=True)
+        kwargs = dict(sep=None, engine='python' if engine is None else engine, encoding='ISO-8859-1', comment=comment,
+                      skipinitialspace=True)
         if index_col is not None:
             kwargs['index_col'] = index_col
         df = pd.read_csv(filename, **kwargs)
@@ -1124,17 +1124,17 @@ class PhylomeDBOrthologMapper:
 
     def __init__(self, map_to_organism, map_from_organism='auto', gene_id_type='auto'):
         legal_species = self.get_legal_species()
-        assert map_from_organism in legal_species, f"organism with taxon id {map_from_organism} is not supported by PhylomeDB. "
-        assert map_to_organism in legal_species, f"organism with taxon id {map_to_organism} is not supported by PhylomeDB. "
+        assert map_from_organism in legal_species.index, f"organism with taxon id {map_from_organism} is not supported by PhylomeDB. "
+        assert map_to_organism in legal_species.index, f"organism with taxon id {map_to_organism} is not supported by PhylomeDB. "
         self.gene_id_type = gene_id_type
         self.map_from_organism = map_from_organism
         self.map_to_organism = map_to_organism
 
     def translate_ids(self, ids: Tuple[str, ...]) -> Tuple[List[str], List[str]]:
         if self.gene_id_type == 'auto':
-            translator, self.gene_id_type, _ = find_best_gene_mapping(ids, None, map_to_options=('UniProtKB',))
+            translator, self.gene_id_type, _ = find_best_gene_mapping(ids, None, map_to_options=('UniProtKB AC/ID',))
         else:
-            translator = GeneIDTranslator(self.gene_id_type, 'UniProtKB').run(ids)
+            translator = GeneIDTranslator(self.gene_id_type, 'UniProtKB AC/ID').run(ids)
 
         ids = [this_id for this_id in ids if this_id in translator]
         translated_ids = [translator[this_id] for this_id in ids]
@@ -1148,31 +1148,37 @@ class PhylomeDBOrthologMapper:
 
         taxon_table = self._get_taxon_file(self.map_from_organism)
         taxon_table = taxon_table[taxon_table['taxid2'] == self.map_to_organism]
-        conversion_dict = self._get_id_conversion_map()
+        map_fwd, map_rev = self._get_id_conversion_maps()
         ids, translated_ids = self.translate_ids(ids)
 
         n_mapped = 0
         for from_id in tqdm(translated_ids, 'Mapping orthologs', unit='genes'):
-            if from_id not in conversion_dict:
+            if from_id not in map_fwd.index:
                 continue
-            from_id_conv = conversion_dict[from_id]
-            if from_id_conv not in taxon_table:
+            from_id_conv = map_fwd.loc[from_id]
+            if from_id_conv not in taxon_table.index:
                 continue
             to_id_conv = taxon_table.loc[from_id_conv, 'protid2']
             if isinstance(to_id_conv, pd.Series):
-                for this_to_id_conv in to_id_conv:
-                    if this_to_id_conv not in conversion_dict:
+                for i, this_to_id_conv in enumerate(to_id_conv):
+                    if this_to_id_conv not in map_rev.index:
                         continue
+
                     if from_id not in mapping_one2many:
                         mapping_one2many[from_id] = []
 
-                    to_id = conversion_dict[this_to_id_conv]
-                    score = taxon_table.loc[from_id_conv, 'cs']
+                    to_id = map_rev.loc[this_to_id_conv]
+                    score = taxon_table.loc[from_id_conv, 'CS'].values[0]
                     # filter by consistency score
                     if score < consistency_score_threshold:
                         continue
 
                     mapping_one2many[from_id] = [(to_id, score)]
+
+                # skip genes where all orthologs were filtered out due to consistency score threshold
+                if len(mapping_one2many.get(from_id, list())) == 0:
+                    continue
+
                 if filter_consistency_score:
                     mapping_one2one[from_id] = max(mapping_one2many[from_id], key=lambda x: x[1])[0]
                 else:
@@ -1184,11 +1190,10 @@ class PhylomeDBOrthologMapper:
                         mapping_one2one[from_id] = random.choice(mapping_one2many[from_id])[0]
                 n_mapped += 1
             else:
-                if to_id_conv not in conversion_dict.inverse:
-                    print(f"{to_id_conv} not in conversion dict.")
+                if to_id_conv not in map_rev.index:
                     continue
-                to_id = conversion_dict.inverse[to_id_conv]
-                score = taxon_table.loc[from_id_conv, 'cs']
+                to_id = map_rev.loc[to_id_conv]
+                score = taxon_table.loc[from_id_conv, 'CS']
                 # filter by consistency score
                 if score < consistency_score_threshold:
                     continue
@@ -1202,7 +1207,8 @@ class PhylomeDBOrthologMapper:
         if n_mapped < len(translated_ids):
             warnings.warn(f"Ortholog mapping found for only {n_mapped} out of {len(translated_ids)} gene IDs.")
 
-        return OrthologDict(mapping_one2one), OrthologDict({k: v[0] for k, v in mapping_one2many.items()})
+        return OrthologDict(mapping_one2one), OrthologDict(
+            {k: [this_v[0] for this_v in v] for k, v in mapping_one2many.items()})
 
     @staticmethod
     def _get_taxon_file(taxon_id: int):
@@ -1211,7 +1217,7 @@ class PhylomeDBOrthologMapper:
         file_path = f"/metaphors/latest/orthologs/{taxon_id}.txt.gz"
         local_zip_file = cache_dir.joinpath(f"{taxon_id}.txt.gz")
         if cache_file.exists():
-            df = load_table(cache_file, squeeze=True, index_col=0)
+            df = load_table(cache_file, squeeze=True, index_col=0, engine="pyarrow")
         else:
             ftp = PhylomeDBOrthologMapper._connect()
             # Download the file
@@ -1228,21 +1234,21 @@ class PhylomeDBOrthologMapper:
             os.remove(local_zip_file)
 
             # Load into pandas dataframe
-            df = pd.read_csv(cache_file.with_suffix('.txt'), sep='\t', index_col=1)
+            df = pd.read_csv(cache_file.with_suffix('.txt'), sep='\t', index_col=1, engine="pyarrow")
 
             # cache file locally
             save_table(df, cache_file)
         return df
 
     @staticmethod
-    def _get_id_conversion_map() -> bidict.bidict:
+    def _get_id_conversion_maps() -> Tuple[pd.DataFrame, pd.DataFrame]:
         cache_dir = get_todays_cache_dir()
         cache_file = cache_dir.joinpath(f'phylomedb_id_conversion.parquet')
         file_path = "/metaphors/latest/id_conversion.txt.gz"
         local_zip_file = cache_dir.joinpath("id_conversion.txt.gz")
 
         if cache_file.exists():
-            data = load_table(cache_file, squeeze=True, index_col=0).to_dict(into=bidict.bidict())
+            df = pd.read_parquet(cache_file, engine='auto', dtype_backend='pyarrow')
         else:
             ftp = PhylomeDBOrthologMapper._connect()
             # Download the file
@@ -1259,16 +1265,14 @@ class PhylomeDBOrthologMapper:
             os.remove(local_zip_file)
 
             # Load into pandas dataframe
-            df = pd.read_csv(cache_file.with_suffix('.txt'), index_col=0, sep=r'\s+').drop('db', axis=1).squeeze()
-            data = df.to_dict(into=bidict.bidict)
 
+            df = pd.read_csv(cache_file.with_suffix('.txt'), index_col=0, sep='\t', dtype=str, dtype_backend='pyarrow',
+                             usecols=[0, 2], names=['#extid', 'protid'], header=None, skiprows=1)
             # cache file locally
             save_table(df, cache_file)
-        return data
 
-    @staticmethod
-    def _parse_taxon_file(path: Path):
-        pass
+        df_inv = df.reset_index().set_index('protid')
+        return df.squeeze(), df_inv.squeeze()
 
     @staticmethod
     def _connect():
@@ -1286,7 +1290,7 @@ class PhylomeDBOrthologMapper:
         cache_file = cache_dir.joinpath("phylomedb_species.parquet")
 
         if cache_file.exists():
-            df = load_table(cache_file, squeeze=True, index_col=0)
+            df = load_table(cache_file, squeeze=True, index_col=0, engine='pyarrow')
             df.index = df.index.astype(int)
         else:
             ftp = PhylomeDBOrthologMapper._connect()
@@ -1304,7 +1308,7 @@ class PhylomeDBOrthologMapper:
             os.remove(local_zip_file)
 
             # Load into pandas dataframe
-            df = pd.read_csv(cache_file.with_suffix('.txt'), sep='\t', index_col=0).dropna()
+            df = pd.read_csv(cache_file.with_suffix('.txt'), sep='\t', index_col=0, engine='pyarrow').dropna()
 
             # Extract necessary columns and sort by name
             df.index = df.index.astype(int)
@@ -1327,9 +1331,9 @@ class OrthoInspectorOrthologMapper:
 
     def translate_ids(self, ids: Tuple[str, ...], session=None) -> Tuple[List[str], List[str]]:
         if self.gene_id_type == 'auto':
-            translator, self.gene_id_type, _ = find_best_gene_mapping(ids, None, map_to_options=('UniProtKB',))
+            translator, self.gene_id_type, _ = find_best_gene_mapping(ids, None, map_to_options=('UniProtKB AC/ID',))
         else:
-            translator = GeneIDTranslator(self.gene_id_type, 'UniProtKB', session=session).run(ids)
+            translator = GeneIDTranslator(self.gene_id_type, 'UniProtKB AC/ID', session=session).run(ids)
 
         ids = [this_id for this_id in ids if this_id in translator]
         translated_ids = [translator[this_id] for this_id in ids]
@@ -1581,9 +1585,9 @@ class PantherOrthologMapper:
 
     def translate_ids(self, ids: Tuple[str, ...], session=None) -> Tuple[List[str], List[str]]:
         if self.gene_id_type == 'auto':
-            translator, self.gene_id_type, _ = find_best_gene_mapping(ids, None, map_to_options=('UniProtKB',))
+            translator, self.gene_id_type, _ = find_best_gene_mapping(ids, None, map_to_options=('UniProtKB AC/ID',))
         else:
-            translator = GeneIDTranslator(self.gene_id_type, 'UniProtKB', session=session).run(ids)
+            translator = GeneIDTranslator(self.gene_id_type, 'UniProtKB AC/ID', session=session).run(ids)
 
         ids = [this_id for this_id in ids if this_id in translator]
         translated_ids = [translator[this_id] for this_id in ids]
