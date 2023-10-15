@@ -1401,3 +1401,82 @@ class TestPantherOrthologMapper:
 
         assert isinstance(paralogs, OrthologDict)
         assert paralogs.mapping_dict == truth
+
+
+class TestEnsemblOrthologMapper:
+
+    # Define a fixture to create an instance of EnsemblOrthologMapper for testing
+    @pytest.fixture
+    def ortholog_mapper(self):
+        # Supply valid parameters for the class constructor
+        return EnsemblOrthologMapper(map_to_organism='organism1', map_from_organism='organism2',
+                                     gene_id_type='gene_type')
+
+    # Test the constructor of EnsemblOrthologMapper
+    def test_constructor(self, ortholog_mapper):
+        assert ortholog_mapper.map_to_organism == 'organism1'  # Replace with a valid organism
+        assert ortholog_mapper.map_from_organism == 'organism2'  # Replace with a valid organism
+        assert ortholog_mapper.gene_id_type == 'gene_type'  # Replace with a valid gene ID type
+
+    # Test the translate_ids method
+    def test_translate_ids(self, ortholog_mapper, monkeypatch):
+        ids = ('gene1', 'gene2')
+
+        # Monkeypatch GeneIDTranslator to return the same translation
+        class MockGeneIDTranslator:
+            def __init__(self, gene_id_type, target_gene_id_type, session=None):
+                assert gene_id_type == 'gene_type'
+                assert target_gene_id_type == 'Ensembl Genomes'
+                assert session is None or isinstance(session, requests.Session)
+
+            def run(self, ids):
+                assert ids == ('gene1', 'gene2')
+                return GeneIDDict({'gene1': 'trans_gene1', 'gene2': 'trans_gene2'})
+
+        monkeypatch.setattr(io, 'GeneIDTranslator', MockGeneIDTranslator)
+
+        translated_ids = ortholog_mapper.translate_ids(ids)
+        assert isinstance(translated_ids, tuple)
+        assert isinstance(translated_ids[0], list)
+        assert isinstance(translated_ids[1], list)
+        assert translated_ids == (['gene1', 'gene2'], ['trans_gene1', 'trans_gene2'])
+
+    # Test the get_paralogs method
+    def test_get_paralogs(self):
+        ids = ('G5EDF7', 'P34707')
+        filter_percent_identity = False
+
+        truth = {'G5EDF7': ['WBGene00018034',
+                            'WBGene00018035',
+                            'WBGene00003185',
+                            'WBGene00003186',
+                            'WBGene00012162',
+                            'WBGene00003368',
+                            'WBGene00003472'],
+                 'P34707': ['WBGene00020961']}
+        ortholog_mapper = EnsemblOrthologMapper(map_to_organism=6239, map_from_organism=6239,
+                                                gene_id_type='UniProtKB AC/ID')
+
+        paralogs = ortholog_mapper.get_paralogs(ids, filter_percent_identity)
+
+        assert isinstance(paralogs, OrthologDict)
+        assert paralogs.mapping_dict == truth
+
+    # Test the get_orthologs method
+    def test_get_orthologs(self):
+        ids = ('G5EDF7', 'P34544')
+        non_unique_mode = 'first'
+
+        ortholog_mapper = EnsemblOrthologMapper(map_to_organism=9606, map_from_organism=6239,
+                                                gene_id_type='UniProtKB AC/ID')
+
+        ortholog_one2one, ortholog_one2many = ortholog_mapper.get_orthologs(ids, non_unique_mode)
+
+        assert isinstance(ortholog_one2one, OrthologDict)
+        assert isinstance(ortholog_one2many, OrthologDict)
+
+        assert list(ortholog_one2one.mapping_dict.keys()) == ['G5EDF7', 'P34544']
+        assert list(ortholog_one2many.mapping_dict.keys()) == ['G5EDF7', 'P34544']
+
+        assert ortholog_one2one['G5EDF7'] == 'ENSG00000085511'
+        assert ortholog_one2one['P34544'] == 'ENSG00000167548'

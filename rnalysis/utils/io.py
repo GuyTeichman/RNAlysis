@@ -1503,7 +1503,7 @@ class EnsemblOrthologMapper:
 
                     mapping_one2many[this_id] = best_match
                 else:
-                    mapping_one2many[this_id] = [homology['target']['id'] for homologyn in req_output['homologies']]
+                    mapping_one2many[this_id] = [homology['target']['id'] for homology in req_output['homologies']]
                 pbar.update()
 
         _, mapping_one2many = translate_mappings(ids, translated_ids, {}, mapping_one2many)
@@ -1569,7 +1569,7 @@ class EnsemblOrthologMapper:
         if n_mapped < len(translated_ids):
             warnings.warn(f"Ortholog mapping found for only {n_mapped} out of {len(translated_ids)} gene IDs.")
 
-            return OrthologDict(mapping_one2one), OrthologDict({k: v[0] for k, v in mapping_one2many.items()})
+        return OrthologDict(mapping_one2one), OrthologDict({k: v[0] for k, v in mapping_one2many.items()})
 
 
 class PantherOrthologMapper:
