@@ -1144,6 +1144,36 @@ def test_translate_mappings(translated_ids, mapping_one2one, mapping_one2many, e
     assert result_one2many == expected_one2many
 
 
+class TestOrthologDict:
+    def test_empty_dict(self):
+        ortholog_dict = OrthologDict()
+        assert len(ortholog_dict) == 0
+        assert 'gene1' not in ortholog_dict
+        with pytest.raises(KeyError):
+            ortholog_dict['gene1']
+
+    def test_non_empty_dict(self):
+        mapping_dict = {'gene1': 'ortholog1', 'gene2': 'ortholog2'}
+        ortholog_dict = OrthologDict(mapping_dict)
+        assert len(ortholog_dict) == 2
+        assert 'gene1' in ortholog_dict
+        assert ortholog_dict['gene1'] == 'ortholog1'
+        assert 'gene2' in ortholog_dict
+        assert ortholog_dict['gene2'] == 'ortholog2'
+
+    def test_non_existing_key(self):
+        ortholog_dict = OrthologDict({'gene1': 'ortholog1'})
+        assert 'gene2' not in ortholog_dict
+        with pytest.raises(KeyError):
+            ortholog_dict['gene2']
+
+    def test_none_mapping_dict(self):
+        ortholog_dict = OrthologDict(None)
+        assert len(ortholog_dict) == 0
+        assert 'gene1' not in ortholog_dict
+        with pytest.raises(KeyError):
+            ortholog_dict['gene1']
+
 class TestPhylomeDBOrthologMapper:
 
     # Define a fixture to create an instance of PhylomeDBOrthologMapper for testing

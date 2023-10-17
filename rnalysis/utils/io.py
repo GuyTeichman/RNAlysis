@@ -987,6 +987,8 @@ class OrthologDict:
         return len(self.mapping_dict)
 
     def __getitem__(self, key):
+        if self.mapping_dict is None:
+            raise KeyError(key)
         return self.mapping_dict[key]
 
     def __contains__(self, item):
