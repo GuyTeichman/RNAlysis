@@ -1174,6 +1174,7 @@ class TestOrthologDict:
         with pytest.raises(KeyError):
             ortholog_dict['gene1']
 
+
 class TestPhylomeDBOrthologMapper:
 
     # Define a fixture to create an instance of PhylomeDBOrthologMapper for testing

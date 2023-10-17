@@ -754,7 +754,7 @@ def test_PairedEndPipeline_import():
                        **{'allow_indels': True, 'any_position_adapters_r1': None, 'any_position_adapters_r2': None,
                           'discard_untrimmed_reads': False,
                           'error_tolerance': 0.1, 'five_prime_adapters_r1': None, 'five_prime_adapters_r2': None,
-                          'maximum_read_length': None, 'pair_filter_if': 'both',
+                          'maximum_read_length': None, 'pair_filter_if': 'any',
                           'minimum_overlap': 3, 'minimum_read_length': 10, 'parallel': True, 'quality_trimming': 20,
                           'three_prime_adapters_r1': 'ATGGGTATATGGGT',
                           'three_prime_adapters_r2': 'AGTTTACCGTTGT', 'trim_n': True, 'gzip_output': False})
