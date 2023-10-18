@@ -1267,8 +1267,7 @@ class PhylomeDBOrthologMapper:
             os.remove(local_zip_file)
 
             # Load into pandas dataframe
-
-            df = pd.read_csv(cache_file.with_suffix('.txt'), index_col=0, sep='\t', dtype=str, dtype_backend='pyarrow',
+            df = pd.read_csv(cache_file.with_suffix('.txt'), index_col=0, sep='\t', dtype_backend='pyarrow',
                              usecols=[0, 2], names=['#extid', 'protid'], header=None, skiprows=1)
             # cache file locally
             save_table(df, cache_file)
