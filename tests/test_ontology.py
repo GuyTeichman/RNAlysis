@@ -314,5 +314,5 @@ def test_dag_plot_ontology():
     results = io.load_table('tests/test_files/go_enrichment_runner_sample_results.csv', index_col=0)
     dag_tree = fetch_go_basic()
     en_score_col = 'colName'
-    ontology_graph_format = 'png'
+    ontology_graph_format = 'svg'
     dag_tree.plot_ontology('biological_process', results, en_score_col, 'title', 'ylabel', ontology_graph_format)
