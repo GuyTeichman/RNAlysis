@@ -1201,6 +1201,11 @@ class TestPhylomeDBOrthologMapper:
         assert ortholog_mapper.map_from_organism in PhylomeDBOrthologMapper.get_legal_species()
         assert ortholog_mapper.gene_id_type == 'gene_type'
 
+    # Test the _connect method
+    def test_connect(self):
+        ftp = PhylomeDBOrthologMapper._connect()
+        ftp.quit()
+
     # Test the translate_ids method
     def test_translate_ids(self, ortholog_mapper, monkeypatch):
         ids = ('gene1', 'gene2')
@@ -1222,26 +1227,6 @@ class TestPhylomeDBOrthologMapper:
         assert isinstance(translated_ids[0], list)
         assert isinstance(translated_ids[1], list)
         assert translated_ids == (['gene1', 'gene2'], ['trans_gene1', 'trans_gene2'])
-
-    # Test the get_orthologs method
-    def test_get_orthologs(self):
-        ortholog_mapper = PhylomeDBOrthologMapper(map_to_organism=9606, map_from_organism=6239,
-                                                  gene_id_type='UniProtKB AC/ID')
-        ids = ('G5EDF7', 'P34544')
-        non_unique_mode = 'first'
-        consistency_score_threshold = 0.5
-        filter_consistency_score = True
-        ortholog_one2one, ortholog_one2many = ortholog_mapper.get_orthologs(
-            ids, non_unique_mode, consistency_score_threshold, filter_consistency_score)
-
-        assert isinstance(ortholog_one2one, OrthologDict)
-        assert isinstance(ortholog_one2many, OrthologDict)
-
-        assert list(ortholog_one2one.mapping_dict.keys()) == ['G5EDF7', 'P34544']
-        assert list(ortholog_one2many.mapping_dict.keys()) == ['G5EDF7', 'P34544']
-
-        assert ortholog_one2one['G5EDF7'] == 'P52564'
-        assert ortholog_one2one['P34544'] == 'Q15047'
 
     # Test the _get_taxon_file method
     @pytest.mark.parametrize('taxon_ind', [0, -1])
@@ -1274,10 +1259,24 @@ class TestPhylomeDBOrthologMapper:
         assert map_fwd_cache.shape == map_rev_cache.shape
         assert map_fwd.shape == map_fwd_cache.shape
 
-    # Test the _connect method
-    def test_connect(self):
-        ftp = PhylomeDBOrthologMapper._connect()
-        ftp.quit()
+    def test_get_orthologs(self):
+        ortholog_mapper = PhylomeDBOrthologMapper(map_to_organism=9606, map_from_organism=6239,
+                                                  gene_id_type='UniProtKB AC/ID')
+        ids = ('G5EDF7', 'P34544')
+        non_unique_mode = 'first'
+        consistency_score_threshold = 0.5
+        filter_consistency_score = True
+        ortholog_one2one, ortholog_one2many = ortholog_mapper.get_orthologs(
+            ids, non_unique_mode, consistency_score_threshold, filter_consistency_score)
+
+        assert isinstance(ortholog_one2one, OrthologDict)
+        assert isinstance(ortholog_one2many, OrthologDict)
+
+        assert list(ortholog_one2one.mapping_dict.keys()) == ['G5EDF7', 'P34544']
+        assert list(ortholog_one2many.mapping_dict.keys()) == ['G5EDF7', 'P34544']
+
+        assert ortholog_one2one['G5EDF7'] == 'P52564'
+        assert ortholog_one2one['P34544'] == 'Q15047'
 
 
 class TestOrthoInspectorOrthologMapper:
