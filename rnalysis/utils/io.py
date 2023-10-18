@@ -2251,7 +2251,7 @@ def stdout_reader(pipe, log_filename, lock, print_output: bool = True):
 
 def stderr_reader(pipe, stderr_record, log_filename, lock, print_output: bool = True):
     with open(log_filename, 'a') if log_filename is not None else contextlib.nullcontext() as logfile:
-        for line in iter(pipe.readline, b''):
+        for line in (pipe if isinstance(pipe, list) else iter(pipe.readline, b'')):
             decoded_line = line.decode('utf8', errors="ignore")
             stderr_record.append(decoded_line)
 
