@@ -2246,7 +2246,8 @@ def stdout_reader(pipe, log_filename, lock, print_output: bool = True):
             if log_filename is not None:
                 with lock:
                     logfile.write(decoded_line)
-    pipe.close()
+    if not isinstance(pipe, list):
+        pipe.close()
 
 
 def stderr_reader(pipe, stderr_record, log_filename, lock, print_output: bool = True):
