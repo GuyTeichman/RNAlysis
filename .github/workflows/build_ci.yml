@@ -21,6 +21,10 @@ jobs:
         env:
             DISPLAY: ':99.0'
         steps:
+            -   name: Set Swap Space
+                uses: pierotofy/set-swap-space@master
+                with:
+                    swap-size-gb: 10
             -   name: Get repository
                 uses: actions/checkout@v3
             -   name: apt-get update (Linux)
