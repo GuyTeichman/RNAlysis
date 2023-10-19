@@ -1318,23 +1318,6 @@ class TestOrthoInspectorOrthologMapper:
         assert isinstance(translated_ids[1], list)
         assert translated_ids == (['gene1', 'gene2'], ['trans_gene1', 'trans_gene2'])
 
-    # Test the get_orthologs method
-    def test_get_orthologs(self, ortholog_mapper):
-        ortholog_mapper = OrthoInspectorOrthologMapper(map_to_organism=9606, map_from_organism=6239,
-                                                       gene_id_type='UniProtKB AC/ID')
-        ids = ('G5EDF7', 'P34544')
-        non_unique_mode = 'first'
-
-        ortholog_one2one, ortholog_one2many = ortholog_mapper.get_orthologs(ids, non_unique_mode)
-
-        assert isinstance(ortholog_one2one, OrthologDict)
-        assert isinstance(ortholog_one2many, OrthologDict)
-
-        assert list(ortholog_one2one.mapping_dict.keys()) == ['G5EDF7', 'P34544']
-        assert list(ortholog_one2many.mapping_dict.keys()) == ['G5EDF7', 'P34544']
-
-        assert ortholog_one2one.mapping_dict == {'G5EDF7': 'P52564', 'P34544': 'Q15047'}
-
     # Test the get_cache_filename method
     def test_get_cache_filename(self, ortholog_mapper):
         filename = ortholog_mapper.get_cache_filename()
@@ -1350,6 +1333,23 @@ class TestOrthoInspectorOrthologMapper:
     def test_get_database_organisms(self, ortholog_mapper):
         db_organisms = ortholog_mapper.get_database_organisms()
         assert isinstance(db_organisms, dict)
+
+    # Test the get_orthologs method
+    def test_get_orthologs(self, ortholog_mapper):
+        ortholog_mapper = OrthoInspectorOrthologMapper(map_to_organism=6238, map_from_organism=6239,
+                                                       gene_id_type='UniProtKB AC/ID')
+        ids = ('G5EDF7', 'P34544')
+        non_unique_mode = 'first'
+
+        ortholog_one2one, ortholog_one2many = ortholog_mapper.get_orthologs(ids, non_unique_mode)
+
+        assert isinstance(ortholog_one2one, OrthologDict)
+        assert isinstance(ortholog_one2many, OrthologDict)
+
+        assert list(ortholog_one2one.mapping_dict.keys()) == ['G5EDF7', 'P34544']
+        assert list(ortholog_one2many.mapping_dict.keys()) == ['G5EDF7', 'P34544']
+
+        assert ortholog_one2one.mapping_dict == {'G5EDF7': 'A8XPU4', 'P34544': 'A8XT55'}
 
 
 class TestPantherOrthologMapper:
