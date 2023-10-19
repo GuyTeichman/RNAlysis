@@ -1870,9 +1870,10 @@ def test_transform(filter_obj, columns, function, kwargs, matching_function):
             truth.df[columns] = matching_function(truth.df[columns].to_frame())
         else:
             truth.df[columns] = matching_function(truth.df[columns])
-    filter_obj.transform(function, columns, **kwargs)
+    cp = filter_obj.__copy__()
+    cp.transform(function, columns, **kwargs)
 
-    filter_obj.df.equals(truth.df)
+    cp.df.equals(truth.df)
 
 
 def test_import_pipeline():
