@@ -2237,7 +2237,7 @@ def run_r_script(script_path: Union[str, Path], r_installation_folder: Union[str
 
 def stdout_reader(pipe, log_filename, lock, print_output: bool = True):
     with open(log_filename, 'a') if log_filename is not None else contextlib.nullcontext() as logfile:
-        for line in iter(pipe.readline, b''):
+        for line in (pipe if isinstance(pipe, list) else iter(pipe.readline, b'')):
             decoded_line = line.decode('utf8', errors="ignore")
 
             if print_output:
@@ -2262,7 +2262,8 @@ def stderr_reader(pipe, stderr_record, log_filename, lock, print_output: bool = 
             if log_filename is not None:
                 with lock:
                     logfile.write(decoded_line)
-    pipe.close()
+    if not isinstance(pipe, list):
+        pipe.close()
 
 
 def run_subprocess(args: List[str], print_stdout: bool = True, print_stderr: bool = True,
