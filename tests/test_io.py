@@ -350,6 +350,7 @@ def test_map_taxon_id_no_results(monkeypatch):
         return MockResponse(text='')
 
     monkeypatch.setattr(requests, 'get', mock_requests_get)
+    map_taxon_id.cache_clear()
     with pytest.raises(ValueError):
         map_taxon_id('')
 
