@@ -297,6 +297,7 @@ class DataFramePreviewModel(DataFrameModel):
             df = df.iloc[:n_rows]
 
         if n_rows < shape[0]:
+            df = df.astype(object)
             if isinstance(df, pd.DataFrame):
                 df.loc['...', :] = '...'
             elif isinstance(df, pd.Series):
