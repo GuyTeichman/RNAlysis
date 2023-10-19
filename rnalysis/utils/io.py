@@ -1371,21 +1371,21 @@ class OrthoInspectorOrthologMapper:
     def get_orthologs(self, ids: Tuple[str, ...], non_unique_mode: str, database: str = 'auto'):
         # find a valid database, or ensure that given database is valid
         if database == 'auto':
-            database = None
             database_organisms = OrthoInspectorOrthologMapper.get_database_organisms()
             dbs_by_size = sorted(database_organisms.keys(), key=lambda x: len(database_organisms[x]), reverse=True)
+            valid_dbs = []
 
             for db in dbs_by_size:
                 if self.map_from_organism in database_organisms[db] and self.map_to_organism in database_organisms[db]:
-                    database = db
-                    break
-            if database is None:
+                    valid_dbs.append(db)
+            if len(valid_dbs) == 0:
                 raise ValueError(
                     f'No database found that supports mapping from {self.map_from_organism} to {self.map_to_organism}. ')
 
         else:
             databases = self.get_databases()
             assert database in databases, f"Invalid database: {database}. Valid databases are: {databases}."
+            valid_dbs = [database]
 
         session = get_session(self.RETRIES)
         mapping_one2one = {}
@@ -1395,11 +1395,15 @@ class OrthoInspectorOrthologMapper:
         # if a large number of genes is requested, download the entire pairwise dataset and filter it
         cached = load_cached_file(self.get_cache_filename())
         if cached is None:
-            url = f'{self.API_URL}/{database}/species/{self.map_from_organism}/orthologs/{self.map_to_organism}'
-            req = session.get(url)
-            req.raise_for_status()
-            content = req.json()['data']
-            cache_file(json.dumps(content), self.get_cache_filename())
+            content = {}
+            for database in valid_dbs:
+                url = f'{self.API_URL}/{database}/species/{self.map_from_organism}/orthologs/{self.map_to_organism}'
+                req = session.get(url)
+                req.raise_for_status()
+                content = req.json()['data']
+                if len(content) >= 0:
+                    cache_file(json.dumps(content), self.get_cache_filename())
+                    break
         else:
             content = json.loads(cached)
 
@@ -1438,7 +1442,6 @@ class OrthoInspectorOrthologMapper:
                         mapping_one2one[from_id] = to_ids[-1]
                     elif non_unique_mode == 'random':
                         mapping_one2one[from_id] = random.choice(to_ids)
-
 
             else:
                 raise ValueError(f'Unknown ortholog type: "{annotation["type"]}"')
