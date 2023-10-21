@@ -2121,3 +2121,50 @@ def test_filter_by_row_name():
     assert res.df.equals(truth)
     f.filter_by_row_name(names)
     assert f.df.equals(truth)
+
+
+class TestOrthologDictTableGenerator:
+    def test_create_one2many_table_ortholog(self):
+        # Test when the mode is 'ortholog'
+        mapping_dict = {
+            'gene1': ['ortholog1', 'ortholog2'],
+            'gene2': ['ortholog3'],
+        }
+        expected_table = pd.DataFrame([
+            ('gene1', 'ortholog1'),
+            ('gene1', 'ortholog2'),
+            ('gene2', 'ortholog3'),
+        ], columns=['gene', 'ortholog'])
+
+        result_table = Filter._create_one2many_table(io.OrthologDict(mapping_dict))
+        pd.testing.assert_frame_equal(result_table, expected_table)
+
+    def test_create_one2many_table_paralog(self):
+        # Test when the mode is 'paralog'
+        mapping_dict = {
+            'gene1': ['paralog1', 'paralog2'],
+            'gene2': ['paralog3'],
+        }
+        expected_table = pd.DataFrame([
+            ('gene1', 'paralog1'),
+            ('gene1', 'paralog2'),
+            ('gene2', 'paralog3'),
+        ], columns=['gene', 'paralog'])
+
+        result_table = Filter._create_one2many_table(io.OrthologDict(mapping_dict), mode='paralog')
+        pd.testing.assert_frame_equal(result_table, expected_table)
+
+    def test_create_one2many_table_empty(self):
+        # Test when the mapping_dict is empty
+        mapping_dict = {}
+        expected_table = pd.DataFrame(columns=['gene', 'ortholog'])
+
+        result_table = Filter._create_one2many_table(io.OrthologDict(mapping_dict))
+        pd.testing.assert_frame_equal(result_table, expected_table)
+
+    def test_create_one2many_table_no_mapping(self):
+        # Test when no mapping_dict is provided (None)
+        expected_table = pd.DataFrame(columns=['gene', 'ortholog'])
+
+        result_table = Filter._create_one2many_table(io.OrthologDict())
+        pd.testing.assert_frame_equal(result_table, expected_table)

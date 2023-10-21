@@ -979,16 +979,14 @@ class OrthologDict:
         If mappping_dict is None, gene IDs will be automatically mapped to themselves.
         :type mapping_dict: dict or None (default None)
         """
+        if mapping_dict is None:
+            mapping_dict = {}
         self.mapping_dict = mapping_dict
 
     def __len__(self):
-        if self.mapping_dict is None:
-            return 0
         return len(self.mapping_dict)
 
     def __getitem__(self, key):
-        if self.mapping_dict is None:
-            raise KeyError(key)
         return self.mapping_dict[key]
 
     def __contains__(self, item):
