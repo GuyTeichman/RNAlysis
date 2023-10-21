@@ -1260,12 +1260,15 @@ class TestPhylomeDBOrthologMapper:
         assert map_fwd_cache.shape == map_rev_cache.shape
         assert map_fwd.shape == map_fwd_cache.shape
 
-    @pytest.mark.parametrize('filter_consistency_score', [True, False])
-    def test_get_orthologs(self, filter_consistency_score):
+    @pytest.mark.parametrize('filter_consistency_score,non_unique_mode', [
+        (False, 'first'),
+        (True, 'last'),
+        (True, 'random')
+    ])
+    def test_get_orthologs(self, filter_consistency_score, non_unique_mode):
         ortholog_mapper = PhylomeDBOrthologMapper(map_to_organism=9606, map_from_organism=6239,
                                                   gene_id_type='UniProtKB AC/ID')
         ids = ('G5EDF7', 'P34544')
-        non_unique_mode = 'first'
         consistency_score_threshold = 0.5
         ortholog_one2one, ortholog_one2many = ortholog_mapper.get_orthologs(
             ids, non_unique_mode, consistency_score_threshold, filter_consistency_score)
@@ -1276,8 +1279,9 @@ class TestPhylomeDBOrthologMapper:
         assert list(ortholog_one2one.mapping_dict.keys()) == ['G5EDF7', 'P34544']
         assert list(ortholog_one2many.mapping_dict.keys()) == ['G5EDF7', 'P34544']
 
-        assert ortholog_one2one['G5EDF7'] == 'P52564'
-        assert ortholog_one2one['P34544'] == 'Q15047'
+        if non_unique_mode == 'first':
+            assert ortholog_one2one['G5EDF7'] == 'P52564'
+            assert ortholog_one2one['P34544'] == 'Q15047'
 
 
 class TestOrthoInspectorOrthologMapper:
@@ -1335,14 +1339,15 @@ class TestOrthoInspectorOrthologMapper:
         db_organisms = ortholog_mapper.get_database_organisms()
         assert isinstance(db_organisms, dict)
 
-    # Test the get_orthologs method
-    def test_get_orthologs(self, ortholog_mapper):
+    @pytest.mark.parametrize('database,non_unique_mode', [
+        ('auto', 'first'),
+        ('Eukaryota', 'last'),
+        ('Eukaryota', 'random')])
+    def test_get_orthologs(self, ortholog_mapper, database, non_unique_mode):
         ortholog_mapper = OrthoInspectorOrthologMapper(map_to_organism=6238, map_from_organism=6239,
                                                        gene_id_type='UniProtKB AC/ID')
         ids = ('G5EDF7', 'P34544')
-        non_unique_mode = 'first'
-
-        ortholog_one2one, ortholog_one2many = ortholog_mapper.get_orthologs(ids, non_unique_mode)
+        ortholog_one2one, ortholog_one2many = ortholog_mapper.get_orthologs(ids, non_unique_mode, database)
 
         assert isinstance(ortholog_one2one, OrthologDict)
         assert isinstance(ortholog_one2many, OrthologDict)
@@ -1350,7 +1355,8 @@ class TestOrthoInspectorOrthologMapper:
         assert list(ortholog_one2one.mapping_dict.keys()) == ['G5EDF7', 'P34544']
         assert list(ortholog_one2many.mapping_dict.keys()) == ['G5EDF7', 'P34544']
 
-        assert ortholog_one2one.mapping_dict == {'G5EDF7': 'A8XPU4', 'P34544': 'A8XT55'}
+        if non_unique_mode == 'first':
+            assert ortholog_one2one.mapping_dict == {'G5EDF7': 'A8XPU4', 'P34544': 'A8XT55'}
 
 
 class TestPantherOrthologMapper:
@@ -1391,10 +1397,12 @@ class TestPantherOrthologMapper:
         assert isinstance(translated_ids[1], list)
         assert translated_ids == (['gene1', 'gene2'], ['trans_gene1', 'trans_gene2'])
 
-    # Test the get_orthologs method
-    def test_get_orthologs(self):
+    @pytest.mark.parametrize('filter_least_diverged,non_unique_mode', [
+        (True, 'first'),
+        (False, 'last'),
+        (True, 'random')])
+    def test_get_orthologs(self, filter_least_diverged, non_unique_mode):
         ids = ('G5EDF7', 'P34544')
-        non_unique_mode = 'first'
         ortholog_mapper = PantherOrthologMapper(map_to_organism=9606, map_from_organism=6239,
                                                 gene_id_type='UniProtKB AC/ID')
         filter_least_diverged = True
@@ -1407,10 +1415,10 @@ class TestPantherOrthologMapper:
         assert list(ortholog_one2one.mapping_dict.keys()) == ['G5EDF7', 'P34544']
         assert list(ortholog_one2many.mapping_dict.keys()) == ['G5EDF7', 'P34544']
 
-        assert ortholog_one2one['G5EDF7'] == 'P46734'
-        assert ortholog_one2one['P34544'] == 'Q15047'
+        if non_unique_mode == 'first':
+            assert ortholog_one2one['G5EDF7'] == 'P46734'
+            assert ortholog_one2one['P34544'] == 'Q15047'
 
-    # Test the get_paralogs method
     def test_get_paralogs(self):
         ids = ('G5EDF7', 'P34707')
 
@@ -1493,10 +1501,9 @@ class TestEnsemblOrthologMapper:
         assert isinstance(paralogs, OrthologDict)
         assert paralogs.mapping_dict == truth
 
-    # Test the get_orthologs method
-    def test_get_orthologs(self):
+    @pytest.mark.parametrize('non_unique_mode', ['first', 'last', 'random'])
+    def test_get_orthologs(self, non_unique_mode):
         ids = ('G5EDF7', 'P34544')
-        non_unique_mode = 'first'
 
         ortholog_mapper = EnsemblOrthologMapper(map_to_organism=9606, map_from_organism=6239,
                                                 gene_id_type='UniProtKB AC/ID')
@@ -1509,5 +1516,6 @@ class TestEnsemblOrthologMapper:
         assert list(ortholog_one2one.mapping_dict.keys()) == ['G5EDF7', 'P34544']
         assert list(ortholog_one2many.mapping_dict.keys()) == ['G5EDF7', 'P34544']
 
-        assert ortholog_one2one['G5EDF7'] == 'ENSG00000085511'
-        assert ortholog_one2one['P34544'] == 'ENSG00000167548'
+        if non_unique_mode == 'first':
+            assert ortholog_one2one['G5EDF7'] == 'ENSG00000085511'
+            assert ortholog_one2one['P34544'] == 'ENSG00000167548'
