@@ -1260,13 +1260,13 @@ class TestPhylomeDBOrthologMapper:
         assert map_fwd_cache.shape == map_rev_cache.shape
         assert map_fwd.shape == map_fwd_cache.shape
 
-    def test_get_orthologs(self):
+    @pytest.mark.parametrize('filter_consistency_score', [True, False])
+    def test_get_orthologs(self, filter_consistency_score):
         ortholog_mapper = PhylomeDBOrthologMapper(map_to_organism=9606, map_from_organism=6239,
                                                   gene_id_type='UniProtKB AC/ID')
         ids = ('G5EDF7', 'P34544')
         non_unique_mode = 'first'
         consistency_score_threshold = 0.5
-        filter_consistency_score = True
         ortholog_one2one, ortholog_one2many = ortholog_mapper.get_orthologs(
             ids, non_unique_mode, consistency_score_threshold, filter_consistency_score)
 
@@ -1473,18 +1473,18 @@ class TestEnsemblOrthologMapper:
         assert translated_ids == (['gene1', 'gene2'], ['trans_gene1', 'trans_gene2'])
 
     # Test the get_paralogs method
-    def test_get_paralogs(self):
-        ids = ('G5EDF7', 'P34707')
-        filter_percent_identity = False
-
-        truth = {'G5EDF7': ['WBGene00018034',
+    @pytest.mark.parametrize('filter_percent_identity,truth', [
+        (True, {'G5EDF7': 'WBGene00003368', 'P34707': 'WBGene00020961'}),
+        (False, {'G5EDF7': ['WBGene00018034',
                             'WBGene00018035',
                             'WBGene00003185',
                             'WBGene00003186',
                             'WBGene00012162',
                             'WBGene00003368',
                             'WBGene00003472'],
-                 'P34707': ['WBGene00020961']}
+                 'P34707': ['WBGene00020961']})])
+    def test_get_paralogs(self, filter_percent_identity, truth):
+        ids = ('G5EDF7', 'P34707')
         ortholog_mapper = EnsemblOrthologMapper(map_to_organism=6239, map_from_organism=6239,
                                                 gene_id_type='UniProtKB AC/ID')
 
