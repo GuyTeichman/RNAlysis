@@ -1,6 +1,6 @@
 import logging
 import re
-from unittest.mock import patch
+from unittest.mock import patch, Mock
 
 import matplotlib
 import pytest
@@ -2919,3 +2919,48 @@ class TestMainWindowToggleReporting:
         assert not main_window._generate_report
         assert main_window.report is None
         assert not main_window.toggle_report_action.isChecked()
+
+
+class TestPromptAutoReportGen:
+    @pytest.mark.parametrize("choice_truth, dont_ask_again_truth", [
+        (True, True), (True, False), (False, True), (False, False)])
+    def test_no_preset(self, use_temp_settings_file, main_window, caplog, monkeypatch, choice_truth,
+                       dont_ask_again_truth):
+        # Simulate no preset settings
+        def mock_get_settings():
+            return None
+
+        monkeypatch.setattr(settings, 'get_report_gen_settings', mock_get_settings)
+
+        def mock_set_settings(given_choice):
+            if dont_ask_again_truth:
+                assert given_choice == choice_truth
+            else:
+                assert given_choice is None
+
+        monkeypatch.setattr(settings, 'set_report_gen_settings', mock_set_settings)
+
+        # Simulate user input from ReportGenerationMessageBox
+        message_box = Mock()
+        message_box.exec.return_value = (choice_truth, dont_ask_again_truth)
+
+        # Mock the ReportGenerationMessageBox and settings
+        with patch('rnalysis.gui.gui_windows.ReportGenerationMessageBox', return_value=message_box):
+            main_window.prompt_auto_report_gen()
+
+        # Check if the toggle_report_action is checked
+        assert main_window.toggle_report_action.isChecked() == choice_truth
+
+    @pytest.mark.parametrize('preset_choice', [True, False])
+    def test_with_preset(self, main_window, monkeypatch, preset_choice, use_temp_settings_file):
+        # Simulate having a preset choice
+        def mock_get_settings():
+            return preset_choice
+
+        monkeypatch.setattr(settings, 'get_report_gen_settings', mock_get_settings)
+
+        # Run the method
+        main_window.prompt_auto_report_gen()
+
+        # Check if the toggle_report_action is checked and no log message was generated
+        assert main_window.toggle_report_action.isChecked() == preset_choice

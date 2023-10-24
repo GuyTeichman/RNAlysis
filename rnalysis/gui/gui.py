@@ -2974,7 +2974,6 @@ class MainWindow(QtWidgets.QMainWindow):
         else:
             choice = preset
 
-        self.toggle_report_action.setChecked(choice)
         self._toggle_reporting(choice)
 
     def init_ui(self):
