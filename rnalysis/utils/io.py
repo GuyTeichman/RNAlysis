@@ -2232,8 +2232,8 @@ def run_r_script(script_path: Union[str, Path], r_installation_folder: Union[str
             if s.startswith('Error'):
                 short_err = s.rstrip() + stderr[i + 1].rstrip()
                 break
-        raise ChildProcessError(
-            f"R script failed to execute: '{short_err}'. See full error report below.") from RuntimeError(full_err)
+        raise ChildProcessError(f"R script failed to execute: '{short_err}'. See full error report below.") \
+            from RuntimeError(full_err)
 
 
 def stdout_reader(pipe, log_filename, lock, print_output: bool = True):

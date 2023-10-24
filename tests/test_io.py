@@ -1,3 +1,4 @@
+from unittest import mock
 from unittest.mock import MagicMock
 
 import pytest
@@ -836,39 +837,6 @@ class MockProcess:
         return
 
 
-@pytest.mark.parametrize('r_path,expected', [
-    ('auto', ['Rscript', "tests/test_files/test_r_script.R"]),
-    ('D:/Program Files/R', ["D:/Program Files/R/bin/Rscript", "tests/test_files/test_r_script.R"])
-])
-def test_run_r_script(monkeypatch, r_path, expected):
-    script_path = 'tests/test_files/test_r_script.R'
-
-    ran = []
-
-    def mock_popen(process, stdout, stderr, shell=False):
-        if ran:
-            assert process == expected
-            ran.append(2)
-        else:
-            assert process == [expected[0], '--help']
-            ran.append(1)
-        return MockProcess(0)
-
-    monkeypatch.setattr(subprocess, 'Popen', mock_popen)
-
-    run_r_script(script_path, r_path)
-    assert ran == [1, 2]
-
-
-def test_run_r_script_not_installed(monkeypatch):
-    def mock_popen(process, stdout, stderr, shell=False):
-        return MockProcess(1)
-
-    monkeypatch.setattr(subprocess, 'Popen', mock_popen)
-    with pytest.raises(FileNotFoundError):
-        run_r_script('tests/test_files/test_r_script.R')
-
-
 @pytest.mark.parametrize("stdout", [True, False])
 @pytest.mark.parametrize("stderr", [True, False])
 def test_run_subprocess(stdout, stderr):
@@ -1519,3 +1487,60 @@ class TestEnsemblOrthologMapper:
         if non_unique_mode == 'first':
             assert ortholog_one2one['G5EDF7'] == 'ENSG00000085511'
             assert ortholog_one2one['P34544'] == 'ENSG00000167548'
+
+
+class TestRunRScript:
+    @mock.patch('rnalysis.utils.io.run_subprocess')
+    def test_non_zero_return_code(self, mock_run_subprocess):
+        # Set up the mock to return a non-zero return code
+        def conditional_return(*args, **kwargs):
+            if args[0][1] == "--help":
+                return 0, ''
+            else:
+                return 1, ["warning1", "warning2", "Error: Something went wrong", "traceback"]
+
+        # Set the side_effect to the conditional function
+        mock_run_subprocess.side_effect = conditional_return
+
+        # Define the script path and R installation folder
+        script_path = "tests/test_files/test_r_script.R"
+        r_installation_folder = "auto"
+
+        # Execute the function with the mock in place
+        with pytest.raises(ChildProcessError) as context:
+            run_r_script(script_path, r_installation_folder)
+
+        # Check if the expected error message is in the exception message
+        expected_error_message = "R script failed to execute: 'Error: Something went wrongtraceback'. See full error report below."
+        assert expected_error_message in str(context.value)
+
+    @pytest.mark.parametrize('r_path,expected', [
+        ('auto', ['Rscript', "tests/test_files/test_r_script.R"]),
+        ('D:/Program Files/R', ["D:/Program Files/R/bin/Rscript", "tests/test_files/test_r_script.R"])
+    ])
+    def test_run_r_script(self, monkeypatch, r_path, expected):
+        script_path = 'tests/test_files/test_r_script.R'
+
+        ran = []
+
+        def mock_popen(process, stdout, stderr, shell=False):
+            if ran:
+                assert process == expected
+                ran.append(2)
+            else:
+                assert process == [expected[0], '--help']
+                ran.append(1)
+            return MockProcess(0)
+
+        monkeypatch.setattr(subprocess, 'Popen', mock_popen)
+
+        run_r_script(script_path, r_path)
+        assert ran == [1, 2]
+
+    def test_run_r_script_not_installed(self, monkeypatch):
+        def mock_popen(process, stdout, stderr, shell=False):
+            return MockProcess(1)
+
+        monkeypatch.setattr(subprocess, 'Popen', mock_popen)
+        with pytest.raises(FileNotFoundError):
+            run_r_script('tests/test_files/test_r_script.R')
