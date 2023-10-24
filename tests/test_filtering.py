@@ -1,5 +1,6 @@
 import json
 import shutil
+from unittest.mock import patch, Mock
 
 import matplotlib
 import pytest
@@ -2168,3 +2169,38 @@ class TestOrthologDictTableGenerator:
 
         result_table = Filter._create_one2many_table(io.OrthologDict())
         pd.testing.assert_frame_equal(result_table, expected_table)
+
+
+@patch('rnalysis.utils.io.PantherOrthologMapper')
+def test_find_paralogs_panther(mock_mapper):
+    df_truth = pd.DataFrame({'gene': ['gene1', 'gene1', 'gene2'], 'paralog': ['paralog1', 'paralog2', 'paralog3']})
+    mock_mapper_instance = Mock()
+    mock_mapper.return_value = mock_mapper_instance
+    mock_mapper_instance.get_paralogs.return_value = io.OrthologDict(
+        {'gene1': ['paralog1', 'paralog2'], 'gene2': ['paralog3']})
+
+    filter_obj = Filter('tests/test_files/counted.csv')
+    result = filter_obj.find_paralogs_panther(organism='Homo sapiens', gene_id_type='UniProtKB')
+
+    assert result.equals(df_truth)
+    mock_mapper.assert_called_once_with(9606, 9606, 'UniProtKB')
+    mock_mapper_instance.get_paralogs.assert_called_once_with(parsing.data_to_tuple(filter_obj.index_set))
+
+
+@pytest.mark.parametrize('filter_percent_identity', [True, False])
+@patch('rnalysis.utils.io.EnsemblOrthologMapper')
+def test_find_paralogs_ensembl(mock_mapper, filter_percent_identity):
+    df_truth = pd.DataFrame({'gene': ['gene1', 'gene1', 'gene2'], 'paralog': ['paralog1', 'paralog2', 'paralog3']})
+    mock_mapper_instance = Mock()
+    mock_mapper.return_value = mock_mapper_instance
+    mock_mapper_instance.get_paralogs.return_value = io.OrthologDict(
+        {'gene1': ['paralog1', 'paralog2'], 'gene2': ['paralog3']})
+
+    filter_obj = Filter('tests/test_files/counted.csv')
+    result = filter_obj.find_paralogs_ensembl(organism='Homo sapiens', gene_id_type='UniProtKB',
+                                              filter_percent_identity=filter_percent_identity)
+
+    assert result.equals(df_truth)
+    mock_mapper.assert_called_once_with(9606, 9606, 'UniProtKB')
+    mock_mapper_instance.get_paralogs.assert_called_once_with(parsing.data_to_tuple(filter_obj.index_set),
+                                                              filter_percent_identity)

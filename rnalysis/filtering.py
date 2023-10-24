@@ -474,7 +474,7 @@ class Filter:
         mapper = io.EnsemblOrthologMapper(taxon_id, taxon_id, gene_id_type)
         ids = parsing.data_to_tuple(self.index_set)
         ortho_dict_one2many = mapper.get_paralogs(ids, filter_percent_identity)
-        one2many_table = self._create_one2many_table(ortho_dict_one2many)
+        one2many_table = self._create_one2many_table(ortho_dict_one2many, 'paralog')
         return one2many_table
 
     @readable_name('Map genes to nearest orthologs (using PantherDB)')
