@@ -1,7 +1,11 @@
+import logging
 import re
+from unittest.mock import patch
 
 import matplotlib
 import pytest
+
+import rnalysis.gui.gui_report
 
 matplotlib.use('Agg')
 from rnalysis.gui.gui import *
@@ -2823,3 +2827,95 @@ def test_MainWindow_open_dialogs(qtbot, main_window_with_tabs, action_name, wind
 
     QtCore.QTimer.singleShot(100, handle_dialog)
     action.trigger()
+
+
+class TestMainWindowToggleReporting:
+    # Mock the dependencies and set up the test scenario
+    @pytest.fixture
+    def mock_dependencies(self):
+        with patch('rnalysis.gui.gui.MainWindow.clear_session', autospec=True) as mock_clear_session:
+            yield mock_clear_session
+
+    def test_toggle_reporting_on(self, main_window, mock_dependencies, caplog, monkeypatch):
+        session_cleared = []
+
+        def mock_clear_session(self, confirm_action=True):
+            assert confirm_action
+            session_cleared.append(True)
+            return True
+
+        monkeypatch.setattr(main_window, 'clear_session', mock_clear_session)
+        # Arrange
+        mock_clear_session = mock_dependencies
+        mock_clear_session.return_value = True
+        state = True  # Turning on report generation
+
+        # Act
+        with caplog.at_level(logging.WARNING):
+            main_window._toggle_reporting(state)
+
+        # Assert
+        assert main_window._generate_report
+        assert main_window.report is not None
+        assert main_window.tabs.count() == 1 and main_window.tabs.currentWidget().is_empty()
+        assert main_window.toggle_report_action.isChecked()
+        assert session_cleared == [True]
+
+    def test_toggle_reporting_on_missing_module(self, main_window, monkeypatch):
+        # Arrange
+        session_cleared = []
+
+        def mock_clear_session(self, confirm_action=True):
+            assert confirm_action
+            session_cleared.append(True)
+            return True
+
+        monkeypatch.setattr(main_window, 'clear_session', mock_clear_session)
+
+        def mock_report_init(*args):
+            raise ImportError
+
+        monkeypatch.setattr(rnalysis.gui.gui_report.ReportGenerator, '__init__', mock_report_init)
+
+        state = True  # Turning on report generation
+
+        # Act
+        main_window._toggle_reporting(state)
+
+        # Assert
+        assert not main_window._generate_report
+        assert main_window.report is None
+        assert session_cleared == []
+
+    def test_toggle_reporting_on_clear_session_failed(self, main_window, mock_dependencies, monkeypatch):
+        # Arrange
+        session_cleared = []
+
+        def mock_clear_session(confirm_action=True):
+            session_cleared.append(True)
+            return False
+
+        monkeypatch.setattr(main_window, 'clear_session', mock_clear_session)
+        state = True  # Turning on report generation
+
+        # Act
+        main_window._toggle_reporting(state)
+
+        # Assert
+        assert not main_window._generate_report
+        assert main_window.report is None
+        assert session_cleared == [True]
+
+    def test_toggle_reporting_off(self, main_window):
+        # Arrange
+        state = False
+        main_window._generate_report = True  # Simulate report generation turned on
+        main_window.toggle_report_action.setChecked(True)
+
+        # Act
+        main_window._toggle_reporting(state)
+
+        # Assert
+        assert not main_window._generate_report
+        assert main_window.report is None
+        assert not main_window.toggle_report_action.isChecked()
