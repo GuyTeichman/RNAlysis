@@ -105,6 +105,7 @@ def main_window(qtbot, monkeypatch, use_temp_settings_file):
 def main_window_with_tabs(main_window, monkeypatch):
     monkeypatch.setattr(QtWidgets.QFileDialog, 'getOpenFileName',
                         lambda *args, **kwargs: ('tests/test_files/test_session.rnal', '.rnal'))
+    monkeypatch.setattr(QtWidgets.QApplication, 'processEvents', lambda *args, **kwargs: None)
     main_window.load_session_action.trigger()
     return main_window
 
@@ -2647,6 +2648,8 @@ def test_MainWindow_toggle_history(state, qtbot, use_temp_settings_file, main_wi
 def test_MainWindow_save_session(qtbot, use_temp_settings_file, main_window, monkeypatch):
     monkeypatch.setattr(QtWidgets.QFileDialog, 'getOpenFileName',
                         lambda *args, **kwargs: ('tests/test_files/test_session.rnal', '.rnal'))
+    monkeypatch.setattr(QtWidgets.QApplication, 'processEvents', lambda *args, **kwargs: None)
+
     main_window.load_session()
 
     session_fname = 'session filename.rnal'
