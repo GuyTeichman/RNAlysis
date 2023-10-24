@@ -3239,6 +3239,7 @@ class MainWindow(QtWidgets.QMainWindow):
                             self.new_tab_from_filter_obj(filter_obj, JOB_COUNTER.get_id())
                         else:
                             self.new_tab_from_filter_obj(filter_obj, JOB_COUNTER.get_id(), name)
+                        QtWidgets.QApplication.processEvents()
                     if tabs_to_close is not None:
                         self.tabs.removeTab(tabs_to_close)
 
@@ -3249,8 +3250,6 @@ class MainWindow(QtWidgets.QMainWindow):
         self.tabs.currentWidget().start_from_filter_obj(filter_obj, tab_id)
         if self._generate_report:
             self.add_loaded_item_to_report(tab_id, self.tabs.currentWidget().name, self.tabs.currentWidget().obj())
-
-        QtWidgets.QApplication.processEvents()
 
     @QtCore.pyqtSlot(str)
     def set_current_tab_icon(self, icon_name: str = None):
@@ -3279,7 +3278,6 @@ class MainWindow(QtWidgets.QMainWindow):
         self.tabs.currentWidget().start_from_gene_set(tab_id, gene_set)
         if self._generate_report:
             self.add_loaded_item_to_report(tab_id, self.tabs.currentWidget().name, self.tabs.currentWidget().obj())
-        QtWidgets.QApplication.processEvents()
 
     def add_loaded_item_to_report(self, item_id: int, item_name: str,
                                   obj: Union[filtering.Filter, enrichment.FeatureSet, generic.GenericPipeline]):
@@ -4059,7 +4057,6 @@ class MainWindow(QtWidgets.QMainWindow):
             for name in chosen_names:
                 self.tabs.setCurrentWidget(filtered_available_objs[name][0])
                 filtered_available_objs[name][0].apply_pipeline(pipeline, name, pipeline_id, inplace)
-                QtWidgets.QApplication.processEvents()
             self.tabs.setCurrentIndex(current_ind)
 
     @QtCore.pyqtSlot()
@@ -4093,7 +4090,6 @@ class MainWindow(QtWidgets.QMainWindow):
 
             for pipeline_name, pipeline_file in zip(pipeline_names, pipeline_files):
                 self._import_pipeline_from_str(pipeline_name, pipeline_file)
-            QtWidgets.QApplication.processEvents()
 
             tab_to_close = None
             if self.tabs.currentWidget().is_empty():
@@ -4110,6 +4106,9 @@ class MainWindow(QtWidgets.QMainWindow):
                         raise TypeError(f"Invalid object type in session file: '{item_type}'")
                     obj = cls.from_dataframe(item, item_name, **item_property)
                     self.new_tab_from_filter_obj(obj, tab_id)
+
+                QtWidgets.QApplication.processEvents()
+
             if tab_to_close is not None:
                 self.tabs.removeTab(tab_to_close)
 
