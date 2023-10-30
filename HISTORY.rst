@@ -3,13 +3,31 @@ History
 =======
 
 
-3.10.0 (2023-??-??)
+3.10.0 (2023-10-31)
 ------------------
+
+I'm thrilled to introduce RNAlysis version 3.10.0.
+This version includes features that were requested by users for a while, alongside quality-of-life improvements and bug fixes.
+Here is a brief highlight of the most important additions:
+
+**Ortholog Mapping:** *RNAlysis* can now map genes to their closest orthologs in different organisms.
+You can map genes to their orthologs using four different databases - Ensembl, Panther, PhylomeDB, and OrthoInspector - extracting both one-to-one and one-to-many ortholog relationships and filtering them based on their reliability.
+
+**Discovering Paralogs:** In the same vein, *RNAlysis* now facilitates the discovery of paralogs within a specific organism, using either the Ensembl or Panther databases.
+
+**New visualization and analysis options for Principal Component Analysis (PCA):** We've introduced new functions and parameters to allow you to get more out of your principal component analysis.
+
+I would also like to extend my personal apology for the delay in bringing you this update.
+Due to personal reasons, this release, originally scheduled for the end of August, took longer than expected.
+Your patience and support have been invaluable, and I'm eager to share these exciting additions with you.
+Thank you for being a part of the RNAlysis community, and stay tuned for more updates in the near future!
 
 Added
 *******
-* Added a new parameter called 'legend' to 'Principal Component Analysis (PCA) plot' (CountFilter.pca), which allows users to display a legend on the PCA plot with a name for each sample group/color.
+* Added new functions to the filtering module that map genes to their closest orthologs in a different organism, using four different databases: Ensembl, Panther, PhylomeDB, and OrthoInspector.
+* Added new functions to the filtering module that find paralogs of genes in a given organism, using two different databases: Ensembl and Panther.
 * Added new function 'Sort table by contribution to a Principal Component (PCA)' (CountFilter.sort_by_principal_component), which allows sorting of genes in a count matrix by their contribution (gene loadings) to a principal component.
+* Added a new parameter called 'legend' to 'Principal Component Analysis (PCA) plot' (CountFilter.pca), which allows users to display a legend on the PCA plot with a name for each sample group/color.
 
 Changed
 ********
