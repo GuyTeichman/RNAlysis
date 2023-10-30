@@ -42,7 +42,8 @@ def test_color_generator():
                      'lawngreen', 'moccasin', 'thistle']
     for i in range(150):
         color = next(gen)
-        assert color in preset_colors or (isinstance(color, np.ndarray) and len(color) == 3 and
+        assert (isinstance(color, str) and color in preset_colors) or (
+                isinstance(color, np.ndarray) and len(color) == 3 and
                                           np.max(color) <= 1 and np.min(color) >= 0)
 
 

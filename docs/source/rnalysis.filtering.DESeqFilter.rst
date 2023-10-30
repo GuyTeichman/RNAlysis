@@ -1,4 +1,4 @@
-rnalysis.filtering.DESeqFilter
+﻿rnalysis.filtering.DESeqFilter
 ==============================
 
 .. currentmodule:: rnalysis.filtering
@@ -34,10 +34,16 @@ rnalysis.filtering.DESeqFilter
     DESeqFilter.filter_percentile
     DESeqFilter.filter_significant
     DESeqFilter.filter_top_n
+    DESeqFilter.find_paralogs_ensembl
+    DESeqFilter.find_paralogs_panther
     DESeqFilter.from_dataframe
     DESeqFilter.head
     DESeqFilter.intersection
     DESeqFilter.majority_vote_intersection
+    DESeqFilter.map_orthologs_ensembl
+    DESeqFilter.map_orthologs_orthoinspector
+    DESeqFilter.map_orthologs_panther
+    DESeqFilter.map_orthologs_phylomedb
     DESeqFilter.number_filters
     DESeqFilter.print_features
     DESeqFilter.save_csv

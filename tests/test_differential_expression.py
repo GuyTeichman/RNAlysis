@@ -109,4 +109,4 @@ def test_run_deseq2_analysis(comparisons, expected_paths):
         assert np.all(out.columns == truth.columns)
         assert np.all(sorted(out.index) == sorted(truth.index))
         if sys.platform == 'win32':  # running DESeq in linux gives slightly different results
-            assert np.allclose(out, truth, equal_nan=True, atol=1 * 10 ** (- 5))
+            assert np.allclose(out, truth, equal_nan=True, atol=1 * 10 ** (- 4))

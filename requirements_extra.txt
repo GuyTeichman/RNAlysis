@@ -3,7 +3,7 @@
 #
 # package[version_required]: tag1, tag2, ...
 
-hdbscan>=0.8.29:    hdbscan
+hdbscan>=0.8.33:    hdbscan
 xlmhglite>=1.1.0:   single-set
 numba>=0.57.0:      randomization
 cutadapt>=4.4:      fastq

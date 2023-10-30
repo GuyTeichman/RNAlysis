@@ -1,4 +1,6 @@
 import collections.abc
+import ftplib
+import functools
 import typing
 import warnings
 
@@ -12,7 +14,7 @@ K_CRITERIA = ('gap', 'silhouette', 'calinski_harabasz', 'davies_bouldin', 'bic')
 LEGAL_GENE_LENGTH_METHODS = ('mean', 'median', 'max', 'min', 'geometric_mean', 'merged_exons')
 
 LEGAL_FASTQ_SUFFIXES = ('.fastq', '.fastq.gz', '.fq', '.fq.gz')
-LEGAL_ALIGNMENT_SUFFIXES = ('.sam', '.bam','.cram',)
+LEGAL_ALIGNMENT_SUFFIXES = ('.sam', '.bam', '.cram',)
 LEGAL_BOWTIE2_PRESETS = ('very-fast', 'fast', 'sensitive', 'very-sensitive')
 LEGAL_BOWTIE2_MODES = ('end-to-end', 'local')
 LEGAL_QUAL_SCORE_TYPES = ('phred33', 'phred64', 'solexa-quals', 'int-quals')
@@ -37,6 +39,8 @@ DEFAULT_ORGANISMS = tuple(sorted(['Caenorhabditis elegans',
                                   'Escherichia coli',
                                   'Saccharomyces cerevisiae',
                                   'Schizosaccharomyces pombe']))
+
+ORTHOLOG_NON_UNIQUE_MODES = ('first', 'last', 'random', 'none')
 
 Fraction = typing.NewType('Fraction', float)
 PositiveInt = typing.NewType('PositiveInt', int)
@@ -69,6 +73,7 @@ def type_to_supertype(this_type):
     return this_type
 
 
+@functools.lru_cache(maxsize=2)
 def get_gene_id_types() -> typing.Tuple[str, ...]:
     try:
         gene_id_types = parsing.data_to_tuple(io.get_legal_gene_id_types()[0].keys())
@@ -79,3 +84,42 @@ def get_gene_id_types() -> typing.Tuple[str, ...]:
                       'To fix this issue, make sure your computer has internet connection, '
                       'and restart RNAlysis. ')
     return gene_id_types
+
+
+@functools.lru_cache(maxsize=2)
+def get_panther_taxons() -> typing.Tuple[str, ...]:
+    try:
+        taxons = io.get_legal_panther_taxons()
+    except requests.exceptions.ConnectionError:
+        taxons = tuple()
+        warnings.warn('Failed to retreive legal taxons from PantherDB. '
+                      'Some features may not work as intended. '
+                      'To fix this issue, make sure your computer has internet connection, '
+                      'and restart RNAlysis. ')
+    return taxons
+
+
+@functools.lru_cache(maxsize=2)
+def get_phylomedb_taxons() -> typing.Tuple[str, ...]:
+    try:
+        taxons = io.get_legal_phylomedb_taxons()
+    except ftplib.all_errors:
+        taxons = tuple()
+        warnings.warn('Failed to retreive legal taxons from PhylomeDB. '
+                      'Some features may not work as intended. '
+                      'To fix this issue, make sure your computer has internet connection, '
+                      'and restart RNAlysis. ')
+    return taxons
+
+
+@functools.lru_cache(maxsize=2)
+def get_ensembl_taxons() -> typing.Tuple[str, ...]:
+    try:
+        taxons = parsing.data_to_tuple(io.get_legal_ensembl_taxons())
+    except requests.exceptions.ConnectionError:
+        taxons = tuple()
+        warnings.warn('Failed to retreive legal taxons from Ensembl. '
+                      'Some features may not work as intended. '
+                      'To fix this issue, make sure your computer has internet connection, '
+                      'and restart RNAlysis. ')
+    return taxons

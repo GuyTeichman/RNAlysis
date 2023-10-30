@@ -921,16 +921,12 @@ def test_go_enrichment_runner_api(monkeypatch, single_list, genes, biotypes, pva
 def test_go_enrichment_runner_run(monkeypatch):
     organism_truth = 'my_organism'
 
-    def get_taxon(self, organism):
-        return 'taxon_id', organism
-
     def run(self):
         self.results = 'results'
 
     monkeypatch.setattr(EnrichmentRunner, 'run', run)
-    monkeypatch.setattr(GOEnrichmentRunner, 'get_taxon_id', get_taxon)
     runner = GOEnrichmentRunner.__new__(GOEnrichmentRunner)
-    runner.taxon_id, runner.organism = runner.get_taxon_id(organism_truth)
+    runner.taxon_id, runner.organism = 'taxon_id', organism_truth
     runner.run()
     assert runner.results == 'results'
     assert runner.organism == organism_truth
@@ -965,37 +961,6 @@ def test_go_enrichment_runner_get_enrichment_func_invalid_value(test_input, err)
     runner.propagate_annotations = 'weight'
     with pytest.raises(err):
         runner._get_enrichment_func(test_input)
-
-
-@pytest.mark.parametrize('got_gene_id_type', (True, False))
-@pytest.mark.parametrize('organism,truth',
-                         [('auto', ('inferred_id', 'inferred_organism')),
-                          ('c elegans', ('c elegans_mapped_id', 'organism'))])
-def test_go_enrichment_runner_get_taxon_id(monkeypatch, organism, got_gene_id_type, truth):
-    gene_id_type_truth = 'UniProtKB'
-
-    def alt_infer_taxon_id(gene_set, gene_id_type=None):
-        assert isinstance(gene_set, set)
-        if got_gene_id_type:
-            assert gene_id_type == gene_id_type_truth
-        else:
-            assert gene_id_type is None
-        return ('inferred_id', 'inferred_organism'), 'map_from'
-
-    monkeypatch.setattr(io, 'map_taxon_id', lambda input_organism: (input_organism + '_mapped_id', 'organism'))
-    monkeypatch.setattr(io, 'infer_taxon_from_gene_ids', alt_infer_taxon_id)
-    runner = GOEnrichmentRunner.__new__(GOEnrichmentRunner)
-    runner.gene_set = {'gene1', 'gene2', 'gene4'}
-    runner.organism = organism
-
-    if got_gene_id_type:
-        runner.gene_id_type = gene_id_type_truth
-        res = runner.get_taxon_id(organism)
-    else:
-        runner.gene_id_type = 'auto'
-        res = runner.get_taxon_id(organism)
-
-    assert res == truth
 
 
 def test_go_enrichment_runner_fetch_annotations(monkeypatch):
@@ -1076,7 +1041,8 @@ def test_go_enrichment_runner_propagate_annotation(monkeypatch, propagate, gene_
     ({'gene1': 'gene1_translated', 'gene2': 'gene2_translated', 'gene3': 'gene3_translated'},
      {'gene1_translated': {'GO1', 'GO2'}, 'gene2_translated': {'GO1'}, 'gene3_translated': {'GO2'}})])
 def test_go_enrichment_runner_translate_gene_ids(monkeypatch, mapping_dict, truth):
-    monkeypatch.setattr(io, 'map_gene_ids', lambda gene_id, source, gene_id_type: mapping_dict)
+    monkeypatch.setattr(io.GeneIDTranslator, '__init__', lambda *args: None)
+    monkeypatch.setattr(io.GeneIDTranslator, 'run', lambda *args: mapping_dict)
     source_to_gene_id_dict = {'source1': {'gene1', 'gene3'}, 'source2': {'gene2'}}
     sparse_annotation_dict = {'gene1': {'GO1', 'GO2'}, 'gene2': {'GO1'}, 'gene3': {'GO2'}}
 
@@ -1754,6 +1720,7 @@ def test_enrichment_runner_extract_xlmhg_results(pval_fwd, pval_rev, escore_fwd,
     assert obs == obs_truth
     assert exp == exp_truth
 
+
 @pytest.mark.parametrize('exclude_unannotated', [True, False])
 @pytest.mark.parametrize(
     'single_list,genes,biotypes,pval_func,background_set,biotype_ref_path, random_seed,graph_format,kwargs',
@@ -1763,41 +1730,10 @@ def test_enrichment_runner_extract_xlmhg_results(pval_fwd, pval_rev, escore_fwd,
       'path/to/biotype/ref', 42, 'pdf', {'reps': 10000})])
 def test_kegg_enrichment_runner_api(monkeypatch, single_list, genes, biotypes, pval_func, background_set,
                                     biotype_ref_path, random_seed, graph_format, kwargs, exclude_unannotated):
-    monkeypatch.setattr(KEGGEnrichmentRunner, 'get_taxon_id', lambda *args: ('a', 'b'))
+    monkeypatch.setattr(io, 'get_taxon_and_id_type', lambda *args: (('a', 'b'), 'gene_id_type'))
     KEGGEnrichmentRunner(genes, 'organism', 'gene_id_type', 0.05, True, False, 'fname', False, False, True,
                          'set_name', False, pval_func, biotypes, background_set, biotype_ref_path,
                          exclude_unannotated, single_list, random_seed, graph_format, **kwargs)
-
-
-@pytest.mark.parametrize('got_gene_id_type', (True, False))
-@pytest.mark.parametrize('organism,truth',
-                         [('auto', ('inferred_id', 'inferred_organism')),
-                          ('c elegans', ('c elegans_mapped_id', 'organism'))])
-def test_kegg_enrichment_runner_get_taxon_id(monkeypatch, organism, got_gene_id_type, truth):
-    gene_id_type_truth = 'UniProtKB'
-
-    def alt_infer_taxon_id(gene_set, gene_id_type=None):
-        assert isinstance(gene_set, set)
-        if got_gene_id_type:
-            assert gene_id_type == gene_id_type_truth
-        else:
-            assert gene_id_type is None
-        return ('inferred_id', 'inferred_organism'), 'map_from'
-
-    monkeypatch.setattr(io, 'map_taxon_id', lambda input_organism: (input_organism + '_mapped_id', 'organism'))
-    monkeypatch.setattr(io, 'infer_taxon_from_gene_ids', alt_infer_taxon_id)
-    runner = KEGGEnrichmentRunner.__new__(KEGGEnrichmentRunner)
-    runner.gene_set = {'gene1', 'gene2', 'gene4'}
-    runner.organism = organism
-
-    if got_gene_id_type:
-        runner.gene_id_type = gene_id_type_truth
-        res = runner.get_taxon_id(organism)
-    else:
-        runner.gene_id_type = 'auto'
-        res = runner.get_taxon_id(organism)
-
-    assert res == truth
 
 
 def test_kegg_enrichment_runner_format_results(monkeypatch):
@@ -1899,7 +1835,9 @@ def test_kegg_enrichment_runner_process_annotations(monkeypatch):
     ({'gene1': 'gene1_translated', 'gene2': 'gene2_translated', 'gene3': 'gene3_translated'},
      {'gene1_translated': {'GO1', 'GO2'}, 'gene2_translated': {'GO1'}, 'gene3_translated': {'GO2'}})])
 def test_kegg_enrichment_runner_translate_gene_ids(monkeypatch, mapping_dict, truth):
-    monkeypatch.setattr(io, 'map_gene_ids', lambda gene_id, source, gene_id_type: mapping_dict)
+    monkeypatch.setattr(io.GeneIDTranslator, '__init__', lambda *args: None)
+    monkeypatch.setattr(io.GeneIDTranslator, 'run', lambda *args: mapping_dict)
+
     sparse_annotation_dict = {'gene1': {'GO1', 'GO2'}, 'gene2': {'GO1'}, 'gene3': {'GO2'}}
 
     runner = KEGGEnrichmentRunner.__new__(KEGGEnrichmentRunner)

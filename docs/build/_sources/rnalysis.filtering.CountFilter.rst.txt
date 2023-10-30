@@ -1,4 +1,4 @@
-rnalysis.filtering.CountFilter
+﻿rnalysis.filtering.CountFilter
 ==============================
 
 .. currentmodule:: rnalysis.filtering
@@ -39,6 +39,8 @@ rnalysis.filtering.CountFilter
     CountFilter.filter_missing_values
     CountFilter.filter_percentile
     CountFilter.filter_top_n
+    CountFilter.find_paralogs_ensembl
+    CountFilter.find_paralogs_panther
     CountFilter.fold_change
     CountFilter.from_dataframe
     CountFilter.from_folder
@@ -47,6 +49,10 @@ rnalysis.filtering.CountFilter
     CountFilter.intersection
     CountFilter.ma_plot
     CountFilter.majority_vote_intersection
+    CountFilter.map_orthologs_ensembl
+    CountFilter.map_orthologs_orthoinspector
+    CountFilter.map_orthologs_panther
+    CountFilter.map_orthologs_phylomedb
     CountFilter.normalize_median_of_ratios
     CountFilter.normalize_rle
     CountFilter.normalize_tmm
@@ -66,6 +72,7 @@ rnalysis.filtering.CountFilter
     CountFilter.save_table
     CountFilter.scatter_sample_vs_sample
     CountFilter.sort
+    CountFilter.sort_by_principal_component
     CountFilter.split_by_attribute
     CountFilter.split_by_percentile
     CountFilter.split_by_principal_components

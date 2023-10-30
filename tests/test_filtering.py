@@ -1,5 +1,6 @@
 import json
 import shutil
+from unittest.mock import patch, Mock
 
 import matplotlib
 import pytest
@@ -132,16 +133,16 @@ def test_from_string(monkeypatch):
     ('UniProtKB', 'auto', True, 'tests/test_files/counted_translated_remove_unmapped.csv'),
 ])
 def test_filter_translate_gene_ids(map_to, map_from, remove_unmapped_genes, expected, monkeypatch):
-    def mock_map_gene_ids(ids, trans_from, trans_to='UniProtKB AC', verbose=True):
-        if trans_from == 'WormBase':
-            return io.GeneIDTranslator(
+    def mock_map_gene_ids(self, ids):
+        if self.map_from == 'WormBase':
+            return io.GeneIDDict(
                 {'WBGene00007063': 'A0A0K3AWR5', 'WBGene00007064': 'A0A2X0T1Z3', 'WBGene00007067': 'D3NQA2',
                  'WBGene00077503': 'H2L2B5', 'WBGene00007071': 'Q17405', 'WBGene00014997': 'Q7JNR0',
                  'WBGene00043988': 'A4F2Z7', 'WBGene00043989': 'G5EFZ2', 'WBGene00007075': 'G5EDW3',
                  'WBGene00007076': 'G5EFZ2'})
-        return io.GeneIDTranslator({})
+        return io.GeneIDDict({})
 
-    monkeypatch.setattr(io, 'map_gene_ids', mock_map_gene_ids)
+    monkeypatch.setattr(io.GeneIDTranslator, 'run', mock_map_gene_ids)
     truth = io.load_table(expected, index_col=0)
     f = Filter('tests/test_files/counted.csv')
 
@@ -1870,9 +1871,10 @@ def test_transform(filter_obj, columns, function, kwargs, matching_function):
             truth.df[columns] = matching_function(truth.df[columns].to_frame())
         else:
             truth.df[columns] = matching_function(truth.df[columns])
-    filter_obj.transform(function, columns, **kwargs)
+    cp = filter_obj.__copy__()
+    cp.transform(function, columns, **kwargs)
 
-    filter_obj.df.equals(truth.df)
+    cp.df.equals(truth.df)
 
 
 def test_import_pipeline():
@@ -1916,7 +1918,7 @@ def test_export_pipeline():
 @pytest.mark.parametrize('components,gene_fraction,truth_paths', [
     (1, 0.32, ['tests/test_files/counted_pc1_0.32_top.csv', 'tests/test_files/counted_pc1_0.32_bottom.csv'])
 ])
-def test_filter_by_principal_components(components, gene_fraction, truth_paths):
+def test_split_by_principal_components(components, gene_fraction, truth_paths):
     truth = [CountFilter(pth) for pth in truth_paths]
     c = CountFilter('tests/test_files/counted.csv')
     c.filter_low_reads(1)
@@ -1949,9 +1951,10 @@ def test_filter_by_kegg_annotations(monkeypatch, ids, mode, truth_path):
 
     monkeypatch.setattr(io.KEGGAnnotationIterator, 'get_kegg_organism_code', lambda *args, **kwargs: 'cel')
     monkeypatch.setattr(io.KEGGAnnotationIterator, 'get_pathway_annotations', annotation_iter)
+    monkeypatch.setattr(io, 'get_taxon_and_id_type', lambda *args, **kwargs: ((6239, 'elegans'), 'KEGG'))
 
     f = Filter('tests/test_files/counted.csv')
-    res = f.filter_by_kegg_annotations(ids, mode, gene_id_type='KEGG', inplace=False)
+    res = f.filter_by_kegg_annotations(ids, mode, gene_id_type='WormBase', inplace=False)
 
     try:
         assert res.df.sort_index().equals(truth.sort_index())
@@ -2119,3 +2122,218 @@ def test_filter_by_row_name():
     assert res.df.equals(truth)
     f.filter_by_row_name(names)
     assert f.df.equals(truth)
+
+
+class TestOrthologDictTableGenerator:
+    def test_create_one2many_table_ortholog(self):
+        # Test when the mode is 'ortholog'
+        mapping_dict = {
+            'gene1': ['ortholog1', 'ortholog2'],
+            'gene2': ['ortholog3'],
+        }
+        expected_table = pd.DataFrame([
+            ('gene1', 'ortholog1'),
+            ('gene1', 'ortholog2'),
+            ('gene2', 'ortholog3'),
+        ], columns=['gene', 'ortholog'])
+
+        result_table = Filter._create_one2many_table(io.OrthologDict(mapping_dict))
+        pd.testing.assert_frame_equal(result_table, expected_table)
+
+    def test_create_one2many_table_paralog(self):
+        # Test when the mode is 'paralog'
+        mapping_dict = {
+            'gene1': ['paralog1', 'paralog2'],
+            'gene2': ['paralog3'],
+        }
+        expected_table = pd.DataFrame([
+            ('gene1', 'paralog1'),
+            ('gene1', 'paralog2'),
+            ('gene2', 'paralog3'),
+        ], columns=['gene', 'paralog'])
+
+        result_table = Filter._create_one2many_table(io.OrthologDict(mapping_dict), mode='paralog')
+        pd.testing.assert_frame_equal(result_table, expected_table)
+
+    def test_create_one2many_table_empty(self):
+        # Test when the mapping_dict is empty
+        mapping_dict = {}
+        expected_table = pd.DataFrame(columns=['gene', 'ortholog'])
+
+        result_table = Filter._create_one2many_table(io.OrthologDict(mapping_dict))
+        pd.testing.assert_frame_equal(result_table, expected_table)
+
+    def test_create_one2many_table_no_mapping(self):
+        # Test when no mapping_dict is provided (None)
+        expected_table = pd.DataFrame(columns=['gene', 'ortholog'])
+
+        result_table = Filter._create_one2many_table(io.OrthologDict())
+        pd.testing.assert_frame_equal(result_table, expected_table)
+
+
+@patch('rnalysis.utils.io.PantherOrthologMapper')
+def test_find_paralogs_panther(mock_mapper):
+    df_truth = pd.DataFrame({'gene': ['gene1', 'gene1', 'gene2'], 'paralog': ['paralog1', 'paralog2', 'paralog3']})
+    mock_mapper_instance = Mock()
+    mock_mapper.return_value = mock_mapper_instance
+    mock_mapper_instance.get_paralogs.return_value = io.OrthologDict(
+        {'gene1': ['paralog1', 'paralog2'], 'gene2': ['paralog3']})
+
+    filter_obj = Filter('tests/test_files/test_map_orthologs.csv')
+    result = filter_obj.find_paralogs_panther(organism='Homo sapiens', gene_id_type='UniProtKB')
+
+    assert result.equals(df_truth)
+    mock_mapper.assert_called_once_with(9606, 9606, 'UniProtKB')
+    mock_mapper_instance.get_paralogs.assert_called_once_with(parsing.data_to_tuple(filter_obj.index_set))
+
+
+@pytest.mark.parametrize('filter_percent_identity', [True, False])
+@patch('rnalysis.utils.io.EnsemblOrthologMapper')
+def test_find_paralogs_ensembl(mock_mapper, filter_percent_identity):
+    df_truth = pd.DataFrame({'gene': ['gene1', 'gene1', 'gene2'], 'paralog': ['paralog1', 'paralog2', 'paralog3']})
+    mock_mapper_instance = Mock()
+    mock_mapper.return_value = mock_mapper_instance
+    mock_mapper_instance.get_paralogs.return_value = io.OrthologDict(
+        {'gene1': ['paralog1', 'paralog2'], 'gene2': ['paralog3']})
+
+    filter_obj = Filter('tests/test_files/test_map_orthologs.csv')
+    result = filter_obj.find_paralogs_ensembl(organism='Homo sapiens', gene_id_type='UniProtKB',
+                                              filter_percent_identity=filter_percent_identity)
+
+    assert result.equals(df_truth)
+    mock_mapper.assert_called_once_with(9606, 9606, 'UniProtKB')
+    mock_mapper_instance.get_paralogs.assert_called_once_with(parsing.data_to_tuple(filter_obj.index_set),
+                                                              filter_percent_identity)
+
+
+@pytest.mark.parametrize('remove_unmapped', [True, False])
+@pytest.mark.parametrize('non_unique_mode,filter_least_diverged', [
+    ('first', True),
+    ('last', False),
+])
+@patch('rnalysis.utils.io.PantherOrthologMapper')
+def test_map_orthologs_panther(mock_mapper, non_unique_mode, filter_least_diverged, remove_unmapped):
+    if remove_unmapped:
+        filter_obj_path = 'tests/test_files/test_map_orthologs_remove_unmapped_truth.csv'
+    else:
+        filter_obj_path = 'tests/test_files/test_map_orthologs_truth.csv'
+    filter_obj_truth = Filter(filter_obj_path)
+    one2many_truth = pd.DataFrame(
+        {'gene': ['gene1', 'gene1', 'gene2'], 'ortholog': ['ortholog1', 'ortholog2', 'ortholog3']})
+    mock_mapper_instance = Mock()
+    mock_mapper.return_value = mock_mapper_instance
+    mock_mapper_instance.get_orthologs.return_value = (
+        io.OrthologDict({'gene1': 'ortholog2', 'gene2': 'ortholog3'})
+        , io.OrthologDict({'gene1': ['ortholog1', 'ortholog2'], 'gene2': ['ortholog3']}))
+
+    filter_obj = Filter('tests/test_files/test_map_orthologs.csv')
+    one2one, one2many = filter_obj.map_orthologs_panther('Homo sapiens', 'caenorhabditis elegans',
+                                                         gene_id_type='UniProtKB', inplace=False,
+                                                         non_unique_mode=non_unique_mode,
+                                                         filter_least_diverged=filter_least_diverged,
+                                                         remove_unmapped_genes=remove_unmapped)
+
+    assert one2many.equals(one2many_truth)
+    assert one2one == filter_obj_truth
+    mock_mapper.assert_called_once_with(9606, 6239, 'UniProtKB')
+    mock_mapper_instance.get_orthologs.assert_called_once_with(
+        parsing.data_to_tuple(filter_obj.index_set), non_unique_mode, filter_least_diverged)
+
+
+@pytest.mark.parametrize('remove_unmapped', [True, False])
+@pytest.mark.parametrize('non_unique_mode,filter_percent_identity', [
+    ('first', True),
+    ('last', False),
+])
+@patch('rnalysis.utils.io.EnsemblOrthologMapper')
+def test_map_orthologs_ensembl(mock_mapper, non_unique_mode, filter_percent_identity, remove_unmapped):
+    if remove_unmapped:
+        filter_obj_path = 'tests/test_files/test_map_orthologs_remove_unmapped_truth.csv'
+    else:
+        filter_obj_path = 'tests/test_files/test_map_orthologs_truth.csv'
+    filter_obj_truth = Filter(filter_obj_path)
+    one2many_truth = pd.DataFrame(
+        {'gene': ['gene1', 'gene1', 'gene2'], 'ortholog': ['ortholog1', 'ortholog2', 'ortholog3']})
+    mock_mapper_instance = Mock()
+    mock_mapper.return_value = mock_mapper_instance
+    mock_mapper_instance.get_orthologs.return_value = (
+        io.OrthologDict({'gene1': 'ortholog2', 'gene2': 'ortholog3'})
+        , io.OrthologDict({'gene1': ['ortholog1', 'ortholog2'], 'gene2': ['ortholog3']}))
+
+    filter_obj = Filter('tests/test_files/test_map_orthologs.csv')
+    one2one, one2many = filter_obj.map_orthologs_ensembl('Homo sapiens', 'caenorhabditis elegans',
+                                                         gene_id_type='UniProtKB', inplace=False,
+                                                         non_unique_mode=non_unique_mode,
+                                                         filter_percent_identity=filter_percent_identity,
+                                                         remove_unmapped_genes=remove_unmapped)
+
+    assert one2many.equals(one2many_truth)
+    assert one2one == filter_obj_truth
+    mock_mapper.assert_called_once_with(9606, 6239, 'UniProtKB')
+    mock_mapper_instance.get_orthologs.assert_called_once_with(
+        parsing.data_to_tuple(filter_obj.index_set), non_unique_mode, filter_percent_identity)
+
+
+@pytest.mark.parametrize('remove_unmapped', [True, False])
+@pytest.mark.parametrize('non_unique_mode,filter_consistency_score,threshold', [
+    ('first', True, 0.5),
+    ('last', False, 0.93),
+])
+@patch('rnalysis.utils.io.PhylomeDBOrthologMapper')
+def test_map_orthologs_phylomedb(mock_mapper, non_unique_mode, filter_consistency_score, remove_unmapped, threshold):
+    if remove_unmapped:
+        filter_obj_path = 'tests/test_files/test_map_orthologs_remove_unmapped_truth.csv'
+    else:
+        filter_obj_path = 'tests/test_files/test_map_orthologs_truth.csv'
+    filter_obj_truth = Filter(filter_obj_path)
+    one2many_truth = pd.DataFrame(
+        {'gene': ['gene1', 'gene1', 'gene2'], 'ortholog': ['ortholog1', 'ortholog2', 'ortholog3']})
+    mock_mapper_instance = Mock()
+    mock_mapper.return_value = mock_mapper_instance
+    mock_mapper_instance.get_orthologs.return_value = (
+        io.OrthologDict({'gene1': 'ortholog2', 'gene2': 'ortholog3'})
+        , io.OrthologDict({'gene1': ['ortholog1', 'ortholog2'], 'gene2': ['ortholog3']}))
+
+    filter_obj = Filter('tests/test_files/test_map_orthologs.csv')
+    one2one, one2many = filter_obj.map_orthologs_phylomedb('Homo sapiens', 'caenorhabditis elegans',
+                                                           gene_id_type='UniProtKB', inplace=False,
+                                                           non_unique_mode=non_unique_mode,
+                                                           filter_consistency_score=filter_consistency_score,
+                                                           consistency_score_threshold=threshold,
+                                                           remove_unmapped_genes=remove_unmapped)
+
+    assert one2many.equals(one2many_truth)
+    assert one2one == filter_obj_truth
+    mock_mapper.assert_called_once_with(9606, 6239, 'UniProtKB')
+    mock_mapper_instance.get_orthologs.assert_called_once_with(
+        parsing.data_to_tuple(filter_obj.index_set), non_unique_mode, threshold, filter_consistency_score)
+
+
+@pytest.mark.parametrize('remove_unmapped', [True, False])
+@pytest.mark.parametrize('non_unique_mode', ['first', 'last'])
+@patch('rnalysis.utils.io.OrthoInspectorOrthologMapper')
+def test_map_orthologs_orthoinspector(mock_mapper, non_unique_mode, remove_unmapped):
+    if remove_unmapped:
+        filter_obj_path = 'tests/test_files/test_map_orthologs_remove_unmapped_truth.csv'
+    else:
+        filter_obj_path = 'tests/test_files/test_map_orthologs_truth.csv'
+    filter_obj_truth = Filter(filter_obj_path)
+    one2many_truth = pd.DataFrame(
+        {'gene': ['gene1', 'gene1', 'gene2'], 'ortholog': ['ortholog1', 'ortholog2', 'ortholog3']})
+    mock_mapper_instance = Mock()
+    mock_mapper.return_value = mock_mapper_instance
+    mock_mapper_instance.get_orthologs.return_value = (
+        io.OrthologDict({'gene1': 'ortholog2', 'gene2': 'ortholog3'})
+        , io.OrthologDict({'gene1': ['ortholog1', 'ortholog2'], 'gene2': ['ortholog3']}))
+
+    filter_obj = Filter('tests/test_files/test_map_orthologs.csv')
+    one2one, one2many = filter_obj.map_orthologs_orthoinspector('Homo sapiens', 'caenorhabditis elegans',
+                                                                gene_id_type='UniProtKB', inplace=False,
+                                                                non_unique_mode=non_unique_mode,
+                                                                remove_unmapped_genes=remove_unmapped)
+
+    assert one2many.equals(one2many_truth)
+    assert one2one == filter_obj_truth
+    mock_mapper.assert_called_once_with(9606, 6239, 'UniProtKB')
+    mock_mapper_instance.get_orthologs.assert_called_once_with(
+        parsing.data_to_tuple(filter_obj.index_set), non_unique_mode)

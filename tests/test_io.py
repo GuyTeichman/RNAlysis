@@ -1,3 +1,4 @@
+from unittest import mock
 from unittest.mock import MagicMock
 
 import pytest
@@ -5,11 +6,12 @@ import requests_mock
 
 from rnalysis.utils import io
 from rnalysis.utils.io import *
-from rnalysis.utils.io import _format_ids_iter, _ensmbl_lookup_post_request
-from tests import is_uniprot_available, is_ensembl_available
+from rnalysis.utils.io import _format_ids_iter, _ensembl_lookup_post_request
+from tests import is_uniprot_available, is_ensembl_available, is_phylomedb_available
 
 ENSEMBL_AVAILABLE = is_ensembl_available()
 UNIPROT_AVAILABLE = is_uniprot_available()
+PHYLOMEDB_AVAILABLE = is_phylomedb_available()
 
 
 class MockResponse(object):
@@ -35,6 +37,17 @@ class MockResponse(object):
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         return
+
+
+class AsyncMockResponse(MockResponse):
+    async def __aenter__(self):
+        return self
+
+    async def __aexit__(self, exc_type, exc_val, exc_tb):
+        pass
+
+    async def json(self):
+        return self._json
 
 
 def test_load_csv_bad_input():
@@ -99,25 +112,25 @@ def test_format_ids_iter():
 
 
 def test_gene_id_translator_api():
-    _ = GeneIDTranslator({1: 2, 3: 4})
-    _ = GeneIDTranslator()
+    _ = GeneIDDict({1: 2, 3: 4})
+    _ = GeneIDDict()
 
 
 def test_gene_id_translator_getitem():
-    translator = GeneIDTranslator({1: 2, 3: 4})
+    translator = GeneIDDict({1: 2, 3: 4})
     assert translator[1] == 2
     assert translator[3] == 4
-    translator = GeneIDTranslator(None)
+    translator = GeneIDDict(None)
     for something in [2, 3, '1', False, True, {}, 3.141592]:
         assert translator[something] == something
 
 
 def test_gene_id_translator_contains():
-    translator = GeneIDTranslator({1: 2, 3: 4})
+    translator = GeneIDDict({1: 2, 3: 4})
     assert 1 in translator and 3 in translator
     for invalid in [2, 4, '1', False]:
         assert invalid not in translator
-    translator = GeneIDTranslator(None)
+    translator = GeneIDDict(None)
     for something in [2, 3, '1', False, True, {}, 3.141592]:
         assert something in translator
 
@@ -210,7 +223,10 @@ def test_golr_annotation_iterator_generate_query():
 
 def test_golr_annotation_iterator_golr_request_connectivity(monkeypatch):
     fake_params = {'param': 'value', 'other_param': 'other_value'}
-    assert isinstance(GOlrAnnotationIterator._golr_request(fake_params), str)
+    session = get_session(GOlrAnnotationIterator.RETRIES)
+    golr_it = GOlrAnnotationIterator.__new__(GOlrAnnotationIterator)
+    golr_it.session = session
+    assert isinstance(golr_it._golr_request(fake_params), str)
 
 
 def remove_cached_test_file(cached_filename: str):
@@ -227,33 +243,36 @@ def test_golr_annotation_iterator_golr_request(monkeypatch):
     correct_url = GOlrAnnotationIterator.URL
     correct_params = {'param': 'value', 'other_param': 'other_value'}
 
-    def mock_get(url, params: dict):
+    def mock_get(self, url, params: dict):
         assert url == correct_url
         assert params == correct_params
         return MockResponse(text='the correct text')
 
-    monkeypatch.setattr(requests, 'get', mock_get)
+    monkeypatch.setattr(requests.Session, 'get', mock_get)
     monkeypatch.setattr(GOlrAnnotationIterator, '_generate_cached_filename', lambda self, start: 'test.json')
-    assert GOlrAnnotationIterator._golr_request(correct_params, cached_filename) == 'the correct text'
+    session = get_session(GOlrAnnotationIterator.RETRIES)
+    golr_it = GOlrAnnotationIterator.__new__(GOlrAnnotationIterator)
+    golr_it.session = session
+    assert golr_it._golr_request(correct_params, cached_filename) == 'the correct text'
 
-    def mock_get_uncached(url, params: dict):
+    def mock_get_uncached(self, url, params: dict):
         raise AssertionError("This function should not be called if a cached file was found!")
 
-    monkeypatch.setattr(requests, 'get', mock_get_uncached)
+    monkeypatch.setattr(requests.Session, 'get', mock_get_uncached)
     try:
-        assert GOlrAnnotationIterator._golr_request(correct_params, cached_filename) == 'the correct text'
+        assert golr_it._golr_request(correct_params, cached_filename) == 'the correct text'
     finally:
         remove_cached_test_file(cached_filename)
 
-    def mock_get_failed(url, params: dict):
+    def mock_get_failed(self, url, params: dict):
         assert url == correct_url
         assert params == correct_params
         return MockResponse(text='the correct text', status_code=404)
 
-    monkeypatch.setattr(requests, 'get', mock_get_failed)
+    monkeypatch.setattr(requests.Session, 'get', mock_get_failed)
     try:
         with pytest.raises(ConnectionError):
-            _ = GOlrAnnotationIterator._golr_request(correct_params)
+            _ = golr_it._golr_request(correct_params)
     finally:
         remove_cached_test_file(cached_filename)
 
@@ -332,6 +351,7 @@ def test_map_taxon_id_no_results(monkeypatch):
         return MockResponse(text='')
 
     monkeypatch.setattr(requests, 'get', mock_requests_get)
+    map_taxon_id.cache_clear()
     with pytest.raises(ValueError):
         map_taxon_id('')
 
@@ -358,16 +378,16 @@ def test_map_taxon_id_no_connection(monkeypatch):
 def test_ensmbl_lookup_post_request(monkeypatch):
     ids = ('id1', 'id2', 'id3')
 
-    def mock_post_request(url, headers, data):
+    def mock_post_request(self, url, headers, data):
         assert url == 'https://rest.ensembl.org/lookup/id'
         assert headers == {"Content-Type": "application/json", "Accept": "application/json"}
         assert isinstance(data, str)
         assert json.loads(data) == {'ids': list(ids)}
 
-        return MockResponse(json_output={this_id: {} for this_id in ids})
+        return AsyncMockResponse(json_output={this_id: {} for this_id in ids})
 
-    monkeypatch.setattr(requests, 'post', mock_post_request)
-    assert _ensmbl_lookup_post_request(ids) == {'id1': {}, 'id2': {}, 'id3': {}}
+    monkeypatch.setattr(aiohttp.ClientSession, 'post', mock_post_request)
+    assert _ensembl_lookup_post_request(ids) == {'id1': {}, 'id2': {}, 'id3': {}}
 
 
 @pytest.mark.parametrize("gene_id_info,truth", [
@@ -379,7 +399,7 @@ def test_ensmbl_lookup_post_request(monkeypatch):
     ({}, {})
 ])
 def test_infer_sources_from_gene_ids(monkeypatch, gene_id_info, truth):
-    monkeypatch.setattr(io, '_ensmbl_lookup_post_request', lambda x: gene_id_info)
+    monkeypatch.setattr(io, '_ensembl_lookup_post_request', lambda x: gene_id_info)
     assert infer_sources_from_gene_ids([]) == truth
 
 
@@ -389,13 +409,13 @@ def test_infer_sources_from_gene_ids(monkeypatch, gene_id_info, truth):
      'm musculus')])
 def test_infer_taxon_from_gene_ids(monkeypatch, gene_id_info, truth):
     monkeypatch.setattr(io, 'map_taxon_id', lambda x: x)
-    monkeypatch.setattr(io, '_ensmbl_lookup_post_request', lambda x: gene_id_info)
+    monkeypatch.setattr(io, '_ensembl_lookup_post_request', lambda x: gene_id_info)
     assert infer_taxon_from_gene_ids([])[0] == truth
 
 
 def test_infer_taxon_from_gene_ids_no_species(monkeypatch):
     gene_id_info = {'id1': None, 'id2': None}
-    monkeypatch.setattr(io, '_ensmbl_lookup_post_request', lambda x: gene_id_info)
+    monkeypatch.setattr(io, '_ensembl_lookup_post_request', lambda x: gene_id_info)
     with pytest.raises(ValueError):
         infer_taxon_from_gene_ids([])
 
@@ -410,12 +430,10 @@ mapped_ids_truth_rev = {b: a for a, b in zip(mapped_ids_truth.keys(), mapped_ids
 
 @pytest.mark.parametrize('ids,map_from,map_to,expected_dict',
                          [(ids_uniprot, 'UniProtKB', 'WormBase', mapped_ids_truth),
-                          (ids_wormbase, 'WormBase', 'UniProtKB', mapped_ids_truth_rev),
-                          (entrez_to_wb_truth.keys(), 'Entrez Gene ID', 'WormBase', entrez_to_wb_truth),
-                          (wb_to_entrez_truth.keys(), 'WormBase', 'Entrez Gene ID', wb_to_entrez_truth)])
+                          (ids_wormbase, 'WormBase', 'UniProtKB', mapped_ids_truth_rev)])
 @pytest.mark.skipif(not UNIPROT_AVAILABLE, reason='UniProt REST API is not available at the moment')
 def test_map_gene_ids_connectivity(ids, map_from, map_to, expected_dict):
-    mapped_ids = map_gene_ids(ids, map_from, map_to)
+    mapped_ids = GeneIDTranslator(map_from, map_to).run(ids)
     for geneid in ids:
         assert geneid in mapped_ids
         assert mapped_ids[geneid] == expected_dict[geneid]
@@ -424,7 +442,7 @@ def test_map_gene_ids_connectivity(ids, map_from, map_to, expected_dict):
 
 @pytest.mark.parametrize('id_type', ['UniProtKB', 'Entrez', 'WormBase'])
 def test_map_gene_ids_to_same_set(id_type):
-    mapper = map_gene_ids(['it', 'doesnt', 'matter', 'what', 'is', 'in', 'here'], id_type, id_type)
+    mapper = GeneIDTranslator(id_type, id_type).run(['it', 'doesnt', 'matter', 'what', 'is', 'in', 'here'])
     assert mapper.mapping_dict is None
     for i in ['it', 'not', False, 42, 3.14]:
         assert i in mapper
@@ -454,7 +472,7 @@ def test_map_gene_ids_request(monkeypatch, ids, map_from, map_to, req_from, req_
 
     monkeypatch.setattr(requests, 'get', mock_get)
     monkeypatch.setattr(io, 'get_legal_gene_id_types', lambda: legal_types)
-    res = map_gene_ids(ids, map_from, map_to)
+    res = GeneIDTranslator(map_from, map_to).run(ids)
     for gene_id in truth:
         assert res[gene_id] == truth[gene_id]
 
@@ -477,20 +495,19 @@ def test_map_gene_ids_with_duplicates(monkeypatch, ids, map_from, map_to, txt, r
              'UniProtKB': 'UniProtKB'}
         return d, d
 
-    def mock_get_mapping_results(api_url: str, from_db: str, to_db: str, ids: List[str], polling_interval: float,
-                                 session, verbose):
+    def mock_get_mapping_results(self, to_db: str, from_db: str, ids: List[str], session):
         mock_abbrev_dict_to, mock_abbrev_dict_from = mock_abbrev_dict()
-        if to_db == mock_abbrev_dict_to['UniProtKB_to']:
+        if to_db == 'UniProtKB_to':
             return_txt = txt if map_to == 'UniProtKB' else rev_txt
-        elif from_db == mock_abbrev_dict_from['UniProtKB_from']:
+        elif from_db == 'UniProtKB_from':
             return_txt = txt if map_from == 'UniProtKB' else rev_txt
         else:
-            raise ValueError(to_db, from_db)
+            raise ValueError(self.map_to, self.map_from)
         return return_txt.split('\n')
 
     monkeypatch.setattr(io, '_get_id_abbreviation_dicts', mock_abbrev_dict)
-    monkeypatch.setattr(io, 'get_mapping_results', mock_get_mapping_results)
-    res = map_gene_ids(ids, map_from, map_to)
+    monkeypatch.setattr(GeneIDTranslator, 'get_mapping_results', mock_get_mapping_results)
+    res = GeneIDTranslator(map_from, map_to).run(ids)
     for gene_id in truth:
         assert res[gene_id] == truth[gene_id]
 
@@ -576,14 +593,15 @@ def test_kegg_annotation_iterator_kegg_request(monkeypatch, arguments, url_truth
         assert content == truth
         cached.append(True)
 
-    def mock_get(url):
+    def mock_get(self, url):
         assert url == url_truth
         return MockResponse(text=truth)
 
     monkeypatch.setattr(io, 'load_cached_file', mock_get_cached_file)
-    monkeypatch.setattr(requests, 'get', mock_get)
+    monkeypatch.setattr(requests.Session, 'get', mock_get)
     monkeypatch.setattr(io, 'cache_file', mock_cache_file)
-    assert KEGGAnnotationIterator._kegg_request('operation', arguments, 'cached_filename.csv') == (
+    session = get_session(KEGGAnnotationIterator.RETRIES)
+    assert KEGGAnnotationIterator._kegg_request(session, 'operation', arguments, 'cached_filename.csv') == (
         truth, False)
     assert cached == [True]
 
@@ -595,7 +613,9 @@ def test_kegg_annotation_iterator_kegg_request_cached(monkeypatch):
         return truth
 
     monkeypatch.setattr(io, 'load_cached_file', mock_get_cached_file)
-    assert KEGGAnnotationIterator._kegg_request('operation', 'argument', 'cached_filename.csv') == (truth, True)
+    session = get_session(KEGGAnnotationIterator.RETRIES)
+    assert KEGGAnnotationIterator._kegg_request(session, 'operation', 'argument', 'cached_filename.csv') == (
+        truth, True)
 
 
 PATHWAY_NAMES_TRUTH = {'cel00010': 'Glycolysis / Gluconeogenesis - Caenorhabditis elegans (nematode)',
@@ -610,7 +630,7 @@ def test_kegg_annotation_iterator_get_pathways(monkeypatch):
     truth = (PATHWAY_NAMES_TRUTH, 6)
     organism_code = 'cel'
 
-    def mock_kegg_request(self, operation, arguments, cached_filename=None):
+    def mock_kegg_request(self, session, operation, arguments, cached_filename=None):
         assert operation == 'list'
         assert arguments == ['pathway', organism_code]
         assert cached_filename == KEGGAnnotationIterator.PATHWAY_NAMES_CACHED_FILENAME
@@ -622,6 +642,7 @@ def test_kegg_annotation_iterator_get_pathways(monkeypatch):
 
     kegg = KEGGAnnotationIterator.__new__(KEGGAnnotationIterator)
     kegg.organism_code = organism_code
+    kegg.session = get_session(kegg.RETRIES)
     assert kegg.get_pathways() == truth
 
 
@@ -640,7 +661,7 @@ def test_kegg_annotation_iterator_get_compounds(monkeypatch):
              'C00011': 'CO2',
              'C00012': 'Peptide', }
 
-    def mock_kegg_request(operation, arguments, cached_filename=None):
+    def mock_kegg_request(session, operation, arguments, cached_filename=None):
         assert operation == 'list'
         assert len(arguments) == 1
         if arguments[0] == 'compound':
@@ -654,6 +675,7 @@ def test_kegg_annotation_iterator_get_compounds(monkeypatch):
     monkeypatch.setattr(KEGGAnnotationIterator, '_kegg_request', mock_kegg_request)
 
     kegg = KEGGAnnotationIterator.__new__(KEGGAnnotationIterator)
+    kegg.session = get_session(kegg.RETRIES)
     res = kegg.get_compounds()
     assert res == truth
     assert sorted(reqs_made) == ['compound', 'glycan']
@@ -674,7 +696,7 @@ def test_kegg_annotation_iterator_get_pathway_kgml(monkeypatch, pathway_id, expe
     with open(pth) as f:
         truth = ElementTree.parse(f)
 
-    def mock_kegg_request(operation, arguments, cached_filename=None):
+    def mock_kegg_request(session, operation, arguments, cached_filename=None):
         assert operation == 'get'
         assert arguments == [pathway_id, 'kgml']
         assert cached_filename == expected_fname
@@ -684,6 +706,7 @@ def test_kegg_annotation_iterator_get_pathway_kgml(monkeypatch, pathway_id, expe
     monkeypatch.setattr(KEGGAnnotationIterator, '_kegg_request', mock_kegg_request)
 
     kegg = KEGGAnnotationIterator.__new__(KEGGAnnotationIterator)
+    kegg.session = get_session(kegg.RETRIES)
     assert are_xml_elements_equal(kegg.get_pathway_kgml(pathway_id).getroot(), truth.getroot())
 
 
@@ -713,7 +736,7 @@ def test_kegg_annotation_iterator_get_pathway_annotations(monkeypatch):
              'cel00052': ['Galactose metabolism - Caenorhabditis elegans (nematode)', {'cel:CELE_C01B4.6'}]}
     args_truth = ['cel00010+cel00020+cel00030', 'cel00040+cel00051+cel00052']
 
-    def mock_kegg_request(self, operation, arguments, fname):
+    def mock_kegg_request(self, session, operation, arguments, fname):
         assert operation == 'get'
         assert arguments == args_truth[0] or arguments == args_truth[1]
         if arguments == args_truth[0]:
@@ -729,6 +752,7 @@ def test_kegg_annotation_iterator_get_pathway_annotations(monkeypatch):
     kegg.pathway_annotations = None
     kegg.taxon_id = 6239
     kegg.organism_code = 'cel'
+    kegg.session = get_session(kegg.RETRIES)
     kegg.pathway_names = PATHWAY_NAMES_TRUTH
     assert {key: [name, ann] for key, name, ann in kegg.get_pathway_annotations()} == truth
 
@@ -750,13 +774,13 @@ def test_kegg_annotation_iterator_get_pathway_annotations_cached():
     (6238, 'cbr')
 ])
 def test_kegg_annotation_iterator_get_kegg_organism_code(monkeypatch, taxon_id, truth):
-    def mock_get_tree():
+    def mock_get_tree(_):
         with open('tests/test_files/kegg_taxon_tree_truth.json') as f:
             return json.loads(f.read())
 
     monkeypatch.setattr(KEGGAnnotationIterator, '_get_taxon_tree', mock_get_tree)
-
-    assert KEGGAnnotationIterator.get_kegg_organism_code(taxon_id) == truth
+    session = get_session(KEGGAnnotationIterator.RETRIES)
+    assert KEGGAnnotationIterator.get_kegg_organism_code(taxon_id, session) == truth
 
 
 def test_kegg_annotation_iterator_get_taxon_tree(monkeypatch):
@@ -772,16 +796,17 @@ def test_kegg_annotation_iterator_get_taxon_tree(monkeypatch):
         assert content == truth_text
         cached.append(True)
 
-    def mock_get(url, params):
+    def mock_get(self, url, params):
         assert url == 'https://www.genome.jp/kegg-bin/download_htext?htext=br08610'
         assert params == {'format': 'json'}
         return MockResponse(content=truth_text)
 
     monkeypatch.setattr(io, 'load_cached_file', mock_get_cached_file)
-    monkeypatch.setattr(requests, 'get', mock_get)
+    monkeypatch.setattr(requests.Session, 'get', mock_get)
     monkeypatch.setattr(io, 'cache_file', mock_cache_file)
 
-    assert KEGGAnnotationIterator._get_taxon_tree() == truth
+    session = get_session(KEGGAnnotationIterator.RETRIES)
+    assert KEGGAnnotationIterator._get_taxon_tree(session) == truth
     assert cached == [True]
 
 
@@ -792,7 +817,8 @@ def test_kegg_annotation_iterator_get_taxon_tree_cached(monkeypatch):
         return '{"sample":"json","lorem":"ipsum"}'
 
     monkeypatch.setattr(io, 'load_cached_file', mock_get_cached_file)
-    assert KEGGAnnotationIterator._get_taxon_tree() == truth
+    session = get_session(KEGGAnnotationIterator.RETRIES)
+    assert KEGGAnnotationIterator._get_taxon_tree(session) == truth
 
 
 class MockProcess:
@@ -809,37 +835,6 @@ class MockProcess:
 
     def wait(self):
         return
-
-@pytest.mark.parametrize('r_path,expected', [
-    ('auto', ['Rscript', "tests/test_files/test_r_script.R"]),
-    ('D:/Program Files/R', ["D:/Program Files/R/bin/Rscript", "tests/test_files/test_r_script.R"])
-])
-def test_run_r_script(monkeypatch, r_path, expected):
-    script_path = 'tests/test_files/test_r_script.R'
-
-    ran = []
-
-    def mock_popen(process, stdout, stderr, shell=False):
-        if ran:
-            assert process == expected
-            ran.append(2)
-        else:
-            assert process == [expected[0], '--help']
-            ran.append(1)
-        return MockProcess(0)
-
-    monkeypatch.setattr(subprocess, 'Popen', mock_popen)
-
-    run_r_script(script_path, r_path)
-    assert ran == [1, 2]
-
-def test_run_r_script_not_installed(monkeypatch):
-    def mock_popen(process, stdout, stderr, shell=False):
-        return MockProcess(1)
-
-    monkeypatch.setattr(subprocess, 'Popen', mock_popen)
-    with pytest.raises(FileNotFoundError):
-        run_r_script('tests/test_files/test_r_script.R')
 
 
 @pytest.mark.parametrize("stdout", [True, False])
@@ -918,16 +913,16 @@ def test_load_cached_gui_file(item, filename, load_as_obj, expected_output):
 
 
 def test_get_next_link():
-    headers = {"Link": '<https://www.example.com/next-batch>; rel="next"'}
-    result = get_next_link(headers)
-    assert result == "https://www.example.com/next-batch"
+    headers = {"Link": '<https://www.rest.uniprot.org/next-batch>; rel="next"'}
+    result = GeneIDTranslator.get_next_link(headers)
+    assert result == "https://www.rest.uniprot.org/next-batch"
 
 
 def test_combine_batches_json():
     all_results = {"results": [], "failedIds": []}
     batch_results = {"results": [{"accession": "P29307", "identifier": "7157"}], "failedIds": []}
     file_format = "json"
-    assert combine_batches(all_results, batch_results, file_format) == {
+    assert GeneIDTranslator.combine_batches(all_results, batch_results, file_format) == {
         "results": [{"accession": "P29307", "identifier": "7157"}], "failedIds": []}
 
 
@@ -935,7 +930,7 @@ def test_combine_batches_tsv():
     all_results = ["accession\tannotation_score", "P12345\t1.0"]
     batch_results = ["accession\tannotation_score", "Q67890\t0.8", "P12355\t1.0"]
     file_format = "tsv"
-    combined_results = combine_batches(all_results, batch_results, file_format)
+    combined_results = GeneIDTranslator.combine_batches(all_results, batch_results, file_format)
     assert combined_results == ["accession\tannotation_score", "P12345\t1.0", "Q67890\t0.8", "P12355\t1.0"]
 
 
@@ -943,7 +938,7 @@ def test_combine_batches_other():
     all_results = "some text"
     batch_results = "more text"
     file_format = "unknown"
-    combined_results = combine_batches(all_results, batch_results, file_format)
+    combined_results = GeneIDTranslator.combine_batches(all_results, batch_results, file_format)
     assert combined_results == "some textmore text"
 
 
@@ -952,7 +947,7 @@ def test_decode_results_json():
     response_mock.text = '{"id": 1, "name": "John"}'
     response_mock.json.return_value = {'id': 1, 'name': 'John'}
 
-    result = decode_results(response_mock, 'json')
+    result = GeneIDTranslator.decode_results(response_mock, 'json')
     assert result == {'id': 1, 'name': 'John'}
 
 
@@ -960,7 +955,7 @@ def test_decode_results_tsv():
     response_mock = MagicMock(spec=requests.Response)
     response_mock.text = "id\tname\n1\tJohn\n2\tJane\n"
 
-    result = decode_results(response_mock, 'tsv')
+    result = GeneIDTranslator.decode_results(response_mock, 'tsv')
     assert result == ['id\tname', '1\tJohn', '2\tJane']
 
 
@@ -968,17 +963,17 @@ def test_decode_results_with_invalid_file_format():
     response_mock = MagicMock(spec=requests.Response)
     response_mock.text = 'Invalid format'
 
-    result = decode_results(response_mock, 'csv')
+    result = GeneIDTranslator.decode_results(response_mock, 'csv')
     assert result == 'Invalid format'
 
 
 def test_check_id_mapping_results_ready_with_results():
     with requests_mock.Mocker() as m:
         # Mock the response from the server
-        m.get("http://example.com/idmapping/status/123", json={"results": ['content']})
+        m.get("https://rest.uniprot.org/idmapping/status/123", json={"results": ['content']})
         # Call the function
         session = requests.Session()
-        ready = check_id_mapping_results_ready(session, "http://example.com", "123", 0.1)
+        ready = GeneIDTranslator.check_id_mapping_results_ready(session, "123", 0.1)
         # Check the result
         assert ready
 
@@ -986,10 +981,10 @@ def test_check_id_mapping_results_ready_with_results():
 def test_check_id_mapping_results_ready_with_failed_ids():
     with requests_mock.Mocker() as m:
         # Mock the response from the server
-        m.get("http://example.com/idmapping/status/123", json={"failedIds": ['content']})
+        m.get("https://rest.uniprot.org/idmapping/status/123", json={"failedIds": ['content']})
         # Call the function
         session = requests.Session()
-        ready = check_id_mapping_results_ready(session, "http://example.com", "123", 0.1)
+        ready = GeneIDTranslator.check_id_mapping_results_ready(session, "123", 0.1)
         # Check the result
         assert ready
 
@@ -1007,11 +1002,11 @@ def test_check_id_mapping_results_ready_running():
             else:
                 return {"results": ['data'], "status_code": 200}
 
-        m.get("http://example.com/idmapping/status/123", json=request_callback)
+        m.get("https://rest.uniprot.org/idmapping/status/123", json=request_callback)
 
         # Call the function
         session = requests.Session()
-        ready = check_id_mapping_results_ready(session, "http://example.com", "123", 0.1)
+        ready = GeneIDTranslator.check_id_mapping_results_ready(session, "123", 0.1)
         # Check the result
         assert ready
         assert count == 5
@@ -1020,11 +1015,532 @@ def test_check_id_mapping_results_ready_running():
 def test_check_id_mapping_results_ready_error():
     with requests_mock.Mocker() as m:
         # Mock the response from the server
-        m.get("http://example.com/idmapping/status/123", json={"jobStatus": "ERROR"})
+        m.get("https://rest.uniprot.org/idmapping/status/123", json={"jobStatus": "ERROR"})
 
         # Call the function
         session = requests.Session()
 
         # Check that an exception is raised
         with pytest.raises(Exception):
-            check_id_mapping_results_ready(session, "http://example.com", "123", 0.1)
+            GeneIDTranslator.check_id_mapping_results_ready(session, "https://rest.uniprot.org", "123", 0.1)
+
+
+# Test cases for the OrthologDict class
+class TestOrthologDict:
+
+    # Test the initialization of OrthologDict
+    def test_init(self):
+        ortholog_dict = OrthologDict()
+        assert len(ortholog_dict) == 0  # Check that it's empty when initialized without mapping_dict
+
+        mapping_dict = {'gene1': 'ortho1', 'gene2': 'ortho2'}
+        ortholog_dict = OrthologDict(mapping_dict)
+        assert len(ortholog_dict) == len(mapping_dict)  # Check that it contains the correct number of items
+        assert 'gene1' in ortholog_dict  # Check that a key is present in the mapping
+
+    # Test getting an item from OrthologDict
+    def test_getitem(self):
+        mapping_dict = {'gene1': 'ortho1', 'gene2': 'ortho2'}
+        ortholog_dict = OrthologDict(mapping_dict)
+        assert ortholog_dict['gene1'] == 'ortho1'  # Check that we can get an item
+
+        with pytest.raises(KeyError):
+            _ = ortholog_dict['gene3']  # Check that getting a non-existent item raises a KeyError
+
+    # Test checking for item existence in OrthologDict
+    def test_contains(self):
+        mapping_dict = {'gene1': 'ortho1', 'gene2': 'ortho2'}
+        ortholog_dict = OrthologDict(mapping_dict)
+        assert 'gene1' in ortholog_dict  # Check that an existing key is in the OrthologDict
+        assert 'gene3' not in ortholog_dict  # Check that a non-existent key is not in the OrthologDict
+
+
+@pytest.mark.parametrize(
+    "translated_ids, mapping_one2one, mapping_one2many, expected_one2one, expected_one2many",
+    [
+        # Both mappings are empty
+        (['trans1', 'trans2'], {}, {}, {}, {}),
+
+        # One-to-one mapping contains keys, one-to-many mapping is empty
+        (
+            ['trans1', 'trans2'], {'trans1': 'ortho1', 'trans2': 'ortho2'}, {}, {'gene1': 'ortho1', 'gene2': 'ortho2'},
+            {}),
+
+        # One-to-many mapping contains keys, one-to-one mapping is empty
+        (['trans1', 'trans2'], {}, {'trans1': ['ortho1', 'ortho3'], 'trans2': ['ortho2']}, {},
+         {'gene1': ['ortho1', 'ortho3'], 'gene2': ['ortho2']}),
+
+        # Both mappings contain the same keys
+        (['trans1', 'trans2'], {'trans1': 'ortho1', 'trans2': 'ortho2'},
+         {'trans1': ['ortho1', 'ortho3'], 'trans2': ['ortho2']},
+         {'gene1': 'ortho1', 'gene2': 'ortho2'}, {'gene1': ['ortho1', 'ortho3'], 'gene2': ['ortho2']}),
+
+        # One-to-one mapping has extra keys
+        (['trans1', 'trans2'], {'trans1': 'ortho1', 'trans2': 'ortho2', 'trans3': 'ortho3'},
+         {'trans1': ['ortho1', 'ortho3'], 'trans2': ['ortho2']},
+         {'gene1': 'ortho1', 'gene2': 'ortho2'}, {'gene1': ['ortho1', 'ortho3'], 'gene2': ['ortho2']}),
+
+        # One-to-many mapping has extra keys
+        (['trans1', 'trans2'], {'trans1': 'ortho1', 'trans2': 'ortho2'},
+         {'trans1': ['ortho1', 'ortho3'], 'trans2': ['ortho2'], 'trans3': ['ortho4']},
+         {'gene1': 'ortho1', 'gene2': 'ortho2'}, {'gene1': ['ortho1', 'ortho3'], 'gene2': ['ortho2']}),
+
+        # Both mappings have extra keys
+        (['trans1', 'trans2'], {'trans1': 'ortho1', 'trans2': 'ortho2', 'trans3': 'ortho3'},
+         {'trans1': ['ortho1', 'ortho3'], 'trans2': ['ortho2'], 'trans4': ['ortho4']},
+         {'gene1': 'ortho1', 'gene2': 'ortho2'}, {'gene1': ['ortho1', 'ortho3'], 'gene2': ['ortho2']}),
+
+        # Both mappings are empty, translated_ids contain unmapped IDs
+        (['trans1', 'trans3'], {}, {}, {}, {}),
+
+        # One-to-one mapping contains keys, translated_ids contain unmapped IDs
+        (['trans1', 'trans3'], {'trans1': 'ortho1', 'trans2': 'ortho2'}, {}, {'gene1': 'ortho1'}, {}),
+
+        # One-to-many mapping contains keys, translated_ids contain unmapped IDs
+        (['trans1', 'trans3'], {}, {'trans1': ['ortho1', 'ortho3'], 'trans2': ['ortho2']}, {},
+         {'gene1': ['ortho1', 'ortho3']}),
+
+        # Both mappings contain the same keys, translated_ids contain unmapped IDs
+        (['trans1', 'trans3'], {'trans1': 'ortho1', 'trans2': 'ortho2'},
+         {'trans1': ['ortho1', 'ortho3'], 'trans2': ['ortho2']},
+         {'gene1': 'ortho1'}, {'gene1': ['ortho1', 'ortho3']}),
+    ]
+)
+def test_translate_mappings(translated_ids, mapping_one2one, mapping_one2many, expected_one2one, expected_one2many):
+    ids = ['gene1', 'gene2']
+    result_one2one, result_one2many = translate_mappings(ids, translated_ids, mapping_one2one, mapping_one2many)
+    assert result_one2one == expected_one2one
+    assert result_one2many == expected_one2many
+
+
+class TestOrthologDict:
+    def test_empty_dict(self):
+        ortholog_dict = OrthologDict()
+        assert len(ortholog_dict) == 0
+        assert 'gene1' not in ortholog_dict
+        with pytest.raises(KeyError):
+            ortholog_dict['gene1']
+
+    def test_non_empty_dict(self):
+        mapping_dict = {'gene1': 'ortholog1', 'gene2': 'ortholog2'}
+        ortholog_dict = OrthologDict(mapping_dict)
+        assert len(ortholog_dict) == 2
+        assert 'gene1' in ortholog_dict
+        assert ortholog_dict['gene1'] == 'ortholog1'
+        assert 'gene2' in ortholog_dict
+        assert ortholog_dict['gene2'] == 'ortholog2'
+
+    def test_non_existing_key(self):
+        ortholog_dict = OrthologDict({'gene1': 'ortholog1'})
+        assert 'gene2' not in ortholog_dict
+        with pytest.raises(KeyError):
+            ortholog_dict['gene2']
+
+    def test_none_mapping_dict(self):
+        ortholog_dict = OrthologDict(None)
+        assert len(ortholog_dict) == 0
+        assert 'gene1' not in ortholog_dict
+        with pytest.raises(KeyError):
+            ortholog_dict['gene1']
+
+
+class TestPhylomeDBOrthologMapper:
+
+    # Define a fixture to create an instance of PhylomeDBOrthologMapper for testing
+    @pytest.fixture
+    def ortholog_mapper(self):
+        # Supply legal species
+        legal_species = PhylomeDBOrthologMapper.get_legal_species()
+        map_to_organism = legal_species.index[0]  # Use the first legal species
+        map_from_organism = legal_species.index[1]  # Use the second legal species
+        return PhylomeDBOrthologMapper(map_to_organism=map_to_organism, map_from_organism=map_from_organism,
+                                       gene_id_type='gene_type')
+
+    @staticmethod
+    def mock_translate_ids(self, ids):
+        return ['gene1', 'gene2'], ['trans_gene1', 'trans_gene2']
+
+    # Check if internet connection is available before running the tests
+    if not PHYLOMEDB_AVAILABLE:
+        pytest.skip("No internet connection or FTP server is down. Skipping PhylomeDBOrthologMapper tests.")
+
+    # Test the constructor of PhylomeDBOrthologMapper
+    def test_constructor(self, ortholog_mapper):
+        assert ortholog_mapper.map_to_organism in PhylomeDBOrthologMapper.get_legal_species()
+        assert ortholog_mapper.map_from_organism in PhylomeDBOrthologMapper.get_legal_species()
+        assert ortholog_mapper.gene_id_type == 'gene_type'
+
+    # Test the _connect method
+    def test_connect(self):
+        ftp = PhylomeDBOrthologMapper._connect()
+        ftp.quit()
+
+    # Test the translate_ids method
+    def test_translate_ids(self, ortholog_mapper, monkeypatch):
+        ids = ('gene1', 'gene2')
+
+        # Monkeypatch GeneIDTranslator to return the same translation
+        class MockGeneIDTranslator:
+            def __init__(self, gene_id_type, target_gene_id_type):
+                assert gene_id_type == 'gene_type'
+                assert target_gene_id_type == 'UniProtKB AC/ID'
+
+            def run(self, ids):
+                assert ids == ('gene1', 'gene2')
+                return GeneIDDict({'gene1': 'trans_gene1', 'gene2': 'trans_gene2'})
+
+        monkeypatch.setattr(io, 'GeneIDTranslator', MockGeneIDTranslator)
+
+        translated_ids = ortholog_mapper.translate_ids(ids)
+        assert isinstance(translated_ids, tuple)
+        assert isinstance(translated_ids[0], list)
+        assert isinstance(translated_ids[1], list)
+        assert translated_ids == (['gene1', 'gene2'], ['trans_gene1', 'trans_gene2'])
+
+    # Test the _get_taxon_file method
+    @pytest.mark.parametrize('taxon_ind', [0, -1])
+    def test_get_taxon_file(self, ortholog_mapper, taxon_ind):
+        legal_species = PhylomeDBOrthologMapper.get_legal_species()
+        taxon_id = legal_species.index[taxon_ind]
+        df = ortholog_mapper._get_taxon_file(taxon_id)
+        assert isinstance(df, pd.DataFrame)
+        assert list(df.columns) == ['#taxid1', 'taxid2', 'protid2', 'CS', 'sources']
+        assert (df['#taxid1'] == taxon_id).all()
+
+        cached_df = ortholog_mapper._get_taxon_file(taxon_id)
+        assert df.equals(cached_df)
+
+    # Test the get_legal_species method
+    def test_get_legal_species(self, ortholog_mapper):
+        species = ortholog_mapper.get_legal_species()
+        assert species.index.dtype == int
+        assert 6239 in species.index
+
+        species_cached = ortholog_mapper.get_legal_species()
+        assert species.equals(species_cached)
+
+    # Test the _get_id_conversion_maps method
+    def test_get_id_conversion_map(self, ortholog_mapper):
+        map_fwd, map_rev = ortholog_mapper._get_id_conversion_maps()
+        assert map_fwd.shape == map_rev.shape
+
+        map_fwd_cache, map_rev_cache = ortholog_mapper._get_id_conversion_maps()
+        assert map_fwd_cache.shape == map_rev_cache.shape
+        assert map_fwd.shape == map_fwd_cache.shape
+
+    @pytest.mark.parametrize('filter_consistency_score,non_unique_mode', [
+        (False, 'first'),
+        (True, 'last'),
+        (True, 'random')
+    ])
+    def test_get_orthologs(self, filter_consistency_score, non_unique_mode):
+        ortholog_mapper = PhylomeDBOrthologMapper(map_to_organism=9606, map_from_organism=6239,
+                                                  gene_id_type='UniProtKB AC/ID')
+        ids = ('G5EDF7', 'P34544')
+        consistency_score_threshold = 0.5
+        ortholog_one2one, ortholog_one2many = ortholog_mapper.get_orthologs(
+            ids, non_unique_mode, consistency_score_threshold, filter_consistency_score)
+
+        assert isinstance(ortholog_one2one, OrthologDict)
+        assert isinstance(ortholog_one2many, OrthologDict)
+
+        assert list(ortholog_one2one.mapping_dict.keys()) == ['G5EDF7', 'P34544']
+        assert list(ortholog_one2many.mapping_dict.keys()) == ['G5EDF7', 'P34544']
+
+        if non_unique_mode == 'first':
+            assert ortholog_one2one['G5EDF7'] == 'P52564'
+            assert ortholog_one2one['P34544'] == 'Q15047'
+
+
+class TestOrthoInspectorOrthologMapper:
+
+    # Define a fixture to create an instance of OrthoInspectorOrthologMapper for testing
+    @pytest.fixture
+    def ortholog_mapper(self):
+        # Supply legal species and a valid database for testing
+        legal_species = {'organism1', 'organism2'}  # Replace with valid species
+        return OrthoInspectorOrthologMapper(map_to_organism='organism1', map_from_organism='organism2',
+                                            gene_id_type='gene_type')
+
+    # Test the constructor of OrthoInspectorOrthologMapper
+    def test_constructor(self, ortholog_mapper):
+        assert ortholog_mapper.map_to_organism == 'organism1'  # Replace with valid organism
+        assert ortholog_mapper.map_from_organism == 'organism2'  # Replace with valid organism
+        assert ortholog_mapper.gene_id_type == 'gene_type'
+
+    # Test the translate_ids method
+    def test_translate_ids(self, ortholog_mapper, monkeypatch):
+        ids = ('gene1', 'gene2')
+
+        # Monkeypatch GeneIDTranslator to return the same translation
+        class MockGeneIDTranslator:
+            def __init__(self, gene_id_type, target_gene_id_type, session=None):
+                assert gene_id_type == 'gene_type'
+                assert target_gene_id_type == 'UniProtKB AC/ID'
+                assert session is None or isinstance(session, requests.Session)
+
+            def run(self, ids):
+                assert ids == ('gene1', 'gene2')
+                return GeneIDDict({'gene1': 'trans_gene1', 'gene2': 'trans_gene2'})
+
+        monkeypatch.setattr(io, 'GeneIDTranslator', MockGeneIDTranslator)
+
+        translated_ids = ortholog_mapper.translate_ids(ids)
+        assert isinstance(translated_ids, tuple)
+        assert isinstance(translated_ids[0], list)
+        assert isinstance(translated_ids[1], list)
+        assert translated_ids == (['gene1', 'gene2'], ['trans_gene1', 'trans_gene2'])
+
+    # Test the get_cache_filename method
+    def test_get_cache_filename(self, ortholog_mapper):
+        filename = ortholog_mapper.get_cache_filename()
+        assert isinstance(filename, str)
+        assert filename == 'orthoinspector_organism2_organism1.json'
+
+    # Test the get_databases method
+    def test_get_databases(self, ortholog_mapper):
+        databases = ortholog_mapper.get_databases()
+        assert isinstance(databases, list)
+
+    # Test the get_database_organisms method
+    def test_get_database_organisms(self, ortholog_mapper):
+        db_organisms = ortholog_mapper.get_database_organisms()
+        assert isinstance(db_organisms, dict)
+
+    @pytest.mark.parametrize('database,non_unique_mode', [
+        ('auto', 'first'),
+        ('Eukaryota', 'last'),
+        ('Eukaryota', 'random')])
+    def test_get_orthologs(self, ortholog_mapper, database, non_unique_mode):
+        ortholog_mapper = OrthoInspectorOrthologMapper(map_to_organism=6238, map_from_organism=6239,
+                                                       gene_id_type='UniProtKB AC/ID')
+        ids = ('G5EDF7', 'P34544')
+        ortholog_one2one, ortholog_one2many = ortholog_mapper.get_orthologs(ids, non_unique_mode, database)
+
+        assert isinstance(ortholog_one2one, OrthologDict)
+        assert isinstance(ortholog_one2many, OrthologDict)
+
+        assert list(ortholog_one2one.mapping_dict.keys()) == ['G5EDF7', 'P34544']
+        assert list(ortholog_one2many.mapping_dict.keys()) == ['G5EDF7', 'P34544']
+
+        if non_unique_mode == 'first':
+            assert ortholog_one2one.mapping_dict == {'G5EDF7': 'A8XPU4', 'P34544': 'A8XT55'}
+
+
+class TestPantherOrthologMapper:
+
+    # Define a fixture to create an instance of PantherOrthologMapper for testing
+    @pytest.fixture
+    def ortholog_mapper(self):
+        # Supply valid parameters for the class constructor
+        return PantherOrthologMapper(map_to_organism='organism1', map_from_organism='organism2',
+                                     gene_id_type='gene_type')
+
+    # Test the constructor of PantherOrthologMapper
+    def test_constructor(self, ortholog_mapper):
+        assert ortholog_mapper.map_to_organism == 'organism1'
+        assert ortholog_mapper.map_from_organism == 'organism2'
+        assert ortholog_mapper.gene_id_type == 'gene_type'
+
+    # Test the translate_ids method
+    def test_translate_ids(self, ortholog_mapper, monkeypatch):
+        ids = ('gene1', 'gene2')
+
+        # Monkeypatch GeneIDTranslator to return the same translation
+        class MockGeneIDTranslator:
+            def __init__(self, gene_id_type, target_gene_id_type, session=None):
+                assert gene_id_type == 'gene_type'
+                assert target_gene_id_type == 'UniProtKB AC/ID'
+                assert session is None or isinstance(session, requests.Session)
+
+            def run(self, ids):
+                assert ids == ('gene1', 'gene2')
+                return GeneIDDict({'gene1': 'trans_gene1', 'gene2': 'trans_gene2'})
+
+        monkeypatch.setattr(io, 'GeneIDTranslator', MockGeneIDTranslator)
+
+        translated_ids = ortholog_mapper.translate_ids(ids)
+        assert isinstance(translated_ids, tuple)
+        assert isinstance(translated_ids[0], list)
+        assert isinstance(translated_ids[1], list)
+        assert translated_ids == (['gene1', 'gene2'], ['trans_gene1', 'trans_gene2'])
+
+    @pytest.mark.parametrize('filter_least_diverged,non_unique_mode', [
+        (True, 'first'),
+        (False, 'last'),
+        (True, 'random')])
+    def test_get_orthologs(self, filter_least_diverged, non_unique_mode):
+        ids = ('G5EDF7', 'P34544')
+        ortholog_mapper = PantherOrthologMapper(map_to_organism=9606, map_from_organism=6239,
+                                                gene_id_type='UniProtKB AC/ID')
+        filter_least_diverged = True
+
+        ortholog_one2one, ortholog_one2many = ortholog_mapper.get_orthologs(ids, non_unique_mode, filter_least_diverged)
+
+        assert isinstance(ortholog_one2one, OrthologDict)
+        assert isinstance(ortholog_one2many, OrthologDict)
+
+        assert list(ortholog_one2one.mapping_dict.keys()) == ['G5EDF7', 'P34544']
+        assert list(ortholog_one2many.mapping_dict.keys()) == ['G5EDF7', 'P34544']
+
+        if non_unique_mode == 'first':
+            assert ortholog_one2one['G5EDF7'] == 'P46734'
+            assert ortholog_one2one['P34544'] == 'Q15047'
+
+    def test_get_paralogs(self):
+        ids = ('G5EDF7', 'P34707')
+
+        truth = {'G5EDF7': ['Q10664',
+                            'O01706',
+                            'Q20347',
+                            'Q21307',
+                            'G5EDT6',
+                            'Q58AU7',
+                            'Q58AU8',
+                            'Q8MPS3',
+                            'G5ECN5',
+                            'Q9TYV7'],
+                 'P34707': ['A0A0M7REQ4']}
+        ortholog_mapper = PantherOrthologMapper(map_to_organism=6239, map_from_organism=6239,
+                                                gene_id_type='UniProtKB AC/ID')
+
+        paralogs = ortholog_mapper.get_paralogs(ids)
+
+        assert isinstance(paralogs, OrthologDict)
+        assert paralogs.mapping_dict == truth
+
+
+class TestEnsemblOrthologMapper:
+
+    # Define a fixture to create an instance of EnsemblOrthologMapper for testing
+    @pytest.fixture
+    def ortholog_mapper(self):
+        # Supply valid parameters for the class constructor
+        return EnsemblOrthologMapper(map_to_organism='organism1', map_from_organism='organism2',
+                                     gene_id_type='gene_type')
+
+    # Test the constructor of EnsemblOrthologMapper
+    def test_constructor(self, ortholog_mapper):
+        assert ortholog_mapper.map_to_organism == 'organism1'  # Replace with a valid organism
+        assert ortholog_mapper.map_from_organism == 'organism2'  # Replace with a valid organism
+        assert ortholog_mapper.gene_id_type == 'gene_type'  # Replace with a valid gene ID type
+
+    # Test the translate_ids method
+    def test_translate_ids(self, ortholog_mapper, monkeypatch):
+        ids = ('gene1', 'gene2')
+
+        # Monkeypatch GeneIDTranslator to return the same translation
+        class MockGeneIDTranslator:
+            def __init__(self, gene_id_type, target_gene_id_type, session=None):
+                assert gene_id_type == 'gene_type'
+                assert target_gene_id_type == 'Ensembl Genomes'
+                assert session is None or isinstance(session, requests.Session)
+
+            def run(self, ids):
+                assert ids == ('gene1', 'gene2')
+                return GeneIDDict({'gene1': 'trans_gene1', 'gene2': 'trans_gene2'})
+
+        monkeypatch.setattr(io, 'GeneIDTranslator', MockGeneIDTranslator)
+
+        translated_ids = ortholog_mapper.translate_ids(ids)
+        assert isinstance(translated_ids, tuple)
+        assert isinstance(translated_ids[0], list)
+        assert isinstance(translated_ids[1], list)
+        assert translated_ids == (['gene1', 'gene2'], ['trans_gene1', 'trans_gene2'])
+
+    # Test the get_paralogs method
+    @pytest.mark.parametrize('filter_percent_identity,truth', [
+        (True, {'G5EDF7': 'WBGene00003368', 'P34707': 'WBGene00020961'}),
+        (False, {'G5EDF7': ['WBGene00018034',
+                            'WBGene00018035',
+                            'WBGene00003185',
+                            'WBGene00003186',
+                            'WBGene00012162',
+                            'WBGene00003368',
+                            'WBGene00003472'],
+                 'P34707': ['WBGene00020961']})])
+    def test_get_paralogs(self, filter_percent_identity, truth):
+        ids = ('G5EDF7', 'P34707')
+        ortholog_mapper = EnsemblOrthologMapper(map_to_organism=6239, map_from_organism=6239,
+                                                gene_id_type='UniProtKB AC/ID')
+
+        paralogs = ortholog_mapper.get_paralogs(ids, filter_percent_identity)
+
+        assert isinstance(paralogs, OrthologDict)
+        assert paralogs.mapping_dict == truth
+
+    @pytest.mark.parametrize('non_unique_mode', ['first', 'last', 'random'])
+    def test_get_orthologs(self, non_unique_mode):
+        ids = ('G5EDF7', 'P34544')
+
+        ortholog_mapper = EnsemblOrthologMapper(map_to_organism=9606, map_from_organism=6239,
+                                                gene_id_type='UniProtKB AC/ID')
+
+        ortholog_one2one, ortholog_one2many = ortholog_mapper.get_orthologs(ids, non_unique_mode)
+
+        assert isinstance(ortholog_one2one, OrthologDict)
+        assert isinstance(ortholog_one2many, OrthologDict)
+
+        assert list(ortholog_one2one.mapping_dict.keys()) == ['G5EDF7', 'P34544']
+        assert list(ortholog_one2many.mapping_dict.keys()) == ['G5EDF7', 'P34544']
+
+        if non_unique_mode == 'first':
+            assert ortholog_one2one['G5EDF7'] == 'ENSG00000085511'
+            assert ortholog_one2one['P34544'] == 'ENSG00000167548'
+
+
+class TestRunRScript:
+    @mock.patch('rnalysis.utils.io.run_subprocess')
+    def test_non_zero_return_code(self, mock_run_subprocess):
+        # Set up the mock to return a non-zero return code
+        def conditional_return(*args, **kwargs):
+            if args[0][1] == "--help":
+                return 0, ''
+            else:
+                return 1, ["warning1", "warning2", "Error: Something went wrong", "traceback"]
+
+        # Set the side_effect to the conditional function
+        mock_run_subprocess.side_effect = conditional_return
+
+        # Define the script path and R installation folder
+        script_path = "tests/test_files/test_r_script.R"
+        r_installation_folder = "auto"
+
+        # Execute the function with the mock in place
+        with pytest.raises(ChildProcessError) as context:
+            run_r_script(script_path, r_installation_folder)
+
+        # Check if the expected error message is in the exception message
+        expected_error_message = "R script failed to execute: 'Error: Something went wrongtraceback'. See full error report below."
+        assert expected_error_message in str(context.value)
+
+    @pytest.mark.parametrize('r_path,expected', [
+        ('auto', ['Rscript', "tests/test_files/test_r_script.R"]),
+        ('D:/Program Files/R', ["D:/Program Files/R/bin/Rscript", "tests/test_files/test_r_script.R"])
+    ])
+    def test_run_r_script(self, monkeypatch, r_path, expected):
+        script_path = 'tests/test_files/test_r_script.R'
+
+        ran = []
+
+        def mock_popen(process, stdout, stderr, shell=False):
+            if ran:
+                assert process == expected
+                ran.append(2)
+            else:
+                assert process == [expected[0], '--help']
+                ran.append(1)
+            return MockProcess(0)
+
+        monkeypatch.setattr(subprocess, 'Popen', mock_popen)
+
+        run_r_script(script_path, r_path)
+        assert ran == [1, 2]
+
+    def test_run_r_script_not_installed(self, monkeypatch):
+        def mock_popen(process, stdout, stderr, shell=False):
+            return MockProcess(1)
+
+        monkeypatch.setattr(subprocess, 'Popen', mock_popen)
+        with pytest.raises(FileNotFoundError):
+            run_r_script('tests/test_files/test_r_script.R')

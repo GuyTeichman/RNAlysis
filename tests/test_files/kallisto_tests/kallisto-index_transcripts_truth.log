@@ -1,8 +1,31 @@
+KmerStream::KmerStream(): Start computing k-mer cardinality estimations (1/2)
+KmerStream::KmerStream(): Start computing k-mer cardinality estimations (1/2)
+KmerStream::KmerStream(): Finished
+CompactedDBG::build(): Estimated number of k-mers occurring at least once: 22338
+CompactedDBG::build(): Estimated number of minimizer occurring at least once: 5522
+CompactedDBG::filter(): Processed 28144 k-mers in 14 reads
+CompactedDBG::filter(): Found 22106 unique k-mers
+CompactedDBG::filter(): Number of blocks in Bloom filter is 154
+CompactedDBG::construct(): Extract approximate unitigs (1/2)
+CompactedDBG::construct(): Extract approximate unitigs (2/2)
+CompactedDBG::construct(): Closed all input files
+
+CompactedDBG::construct(): Splitting unitigs (1/2)
+
+CompactedDBG::construct(): Splitting unitigs (2/2)
+CompactedDBG::construct(): Before split: 38 unitigs
+CompactedDBG::construct(): After split (1/1): 38 unitigs
+CompactedDBG::construct(): Unitigs split: 0
+CompactedDBG::construct(): Unitigs deleted: 0
+
+CompactedDBG::construct(): Joining unitigs
+CompactedDBG::construct(): After join: 21 unitigs
+CompactedDBG::construct(): Joined 17 unitigs
 
 [build] loading fasta file tests/test_files/kallisto_tests/transcripts.fasta
 [build] k-mer length: 31
-[build] counting k-mers ... done.
-[build] building target de Bruijn graph ...  done 
-[build] creating equivalence classes ...  done
-[build] target de Bruijn graph has 27 contigs and contains 22118 k-mers 
+[build] building MPHF
+[build] creating equivalence classes ... 
+[build] target de Bruijn graph has k-mer length 31 and minimizer length 23
+[build] target de Bruijn graph has 21 contigs and contains 22118 k-mers 
 

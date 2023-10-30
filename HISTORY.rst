@@ -2,6 +2,46 @@
 History
 =======
 
+
+3.10.0 (2023-10-31)
+------------------
+
+I'm thrilled to introduce RNAlysis version 3.10.0.
+This version includes features that were requested by users for a while, alongside quality-of-life improvements and bug fixes.
+Here is a brief highlight of the most important additions:
+
+**Ortholog Mapping:** *RNAlysis* can now map genes to their closest orthologs in different organisms.
+You can map genes to their orthologs using four different databases - Ensembl, Panther, PhylomeDB, and OrthoInspector - extracting both one-to-one and one-to-many ortholog relationships and filtering them based on their reliability.
+
+**Discovering Paralogs:** In the same vein, *RNAlysis* now facilitates the discovery of paralogs within a specific organism, using either the Ensembl or Panther databases.
+
+**New visualization and analysis options for Principal Component Analysis (PCA):** We've introduced new functions and parameters to allow you to get more out of your principal component analysis.
+
+I would also like to extend my personal apology for the delay in bringing you this update.
+Due to personal reasons, this release, originally scheduled for the end of August, took longer than expected.
+Your patience and support have been invaluable, and I'm eager to share these exciting additions with you.
+Thank you for being a part of the RNAlysis community, and stay tuned for more updates in the near future!
+
+Added
+*******
+* Added new functions to the filtering module that map genes to their closest orthologs in a different organism, using four different databases: Ensembl, Panther, PhylomeDB, and OrthoInspector.
+* Added new functions to the filtering module that find paralogs of genes in a given organism, using two different databases: Ensembl and Panther.
+* Added new function 'Sort table by contribution to a Principal Component (PCA)' (CountFilter.sort_by_principal_component), which allows sorting of genes in a count matrix by their contribution (gene loadings) to a principal component.
+* Added a new parameter called 'legend' to 'Principal Component Analysis (PCA) plot' (CountFilter.pca), which allows users to display a legend on the PCA plot with a name for each sample group/color.
+
+Changed
+********
+* RNAlysis now issues a warning when users run PCA or PCA-based functions on an unnormalized count matrix.
+* The 'seek_fusion_genes' and 'learn_bias' arguments for kallisto quantification (fastq.kallisto_quant_single_end and fastq.kallisto_quant_paired_end), which were depracated in kallisto versions >0.48, are no longer displayed on the graphical interface. Old Pipelines that contain these arguments will still run, but new Pipelines will not contain them.
+
+Fixed
+*******
+* Fixed bug where functions would sometimes fail to run without displaying an error message.
+* Fixed bug where progress bars in the graphical interface would sometimes not disappear after reaching 100% completion.
+* RNAlysis should no longer display warning messages about graph layout when graphs are scaled down.
+* Fixed bug where the clustergram function (CountFilter.clustergram) would raise an error with specific sets of dependecy versions.
+* Loading tables no longer raises a depracation warning when using newer versions of Pandas.
+
 3.9.2 (2023-06-23)
 ------------------
 This patch contains bug fixes and improved functionality for enrichment lollipop plots,

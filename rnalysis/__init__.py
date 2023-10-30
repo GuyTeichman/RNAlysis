@@ -2,6 +2,7 @@
 
 """Top-level package for RNA sequencing analysis pipeline."""
 import warnings
+
 import pandas as pd
 
 pd.set_option("mode.copy_on_write", True)
@@ -11,7 +12,7 @@ __all__ = ['general', 'filtering', 'enrichment', '__attr_file_key__', '__biotype
 __name__ = "rnalysis"
 __author__ = "Guy Teichman"
 __email__ = "guyteichman@gmail.com"
-__version__ = "3.9.2"
+__version__ = "3.10.0"
 __license__ = "MIT"
 __attr_file_key__ = "attribute_reference_table"
 __biotype_file_key__ = "biotype_reference_table"
@@ -30,3 +31,4 @@ def _simple_warning_format(msg, *args, **kwargs):
 
 warnings.formatwarning = _simple_warning_format
 warnings.simplefilter('always', UserWarning)
+warnings.filterwarnings('ignore', message='.*layout not applied.*')

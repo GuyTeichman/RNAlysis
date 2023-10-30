@@ -1,6 +1,7 @@
 import filecmp
 import os
 import shutil
+import socket
 from pathlib import Path
 
 import requests
@@ -46,8 +47,13 @@ def are_dir_trees_equal(dir1, dir2, compare_contents: bool = True):
             items = []
             for this_dir in [dir1, dir2]:
                 pth = Path(this_dir).joinpath(item)
-                with open(pth) as f:
-                    items.append(f.read())
+                try:
+                    with open(pth) as f:
+                        txt = f.read()
+                except UnicodeDecodeError:
+                    with open(pth, 'rb') as f:
+                        txt = f.read()
+                items.append(txt)
             if items[0] != items[1]:
                 for i in items:
                     print(i)
@@ -73,6 +79,16 @@ def is_ensembl_available():
     if str(req.status_code)[0] == '5':
         return False
     return True
+
+
+def is_phylomedb_available():
+    try:
+        host = socket.gethostbyname('ftp.phylomedb.org')
+        s = socket.create_connection((host, 21), timeout=5)
+        s.close()
+        return True
+    except (socket.gaierror, ConnectionError):
+        return False
 
 
 if os.getcwd().endswith('tests'):

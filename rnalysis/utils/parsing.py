@@ -131,7 +131,7 @@ def data_to_list(data: Any, sort: bool = False) -> list:
         lst = data
     elif isinstance(data, (set, tuple, np.ndarray)):
         lst = list(data)
-    elif isinstance(data, (int, float, bool, str, pd.DataFrame, pd.Series)):
+    elif isinstance(data, (dict, int, float, bool, str, pd.DataFrame, pd.Series)):
         lst = [data]
     elif data is None:
         lst = [None]
@@ -386,6 +386,19 @@ def df_to_html(df: pd.DataFrame, max_rows: int = 5, max_cols: int = 4):
         # remove a redundant '...' from the end of the table
         html = replace_last_occurrence(r'<td class="data col[\d]+ row_trim" >...<\/td>', '', html)
     return html
+
+
+def parse_uniprot_id(input_string):
+    """
+    Parses a UniProt ID from a string.
+
+    :param input_string: The string to parse.
+    :type input_string: str
+    """
+    pattern = r'[OPQ][0-9][A-Z0-9]{3}[0-9]|[A-NR-Z][0-9]([A-Z][A-Z0-9]{2}[0-9]){1,2}'
+    match = re.search(pattern, input_string)
+    if match:
+        return match.group()
 
 
 def slugify(value, allow_unicode=False):

@@ -898,22 +898,12 @@ class KEGGEnrichmentRunner(EnrichmentRunner):
                          exclude_unannotated_genes, single_set, random_seed, plot_style, show_expected, **pvalue_kwargs)
         if not self.enrichment_func:
             return
-        self.gene_id_type = gene_id_type
-        self.taxon_id, self.organism = self.get_taxon_id(organism)
+        (self.taxon_id, self.organism), self.gene_id_type = io.get_taxon_and_id_type(organism, gene_id_type,
+                                                                                     self.gene_set, 'KEGG')
         self.pathway_names_dict: dict = {}
         self.plot_pathway_graphs = plot_pathway_graphs
         self.pathway_graphs_format = pathway_graphs_format
         self.gene_id_translator = None
-
-    def get_taxon_id(self, organism: str):
-        if isinstance(organism, str) and organism.lower() == 'auto':
-            id_type = None if self.gene_id_type.lower() == 'auto' else self.gene_id_type
-            res, map_from = io.infer_taxon_from_gene_ids(self.gene_set, id_type)
-            if self.gene_id_type.lower() == 'auto':
-                self.gene_id_type = map_from
-            return res
-        else:
-            return io.map_taxon_id(organism)
 
     def _get_annotation_iterator(self):
         return io.KEGGAnnotationIterator(self.taxon_id)
@@ -983,12 +973,8 @@ class KEGGEnrichmentRunner(EnrichmentRunner):
         source = 'KEGG'
         translated_sparse_annotation_dict = {}
         sparse_dict_cp = sparse_annotation_dict.copy()
-        if self.gene_id_type.lower() == 'auto':
-            translator, _, self.gene_id_type = io.find_best_gene_mapping(
-                parsing.data_to_tuple(sparse_annotation_dict.keys()), (source,), None)
-        else:
-            translator = io.map_gene_ids(parsing.data_to_tuple(sparse_annotation_dict.keys()), source,
-                                         self.gene_id_type)
+        translator = io.GeneIDTranslator(source, self.gene_id_type).run(
+            parsing.data_to_tuple(sparse_annotation_dict.keys()))
         self.gene_id_translator = translator
         for gene_id in sparse_annotation_dict:
             if gene_id in translator:
@@ -1068,8 +1054,8 @@ class GOEnrichmentRunner(EnrichmentRunner):
             return
         self.dag_tree: ontology.DAGTree = ontology.fetch_go_basic()
         self.mod_annotation_dfs: Tuple[pd.DataFrame, ...] = tuple()
-        self.gene_id_type = gene_id_type
-        self.taxon_id, self.organism = self.get_taxon_id(organism)
+        (self.taxon_id, self.organism), self.gene_id_type = io.get_taxon_and_id_type(organism, gene_id_type,
+                                                                                     self.gene_set, 'UniProtKB')
         self.aspects = aspects
         self.evidence_types = evidence_types
         self.excluded_evidence_types = excluded_evidence_types
@@ -1090,16 +1076,6 @@ class GOEnrichmentRunner(EnrichmentRunner):
                           f"Therefore, when calculating 'allm' p-values, the 'weight' method will use "
                           f"Fisher's Exact test, while the rest of the methods will use the '{pval_func_name}' method.")
         return enrichment_func
-
-    def get_taxon_id(self, organism: str):
-        if isinstance(organism, str) and organism.lower() == 'auto':
-            id_type = None if self.gene_id_type.lower() == 'auto' else self.gene_id_type
-            res, map_from = io.infer_taxon_from_gene_ids(self.gene_set, id_type)
-            if self.gene_id_type.lower() == 'auto':
-                self.gene_id_type = map_from
-            return res
-        else:
-            return io.map_taxon_id(organism)
 
     def fetch_annotations(self):
         # check if annotations for the requested query were previously fetched and cached
@@ -1172,12 +1148,9 @@ class GOEnrichmentRunner(EnrichmentRunner):
     def _translate_gene_ids(self, sparse_annotation_dict: dict, source_to_gene_id_dict: dict):
         translated_sparse_annotation_dict = {}
         sparse_dict_cp = sparse_annotation_dict.copy()
-        if self.gene_id_type.lower() == 'auto':
-            _, self.gene_id_type, _ = io.find_best_gene_mapping(parsing.data_to_tuple(self.gene_set), None,
-                                                                ('UniProtKB',))
         for source in source_to_gene_id_dict:
             try:
-                translator = io.map_gene_ids(source_to_gene_id_dict[source], source, self.gene_id_type)
+                translator = io.GeneIDTranslator(source, self.gene_id_type).run(source_to_gene_id_dict[source])
                 for gene_id in sparse_dict_cp.copy():
                     if gene_id in translator:
                         translated_sparse_annotation_dict[translator[gene_id]] = sparse_dict_cp.pop(gene_id)

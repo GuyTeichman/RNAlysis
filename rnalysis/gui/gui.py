@@ -37,6 +37,11 @@ FROZEN_ENV = getattr(sys, 'frozen', False) and hasattr(sys, '_MEIPASS')
 JOB_COUNTER = gui_widgets.JobCounter()
 
 
+def check_run_success(result: gui_widgets.WorkerOutput):
+    if result.raised_exception:
+        raise result.raised_exception
+
+
 class BarPlotWindow(gui_windows.FuncExternalWindow):
     EXCLUDED_PARAMS = set()
     __slots__ = {}
@@ -188,7 +193,7 @@ class KallistoIndexWindow(gui_windows.FuncExternalWindow):
 
 
 class KallistoSingleWindow(gui_windows.FuncExternalWindow):
-    EXCLUDED_PARAMS = set()
+    EXCLUDED_PARAMS = {'legacy_args'}
     __slots__ = {}
 
     def __init__(self, parent=None):
@@ -203,6 +208,7 @@ class KallistoSingleWindow(gui_windows.FuncExternalWindow):
 
 
 class KallistoPairedWindow(gui_windows.PairedFuncExternalWindow):
+    EXCLUDED_PARAMS = {'legacy_args'}
     __slots__ = {}
 
     def __init__(self, parent=None):
@@ -1417,6 +1423,7 @@ class TabPage(QtWidgets.QWidget):
             return
 
         prev_name = self.get_tab_name()
+        worker.finished.connect(check_run_success)
         worker.finished.connect(self.functionApplied.emit)
         result = worker.run()
         if kwargs.get('inplace', False):
@@ -1513,8 +1520,12 @@ class TabPage(QtWidgets.QWidget):
 class SetTabPage(TabPage):
     EXCLUDED_FUNCS = {'union', 'intersection', 'majority_vote_intersection', 'difference', 'symmetric_difference'}
     SUMMARY_FUNCS = {'biotypes_from_ref_table', 'biotypes_from_gtf'}
-    GENERAL_FUNCS = {'translate_gene_ids'}
-    THREADED_FUNCS = {'translate_gene_ids', 'filter_by_kegg_annotations', 'filter_by_go_annotations'}
+    GENERAL_FUNCS = {'translate_gene_ids', 'map_orthologs_phylomedb', 'map_orthologs_orthoinspector',
+                     'map_orthologs_ensembl', 'map_orthologs_panther', 'find_paralogs_panther', 'find_paralogs_ensembl'}
+    THREADED_FUNCS = {'translate_gene_ids', 'filter_by_kegg_annotations', 'filter_by_go_annotations',
+                      'map_orthologs_phylomedb', 'map_orthologs_orthoinspector',
+                      'map_orthologs_ensembl', 'map_orthologs_panther', 'find_paralogs_panther', 'find_paralogs_ensembl'
+                      }
 
     def __init__(self, set_name: str, gene_set: typing.Union[set, enrichment.FeatureSet] = None, parent=None,
                  undo_stack: QtWidgets.QUndoStack = None, tab_id: int = None):
@@ -1805,10 +1816,15 @@ class FilterTabPage(TabPage):
                         'split_hierarchical': 'Hierarchical (Agglomerative)', 'split_hdbscan': 'HDBSCAN',
                         'split_clicom': 'CLICOM (Ensemble)'}
     SUMMARY_FUNCS = {'describe', 'head', 'tail', 'biotypes_from_ref_table', 'biotypes_from_gtf', 'print_features'}
-    GENERAL_FUNCS = {'sort', 'transform', 'translate_gene_ids', 'differential_expression_deseq2', 'fold_change',
-                     'average_replicate_samples', 'drop_columns', 'differential_expression_limma_voom'}
+    GENERAL_FUNCS = {'sort', 'sort_by_principal_component', 'transform', 'translate_gene_ids',
+                     'differential_expression_deseq2', 'fold_change', 'average_replicate_samples', 'drop_columns',
+                     'differential_expression_limma_voom', 'map_orthologs_phylomedb', 'map_orthologs_orthoinspector',
+                     'map_orthologs_ensembl', 'map_orthologs_panther', 'find_paralogs_panther'}
     THREADED_FUNCS = {'translate_gene_ids', 'differential_expression_deseq2', 'filter_by_kegg_annotations',
-                      'filter_by_go_annotations', 'differential_expression_limma_voom'}
+                      'filter_by_go_annotations', 'differential_expression_limma_voom', 'map_orthologs_phylomedb',
+                      'map_orthologs_orthoinspector',
+                      'map_orthologs_ensembl', 'map_orthologs_panther', 'find_paralogs_panther',
+                      'find_paralogs_ensembl'}
     startedClustering = QtCore.pyqtSignal(object, object, object)
     widthChanged = QtCore.pyqtSignal()
 
@@ -2097,6 +2113,7 @@ class FilterTabPage(TabPage):
         job_id = JOB_COUNTER.get_id() if job_id is None else job_id
         predecessors = predecessors if isinstance(predecessors, list) else []
         worker = gui_widgets.Worker(partial, job_id, predecessors + [self.tab_id], f"Pipeline '{pipeline_name}'")
+        worker.finished.connect(check_run_success)
         worker.finished.connect(self.functionApplied.emit)
         prev_name = self.get_tab_name()
         result = worker.run()
@@ -2792,8 +2809,10 @@ class SetOpInplacCommand(InplaceCommand):
             first_obj = filtering.Filter.from_dataframe(pd.DataFrame(index=first_obj), 'placeholder')
         partial = functools.partial(getattr(first_obj, self.func_name), *self.args, **self.kwargs)
         worker = gui_widgets.Worker(partial, self.new_job_id, self.predecessors + [self.prev_job_id])
+        worker.finished.connect(check_run_success)
         worker.finished.connect(self.tab.functionApplied.emit)
-        worker.run()
+        result = worker.run()
+
         if not is_filter_obj:
             self.tab.update_obj(first_obj.index_set)
         self.tab.update_tab()
@@ -2926,6 +2945,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 self.report = gui_report.ReportGenerator()
                 cleared = self.clear_session(not (self.tabs.count() == 1 and self.tabs.currentWidget().is_empty()))
                 assert cleared
+                self.toggle_report_action.setChecked(True)
                 print("Report generation turned on. ")
             except ImportError:
                 warnings.warn("The RNAlysis 'reports' module is not installed. Please install it and try again. ")
@@ -2954,7 +2974,6 @@ class MainWindow(QtWidgets.QMainWindow):
         else:
             choice = preset
 
-        self.toggle_report_action.setChecked(choice)
         self._toggle_reporting(choice)
 
     def init_ui(self):
@@ -3220,6 +3239,7 @@ class MainWindow(QtWidgets.QMainWindow):
                             self.new_tab_from_filter_obj(filter_obj, JOB_COUNTER.get_id())
                         else:
                             self.new_tab_from_filter_obj(filter_obj, JOB_COUNTER.get_id(), name)
+                        QtWidgets.QApplication.processEvents()
                     if tabs_to_close is not None:
                         self.tabs.removeTab(tabs_to_close)
 
@@ -3230,8 +3250,6 @@ class MainWindow(QtWidgets.QMainWindow):
         self.tabs.currentWidget().start_from_filter_obj(filter_obj, tab_id)
         if self._generate_report:
             self.add_loaded_item_to_report(tab_id, self.tabs.currentWidget().name, self.tabs.currentWidget().obj())
-
-        QtWidgets.QApplication.processEvents()
 
     @QtCore.pyqtSlot(str)
     def set_current_tab_icon(self, icon_name: str = None):
@@ -3260,7 +3278,6 @@ class MainWindow(QtWidgets.QMainWindow):
         self.tabs.currentWidget().start_from_gene_set(tab_id, gene_set)
         if self._generate_report:
             self.add_loaded_item_to_report(tab_id, self.tabs.currentWidget().name, self.tabs.currentWidget().obj())
-        QtWidgets.QApplication.processEvents()
 
     def add_loaded_item_to_report(self, item_id: int, item_name: str,
                                   obj: Union[filtering.Filter, enrichment.FeatureSet, generic.GenericPipeline]):
@@ -3933,11 +3950,16 @@ class MainWindow(QtWidgets.QMainWindow):
         view_menu = self.menu_bar.addMenu("&View")
         view_menu.addActions([self.show_history_action, self.task_queue_action, self.close_figs_action])
 
-        fastq_menu = self.menu_bar.addMenu("&FASTQ")
-        self.trimming_menu = fastq_menu.addMenu('&Adapter trimming')
+        fastq_menu = self.menu_bar.addMenu("&FASTQ/SAM")
+        self.quality_menu = fastq_menu.addMenu('&Quality control')
+        self.preprocess_menu = fastq_menu.addMenu('&Pre-processing')
+        self.trimming_menu = fastq_menu.addMenu('Adapter &trimming')
         self.kallisto_menu = fastq_menu.addMenu("RNA-sequencing &quantification")
-        self.alignment_menu = fastq_menu.addMenu("Read alignment")
-        self.count_menu = fastq_menu.addMenu("Feature counting")
+        self.alignment_menu = fastq_menu.addMenu("Read &alignment")
+        self.convert_menu = fastq_menu.addMenu('&Conversion')
+        self.process_menu = fastq_menu.addMenu('P&ost-processing')
+        self.filtering_menu = fastq_menu.addMenu('&Filtering')
+        self.count_menu = fastq_menu.addMenu("&Feature counting")
 
         self.trimming_menu.addActions([self.cutadapt_single_action, self.cutadapt_paired_action])
         self.kallisto_menu.addActions(
@@ -4035,7 +4057,6 @@ class MainWindow(QtWidgets.QMainWindow):
             for name in chosen_names:
                 self.tabs.setCurrentWidget(filtered_available_objs[name][0])
                 filtered_available_objs[name][0].apply_pipeline(pipeline, name, pipeline_id, inplace)
-                QtWidgets.QApplication.processEvents()
             self.tabs.setCurrentIndex(current_ind)
 
     @QtCore.pyqtSlot()
@@ -4069,7 +4090,6 @@ class MainWindow(QtWidgets.QMainWindow):
 
             for pipeline_name, pipeline_file in zip(pipeline_names, pipeline_files):
                 self._import_pipeline_from_str(pipeline_name, pipeline_file)
-            QtWidgets.QApplication.processEvents()
 
             tab_to_close = None
             if self.tabs.currentWidget().is_empty():
@@ -4086,6 +4106,9 @@ class MainWindow(QtWidgets.QMainWindow):
                         raise TypeError(f"Invalid object type in session file: '{item_type}'")
                     obj = cls.from_dataframe(item, item_name, **item_property)
                     self.new_tab_from_filter_obj(obj, tab_id)
+
+                QtWidgets.QApplication.processEvents()
+
             if tab_to_close is not None:
                 self.tabs.removeTab(tab_to_close)
 
@@ -4370,6 +4393,7 @@ def customwarn(message, category, filename, lineno, file=None, line=None):  # pr
 
 
 async def run():  # pragma: no cover
+    warnings.showwarning = customwarn
     # close built-in splash screen in frozen app version of RNAlysis
     if '_PYIBoot_SPLASH' in os.environ and importlib.util.find_spec("pyi_splash"):
         import pyi_splash
@@ -4405,7 +4429,6 @@ async def run():  # pragma: no cover
         splash.showMessage(base_message + 'loading application', QtCore.Qt.AlignBottom | QtCore.Qt.AlignHCenter)
     matplotlib.use('Qt5Agg')
     window = MainWindow()
-    warnings.showwarning = customwarn
     sys.excepthook = window.excepthook
     builtins.input = window.input
 

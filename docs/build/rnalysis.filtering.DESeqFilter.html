@@ -4,7 +4,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>rnalysis.filtering.DESeqFilter &mdash; RNAlysis 3.9.2 documentation</title>
+  <title>rnalysis.filtering.DESeqFilter &mdash; RNAlysis 3.10.0 documentation</title>
       <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
     <link rel="shortcut icon" href="_static/favicon.ico"/>
@@ -99,10 +99,16 @@
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.DESeqFilter.filter_percentile.html">rnalysis.filtering.DESeqFilter.filter_percentile</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.DESeqFilter.filter_significant.html">rnalysis.filtering.DESeqFilter.filter_significant</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.DESeqFilter.filter_top_n.html">rnalysis.filtering.DESeqFilter.filter_top_n</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.DESeqFilter.find_paralogs_ensembl.html">rnalysis.filtering.DESeqFilter.find_paralogs_ensembl</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.DESeqFilter.find_paralogs_panther.html">rnalysis.filtering.DESeqFilter.find_paralogs_panther</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.DESeqFilter.from_dataframe.html">rnalysis.filtering.DESeqFilter.from_dataframe</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.DESeqFilter.head.html">rnalysis.filtering.DESeqFilter.head</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.DESeqFilter.intersection.html">rnalysis.filtering.DESeqFilter.intersection</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.DESeqFilter.majority_vote_intersection.html">rnalysis.filtering.DESeqFilter.majority_vote_intersection</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.DESeqFilter.map_orthologs_ensembl.html">rnalysis.filtering.DESeqFilter.map_orthologs_ensembl</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.DESeqFilter.map_orthologs_orthoinspector.html">rnalysis.filtering.DESeqFilter.map_orthologs_orthoinspector</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.DESeqFilter.map_orthologs_panther.html">rnalysis.filtering.DESeqFilter.map_orthologs_panther</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.DESeqFilter.map_orthologs_phylomedb.html">rnalysis.filtering.DESeqFilter.map_orthologs_phylomedb</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.DESeqFilter.number_filters.html">rnalysis.filtering.DESeqFilter.number_filters</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.DESeqFilter.print_features.html">rnalysis.filtering.DESeqFilter.print_features</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.DESeqFilter.save_csv.html">rnalysis.filtering.DESeqFilter.save_csv</a></li>
@@ -260,6 +266,12 @@
 <tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.DESeqFilter.filter_top_n.html#rnalysis.filtering.DESeqFilter.filter_top_n" title="rnalysis.filtering.DESeqFilter.filter_top_n"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DESeqFilter.filter_top_n</span></code></a>(by[, n, ascending, ...])</p></td>
 <td><p>Sort the rows by the values of specified column or columns, then keep only the top 'n' rows.</p></td>
 </tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.DESeqFilter.find_paralogs_ensembl.html#rnalysis.filtering.DESeqFilter.find_paralogs_ensembl" title="rnalysis.filtering.DESeqFilter.find_paralogs_ensembl"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DESeqFilter.find_paralogs_ensembl</span></code></a>([...])</p></td>
+<td><p>Find paralogs within the same species using the Ensembl database.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.DESeqFilter.find_paralogs_panther.html#rnalysis.filtering.DESeqFilter.find_paralogs_panther" title="rnalysis.filtering.DESeqFilter.find_paralogs_panther"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DESeqFilter.find_paralogs_panther</span></code></a>([...])</p></td>
+<td><p>Find paralogs within the same species using the PantherDB database.</p></td>
+</tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.DESeqFilter.from_dataframe.html#rnalysis.filtering.DESeqFilter.from_dataframe" title="rnalysis.filtering.DESeqFilter.from_dataframe"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DESeqFilter.from_dataframe</span></code></a>(df, name[, ...])</p></td>
 <td><p></p></td>
 </tr>
@@ -271,6 +283,18 @@
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.DESeqFilter.majority_vote_intersection.html#rnalysis.filtering.DESeqFilter.majority_vote_intersection" title="rnalysis.filtering.DESeqFilter.majority_vote_intersection"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DESeqFilter.majority_vote_intersection</span></code></a>(*others)</p></td>
 <td><p>Returns a set/string of the features that appear in at least         (majority_threhold * 100)% of the given Filter objects/sets.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.DESeqFilter.map_orthologs_ensembl.html#rnalysis.filtering.DESeqFilter.map_orthologs_ensembl" title="rnalysis.filtering.DESeqFilter.map_orthologs_ensembl"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DESeqFilter.map_orthologs_ensembl</span></code></a>(...[, ...])</p></td>
+<td><p>Map genes to their nearest orthologs in a different species using the Ensembl database.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.DESeqFilter.map_orthologs_orthoinspector.html#rnalysis.filtering.DESeqFilter.map_orthologs_orthoinspector" title="rnalysis.filtering.DESeqFilter.map_orthologs_orthoinspector"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DESeqFilter.map_orthologs_orthoinspector</span></code></a>(...)</p></td>
+<td><p>Map genes to their nearest orthologs in a different species using the OrthoInspector database.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.DESeqFilter.map_orthologs_panther.html#rnalysis.filtering.DESeqFilter.map_orthologs_panther" title="rnalysis.filtering.DESeqFilter.map_orthologs_panther"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DESeqFilter.map_orthologs_panther</span></code></a>(...[, ...])</p></td>
+<td><p>Map genes to their nearest orthologs in a different species using the PantherDB database.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.DESeqFilter.map_orthologs_phylomedb.html#rnalysis.filtering.DESeqFilter.map_orthologs_phylomedb" title="rnalysis.filtering.DESeqFilter.map_orthologs_phylomedb"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DESeqFilter.map_orthologs_phylomedb</span></code></a>(...[, ...])</p></td>
+<td><p>Map genes to their nearest orthologs in a different species using the PhylomeDB database.         This function generates a table describing all matching discovered ortholog pairs (both unique and non-unique)         and returns it, and can also translate the genes in this data table into their nearest ortholog,         as well as remove unmapped genes.</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.DESeqFilter.number_filters.html#rnalysis.filtering.DESeqFilter.number_filters" title="rnalysis.filtering.DESeqFilter.number_filters"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DESeqFilter.number_filters</span></code></a>(column, operator, ...)</p></td>
 <td><p>Applay a number filter (greater than, equal, lesser than) on a particular column in the Filter object.</p></td>
