@@ -1,4 +1,4 @@
-rnalysis.filtering.Filter
+﻿rnalysis.filtering.Filter
 =========================
 
 .. currentmodule:: rnalysis.filtering
@@ -31,10 +31,16 @@ rnalysis.filtering.Filter
     Filter.filter_missing_values
     Filter.filter_percentile
     Filter.filter_top_n
+    Filter.find_paralogs_ensembl
+    Filter.find_paralogs_panther
     Filter.from_dataframe
     Filter.head
     Filter.intersection
     Filter.majority_vote_intersection
+    Filter.map_orthologs_ensembl
+    Filter.map_orthologs_orthoinspector
+    Filter.map_orthologs_panther
+    Filter.map_orthologs_phylomedb
     Filter.number_filters
     Filter.print_features
     Filter.save_csv

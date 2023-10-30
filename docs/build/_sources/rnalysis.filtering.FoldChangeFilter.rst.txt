@@ -1,4 +1,4 @@
-rnalysis.filtering.FoldChangeFilter
+﻿rnalysis.filtering.FoldChangeFilter
 ===================================
 
 .. currentmodule:: rnalysis.filtering
@@ -33,10 +33,16 @@ rnalysis.filtering.FoldChangeFilter
     FoldChangeFilter.filter_missing_values
     FoldChangeFilter.filter_percentile
     FoldChangeFilter.filter_top_n
+    FoldChangeFilter.find_paralogs_ensembl
+    FoldChangeFilter.find_paralogs_panther
     FoldChangeFilter.from_dataframe
     FoldChangeFilter.head
     FoldChangeFilter.intersection
     FoldChangeFilter.majority_vote_intersection
+    FoldChangeFilter.map_orthologs_ensembl
+    FoldChangeFilter.map_orthologs_orthoinspector
+    FoldChangeFilter.map_orthologs_panther
+    FoldChangeFilter.map_orthologs_phylomedb
     FoldChangeFilter.number_filters
     FoldChangeFilter.print_features
     FoldChangeFilter.randomization_test
