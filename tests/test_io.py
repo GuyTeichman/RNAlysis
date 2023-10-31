@@ -1311,11 +1311,11 @@ class TestOrthoInspectorOrthologMapper:
         ('auto', 'first'),
         ('Eukaryota', 'last'),
         ('Eukaryota', 'random')])
-    def test_get_orthologs(self, ortholog_mapper, database, non_unique_mode):
-        ortholog_mapper = OrthoInspectorOrthologMapper(map_to_organism=6238, map_from_organism=6239,
-                                                       gene_id_type='UniProtKB AC/ID')
+    def test_get_orthologs(self, database, non_unique_mode):
+        mapper = OrthoInspectorOrthologMapper(map_to_organism=6238, map_from_organism=6239,
+                                              gene_id_type='UniProtKB AC/ID')
         ids = ('G5EDF7', 'P34544')
-        ortholog_one2one, ortholog_one2many = ortholog_mapper.get_orthologs(ids, non_unique_mode, database)
+        ortholog_one2one, ortholog_one2many = mapper.get_orthologs(ids, non_unique_mode, database)
 
         assert isinstance(ortholog_one2one, OrthologDict)
         assert isinstance(ortholog_one2many, OrthologDict)
