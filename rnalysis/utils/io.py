@@ -1049,7 +1049,7 @@ class EnsemblRestClient:
     def __init__(self):
         self.queue = queue.Queue()
         self.session = None
-        self.semaphore = asyncio.Semaphore(value=self.REQS_PER_SEQ)
+        self.semaphore = None
 
     def queue_action(self, req_type: Literal['get', 'post'], endpoint: str, hdrs=None, params=None):
         self.queue.put((req_type, endpoint, hdrs, params))
@@ -1069,6 +1069,9 @@ class EnsemblRestClient:
 
     async def perform_api_action(self, req_type: Literal['get', 'post'], endpoint: str, hdrs=None, params=None):
         # TODO: implement retries
+        if self.semaphore is None:
+            self.semaphore = asyncio.Semaphore(value=self.REQS_PER_SEQ)
+
         if hdrs is None:
             hdrs = self.HEADERS
 
