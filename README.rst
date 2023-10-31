@@ -95,6 +95,7 @@ All of *RNAlysis*'s dependencies can be installed automatically via PyPI.
 * `Brotli <https://github.com/google/brotli>`_
 * `networkx <https://networkx.org>`_
 * `pyvis <https://github.com/WestHealth/pyvis>`_
+* `tenacity <https://github.com/jd/tenacity>`_
 
 ----
 

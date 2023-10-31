@@ -24,3 +24,4 @@ aiohttp>=3.8.4
 aiodns>=3.0.0
 Brotli>=1.0.9
 aiolimiter>=1.0.0
+tenacity>=8.2.3

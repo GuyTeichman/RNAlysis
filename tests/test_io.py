@@ -1448,7 +1448,7 @@ class TestEnsemblOrthologMapper:
         assert isinstance(translated_ids[1], list)
         assert translated_ids == (['gene1', 'gene2'], ['trans_gene1', 'trans_gene2'])
 
-    # Test the get_paralogs method
+    @pytest.mark.skipif(not ENSEMBL_AVAILABLE, reason='Ensembl API is not available at the moment')
     @pytest.mark.parametrize('filter_percent_identity,truth', [
         (True, {'G5EDF7': 'WBGene00003368', 'P34707': 'WBGene00020961'}),
         (False, {'G5EDF7': ['WBGene00018034',
@@ -1469,6 +1469,7 @@ class TestEnsemblOrthologMapper:
         assert isinstance(paralogs, OrthologDict)
         assert paralogs.mapping_dict == truth
 
+    @pytest.mark.skipif(not ENSEMBL_AVAILABLE, reason='Ensembl API is not available at the moment')
     @pytest.mark.parametrize('non_unique_mode', ['first', 'last', 'random'])
     def test_get_orthologs(self, non_unique_mode):
         ids = ('G5EDF7', 'P34544')

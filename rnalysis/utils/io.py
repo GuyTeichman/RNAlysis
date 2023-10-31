@@ -34,6 +34,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import requests
+import tenacity
 import yaml
 from defusedxml import ElementTree
 from requests.adapters import HTTPAdapter, Retry
@@ -1060,15 +1061,18 @@ class EnsemblRestClient:
 
     async def _run(self):
         tasks = []
-        async with aiohttp.ClientSession() as self.session:
+        async with aiohttp.ClientSession(raise_for_status=True) as self.session:
             while not self.queue.empty():
                 req_type, endpoint, hdrs, params = self.queue.get()
                 tasks.append(self.perform_api_action(req_type, endpoint, hdrs, params))
 
             return await asyncio.gather(*tasks)
 
+    @tenacity.retry(stop=tenacity.stop_after_attempt(5),
+                    wait=tenacity.wait_random_exponential(multiplier=1, max=10),
+                    retry=tenacity.retry_if_exception_type(
+                        (aiohttp.ClientConnectorError, aiohttp.ClientResponseError, asyncio.TimeoutError)))
     async def perform_api_action(self, req_type: Literal['get', 'post'], endpoint: str, hdrs=None, params=None):
-        # TODO: implement retries
         if self.semaphore is None:
             self.semaphore = asyncio.Semaphore(value=self.REQS_PER_SEQ)
 
@@ -1091,7 +1095,6 @@ class EnsemblRestClient:
                 else:
                     raise ValueError(f"Invalid request type '{req_type}'. ")
                 async with request_func(self.SERVER + endpoint, headers=hdrs, **kwargs) as response:
-                    response.raise_for_status()
                     content = await response.json()
                     self.semaphore.release()
 
