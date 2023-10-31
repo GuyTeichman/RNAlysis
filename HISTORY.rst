@@ -4,8 +4,7 @@ History
 
 
 3.10.0 (2023-10-31)
-------------------
-
+-------------------
 I'm thrilled to introduce RNAlysis version 3.10.0.
 This version includes features that were requested by users for a while, alongside quality-of-life improvements and bug fixes.
 Here is a brief highlight of the most important additions:
