@@ -57,7 +57,7 @@ jobs:
         strategy:
             matrix:
                 include:
-                    -   os: macos-11
+                    -   os: macos-12
                         TARGET: macos
                         CMD_BUILD: >
                             pyinstaller RNAlysis.spec &&
@@ -82,6 +82,8 @@ jobs:
                 run: brew update
             -   name: Setup Graphviz
                 uses: ts-graphviz/setup-graphviz@v1
+                with:
+                    macos-skip-brew-update: 'true' # defalt false
             -   name: Cache LLVM and Clang
                 id: cache-llvm
                 uses: actions/cache@v2
