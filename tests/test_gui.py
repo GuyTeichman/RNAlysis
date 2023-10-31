@@ -1564,13 +1564,13 @@ def test_FilterTabPage_apply_split_clustering_function(qtbot, monkeypatch, count
 
     orig = window.obj().__copy__()
 
-    truth = orig.split_kmeans(n_clusters=3, random_seed=0)
+    truth = orig.split_kmeans(n_clusters=3, random_seed=42)
     truth = sorted(truth, key=lambda obj: sorted(obj.df.index)[0])
 
     window.stack_buttons[4].click()
     qtbot.keyClicks(window.stack.currentWidget().func_combo, filtering.CountFilter.split_kmeans.readable_name)
     window.stack.currentWidget().parameter_widgets['n_clusters'].other.setValue(3)
-    qtbot.mouseClick(window.stack.currentWidget().parameter_widgets['random_seed'].checkbox, LEFT_CLICK)
+    window.stack.currentWidget().parameter_widgets['random_seed'].setValue(42)
     with qtbot.waitSignals([window.filterObjectCreated, window.filterObjectCreated, window.filterObjectCreated],
                            timeout=15000) as blocker:
         qtbot.mouseClick(window.apply_button, LEFT_CLICK)
