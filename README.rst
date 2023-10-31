@@ -170,6 +170,35 @@ If you use the *XL-mHG* single-set enrichment test in your research, please cite
     Wagner, F. (2017). The XL-mHG test for gene set enrichment. ArXiv.
     https://doi.org/10.48550/arXiv.1507.07905
 
+If you use the *Ensembl* database in your research, please cite::
+
+    Martin FJ, Amode MR, Aneja A, Austine-Orimoloye O, Azov AG, Barnes I, et al.
+    Ensembl 2023. Nucleic Acids Res [Internet]. 2023 Jan 6;51(D1):D933–41.
+    doi.org/10.1093/nar/gkac958
+
+If you use the *PANTHER* database in your research, please cite::
+
+    Thomas PD, Ebert D, Muruganujan A, Mushayahama T, Albou L-P, Mi H.
+    PANTHER: Making genome-scale phylogenetics accessible to all. Protein Sci [Internet]. 2022 Jan 1;31(1):8–22.
+    doi.org/10.1002/pro.4218
+
+If you use the *OrthoInspector* database in your research, please cite::
+
+    Nevers Y, Kress A, Defosset A, Ripp R, Linard B, Thompson JD, et al.
+    OrthoInspector 3.0: open portal for comparative genomics. Nucleic Acids Res [Internet]. 2019 Jan 8;47(D1):D411–8.
+    doi.org/10.1093/nar/gky1068
+
+If you use the *PhylomeDB* database in your research, please cite::
+
+    Fuentes D, Molina M, Chorostecki U, Capella-Gutiérrez S, Marcet-Houben M, Gabaldón T.
+    PhylomeDB V5: an expanding repository for genome-wide catalogues of annotated gene phylogenies. Nucleic Acids Res [Internet]. 2022 Jan 7;50(D1):D1062–8.
+    doi.org/10.1093/nar/gkab966
+
+If you use the *UniProt* gene ID mapping service in your research, please cite::
+
+    The UniProt Consortium.
+    UniProt: the Universal Protein Knowledgebase in 2023. Nucleic Acids Res [Internet]. 2023 Jan 6;51(D1):D523–31.
+    doi.org/10.1093/nar/gkac1052
 
 Development Lead
 ******************
