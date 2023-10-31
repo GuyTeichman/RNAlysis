@@ -1044,12 +1044,12 @@ class EnsemblRestClient:
     REQS_PER_SEQ = 10
     HEADERS = {"Content-Type": "application/json", "Accept": "application/json"}
     RETRIES = Retry(total=5, backoff_factor=0.25, status_forcelist=[500, 502, 503, 504])
-    SEMAPHORE = asyncio.Semaphore(value=REQS_PER_SEQ)
     LIMITER = aiolimiter.AsyncLimiter(REQS_PER_SEQ, 1)
 
     def __init__(self):
         self.queue = queue.Queue()
         self.session = None
+        self.semaphore = asyncio.Semaphore(value=self.REQS_PER_SEQ)
 
     def queue_action(self, req_type: Literal['get', 'post'], endpoint: str, hdrs=None, params=None):
         self.queue.put((req_type, endpoint, hdrs, params))
@@ -1077,7 +1077,7 @@ class EnsemblRestClient:
 
         content = None
         try:
-            await self.SEMAPHORE.acquire()
+            await self.semaphore.acquire()
             async with self.LIMITER:
                 if req_type == 'get':
                     request_func = self.session.get
@@ -1090,7 +1090,7 @@ class EnsemblRestClient:
                 async with request_func(self.SERVER + endpoint, headers=hdrs, **kwargs) as response:
                     response.raise_for_status()
                     content = await response.json()
-                    self.SEMAPHORE.release()
+                    self.semaphore.release()
 
         except (aiohttp.ClientConnectorError, asyncio.TimeoutError) as e:
             # check if we are being rate limited by the server
@@ -1571,7 +1571,8 @@ class EnsemblOrthologMapper:
         if n_mapped < len(translated_ids):
             warnings.warn(f"Ortholog mapping found for only {n_mapped} out of {len(translated_ids)} gene IDs.")
 
-        return OrthologDict(mapping_one2one), OrthologDict({k: v[0] for k, v in mapping_one2many.items()})
+        return OrthologDict(mapping_one2one), OrthologDict(
+            {k: [this_v[0] for this_v in v] for k, v in mapping_one2many.items()})
 
 
 class PantherOrthologMapper:
