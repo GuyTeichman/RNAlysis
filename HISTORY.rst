@@ -33,6 +33,7 @@ Changed
 ********
 * RNAlysis now issues a warning when users run PCA or PCA-based functions on an unnormalized count matrix.
 * The 'seek_fusion_genes' and 'learn_bias' arguments for kallisto quantification (fastq.kallisto_quant_single_end and fastq.kallisto_quant_paired_end), which were depracated in kallisto versions >0.48, are no longer displayed on the graphical interface. Old Pipelines that contain these arguments will still run, but new Pipelines will not contain them.
+* Long-running functions now run in the background even when the 'inplace' parameter is set to True, instead of freezing the entire graphical interface.
 
 Fixed
 *******
