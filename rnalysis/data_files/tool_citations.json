@@ -38,5 +38,25 @@
     "xlmhg": {
         "name": "the <b>XL-mHG</b> single-set enrichment test",
         "citation": "\n<p>\nEden, E., Lipson, D., Yogev, S., and Yakhini, Z. (2007).\n Discovering Motifs in Ranked Lists of DNA Sequences. PLOS Comput. Biol. 3, e39.\n<br>\n<a href=https://doi.org/10.1371/journal.pcbi.0030039>doi.org/10.1371/journal.pcbi.0030039</a>\n</p>\n<p>\nWagner, F. (2017). The XL-mHG test for gene set enrichment. ArXiv.\n<br>\n<a href=https://doi.org/10.48550/arXiv.1507.07905>doi.org/10.48550/arXiv.1507.07905</a>\n</p>"
+    },
+    "ensembl": {
+        "name": "the <b>Ensembl</b> database",
+        "citation": "\nMartin FJ, Amode MR, Aneja A, Austine-Orimoloye O, Azov AG, Barnes I, et al.\n Ensembl 2023. \nNucleic Acids Res [Internet]. 2023 Jan 6;51(D1):D933–41. \n<a href=https://doi.org/10.1093/nar/gkac958>doi.org/10.1093/nar/gkac958</a>"
+    },
+    "panther": {
+        "name": "the <b>PANTHER</b> database",
+        "citation": "\nThomas PD, Ebert D, Muruganujan A, Mushayahama T, Albou L-P, Mi H. \nPANTHER: Making genome-scale phylogenetics accessible to all. \nProtein Sci [Internet]. 2022 Jan 1;31(1):8–22. \n<a href=https://doi.org/10.1002/pro.4218>doi.org/10.1002/pro.4218</a>"
+    },
+    "orthoinspector": {
+        "name": "the <b>OrthoInspector</b> database",
+        "citation": "\nNevers Y, Kress A, Defosset A, Ripp R, Linard B, Thompson JD, et al. \nOrthoInspector 3.0: open portal for comparative genomics. \nNucleic Acids Res [Internet]. 2019 Jan 8;47(D1):D411–8. \n<a href=https://doi.org/10.1093/nar/gky1068>doi.org/10.1093/nar/gky1068</a>"
+    },
+    "phylomedb": {
+        "name": "the <b>PhylomeDB</b> database",
+        "citation": "\nFuentes D, Molina M, Chorostecki U, Capella-Gutiérrez S, Marcet-Houben M, Gabaldón T. \nPhylomeDB V5: an expanding repository for genome-wide catalogues of annotated gene phylogenies. \nNucleic Acids Res [Internet]. 2022 Jan 7;50(D1):D1062–8. \n<a href=https://doi.org/10.1093/nar/gkab966>doi.org/10.1093/nar/gkab966</a>"
+    },
+    "uniprot": {
+        "name": "the <b>UniProt</b> gene ID mapping service",
+        "citation": "\nThe UniProt Consortium. \nUniProt: the Universal Protein Knowledgebase in 2023. \nNucleic Acids Res [Internet]. 2023 Jan 6;51(D1):D523–31. \n<a href=https://doi.org/10.1093/nar/gkac1052>doi.org/10.1093/nar/gkac1052</a>"
     }
 }
