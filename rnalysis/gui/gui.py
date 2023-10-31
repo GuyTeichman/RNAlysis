@@ -1418,7 +1418,7 @@ class TabPage(QtWidgets.QWidget):
         predecessors = predecessors if isinstance(predecessors, list) else []
         worker = gui_widgets.Worker(partial, job_id, predecessors + [self.tab_id], source_name)
 
-        if func_name in self.THREADED_FUNCS and (not kwargs.get('inplace', False)):
+        if func_name in self.THREADED_FUNCS:
             self.startedJob.emit(self, worker, [self.functionApplied.emit, finish_slot])
             return
 
