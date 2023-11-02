@@ -9,3 +9,4 @@ numba>=0.57.0:      randomization
 cutadapt>=4.4:      fastq
 pyvis>=0.3.2:       reports
 networkx>=3.0.0:    reports
+install-jdk>=1.1.0: picardtools
