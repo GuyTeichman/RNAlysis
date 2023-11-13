@@ -2066,6 +2066,7 @@ def test_differential_expression_deseq2(monkeypatch, comparisons, expected_paths
         unlink_tree(outdir)
 
 
+@pytest.mark.parametrize('random_effect', [None, 'replicate'])
 @pytest.mark.parametrize('comparisons,expected_paths,script_path', [
     ([('replicate', 'rep2', 'rep3')], ['tests/test_files/limma_tests/case1/LimmaVoom_replicate_rep2_vs_rep3_truth.csv'],
      'tests/test_files/limma_tests/case1/expected_limma_script_1.R'),
@@ -2074,16 +2075,17 @@ def test_differential_expression_deseq2(monkeypatch, comparisons, expected_paths
       'tests/test_files/limma_tests/case2/LimmaVoom_condition_cond3_vs_cond2_truth.csv'],
      'tests/test_files/limma_tests/case2/expected_limma_script_2.R')
 ])
-def test_differential_expression_limma(monkeypatch, comparisons, expected_paths, script_path):
+def test_differential_expression_limma(monkeypatch, comparisons, expected_paths, script_path, random_effect):
     outdir = 'tests/test_files/limma_tests/outdir'
     sample_table_path = 'tests/test_files/test_design_matrix.csv'
     truth = parsing.data_to_tuple(
         [DESeqFilter(file, log2fc_col='logFC', padj_col='adj.P.Val') for file in expected_paths])
     c = CountFilter('tests/test_files/big_counted.csv')
 
-    def mock_run_analysis(data_path, design_mat_path, comps, r_installation_folder):
+    def mock_run_analysis(data_path, design_mat_path, comps, r_installation_folder, rand_eff):
         assert r_installation_folder == 'auto'
         assert comps == comparisons
+        assert rand_eff == random_effect
         assert CountFilter(data_path) == c
         assert io.load_table(design_mat_path, 0).equals(io.load_table(sample_table_path, 0))
 
@@ -2091,7 +2093,8 @@ def test_differential_expression_limma(monkeypatch, comparisons, expected_paths,
 
     monkeypatch.setattr(differential_expression, 'run_limma_analysis', mock_run_analysis)
     try:
-        res = c.differential_expression_limma_voom(sample_table_path, comparisons, output_folder=outdir)
+        res = c.differential_expression_limma_voom(sample_table_path, comparisons, output_folder=outdir,
+                                                   random_effect=random_effect)
         assert sorted(res, key=lambda filter_obj: filter_obj.fname.name) == sorted(truth, key=lambda
             filter_obj: filter_obj.fname.name)
         with open(Path(outdir).joinpath(Path(script_path).name)) as outfile, open(script_path) as truthfile:

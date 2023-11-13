@@ -7,9 +7,8 @@ History
 
 Added
 *******
+* Limma-Voom differential expression can now fit mixed linear models containing a random effect (e.g. nested design).
 
-Changed
-********
 
 Fixed
 *******

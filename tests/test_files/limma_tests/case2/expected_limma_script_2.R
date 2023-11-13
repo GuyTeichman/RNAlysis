@@ -9,8 +9,8 @@ colnames(design)[1] <- "Intercept"
 
 count_data <- read.table("counted.csv", header=TRUE, sep= ",", row.names = 1)
 voom_object <- voom(count_data, design, plot=FALSE, save.plot=TRUE)
-fit <- lmFit(voom_object, design)
 
+fit <- lmFit(voom_object, design)
 
 contrast <- makeContrasts("conditioncond3 - conditioncond2", levels = design)
 contrast_fit <- contrasts.fit(fit, contrast)

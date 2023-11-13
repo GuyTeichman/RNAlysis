@@ -17,7 +17,7 @@ def install_limma(r_installation_folder: Union[str, Path, Literal['auto']] = 'au
 
 
 def create_limma_script(data_path: Union[str, Path], design_mat_path: Union[str, Path],
-                        comparisons: Iterable[Tuple[str, str, str]]):
+                        comparisons: Iterable[Tuple[str, str, str]], random_effect: Union[str, None]):
     cache_dir = io.get_todays_cache_dir().joinpath(hashlib.sha1(str(time.time_ns()).encode('utf-8')).hexdigest())
     if not cache_dir.exists():
         cache_dir.mkdir(parents=True)
@@ -36,7 +36,11 @@ def create_limma_script(data_path: Union[str, Path], design_mat_path: Union[str,
         factors_str = ''
         for factor in design_mat_df.columns:
             factor_name = generic.sanitize_variable_name(factor)
-            factor_names[factor] = factor_name
+
+            if factor == random_effect or factor_name == random_effect:
+                random_effect = factor_name
+            else:
+                factor_names[factor] = factor_name
 
             values = sorted(design_mat_df[factor].unique())
             values_str = ', '.join([f'"{val}"' for val in values])
@@ -45,10 +49,24 @@ def create_limma_script(data_path: Union[str, Path], design_mat_path: Union[str,
 
         formula = "~ " + " + ".join(factor_names.values())
 
+        if random_effect is None:
+            random_effect_fit_code = "fit <- lmFit(voom_object, design)"
+        else:
+            random_effect_fit_code = (f"cor <- duplicateCorrelation(voom_object, design, block={random_effect})\n"
+                                      "if (cor$consensus.correlation > 0) { "
+                                      "#only include random effect if the correlation is positive\n"
+                                      f"  fit <- lmFit(voom_object, design, block={random_effect}, "
+                                      f"correlation=cor$consensus.correlation)\n"
+                                      "}"
+                                      "else {"
+                                      "   fit <- lmFit(voom_object, design)"
+                                      "}")
+
         run_template = run_template.replace("$COUNT_MATRIX", Path(data_path).as_posix())
         run_template = run_template.replace("$DESIGN_MATRIX", (Path(design_mat_path).as_posix()))
         run_template = run_template.replace("$DEFINE_FACTORS", factors_str)
         run_template = run_template.replace("$FORMULA", formula)
+        run_template = run_template.replace("$RANDOM_EFFECT_FIT", random_effect_fit_code)
 
         outfile.write(run_template)
 
@@ -68,9 +86,10 @@ def create_limma_script(data_path: Union[str, Path], design_mat_path: Union[str,
 
 def run_limma_analysis(data_path: Union[str, Path], design_mat_path: Union[str, Path],
                        comparisons: Iterable[Tuple[str, str, str]],
-                       r_installation_folder: Union[str, Path, Literal['auto']] = 'auto'):
+                       r_installation_folder: Union[str, Path, Literal['auto']] = 'auto',
+                       random_effect: Union[str, None] = None):
     install_limma(r_installation_folder)
-    script_path = create_limma_script(data_path, design_mat_path, comparisons)
+    script_path = create_limma_script(data_path, design_mat_path, comparisons, random_effect)
     io.run_r_script(script_path, r_installation_folder)
     return script_path.parent
 

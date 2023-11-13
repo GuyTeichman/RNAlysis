@@ -1,4 +1,3 @@
-import platform
 import sys
 
 import numpy as np
@@ -11,18 +10,21 @@ def test_install_limma():
     install_limma()
 
 
-@pytest.mark.parametrize("data,design_matrix,comparisons,expected_path", [
+@pytest.mark.parametrize("data,design_matrix,comparisons,random_effect,expected_path", [
     ('tests/test_files/big_counted.csv', 'tests/test_files/test_design_matrix.csv', [('condition', 'cond2', 'cond1')],
-     'tests/test_files/limma_tests/case1/expected_limma_script_1.R'),
+     None, 'tests/test_files/limma_tests/case1/expected_limma_script_1.R'),
     ('counted.csv', 'tests/test_files/test_design_matrix.csv',
      [('condition', 'cond3', 'cond2'), ('replicate', 'rep2', 'rep1'), ('condition', 'cond1', 'cond2')],
-     'tests/test_files/limma_tests/case2/expected_limma_script_2.R')
+     None, 'tests/test_files/limma_tests/case2/expected_limma_script_2.R'),
+    ('tests/test_files/big_counted.csv', 'tests/test_files/test_design_matrix.csv', [('condition', 'cond2', 'cond1')],
+     'replicate', 'tests/test_files/limma_tests/case3/expected_limma_script_3.R'),
+
 ])
-def test_create_limma_script(data, design_matrix, comparisons, expected_path):
+def test_create_limma_script(data, design_matrix, comparisons, random_effect, expected_path):
     with open(expected_path) as f:
         expected = f.read()
 
-    out_path = create_limma_script(data, design_matrix, comparisons)
+    out_path = create_limma_script(data, design_matrix, comparisons, random_effect)
     assert Path(out_path).exists()
     with open(out_path) as f:
         out = f.read()
@@ -33,7 +35,8 @@ def test_create_limma_script(data, design_matrix, comparisons, expected_path):
 
 @pytest.mark.parametrize('comparisons,expected_paths', [
     (
-    [('replicate', 'rep2', 'rep3')], ['tests/test_files/limma_tests/case1/LimmaVoom_replicate_rep2_vs_rep3_truth.csv']),
+        [('replicate', 'rep2', 'rep3')],
+        ['tests/test_files/limma_tests/case1/LimmaVoom_replicate_rep2_vs_rep3_truth.csv']),
     ([('condition', 'cond2', 'cond1'), ('condition', 'cond3', 'cond2')],
      ['tests/test_files/limma_tests/case2/LimmaVoom_condition_cond2_vs_cond1_truth.csv',
       'tests/test_files/limma_tests/case2/LimmaVoom_condition_cond3_vs_cond2_truth.csv'])

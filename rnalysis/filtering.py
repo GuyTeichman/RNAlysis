@@ -3069,15 +3069,16 @@ class CountFilter(Filter):
                                                                     f"{sorted(self.columns)}"
 
         for factor in design_mat_df.columns:
-            assert parsing.slugify(factor) == factor, f"Invalid factor name '{factor}': contains invalid characters." \
-                                                      f" \nSuggested alternative name: '{parsing.slugify(factor)}'. "
+            assert generic.sanitize_variable_name(
+                factor) == factor, f"Invalid factor name '{factor}': contains invalid characters." \
+                                   f" \nSuggested alternative name: '{generic.sanitize_variable_name(factor)}'. "
 
     @readable_name('Run Limma-Voom differential expression')
     def differential_expression_limma_voom(self, design_matrix: Union[str, Path],
                                            comparisons: Iterable[Tuple[str, str, str]],
                                            r_installation_folder: Union[str, Path, Literal['auto']] = 'auto',
-                                           output_folder: Union[str, Path, None] = None
-                                           ) -> Tuple['DESeqFilter', ...]:
+                                           output_folder: Union[str, Path, None] = None,
+                                           random_effect: Union[str, None] = None) -> Tuple['DESeqFilter', ...]:
         """
         Run differential expression analysis on the count matrix using the \
         `Limma-Voom <https://doi.org/10.1186/gb-2014-15-2-r29>`_ pipeline. \
@@ -3107,6 +3108,9 @@ class CountFilter(Filter):
         as well as the log files and R script used to generate them, will be saved. \
         if output_folder is None, the results will not be saved to a specified directory.
         :type output_folder: str, Path, or None
+        :param random_effect: optionally, specify a single factor to model as a random effect. \
+        This is useful when your experimental design is nested. limma-voom can only treat one factor as a random effect.
+        :type random_effect: str or None
         :return: a tuple of DESeqFilter objects, one for each comparison
         """
         if output_folder is not None:
@@ -3128,7 +3132,7 @@ class CountFilter(Filter):
         io.save_table(design_mat_df, design_mat_path)
 
         r_output_dir = differential_expression.run_limma_analysis(data_path, design_mat_path, comparisons,
-                                                                  r_installation_folder)
+                                                                  r_installation_folder, random_effect)
         outputs = []
         for item in r_output_dir.iterdir():
             if not item.is_file():

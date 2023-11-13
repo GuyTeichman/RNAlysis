@@ -7,5 +7,5 @@ colnames(design)[1] <- "Intercept"
 
 count_data <- read.table("$COUNT_MATRIX", header=TRUE, sep= ",", row.names = 1)
 voom_object <- voom(count_data, design, plot=FALSE, save.plot=TRUE)
-fit <- lmFit(voom_object, design)
 
+$RANDOM_EFFECT_FIT
