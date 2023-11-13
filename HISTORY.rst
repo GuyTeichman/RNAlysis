@@ -2,6 +2,18 @@
 History
 =======
 
+3.10.1 (2023-11-15)
+-------------------
+
+Added
+*******
+
+Changed
+********
+
+Fixed
+*******
+* Fixed bug where trying to load sessions created with RNAlysis version 3.10.0 would result in an error.
 
 3.10.0 (2023-10-31)
 -------------------

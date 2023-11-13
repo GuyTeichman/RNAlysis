@@ -252,7 +252,7 @@ def load_gui_session(session_filename: Union[str, Path]):
 
 
 def load_table(filename: Union[str, Path], index_col: int = None, drop_columns: Union[str, List[str]] = False,
-               squeeze=False, comment: str = None, engine: Literal['pyarrow', None] = None):
+               squeeze=False, comment: str = None, engine: Literal['pyarrow', 'auto'] = 'auto'):
     """
     loads a csv/parquet table into a pandas dataframe.
 
@@ -281,7 +281,7 @@ def load_table(filename: Union[str, Path], index_col: int = None, drop_columns: 
     if filename.suffix.lower() == '.parquet':
         df = pd.read_parquet(filename, engine=engine)
     else:
-        kwargs = dict(sep=None, engine='python' if engine is None else engine, encoding='ISO-8859-1', comment=comment,
+        kwargs = dict(sep=None, engine='python' if engine == 'auto' else engine, encoding='ISO-8859-1', comment=comment,
                       skipinitialspace=True)
         if index_col is not None:
             kwargs['index_col'] = index_col
