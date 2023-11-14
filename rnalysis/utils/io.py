@@ -1346,33 +1346,40 @@ class OrthoInspectorOrthologMapper:
         return ids, translated_ids
 
     @staticmethod
-    @functools.lru_cache(maxsize=2)
-    def get_databases():
+    def get_databases(session: requests.Session = None):
+        if session is None:
+            session = get_session(OrthoInspectorOrthologMapper.RETRIES)
         url = f'{OrthoInspectorOrthologMapper.API_URL}/databases'
-        req = requests.get(url)
+        req = session.get(url)
         req.raise_for_status()
-        databases = req.json()['data']
+        databases = frozenset(req.json()['data'])
         return databases
 
     @staticmethod
-    @functools.lru_cache(maxsize=2)
-    def get_database_organisms():
+    def get_database_organisms(session: requests.Session = None):
+        if session is None:
+            session = get_session(OrthoInspectorOrthologMapper.RETRIES)
         # get list of databases
-        databases = OrthoInspectorOrthologMapper.get_databases()
+        databases = OrthoInspectorOrthologMapper.get_databases(session)
         db_organisms = {}
-        for database in databases:
+        for i, database in enumerate(databases):
+            if i > 0:
+                time.sleep(6)  # wait 6 seconds between requests to avoid rate limiting
             url = f'{OrthoInspectorOrthologMapper.API_URL}/{database}/species'
-            req = requests.get(url)
+            req = session.get(url)
             req.raise_for_status()
-            content = req.json()['data']
-            species = frozenset({d['id'] for d in content})
-            db_organisms[database] = species
+            content = req.json()
+            assert content['meta']['status'] == 'success'
+            db_organisms[database] = frozenset({d['id'] for d in content['data']})
+            assert len(db_organisms[database]) == int(content['meta']['nbResults'])
+
         return db_organisms
 
     def get_cache_filename(self):
         return f'orthoinspector_{self.map_from_organism}_{self.map_to_organism}.json'
 
     def get_orthologs(self, ids: Tuple[str, ...], non_unique_mode: str, database: str = 'auto'):
+        session = get_session(self.RETRIES)
         # find a valid database, or ensure that given database is valid
         if database == 'auto':
             database_organisms = OrthoInspectorOrthologMapper.get_database_organisms()
@@ -1383,15 +1390,14 @@ class OrthoInspectorOrthologMapper:
                 if self.map_from_organism in database_organisms[db] and self.map_to_organism in database_organisms[db]:
                     valid_dbs.append(db)
             if len(valid_dbs) == 0:
-                raise ValueError(
-                    f'No database found that supports mapping from {self.map_from_organism} to {self.map_to_organism}. ')
+                raise ValueError('No database found that supports mapping from '
+                                 f'{self.map_from_organism} to {self.map_to_organism}. ')
 
         else:
             databases = self.get_databases()
             assert database in databases, f"Invalid database: {database}. Valid databases are: {databases}."
             valid_dbs = [database]
 
-        session = get_session(self.RETRIES)
         mapping_one2one = {}
         mapping_one2many = {}
         ids, translated_ids = self.translate_ids(ids, session=session)

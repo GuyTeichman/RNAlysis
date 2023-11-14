@@ -1264,8 +1264,8 @@ class TestOrthoInspectorOrthologMapper:
 
     # Test the constructor of OrthoInspectorOrthologMapper
     def test_constructor(self, ortholog_mapper):
-        assert ortholog_mapper.map_to_organism == 'organism1'  # Replace with valid organism
-        assert ortholog_mapper.map_from_organism == 'organism2'  # Replace with valid organism
+        assert ortholog_mapper.map_to_organism == 'organism1'
+        assert ortholog_mapper.map_from_organism == 'organism2'
         assert ortholog_mapper.gene_id_type == 'gene_type'
 
     # Test the translate_ids method
@@ -1279,8 +1279,8 @@ class TestOrthoInspectorOrthologMapper:
                 assert target_gene_id_type == 'UniProtKB AC/ID'
                 assert session is None or isinstance(session, requests.Session)
 
-            def run(self, ids):
-                assert ids == ('gene1', 'gene2')
+            def run(self, run_ids):
+                assert run_ids == ('gene1', 'gene2')
                 return GeneIDDict({'gene1': 'trans_gene1', 'gene2': 'trans_gene2'})
 
         monkeypatch.setattr(io, 'GeneIDTranslator', MockGeneIDTranslator)
@@ -1300,12 +1300,16 @@ class TestOrthoInspectorOrthologMapper:
     # Test the get_databases method
     def test_get_databases(self, ortholog_mapper):
         databases = ortholog_mapper.get_databases()
-        assert isinstance(databases, list)
+        assert isinstance(databases, frozenset)
+        assert len(databases) >= 4  # the current number of OrthoInspector databases
 
     # Test the get_database_organisms method
     def test_get_database_organisms(self, ortholog_mapper):
         db_organisms = ortholog_mapper.get_database_organisms()
         assert isinstance(db_organisms, dict)
+        assert len(db_organisms) >= 4  # the current number of OrthoInspector databases
+        assert len(list(db_organisms.values())) == len(set(db_organisms.values()))  # check that all values are unique
+        time.sleep(5)
 
     @pytest.mark.parametrize('database,non_unique_mode', [
         ('auto', 'first'),

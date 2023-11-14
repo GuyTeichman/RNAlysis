@@ -13,6 +13,7 @@ Added
 Fixed
 *******
 * Fixed bug where trying to load sessions created with RNAlysis version 3.10.0 would result in an error.
+* Fixed bug where using the OrthoInspector ortholog mapping function with database='auto' would sometimes fail to find an appropriate mapping database, even when one exists.
 
 3.10.0 (2023-10-31)
 -------------------
