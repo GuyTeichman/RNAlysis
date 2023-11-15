@@ -1363,8 +1363,6 @@ class OrthoInspectorOrthologMapper:
         databases = OrthoInspectorOrthologMapper.get_databases(session)
         db_organisms = {}
         for i, database in enumerate(databases):
-            if i > 0:
-                time.sleep(6)  # wait 6 seconds between requests to avoid rate limiting
             url = f'{OrthoInspectorOrthologMapper.API_URL}/{database}/species'
             req = session.get(url)
             req.raise_for_status()
