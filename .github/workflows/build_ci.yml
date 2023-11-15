@@ -34,13 +34,13 @@ jobs:
             -   name: apt-get update (Linux)
                 if: runner.os == 'Linux'
                 run: sudo apt-get update
-            -   name: brew update (macOS)
-                if: runner.os == 'MacOS'
-                run: brew update
             -   name: Setup Qt requirements for Linux
                 uses: tlambert03/setup-qt-libs@v1
             -   name: Setup Graphviz
                 uses: ts-graphviz/setup-graphviz@v1
+                with:
+                    # Skip to run brew update command on macOS.
+                    macos-skip-brew-update: 'true' # defalt false
             -   name: Cache LLVM and Clang
                 if: runner.os != 'macOS'
                 id: cache-llvm
