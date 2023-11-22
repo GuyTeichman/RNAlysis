@@ -2,8 +2,9 @@
 History
 =======
 
-3.10.1 (2023-11-15)
+3.10.1 (2023-11-22)
 -------------------
+Version 3.10.1 introduces several bug fixes, as well as well as support for random effect analysis in Limma-Voom differential expression.
 
 Added
 *******
