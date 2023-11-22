@@ -208,7 +208,8 @@ class KallistoSingleWindow(gui_windows.FuncExternalWindow):
 
 
 class KallistoPairedWindow(gui_windows.PairedFuncExternalWindow):
-    EXCLUDED_PARAMS = {'legacy_args'}
+    EXCLUDED_PARAMS = gui_windows.PairedFuncExternalWindow.EXCLUDED_PARAMS.copy()
+    EXCLUDED_PARAMS.add('legacy_args')
     __slots__ = {}
 
     def __init__(self, parent=None):
@@ -2811,7 +2812,7 @@ class SetOpInplacCommand(InplaceCommand):
         worker = gui_widgets.Worker(partial, self.new_job_id, self.predecessors + [self.prev_job_id])
         worker.finished.connect(check_run_success)
         worker.finished.connect(self.tab.functionApplied.emit)
-        result = worker.run()
+        worker.run()
 
         if not is_filter_obj:
             self.tab.update_obj(first_obj.index_set)
