@@ -15,6 +15,7 @@ Fixed
 * Fixed bug where trying to load sessions created with RNAlysis version 3.10.0 would result in an error.
 * Fixed bug where using the OrthoInspector ortholog mapping function with database='auto' would sometimes fail to find an appropriate mapping database, even when one exists.
 * Fixed bug where kallisto paired-end quantification window would display the 'read1' and 'read2' parameters twice.
+* Fixed bug where empty sub-menus would appear under the FASTQ menu. These sub-menus will be implemented in future versions of RNAlysis.
 
 3.10.0 (2023-10-31)
 -------------------
