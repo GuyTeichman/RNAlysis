@@ -93,7 +93,7 @@ def main_window(qtbot, monkeypatch, use_temp_settings_file):
     monkeypatch.setattr(gui_widgets.ThreadStdOutStreamTextQueueReceiver, 'run', lambda self: None)
     monkeypatch.setattr(gui_quickstart.QuickStartWizard, '__init__', lambda *args, **kwargs: None)
     settings.set_show_tutorial_settings(False)
-    qtbot, window = widget_setup(qtbot, MainWindow)
+    qtbot, window = widget_setup(qtbot, MainWindow, gather_stdout=False)
     warnings.showwarning = customwarn
     # sys.excepthook = window.excepthook
     builtins.input = window.input
@@ -103,7 +103,10 @@ def main_window(qtbot, monkeypatch, use_temp_settings_file):
     app = QtWidgets.QApplication.instance()
     if app is not None:
         for w in app.topLevelWidgets():
-            w.close()
+            try:
+                w.close()
+            except RuntimeError:
+                continue
 
 
 @pytest.fixture

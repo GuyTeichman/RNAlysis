@@ -2866,8 +2866,27 @@ class MainWindow(QtWidgets.QMainWindow):
 
     jobQueued = QtCore.pyqtSignal()
 
-    def __init__(self):
+    def __init__(self, gather_stdout: bool = True):
         super().__init__()
+        if gather_stdout:
+            self.queue_stdout = Queue()
+            # create console text read thread + receiver object
+            self.thread_stdout_queue_listener = QtCore.QThread()
+            self.stdout_receiver = gui_widgets.ThreadStdOutStreamTextQueueReceiver(self.queue_stdout)
+            sys.stdout = gui_widgets.WriteStream(self.queue_stdout)
+
+            # attach console text receiver to console text thread
+            self.stdout_receiver.moveToThread(self.thread_stdout_queue_listener)
+            # connect receiver object to widget for text update
+            self.stdout_receiver.queue_stdout_element_received_signal.connect(self.append_text_to_current_console)
+            # attach to start / stop methods
+            self.thread_stdout_queue_listener.started.connect(self.stdout_receiver.run)
+            self.thread_stdout_queue_listener.start()
+        else:
+            self.queue_stdout = None
+            self.stdout_receiver = None
+            self.thread_stdout_queue_listener = None
+
         self._generate_report = False
         self.report = None
         self.tabs = ReactiveTabWidget(self)
@@ -2908,20 +2927,6 @@ class MainWindow(QtWidgets.QMainWindow):
         self.init_actions()
         self.init_menu_ui()
         self.init_shortcuts()
-
-        self.queue_stdout = Queue()
-        # create console text read thread + receiver object
-        self.thread_stdout_queue_listener = QtCore.QThread()
-        self.stdout_receiver = gui_widgets.ThreadStdOutStreamTextQueueReceiver(self.queue_stdout)
-        sys.stdout = gui_widgets.WriteStream(self.queue_stdout)
-
-        # attach console text receiver to console text thread
-        self.stdout_receiver.moveToThread(self.thread_stdout_queue_listener)
-        # connect receiver object to widget for text update
-        self.stdout_receiver.queue_stdout_element_received_signal.connect(self.append_text_to_current_console)
-        # attach to start / stop methods
-        self.thread_stdout_queue_listener.started.connect(self.stdout_receiver.run)
-        self.thread_stdout_queue_listener.start()
 
         # init thread execution attributes
         self.current_worker = None
