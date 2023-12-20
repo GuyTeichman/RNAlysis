@@ -4176,7 +4176,8 @@ class MainWindow(QtWidgets.QMainWindow):
                                                quit_msg, QtWidgets.QMessageBox.No, QtWidgets.QMessageBox.Yes)
 
         if reply == QtWidgets.QMessageBox.Yes:
-            self.thread_stdout_queue_listener.exit()
+            if self.thread_stdout_queue_listener is not None:
+                self.thread_stdout_queue_listener.exit()
             io.clear_gui_cache()
             event.accept()
         else:
