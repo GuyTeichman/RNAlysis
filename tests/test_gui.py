@@ -104,9 +104,6 @@ def main_window(qtbot, monkeypatch, use_temp_settings_file):
     if app is not None:
         for w in app.topLevelWidgets():
             w.close()
-        n = len(app.topLevelWidgets())
-        print(f"{n} widgets in the balance.")
-
 
 
 @pytest.fixture
