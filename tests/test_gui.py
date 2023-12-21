@@ -14,6 +14,23 @@ LEFT_CLICK = QtCore.Qt.LeftButton
 RIGHT_CLICK = QtCore.Qt.RightButton
 
 
+def _pytestqt_graceful_shutdown():
+    app = QtWidgets.QApplication.instance()
+    if app is not None:
+        for w in app.topLevelWidgets():
+            try:
+                w.close()
+            except RuntimeError:
+                continue
+
+
+@pytest.fixture(autouse=True)
+def mainwindow_setup(monkeypatch):
+    monkeypatch.setattr(QtWidgets.QMessageBox, 'question', lambda *args, **kwargs: QtWidgets.QMessageBox.Yes)
+    monkeypatch.setattr(gui_widgets.ThreadStdOutStreamTextQueueReceiver, 'run', lambda self: None)
+    monkeypatch.setattr(gui_quickstart.QuickStartWizard, '__init__', lambda *args, **kwargs: None)
+
+
 @pytest.fixture
 def blank_icon():
     pixmap = QtGui.QPixmap(32, 32)
@@ -36,10 +53,11 @@ def green_icon():
 
 
 @pytest.fixture
-def use_temp_settings_file(request):
+def use_temp_settings_file():
     settings.make_temp_copy_of_settings_file()
-    request.addfinalizer(settings.remove_temp_copy_of_settings_file)
-    request.addfinalizer(settings.set_temp_copy_of_settings_file_as_default)
+    yield
+    settings.remove_temp_copy_of_settings_file()
+    settings.set_temp_copy_of_settings_file_as_default()
 
 
 @pytest.fixture
@@ -61,7 +79,8 @@ def available_objects(qtbot, red_icon, green_icon):
     third.start_from_filter_obj(filtering.CountFilter('tests/test_files/counted.tsv'), 2)
     third.rename('third tab')
 
-    return {'first tab': (first, red_icon), 'second tab': (second, red_icon), 'third tab': (third, green_icon)}
+    yield {'first tab': (first, red_icon), 'second tab': (second, red_icon), 'third tab': (third, green_icon)}
+    _pytestqt_graceful_shutdown()
 
 
 @pytest.fixture
@@ -83,30 +102,22 @@ def four_available_objects_and_empty(qtbot, red_icon, green_icon, blank_icon):
 
     qtbot, empty = widget_setup(qtbot, FilterTabPage, undo_stack=QtWidgets.QUndoStack())
 
-    return {'first tab': (first, red_icon), 'second tab': (second, red_icon), 'third tab': (third, red_icon),
-            'fourth tab': (fourth, green_icon), 'empty tab': (empty, blank_icon)}
+    yield {'first tab': (first, red_icon), 'second tab': (second, red_icon), 'third tab': (third, red_icon),
+           'fourth tab': (fourth, green_icon), 'empty tab': (empty, blank_icon)}
+    _pytestqt_graceful_shutdown()
 
 
 @pytest.fixture
 def main_window(qtbot, monkeypatch, use_temp_settings_file):
-    monkeypatch.setattr(QtWidgets.QMessageBox, 'question', lambda *args, **kwargs: QtWidgets.QMessageBox.Yes)
-    monkeypatch.setattr(gui_widgets.ThreadStdOutStreamTextQueueReceiver, 'run', lambda self: None)
-    monkeypatch.setattr(gui_quickstart.QuickStartWizard, '__init__', lambda *args, **kwargs: None)
     settings.set_show_tutorial_settings(False)
-    qtbot, window = widget_setup(qtbot, MainWindow, gather_stdout=False)
-    warnings.showwarning = customwarn
+    qtbot, window = widget_setup(qtbot, MainWindow, gather_stdout=True)
+    # warnings.showwarning = customwarn
     # sys.excepthook = window.excepthook
     builtins.input = window.input
     window._toggle_reporting(True)
     yield window
-
-    app = QtWidgets.QApplication.instance()
-    if app is not None:
-        for w in app.topLevelWidgets():
-            try:
-                w.close()
-            except RuntimeError:
-                continue
+    window.close()
+    _pytestqt_graceful_shutdown()
 
 
 @pytest.fixture
@@ -121,7 +132,9 @@ def main_window_with_tabs(main_window, monkeypatch):
 @pytest.fixture
 def tab_widget(qtbot):
     qtbot, window = widget_setup(qtbot, ReactiveTabWidget)
-    return window
+    yield window
+    window.close()
+    _pytestqt_graceful_shutdown()
 
 
 @pytest.fixture
@@ -130,14 +143,18 @@ def multi_keep_window(qtbot):
             filtering.CountFilter('tests/test_files/counted.tsv'),
             filtering.Filter('tests/test_files/test_deseq_biotype.csv')]
     qtbot, window = widget_setup(qtbot, MultiKeepWindow, objs, -1)
-    return window
+    yield window
+    window.close()
+    _pytestqt_graceful_shutdown()
 
 
 @pytest.fixture
 def filtertabpage(qtbot):
     qtbot, window = widget_setup(qtbot, FilterTabPage)
     window.start_from_filter_obj(filtering.DESeqFilter('tests/test_files/test_deseq.csv'), 1)
-    return window
+    yield window
+    window.close()
+    _pytestqt_graceful_shutdown()
 
 
 @pytest.fixture
@@ -145,7 +162,8 @@ def filtertabpage_with_undo_stack(qtbot):
     stack = QtWidgets.QUndoStack()
     qtbot, window = widget_setup(qtbot, FilterTabPage, undo_stack=stack)
     window.start_from_filter_obj(filtering.DESeqFilter('tests/test_files/test_deseq_sig.csv'), 1)
-    return window, stack
+    yield window, stack
+    _pytestqt_graceful_shutdown()
 
 
 @pytest.fixture
@@ -153,14 +171,16 @@ def countfiltertabpage_with_undo_stack(qtbot):
     stack = QtWidgets.QUndoStack()
     qtbot, window = widget_setup(qtbot, FilterTabPage, undo_stack=stack)
     window.start_from_filter_obj(filtering.CountFilter('tests/test_files/counted.csv'), 1)
-    return window, stack
+    yield window, stack
+    _pytestqt_graceful_shutdown()
 
 
 @pytest.fixture
 def settabpage_with_undo_stack(qtbot):
     stack = QtWidgets.QUndoStack()
     qtbot, window = widget_setup(qtbot, SetTabPage, 'my set name', {'a', 'b', 'c', 'd'}, undo_stack=stack)
-    return window, stack
+    yield window, stack
+    _pytestqt_graceful_shutdown()
 
 
 @pytest.fixture
@@ -177,49 +197,66 @@ def clicom_window(qtbot):
     funcs = {'split_kmeans': 'K-Means', 'split_kmedoids': 'K-Medoids',
              'split_hierarchical': 'Hierarchical (Agglomerative)', 'split_hdbscan': 'HDBSCAN'}
     qtbot, window = widget_setup(qtbot, ClicomWindow, funcs, filtering.CountFilter('tests/test_files/counted.csv'))
-    return window
+    yield window
+    window.close()
+    _pytestqt_graceful_shutdown()
 
 
 @pytest.fixture
 def deseq_window(qtbot) -> DESeqWindow:
     qtbot, window = widget_setup(qtbot, DESeqWindow)
-    return window
+    yield window
+    window.close()
+    _pytestqt_graceful_shutdown()
 
 
 @pytest.fixture
 def limma_window(qtbot) -> LimmaWindow:
     qtbot, window = widget_setup(qtbot, LimmaWindow)
-    return window
+    yield window
+    window.close()
+    _pytestqt_graceful_shutdown()
 
 
 @pytest.fixture
 def cutadapt_single_window(qtbot) -> CutAdaptSingleWindow:
     qtbot, window = widget_setup(qtbot, CutAdaptSingleWindow)
-    return window
+    yield window
+    window.close()
+    _pytestqt_graceful_shutdown()
 
 
 @pytest.fixture
 def cutadapt_paired_window(qtbot) -> CutAdaptPairedWindow:
     qtbot, window = widget_setup(qtbot, CutAdaptPairedWindow)
-    return window
+    yield window
+
+    window.close()
+    _pytestqt_graceful_shutdown()
 
 
 @pytest.fixture
 def kallisto_index_window(qtbot) -> KallistoIndexWindow:
     qtbot, window = widget_setup(qtbot, KallistoIndexWindow)
-    return window
+    yield window
+    window.close()
+    _pytestqt_graceful_shutdown()
 
 
 @pytest.fixture
 def kallisto_single_window(qtbot) -> KallistoSingleWindow:
     qtbot, window = widget_setup(qtbot, KallistoSingleWindow)
-    return window
+    yield window
+    window.close()
+    _pytestqt_graceful_shutdown()
 
 
 @pytest.fixture
 def kallisto_paired_window(qtbot) -> KallistoPairedWindow:
     qtbot, window = widget_setup(qtbot, KallistoPairedWindow)
-    return window
+    yield window
+    window.close()
+    _pytestqt_graceful_shutdown()
 
 
 def update_gene_sets_widget(widget: gui_widgets.GeneSetComboBox, objs):
@@ -230,19 +267,22 @@ def update_gene_sets_widget(widget: gui_widgets.GeneSetComboBox, objs):
 def enrichment_window(qtbot, available_objects):
     qtbot, window = widget_setup(qtbot, EnrichmentWindow)
     window.geneSetsRequested.connect(functools.partial(update_gene_sets_widget, objs=available_objects))
-    return window
+    yield window
+    _pytestqt_graceful_shutdown()
 
 
 @pytest.fixture
 def set_op_window(qtbot, four_available_objects_and_empty):
     qtbot, window = widget_setup(qtbot, SetOperationWindow, four_available_objects_and_empty)
-    return window
+    yield window
+    _pytestqt_graceful_shutdown()
 
 
 @pytest.fixture
 def set_vis_window(qtbot, four_available_objects_and_empty):
     qtbot, window = widget_setup(qtbot, SetVisualizationWindow, four_available_objects_and_empty)
-    return window
+    yield window
+    _pytestqt_graceful_shutdown()
 
 
 multi_open_window_files = ['tests/counted.csv', 'tests/test_deseq.csv', 'tests/counted.tsv']
@@ -251,7 +291,15 @@ multi_open_window_files = ['tests/counted.csv', 'tests/test_deseq.csv', 'tests/c
 @pytest.fixture
 def multi_open_window(qtbot):
     qtbot, window = widget_setup(qtbot, MultiOpenWindow, multi_open_window_files)
-    return window
+    yield window
+    _pytestqt_graceful_shutdown()
+
+
+@pytest.fixture
+def apply_table_pipeline_window(qtbot, available_objects_no_tabpages):
+    qtbot, window = widget_setup(qtbot, gui_windows.ApplyTablePipelineWindow, available_objects_no_tabpages)
+    yield window
+    _pytestqt_graceful_shutdown()
 
 
 @pytest.fixture
@@ -272,32 +320,30 @@ def widget_setup(qtbot, widget_class, *args, **kwargs):
     return qtbot, widget
 
 
-def test_ApplyPipelineWindow_init(qtbot, available_objects_no_tabpages):
-    qtbot, window = widget_setup(qtbot, gui_windows.ApplyTablePipelineWindow, available_objects_no_tabpages)
+def test_ApplyPipelineWindow_init(apply_table_pipeline_window):
+    pass
 
 
-def test_ApplyPipelineWindow_select_all(qtbot, available_objects_no_tabpages):
-    qtbot, window = widget_setup(qtbot, gui_windows.ApplyTablePipelineWindow, available_objects_no_tabpages)
-    qtbot.mouseClick(window.list.select_all_button, LEFT_CLICK)
-    assert window.result() == list(available_objects_no_tabpages.keys())
+def test_ApplyPipelineWindow_select_all(qtbot, apply_table_pipeline_window, available_objects_no_tabpages):
+    qtbot.mouseClick(apply_table_pipeline_window.list.select_all_button, LEFT_CLICK)
+    assert apply_table_pipeline_window.result() == list(available_objects_no_tabpages.keys())
 
 
-def test_ApplyPipelineWindow_clear_all(qtbot, available_objects_no_tabpages):
-    qtbot, window = widget_setup(qtbot, gui_windows.ApplyTablePipelineWindow, available_objects_no_tabpages)
-    qtbot.mouseClick(window.list.select_all_button, LEFT_CLICK)
-    qtbot.mouseClick(window.list.clear_all_button, LEFT_CLICK)
-    assert window.result() == []
+def test_ApplyPipelineWindow_clear_all(qtbot, apply_table_pipeline_window):
+    qtbot.mouseClick(apply_table_pipeline_window.list.select_all_button, LEFT_CLICK)
+    qtbot.mouseClick(apply_table_pipeline_window.list.clear_all_button, LEFT_CLICK)
+    assert apply_table_pipeline_window.result() == []
 
 
-def test_KallistoIndexWindow_init(qtbot, kallisto_index_window):
+def test_KallistoIndexWindow_init(kallisto_index_window):
     _ = kallisto_index_window
 
 
-def test_KallistoSingleWindow_init(qtbot, kallisto_single_window):
+def test_KallistoSingleWindow_init(kallisto_single_window):
     _ = kallisto_single_window
 
 
-def test_KallistoPairedWindow_init(qtbot, kallisto_paired_window):
+def test_KallistoPairedWindow_init(kallisto_paired_window):
     _ = kallisto_paired_window
 
 
@@ -376,11 +422,11 @@ def test_KallistoPairedWindow_start_analysis(qtbot, kallisto_paired_window):
     assert blocker.args[1] == truth_kwargs
 
 
-def test_CutAdaptSingleWindow_init(qtbot, cutadapt_single_window):
+def test_CutAdaptSingleWindow_init(cutadapt_single_window):
     _ = cutadapt_single_window
 
 
-def test_CutAdaptPairedWindow_init(qtbot, cutadapt_paired_window):
+def test_CutAdaptPairedWindow_init(cutadapt_paired_window):
     _ = cutadapt_paired_window
 
 
@@ -435,7 +481,7 @@ def test_CutAdaptPairedWindow_start_analysis(qtbot, cutadapt_paired_window):
     assert blocker.args[1] == truth_kwargs
 
 
-def test_DESeqWindow_init(qtbot, deseq_window):
+def test_DESeqWindow_init(deseq_window):
     _ = deseq_window
 
 
@@ -487,7 +533,7 @@ def test_DESeqWindow_start_analysis(qtbot, deseq_window):
     assert blocker.args[1] == truth_kwargs
 
 
-def test_LimmaWindow_init(qtbot, limma_window):
+def test_LimmaWindow_init(limma_window):
     _ = limma_window
 
 
@@ -540,7 +586,7 @@ def test_LimmaWindow_start_analysis(qtbot, limma_window):
     assert blocker.args[1] == truth_kwargs
 
 
-def test_ClicomWindow_init(qtbot, clicom_window):
+def test_ClicomWindow_init(clicom_window):
     _ = clicom_window
 
 
@@ -608,7 +654,7 @@ def test_ClicomWindow_start_analysis(qtbot, clicom_window):
     assert blocker.args[1] == truth_params
 
 
-def test_EnrichmentWindow_init(qtbot, enrichment_window):
+def test_EnrichmentWindow_init(enrichment_window):
     _ = enrichment_window
 
 
@@ -618,7 +664,7 @@ def test_EnrichmentWindow_init(qtbot, enrichment_window):
     ('Categorical attributes', 'user_defined'),
     ('Non-categorical attributes', 'non_categorical')
 ])
-def test_EnrichmentWindow_get_analysis_type(qtbot, enrichment_window, button_name, truth):
+def test_EnrichmentWindow_get_analysis_type(enrichment_window, button_name, truth):
     enrichment_window.widgets['dataset_radiobox'].radio_buttons[button_name].click()
     assert enrichment_window.get_current_analysis_type() == truth
 
@@ -634,7 +680,7 @@ def test_EnrichmentWindow_get_analysis_type(qtbot, enrichment_window, button_nam
     ('Randomization test', False),
     ('Single-set enrichment (XL-mHG test)', True)
 ])
-def test_EnrichmentWindow_is_single_set(qtbot, enrichment_window, button_name, test_name, truth):
+def test_EnrichmentWindow_is_single_set(enrichment_window, button_name, test_name, truth):
     enrichment_window.widgets['dataset_radiobox'].radio_buttons[button_name].click()
     enrichment_window.stats_widgets['stats_radiobox'].radio_buttons[test_name].click()
 
@@ -644,7 +690,7 @@ def test_EnrichmentWindow_is_single_set(qtbot, enrichment_window, button_name, t
 @pytest.mark.parametrize('test_name,truth', [
     ("One-sample T-test (parametric)", False),
     ('Sign test (non-parametric)', False)])
-def test_EnrichmentWindow_is_single_set_non_categorical(qtbot, enrichment_window, test_name, truth):
+def test_EnrichmentWindow_is_single_set_non_categorical(enrichment_window, test_name, truth):
     enrichment_window.widgets['dataset_radiobox'].radio_buttons['Non-categorical attributes'].click()
     enrichment_window.stats_widgets['stats_radiobox'].radio_buttons[test_name].click()
 
@@ -668,7 +714,7 @@ def test_EnrichmentWindow_is_single_set_non_categorical(qtbot, enrichment_window
     ('Non-categorical attributes', "One-sample T-test (parametric)", enrichment.FeatureSet.non_categorical_enrichment),
     ('Non-categorical attributes', "Sign test (non-parametric)", enrichment.FeatureSet.non_categorical_enrichment)
 ])
-def test_EnrichmentWindow_get_func(qtbot, enrichment_window, button_name, test_name, func_truth):
+def test_EnrichmentWindow_get_func(enrichment_window, button_name, test_name, func_truth):
     enrichment_window.widgets['dataset_radiobox'].radio_buttons[button_name].click()
     enrichment_window.stats_widgets['stats_radiobox'].radio_buttons[test_name].click()
 
@@ -681,7 +727,7 @@ def test_EnrichmentWindow_get_func(qtbot, enrichment_window, button_name, test_n
     ('Categorical attributes', True),
     ('Non-categorical attributes', False)
 ])
-def test_EnrichmentWindow_is_categorical(qtbot, enrichment_window, button_name, truth):
+def test_EnrichmentWindow_is_categorical(enrichment_window, button_name, truth):
     enrichment_window.widgets['dataset_radiobox'].radio_buttons[button_name].click()
     assert enrichment_window.is_categorical() == truth
 
@@ -958,7 +1004,7 @@ def test_EnrichmentWindow_run_analysis_non_categorical(qtbot, enrichment_window,
         0].obj().index_set
 
 
-def test_SetOperationWindow_init(qtbot, set_op_window):
+def test_SetOperationWindow_init(set_op_window):
     _ = set_op_window
 
 
@@ -976,7 +1022,7 @@ def test_SetOperationWindow_init(qtbot, set_op_window):
     ('Majority-Vote Intersection', 'majority_vote_intersection'),
     ('Other', 'other')
 ])
-def test_SetOperationWindow_get_current_func_name(qtbot, set_op_window, op_name, truth, second_op_name, second_truth):
+def test_SetOperationWindow_get_current_func_name(set_op_window, op_name, truth, second_op_name, second_truth):
     assert set_op_window.get_current_func_name() is None
     set_op_window.widgets['radio_button_box'].radio_buttons[op_name].click()
     assert set_op_window.get_current_func_name() == truth
@@ -984,7 +1030,7 @@ def test_SetOperationWindow_get_current_func_name(qtbot, set_op_window, op_name,
     assert set_op_window.get_current_func_name() == second_truth
 
 
-def test_SetOperationWindow_canvas_types(qtbot, set_op_window):
+def test_SetOperationWindow_canvas_types(set_op_window):
     assert isinstance(set_op_window.widgets['canvas'], gui_graphics.EmptyCanvas)
 
     set_op_window.widgets['set_list'].list_items[0].setSelected(True)
@@ -1178,7 +1224,7 @@ def test_SetOperationWindow_apply_set_op_majority_vote(qtbot, set_op_window, thr
     assert blocker.args[0] == truth
 
 
-def test_SetVisualizationWindow_init(qtbot, set_vis_window):
+def test_SetVisualizationWindow_init(set_vis_window):
     _ = set_vis_window
 
 
@@ -1190,7 +1236,7 @@ def test_SetVisualizationWindow_init(qtbot, set_vis_window):
     ('Venn Diagram', 'venn_diagram'),
     ('UpSet Plot', 'upset_plot')
 ])
-def test_SetVisualizationWindow_get_current_func_name(qtbot, set_vis_window, op_name, truth, second_op_name,
+def test_SetVisualizationWindow_get_current_func_name(set_vis_window, op_name, truth, second_op_name,
                                                       second_truth):
     assert set_vis_window.get_current_func_name() is None
     set_vis_window.widgets['radio_button_box'].radio_buttons[op_name].click()
@@ -1233,7 +1279,7 @@ def test_SetVisualizationWindow_canvas_types(qtbot, set_vis_window, is_func_sele
     'Venn Diagram',
     'UpSet Plot'
 ])
-def test_SetVisualizationWindow_function_change_canvas(monkeypatch_create_canvas, set_vis_window, qtbot, op_name,
+def test_SetVisualizationWindow_function_change_canvas(monkeypatch_create_canvas, set_vis_window, op_name,
                                                        second_op_name):
     n_sets = 3
     for i in range(n_sets):
@@ -1533,7 +1579,7 @@ def test_FilterTabPage_save_table(qtbot, monkeypatch):
     assert saved == ['got name', fname]
 
 
-def test_FilterTabPage_view_full_table(qtbot, filtertabpage):
+def test_FilterTabPage_view_full_table(filtertabpage):
     filtertabpage.overview_widgets['view_button'].click()
     assert isinstance(filtertabpage.overview_widgets['full_table_view'], gui_windows.DataFrameView)
     assert filtertabpage.overview_widgets['full_table_view'].data_view.model()._dataframe.equals(filtertabpage.obj().df)
@@ -1641,7 +1687,7 @@ def test_FilterTabPage_apply_pipeline(qtbot, filtertabpage_with_undo_stack, pipe
     assert window.obj() == filter_obj_truth
 
 
-def test_FilterTabPage_undo_pipeline(qtbot, filtertabpage_with_undo_stack, pipeline):
+def test_FilterTabPage_undo_pipeline(filtertabpage_with_undo_stack, pipeline):
     window, stack = filtertabpage_with_undo_stack
     orig_name = window.name
     filter_obj_orig = window.obj().__copy__()
@@ -1658,7 +1704,7 @@ def test_FilterTabPage_undo_pipeline(qtbot, filtertabpage_with_undo_stack, pipel
     assert window.name != orig_name
 
 
-def test_FilterTabPage_open_clicom(countfiltertabpage_with_undo_stack, qtbot, monkeypatch):
+def test_FilterTabPage_open_clicom(countfiltertabpage_with_undo_stack, monkeypatch):
     tabpage = countfiltertabpage_with_undo_stack[0]
     opened = []
 
@@ -1673,7 +1719,7 @@ def test_FilterTabPage_open_clicom(countfiltertabpage_with_undo_stack, qtbot, mo
     assert opened == [True]
 
 
-def test_FilterTabPage_open_deseq(countfiltertabpage_with_undo_stack, qtbot, monkeypatch):
+def test_FilterTabPage_open_deseq(countfiltertabpage_with_undo_stack, monkeypatch):
     tabpage = countfiltertabpage_with_undo_stack[0]
     opened = []
 
@@ -1689,7 +1735,7 @@ def test_FilterTabPage_open_deseq(countfiltertabpage_with_undo_stack, qtbot, mon
     assert opened == [True]
 
 
-def test_FilterTabPage_open_limma(countfiltertabpage_with_undo_stack, qtbot, monkeypatch):
+def test_FilterTabPage_open_limma(countfiltertabpage_with_undo_stack, monkeypatch):
     tabpage = countfiltertabpage_with_undo_stack[0]
     opened = []
 
@@ -1705,7 +1751,7 @@ def test_FilterTabPage_open_limma(countfiltertabpage_with_undo_stack, qtbot, mon
     assert opened == [True]
 
 
-def test_FilterTabPage_get_all_actions(qtbot, countfiltertabpage_with_undo_stack, filtertabpage_with_undo_stack):
+def test_FilterTabPage_get_all_actions(countfiltertabpage_with_undo_stack, filtertabpage_with_undo_stack):
     countfilter = countfiltertabpage_with_undo_stack[0]
     deseqfilter = filtertabpage_with_undo_stack[0]
     truth_counts = {'Filter': [], 'Summarize': [], 'Visualize': [], 'Normalize': [], 'Cluster': [], 'General': []}
@@ -1852,9 +1898,9 @@ def test_SetTabPage_view_full_set(qtbot):
 @pytest.mark.parametrize('exc_params', [None, ['self', 'other']])
 @pytest.mark.parametrize('pipeline_mode', [True, False])
 def test_FuncTypeStack_init(qtbot, pipeline_mode, exc_params):
-    qtbot, stack = widget_setup(qtbot, FuncTypeStack, ['filter_biotype_from_ref_table', 'number_filters', 'describe'],
-                                filtering.Filter('tests/test_files/test_deseq.csv'),
-                                additional_excluded_params=exc_params, pipeline_mode=pipeline_mode)
+    _ = widget_setup(qtbot, FuncTypeStack, ['filter_biotype_from_ref_table', 'number_filters', 'describe'],
+                     filtering.Filter('tests/test_files/test_deseq.csv'),
+                     additional_excluded_params=exc_params, pipeline_mode=pipeline_mode)
 
 
 def test_CreatePipelineWindow_init(qtbot):
@@ -2013,7 +2059,7 @@ def test_CreatePipelineWindow_export_pipeline(qtbot, monkeypatch):
     assert blocker.args[1] == pipeline_truth
 
 
-def test_MultiKeepWindow_init(qtbot, multi_keep_window):
+def test_MultiKeepWindow_init(multi_keep_window):
     _ = multi_keep_window
 
 
@@ -2046,7 +2092,7 @@ def test_MultiKeepWindow_result(qtbot, multi_keep_window, keep_ops, name_ops, tr
     assert multi_keep_window.result() == truth
 
 
-def test_MultiOpenWindow_init(qtbot, multi_open_window):
+def test_MultiOpenWindow_init(multi_open_window):
     _ = multi_open_window
 
 
@@ -2116,7 +2162,7 @@ def test_MultiOpenWindow_result(qtbot, multi_open_window, path_ops, type_ops, na
     assert multi_open_window.result() == truth
 
 
-def test_ReactiveTabWidget_init(qtbot, tab_widget):
+def test_ReactiveTabWidget_init(tab_widget):
     _ = tab_widget
 
 
@@ -2191,24 +2237,24 @@ def test_ReactiveTabWidget_right_click(qtbot, tab_widget, monkeypatch):
             assert blocker.args[0] == j
 
 
-def test_MainWindow_init(qtbot, main_window):
+def test_MainWindow_init(main_window):
     _ = main_window
 
 
-def test_MainWindow_add_new_tab(qtbot, main_window):
+def test_MainWindow_add_new_tab(main_window):
     main_window.new_table_action.trigger()
     assert main_window.tabs.count() == 2
 
 
 @pytest.mark.parametrize('ind', range(6))
-def test_MainWindow_add_new_tab_at(qtbot, main_window_with_tabs, ind):
+def test_MainWindow_add_new_tab_at(main_window_with_tabs, ind):
     main_window_with_tabs.add_new_tab_at(ind)
     assert main_window_with_tabs.tabs.count() == 6
     assert main_window_with_tabs.tabs.currentIndex() == ind
     assert main_window_with_tabs.tabs.currentWidget().is_empty()
 
 
-def test_MainWindow_close_current_tab(qtbot, main_window_with_tabs):
+def test_MainWindow_close_current_tab(main_window_with_tabs):
     current_tab_name = main_window_with_tabs.tabs.currentWidget().get_tab_name()
     main_window_with_tabs.close_current_action.trigger()
     assert main_window_with_tabs.tabs.count() == 4
@@ -2217,7 +2263,7 @@ def test_MainWindow_close_current_tab(qtbot, main_window_with_tabs):
 
 
 @pytest.mark.parametrize('ind', range(5))
-def test_MainWindow_close_tabs_to_the_right(qtbot, main_window_with_tabs, ind):
+def test_MainWindow_close_tabs_to_the_right(main_window_with_tabs, ind):
     tab_name = main_window_with_tabs.tabs.widget(ind).get_tab_name()
     all_names = [main_window_with_tabs.tabs.widget(i).get_tab_name() for i in range(5)]
     main_window_with_tabs.close_tabs_to_the_right(ind)
@@ -2231,7 +2277,7 @@ def test_MainWindow_close_tabs_to_the_right(qtbot, main_window_with_tabs, ind):
 
 
 @pytest.mark.parametrize('ind', range(5))
-def test_MainWindow_close_tabs_to_the_left(qtbot, main_window_with_tabs, ind):
+def test_MainWindow_close_tabs_to_the_left(main_window_with_tabs, ind):
     tab_name = main_window_with_tabs.tabs.widget(ind).get_tab_name()
     all_names = [main_window_with_tabs.tabs.widget(i).get_tab_name() for i in range(5)]
     main_window_with_tabs.close_tabs_to_the_left(ind)
@@ -2245,7 +2291,7 @@ def test_MainWindow_close_tabs_to_the_left(qtbot, main_window_with_tabs, ind):
 
 
 @pytest.mark.parametrize('ind', range(5))
-def test_MainWindow_close_other_tabs(qtbot, main_window_with_tabs, ind):
+def test_MainWindow_close_other_tabs(main_window_with_tabs, ind):
     tab_name = main_window_with_tabs.tabs.widget(ind).get_tab_name()
     all_names = [main_window_with_tabs.tabs.widget(i).get_tab_name() for i in range(5)]
     main_window_with_tabs.close_other_tabs(ind)
@@ -2257,7 +2303,7 @@ def test_MainWindow_close_other_tabs(qtbot, main_window_with_tabs, ind):
 
 
 @pytest.mark.parametrize('ind', range(5))
-def test_MainWindow_close_tab(qtbot, main_window_with_tabs, ind):
+def test_MainWindow_close_tab(main_window_with_tabs, ind):
     tab_name = main_window_with_tabs.tabs.widget(ind).get_tab_name()
     main_window_with_tabs.close_tab(ind)
     assert main_window_with_tabs.tabs.count() == 4
@@ -2265,7 +2311,7 @@ def test_MainWindow_close_tab(qtbot, main_window_with_tabs, ind):
     assert main_window_with_tabs.tabs.currentWidget().get_tab_name() != tab_name
 
 
-def test_MainWindow_close_tab_undo(qtbot, main_window_with_tabs):
+def test_MainWindow_close_tab_undo(main_window_with_tabs):
     current_tab_name = main_window_with_tabs.tabs.currentWidget().get_tab_name()
     current_obj = copy.copy(main_window_with_tabs.tabs.currentWidget().obj())
     main_window_with_tabs.close_current_action.trigger()
@@ -2279,14 +2325,14 @@ def test_MainWindow_close_tab_undo(qtbot, main_window_with_tabs):
     assert main_window_with_tabs.tabs.currentWidget().obj() == current_obj
 
 
-def test_MainWindow_sort_tabs_by_type(qtbot, main_window_with_tabs):
+def test_MainWindow_sort_tabs_by_type(main_window_with_tabs):
     truth = ['counted', 'test_deseq', 'my table', 'counted_6cols', 'majority_vote_intersection output']
     main_window_with_tabs.sort_tabs_by_type()
     for i, name in enumerate(truth):
         assert main_window_with_tabs.tabs.widget(i).get_tab_name() == name
 
 
-def test_MainWindow_sort_tabs_by_n_features(qtbot, main_window_with_tabs):
+def test_MainWindow_sort_tabs_by_n_features(main_window_with_tabs):
     truth = ['test_deseq', 'my table', 'majority_vote_intersection output', 'counted_6cols', 'counted']
     main_window_with_tabs.sort_tabs_by_name()
     main_window_with_tabs.sort_tabs_by_n_features()
@@ -2294,7 +2340,7 @@ def test_MainWindow_sort_tabs_by_n_features(qtbot, main_window_with_tabs):
         assert main_window_with_tabs.tabs.widget(i).get_tab_name() == name
 
 
-def test_MainWindow_sort_tabs_by_creation_time(qtbot, main_window_with_tabs):
+def test_MainWindow_sort_tabs_by_creation_time(main_window_with_tabs):
     truth = [main_window_with_tabs.tabs.widget(i).get_tab_name() for i in range(5)]
     main_window_with_tabs.sort_tabs_by_name()
     main_window_with_tabs.sort_tabs_by_creation_time()
@@ -2302,14 +2348,14 @@ def test_MainWindow_sort_tabs_by_creation_time(qtbot, main_window_with_tabs):
         assert main_window_with_tabs.tabs.widget(i).get_tab_name() == name
 
 
-def test_MainWindow_sort_tabs_by_name(qtbot, main_window_with_tabs):
+def test_MainWindow_sort_tabs_by_name(main_window_with_tabs):
     truth = ['counted', 'counted_6cols', 'majority_vote_intersection output', 'my table', 'test_deseq']
     main_window_with_tabs.sort_tabs_by_name()
     for i, name in enumerate(truth):
         assert main_window_with_tabs.tabs.widget(i).get_tab_name() == name
 
 
-def test_MainWindow_reverse_order(qtbot, main_window_with_tabs):
+def test_MainWindow_reverse_order(main_window_with_tabs):
     truth = reversed(['counted', 'counted_6cols', 'majority_vote_intersection output', 'my table', 'test_deseq'])
     main_window_with_tabs.sort_tabs_by_name()
     main_window_with_tabs.sort_reverse()
@@ -2328,7 +2374,7 @@ def test_MainWindow_rename_tab(qtbot, main_window_with_tabs):
 
 
 @pytest.mark.parametrize('normalize', [False, True])
-def test_MainWindow_new_table_from_folder_htseqcount(qtbot, main_window_with_tabs, normalize, monkeypatch):
+def test_MainWindow_new_table_from_folder_htseqcount(main_window_with_tabs, normalize, monkeypatch):
     dir_path = 'tests/test_files/test_count_from_folder'
 
     def mock_get_dir(*args, **kwargs):
@@ -2348,7 +2394,7 @@ def test_MainWindow_new_table_from_folder_htseqcount(qtbot, main_window_with_tab
                                                                                                             normalize)
 
 
-def test_MainWindow_new_table_from_folder(qtbot, main_window_with_tabs, monkeypatch):
+def test_MainWindow_new_table_from_folder(main_window_with_tabs, monkeypatch):
     dir_path = 'tests/test_files/test_count_from_folder'
 
     def mock_get_dir(*args, **kwargs):
@@ -2361,7 +2407,7 @@ def test_MainWindow_new_table_from_folder(qtbot, main_window_with_tabs, monkeypa
     assert main_window_with_tabs.tabs.currentWidget().obj() == filtering.CountFilter.from_folder(dir_path)
 
 
-def test_MainWindow_multiple_new_tables(qtbot, main_window, monkeypatch):
+def test_MainWindow_multiple_new_tables(main_window, monkeypatch):
     filenames = ['tests/test_files/test_deseq.csv', 'tests/test_files/counted.tsv', 'tests/test_files/fc_1.csv']
     objs_truth = [filtering.DESeqFilter(filenames[0]), filtering.CountFilter(filenames[1], drop_columns='cond2'),
                   filtering.FoldChangeFilter(filenames[2], 'num', 'denom')]
@@ -2424,7 +2470,7 @@ def test_MainWindow_import_pipeline(use_temp_settings_file, main_window, monkeyp
     assert main_window.pipelines == OrderedDict({name: (exp_class.import_pipeline(fname), -1)})
 
 
-def test_MainWindow_import_multiple_gene_sets(qtbot, main_window_with_tabs, monkeypatch):
+def test_MainWindow_import_multiple_gene_sets(main_window_with_tabs, monkeypatch):
     filenames = ['tests/test_files/counted.tsv', 'tests/test_files/test_deseq.csv',
                  'tests/test_files/test_gene_set.txt']
     truth = []
@@ -2452,7 +2498,7 @@ def test_MainWindow_import_multiple_gene_sets(qtbot, main_window_with_tabs, monk
 
 @pytest.mark.parametrize('filename', ['tests/test_files/counted.tsv', 'tests/test_files/test_deseq.csv',
                                       'tests/test_files/test_gene_set.txt'])
-def test_MainWindow_import_gene_set(qtbot, main_window_with_tabs, monkeypatch, filename):
+def test_MainWindow_import_gene_set(main_window_with_tabs, monkeypatch, filename):
     if filename.endswith('.txt'):
         with open(filename) as f:
             truth_set = enrichment.FeatureSet(set(f.read().split()), Path(filename).stem)
@@ -2471,7 +2517,7 @@ def test_MainWindow_import_gene_set(qtbot, main_window_with_tabs, monkeypatch, f
 
 
 @pytest.mark.parametrize('ind', range(5))
-def test_MainWindow_export_gene_set(qtbot, use_temp_settings_file, main_window_with_tabs, monkeypatch, ind):
+def test_MainWindow_export_gene_set(use_temp_settings_file, main_window_with_tabs, monkeypatch, ind):
     save_path = 'test/save/path.csv'
     save_called = []
 
@@ -2507,7 +2553,7 @@ def test_MainWindow_export_gene_set(qtbot, use_temp_settings_file, main_window_w
          'WBGene00007074', 'WBGene00007071', 'WBGene00077503', 'WBGene00007063', 'WBGene00043988',
          'WBGene00007064', 'WBGene00007078'})
 ])
-def test_MainWindow_copy_gene_set(qtbot, main_window_with_tabs, ind, gene_set):
+def test_MainWindow_copy_gene_set(main_window_with_tabs, ind, gene_set):
     main_window_with_tabs.tabs.setCurrentIndex(1)
     main_window_with_tabs.copy_action.trigger()
     txt = QtWidgets.QApplication.clipboard().text()
@@ -2515,7 +2561,7 @@ def test_MainWindow_copy_gene_set(qtbot, main_window_with_tabs, ind, gene_set):
     assert sorted(gene_set) == sorted(txt.split())
 
 
-def test_MainWindow_add_pipeline(qtbot, main_window, monkeypatch):
+def test_MainWindow_add_pipeline(main_window, monkeypatch):
     window_opened = []
     monkeypatch.setattr(CreatePipelineWindow, 'exec', functools.partial(window_opened.append, True))
 
@@ -2543,7 +2589,7 @@ def test_MainWindow_apply_function(qtbot, main_window_with_tabs):
     assert main_window_with_tabs.tabs.count() == 6
 
 
-def test_MainWindow_get_available_objects(qtbot, use_temp_settings_file, main_window_with_tabs):
+def test_MainWindow_get_available_objects(use_temp_settings_file, main_window_with_tabs):
     objs_truth = {'my table': filtering.FoldChangeFilter('tests/test_files/fc_1.csv', 'a', 'b'),
                   'counted': filtering.CountFilter('tests/test_files/counted.tsv'),
                   'counted_6cols': filtering.Filter('tests/test_files/counted_6cols.csv'),
@@ -2574,7 +2620,7 @@ def test_MainWindow_get_available_objects(qtbot, use_temp_settings_file, main_wi
         assert isinstance(res[name][1], QtGui.QIcon)
 
 
-def test_MainWindow_choose_set_op(qtbot, use_temp_settings_file, main_window, monkeypatch):
+def test_MainWindow_choose_set_op(use_temp_settings_file, main_window, monkeypatch):
     def mock_init(self, available_objs, parent=None):
         assert available_objs == 'my available objects'
         QtWidgets.QWidget.__init__(self)
@@ -2588,7 +2634,7 @@ def test_MainWindow_choose_set_op(qtbot, use_temp_settings_file, main_window, mo
     assert window_opened == [True]
 
 
-def test_MainWindow_visualize_gene_sets(qtbot, use_temp_settings_file, main_window, monkeypatch):
+def test_MainWindow_visualize_gene_sets(use_temp_settings_file, main_window, monkeypatch):
     def mock_init(self, available_objs, parent=None):
         assert available_objs == 'my available objects'
         QtWidgets.QWidget.__init__(self)
@@ -2602,7 +2648,7 @@ def test_MainWindow_visualize_gene_sets(qtbot, use_temp_settings_file, main_wind
     assert window_opened == [True]
 
 
-def test_MainWindow_open_enrichment_analysis(qtbot, main_window, monkeypatch):
+def test_MainWindow_open_enrichment_analysis(main_window, monkeypatch):
     window_opened = []
     monkeypatch.setattr(EnrichmentWindow, 'show', functools.partial(window_opened.append, True))
 
@@ -2610,7 +2656,7 @@ def test_MainWindow_open_enrichment_analysis(qtbot, main_window, monkeypatch):
     assert window_opened == [True]
 
 
-def test_MainWindow_choose_tab_by_name(qtbot, use_temp_settings_file, main_window_with_tabs, monkeypatch):
+def test_MainWindow_choose_tab_by_name(use_temp_settings_file, main_window_with_tabs, monkeypatch):
     truth = sorted(['my table', 'counted', 'counted_6cols', 'test_deseq', 'majority_vote_intersection output'])
     keys = truth.copy()
     np.random.shuffle(keys)
@@ -2621,28 +2667,28 @@ def test_MainWindow_choose_tab_by_name(qtbot, use_temp_settings_file, main_windo
         assert main_window_with_tabs.tabs.currentIndex() == truth.index(key)
 
 
-def test_MainWindow_delete_pipeline(qtbot, use_temp_settings_file, main_window, monkeypatch):
+def test_MainWindow_delete_pipeline(use_temp_settings_file, main_window, monkeypatch):
     main_window.pipelines = {'p1': (1, 1), 'p2': (2, 2), 'p3': (3, 3)}
     monkeypatch.setattr(QtWidgets.QInputDialog, 'getItem', lambda *args, **kwargs: ('p2', True))
     main_window.delete_pipeline()
     assert main_window.pipelines == {'p1': (1, 1), 'p3': (3, 3)}
 
 
-def test_MainWindow_delete_pipeline_no_pipelines(qtbot, use_temp_settings_file, main_window):
+def test_MainWindow_delete_pipeline_no_pipelines(use_temp_settings_file, main_window):
     main_window.delete_pipeline()
 
 
-def test_MainWindow_export_pipeline_no_pipelines(qtbot, use_temp_settings_file, main_window):
+def test_MainWindow_export_pipeline_no_pipelines(use_temp_settings_file, main_window):
     main_window.export_pipeline()
 
 
-def test_MainWindow_edit_pipeline(monkeypatch, qtbot, use_temp_settings_file, main_window):
+def test_MainWindow_edit_pipeline(monkeypatch, use_temp_settings_file, main_window):
     monkeypatch.setattr(CreatePipelineWindow, 'exec', lambda *args, **kwargs: None)
     main_window.pipelines = {'p1': (filtering.Pipeline(), 1)}
     main_window.edit_pipeline('p1')
 
 
-def test_MainWindow_clear_cache(monkeypatch, qtbot, use_temp_settings_file, main_window):
+def test_MainWindow_clear_cache(monkeypatch, use_temp_settings_file, main_window):
     called = []
     monkeypatch.setattr(io, 'clear_cache', lambda *args, **kwargs: called.append(True))
     main_window.clear_cache()
@@ -2650,11 +2696,11 @@ def test_MainWindow_clear_cache(monkeypatch, qtbot, use_temp_settings_file, main
 
 
 @pytest.mark.parametrize('state', [True, False])
-def test_MainWindow_toggle_history(state, qtbot, use_temp_settings_file, main_window):
+def test_MainWindow_toggle_history(state, use_temp_settings_file, main_window):
     main_window.toggle_history_window(state)
 
 
-def test_MainWindow_save_session(qtbot, use_temp_settings_file, main_window, monkeypatch):
+def test_MainWindow_save_session(use_temp_settings_file, main_window, monkeypatch):
     monkeypatch.setattr(QtWidgets.QFileDialog, 'getOpenFileName',
                         lambda *args, **kwargs: ('tests/test_files/test_session.rnal', '.rnal'))
     monkeypatch.setattr(QtWidgets.QApplication, 'processEvents', lambda *args, **kwargs: None)
@@ -2697,7 +2743,7 @@ def test_MainWindow_save_session(qtbot, use_temp_settings_file, main_window, mon
     assert func_called == [True]
 
 
-def test_MainWindow_load_session(qtbot, use_temp_settings_file, main_window, monkeypatch):
+def test_MainWindow_load_session(use_temp_settings_file, main_window, monkeypatch):
     pipelines_truth = {'New Pipeline': filtering.Pipeline('Filter'),
                        'Other Pipeline': filtering.Pipeline('DESeqFilter')}
     pipelines_truth['New Pipeline'].add_function('filter_top_n', by='log2FoldChange', n=99, ascending=True,
@@ -2734,7 +2780,7 @@ def test_MainWindow_load_session(qtbot, use_temp_settings_file, main_window, mon
             main_window.tabs.widget(i).obj().fname == objs_truth[i].fname))
 
 
-def test_MainWindow_about(qtbot, main_window, monkeypatch):
+def test_MainWindow_about(main_window, monkeypatch):
     window_opened = []
     monkeypatch.setattr(gui_windows.AboutWindow, 'exec', functools.partial(window_opened.append, True))
 
@@ -2742,7 +2788,7 @@ def test_MainWindow_about(qtbot, main_window, monkeypatch):
     assert window_opened == [True]
 
 
-def test_MainWindow_cite(qtbot, main_window, monkeypatch):
+def test_MainWindow_cite(main_window, monkeypatch):
     window_opened = []
     monkeypatch.setattr(gui_windows.HowToCiteWindow, 'exec', functools.partial(window_opened.append, True))
 
@@ -2750,7 +2796,7 @@ def test_MainWindow_cite(qtbot, main_window, monkeypatch):
     assert window_opened == [True]
 
 
-def test_MainWindow_settings(qtbot, main_window, monkeypatch):
+def test_MainWindow_settings(main_window, monkeypatch):
     window_opened = []
     monkeypatch.setattr(gui_windows.SettingsWindow, 'exec', lambda *args: window_opened.append(True))
 
@@ -2758,7 +2804,7 @@ def test_MainWindow_settings(qtbot, main_window, monkeypatch):
     assert window_opened == [True]
 
 
-def test_MainWindow_user_guide(qtbot, main_window, monkeypatch):
+def test_MainWindow_user_guide(main_window, monkeypatch):
     window_opened = []
 
     def mock_open_url(url):
@@ -2783,7 +2829,7 @@ def test_MainWindow_context_menu(qtbot, main_window_with_tabs, monkeypatch):
     assert opened == [True]
 
 
-def test_MainWindow_clear_history(qtbot, main_window_with_tabs, monkeypatch):
+def test_MainWindow_clear_history(main_window_with_tabs, monkeypatch):
     cleared = [False for i in range(main_window_with_tabs.tabs.count())]
     truth = [True for i in cleared]
 
@@ -2797,7 +2843,7 @@ def test_MainWindow_clear_history(qtbot, main_window_with_tabs, monkeypatch):
     assert cleared == truth
 
 
-def test_MainWindow_clear_session(qtbot, main_window_with_tabs):
+def test_MainWindow_clear_session(main_window_with_tabs):
     main_window_with_tabs.clear_session(confirm_action=False)
     assert main_window_with_tabs.tabs.count() == 1
     assert main_window_with_tabs.tabs.widget(0).is_empty()
@@ -2812,7 +2858,7 @@ NO_WINOS_ACTIONS = ['shortstack_action']
                                          'kallisto_single_action', 'kallisto_paired_action', 'cutadapt_single_action',
                                          'cutadapt_paired_action', 'set_op_action', 'enrichment_action',
                                          'set_vis_action', 'bar_plot_action'])
-def test_MainWindow_open_windows(qtbot, main_window_with_tabs, action_name):
+def test_MainWindow_open_windows(main_window_with_tabs, action_name):
     action = getattr(main_window_with_tabs, action_name)
     if platform.system() == 'Windows' and action_name in NO_WINOS_ACTIONS:
         assert not action.isEnabled()
@@ -2826,7 +2872,7 @@ def test_MainWindow_open_windows(qtbot, main_window_with_tabs, action_name):
                           ('cite_action', 'cite_window'),
                           ('about_action', 'about_window'),
                           ('settings_action', 'settings_window')])
-def test_MainWindow_open_dialogs(qtbot, main_window_with_tabs, action_name, window_attr_name, monkeypatch):
+def test_MainWindow_open_dialogs(main_window_with_tabs, action_name, window_attr_name, monkeypatch):
     action = getattr(main_window_with_tabs, action_name)
 
     def win():
