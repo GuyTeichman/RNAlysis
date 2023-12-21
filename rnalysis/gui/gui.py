@@ -4179,9 +4179,14 @@ class MainWindow(QtWidgets.QMainWindow):
 
         if reply == QtWidgets.QMessageBox.Yes:
             try:
-                self.thread_stdout_queue_listener.exit()
+                self.job_thread.quit()
             except AttributeError:
                 pass
+            try:
+                self.thread_stdout_queue_listener.quit()
+            except AttributeError:
+                pass
+
             io.clear_gui_cache()
             plt.close('all')
             event.accept()
