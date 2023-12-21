@@ -112,6 +112,7 @@ class SingleEndPipeline(_FASTQPipeline):
 
         current_in_dir = input_folder
         for i, (func, (args, kwargs)) in enumerate(zip(self.functions, self.params)):
+            params = generic.get_method_signature(func)
             current_out_dir = output_folder.joinpath(f'{i + 1:02d}_{func.__name__}')
             try:
                 current_out_dir.mkdir(parents=True)
@@ -124,7 +125,9 @@ class SingleEndPipeline(_FASTQPipeline):
                     return_values.extend(res)
                 else:
                     return_values.append(res)
-            current_in_dir = current_out_dir
+
+            if 'new_sample_names' in params:
+                current_in_dir = current_out_dir
 
         return parsing.data_to_tuple(return_values)
 
