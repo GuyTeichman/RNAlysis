@@ -29,6 +29,7 @@ def mainwindow_setup(monkeypatch):
     monkeypatch.setattr(QtWidgets.QMessageBox, 'question', lambda *args, **kwargs: QtWidgets.QMessageBox.Yes)
     monkeypatch.setattr(gui_widgets.ThreadStdOutStreamTextQueueReceiver, 'run', lambda self: None)
     monkeypatch.setattr(gui_quickstart.QuickStartWizard, '__init__', lambda *args, **kwargs: None)
+    parallel_backend('multiprocessing')
 
 
 @pytest.fixture
@@ -267,6 +268,8 @@ def update_gene_sets_widget(widget: gui_widgets.GeneSetComboBox, objs):
 def enrichment_window(qtbot, available_objects):
     qtbot, window = widget_setup(qtbot, EnrichmentWindow)
     window.geneSetsRequested.connect(functools.partial(update_gene_sets_widget, objs=available_objects))
+    window.widgets['parallel_backend'] = 'multiprocessing'
+
     yield window
     _pytestqt_graceful_shutdown()
 
