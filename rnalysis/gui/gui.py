@@ -4183,6 +4183,7 @@ class MainWindow(QtWidgets.QMainWindow):
             except AttributeError:
                 pass
             io.clear_gui_cache()
+            plt.close('all')
             event.accept()
         else:
             event.ignore()
