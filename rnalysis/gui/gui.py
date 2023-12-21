@@ -2932,7 +2932,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
         # init thread execution attributes
         self.current_worker = None
-        self.thread = QtCore.QThread()
+        self.job_thread = QtCore.QThread()
         self.job_queue = Queue()
         self.job_timer = QtCore.QTimer(self)
         self.job_timer.timeout.connect(self.run_threaded_workers)
@@ -4305,7 +4305,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.run_threaded_workers()
 
     def run_threaded_workers(self):  # pragma: no cover
-        job_running = (self.thread is not None) and self.thread.isRunning()
+        job_running = (self.job_thread is not None) and self.job_thread.isRunning()
         self.status_bar.update_n_tasks(self.job_queue.qsize() + job_running)
         # if there are no jobs available, don't proceed
         if self.job_queue.qsize() == 0:
@@ -4365,18 +4365,18 @@ class MainWindow(QtWidgets.QMainWindow):
         fastq.tqdm = alt_tqdm
 
         #  Move worker to the thread
-        self.current_worker.moveToThread(self.thread)
+        self.current_worker.moveToThread(self.job_thread)
         #  Connect signals and slots
         self.current_worker.startProgBar.connect(self.start_progress_bar)
-        self.thread.started.connect(self.current_worker.run)
+        self.job_thread.started.connect(self.current_worker.run)
         for slot in parsing.data_to_list(output_slots):
             if slot is not None:
                 self.current_worker.finished.connect(slot)
+        self.current_worker.finished.connect(self.job_thread.quit)
         self.current_worker.finished.connect(self.run_threaded_workers)
-        self.current_worker.finished.connect(self.thread.quit)
         self.current_worker.finished.connect(self.current_worker.deleteLater)
 
-        self.thread.start()
+        self.job_thread.start()
 
         self._update_queue_window(True)
 
