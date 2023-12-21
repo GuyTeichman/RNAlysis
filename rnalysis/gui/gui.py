@@ -4331,6 +4331,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 pass
         self.current_worker = worker
 
+        @QtCore.pyqtSlot()
         def alt_tqdm(iter_obj: typing.Iterable = None, desc: str = '', unit: str = '', bar_format: str = '',
                      total: int = None):
             self.current_worker.startProgBar.emit(
@@ -4343,6 +4344,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 dict(iter_obj=iter_obj, desc=desc, unit=unit, bar_format=bar_format, total=total))
             return obj
 
+        @QtCore.pyqtSlot()
         def alt_parallel(n_jobs: int = -1, desc: str = '', unit: str = '', bar_format: str = '',
                          total: int = None, **kwargs):
             self.current_worker.startProgBar.emit(
