@@ -2866,7 +2866,6 @@ class MainWindow(QtWidgets.QMainWindow):
         self.add_new_tab()
         self.init_actions()
         self.init_menu_ui()
-        self.init_shortcuts()
 
         if gather_stdout:
             self.queue_stdout = Queue()
@@ -3550,172 +3549,144 @@ class MainWindow(QtWidgets.QMainWindow):
     def settings(self):
         self.settings_window.exec()
 
+    def create_action(self, name, triggered_func, checkable=False, checked=False, enabled=True, shortcut=None):
+        action = QtWidgets.QAction(name, self)
+        action.triggered.connect(triggered_func)
+        action.setCheckable(checkable)
+        action.setChecked(checked)
+        action.setEnabled(enabled)
+        if shortcut:
+            action.setShortcut(QtGui.QKeySequence(shortcut))
+        return action
+
     def init_actions(self):
-        self.new_table_action = QtWidgets.QAction("&New table", self)
-        self.new_table_action.triggered.connect(functools.partial(self.add_new_tab, name=None))
-        self.new_table_from_folder_action = QtWidgets.QAction("New table from &folder")
-        self.new_table_from_folder_action.triggered.connect(self.new_table_from_folder)
-        self.new_table_from_folder_htseq_action = QtWidgets.QAction("New table from folder (HTSeq-count output)")
-        self.new_table_from_folder_htseq_action.triggered.connect(self.new_table_from_folder_htseqcount)
+        # Table Actions
+        self.new_table_action = self.create_action("&New table", functools.partial(self.add_new_tab, name=None),
+                                                   shortcut="Ctrl+N")
+        self.new_table_from_folder_action = self.create_action("New table from &folder", self.new_table_from_folder)
+        self.new_table_from_folder_htseq_action = self.create_action("New table from folder (HTSeq-count output)",
+                                                                     self.new_table_from_folder_htseqcount)
+        self.new_multiple_action = self.create_action("&Multiple new tables", self.load_multiple_files,
+                                                      shortcut="Ctrl+Shift+N")
 
-        self.new_multiple_action = QtWidgets.QAction("&Multiple new tables")
-        self.new_multiple_action.triggered.connect(self.load_multiple_files)
+        # File Actions
+        self.save_action = self.create_action("&Save...", self.save_file, shortcut="Ctrl+S")
+        self.load_session_action = self.create_action("&Load session...", self.load_session)
+        self.save_session_action = self.create_action("Sa&ve session...", self.save_session)
+        self.clear_session_action = self.create_action("Clea&r session...", self.clear_session)
 
-        self.save_action = QtWidgets.QAction("&Save...", self)
-        self.save_action.triggered.connect(self.save_file)
+        # Settings and Updates
+        self.clear_cache_action = self.create_action("&Clear cache...", self.clear_cache)
+        self.settings_action = self.create_action("&Settings...", self.settings)
+        self.exit_action = self.create_action("&Exit", self.close)
+        self.check_update_action = self.create_action("Check for &updates...", self.check_for_updates)
 
-        self.load_session_action = QtWidgets.QAction("&Load session...", self)
-        self.load_session_action.triggered.connect(self.load_session)
-        self.save_session_action = QtWidgets.QAction("Sa&ve session...", self)
-        self.save_session_action.triggered.connect(self.save_session)
-        self.clear_session_action = QtWidgets.QAction("Clea&r session...", self)
-        self.clear_session_action.triggered.connect(self.clear_session)
+        # Report Actions
+        self.toggle_report_action = self.create_action("&Enable report generation", self._toggle_reporting, True, False)
+        self.generate_report_action = self.create_action("&Create session report", self.generate_report)
 
-        self.clear_cache_action = QtWidgets.QAction("&Clear cache...", self)
-        self.clear_cache_action.triggered.connect(self.clear_cache)
-        self.settings_action = QtWidgets.QAction("&Settings...", self)
-        self.settings_action.triggered.connect(self.settings)
-        self.exit_action = QtWidgets.QAction("&Exit", self)
-        self.exit_action.triggered.connect(self.close)
-        self.check_update_action = QtWidgets.QAction("Check for &updates...", self)
-        self.check_update_action.triggered.connect(self.check_for_updates)
-        self.toggle_report_action = QtWidgets.QAction("&Enable report generation")
-        self.toggle_report_action.setCheckable(True)
-        self.toggle_report_action.setChecked(False)
-        self.toggle_report_action.triggered.connect(self._toggle_reporting)
-        self.generate_report_action = QtWidgets.QAction("&Create session report")
-        self.generate_report_action.triggered.connect(self.generate_report)
+        # Undo and Redo Actions
+        self.undo_action = self.undo_group.createUndoAction(self, "Ctrl+Z")
+        self.redo_action = self.undo_group.createRedoAction(self, "Ctrl+Shift+Z")
+        self.restore_tab_action = self.create_action("Restore tab", self.closed_tabs_stack.undo,
+                                                     shortcut="Ctrl+Shift+T")
+        self.close_current_action = self.create_action("&Close current tab", self.close_current_tab, shortcut="Ctrl+W")
 
-        self.undo_action = self.undo_group.createUndoAction(self)
-        self.redo_action = self.undo_group.createRedoAction(self)
-        self.restore_tab_action = self.closed_tabs_stack.createUndoAction(self, 'Restore tab')
-        self.close_current_action = QtWidgets.QAction("&Close current tab", self)
-        self.close_current_action.triggered.connect(self.close_current_tab)
-
-        self.close_figs_action = QtWidgets.QAction("Close all &Figures")
-        self.close_figs_action.triggered.connect(functools.partial(plt.close, 'all'))
-        self.task_queue_action = QtWidgets.QAction("Task &queue")
-        self.task_queue_action.triggered.connect(self.task_queue_window.show)
+        # View and History Actions
+        self.close_figs_action = self.create_action("Close all &Figures", functools.partial(plt.close, 'all'))
+        self.task_queue_action = self.create_action("Task &queue", self.task_queue_window.show)
         self.status_bar.taskQueueRequested.connect(self.task_queue_action.trigger)
+        self.show_history_action = self.create_action("Command &History", self.toggle_history_window, checkable=True,
+                                                      checked=True)
+        self.clear_history_action = self.create_action("Clea&r command history", self.clear_history)
 
-        self.show_history_action = QtWidgets.QAction("Command &History")
-        self.show_history_action.setCheckable(True)
-        self.show_history_action.setChecked(True)
-        self.show_history_action.triggered.connect(self.toggle_history_window)
-        self.clear_history_action = QtWidgets.QAction("Clea&r command history")
-        self.clear_history_action.triggered.connect(self.clear_history)
+        # Gene Set Actions
+        self.copy_action = self.create_action("&Copy Gene Set", self.copy_gene_set, shortcut="Ctrl+C")
+        self.import_set_action = self.create_action("&Import Gene Set...", self.import_gene_set,
+                                                    shortcut="Ctrl+Shift+I")
+        self.import_multiple_sets_action = self.create_action("Import &Multiple Gene Sets...",
+                                                              self.import_multiple_gene_sets, shortcut="Ctrl+Shift+M")
+        self.export_set_action = self.create_action("&Export Gene Set...", self.export_gene_set,
+                                                    shortcut="Ctrl+Shift+E")
+        self.set_op_action = self.create_action("Set &Operations...", self.choose_set_op, shortcut="Ctrl+Shift+O")
+        self.enrichment_action = self.create_action("Enrichment &Analysis...", self.open_enrichment_analysis,
+                                                    shortcut="Ctrl+Shift+A")
+        self.set_vis_action = self.create_action("&Visualize Gene Sets...", self.visualize_gene_sets,
+                                                 shortcut="Ctrl+Shift+V")
 
-        self.copy_action = QtWidgets.QAction("&Copy Gene Set", self)
-        self.copy_action.triggered.connect(self.copy_gene_set)
-        self.set_op_action = QtWidgets.QAction("Set &Operations...", self)
-        self.set_op_action.triggered.connect(self.choose_set_op)
-        self.enrichment_action = QtWidgets.QAction("Enrichment &Analysis...", self)
-        self.enrichment_action.triggered.connect(self.open_enrichment_analysis)
-        self.set_vis_action = QtWidgets.QAction("&Visualize Gene Sets...", self)
-        self.set_vis_action.triggered.connect(self.visualize_gene_sets)
-        self.import_set_action = QtWidgets.QAction("&Import Gene Set...", self)
-        self.import_set_action.triggered.connect(self.import_gene_set)
-        self.import_multiple_sets_action = QtWidgets.QAction("Import &Multiple Gene Sets...", self)
-        self.import_multiple_sets_action.triggered.connect(self.import_multiple_gene_sets)
-        self.export_set_action = QtWidgets.QAction("&Export Gene Set...", self)
-        self.export_set_action.triggered.connect(self.export_gene_set)
+        # External Tool Actions
+        self.cutadapt_single_action = self.create_action("&Single-end adapter trimming...",
+                                                         functools.partial(self.start_external_window,
+                                                                           CutAdaptSingleWindow))
+        self.cutadapt_paired_action = self.create_action("&Paired-end adapter trimming...",
+                                                         functools.partial(self.start_external_window,
+                                                                           CutAdaptPairedWindow))
+        self.kallisto_index_action = self.create_action("kallisto build &index...",
+                                                        functools.partial(self.start_external_window,
+                                                                          KallistoIndexWindow))
+        self.kallisto_single_action = self.create_action("&kallisto Single-end RNA-seq quantification...",
+                                                         functools.partial(self.start_external_window,
+                                                                           KallistoSingleWindow))
+        self.kallisto_paired_action = self.create_action("kallisto &Paired-end RNA-seq quantification...",
+                                                         functools.partial(self.start_external_window,
+                                                                           KallistoPairedWindow))
+        self.bowtie2_index_action = self.create_action("Bowtie2 build &index...",
+                                                       functools.partial(self.start_external_window,
+                                                                         Bowtie2IndexWindow))
+        self.bowtie2_single_action = self.create_action("Bowtie2 &Single-end alignment...",
+                                                        functools.partial(self.start_external_window,
+                                                                          Bowtie2SingleWindow))
+        self.bowtie2_paired_action = self.create_action("Bowtie2 &Paired-end alignment...",
+                                                        functools.partial(self.start_external_window,
+                                                                          Bowtie2PairedWindow))
 
-        self.cutadapt_single_action = QtWidgets.QAction("&Single-end adapter trimming...", self)
-        self.cutadapt_single_action.triggered.connect(
-            functools.partial(self.start_external_window, CutAdaptSingleWindow))
-        self.cutadapt_paired_action = QtWidgets.QAction("&Paired-end adapter trimming...", self)
-        self.cutadapt_paired_action.triggered.connect(
-            functools.partial(self.start_external_window, CutAdaptPairedWindow))
+        self.featurecounts_single_action = self.create_action("&featureCounts Single-end counting...",
+                                                              functools.partial(self.start_external_window,
+                                                                                FeatureCountsSingleWindow))
+        self.featurecounts_paired_action = self.create_action("featureCounts &Paired-end counting...",
+                                                              functools.partial(self.start_external_window,
+                                                                                FeatureCountsPairedWindow))
+        # Conditional Action for Platform-Specific Use
+        action_name = "ShortStack small &RNA alignment..." if platform.system() != 'Windows' else "ShortStack small &RNA alignment (not available on Windows)"
+        self.shortstack_action = self.create_action(action_name,
+                                                    functools.partial(self.start_external_window, ShortStackWindow),
+                                                    enabled=platform.system() != 'Windows')
 
-        self.kallisto_index_action = QtWidgets.QAction("kallisto build &index...", self)
-        self.kallisto_index_action.triggered.connect(functools.partial(self.start_external_window, KallistoIndexWindow))
-        self.kallisto_single_action = QtWidgets.QAction("&kallisto Single-end RNA-seq quantification...", self)
-        self.kallisto_single_action.triggered.connect(
-            functools.partial(self.start_external_window, KallistoSingleWindow))
-        self.kallisto_paired_action = QtWidgets.QAction("kallisto &Paired-end RNA-seq quantification...", self)
-        self.kallisto_paired_action.triggered.connect(
-            functools.partial(self.start_external_window, KallistoPairedWindow))
+        # Visualization Actions
+        self.bar_plot_action = self.create_action("Create enrichment &bar-plot...",
+                                                  functools.partial(self.start_external_window, BarPlotWindow))
+        self.ontology_graph_action = self.create_action("Visualize &Gene Ontology...",
+                                                        functools.partial(self.start_external_window,
+                                                                          OntologyGraphWindow))
+        self.pathway_graph_action = self.create_action("Visualize &KEGG Pathway...",
+                                                       functools.partial(self.start_external_window,
+                                                                         PathwayGraphWindow))
 
-        self.bowtie2_index_action = QtWidgets.QAction("Bowtie2 build &index...", self)
-        self.bowtie2_index_action.triggered.connect(functools.partial(self.start_external_window, Bowtie2IndexWindow))
-        self.bowtie2_single_action = QtWidgets.QAction("Bowtie2 &Single-end alignment...", self)
-        self.bowtie2_single_action.triggered.connect(
-            functools.partial(self.start_external_window, Bowtie2SingleWindow))
-        self.bowtie2_paired_action = QtWidgets.QAction("Bowtie2 &Paired-end alignment...", self)
-        self.bowtie2_paired_action.triggered.connect(
-            functools.partial(self.start_external_window, Bowtie2PairedWindow))
+        # Help Actions
+        self.quick_start_action = self.create_action("&Quick-start guide", self.quickstart_window.show)
+        self.user_guide_action = self.create_action("&User Guide",
+                                                    functools.partial(self.open_link, self.USER_GUIDE_URL))
+        self.tutorial_action = self.create_action("&Tutorial", functools.partial(self.open_link, self.TUTORIAL_URL))
+        self.faq_action = self.create_action("&Frequently Asked Questions",
+                                             functools.partial(self.open_link, self.FAQ_URL))
+        self.bug_report_action = self.create_action("Submit an &issue",
+                                                    functools.partial(self.open_link, self.BUGS_URL))
+        self.request_feature_action = self.create_action("&Request a feature",
+                                                         functools.partial(self.open_link, self.FEATURE_URL))
+        self.ask_question_action = self.create_action("Ask a &question",
+                                                      functools.partial(self.open_link, self.QUESTION_URL))
+        self.check_update_action = self.create_action("Check for &updates...", self.check_for_updates)
+        self.about_action = self.create_action("&About", self.about)
+        self.cite_action = self.create_action("How to &cite RNAlysis", self.cite)
 
-        action_name = "ShortStack small &RNA alignment..."
-        if platform.system() == 'Windows':
-            action_name = "ShortStack small &RNA alignment (not available on Windows)"
-        self.shortstack_action = QtWidgets.QAction(action_name, self)
-        self.shortstack_action.triggered.connect(functools.partial(self.start_external_window, ShortStackWindow))
-        self.shortstack_action.setEnabled(platform.system() != 'Windows')
-
-        self.featurecounts_single_action = QtWidgets.QAction("&featureCounts Single-end counting...", self)
-        self.featurecounts_single_action.triggered.connect(
-            functools.partial(self.start_external_window, FeatureCountsSingleWindow))
-        self.featurecounts_paired_action = QtWidgets.QAction("featureCounts &Paired-end counting...", self)
-        self.featurecounts_paired_action.triggered.connect(
-            functools.partial(self.start_external_window, FeatureCountsPairedWindow))
-
-        self.bar_plot_action = QtWidgets.QAction("Create enrichment &bar-plot...")
-        self.bar_plot_action.triggered.connect(functools.partial(self.start_external_window, BarPlotWindow))
-        self.ontology_graph_action = QtWidgets.QAction("Visualize &Gene Ontology...")
-        self.ontology_graph_action.triggered.connect(functools.partial(self.start_external_window, OntologyGraphWindow))
-        self.pathway_graph_action = QtWidgets.QAction("Visualize &KEGG Pathway...")
-        self.pathway_graph_action.triggered.connect(functools.partial(self.start_external_window, PathwayGraphWindow))
-
-        self.quick_start_action = QtWidgets.QAction("&Quick-start guide", self)
-        self.quick_start_action.triggered.connect(self.quickstart_window.show)
-        self.user_guide_action = QtWidgets.QAction("&User Guide", self)
-        self.user_guide_action.triggered.connect(functools.partial(self.open_link, self.USER_GUIDE_URL))
-        self.tutorial_action = QtWidgets.QAction("&Tutorial", self)
-        self.tutorial_action.triggered.connect(functools.partial(self.open_link, self.TUTORIAL_URL))
-        self.faq_action = QtWidgets.QAction("&Frequently Asked Questions", self)
-        self.faq_action.triggered.connect(functools.partial(self.open_link, self.FAQ_URL))
-        self.bug_report_action = QtWidgets.QAction("Submit an &issue", self)
-        self.bug_report_action.triggered.connect(functools.partial(self.open_link, self.BUGS_URL))
-        self.request_feature_action = QtWidgets.QAction("&Request a feature", self)
-        self.request_feature_action.triggered.connect(functools.partial(self.open_link, self.FEATURE_URL))
-        self.ask_question_action = QtWidgets.QAction("Ask a &question", self)
-        self.ask_question_action.triggered.connect(functools.partial(self.open_link, self.QUESTION_URL))
-        self.about_action = QtWidgets.QAction("&About", self)
-        self.about_action.triggered.connect(self.about)
-        self.cite_action = QtWidgets.QAction("How to &cite RNAlysis", self)
-        self.cite_action.triggered.connect(self.cite)
-
-        self.new_pipeline_action = QtWidgets.QAction("&New Pipeline...", self)
-        self.new_pipeline_action.triggered.connect(self.add_pipeline)
-        self.import_pipeline_action = QtWidgets.QAction("&Import Pipeline...", self)
-        self.import_pipeline_action.triggered.connect(self.import_pipeline)
-        self.export_pipeline_action = QtWidgets.QAction("&Export Pipeline...", self)
-        self.export_pipeline_action.triggered.connect(self.export_pipeline)
-        self.delete_pipeline_action = QtWidgets.QAction("&Delete Pipeline...", self)
-        self.delete_pipeline_action.triggered.connect(self.delete_pipeline)
-
-    def init_shortcuts(self):
-        self.copy_action.setShortcut(QtGui.QKeySequence("Ctrl+C"))
-        self.save_action.setShortcut(QtGui.QKeySequence("Ctrl+S"))
-        self.new_multiple_action.setShortcut(QtGui.QKeySequence("Ctrl+Shift+N"))
-        self.new_table_action.setShortcut(QtGui.QKeySequence("Ctrl+N"))
-
-        self.undo_action.setShortcut(QtGui.QKeySequence("Ctrl+Z"))
-        self.redo_action.setShortcut(QtGui.QKeySequence("Ctrl+Shift+Z"))
-        self.restore_tab_action.setShortcut(QtGui.QKeySequence("Ctrl+Shift+T"))
-        self.close_current_action.setShortcut(QtGui.QKeySequence("Ctrl+W"))
-
-        self.import_set_action.setShortcut(QtGui.QKeySequence("Ctrl+Shift+I"))
-        self.import_multiple_sets_action.setShortcut(QtGui.QKeySequence("Ctrl+Shift+M"))
-        self.export_set_action.setShortcut(QtGui.QKeySequence("Ctrl+Shift+E"))
-        self.set_vis_action.setShortcut(QtGui.QKeySequence("Ctrl+Shift+V"))
-        self.enrichment_action.setShortcut(QtGui.QKeySequence("Ctrl+Shift+A"))
-        self.set_op_action.setShortcut(QtGui.QKeySequence("Ctrl+Shift+O"))
-
-        self.new_pipeline_action.setShortcut(QtGui.QKeySequence("Ctrl+Alt+N"))
-        self.import_pipeline_action.setShortcut(QtGui.QKeySequence("Ctrl+Alt+I"))
-        self.export_pipeline_action.setShortcut(QtGui.QKeySequence("Ctrl+Alt+E"))
-        self.delete_pipeline_action.setShortcut(QtGui.QKeySequence("Ctrl+Alt+D"))
+        # Pipeline Actions
+        self.new_pipeline_action = self.create_action("&New Pipeline...", self.add_pipeline, shortcut="Ctrl+Alt+N")
+        self.import_pipeline_action = self.create_action("&Import Pipeline...", self.import_pipeline,
+                                                         shortcut="Ctrl+Alt+I")
+        self.export_pipeline_action = self.create_action("&Export Pipeline...", self.export_pipeline,
+                                                         shortcut="Ctrl+Alt+E")
+        self.delete_pipeline_action = self.create_action("&Delete Pipeline...", self.delete_pipeline,
+                                                         shortcut="Ctrl+Alt+D")
 
     @QtCore.pyqtSlot()
     def clear_cache(self):
