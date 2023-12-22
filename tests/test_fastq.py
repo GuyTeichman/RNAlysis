@@ -538,10 +538,12 @@ def test_trim_adapters_single_end_command(monkeypatch, fastq_folder, output_fold
     monkeypatch.setattr(io, 'run_subprocess', mock_run_subprocess)
     monkeypatch.setattr(io, 'generate_base_call', lambda *args, **kwargs: ['cutadapt'])
 
-    trim_adapters_single_end(fastq_folder, output_folder, three_prime_adapters,
-                             five_prime_adapters, any_position_adapters, quality_trimming, trim_n,
-                             minimum_read_length, maximum_read_length, discard_untrimmed_reads,
-                             error_tolerance, minimum_overlap, allow_indels, parallel, gzip_output=True)
+    trim_adapters_single_end(fastq_folder, output_folder, three_prime_adapters, five_prime_adapters,
+                             any_position_adapters, quality_trimming=quality_trimming, trim_n=trim_n,
+                             minimum_read_length=minimum_read_length, maximum_read_length=maximum_read_length,
+                             discard_untrimmed_reads=discard_untrimmed_reads, error_tolerance=error_tolerance,
+                             minimum_overlap=minimum_overlap, allow_indels=allow_indels, parallel=parallel,
+                             gzip_output=True)
     assert sorted(files_covered) == sorted(files_to_cover)
 
 
