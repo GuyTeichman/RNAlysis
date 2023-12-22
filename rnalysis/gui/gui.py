@@ -51,10 +51,7 @@ class BarPlotWindow(gui_windows.FuncExternalWindow):
         help_link = f"https://guyteichman.github.io/RNAlysis/build/rnalysis.enrichment.{func.__name__}.html"
         super().__init__('Enrichment bar-plot', func, help_link, self.EXCLUDED_PARAMS, threaded=False, parent=parent)
         self.init_ui()
-
-    def init_ui(self):
         self.setWindowTitle('Create enrichment bar-plot')
-        super().init_ui()
 
 
 class OntologyGraphWindow(gui_windows.FuncExternalWindow):
@@ -66,10 +63,7 @@ class OntologyGraphWindow(gui_windows.FuncExternalWindow):
         help_link = f"https://guyteichman.github.io/RNAlysis/build/rnalysis.fastq.{func.__name__}.html"
         super().__init__('Gene Ontology graph', func, help_link, self.EXCLUDED_PARAMS, threaded=False, parent=parent)
         self.init_ui()
-
-    def init_ui(self):
         self.setWindowTitle('Plot Gene Ontology Graph')
-        super().init_ui()
 
 
 class PathwayGraphWindow(gui_windows.FuncExternalWindow):
@@ -81,10 +75,7 @@ class PathwayGraphWindow(gui_windows.FuncExternalWindow):
         help_link = f"https://guyteichman.github.io/RNAlysis/build/rnalysis.fastq.{func.__name__}.html"
         super().__init__('KEGG Pathway graph', func, help_link, self.EXCLUDED_PARAMS, threaded=False, parent=parent)
         self.init_ui()
-
-    def init_ui(self):
         self.setWindowTitle('Plot KEGG Pathway Graph')
-        super().init_ui()
 
 
 class FeatureCountsSingleWindow(gui_windows.FuncExternalWindow):
@@ -96,10 +87,7 @@ class FeatureCountsSingleWindow(gui_windows.FuncExternalWindow):
         help_link = f"https://guyteichman.github.io/RNAlysis/build/rnalysis.fastq.{func.__name__}.html"
         super().__init__(func.readable_name, func, help_link, self.EXCLUDED_PARAMS, parent=parent)
         self.init_ui()
-
-    def init_ui(self):
         self.setWindowTitle('featureCounts single-end counting setup')
-        super().init_ui()
 
 
 class FeatureCountsPairedWindow(gui_windows.FuncExternalWindow):
@@ -111,10 +99,7 @@ class FeatureCountsPairedWindow(gui_windows.FuncExternalWindow):
         help_link = f"https://guyteichman.github.io/RNAlysis/build/rnalysis.fastq.{func.__name__}.html"
         super().__init__(func.readable_name, func, help_link, self.EXCLUDED_PARAMS, parent=parent)
         self.init_ui()
-
-    def init_ui(self):
         self.setWindowTitle('featureCounts paired-end counting setup')
-        super().init_ui()
 
 
 class Bowtie2IndexWindow(gui_windows.FuncExternalWindow):
@@ -126,10 +111,7 @@ class Bowtie2IndexWindow(gui_windows.FuncExternalWindow):
         help_link = f"https://guyteichman.github.io/RNAlysis/build/rnalysis.fastq.{func.__name__}.html"
         super().__init__(func.readable_name, func, help_link, self.EXCLUDED_PARAMS, parent=parent)
         self.init_ui()
-
-    def init_ui(self):
         self.setWindowTitle('Bowtie2 - build genome index')
-        super().init_ui()
 
 
 class Bowtie2SingleWindow(gui_windows.FuncExternalWindow):
@@ -141,10 +123,7 @@ class Bowtie2SingleWindow(gui_windows.FuncExternalWindow):
         help_link = f"https://guyteichman.github.io/RNAlysis/build/rnalysis.fastq.{func.__name__}.html"
         super().__init__(func.readable_name, func, help_link, self.EXCLUDED_PARAMS, parent=parent)
         self.init_ui()
-
-    def init_ui(self):
         self.setWindowTitle('Bowtie2 single-end alignment setup')
-        super().init_ui()
 
 
 class Bowtie2PairedWindow(gui_windows.PairedFuncExternalWindow):
@@ -155,10 +134,7 @@ class Bowtie2PairedWindow(gui_windows.PairedFuncExternalWindow):
         help_link = f"https://guyteichman.github.io/RNAlysis/build/rnalysis.fastq.{func.__name__}.html"
         super().__init__(func.readable_name, func, help_link, self.EXCLUDED_PARAMS, parent)
         self.init_ui()
-
-    def init_ui(self):
         self.setWindowTitle('Bowtie2 paired-end alignment setup')
-        super().init_ui()
 
 
 class ShortStackWindow(gui_windows.FuncExternalWindow):
@@ -170,10 +146,7 @@ class ShortStackWindow(gui_windows.FuncExternalWindow):
         help_link = f"https://guyteichman.github.io/RNAlysis/build/rnalysis.fastq.{func.__name__}.html"
         super().__init__(func.readable_name, func, help_link, self.EXCLUDED_PARAMS, parent=parent)
         self.init_ui()
-
-    def init_ui(self):
         self.setWindowTitle('ShortStack small RNA alignment setup')
-        super().init_ui()
 
 
 class KallistoIndexWindow(gui_windows.FuncExternalWindow):
@@ -186,10 +159,7 @@ class KallistoIndexWindow(gui_windows.FuncExternalWindow):
         help_link = f"https://guyteichman.github.io/RNAlysis/build/rnalysis.fastq.{func.__name__}.html"
         super().__init__(func.readable_name, func, help_link, self.EXCLUDED_PARAMS, parent=parent)
         self.init_ui()
-
-    def init_ui(self):
         self.setWindowTitle('Kallisto - build transcriptome index')
-        super().init_ui()
 
 
 class KallistoSingleWindow(gui_windows.FuncExternalWindow):
@@ -201,10 +171,7 @@ class KallistoSingleWindow(gui_windows.FuncExternalWindow):
         help_link = f"https://guyteichman.github.io/RNAlysis/build/rnalysis.fastq.{func.__name__}.html"
         super().__init__(func.readable_name, func, help_link, self.EXCLUDED_PARAMS, parent=parent)
         self.init_ui()
-
-    def init_ui(self):
         self.setWindowTitle('Kallisto single-end quantification setup')
-        super().init_ui()
 
 
 class KallistoPairedWindow(gui_windows.PairedFuncExternalWindow):
@@ -219,9 +186,6 @@ class KallistoPairedWindow(gui_windows.PairedFuncExternalWindow):
         super().__init__(func.readable_name, func, help_link, self.EXCLUDED_PARAMS,
                          parent)
         self.init_ui()
-
-    def init_ui(self):
-        super().init_ui()
         self.setWindowTitle('Kallisto paired-end quantification setup')
 
 
@@ -234,10 +198,7 @@ class CutAdaptSingleWindow(gui_windows.FuncExternalWindow):
         help_link = f"https://guyteichman.github.io/RNAlysis/build/rnalysis.fastq.{func.__name__}.html"
         super().__init__(func.readable_name, func, help_link, self.EXCLUDED_PARAMS, parent=parent)
         self.init_ui()
-
-    def init_ui(self):
         self.setWindowTitle('CutAdapt single-end adapter trimming setup')
-        super().init_ui()
 
 
 class CutAdaptPairedWindow(gui_windows.PairedFuncExternalWindow):
@@ -251,9 +212,6 @@ class CutAdaptPairedWindow(gui_windows.PairedFuncExternalWindow):
         help_link = f"https://guyteichman.github.io/RNAlysis/build/rnalysis.fastq.{func.__name__}.html"
         super().__init__(func.readable_name, func, help_link, self.EXCLUDED_PARAMS, parent)
         self.init_ui()
-
-    def init_ui(self):
-        super().init_ui()
         self.setWindowTitle('CutAdapt paired-end adapter trimming setup')
 
 
@@ -2868,7 +2826,6 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def __init__(self, gather_stdout: bool = True):
         super().__init__()
-
 
         self._generate_report = False
         self.report = None
