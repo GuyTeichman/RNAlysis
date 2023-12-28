@@ -946,6 +946,11 @@ def bowtie2_align_paired_end(r1_files: List[str], r2_files: List[str], output_fo
     call = _parse_bowtie2_misc_args(output_folder, index_file, bowtie2_installation_folder, mode, settings_preset,
                                     ignore_qualities, quality_score_type, random_seed, threads)
 
+    assert len(r1_files) == len(r2_files), f"Got an uneven number of R1 and R2 files: " \
+                                           f"{len(r1_files)} and {len(r2_files)} respectively"
+    assert (new_sample_names == 'auto') or (len(new_sample_names) == len(r1_files)), \
+        f'Number of samples ({len(r1_files)}) does not match number of sample names ({len(new_sample_names)})!'
+
     assert isinstance(min_fragment_length, int) and min_fragment_length >= 0, \
         "'min_fragment_len' must be a non-negative int!"
     assert isinstance(max_fragment_length, int) and max_fragment_length >= 0, \
