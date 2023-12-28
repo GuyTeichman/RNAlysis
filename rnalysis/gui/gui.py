@@ -146,7 +146,7 @@ class ConvertSamFormatWindow(gui_windows.FuncExternalWindow):
     def __init__(self, parent=None):
         func = fastq.convert_sam_format
         help_link = f"https://guyteichman.github.io/RNAlysis/build/rnalysis.fastq.{func.__name__}.html"
-        super().__init__('Convert SAM/BAM format', func, help_link, self.EXCLUDED_PARAMS, parent=parent)
+        super().__init__(func.readable_name, func, help_link, self.EXCLUDED_PARAMS, parent=parent)
         self.init_ui()
         self.setWindowTitle('Convert SAM/BAM format')
 
