@@ -151,6 +151,19 @@ class ConvertSamFormatWindow(gui_windows.FuncExternalWindow):
         self.setWindowTitle('Convert SAM/BAM format')
 
 
+class BamIndexWindow(gui_windows.FuncExternalWindow):
+    EXCLUDED_PARAMS = set()
+    __slots__ = {}
+
+    def __init__(self, parent=None):
+        func = fastq.create_bam_index
+        help_link = f"https://guyteichman.github.io/RNAlysis/build/rnalysis.fastq.{func.__name__}.html"
+
+        super().__init__('Create BAM index', func, help_link, self.EXCLUDED_PARAMS, parent=parent)
+        self.init_ui()
+        self.setWindowTitle('Create BAM index')
+
+
 class ValidateSamWindow(gui_windows.FuncExternalWindow):
     EXCLUDED_PARAMS = set()
     __slots__ = {}
@@ -3761,11 +3774,12 @@ class MainWindow(QtWidgets.QMainWindow):
         self.convert_sam_action = self.create_action("Convert SAM/BAM to BAM/SAM...",
                                                      functools.partial(self.start_external_window,
                                                                        ConvertSamFormatWindow))
+        self.bam_index_action = self.create_action("Create BAM index...",
+                                                   functools.partial(self.start_external_window, BamIndexWindow))
         self.sort_sam_action = self.create_action("Sort SAM/BAM...", functools.partial(self.start_external_window,
                                                                                        SortSamWindow))
         self.validate_sam_action = self.create_action("Validate SAM/BAM...",
-                                                      functools.partial(self.start_external_window,
-                                                                        ValidateSamWindow))
+                                                      functools.partial(self.start_external_window, ValidateSamWindow))
         self.find_duplicates_action = self.create_action("Find PCR/optical &duplicates...",
                                                          functools.partial(self.start_external_window,
                                                                            FindDuplicatesWindow))
