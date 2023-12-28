@@ -6,7 +6,7 @@ History
 -------------------
 Added
 *******
-* *RNAlysis* can now run functions from the Picardtools suite, including conversion functions (BAM to SAM, SAM to FASTQ, FASTQ to SAM, etc) and post-processing functions (remove PCR duplicates, sort SAM, create BAM index).
+* *RNAlysis* can now run functions from the Picardtools suite, including conversion functions (BAM to SAM, SAM to FASTQ, FASTQ to SAM, etc) and post-processing functions (remove PCR duplicates, sort SAM, create BAM index, validate SAM).
 
 Changed
 ********
