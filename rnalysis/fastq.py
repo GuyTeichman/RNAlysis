@@ -202,7 +202,7 @@ class PairedEndPipeline(_FASTQPipeline):
 
             if 'new_sample_names' in params:
                 current_in_dir = current_out_dir
-            elif 'return_new_filenames' in params:
+            if 'return_new_filenames' in params:
                 current_r1, current_r2 = res
 
         return parsing.data_to_tuple(return_values)
