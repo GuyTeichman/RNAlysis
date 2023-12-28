@@ -90,6 +90,106 @@ class FeatureCountsSingleWindow(gui_windows.FuncExternalWindow):
         self.setWindowTitle('featureCounts single-end counting setup')
 
 
+class SamToFastqSingleWindow(gui_windows.FuncExternalWindow):
+    EXCLUDED_PARAMS = set()
+    __slots__ = {}
+
+    def __init__(self, parent=None):
+        func = fastq.sam_to_fastq_single
+        help_link = f"https://guyteichman.github.io/RNAlysis/build/rnalysis.fastq.{func.__name__}.html"
+        super().__init__(func.readable_name, func, help_link, self.EXCLUDED_PARAMS, parent=parent)
+        self.init_ui()
+        self.setWindowTitle('Convert SAM/BAM to FASTQ (single-end)')
+
+
+class SamToFastqPairedWindow(gui_windows.FuncExternalWindow):
+    EXCLUDED_PARAMS = set()
+    __slots__ = {}
+
+    def __init__(self, parent=None):
+        func = fastq.sam_to_fastq_paired
+        help_link = f"https://guyteichman.github.io/RNAlysis/build/rnalysis.fastq.{func.__name__}.html"
+        super().__init__(func.readable_name, func, help_link, self.EXCLUDED_PARAMS, parent=parent)
+        self.init_ui()
+        self.setWindowTitle('Convert SAM/BAM to FASTQ (paired-end)')
+
+
+class FastqToSamSingleWindow(gui_windows.FuncExternalWindow):
+    EXCLUDED_PARAMS = {'self', 'return_new_filenames', 'legacy_args'}
+    __slots__ = {}
+
+    def __init__(self, parent=None):
+        func = fastq.fastq_to_sam_single
+        help_link = f"https://guyteichman.github.io/RNAlysis/build/rnalysis.fastq.{func.__name__}.html"
+
+        super().__init__(func.readable_name, func, help_link, self.EXCLUDED_PARAMS, parent=parent)
+        self.init_ui()
+        self.setWindowTitle('Convert FASTQ to SAM/BAM (single-end)')
+
+
+class FastqToSamPairedWindow(gui_windows.PairedFuncExternalWindow):
+    __slots__ = {}
+
+    def __init__(self, parent=None):
+        func = fastq.fastq_to_sam_paired
+        help_link = f"https://guyteichman.github.io/RNAlysis/build/rnalysis.fastq.{func.__name__}.html"
+
+        super().__init__(func.readable_name, func, help_link, self.EXCLUDED_PARAMS, parent=parent)
+        self.init_ui()
+        self.setWindowTitle('Convert FASTQ to SAM/BAM (paired-end)')
+
+
+class ConvertSamFormatWindow(gui_windows.FuncExternalWindow):
+    EXCLUDED_PARAMS = set()
+    __slots__ = {}
+
+    def __init__(self, parent=None):
+        func = fastq.convert_sam_format
+        help_link = f"https://guyteichman.github.io/RNAlysis/build/rnalysis.fastq.{func.__name__}.html"
+        super().__init__(func.readable_name, func, help_link, self.EXCLUDED_PARAMS, parent=parent)
+        self.init_ui()
+        self.setWindowTitle('Convert SAM/BAM format')
+
+
+class ValidateSamWindow(gui_windows.FuncExternalWindow):
+    EXCLUDED_PARAMS = set()
+    __slots__ = {}
+
+    def __init__(self, parent=None):
+        func = fastq.validate_sam
+        help_link = f"https://guyteichman.github.io/RNAlysis/build/rnalysis.fastq.{func.__name__}.html"
+
+        super().__init__('Validate SAM/BAM file', func, help_link, self.EXCLUDED_PARAMS, parent=parent)
+        self.init_ui()
+        self.setWindowTitle('Validate SAM/BAM file')
+
+
+class SortSamWindow(gui_windows.FuncExternalWindow):
+    EXCLUDED_PARAMS = set()
+    __slots__ = {}
+
+    def __init__(self, parent=None):
+        func = fastq.sort_sam
+        help_link = f"https://guyteichman.github.io/RNAlysis/build/rnalysis.fastq.{func.__name__}.html"
+
+        super().__init__('Sort SAM/BAM file', func, help_link, self.EXCLUDED_PARAMS, parent=parent)
+        self.init_ui()
+        self.setWindowTitle('Sort SAM/BAM file')
+
+
+class FindDuplicatesWindow(gui_windows.FuncExternalWindow):
+    EXCLUDED_PARAMS = set()
+    __slots__ = {}
+
+    def __init__(self, parent=None):
+        func = fastq.find_duplicates
+        help_link = f"https://guyteichman.github.io/RNAlysis/build/rnalysis.fastq.{func.__name__}.html"
+
+        super().__init__('Find duplicate reads', func, help_link, self.EXCLUDED_PARAMS, parent=parent)
+        self.init_ui()
+        self.setWindowTitle('Find duplicate reads')
+
+
 class FeatureCountsPairedWindow(gui_windows.FuncExternalWindow):
     EXCLUDED_PARAMS = set()
     __slots__ = {}
@@ -2865,7 +2965,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.init_ui()
         self.add_new_tab()
         self.init_actions()
-        self.init_menu_ui()
+        self.init_menus()
 
         if gather_stdout:
             self.queue_stdout = Queue()
@@ -3646,6 +3746,30 @@ class MainWindow(QtWidgets.QMainWindow):
         self.featurecounts_paired_action = self.create_action("featureCounts &Paired-end counting...",
                                                               functools.partial(self.start_external_window,
                                                                                 FeatureCountsPairedWindow))
+        self.sam2fastq_single_action = self.create_action("Convert SAM/BAM to FASTQ (single-end)...",
+                                                          functools.partial(self.start_external_window,
+                                                                            SamToFastqSingleWindow))
+        self.sam2fastq_paired_action = self.create_action("Convert SAM/BAM to FASTQ (paired-end)...",
+                                                          functools.partial(self.start_external_window,
+                                                                            SamToFastqPairedWindow))
+        self.fastq2sam_single_action = self.create_action("Convert FASTQ to SAM (single-end)...",
+                                                          functools.partial(self.start_external_window,
+                                                                            FastqToSamSingleWindow))
+        self.fastq2sam_paired_action = self.create_action("Convert FASTQ to SAM (paired-end)...",
+                                                          functools.partial(self.start_external_window,
+                                                                            FastqToSamPairedWindow))
+        self.convert_sam_action = self.create_action("Convert SAM/BAM to BAM/SAM...",
+                                                     functools.partial(self.start_external_window,
+                                                                       ConvertSamFormatWindow))
+        self.sort_sam_action = self.create_action("Sort SAM/BAM...", functools.partial(self.start_external_window,
+                                                                                       SortSamWindow))
+        self.validate_sam_action = self.create_action("Validate SAM/BAM...",
+                                                      functools.partial(self.start_external_window,
+                                                                        ValidateSamWindow))
+        self.find_duplicates_action = self.create_action("Find PCR/optical &duplicates...",
+                                                         functools.partial(self.start_external_window,
+                                                                           FindDuplicatesWindow))
+
         # Conditional Action for Platform-Specific Use
         action_name = "ShortStack small &RNA alignment..." if platform.system() != 'Windows' else "ShortStack small &RNA alignment (not available on Windows)"
         self.shortstack_action = self.create_action(action_name,
@@ -3868,7 +3992,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self.report.generate_report(outdir)
             self._save_session_to(outdir.joinpath('data', self.report.ROOT_FNAME))
 
-    def init_menu_ui(self):
+    def init_menus(self):
         self.setMenuBar(self.menu_bar)
         file_menu = self.menu_bar.addMenu("&File")
         self.new_menu = file_menu.addMenu("&New...")
@@ -3887,21 +4011,34 @@ class MainWindow(QtWidgets.QMainWindow):
         view_menu.addActions([self.show_history_action, self.task_queue_action, self.close_figs_action])
 
         fastq_menu = self.menu_bar.addMenu("&FASTQ/SAM")
-        # self.quality_menu = fastq_menu.addMenu('&Quality control')
-        # self.preprocess_menu = fastq_menu.addMenu('&Pre-processing')
-        self.trimming_menu = fastq_menu.addMenu('Adapter &trimming')
-        self.kallisto_menu = fastq_menu.addMenu("RNA-sequencing &quantification")
-        self.alignment_menu = fastq_menu.addMenu("Read &alignment")
-        # self.convert_menu = fastq_menu.addMenu('&Conversion')
-        # self.process_menu = fastq_menu.addMenu('P&ost-processing')
-        # self.filtering_menu = fastq_menu.addMenu('&Filtering')
-        self.count_menu = fastq_menu.addMenu("&Feature counting")
 
+        self.quality_menu = fastq_menu.addMenu('&Quality control')
+        self.quality_menu.addActions([self.validate_sam_action])
+
+        # self.preprocess_menu = fastq_menu.addMenu('&Pre-processing')
+
+        self.trimming_menu = fastq_menu.addMenu('Adapter &trimming')
         self.trimming_menu.addActions([self.cutadapt_single_action, self.cutadapt_paired_action])
+
+        self.kallisto_menu = fastq_menu.addMenu("RNA-sequencing &quantification")
         self.kallisto_menu.addActions(
             [self.kallisto_index_action, self.kallisto_single_action, self.kallisto_paired_action])
+
+        self.alignment_menu = fastq_menu.addMenu("Read &alignment")
         self.alignment_menu.addActions(
             [self.bowtie2_index_action, self.bowtie2_single_action, self.bowtie2_paired_action, self.shortstack_action])
+
+        self.convert_menu = fastq_menu.addMenu('&Conversion')
+        self.convert_menu.addActions(
+            [self.convert_sam_action, self.sam2fastq_single_action, self.sam2fastq_paired_action,
+             self.fastq2sam_single_action, self.fastq2sam_paired_action])
+
+        self.process_menu = fastq_menu.addMenu('P&ost-processing')
+        self.process_menu.addActions([self.sort_sam_action, self.find_duplicates_action])
+
+        # self.filtering_menu = fastq_menu.addMenu('&Filtering')
+
+        self.count_menu = fastq_menu.addMenu("&Feature counting")
         self.count_menu.addActions([self.featurecounts_single_action, self.featurecounts_paired_action])
 
         gene_sets_menu = self.menu_bar.addMenu("&Gene sets")
