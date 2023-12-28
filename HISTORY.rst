@@ -10,6 +10,9 @@ Added
 *******
 * Limma-Voom differential expression can now fit mixed linear models containing a random effect (e.g. nested design).
 
+Changed
+********
+* CutAdapt adapter trimming functions can now receive an optional "new_filenames" parameter, which allows users to specify the names of the output files.
 
 Fixed
 *******

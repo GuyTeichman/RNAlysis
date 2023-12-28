@@ -1408,12 +1408,12 @@ def trim_adapters_single_end(fastq_folder: Union[str, Path], output_folder: Unio
                              three_prime_adapters: Union[None, str, List[str]],
                              five_prime_adapters: Union[None, str, List[str]] = None,
                              any_position_adapters: Union[None, str, List[str]] = None,
+                             new_sample_names: Union[List[str], Literal['auto']] = 'auto',
                              quality_trimming: Union[NonNegativeInt, None] = 20, trim_n: bool = True,
                              minimum_read_length: NonNegativeInt = 10,
-                             maximum_read_length: Union[PositiveInt, None] = None,
-                             discard_untrimmed_reads: bool = True, error_tolerance: Fraction = 0.1,
-                             minimum_overlap: NonNegativeInt = 3, allow_indels: bool = True, parallel: bool = True,
-                             gzip_output: bool = False):
+                             maximum_read_length: Union[PositiveInt, None] = None, discard_untrimmed_reads: bool = True,
+                             error_tolerance: Fraction = 0.1, minimum_overlap: NonNegativeInt = 3,
+                             allow_indels: bool = True, parallel: bool = True, gzip_output: bool = False):
     """
     Trim adapters from single-end reads using `CutAdapt <https://cutadapt.readthedocs.io/>`_.
 
@@ -1455,6 +1455,11 @@ def trim_adapters_single_end(fastq_folder: Union[str, Path], output_folder: Unio
     :type parallel: bool (default=True)
     :param gzip_output: if True, gzips the output FASTQ files.
     :type gzip_output: bool (default=False)
+    :param new_sample_names: Give a new name to each trimmed sample (optional). \
+    If sample_names='auto', sample names \
+    will be given automatically. Otherwise, sample_names should be a list of new names, with the order of the names \
+    matching the alphabetical order of the input files.
+    :type new_sample_names: list of str or 'auto' (default='auto')
     """
     if not HAS_CUTADAPT:
         warnings.warn("Python package 'cutadapt' is not installed. \n"
@@ -1480,14 +1485,24 @@ def trim_adapters_single_end(fastq_folder: Union[str, Path], output_folder: Unio
                                           discard_untrimmed_reads, error_tolerance, minimum_overlap, allow_indels,
                                           parallel))
 
+
+    legal_samples = _get_legal_samples(fastq_folder)
+    assert (new_sample_names == 'auto') or (len(new_sample_names) == len(legal_samples)), \
+        f'Number of samples ({len(legal_samples)}) does not match number of sample names ({len(new_sample_names)})!'
+
     calls = []
-    for item in _get_legal_samples(fastq_folder):
+    for i, item in enumerate(legal_samples):
         if item.is_file():
             name = item.name
             if any([name.endswith(suffix) for suffix in LEGAL_FASTQ_SUFFIXES]):
-                stem = parsing.remove_suffixes(item).stem
-                suffix = '_trimmed.fastq.gz' if gzip_output else '_trimmed.fastq'
-                output_path = Path(output_folder).joinpath(stem + suffix)
+                if new_sample_names == 'auto':
+                    suffix = '_trimmed.fastq.gz' if gzip_output else '_trimmed.fastq'
+                    this_name = parsing.remove_suffixes(item).stem + suffix
+                else:
+                    suffix = '.fastq.gz' if gzip_output else '.fastq'
+                    this_name = new_sample_names[i] + suffix
+
+                output_path = Path(output_folder).joinpath(this_name)
                 this_call = call.copy()
                 this_call.extend(['--output', output_path.as_posix(), item.as_posix()])
                 calls.append(this_call)
@@ -1515,6 +1530,7 @@ def trim_adapters_paired_end(r1_files: List[Union[str, Path]], r2_files: List[Un
                              five_prime_adapters_r2: Union[None, str, List[str]] = None,
                              any_position_adapters_r1: Union[None, str, List[str]] = None,
                              any_position_adapters_r2: Union[None, str, List[str]] = None,
+                             new_sample_names: Union[List[str], Literal['auto']] = 'auto',
                              quality_trimming: Union[NonNegativeInt, None] = 20, trim_n: bool = True,
                              minimum_read_length: NonNegativeInt = 10,
                              maximum_read_length: Union[PositiveInt, None] = None,
@@ -1586,6 +1602,11 @@ def trim_adapters_paired_end(r1_files: List[Union[str, Path]], r2_files: List[Un
     :type parallel: bool (default=True)
     :param gzip_output: if True, gzips the output FASTQ files.
     :type gzip_output: bool (default=False)
+    :param new_sample_names: Give a new name to each trimmed sample (optional). \
+    If sample_names='auto', sample names \
+    will be given automatically. Otherwise, sample_names should be a list of new names, with the order of the names \
+    matching the order of the file pairs.
+    :type new_sample_names: list of str or 'auto' (default='auto')
     """
     if not HAS_CUTADAPT:
         warnings.warn("Python package 'cutadapt' is not installed. \n"
@@ -1594,6 +1615,9 @@ def trim_adapters_paired_end(r1_files: List[Union[str, Path]], r2_files: List[Un
         return
     assert len(r1_files) == len(r2_files), f"Got an uneven number of R1 and R2 files: " \
                                            f"{len(r1_files)} and {len(r2_files)} respectively"
+    assert (new_sample_names == 'auto') or (len(new_sample_names) == len(r1_files)), \
+        f'Number of samples ({len(r1_files)}) does not match number of sample names ({len(new_sample_names)})!'
+
     try:
         call = io.generate_base_call('cutadapt', 'auto')
         found_cli = True
@@ -1623,12 +1647,20 @@ def trim_adapters_paired_end(r1_files: List[Union[str, Path]], r2_files: List[Un
     calls = []
     r1_out = []
     r2_out = []
-    for file1, file2 in zip(r1_files, r2_files):
+    for i, (file1, file2) in enumerate(zip(r1_files, r2_files)):
         file1 = Path(file1)
         file2 = Path(file2)
-        suffix = '_trimmed.fastq.gz' if gzip_output else '_trimmed.fastq'
-        output_path_r1 = Path(output_folder).joinpath(parsing.remove_suffixes(file1).stem + suffix)
-        output_path_r2 = Path(output_folder).joinpath(parsing.remove_suffixes(file2).stem + suffix)
+        if new_sample_names == 'auto':
+            suffix = '_trimmed.fastq.gz' if gzip_output else '_trimmed.fastq'
+            base_name_r1 = f"{parsing.remove_suffixes(file1).stem}{suffix}"
+            base_name_r2 = f"{parsing.remove_suffixes(file2).stem}{suffix}"
+        else:
+            suffix = '.fastq.gz' if gzip_output else '.fastq'
+            base_name_r1 = f"{new_sample_names[i]}_R1{suffix}"
+            base_name_r2 = f"{new_sample_names[i]}_R2{suffix}"
+
+        output_path_r1 = Path(output_folder).joinpath(base_name_r1)
+        output_path_r2 = Path(output_folder).joinpath(base_name_r2)
         r1_out.append(output_path_r1)
         r2_out.append(output_path_r2)
 

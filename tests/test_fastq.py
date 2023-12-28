@@ -549,20 +549,20 @@ def test_trim_adapters_single_end_command(monkeypatch, fastq_folder, output_fold
 
 @pytest.mark.parametrize(
     'fastq_1, fastq_2, output_folder, three_prime_r1, three_prime_r2,five_prime_r1, five_prime_r2, any_position_r1, '
-    'any_position_r2,quality_trimming, trim_n, minimum_read_length, maximum_read_length,discard_untrimmed_reads, '
+    'any_position_r2,new_sample_names,quality_trimming, trim_n, minimum_read_length, maximum_read_length,discard_untrimmed_reads, '
     'pair_filter_if,error_tolerance, minimum_overlap, allow_indels, parallel, expected_command',
     [
         (
             ['tests/test_files/test_fastqs/dir1/fq1.fastq', 'tests/test_files/test_fastqs/dir1/fq2.fastq.gz'],
             ['tests/test_files/test_fastqs/dir2/fq4.fq.gz', 'tests/test_files/test_fastqs/dir2/fq3.fq'],
-            'out/folder', 'ATGGAC', 'AAATTTT', None, None, 'CCTGA', 'GTGGAA', None, False,
+            'out/folder', 'ATGGAC', 'AAATTTT', None, None, 'CCTGA', 'GTGGAA', 'auto', None, False,
             None, None, False, 'any', 0.1, 5, True, False,
             ['cutadapt', '-a', 'ATGGAC', '-A', 'AAATTTT', '-b', 'CCTGA', '-B', 'GTGGAA', '--overlap', '5',
              '--error-rate', '0.1', '--pair-filter=any', '--output']),
         (
             ['tests/test_files/test_fastqs/dir1/fq1.fastq', 'tests/test_files/test_fastqs/dir1/fq2.fastq.gz'],
             ['tests/test_files/test_fastqs/dir2/fq4.fq.gz', 'tests/test_files/test_fastqs/dir2/fq3.fq'],
-            'out/folder', None, None, None, 'ATGGGG', ['CCTGA', 'ATGC'], ['AAAA', 'GGGG'], 15,
+            'out/folder', None, None, None, 'ATGGGG', ['CCTGA', 'ATGC'], ['AAAA', 'GGGG'], ['sample1', 'sample2'], 15,
             True, 12, 100, True, 'both', 0.999, 2, False, True,
             ['cutadapt', '-G', 'ATGGGG', '-b', 'CCTGA', '-b', 'ATGC', '-B', 'AAAA', '-B', 'GGGG',
              '--quality-cutoff', '15', '--minimum-length', '12', '--maximum-length', '100',
@@ -571,6 +571,7 @@ def test_trim_adapters_single_end_command(monkeypatch, fastq_folder, output_fold
     ])
 def test_trim_adapters_paired_end_command(monkeypatch, fastq_1, fastq_2, output_folder, three_prime_r1, three_prime_r2,
                                           five_prime_r1, five_prime_r2, any_position_r1, any_position_r2,
+                                          new_sample_names,
                                           quality_trimming, trim_n, minimum_read_length, maximum_read_length,
                                           discard_untrimmed_reads, pair_filter_if: Literal['any', 'both', 'first'],
                                           error_tolerance, minimum_overlap, allow_indels, parallel, expected_command):
@@ -581,11 +582,23 @@ def test_trim_adapters_paired_end_command(monkeypatch, fastq_1, fastq_2, output_
     def mock_run_subprocess(args, print_stdout=True, print_stderr=True, log_filename: str = None):
         for i in range(len(pairs_to_cover)):
             if pairs_to_cover[i][-1] in args[-1]:
-                assert args == expected_command + [f'{output_folder}/{pair_stems[i][0]}_trimmed.fastq.gz',
-                                                   '--paired-output',
-                                                   f'{output_folder}/{pair_stems[i][1]}_trimmed.fastq.gz',
-                                                   f'tests/test_files/test_fastqs/{pairs_to_cover[i][0]}',
-                                                   f'tests/test_files/test_fastqs/{pairs_to_cover[i][1]}', ]
+
+                if new_sample_names == 'auto':
+                    expected_command_full = expected_command.copy() + [
+                        f'{output_folder}/{pair_stems[i][0]}_trimmed.fastq.gz',
+                        '--paired-output',
+                        f'{output_folder}/{pair_stems[i][1]}_trimmed.fastq.gz',
+                        f'tests/test_files/test_fastqs/{pairs_to_cover[i][0]}',
+                        f'tests/test_files/test_fastqs/{pairs_to_cover[i][1]}', ]
+                else:
+                    expected_command_full = expected_command.copy() + [
+                        f'{output_folder}/{new_sample_names[i]}_R1.fastq.gz',
+                        '--paired-output',
+                        f'{output_folder}/{new_sample_names[i]}_R2.fastq.gz',
+                        f'tests/test_files/test_fastqs/{pairs_to_cover[i][0]}',
+                        f'tests/test_files/test_fastqs/{pairs_to_cover[i][1]}', ]
+
+                assert args == expected_command_full
                 pairs_covered.append(pairs_to_cover[i])
                 break
         assert print_stdout
@@ -596,7 +609,7 @@ def test_trim_adapters_paired_end_command(monkeypatch, fastq_1, fastq_2, output_
     monkeypatch.setattr(io, 'generate_base_call', lambda *args, **kwargs: ['cutadapt'])
 
     trim_adapters_paired_end(fastq_1, fastq_2, output_folder, three_prime_r1, three_prime_r2,
-                             five_prime_r1, five_prime_r2, any_position_r1, any_position_r2,
+                             five_prime_r1, five_prime_r2, any_position_r1, any_position_r2, new_sample_names,
                              quality_trimming, trim_n, minimum_read_length, maximum_read_length,
                              discard_untrimmed_reads, pair_filter_if,
                              error_tolerance, minimum_overlap, allow_indels, parallel, gzip_output=True)
