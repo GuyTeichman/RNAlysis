@@ -240,6 +240,30 @@ def _parse_sam2fastq_misc_args(picard_installation_folder: Union[str, Path, Lite
     return base_call, script_name
 
 
+@_func_type('both')
+@readable_name('Create BAM index files (.bai)')
+def create_bam_index(input_folder: Union[str, Path], output_folder: Union[str, Path],
+                     picard_installation_folder: Union[str, Path, Literal['auto']] = 'auto'):
+    script_name = 'BuildBamIndex'
+    input_folder = Path(input_folder)
+    output_folder = Path(output_folder)
+    assert input_folder.exists() and input_folder.is_dir(), "input_folder does not exist!"
+    assert output_folder.exists() and output_folder.is_dir(), "output_folder does not exist!"
+
+    base_call = _generate_picard_basecall(script_name, picard_installation_folder)
+    legal_samples = _get_legal_samples(input_folder, 'alignment')
+
+    calls = []
+    for i, bam_file in enumerate(sorted(legal_samples)):
+        this_call = base_call.copy()
+
+        this_call.append(f"INPUT={bam_file.as_posix()}")
+        this_call.append(f"OUTPUT={output_folder.joinpath(f'{bam_file.stem}.bai').as_posix()}")
+        calls.append(this_call)
+
+    _run_picard_calls(calls, script_name, output_folder)
+
+
 @_func_type('single')
 @readable_name('Convert SAM/BAM files to FASTQ files (single-end)')
 def sam_to_fastq_single(input_folder: Union[str, Path], output_folder: Union[str, Path],
