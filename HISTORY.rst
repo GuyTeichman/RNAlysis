@@ -2,6 +2,16 @@
 History
 =======
 
+3.11.0 (2024-01-01)
+-------------------
+Added
+*******
+* *RNAlysis* can now run functions from the Picardtools suite, including conversion functions (BAM to SAM, SAM to FASTQ, FASTQ to SAM, etc), quality control (validate SAM), and post-processing functions (remove PCR duplicates, sort SAM, create BAM index).
+
+Changed
+********
+* CutAdapt adapter trimming functions can now receive an optional "new_filenames" parameter, which allows users to specify the names of the output files.
+
 3.10.1 (2023-11-22)
 -------------------
 Version 3.10.1 introduces several bug fixes, as well as well as support for random effect analysis in Limma-Voom differential expression.
@@ -10,9 +20,6 @@ Added
 *******
 * Limma-Voom differential expression can now fit mixed linear models containing a random effect (e.g. nested design).
 
-Changed
-********
-* CutAdapt adapter trimming functions can now receive an optional "new_filenames" parameter, which allows users to specify the names of the output files.
 
 Fixed
 *******
