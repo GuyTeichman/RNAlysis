@@ -19,7 +19,7 @@ import pandas as pd
 from tqdm.auto import tqdm
 
 from rnalysis import filtering
-from rnalysis.utils import validation, parsing, io, feature_counting, genome_annotation, generic
+from rnalysis.utils import validation, parsing, io, feature_counting, genome_annotation, generic, installs
 from rnalysis.utils.generic import readable_name
 from rnalysis.utils.param_typing import PositiveInt, NonNegativeInt, Fraction, LEGAL_FASTQ_SUFFIXES, \
     LEGAL_BOWTIE2_PRESETS, LEGAL_BOWTIE2_MODES, LEGAL_QUAL_SCORE_TYPES, LEGAL_ALIGNMENT_SUFFIXES
@@ -206,6 +206,547 @@ class PairedEndPipeline(_FASTQPipeline):
                 current_r1, current_r2 = res
 
         return parsing.data_to_tuple(return_values)
+
+
+def _generate_picard_basecall(command: str, picard_installation_folder: Union[str, Path, Literal['auto']]) -> List[str]:
+    if picard_installation_folder == 'auto':
+        installs.install_picard()
+        picard_installation_folder = installs.PICARD_JAR
+    args = ['-jar', picard_installation_folder, command]
+    base_call = io.generate_base_call('java', installs.JDK_PATH, args=args)
+    return base_call
+
+
+def _run_picard_calls(calls: List[List[str]], script_name: str, output_folder: Path):
+    with tqdm(total=len(calls), desc=f'Applying "{script_name}"', unit='files') as pbar:
+        for picard_call in calls:
+            print(f"Running command: \n{' '.join(picard_call)}")
+            log_filename = Path(output_folder).joinpath(
+                f'picard_{script_name}_{Path(picard_call[-1]).stem}.log').absolute().as_posix()
+            io.run_subprocess(picard_call, shell=True, log_filename=log_filename)
+            print(f"File saved successfully at {picard_call[-1]}")
+            pbar.update(1)
+
+
+def _parse_sam2fastq_misc_args(picard_installation_folder: Union[str, Path, Literal['auto']] = 'auto',
+                               re_reverse_reads: bool = True, include_non_primary_alignments: bool = False,
+                               quality_trim: Union[PositiveInt, None] = None):
+    script_name = 'SamToFastq'
+    base_call = _generate_picard_basecall(script_name, picard_installation_folder)
+    base_call.append(f"RE_REVERSE={'true' if re_reverse_reads else 'false'}")
+    base_call.append(f"INCLUDE_NON_PRIMARY_ALIGNMENTS ={'true' if include_non_primary_alignments else 'false'}")
+    if quality_trim is not None:
+        base_call.append(f"QUALITY={quality_trim}")
+    return base_call, script_name
+
+
+@_func_type('single')
+@readable_name('Convert SAM/BAM files to FASTQ files (single-end)')
+def sam_to_fastq_single(input_folder: Union[str, Path], output_folder: Union[str, Path],
+                        picard_installation_folder: Union[str, Path, Literal['auto']] = 'auto',
+                        new_sample_names: Union[List[str], Literal['auto']] = 'auto',
+                        re_reverse_reads: bool = True, include_non_primary_alignments: bool = False,
+                        quality_trim: Union[PositiveInt, None] = None):
+    """
+    Convert SAM/BAM files to FASTQ files using \
+    `Picard SamToFastq <https://broadinstitute.github.io/picard/command-line-overview.html#SamToFastq>`_.
+
+    :param input_folder: Path to the folder containing the SAM/BAM files you want to convert.
+    :type input_folder: str or Path
+    :param output_folder: Path to a folder in which the converted FASTQ files will be saved.
+    :type output_folder: str or Path
+    :param picard_installation_folder: Path to the installation folder of Picard. For example: \
+    'C:/Program Files/Picard'
+    :type picard_installation_folder: str, Path, or 'auto' (default='auto')
+    :param new_sample_names: Give a new name to each converted sample (optional). \
+    If sample_names='auto', sample names \
+    will be given automatically. Otherwise, sample_names should be a list of new names, with the order of the names \
+    matching the order of the files in the directory.
+    :type new_sample_names: list of str or 'auto' (default='auto')
+    :param re_reverse_reads: Re-reverse bases and qualities of reads with the negative-strand flag \
+    before writing them to FASTQ.
+    :type re_reverse_reads: bool (default=True)
+    :param include_non_primary_alignments: If true, include non-primary alignments in the output. \
+    Support of non-primary alignments in SamToFastq is not comprehensive, \
+    so there may be exceptions if this is set to true and there are paired reads with non-primary alignments.
+    :type include_non_primary_alignments: bool (default=False)
+    :param quality_trim: If enabled, End-trim reads using the phred/bwa quality trimming algorithm and this quality.
+    :type quality_trim: positive int or None (default=None)
+    :return: a list of the paths to the generated FASTQ files.
+    :rtype: list of str
+    """
+    input_folder = Path(input_folder)
+    output_folder = Path(output_folder)
+    assert input_folder.exists() and input_folder.is_dir(), "input_folder does not exist!"
+    assert output_folder.exists() and output_folder.is_dir(), "output_folder does not exist!"
+
+    base_call, script_name = _parse_sam2fastq_misc_args(picard_installation_folder, re_reverse_reads,
+                                                        include_non_primary_alignments, quality_trim)
+    calls = []
+
+    legal_samples = _get_legal_samples(input_folder, 'alignment')
+    assert (new_sample_names == 'auto') or (len(new_sample_names) == len(legal_samples)), \
+        f'Number of samples ({len(legal_samples)}) does not match number of sample names ({len(new_sample_names)})!'
+
+    for i, sam_file in enumerate(sorted(legal_samples)):
+        this_call = base_call.copy()
+        if new_sample_names == 'auto':
+            this_name = parsing.remove_suffixes(sam_file).stem + '_sam2fastq'
+        else:
+            this_name = new_sample_names[i]
+        this_call.append(f"INPUT={sam_file.as_posix()}")
+        this_call.append(f"FASTQ={output_folder.joinpath(f'{this_name}.fastq').as_posix()}")
+        calls.append(this_call)
+
+    _run_picard_calls(calls, script_name, output_folder)
+
+
+@_func_type('paired')
+@readable_name('Convert SAM/BAM files to FASTQ files (paired-end)')
+def sam_to_fastq_paired(input_folder: Union[str, Path], output_folder: Union[str, Path],
+                        picard_installation_folder: Union[str, Path, Literal['auto']] = 'auto',
+                        new_sample_names: Union[List[str], Literal['auto']] = 'auto',
+                        re_reverse_reads: bool = True, include_non_primary_alignments: bool = False,
+                        quality_trim: Union[PositiveInt, None] = None, return_new_filenames: bool = False):
+    """
+    Convert SAM/BAM files to FASTQ files using \
+    `Picard SamToFastq <https://broadinstitute.github.io/picard/command-line-overview.html#SamToFastq>`_.
+
+    :param input_folder: Path to the folder containing the SAM/BAM files you want to convert.
+    :type input_folder: str or Path
+    :param output_folder: Path to a folder in which the converted FASTQ files will be saved.
+    :type output_folder: str or Path
+    :param picard_installation_folder: Path to the installation folder of Picard. For example: \
+    'C:/Program Files/Picard'
+    :type picard_installation_folder: str, Path, or 'auto' (default='auto')
+    :param new_sample_names: Give a new name to each converted sample (optional). \
+    If sample_names='auto', sample names \
+    will be given automatically. Otherwise, sample_names should be a list of new names, with the order of the names \
+    matching the order of the files in the directory.
+    :type new_sample_names: list of str or 'auto' (default='auto')
+    before writing them to FASTQ.
+    :type re_reverse_reads: bool (default=True)
+    :param include_non_primary_alignments: If true, include non-primary alignments in the output. \
+    Support of non-primary alignments in SamToFastq is not comprehensive, \
+    so there may be exceptions if this is set to true and there are paired reads with non-primary alignments.
+    :type include_non_primary_alignments: bool (default=False)
+    :param quality_trim: If enabled, End-trim reads using the phred/bwa quality trimming algorithm and this quality.
+    :type quality_trim: positive int or None (default=None)
+    :return: a list of the paths to the generated FASTQ files.
+    :return: a list of the paths to the generated FASTQ files.
+    :rtype: list of str
+    """
+    input_folder = Path(input_folder)
+    output_folder = Path(output_folder)
+    assert input_folder.exists() and input_folder.is_dir(), "input_folder does not exist!"
+    assert output_folder.exists() and output_folder.is_dir(), "output_folder does not exist!"
+
+    base_call, script_name = _parse_sam2fastq_misc_args(picard_installation_folder, re_reverse_reads,
+                                                        include_non_primary_alignments, quality_trim)
+
+    calls = []
+
+    legal_samples = _get_legal_samples(input_folder, 'alignment')
+    assert (new_sample_names == 'auto') or (len(new_sample_names) == len(legal_samples)), \
+        f'Number of samples ({len(legal_samples)}) does not match number of sample names ({len(new_sample_names)})!'
+
+    r1_out = []
+    r2_out = []
+    for i, sam_file in enumerate(sorted(legal_samples)):
+        this_call = base_call.copy()
+        if new_sample_names == 'auto':
+            this_name = parsing.remove_suffixes(sam_file).stem + '_sam2fastq'
+        else:
+            this_name = new_sample_names[i]
+        this_call.append(f"INPUT={sam_file.as_posix()}")
+        this_r1 = output_folder.joinpath(f'{this_name}_R1.fastq').as_posix()
+        r1_out.append(this_r1)
+        this_call.append(f"FASTQ={this_r1}")
+
+        this_r2 = output_folder.joinpath(f'{this_name}_R2.fastq').as_posix()
+        r2_out.append(this_r2)
+        this_call.append(f"SECOND_END_FASTQ={this_r2}")
+
+        calls.append(this_call)
+
+    _run_picard_calls(calls, script_name, output_folder)
+
+    if return_new_filenames:
+        return r1_out, r2_out
+
+
+def _parse_fastq2sam_misc_args(picard_installation_folder: Union[str, Path, Literal['auto']] = 'auto',
+                               quality_score_type: Union[Literal['auto'], Literal[LEGAL_QUAL_SCORE_TYPES]] = 'auto'):
+    script_name = 'FastqToSam'
+    base_call = _generate_picard_basecall(script_name, picard_installation_folder)
+    if quality_score_type == 'auto':
+        pass
+    elif quality_score_type == 'solexa-quals':
+        base_call.append("QUALITY_FORMAT=Solexa")
+    elif quality_score_type == 'phred64':
+        base_call.append("QUALITY_FORMAT=Illumina")
+    elif quality_score_type == 'phred33':
+        base_call.append("QUALITY_FORMAT=Standard")
+    else:
+        warnings.warn(f"Quality format {quality_score_type} is not supported by Picard. "
+                      f"Using default quality format.")
+    return base_call, script_name
+
+
+@_func_type('single')
+@readable_name('Convert FASTQ files to SAM/BAM files (single-end reads)')
+def fastq_to_sam_single(input_folder: Union[str, Path], output_folder: Union[str, Path],
+                        picard_installation_folder: Union[str, Path, Literal['auto']] = 'auto',
+                        new_sample_names: Union[List[str], Literal['auto']] = 'auto',
+                        output_format: Literal['sam', 'bam'] = 'bam',
+                        quality_score_type: Union[Literal['auto'], Literal[LEGAL_QUAL_SCORE_TYPES]] = 'auto'):
+    """
+    Convert SAM/BAM files to FASTQ files using \
+    `Picard SamToFastq <https://broadinstitute.github.io/picard/command-line-overview.html#SamToFastq>`_.
+
+    :param input_folder: Path to the folder containing the SAM/BAM files you want to convert.
+    :type input_folder: str or Path
+    :param output_folder: Path to a folder in which the converted FASTQ files will be saved.
+    :type output_folder: str or Path
+    :param picard_installation_folder: Path to the installation folder of Picard. For example: \
+    'C:/Program Files/Picard'
+    :type picard_installation_folder: str, Path, or 'auto' (default='auto')
+    :param new_sample_names: Give a new name to each converted sample (optional). \
+    If sample_names='auto', sample names \
+    will be given automatically. Otherwise, sample_names should be a list of new names, with the order of the names \
+    matching the order of the files in the directory.
+    :type new_sample_names: list of str or 'auto' (default='auto')
+    :return: a list of the paths to the generated FASTQ files.
+    :rtype: list of str
+    """
+    input_folder = Path(input_folder)
+    output_folder = Path(output_folder)
+    assert input_folder.exists() and input_folder.is_dir(), "input_folder does not exist!"
+    assert output_folder.exists() and output_folder.is_dir(), "output_folder does not exist!"
+
+    base_call, script_name = _parse_fastq2sam_misc_args(picard_installation_folder, quality_score_type)
+    calls = []
+
+    legal_samples = _get_legal_samples(input_folder, 'alignment')
+    assert (new_sample_names == 'auto') or (len(new_sample_names) == len(legal_samples)), \
+        f'Number of samples ({len(legal_samples)}) does not match number of sample names ({len(new_sample_names)})!'
+
+    for i, fastq_file in enumerate(sorted(legal_samples)):
+        this_call = base_call.copy()
+        if new_sample_names == 'auto':
+            this_name = parsing.remove_suffixes(fastq_file).stem + '_sam2fastq'
+        else:
+            this_name = new_sample_names[i]
+        this_call.append(f"FASTQ={fastq_file.as_posix()}")
+        this_call.append(f"OUTPUT={output_folder.joinpath(f'{this_name}.{output_format}').as_posix()}")
+        calls.append(this_call)
+
+    _run_picard_calls(calls, script_name, output_folder)
+
+
+@_func_type('paired')
+@readable_name('Convert FASTQ files to SAM/BAM files (paired-end reads)')
+def fastq_to_sam_paired(r1_files: List[str], r2_files: List[str], output_folder: Union[str, Path],
+                        picard_installation_folder: Union[str, Path, Literal['auto']] = 'auto',
+                        new_sample_names: Union[List[str], Literal['auto']] = 'auto',
+                        output_format: Literal['sam', 'bam'] = 'bam',
+                        quality_score_type: Union[Literal['auto'], Literal[LEGAL_QUAL_SCORE_TYPES]] = 'auto'):
+    """
+    Convert SAM/BAM files to FASTQ files using \
+    `Picard SamToFastq <https://broadinstitute.github.io/picard/command-line-overview.html#SamToFastq>`_.
+
+    :param input_folder: Path to the folder containing the SAM/BAM files you want to convert.
+    :type input_folder: str or Path
+    :param output_folder: Path to a folder in which the converted FASTQ files will be saved.
+    :type output_folder: str or Path
+    :param picard_installation_folder: Path to the installation folder of Picard. For example: \
+    'C:/Program Files/Picard'
+    :type picard_installation_folder: str, Path, or 'auto' (default='auto')
+    :param new_sample_names: Give a new name to each converted sample (optional). \
+    If sample_names='auto', sample names \
+    will be given automatically. Otherwise, sample_names should be a list of new names, with the order of the names \
+    matching the order of the files in the directory.
+    :type new_sample_names: list of str or 'auto' (default='auto')
+    :return: a list of the paths to the generated FASTQ files.
+    :rtype: list of str
+    """
+    output_folder = Path(output_folder)
+    assert output_folder.exists() and output_folder.is_dir(), "output_folder does not exist!"
+
+    base_call, script_name = _parse_fastq2sam_misc_args(picard_installation_folder, quality_score_type)
+
+    calls = []
+
+    for i, (file1, file2) in enumerate(zip(r1_files, r2_files)):
+        this_call = base_call.copy()
+        file1 = Path(file1)
+        file2 = Path(file2)
+        if new_sample_names == 'auto':
+            this_name = f"{parsing.remove_suffixes(file1).stem}_{parsing.remove_suffixes(file2).stem}_sam2fastq"
+        else:
+            this_name = new_sample_names[i]
+        this_call.append(f"FASTQ={file1.as_posix()}")
+        this_call.append(f"FASTQ2={file2.as_posix()}")
+        this_call.append(f"OUTPUT={output_folder.joinpath(f'{this_name}.{output_format}').as_posix()}")
+        calls.append(this_call)
+
+    _run_picard_calls(calls, script_name, output_folder)
+
+
+@_func_type('both')
+@readable_name('Validate SAM/BAM files')
+def validate_sam(input_folder: Union[str, Path], output_folder: Union[str, Path],
+                 picard_installation_folder: Union[str, Path, Literal['auto']] = 'auto',
+                 verbose: bool = True, is_bisulfite_sequenced: bool = False):
+    """
+    Validate SAM/BAM files using \
+    `Picard ValidateSamFile <https://broadinstitute.github.io/picard/command-line-overview.html#ValidateSamFile>`_.
+
+    :param input_folder: Path to the folder containing the SAM/BAM files you want to validate.
+    :type input_folder: str or Path
+    :param output_folder: Path to a folder in which the validation reports will be saved.
+    :type output_folder: str or Path
+    :param picard_installation_folder: Path to the installation folder of Picard. For example: \
+    'C:/Program Files/Picard'
+    :type picard_installation_folder: str, Path, or 'auto' (default='auto')
+    :param new_sample_names: Give a new name to each converted sample (optional). \
+    If sample_names='auto', sample names \
+    will be given automatically. Otherwise, sample_names should be a list of new names, with the order of the names \
+    matching the order of the files in the directory.
+    :type new_sample_names: list of str or 'auto' (default='auto')
+    :param verbose: If True, the validation report will be verbose. If False, the validation report will be a summary.
+    :type verbose: bool (default=True)
+    :param is_bisulfite_sequenced: Indicates whether the SAM/BAM file consists of bisulfite sequenced reads. \
+    If so, C->T is not counted as en error in computer the value of the NM tag.
+    :type is_bisulfite_sequenced: bool (default=False)
+    :return: a list of the paths to the generated FASTQ files.
+    :rtype: list of str
+    """
+    script_name = 'ValidateSamFile'
+    input_folder = Path(input_folder)
+    output_folder = Path(output_folder)
+    assert input_folder.exists() and input_folder.is_dir(), "input_folder does not exist!"
+    assert output_folder.exists() and output_folder.is_dir(), "output_folder does not exist!"
+
+    base_call = _generate_picard_basecall(script_name, picard_installation_folder)
+    base_call.append(f"MODE={'VERBOSE' if verbose else 'SUMMARY'}")
+    base_call.append(f"IS_BISULFITE_SEQUENCED={'true' if is_bisulfite_sequenced else 'false'}")
+
+    legal_samples = _get_legal_samples(input_folder, 'alignment')
+
+    calls = []
+    for i, sam_file in enumerate(sorted(legal_samples)):
+        this_call = base_call.copy()
+
+        this_call.append(f"INPUT={sam_file.as_posix()}")
+        this_call.append(f"FASTQ={output_folder.joinpath(f'{sam_file.stem}_report.txt').as_posix()}")
+        calls.append(this_call)
+
+    _run_picard_calls(calls, script_name, output_folder)
+
+
+@_func_type('both')
+@readable_name('Sort SAM/BAM files')
+def sort_sam(input_folder: Union[str, Path], output_folder: Union[str, Path],
+             picard_installation_folder: Union[str, Path, Literal['auto']] = 'auto',
+             new_sample_names: Union[List[str], Literal['auto']] = 'auto',
+             sort_order: Literal['coordinate', 'queryname', 'duplicate'] = 'coordinate'):
+    """
+    Sort SAM/BAM files using \
+    `Picard SortSam <https://broadinstitute.github.io/picard/command-line-overview.html#SortSam>`_.
+
+    :param input_folder: Path to the folder containing the SAM/BAM files you want to sort.
+    :type input_folder: str or Path
+    :param output_folder: Path to a folder in which the sorted SAM/BAM files will be saved.
+    :type output_folder: str or Path
+    :param picard_installation_folder: Path to the installation folder of Picard. For example: \
+    'C:/Program Files/Picard'
+    :type picard_installation_folder: str, Path, or 'auto' (default='auto')
+    :param new_sample_names: Give a new name to each converted sample (optional). \
+    If sample_names='auto', sample names \
+    will be given automatically. Otherwise, sample_names should be a list of new names, with the order of the names \
+    matching the order of the files in the directory.
+    :type new_sample_names: list of str or 'auto' (default='auto')
+    :param sort_order: The order in which the alignments should be sorted.
+    :type sort_order: 'coordinate', 'queryname', or 'duplicate' (default='coordinate')
+    """
+    script_name = 'SortSam'
+    input_folder = Path(input_folder)
+    output_folder = Path(output_folder)
+    assert input_folder.exists() and input_folder.is_dir(), "input_folder does not exist!"
+    assert output_folder.exists() and output_folder.is_dir(), "output_folder does not exist!"
+
+    base_call = _generate_picard_basecall(script_name, picard_installation_folder)
+
+    if sort_order == 'coordinate':
+        base_call.append("SORT_ORDER=coordinate")
+    elif sort_order == 'queryname':
+        base_call.append("SORT_ORDER=queryname")
+    elif sort_order == 'duplicate':
+        base_call.append("SORT_ORDER=duplicate")
+    else:
+        raise ValueError(f"Sort order '{sort_order}' is not supported by Picard.")
+
+    legal_samples = _get_legal_samples(input_folder, 'alignment')
+    assert (new_sample_names == 'auto') or (len(new_sample_names) == len(legal_samples)), \
+        f'Number of samples ({len(legal_samples)}) does not match number of sample names ({len(new_sample_names)})!'
+
+    calls = []
+    for i, sam_file in enumerate(sorted(legal_samples)):
+        this_call = base_call.copy()
+        if new_sample_names == 'auto':
+            this_name = parsing.remove_suffixes(sam_file).stem + '_sorted'
+        else:
+            this_name = new_sample_names[i]
+        this_call.append(f"INPUT={sam_file.as_posix()}")
+        this_call.append(f"OUTPUT={output_folder.joinpath(f'{this_name}.{sam_file.suffix}').as_posix()}")
+        calls.append(this_call)
+
+    _run_picard_calls(calls, script_name, output_folder)
+
+
+@readable_name('Find PCR/optical duplicates in SAM/BAM files')
+def find_duplicates(input_folder: Union[str, Path], output_folder: Union[str, Path],
+                    picard_installation_folder: Union[str, Path, Literal['auto']] = 'auto',
+                    new_sample_names: Union[List[str], Literal['auto']] = 'auto',
+                    output_format: Literal['sam', 'bam'] = 'bam',
+                    duplicate_handling: Literal['mark', 'remove_optical', 'remove_all'] = 'remove_all',
+                    duplicate_scoring_strategy: Literal[
+                        'reference_length', 'sum_of_base_qualities', 'random'] = 'sum_of_base_qualities',
+                    optical_duplicate_pixel_distance: int = 100):
+    """
+    Find duplicate reads in SAM/BAM files using \
+    `Picard MarkDuplicates <https://broadinstitute.github.io/picard/command-line-overview.html#MarkDuplicates>`_.
+
+    :param input_folder: Path to the folder containing the SAM/BAM files you want to sort.
+    :type input_folder: str or Path
+    :param output_folder: Path to a folder in which the sorted SAM/BAM files will be saved.
+    :type output_folder: str or Path
+    :param picard_installation_folder: Path to the installation folder of Picard. For example: \
+    'C:/Program Files/Picard'
+    :type picard_installation_folder: str, Path, or 'auto' (default='auto')
+    :param new_sample_names: Give a new name to each converted sample (optional). \
+    If sample_names='auto', sample names \
+    will be given automatically. Otherwise, sample_names should be a list of new names, with the order of the names \
+    matching the order of the files in the directory.
+    :type new_sample_names: list of str or 'auto' (default='auto')
+    :param output_format: Format of the output file.
+    :type output_format: 'sam' or 'bam' (default='bam')
+    :param duplicate_handling: How to handle detected duplicate reads. If 'mark', duplicate reads will be marked \
+    with a 1024 flag. If 'remove_optical', 'optical' duplicates and other duplicates that appear to have arisen \
+    from the sequencing process instead of the library preparation process will be removed. \
+    If 'remove_all', all duplicate reads will be removed.
+    :type duplicate_handling: 'mark', 'remove_optical', or 'remove_all' (default='remove_all')
+    :param duplicate_scoring_strategy: How to score duplicate reads. If 'reference_length', the length of the \
+    reference sequence will be used. If 'sum_of_base_qualities', the sum of the base qualities will be used.
+    :type duplicate_scoring_strategy: 'reference_length', 'sum_of_base_qualities', or 'random' \
+    (default='sum_of_base_qualities')
+    :param optical_duplicate_pixel_distance: The maximum offset between two duplicate clusters in order to consider \
+    them optical duplicates. The default (100) is appropriate for unpatterned versions of the Illumina platform. \
+    For the patterned flowcell models, 2500 is moreappropriate. \
+    For other platforms and models, users should experiment to find what works best.
+    :type optical_duplicate_pixel_distance: int (default=100)
+    """
+    script_name = 'MarkDuplicates'
+
+    input_folder = Path(input_folder)
+    output_folder = Path(output_folder)
+    assert input_folder.exists() and input_folder.is_dir(), "input_folder does not exist!"
+    assert output_folder.exists() and output_folder.is_dir(), "output_folder does not exist!"
+
+    base_call = _generate_picard_basecall(script_name, picard_installation_folder)
+
+    base_call.append(f"OPTICAL_DUPLICATE_PIXEL_DISTANCE={optical_duplicate_pixel_distance}")
+
+    if duplicate_handling == 'mark':
+        base_call.append("REMOVE_DUPLICATES=false")
+        base_call.append("REMOVE_SEQUENCING_DUPLICATES=false")
+    elif duplicate_handling == 'remove_optical':
+        base_call.append("REMOVE_SEQUENCING_DUPLICATES=true")
+        base_call.append("REMOVE_DUPLICATES=false")
+    elif duplicate_handling == 'remove_all':
+        base_call.append("REMOVE_DUPLICATES=true")
+    else:
+        raise ValueError(f"Duplicate handling method '{duplicate_handling}' is not supported by Picard.")
+
+    if duplicate_scoring_strategy == 'sum_of_base_qualities':
+        base_call.append("DUPLICATE_SCORING_STRATEGY=SUM_OF_BASE_QUALITIES")
+    elif duplicate_scoring_strategy == 'reference_length':
+        base_call.append("DUPLICATE_SCORING_STRATEGY=TOTAL_MAPPED_REFERENCE_LENGTH")
+    elif duplicate_scoring_strategy == 'random':
+        base_call.append("DUPLICATE_SCORING_STRATEGY=RANDOM")
+    else:
+        raise ValueError(f"Duplicate scoring strategy '{duplicate_scoring_strategy}' is not supported by Picard.")
+
+    calls = []
+    legal_samples = _get_legal_samples(input_folder, 'alignment')
+    assert (new_sample_names == 'auto') or (len(new_sample_names) == len(legal_samples)), \
+        f'Number of samples ({len(legal_samples)}) does not match number of sample names ({len(new_sample_names)})!'
+
+    for i, sam_file in enumerate(sorted(legal_samples)):
+        this_call = base_call.copy()
+        if new_sample_names == 'auto':
+            this_name = parsing.remove_suffixes(sam_file).stem + '_sam2fastq'
+        else:
+            this_name = new_sample_names[i]
+        this_call.append(f"INPUT={sam_file.as_posix()}")
+        this_call.append(f"OUTPUT={output_folder.joinpath(f'{this_name}.{output_format}').as_posix()}")
+        this_call.append(f"METRICS_FILE ={output_folder.joinpath(f'{this_name}_metrics.txt').as_posix()}")
+        calls.append(this_call)
+
+    _run_picard_calls(calls, script_name, output_folder)
+
+
+@_func_type('both')
+@readable_name('Convert SAM/BAM files to BAM/SAM files')
+def convert_sam_format(input_folder: Union[str, Path], output_folder: Union[str, Path],
+                       picard_installation_folder: Union[str, Path, Literal['auto']] = 'auto',
+                       new_sample_names: Union[List[str], Literal['auto']] = 'auto',
+                       output_format: Literal['sam', 'bam'] = 'bam'):
+    """
+    Convert SAM files to BAM files or vice versa using \
+    `Picard SamFormatConverter <https://broadinstitute.github.io/picard/command-line-overview.html#SamFormatConverter>`_.
+
+    :param input_folder: Path to the folder containing the SAM/BAM files you want to convert.
+    :type input_folder: str or Path
+    :param output_folder: Path to a folder in which the converted FASTQ files will be saved.
+    :type output_folder: str or Path
+    :param picard_installation_folder: Path to the installation folder of Picard. For example: \
+    'C:/Program Files/Picard'
+    :type picard_installation_folder: str, Path, or 'auto' (default='auto')
+    :param new_sample_names: Give a new name to each converted sample (optional). \
+    If sample_names='auto', sample names \
+    will be given automatically. Otherwise, sample_names should be a list of new names, with the order of the names \
+    matching the order of the files in the directory.
+    :type new_sample_names: list of str or 'auto' (default='auto')
+    :param output_format: format to convert the files into.
+    :type output_format: 'sam' or 'bam' (default='bam')
+    """
+    script_name = 'SamFormatConverter'
+
+    input_folder = Path(input_folder)
+    output_folder = Path(output_folder)
+    assert input_folder.exists() and input_folder.is_dir(), "input_folder does not exist!"
+    assert output_folder.exists() and output_folder.is_dir(), "output_folder does not exist!"
+
+    base_call = _generate_picard_basecall(script_name, picard_installation_folder)
+
+    legal_samples = _get_legal_samples(input_folder, 'alignment')
+    assert (new_sample_names == 'auto') or (len(new_sample_names) == len(legal_samples)), \
+        f'Number of samples ({len(legal_samples)}) does not match number of sample names ({len(new_sample_names)})!'
+
+    calls = []
+    for i, sam_file in enumerate(sorted(legal_samples)):
+        this_call = base_call.copy()
+        if new_sample_names == 'auto':
+            this_name = parsing.remove_suffixes(sam_file).stem
+        else:
+            this_name = new_sample_names[i]
+        this_call.append(f"INPUT={sam_file.as_posix()}")
+        this_call.append(f"OUTPUT={output_folder.joinpath(f'{this_name}.{output_format}').as_posix()}")
+        calls.append(this_call)
+
+    _run_picard_calls(calls, script_name, output_folder)
 
 
 @_func_type('single')
@@ -1484,7 +2025,6 @@ def trim_adapters_single_end(fastq_folder: Union[str, Path], output_folder: Unio
     call.extend(_parse_cutadapt_misc_args(quality_trimming, trim_n, minimum_read_length, maximum_read_length,
                                           discard_untrimmed_reads, error_tolerance, minimum_overlap, allow_indels,
                                           parallel))
-
 
     legal_samples = _get_legal_samples(fastq_folder)
     assert (new_sample_names == 'auto') or (len(new_sample_names) == len(legal_samples)), \
