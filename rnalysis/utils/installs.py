@@ -1,5 +1,4 @@
 import os
-import os.path
 import shutil
 import subprocess
 from pathlib import Path
@@ -48,7 +47,7 @@ def install_jdk():
         print("Installing Java...")
         if JDK_ROOT.exists():
             shutil.rmtree(JDK_ROOT)
-        JDK_ROOT.mkdir(parents=True)
+        JDK_ROOT.mkdir(parents=True, exist_ok=True)
         jdk.install('17', path=JDK_ROOT.as_posix())
         print('Done')
 
