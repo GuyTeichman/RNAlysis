@@ -223,7 +223,18 @@ def _run_picard_calls(calls: List[List[str]], script_name: str, output_folder: P
             print(f"Running command: \n{' '.join(picard_call)}")
             log_filename = Path(output_folder).joinpath(
                 f'picard_{script_name}_{Path(picard_call[-1]).stem}.log').absolute().as_posix()
-            io.run_subprocess(picard_call, shell=True, log_filename=log_filename)
+            return_code, stderr = io.run_subprocess(picard_call, shell=True, log_filename=log_filename)
+
+            if return_code:
+                full_err = 'See Picard log below. \n' + '\n'.join([s.rstrip() for s in stderr])
+                short_err = stderr[-1].rstrip()
+                for i, s in enumerate(stderr):
+                    if s.startswith('Error'):
+                        short_err = s.rstrip() + stderr[i + 1].rstrip()
+                        break
+                raise ChildProcessError(f"Picard call failed to execute: '{short_err}'. See full error report below.") \
+                    from RuntimeError(full_err)
+
             print(f"File saved successfully at {picard_call[-1]}")
             pbar.update(1)
 
