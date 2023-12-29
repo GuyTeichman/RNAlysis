@@ -11,6 +11,7 @@ Added
 Changed
 ********
 * CutAdapt adapter trimming functions can now receive an optional "new_filenames" parameter, which allows users to specify the names of the output files.
+* Hierarchical clustergram plot (CountFilter.clustergram) now displays continuous values on the color bar, instead of discrete values.
 
 3.10.1 (2023-11-22)
 -------------------

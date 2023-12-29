@@ -4711,7 +4711,7 @@ class CountFilter(Filter):
         print('Calculating clustergram...')
         with pd.option_context("mode.copy_on_write", False):
             clustergram = sns.clustermap(np.log2(self.df[sample_names] + 1), method=linkage, metric=metric,
-                                         cmap=sns.color_palette("RdBu_r", 12), yticklabels=False)
+                                         cmap=sns.color_palette("RdBu_r", as_cmap=True), yticklabels=False)
         if title == 'auto':
             title = f"Clustegram of {self.fname.stem}"
         clustergram.figure.suptitle(title, fontsize=title_fontsize)
