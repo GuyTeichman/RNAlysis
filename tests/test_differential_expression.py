@@ -6,10 +6,6 @@ import pytest
 from rnalysis.utils.differential_expression import *
 
 
-def test_install_limma():
-    install_limma()
-
-
 @pytest.mark.parametrize("data,design_matrix,comparisons,random_effect,expected_path", [
     ('tests/test_files/big_counted.csv', 'tests/test_files/test_design_matrix.csv', [('condition', 'cond2', 'cond1')],
      None, 'tests/test_files/limma_tests/case1/expected_limma_script_1.R'),
@@ -61,10 +57,6 @@ def test_run_limma_analysis(comparisons, expected_paths):
         assert np.all(sorted(out.index) == sorted(truth.index))
         if sys.platform == 'win32':  # running DESeq in linux gives slightly different results
             assert np.allclose(out, truth, equal_nan=True, atol=1 * 10 ** (- 5))
-
-
-def test_install_deseq2():
-    install_deseq2()
 
 
 @pytest.mark.parametrize("data,design_matrix,comparisons,expected_path", [

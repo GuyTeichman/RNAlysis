@@ -4,6 +4,7 @@ import shutil
 import subprocess
 from pathlib import Path
 from shutil import copyfileobj
+from typing import Union, Literal
 from urllib.request import urlopen
 
 import jdk
@@ -70,3 +71,23 @@ def install_picard():
     with urlopen(picard_url) as (response), open(PICARD_JAR, 'wb') as (f):
         copyfileobj(response, f)
     print('Done')
+
+
+def install_limma(r_installation_folder: Union[str, Path, Literal['auto']] = 'auto'):
+    script_path = Path(__file__).parent.parent.joinpath('data_files/r_templates/limma_install.R')
+    try:
+        io.run_r_script(script_path, r_installation_folder)
+    except AssertionError:
+        raise AssertionError("Failed to install limma. "
+                             "Please make sure you have write premission to R's library folder, "
+                             "or try to install limma manually.")
+
+
+def install_deseq2(r_installation_folder: Union[str, Path, Literal['auto']] = 'auto'):
+    script_path = Path(__file__).parent.parent.joinpath('data_files/r_templates/deseq2_install.R')
+    try:
+        io.run_r_script(script_path, r_installation_folder)
+    except AssertionError:
+        raise AssertionError("Failed to install DESeq2. "
+                             "Please make sure you have write premission to R's library folder, "
+                             "or try to install DESeq2 manually.")

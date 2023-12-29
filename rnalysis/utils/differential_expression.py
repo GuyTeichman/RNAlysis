@@ -3,17 +3,7 @@ import time
 from pathlib import Path
 from typing import Union, Iterable, Tuple, Literal
 
-from rnalysis.utils import io, generic
-
-
-def install_limma(r_installation_folder: Union[str, Path, Literal['auto']] = 'auto'):
-    script_path = Path(__file__).parent.parent.joinpath('data_files/r_templates/limma_install.R')
-    try:
-        io.run_r_script(script_path, r_installation_folder)
-    except AssertionError:
-        raise AssertionError("Failed to install limma. "
-                             "Please make sure you have write premission to R's library folder, "
-                             "or try to install limma manually.")
+from rnalysis.utils import io, generic, installs
 
 
 def create_limma_script(data_path: Union[str, Path], design_mat_path: Union[str, Path],
@@ -88,20 +78,10 @@ def run_limma_analysis(data_path: Union[str, Path], design_mat_path: Union[str, 
                        comparisons: Iterable[Tuple[str, str, str]],
                        r_installation_folder: Union[str, Path, Literal['auto']] = 'auto',
                        random_effect: Union[str, None] = None):
-    install_limma(r_installation_folder)
+    installs.install_limma(r_installation_folder)
     script_path = create_limma_script(data_path, design_mat_path, comparisons, random_effect)
     io.run_r_script(script_path, r_installation_folder)
     return script_path.parent
-
-
-def install_deseq2(r_installation_folder: Union[str, Path, Literal['auto']] = 'auto'):
-    script_path = Path(__file__).parent.parent.joinpath('data_files/r_templates/deseq2_install.R')
-    try:
-        io.run_r_script(script_path, r_installation_folder)
-    except AssertionError:
-        raise AssertionError("Failed to install DESeq2. "
-                             "Please make sure you have write premission to R's library folder, "
-                             "or try to install DESeq2 manually.")
 
 
 def create_deseq2_script(data_path: Union[str, Path], design_mat_path: Union[str, Path],
@@ -139,7 +119,7 @@ def create_deseq2_script(data_path: Union[str, Path], design_mat_path: Union[str
 def run_deseq2_analysis(data_path: Union[str, Path], design_mat_path: Union[str, Path],
                         comparisons: Iterable[Tuple[str, str, str]],
                         r_installation_folder: Union[str, Path, Literal['auto']] = 'auto'):
-    install_deseq2(r_installation_folder)
+    installs.install_deseq2(r_installation_folder)
     script_path = create_deseq2_script(data_path, design_mat_path, comparisons)
     io.run_r_script(script_path, r_installation_folder)
     return script_path.parent
