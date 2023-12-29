@@ -403,7 +403,8 @@ class ErrorMessage(QtWidgets.QDialog):
         self.widgets['error_label'] = QtWidgets.QLabel('<i>RNAlysis</i> has encountered the following error:')
         self.layout.addWidget(self.widgets['error_label'])
 
-        self.widgets['error_summary'] = QtWidgets.QLabel(f'<b>{";".join(self.exception[1].args)}</b>')
+        self.widgets['error_summary'] = QtWidgets.QLabel(
+            f'<b>{";".join([str(i) for i in parsing.data_to_list(self.exception[1].args)])}</b>')
         self.widgets['error_summary'].setTextInteractionFlags(QtCore.Qt.TextInteractionFlag.TextSelectableByMouse)
         self.widgets['error_summary'].setWordWrap(True)
         self.layout.addWidget(self.widgets['error_summary'])
