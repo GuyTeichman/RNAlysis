@@ -4665,7 +4665,8 @@ class CountFilter(Filter):
                     metric: str = 'Euclidean',
                     linkage: Literal['Single', 'Average', 'Complete', 'Ward', 'Weighted', 'Centroid', 'Median'
                     ] = 'Average', title: Union[str, Literal['auto']] = 'auto', title_fontsize: float = 20,
-                    tick_fontsize: float = 12) -> plt.Figure:
+                    tick_fontsize: float = 12, colormap: str = 'RdBu_r',
+                    colormap_label: str = r"$\log_2$(Normalized reads + 1)") -> plt.Figure:
         """
         Performs hierarchical clustering and plots a clustergram on the base-2 log of a given set of samples.
 
@@ -4699,7 +4700,7 @@ class CountFilter(Filter):
         assert isinstance(metric, str) and isinstance(linkage, str), "Linkage and Metric must be strings!"
         metric = metric.lower()
         linkage = linkage.lower()
-        metrics = ['braycurtis', 'canberra', 'chebyshev', 'cityblock', 'correlation', 'cosine', 'dice', 'euclidean',
+        metrics = ['correlation', 'cosine', 'euclidean',
                    'hamming', 'jaccard', 'jensenshannon', 'kulsinski', 'mahalanobis', 'matching', 'minkowski',
                    'rogerstanimoto', 'russellrao', 'sEuclidean', 'sokalmichener', 'sokalsneath', 'sqEuclidean', 'yule']
         linkages = ['single', 'complete', 'average', 'weighted', 'centroid', 'median', 'ward']
@@ -4711,7 +4712,8 @@ class CountFilter(Filter):
         print('Calculating clustergram...')
         with pd.option_context("mode.copy_on_write", False):
             clustergram = sns.clustermap(np.log2(self.df[sample_names] + 1), method=linkage, metric=metric,
-                                         cmap=sns.color_palette("RdBu_r", as_cmap=True), yticklabels=False)
+                                         cmap=sns.color_palette(colormap, as_cmap=True), yticklabels=False,
+                                         cbar_kws=dict(label=colormap_label))
         if title == 'auto':
             title = f"Clustegram of {self.fname.stem}"
         clustergram.figure.suptitle(title, fontsize=title_fontsize)
