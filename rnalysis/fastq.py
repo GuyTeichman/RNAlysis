@@ -234,7 +234,7 @@ def _parse_sam2fastq_misc_args(picard_installation_folder: Union[str, Path, Lite
     script_name = 'SamToFastq'
     base_call = _generate_picard_basecall(script_name, picard_installation_folder)
     base_call.append(f"RE_REVERSE={'true' if re_reverse_reads else 'false'}")
-    base_call.append(f"INCLUDE_NON_PRIMARY_ALIGNMENTS ={'true' if include_non_primary_alignments else 'false'}")
+    base_call.append(f"INCLUDE_NON_PRIMARY_ALIGNMENTS={'true' if include_non_primary_alignments else 'false'}")
     if quality_trim is not None:
         base_call.append(f"QUALITY={quality_trim}")
     return base_call, script_name
