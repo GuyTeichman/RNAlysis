@@ -2348,7 +2348,8 @@ def generate_base_call(command: str, installation_folder: Union[str, Path, Liter
 
     try:
         exit_code, stderr = run_subprocess(call + [version_command], shell=shell)
-        assert exit_code == 0, f"call to {call[0]} exited with exit status {exit_code}: \n'{''.join(stderr)}'"
+        assert exit_code == 0 or (len(stderr) >= 1 and 'Version' in stderr[0]), \
+            f"call to {call[0]} exited with exit status {exit_code}: \n'{''.join(stderr)}'"
     except FileNotFoundError:
         raise FileNotFoundError(f"RNAlysis could not find '{command}'. "
                                 'Please ensure that your installation folder is correct, or add it to PATH. ')
