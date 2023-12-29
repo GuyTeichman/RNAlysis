@@ -2860,7 +2860,10 @@ NO_WINOS_ACTIONS = ['shortstack_action']
                                          'bowtie2_single_action', 'bowtie2_paired_action', 'kallisto_index_action',
                                          'kallisto_single_action', 'kallisto_paired_action', 'cutadapt_single_action',
                                          'cutadapt_paired_action', 'set_op_action', 'enrichment_action',
-                                         'set_vis_action', 'bar_plot_action'])
+                                         'set_vis_action', 'bar_plot_action', 'validate_sam_action',
+                                         'convert_sam_action', 'sam2fastq_single_action', 'sam2fastq_paired_action',
+                                         'fastq2sam_single_action', 'fastq2sam_paired_action', 'sort_sam_action',
+                                         'find_duplicates_action', 'bam_index_action'])
 def test_MainWindow_open_windows(main_window_with_tabs, action_name):
     action = getattr(main_window_with_tabs, action_name)
     if platform.system() == 'Windows' and action_name in NO_WINOS_ACTIONS:
