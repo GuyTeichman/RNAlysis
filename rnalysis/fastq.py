@@ -212,8 +212,8 @@ def _generate_picard_basecall(command: str, picard_installation_folder: Union[st
     if picard_installation_folder == 'auto':
         installs.install_picard()
         picard_installation_folder = installs.PICARD_JAR
-    args = ['-jar', picard_installation_folder, command]
-    base_call = io.generate_base_call('java', installs.JDK_PATH, args=args)
+    args = ['-jar', picard_installation_folder.as_posix(), command]
+    base_call = io.generate_base_call('java', installs.get_jdk_path().as_posix(), args=args)
     return base_call
 
 
