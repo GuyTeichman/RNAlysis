@@ -9,7 +9,6 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pairwisedist as pwdist
 import pandas as pd
-import seaborn as sns
 import sklearn.metrics.pairwise as sklearn_pairwise
 from grid_strategy import strategies
 from sklearn.cluster import AgglomerativeClustering, KMeans
