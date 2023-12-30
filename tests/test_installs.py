@@ -102,6 +102,16 @@ def test_install_picard_not_installed(monkeypatch):
     monkeypatch.setattr('builtins.open', MagicMock())
     install_picard()
 
+
+def test_install_picard_found_installation(monkeypatch, mock_jdk_install):
+    monkeypatch.setattr(installs, 'is_picard_installed', lambda: True)
+    mock_open = MagicMock()
+    monkeypatch.setattr(installs, 'urlopen', mock_open)
+    monkeypatch.setattr(installs, 'copyfileobj', mock_open)
+    install_jdk()
+    mock_open.assert_not_called()
+
+
 def test_install_limma():
     install_limma()
 

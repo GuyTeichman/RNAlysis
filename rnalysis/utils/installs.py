@@ -63,7 +63,7 @@ def is_picard_installed():
 def install_picard():
     install_jdk()
     if is_picard_installed():
-        print("Picard is installed")
+        print("Found Picard installation")
         return
     picard_url = 'https://github.com/broadinstitute/picard/releases/latest/download/picard.jar'
     print(f'downloading picard.jar from {picard_url} to {PICARD_JAR}...')
