@@ -102,9 +102,9 @@ def test_install_picard_not_installed(monkeypatch):
     monkeypatch.setattr('builtins.open', MagicMock())
     install_picard()
 
-# def test_install_limma():
-#     install_limma()
-#
-#
-# def test_install_deseq2():
-#     install_deseq2()
+def test_install_limma():
+    install_limma()
+
+
+def test_install_deseq2():
+    install_deseq2()
