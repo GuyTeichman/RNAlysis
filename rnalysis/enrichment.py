@@ -4,10 +4,8 @@ These include gene ontology/tissue/phenotype enrichment, enrichment for user-def
 set visualization ,etc. \
 Results of enrichment analyses can be saved to .csv files.
 """
-import functools
 import itertools
 import types
-import warnings
 from pathlib import Path
 from typing import Dict, Iterable, List, Set, Tuple, Union, Sequence, Literal
 
@@ -19,9 +17,8 @@ import pandas as pd
 import upsetplot
 
 from rnalysis.filtering import Filter, readable_name
-from rnalysis.utils import io, parsing, settings, validation, enrichment_runner, generic, param_typing, ontology
-from rnalysis.utils.param_typing import GO_ASPECTS, GO_EVIDENCE_TYPES, GO_QUALIFIERS, DEFAULT_ORGANISMS, \
-    PARALLEL_BACKENDS, get_gene_id_types, PositiveInt
+from rnalysis.utils import settings, validation, enrichment_runner, generic, param_typing, ontology
+from rnalysis.utils.param_typing import *
 
 
 class FeatureSet(set):
@@ -308,16 +305,306 @@ class FeatureSet(set):
         kwargs = dict(attributes=attributes, mode=mode, opposite=opposite, ref=ref)
         return self._inplace(Filter.filter_by_attribute, kwargs, inplace)
 
-    def change_set_name(self, new_name: str):
+    @readable_name('Filter by feature biotype (based on a GTF file)')
+    def filter_biotype_from_gtf(self, gtf_path: Union[str, Path],
+                                biotype: Union[Literal[BIOTYPES], str, List[str]] = 'protein_coding',
+                                attribute_name: Union[Literal[BIOTYPE_ATTRIBUTE_NAMES], str] = 'gene_biotype',
+                                feature_type: Literal['gene', 'transcript'] = 'gene',
+                                opposite: bool = False, inplace: bool = True):
+        """
+        Filters out all features that do not match the indicated biotype/biotypes \
+        (for example: 'protein_coding', 'ncRNA', etc). \
+        The data about feature biotypes is drawn from a GTF (Gene transfer format) file supplied by the user.
+
+        :param gtf_path: Path to your GTF (Gene transfer format) file. The file should match the type of \
+        gene names/IDs you use in your table, and should contain an attribute describing biotype.
+        :type gtf_path: str or Path
+        :param biotype: the biotypes which will not be filtered out.
+        :type biotype: str or list of strings
+        :param attribute_name: name of the attribute in your GTF file that describes feature biotype.
+        :type attribute_name: str (default='gene_biotype')
+        :param feature_type: determined whether the features/rows in your data table describe \
+        individual genes or transcripts.
+        :type feature_type: 'gene' or 'transcript' (default='gene')
+        :type opposite: bool
+        :param opposite: If True, the output of the filtering will be the OPPOSITE of the specified \
+        (instead of filtering out X, the function will filter out anything BUT X). \
+        If False (default), the function will filter as expected.
+        :type inplace: bool (default=True)
+        :param inplace: If True (default), filtering will be applied to the current Filter object. If False, \
+        the function will return a new Filter instance and the current instance will not be affected.
+        """
+        kwargs = dict(gtf_path=gtf_path, biotype=biotype, attribute_name=attribute_name,
+                      feature_type=feature_type, opposite=opposite)
+        return self._inplace(Filter.filter_biotype_from_gtf, kwargs, inplace)
+
+    @readable_name('Filter by feature biotype (based on a reference table)')
+    def filter_biotype_from_ref_table(self, biotype: Union[Literal[BIOTYPES], str, List[str]] = 'protein_coding',
+                                      ref: Union[str, Path, Literal['predefined']] = 'predefined',
+                                      opposite: bool = False, inplace: bool = True):
 
         """
-            Change the 'set_name' of a FeatureSet to a new name.
+        Filters out all features that do not match the indicated biotype/biotypes \
+        (for example: 'protein_coding', 'ncRNA', etc). \
+        The data about feature biotypes is drawn from a Biotype Reference Table supplied by the user.
 
-            :param new_name: the new set name
-            :type new_name: str
+        :type biotype: string or list of strings
+        :param biotype: the biotypes which will not be filtered out.
+        :param ref: Name of the biotype reference file used to determine biotypes. \
+        Default is the path defined by the user in the settings.yaml file.
+        :type opposite: bool
+        :param opposite: If True, the output of the filtering will be the OPPOSITE of the specified \
+        (instead of filtering out X, the function will filter out anything BUT X). \
+        If False (default), the function will filter as expected.
+        :type inplace: bool (default=True)
+        :param inplace: If True (default), filtering will be applied to the current Filter object. If False, \
+        the function will return a new Filter instance and the current instance will not be affected.
+        """
+        kwargs = dict(biotype=biotype, ref=ref, opposite=opposite)
+        return self._inplace(Filter.filter_biotype_from_ref_table, kwargs, inplace)
 
-            """
+    @readable_name('Find paralogs within species (using PantherDB)')
+    def find_paralogs_panther(self, organism: Union[Literal['auto'], str, int, Literal[get_panther_taxons()]] = 'auto',
+                              gene_id_type: Union[str, Literal['auto'], Literal[get_gene_id_types()]] = 'auto'):
+        """
+        Find paralogs within the same species using the PantherDB database.
 
+        :param organism: organism name or NCBI taxon ID of the input genes' source species.
+        :type organism: str or int
+        :param gene_id_type: the identifier type of the genes/features in the FeatureSet object \
+        (for example: 'UniProtKB', 'WormBase', 'RNACentral', 'Entrez Gene ID'). \
+        If the annotations fetched from the KEGG server do not match your gene_id_type, RNAlysis will attempt to map \
+        the annotations' gene IDs to your identifier type. \
+        For a full list of legal 'gene_id_type' names, see the UniProt website: \
+        https://www.uniprot.org/help/api_idmapping
+        :type gene_id_type: str or 'auto' (default='auto')
+        :return: DataFrame describing all discovered paralog mappings.
+        """
+        filter_obj = self._convert_to_filter_obj()
+        return filter_obj.find_paralogs_panther(organism, gene_id_type)
+
+    @readable_name('Find paralogs within species (using Ensembl)')
+    def find_paralogs_ensembl(self, organism: Union[Literal['auto'], str, int, Literal[get_ensembl_taxons()]] = 'auto',
+                              gene_id_type: Union[str, Literal['auto'], Literal[get_gene_id_types()]] = 'auto',
+                              filter_percent_identity: bool = True):
+        """
+        Find paralogs within the same species using the Ensembl database.
+
+        :param organism: organism name or NCBI taxon ID of the input genes' source species.
+        :type organism: str or int
+        :param gene_id_type: the identifier type of the genes/features in the FeatureSet object \
+        (for example: 'UniProtKB', 'WormBase', 'RNACentral', 'Entrez Gene ID'). \
+        If the annotations fetched from the KEGG server do not match your gene_id_type, RNAlysis will attempt to map \
+        the annotations' gene IDs to your identifier type. \
+        For a full list of legal 'gene_id_type' names, see the UniProt website: \
+        https://www.uniprot.org/help/api_idmapping
+        :type gene_id_type: str or 'auto' (default='auto')
+        :param filter_percent_identity: if True (default), when encountering non-unique ortholog mappings, \
+        *RNAlysis* will only keep the mappings with the highest percent_identity score.
+        :type filter_percent_identity: bool (default=True)
+        :return: DataFrame describing all discovered paralog mappings.
+        """
+        filter_obj = self._convert_to_filter_obj()
+        return filter_obj.find_paralogs_ensembl(organism, gene_id_type, filter_percent_identity)
+
+    @readable_name('Map genes to nearest orthologs (using PantherDB)')
+    def map_orthologs_panther(self, map_to_organism: Union[str, int, Literal[get_panther_taxons()]],
+                              map_from_organism: Union[
+                                  Literal['auto'], str, int, Literal[get_panther_taxons()]] = 'auto',
+                              gene_id_type: Union[str, Literal['auto'], Literal[get_gene_id_types()]] = 'auto',
+                              filter_least_diverged: bool = True,
+                              non_unique_mode: Literal[ORTHOLOG_NON_UNIQUE_MODES] = 'first',
+                              remove_unmapped_genes: bool = False, inplace: bool = True):
+        """
+        Map genes to their nearest orthologs in a different species using the PantherDB database. \
+        This function generates a table describing all matching discovered ortholog pairs (both unique and non-unique) \
+        and returns it, and can also translate the genes in this data table into their nearest ortholog, \
+        as well as remove unmapped genes.
+
+        :param map_to_organism: organism name or NCBI taxon ID of the target species for ortholog mapping.
+        :type map_to_organism: str or int
+        :param map_from_organism: organism name or NCBI taxon ID of the input genes' source species.
+        :type map_from_organism: str or int
+        :param gene_id_type: the identifier type of the genes/features in the FeatureSet object \
+        (for example: 'UniProtKB', 'WormBase', 'RNACentral', 'Entrez Gene ID'). \
+        If the annotations fetched from the KEGG server do not match your gene_id_type, RNAlysis will attempt to map \
+        the annotations' gene IDs to your identifier type. \
+        For a full list of legal 'gene_id_type' names, see the UniProt website: \
+        https://www.uniprot.org/help/api_idmapping
+        :type gene_id_type: str or 'auto' (default='auto')
+        :param filter_least_diverged: if True (default), *RNAlysis* will only fetch ortholog mappings that were \
+        flagged as a 'least diverged ortholog' on the PantherDB database. \
+        You can read more about this flag on the PantherDB website: https://www.pantherdb.org/genes/
+        :type filter_least_diverged: bool (default=True)
+        :param non_unique_mode: How to handle non-unique mappings. 'first' will keep the first mapping found for each \
+        gene; 'last' will keep the last; 'random' will keep a random mapping; \
+        and 'none' will discard all non-unique mappings.
+        :type non_unique_mode: 'first', 'last', 'random', or 'none' (default='first')
+        :param remove_unmapped_genes: if True, rows with gene names/IDs that could not be mapped to an ortholog \
+        will be dropped from the table. \
+        Otherwise, they will remain in the table with their original gene name/ID.
+        :type remove_unmapped_genes: bool (default=False)
+        :type inplace: bool (default=True)
+        :param inplace: If True (default), filtering will be applied to the current Filter object. If False, \
+        the function will return a new Filter instance and the current instance will not be affected.
+        :return: DataFrame describing all discovered mappings (unique and otherwise). If inplace=True, \
+        returns a filtered instance of the Filter object as well.
+        """
+        kwargs = dict(map_to_organism=map_to_organism, map_from_organism=map_from_organism,
+                      gene_id_type=gene_id_type, filter_least_diverged=filter_least_diverged,
+                      non_unique_mode=non_unique_mode, remove_unmapped_genes=remove_unmapped_genes)
+        return self._inplace(Filter.map_orthologs_panther, kwargs, inplace)
+
+    @readable_name('Map genes to nearest orthologs (using Ensembl)')
+    def map_orthologs_ensembl(self, map_to_organism: Union[str, int, Literal[get_ensembl_taxons()]],
+                              map_from_organism: Union[
+                                  Literal['auto'], str, int, Literal[get_ensembl_taxons()]] = 'auto',
+                              gene_id_type: Union[str, Literal['auto'], Literal[get_gene_id_types()]] = 'auto',
+                              filter_percent_identity: bool = True,
+                              non_unique_mode: Literal[ORTHOLOG_NON_UNIQUE_MODES] = 'first',
+                              remove_unmapped_genes: bool = False, inplace: bool = True):
+        """
+        Map genes to their nearest orthologs in a different species using the Ensembl database. \
+        This function generates a table describing all matching discovered ortholog pairs (both unique and non-unique) \
+        and returns it, and can also translate the genes in this data table into their nearest ortholog, \
+        as well as remove unmapped genes.
+
+        :param map_to_organism: organism name or NCBI taxon ID of the target species for ortholog mapping.
+        :type map_to_organism: str or int
+        :param map_from_organism: organism name or NCBI taxon ID of the input genes' source species.
+        :type map_from_organism: str or int
+        :param gene_id_type: the identifier type of the genes/features in the FeatureSet object \
+        (for example: 'UniProtKB', 'WormBase', 'RNACentral', 'Entrez Gene ID'). \
+        If the annotations fetched from the KEGG server do not match your gene_id_type, RNAlysis will attempt to map \
+        the annotations' gene IDs to your identifier type. \
+        For a full list of legal 'gene_id_type' names, see the UniProt website: \
+        https://www.uniprot.org/help/api_idmapping
+        :type gene_id_type: str or 'auto' (default='auto')
+        :param filter_percent_identity: if True (default), when encountering non-unique ortholog mappings, \
+        *RNAlysis* will only keep the mappings with the highest percent_identity score.
+        :type filter_percent_identity: bool (default=True)
+        :param non_unique_mode: How to handle non-unique mappings. 'first' will keep the first mapping found for each \
+        gene; 'last' will keep the last; 'random' will keep a random mapping; \
+        and 'none' will discard all non-unique mappings.
+        :type non_unique_mode: 'first', 'last', 'random', or 'none' (default='first')
+        :param remove_unmapped_genes: if True, rows with gene names/IDs that could not be mapped to an ortholog \
+        will be dropped from the table. \
+        Otherwise, they will remain in the table with their original gene name/ID.
+        :type remove_unmapped_genes: bool (default=False)
+        :type inplace: bool (default=True)
+        :param inplace: If True (default), filtering will be applied to the current Filter object. If False, \
+        the function will return a new Filter instance and the current instance will not be affected.
+        :return: DataFrame describing all discovered mappings (unique and otherwise). If inplace=True, \
+        returns a filtered instance of the Filter object as well.
+        """
+        kwargs = dict(map_to_organism=map_to_organism, map_from_organism=map_from_organism,
+                      gene_id_type=gene_id_type, filter_percent_identity=filter_percent_identity,
+                      non_unique_mode=non_unique_mode, remove_unmapped_genes=remove_unmapped_genes)
+        return self._inplace(Filter.map_orthologs_ensembl, kwargs, inplace)
+
+    @readable_name('Map genes to nearest orthologs (using PhylomeDB)')
+    def map_orthologs_phylomedb(self, map_to_organism: Union[str, int, Literal[get_phylomedb_taxons()]],
+                                map_from_organism: Union[
+                                    Literal['auto'], str, int, Literal[get_phylomedb_taxons()]] = 'auto',
+                                gene_id_type: Union[str, Literal['auto'], Literal[get_gene_id_types()]] = 'auto',
+                                consistency_score_threshold: Fraction = 0.5, filter_consistency_score: bool = True,
+                                non_unique_mode: Literal[ORTHOLOG_NON_UNIQUE_MODES] = 'first',
+                                remove_unmapped_genes: bool = False, inplace: bool = True):
+        """
+        Map genes to their nearest orthologs in a different species using the PhylomeDB database. \
+        This function generates a table describing all matching discovered ortholog pairs (both unique and non-unique) \
+        and returns it, and can also translate the genes in this data table into their nearest ortholog, \
+        as well as remove unmapped genes.
+
+        :param map_to_organism: organism name or NCBI taxon ID of the target species for ortholog mapping.
+        :type map_to_organism: str or int
+        :param map_from_organism: organism name or NCBI taxon ID of the input genes' source species.
+        :type map_from_organism: str or int
+        :param gene_id_type: the identifier type of the genes/features in the FeatureSet object \
+        (for example: 'UniProtKB', 'WormBase', 'RNACentral', 'Entrez Gene ID'). \
+        If the annotations fetched from the KEGG server do not match your gene_id_type, RNAlysis will attempt to map \
+        the annotations' gene IDs to your identifier type. \
+        For a full list of legal 'gene_id_type' names, see the UniProt website: \
+        https://www.uniprot.org/help/api_idmapping
+        :type gene_id_type: str or 'auto' (default='auto')
+    `   :param consistency_score_threshold: the minimum consistency score required for an ortholog mapping to be \
+        considered valid. Consistency scores are calculated by PhylomeDB and represent the confidence of the \
+        ortholog mapping. setting consistency_score_threshold to 0 will keep all mappings. You can read more about \
+        PhylomeDB consistency score on the PhylomeDB website: orthology.phylomedb.org/help
+        :type consistency_score_threshold: float between 0 and 1 (default=0.5)
+        :param filter_consistency_score: if True (default), when encountering non-unique ortholog mappings, \
+        *RNAlysis* will only keep the mappings with the highest consistency score.
+        :type filter_consistency_score: bool (default=True)
+        :param non_unique_mode: How to handle non-unique mappings. 'first' will keep the first mapping found for each \
+        gene; 'last' will keep the last; 'random' will keep a random mapping; \
+        and 'none' will discard all non-unique mappings.
+        :type non_unique_mode: 'first', 'last', 'random', or 'none' (default='first')
+        :param remove_unmapped_genes: if True, rows with gene names/IDs that could not be mapped to an ortholog \
+        will be dropped from the table. \
+        Otherwise, they will remain in the table with their original gene name/ID.
+        :type remove_unmapped_genes: bool (default=False)
+        :type inplace: bool (default=True)
+        :param inplace: If True (default), filtering will be applied to the current Filter object. If False, \
+        the function will return a new Filter instance and the current instance will not be affected.
+        :return: DataFrame describing all discovered mappings (unique and otherwise). If inplace=True, \
+        returns a filtered instance of the Filter object as well.
+        """
+        kwargs = dict(map_to_organism=map_to_organism, map_from_organism=map_from_organism,
+                      gene_id_type=gene_id_type, consistency_score_threshold=consistency_score_threshold,
+                      filter_consistency_score=filter_consistency_score, non_unique_mode=non_unique_mode,
+                      remove_unmapped_genes=remove_unmapped_genes)
+        return self._inplace(Filter.map_orthologs_phylomedb, kwargs, inplace)
+
+    @readable_name('Map genes to nearest orthologs (using OrthoInspector)')
+    def map_orthologs_orthoinspector(self, map_to_organism: Union[str, int, Literal[get_panther_taxons()]],
+                                     map_from_organism: Union[
+                                         Literal['auto'], str, int, Literal[get_panther_taxons()]] = 'auto',
+                                     gene_id_type: Union[str, Literal['auto'], Literal[get_gene_id_types()]] = 'auto',
+                                     non_unique_mode: Literal[ORTHOLOG_NON_UNIQUE_MODES] = 'first',
+                                     remove_unmapped_genes: bool = False, inplace: bool = True):
+        """
+        Map genes to their nearest orthologs in a different species using the OrthoInspector database. \
+        This function generates a table describing all matching discovered ortholog pairs (both unique and non-unique) \
+        and returns it, and can also translate the genes in this data table into their nearest ortholog, \
+        as well as remove unmapped genes.
+
+        :param map_to_organism: organism name or NCBI taxon ID of the target species for ortholog mapping.
+        :type map_to_organism: str or int
+        :param map_from_organism: organism name or NCBI taxon ID of the input genes' source species.
+        :type map_from_organism: str or int
+        :param gene_id_type: the identifier type of the genes/features in the FeatureSet object \
+        (for example: 'UniProtKB', 'WormBase', 'RNACentral', 'Entrez Gene ID'). \
+        If the annotations fetched from the KEGG server do not match your gene_id_type, RNAlysis will attempt to map \
+        the annotations' gene IDs to your identifier type. \
+        For a full list of legal 'gene_id_type' names, see the UniProt website: \
+        https://www.uniprot.org/help/api_idmapping
+        :type gene_id_type: str or 'auto' (default='auto')
+        :param non_unique_mode: How to handle non-unique mappings. 'first' will keep the first mapping found for each \
+        gene; 'last' will keep the last; 'random' will keep a random mapping; \
+        and 'none' will discard all non-unique mappings.
+        :type non_unique_mode: 'first', 'last', 'random', or 'none' (default='first')
+        :param remove_unmapped_genes: if True, rows with gene names/IDs that could not be mapped to an ortholog \
+        will be dropped from the table. \
+        Otherwise, they will remain in the table with their original gene name/ID.
+        :type remove_unmapped_genes: bool (default=False)
+        :type inplace: bool (default=True)
+        :param inplace: If True (default), filtering will be applied to the current Filter object. If False, \
+        the function will return a new Filter instance and the current instance will not be affected.
+        :return: DataFrame describing all discovered mappings (unique and otherwise). If inplace=True, \
+        returns a filtered instance of the Filter object as well.
+        """
+        kwargs = dict(map_to_organism=map_to_organism, map_from_organism=map_from_organism,
+                      gene_id_type=gene_id_type, non_unique_mode=non_unique_mode,
+                      remove_unmapped_genes=remove_unmapped_genes)
+        return self._inplace(Filter.map_orthologs_orthoinspector, kwargs, inplace)
+
+    def change_set_name(self, new_name: str):
+        """
+        Change the 'set_name' of a FeatureSet to a new name.
+
+        :param new_name: the new set name
+        :type new_name: str
+        """
         assert isinstance(new_name, str), f"New set name must be of type str. Instead, got {type(new_name)}"
         self.set_name = new_name
 
@@ -1018,7 +1305,7 @@ class FeatureSet(set):
 
     @readable_name('Summarize feature biotypes (based on a GTF file)')
     def biotypes_from_gtf(self, gtf_path: Union[str, Path],
-                          attribute_name: Union[Literal[param_typing.BIOTYPE_ATTRIBUTE_NAMES], str] = 'gene_biotype',
+                          attribute_name: Union[Literal[BIOTYPE_ATTRIBUTE_NAMES], str] = 'gene_biotype',
                           feature_type: Literal['gene', 'transcript'] = 'gene') -> pd.DataFrame:
 
         """

@@ -1,4 +1,5 @@
 import os
+from unittest.mock import patch, Mock
 
 import pytest
 import statsmodels.stats.multitest as multitest
@@ -728,3 +729,210 @@ def test_filter_by_attribute_rankedset():
 
     s.filter_by_attribute('attribute1', ref=__attr_ref__)
     assert s == truth
+
+
+@patch('rnalysis.utils.io.PantherOrthologMapper')
+def test_find_paralogs_panther(mock_mapper):
+    df_truth = pd.DataFrame({'gene': ['gene1', 'gene1', 'gene2'], 'paralog': ['paralog1', 'paralog2', 'paralog3']})
+    mock_mapper_instance = Mock()
+    mock_mapper.return_value = mock_mapper_instance
+    mock_mapper_instance.get_paralogs.return_value = io.OrthologDict(
+        {'gene1': ['paralog1', 'paralog2'], 'gene2': ['paralog3']})
+
+    featureset = FeatureSet(Filter('tests/test_files/test_map_orthologs.csv'))
+    result = featureset.find_paralogs_panther(organism='Homo sapiens', gene_id_type='UniProtKB')
+
+    assert result.equals(df_truth)
+    mock_mapper.assert_called_once_with(9606, 9606, 'UniProtKB')
+    mock_mapper_instance.get_paralogs.assert_called_once_with(parsing.data_to_tuple(featureset.gene_set))
+
+
+@pytest.mark.parametrize('filter_percent_identity', [True, False])
+@patch('rnalysis.utils.io.EnsemblOrthologMapper')
+def test_find_paralogs_ensembl(mock_mapper, filter_percent_identity):
+    df_truth = pd.DataFrame({'gene': ['gene1', 'gene1', 'gene2'], 'paralog': ['paralog1', 'paralog2', 'paralog3']})
+    mock_mapper_instance = Mock()
+    mock_mapper.return_value = mock_mapper_instance
+    mock_mapper_instance.get_paralogs.return_value = io.OrthologDict(
+        {'gene1': ['paralog1', 'paralog2'], 'gene2': ['paralog3']})
+
+    featureset = FeatureSet(Filter('tests/test_files/test_map_orthologs.csv'))
+    result = featureset.find_paralogs_ensembl(organism='Homo sapiens', gene_id_type='UniProtKB',
+                                              filter_percent_identity=filter_percent_identity)
+
+    assert result.equals(df_truth)
+    mock_mapper.assert_called_once_with(9606, 9606, 'UniProtKB')
+    mock_mapper_instance.get_paralogs.assert_called_once_with(parsing.data_to_tuple(featureset.gene_set),
+                                                              filter_percent_identity)
+
+
+@pytest.mark.parametrize('ranked_set', [True, False])
+@pytest.mark.parametrize('remove_unmapped', [True, False])
+@pytest.mark.parametrize('non_unique_mode,filter_least_diverged', [
+    ('first', True),
+    ('last', False),
+])
+@patch('rnalysis.utils.io.PantherOrthologMapper')
+def test_map_orthologs_panther(mock_mapper, non_unique_mode, filter_least_diverged, remove_unmapped, ranked_set):
+    if remove_unmapped:
+        filter_obj_path = 'tests/test_files/test_map_orthologs_remove_unmapped_truth.csv'
+    else:
+        filter_obj_path = 'tests/test_files/test_map_orthologs_truth.csv'
+    filter_obj_truth = Filter(filter_obj_path)
+    one2many_truth = pd.DataFrame(
+        {'gene': ['gene1', 'gene1', 'gene2'], 'ortholog': ['ortholog1', 'ortholog2', 'ortholog3']})
+    mock_mapper_instance = Mock()
+    mock_mapper.return_value = mock_mapper_instance
+    mock_mapper_instance.get_orthologs.return_value = (
+        io.OrthologDict({'gene1': 'ortholog2', 'gene2': 'ortholog3'})
+        , io.OrthologDict({'gene1': ['ortholog1', 'ortholog2'], 'gene2': ['ortholog3']}))
+
+    if ranked_set:
+        featureset = RankedSet(Filter('tests/test_files/test_map_orthologs.csv'))
+    else:
+        featureset = FeatureSet(Filter('tests/test_files/test_map_orthologs.csv'))
+    one2one, one2many = featureset.map_orthologs_panther('Homo sapiens', 'caenorhabditis elegans',
+                                                         gene_id_type='UniProtKB', inplace=False,
+                                                         non_unique_mode=non_unique_mode,
+                                                         filter_least_diverged=filter_least_diverged,
+                                                         remove_unmapped_genes=remove_unmapped)
+
+    assert one2many.equals(one2many_truth)
+
+    if ranked_set:
+        one2one_truth = RankedSet(filter_obj_truth, one2one.set_name)
+    else:
+        one2one_truth = FeatureSet(filter_obj_truth, one2one.set_name)
+
+    assert one2one == one2one_truth
+    mock_mapper.assert_called_once_with(9606, 6239, 'UniProtKB')
+    mock_mapper_instance.get_orthologs.assert_called_once_with(
+        parsing.data_to_tuple(featureset.gene_set), non_unique_mode, filter_least_diverged)
+
+
+@pytest.mark.parametrize('ranked_set', [True, False])
+@pytest.mark.parametrize('remove_unmapped', [True, False])
+@pytest.mark.parametrize('non_unique_mode,filter_percent_identity', [
+    ('first', True),
+    ('last', False),
+])
+@patch('rnalysis.utils.io.EnsemblOrthologMapper')
+def test_map_orthologs_ensembl(mock_mapper, non_unique_mode, filter_percent_identity, remove_unmapped, ranked_set):
+    if remove_unmapped:
+        filter_obj_path = 'tests/test_files/test_map_orthologs_remove_unmapped_truth.csv'
+    else:
+        filter_obj_path = 'tests/test_files/test_map_orthologs_truth.csv'
+    filter_obj_truth = Filter(filter_obj_path)
+    one2many_truth = pd.DataFrame(
+        {'gene': ['gene1', 'gene1', 'gene2'], 'ortholog': ['ortholog1', 'ortholog2', 'ortholog3']})
+    mock_mapper_instance = Mock()
+    mock_mapper.return_value = mock_mapper_instance
+    mock_mapper_instance.get_orthologs.return_value = (
+        io.OrthologDict({'gene1': 'ortholog2', 'gene2': 'ortholog3'})
+        , io.OrthologDict({'gene1': ['ortholog1', 'ortholog2'], 'gene2': ['ortholog3']}))
+
+    if ranked_set:
+        featureset = RankedSet(Filter('tests/test_files/test_map_orthologs.csv'))
+    else:
+        featureset = FeatureSet(Filter('tests/test_files/test_map_orthologs.csv'))
+
+    one2one, one2many = featureset.map_orthologs_ensembl('Homo sapiens', 'caenorhabditis elegans',
+                                                         gene_id_type='UniProtKB', inplace=False,
+                                                         non_unique_mode=non_unique_mode,
+                                                         filter_percent_identity=filter_percent_identity,
+                                                         remove_unmapped_genes=remove_unmapped)
+
+    assert one2many.equals(one2many_truth)
+    if ranked_set:
+        one2one_truth = RankedSet(filter_obj_truth, one2one.set_name)
+    else:
+        one2one_truth = FeatureSet(filter_obj_truth, one2one.set_name)
+
+    assert one2one == one2one_truth
+    mock_mapper.assert_called_once_with(9606, 6239, 'UniProtKB')
+    mock_mapper_instance.get_orthologs.assert_called_once_with(
+        parsing.data_to_tuple(featureset.gene_set), non_unique_mode, filter_percent_identity)
+
+
+@pytest.mark.parametrize('ranked_set', [True, False])
+@pytest.mark.parametrize('remove_unmapped', [True, False])
+@pytest.mark.parametrize('non_unique_mode,filter_consistency_score,threshold', [
+    ('first', True, 0.5),
+    ('last', False, 0.93),
+])
+@patch('rnalysis.utils.io.PhylomeDBOrthologMapper')
+def test_map_orthologs_phylomedb(mock_mapper, non_unique_mode, filter_consistency_score, remove_unmapped, threshold,
+                                 ranked_set):
+    if remove_unmapped:
+        filter_obj_path = 'tests/test_files/test_map_orthologs_remove_unmapped_truth.csv'
+    else:
+        filter_obj_path = 'tests/test_files/test_map_orthologs_truth.csv'
+    filter_obj_truth = Filter(filter_obj_path)
+    one2many_truth = pd.DataFrame(
+        {'gene': ['gene1', 'gene1', 'gene2'], 'ortholog': ['ortholog1', 'ortholog2', 'ortholog3']})
+    mock_mapper_instance = Mock()
+    mock_mapper.return_value = mock_mapper_instance
+    mock_mapper_instance.get_orthologs.return_value = (
+        io.OrthologDict({'gene1': 'ortholog2', 'gene2': 'ortholog3'})
+        , io.OrthologDict({'gene1': ['ortholog1', 'ortholog2'], 'gene2': ['ortholog3']}))
+
+    if ranked_set:
+        featureset = RankedSet(Filter('tests/test_files/test_map_orthologs.csv'))
+    else:
+        featureset = FeatureSet(Filter('tests/test_files/test_map_orthologs.csv'))
+    one2one, one2many = featureset.map_orthologs_phylomedb('Homo sapiens', 'caenorhabditis elegans',
+                                                           gene_id_type='UniProtKB', inplace=False,
+                                                           non_unique_mode=non_unique_mode,
+                                                           filter_consistency_score=filter_consistency_score,
+                                                           consistency_score_threshold=threshold,
+                                                           remove_unmapped_genes=remove_unmapped)
+
+    assert one2many.equals(one2many_truth)
+    if ranked_set:
+        one2one_truth = RankedSet(filter_obj_truth, one2one.set_name)
+    else:
+        one2one_truth = FeatureSet(filter_obj_truth, one2one.set_name)
+
+    assert one2one == one2one_truth
+    mock_mapper.assert_called_once_with(9606, 6239, 'UniProtKB')
+    mock_mapper_instance.get_orthologs.assert_called_once_with(
+        parsing.data_to_tuple(featureset.gene_set), non_unique_mode, threshold, filter_consistency_score)
+
+
+@pytest.mark.parametrize('ranked_set', [True, False])
+@pytest.mark.parametrize('remove_unmapped', [True, False])
+@pytest.mark.parametrize('non_unique_mode', ['first', 'last'])
+@patch('rnalysis.utils.io.OrthoInspectorOrthologMapper')
+def test_map_orthologs_orthoinspector(mock_mapper, non_unique_mode, remove_unmapped, ranked_set):
+    if remove_unmapped:
+        filter_obj_path = 'tests/test_files/test_map_orthologs_remove_unmapped_truth.csv'
+    else:
+        filter_obj_path = 'tests/test_files/test_map_orthologs_truth.csv'
+    filter_obj_truth = Filter(filter_obj_path)
+    one2many_truth = pd.DataFrame(
+        {'gene': ['gene1', 'gene1', 'gene2'], 'ortholog': ['ortholog1', 'ortholog2', 'ortholog3']})
+    mock_mapper_instance = Mock()
+    mock_mapper.return_value = mock_mapper_instance
+    mock_mapper_instance.get_orthologs.return_value = (
+        io.OrthologDict({'gene1': 'ortholog2', 'gene2': 'ortholog3'})
+        , io.OrthologDict({'gene1': ['ortholog1', 'ortholog2'], 'gene2': ['ortholog3']}))
+
+    if ranked_set:
+        featureset = RankedSet(Filter('tests/test_files/test_map_orthologs.csv'))
+    else:
+        featureset = FeatureSet(Filter('tests/test_files/test_map_orthologs.csv'))
+    one2one, one2many = featureset.map_orthologs_orthoinspector('Homo sapiens', 'caenorhabditis elegans',
+                                                                gene_id_type='UniProtKB', inplace=False,
+                                                                non_unique_mode=non_unique_mode,
+                                                                remove_unmapped_genes=remove_unmapped)
+
+    assert one2many.equals(one2many_truth)
+    if ranked_set:
+        one2one_truth = RankedSet(filter_obj_truth, one2one.set_name)
+    else:
+        one2one_truth = FeatureSet(filter_obj_truth, one2one.set_name)
+
+    assert one2one == one2one_truth
+    mock_mapper.assert_called_once_with(9606, 6239, 'UniProtKB')
+    mock_mapper_instance.get_orthologs.assert_called_once_with(
+        parsing.data_to_tuple(featureset.gene_set), non_unique_mode)
