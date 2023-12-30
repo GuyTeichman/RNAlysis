@@ -877,7 +877,7 @@ class Filter:
                             continue
 
                         pbar.update(8)
-                        return ref_srs
+                        return ref_srs.dropna(axis=0)
             raise ValueError("Failed to map features to biotypes with the given GTF file and parameters. "
                              "Please try again with different parameters or a different GTF file. ")
 
@@ -968,7 +968,7 @@ class Filter:
         suffix = f"_{'_'.join(biotype)}"
         # load the biotype reference table
         ref = settings.get_biotype_ref_path(ref)
-        ref_df = io.load_table(ref)
+        ref_df = io.load_table(ref).dropna(axis=0)
         validation.validate_biotype_table(ref_df)
         ref_df.set_index('gene', inplace=True)
         # generate set of legal inputs
@@ -1633,7 +1633,7 @@ class Filter:
         """
         # load the Biotype Reference Table
         ref = settings.get_biotype_ref_path(ref)
-        ref_df = io.load_table(ref)
+        ref_df = io.load_table(ref).dropna(axis=0)
         validation.validate_biotype_table(ref_df)
         # find which genes from tne Filter object don't appear in the Biotype Reference Table
         not_in_ref = self.df.index.difference(ref_df['gene'])

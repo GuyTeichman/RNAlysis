@@ -1218,10 +1218,28 @@ def test_biotypes_from_ref_table():
 
 
 def test_biotypes_from_ref_table_long_form():
-    truth = pd.read_csv('tests/test_files/biotypes_long_format_truth.csv', index_col=0, header=[0, 1]).sort_index()
-    truth.columns = ['_'.join(col) for col in truth.columns.values]
+    truth = pd.read_csv('tests/test_files/biotypes_long_format_truth.csv', index_col=0).sort_index()
     c = CountFilter('tests/test_files/counted_biotype.csv')
     df = c.biotypes_from_ref_table(long_format=True, ref=__biotype_ref__).sort_index()
+    assert np.isclose(df, truth, equal_nan=True).all()
+
+
+def test_biotypes_from_gtf():
+    truth = io.load_table('tests/test_files/biotypes_truth.csv', 0).sort_index()
+    c = CountFilter('tests/test_files/counted_biotype.csv')
+    df = c.biotypes_from_gtf('tests/test_files/test_gtf_for_biotypes.gtf').sort_index()
+    print('\n')
+    print(df, truth)
+    assert df.equals(truth)
+
+
+def test_biotypes_from_gtf_long_form():
+    truth = pd.read_csv('tests/test_files/biotypes_long_format_truth.csv', index_col=0).sort_index()
+    c = CountFilter('tests/test_files/counted_biotype.csv')
+    df = c.biotypes_from_gtf('tests/test_files/test_gtf_for_biotypes.gtf', long_format=True).sort_index()
+    print(df.index, truth.index)
+    print(truth)
+    print(df)
     assert np.isclose(df, truth, equal_nan=True).all()
 
 

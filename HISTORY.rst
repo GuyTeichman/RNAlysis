@@ -14,6 +14,10 @@ Changed
 * Hierarchical clustergram plot (CountFilter.clustergram) now supports the 'colormap' parameter, which allows users to specify a custom color map for the plot.
 * Hierarchical clustergram plot (CountFilter.clustergram) now displays continuous values on the color bar, instead of discrete values.
 
+Fixed
+*******
+* Function "Summarize feature biotypes (based on a reference table)" (biotypes_from_ref_table) now treats rows with missing values as "_missing_from_biotype_reference" instead of ignoring them entirely.
+
 3.10.1 (2023-11-22)
 -------------------
 Version 3.10.1 introduces several bug fixes, as well as well as support for random effect analysis in Limma-Voom differential expression.
