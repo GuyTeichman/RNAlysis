@@ -1044,7 +1044,6 @@ class EnsemblRestClient:
     SERVER = 'https://rest.ensembl.org/'
     REQS_PER_SEQ = 10
     HEADERS = {"Content-Type": "application/json", "Accept": "application/json"}
-    RETRIES = Retry(total=5, backoff_factor=0.25, status_forcelist=[500, 502, 503, 504])
     LIMITER = aiolimiter.AsyncLimiter(REQS_PER_SEQ, 1)
 
     def __init__(self):
