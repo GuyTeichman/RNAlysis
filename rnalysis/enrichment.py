@@ -93,6 +93,13 @@ class FeatureSet(set):
         """
         filter_obj = self._convert_to_filter_obj()
         applied = func(filter_obj, **func_kwargs, inplace=inplace)
+
+        if isinstance(applied, tuple):
+            return_vals = applied[1:]
+            applied = applied[0]
+        else:
+            return_vals = None
+
         if inplace:
             applied = filter_obj
 
@@ -104,11 +111,12 @@ class FeatureSet(set):
         if inplace:
             self.intersection_update(new_set)
             self._update(gene_set=new_set, set_name=new_name, **update_kwargs)
+            return return_vals
         # if not inplace, copy self, modify the self, name, and other properties of the copy, and return it
         else:
             new_obj = type(self)(new_set, new_name)
             new_obj._update(**update_kwargs)
-            return new_obj
+            return new_obj if return_vals is None else (new_obj, *return_vals)
 
     def _convert_to_filter_obj(self) -> Filter:
         return Filter.from_dataframe(pd.DataFrame(index=parsing.data_to_list(self.gene_set)), self.set_name)
@@ -1093,6 +1101,13 @@ class RankedSet(FeatureSet):
         """
         filter_obj = self._convert_to_filter_obj()
         applied = func(filter_obj, **func_kwargs, inplace=inplace)
+
+        if isinstance(applied, tuple):
+            return_vals = applied[1:]
+            applied = applied[0]
+        else:
+            return_vals = None
+
         if inplace:
             applied = filter_obj
 
@@ -1112,11 +1127,12 @@ class RankedSet(FeatureSet):
         if inplace:
             self.intersection_update(new_set)
             self._update(ranked_genes=new_ranked, gene_set=new_set, set_name=new_name, **update_kwargs)
+            return return_vals
         # if not inplace, copy self, modify the self, name, and other properties of the copy, and return it
         else:
             new_obj = type(self)(new_ranked, new_name)
             new_obj._update(**update_kwargs)
-            return new_obj
+            return new_obj if return_vals is None else (new_obj, *return_vals)
 
     def _set_ops(self, others: Union[set, 'FeatureSet'], op: types.FunctionType):
         warnings.warn("Warning: when performing set operations with RankedSet objects, "
