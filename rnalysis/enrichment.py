@@ -986,7 +986,7 @@ class FeatureSet(set):
     @readable_name('Summarize feature biotypes (based on a reference table)')
     def biotypes_from_ref_table(self, ref: Union[str, Path, Literal['predefined']] = 'predefined'):
         """
-        Returns a DataFrame of the biotypes in the gene set and their count.
+        Returns a DataFrame describing the biotypes in the gene set and their count.
 
         :type ref: str or pathlib.Path (default='predefined')
         :param ref: Path of the reference file used to determine biotype. \
@@ -1005,17 +1005,36 @@ class FeatureSet(set):
 
         """
 
-        ref = settings.get_biotype_ref_path(ref)
-        ref_df = io.load_table(ref)
-        validation.validate_biotype_table(ref_df)
-        ref_df.columns = ref_df.columns.str.lower()
-        not_in_ref = pd.Index(self.gene_set).difference(set(ref_df['gene']))
-        if len(not_in_ref) > 0:
-            warnings.warn(
-                f'{len(not_in_ref)} of the features in the Filter object do not appear in the Biotype Reference Table. ')
-            ref_df = pd.concat(
-                [ref_df, pd.DataFrame({'gene': not_in_ref, 'biotype': '_missing_from_biotype_reference'})])
-        return ref_df.set_index('gene', drop=False).loc[parsing.data_to_list(self.gene_set)].groupby('biotype').count()
+        filter_obj = self._convert_to_filter_obj()
+        return filter_obj.biotypes_from_ref_table(ref=ref)
+
+    @readable_name('Summarize feature biotypes (based on a GTF file)')
+    def biotypes_from_gtf(self, gtf_path: Union[str, Path],
+                          attribute_name: Union[Literal[param_typing.BIOTYPE_ATTRIBUTE_NAMES], str] = 'gene_biotype',
+                          feature_type: Literal['gene', 'transcript'] = 'gene') -> pd.DataFrame:
+
+        """
+        Returns a DataFrame describing the biotypes in the table and their count. \
+        The data about feature biotypes is drawn from a GTF (Gene transfer format) file supplied by the user.
+
+        :param gtf_path: Path to your GTF (Gene transfer format) file. The file should match the type of \
+        gene names/IDs you use in your table, and should contain an attribute describing biotype.
+        :type gtf_path: str or Path
+        :param attribute_name: name of the attribute in your GTF file that describes feature biotype.
+        :type attribute_name: str (default='gene_biotype')
+        :param feature_type: determined whether the features/rows in your data table describe \
+        individual genes or transcripts.
+        :type feature_type: 'gene' or 'transcript' (default='gene')
+        :type long_format: bool (default=False)
+        :param long_format:if True, returns a short-form DataFrame, which states the biotypes \
+        in the Filter object and their count. Otherwise, returns a long-form DataFrame,
+        which also provides descriptive statistics of each column per biotype.
+        :rtype: pandas.DataFrame
+        :returns: a pandas DataFrame showing the number of values belonging to each biotype, \
+        as well as additional descriptive statistics of format=='long'.
+        """
+        filter_obj = self._convert_to_filter_obj()
+        return filter_obj.biotypes_from_gtf(gtf_path, attribute_name, feature_type)
 
 
 class RankedSet(FeatureSet):

@@ -13,6 +13,7 @@ Changed
 * CutAdapt adapter trimming functions can now receive an optional "new_filenames" parameter, which allows users to specify the names of the output files.
 * Hierarchical clustergram plot (CountFilter.clustergram) now supports the 'colormap' parameter, which allows users to specify a custom color map for the plot.
 * Hierarchical clustergram plot (CountFilter.clustergram) now displays continuous values on the color bar, instead of discrete values.
+* Previously-added functions (such as ortholog/paralog mapping, biotype summary by GTF file, etc) can now be applied to gene sets. Previously, some of these functions could only be applied to data tables.
 
 Fixed
 *******
