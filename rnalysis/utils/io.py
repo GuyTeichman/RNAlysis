@@ -1103,7 +1103,8 @@ class EnsemblRestClient:
                 if 'Retry-After' in e.request.headers:
                     retry = e.request.headers['Retry-After']
                     await asyncio.sleep(float(retry))
-                    return await self.perform_api_action(req_type, endpoint, hdrs, params)
+                    raise e  # wait the minimum amount of time required by 'retry-after',
+                    # and then trigger tenacity.retry for random exponential to avoid thundering herd
             else:
                 raise e
         return content
