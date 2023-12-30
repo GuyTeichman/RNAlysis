@@ -429,9 +429,14 @@ def test_countfilter_violin_plot_api():
     plt.close('all')
 
 
-def _filter_biotype_from_table_tester(filter_obj, truth_protein_coding, truth_pirna):
-    protein_coding = filter_obj.filter_biotype_from_ref_table(ref=__biotype_ref__, inplace=False)
-    pirna = filter_obj.filter_biotype_from_ref_table('piRNA', ref=__biotype_ref__, inplace=False)
+def _filter_biotype_tester(filter_obj, truth_protein_coding, truth_pirna, from_table: bool = True, **kwargs):
+    if from_table:
+        protein_coding = filter_obj.filter_biotype_from_ref_table(ref=__biotype_ref__, inplace=False, **kwargs)
+        pirna = filter_obj.filter_biotype_from_ref_table('piRNA', ref=__biotype_ref__, inplace=False, **kwargs)
+    else:
+        gtf_path = 'tests/test_files/test_gtf_for_biotypes.gtf'
+        protein_coding = filter_obj.filter_biotype_from_gtf(gtf_path, inplace=False, **kwargs)
+        pirna = filter_obj.filter_biotype_from_gtf(gtf_path, 'piRNA', inplace=False, **kwargs)
     pirna.df.sort_index(inplace=True)
     protein_coding.df.sort_index(inplace=True)
     truth_protein_coding.sort_index(inplace=True)
@@ -444,16 +449,29 @@ def test_htcount_filter_biotype_from_ref_table():
     truth_protein_coding = io.load_table('tests/test_files/counted_biotype_protein_coding.csv', 0)
     truth_pirna = io.load_table('tests/test_files/counted_biotype_piRNA.csv', 0)
     h = CountFilter("tests/test_files/counted_biotype.csv")
-    _filter_biotype_from_table_tester(h, truth_protein_coding=truth_protein_coding, truth_pirna=truth_pirna)
+    _filter_biotype_tester(h, truth_protein_coding=truth_protein_coding, truth_pirna=truth_pirna)
 
 
 def test_htcount_filter_biotype_from_ref_table_opposite():
+    truth_no_pc = io.load_table(r'tests/test_files/counted_biotype_no_protein_coding.csv', 0)
     truth_no_pirna = io.load_table(r'tests/test_files/counted_biotype_no_piRNA.csv', 0)
     h = CountFilter("tests/test_files/counted_biotype.csv")
-    h.filter_biotype_from_ref_table('piRNA', ref=__biotype_ref__, opposite=True, inplace=True)
-    h.df.sort_index(inplace=True)
-    truth_no_pirna.sort_index(inplace=True)
-    assert np.all(h.df == truth_no_pirna)
+    _filter_biotype_tester(h, truth_protein_coding=truth_no_pc, truth_pirna=truth_no_pirna, opposite=True)
+
+
+def test_htcount_filter_biotype_from_gtf():
+    truth_protein_coding = io.load_table('tests/test_files/counted_biotype_protein_coding.csv', 0)
+    truth_pirna = io.load_table('tests/test_files/counted_biotype_piRNA.csv', 0)
+    h = CountFilter("tests/test_files/counted_biotype.csv")
+    _filter_biotype_tester(h, truth_protein_coding=truth_protein_coding, truth_pirna=truth_pirna, from_table=False)
+
+
+def test_htcount_filter_biotype_from_gtf_opposite():
+    truth_no_pc = io.load_table(r'tests/test_files/counted_biotype_no_protein_coding.csv', 0)
+    truth_no_pirna = io.load_table(r'tests/test_files/counted_biotype_no_piRNA.csv', 0)
+    h = CountFilter("tests/test_files/counted_biotype.csv")
+    _filter_biotype_tester(h, truth_protein_coding=truth_no_pc, truth_pirna=truth_no_pirna, from_table=False,
+                           opposite=True)
 
 
 def test_filter_by_attribute():
@@ -861,7 +879,7 @@ def test_deseq_filter_biotype_from_ref_table():
     truth_protein_coding = io.load_table('tests/test_files/test_deseq_biotype_protein_coding.csv', 0)
     truth_pirna = io.load_table('tests/test_files/test_deseq_biotype_piRNA.csv', 0)
     d = DESeqFilter("tests/test_files/test_deseq_biotype.csv")
-    _filter_biotype_from_table_tester(d, truth_protein_coding=truth_protein_coding, truth_pirna=truth_pirna)
+    _filter_biotype_tester(d, truth_protein_coding=truth_protein_coding, truth_pirna=truth_pirna)
 
 
 def test_deseq_filter_biotype_from_ref_table_opposite():
