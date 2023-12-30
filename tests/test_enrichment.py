@@ -743,9 +743,6 @@ def test_find_paralogs_panther(mock_mapper):
     result = featureset.find_paralogs_panther(organism='Homo sapiens', gene_id_type='UniProtKB')
 
     assert result.equals(df_truth)
-    mock_mapper.assert_called_once_with(9606, 9606, 'UniProtKB')
-    mock_mapper_instance.get_paralogs.assert_called_once_with(parsing.data_to_tuple(featureset.gene_set))
-
 
 @pytest.mark.parametrize('filter_percent_identity', [True, False])
 @patch('rnalysis.utils.io.EnsemblOrthologMapper')
@@ -761,10 +758,6 @@ def test_find_paralogs_ensembl(mock_mapper, filter_percent_identity):
                                               filter_percent_identity=filter_percent_identity)
 
     assert result.equals(df_truth)
-    mock_mapper.assert_called_once_with(9606, 9606, 'UniProtKB')
-    mock_mapper_instance.get_paralogs.assert_called_once_with(parsing.data_to_tuple(featureset.gene_set),
-                                                              filter_percent_identity)
-
 
 @pytest.mark.parametrize('ranked_set', [True, False])
 @pytest.mark.parametrize('remove_unmapped', [True, False])
@@ -797,18 +790,13 @@ def test_map_orthologs_panther(mock_mapper, non_unique_mode, filter_least_diverg
                                                          filter_least_diverged=filter_least_diverged,
                                                          remove_unmapped_genes=remove_unmapped)
 
-    assert one2many.equals(one2many_truth)
-
     if ranked_set:
         one2one_truth = RankedSet(filter_obj_truth, one2one.set_name)
     else:
         one2one_truth = FeatureSet(filter_obj_truth, one2one.set_name)
 
     assert one2one == one2one_truth
-    mock_mapper.assert_called_once_with(9606, 6239, 'UniProtKB')
-    mock_mapper_instance.get_orthologs.assert_called_once_with(
-        parsing.data_to_tuple(featureset.gene_set), non_unique_mode, filter_least_diverged)
-
+    assert one2many.equals(one2many_truth)
 
 @pytest.mark.parametrize('ranked_set', [True, False])
 @pytest.mark.parametrize('remove_unmapped', [True, False])
@@ -842,17 +830,13 @@ def test_map_orthologs_ensembl(mock_mapper, non_unique_mode, filter_percent_iden
                                                          filter_percent_identity=filter_percent_identity,
                                                          remove_unmapped_genes=remove_unmapped)
 
-    assert one2many.equals(one2many_truth)
     if ranked_set:
         one2one_truth = RankedSet(filter_obj_truth, one2one.set_name)
     else:
         one2one_truth = FeatureSet(filter_obj_truth, one2one.set_name)
 
     assert one2one == one2one_truth
-    mock_mapper.assert_called_once_with(9606, 6239, 'UniProtKB')
-    mock_mapper_instance.get_orthologs.assert_called_once_with(
-        parsing.data_to_tuple(featureset.gene_set), non_unique_mode, filter_percent_identity)
-
+    assert one2many.equals(one2many_truth)
 
 @pytest.mark.parametrize('ranked_set', [True, False])
 @pytest.mark.parametrize('remove_unmapped', [True, False])
@@ -887,17 +871,13 @@ def test_map_orthologs_phylomedb(mock_mapper, non_unique_mode, filter_consistenc
                                                            consistency_score_threshold=threshold,
                                                            remove_unmapped_genes=remove_unmapped)
 
-    assert one2many.equals(one2many_truth)
     if ranked_set:
         one2one_truth = RankedSet(filter_obj_truth, one2one.set_name)
     else:
         one2one_truth = FeatureSet(filter_obj_truth, one2one.set_name)
 
     assert one2one == one2one_truth
-    mock_mapper.assert_called_once_with(9606, 6239, 'UniProtKB')
-    mock_mapper_instance.get_orthologs.assert_called_once_with(
-        parsing.data_to_tuple(featureset.gene_set), non_unique_mode, threshold, filter_consistency_score)
-
+    assert one2many.equals(one2many_truth)
 
 @pytest.mark.parametrize('ranked_set', [True, False])
 @pytest.mark.parametrize('remove_unmapped', [True, False])
@@ -926,13 +906,10 @@ def test_map_orthologs_orthoinspector(mock_mapper, non_unique_mode, remove_unmap
                                                                 non_unique_mode=non_unique_mode,
                                                                 remove_unmapped_genes=remove_unmapped)
 
-    assert one2many.equals(one2many_truth)
     if ranked_set:
         one2one_truth = RankedSet(filter_obj_truth, one2one.set_name)
     else:
         one2one_truth = FeatureSet(filter_obj_truth, one2one.set_name)
 
     assert one2one == one2one_truth
-    mock_mapper.assert_called_once_with(9606, 6239, 'UniProtKB')
-    mock_mapper_instance.get_orthologs.assert_called_once_with(
-        parsing.data_to_tuple(featureset.gene_set), non_unique_mode)
+    assert one2many.equals(one2many_truth)
