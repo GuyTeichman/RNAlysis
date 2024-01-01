@@ -4257,6 +4257,7 @@ class MainWindow(QtWidgets.QMainWindow):
                                                quit_msg, QtWidgets.QMessageBox.No, QtWidgets.QMessageBox.Yes)
 
         if reply == QtWidgets.QMessageBox.Yes:
+            # quit job and STDOUT listener threads
             try:
                 self.job_thread.quit()
             except AttributeError:
@@ -4265,9 +4266,17 @@ class MainWindow(QtWidgets.QMainWindow):
                 self.thread_stdout_queue_listener.quit()
             except AttributeError:
                 pass
-
+            # clear cache
             io.clear_gui_cache()
-            plt.close('all')
+            # close all figures
+            self.close_figs_action.trigger()
+
+            # close all external windows
+            for window in itertools.chain(self.external_windows, self.enrichment_results):
+                window.close()
+            if self.error_window is not None:
+                self.error_window.close()
+
             event.accept()
         else:
             event.ignore()
