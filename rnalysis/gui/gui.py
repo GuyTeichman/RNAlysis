@@ -1669,7 +1669,7 @@ class SetTabPage(TabPage):
         this_row += 1
 
     def view_full_gene_set(self):
-        set_window = gui_windows.GeneSetView(self.gene_set.gene_set, self.get_tab_name())
+        set_window = gui_windows.GeneSetView(self.gene_set.gene_set, self.get_tab_name(), self)
         self.overview_widgets['full_table_view'] = set_window
         set_window.show()
 
@@ -2112,7 +2112,7 @@ class FilterTabPage(TabPage):
             self.limma_window.show()
 
     def view_full_dataframe(self):
-        df_window = gui_windows.DataFrameView(self.filter_obj.df, self.name)
+        df_window = gui_windows.DataFrameView(self.filter_obj.df, self.name, self)
         self.overview_widgets['full_table_view'] = df_window
         df_window.show()
 
@@ -3977,7 +3977,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 return
 
     def display_enrichment_results(self, result: pd.DataFrame, gene_set_name: str):
-        df_window = gui_windows.DataFrameView(result, f'Enrichment results for set "{gene_set_name}"')
+        df_window = gui_windows.DataFrameView(result, f'Enrichment results for set "{gene_set_name}"', self)
         self.enrichment_results.append(df_window)
         df_window.show()
 
@@ -4323,7 +4323,8 @@ class MainWindow(QtWidgets.QMainWindow):
                 if validation.isinstanceinh(output, filtering.Filter):
                     self.new_tab_from_filter_obj(output, output_id)
                 elif isinstance(output, pd.DataFrame):
-                    self.tabs.currentWidget().object_views.append(gui_windows.DataFrameView(output, source_name))
+                    self.tabs.currentWidget().object_views.append(
+                        gui_windows.DataFrameView(output, source_name, self.tabs.currentWidget()))
                     self.tabs.currentWidget().object_views[-1].show()
 
     @QtCore.pyqtSlot(object, object, object)
