@@ -4269,7 +4269,7 @@ class MainWindow(QtWidgets.QMainWindow):
             # clear cache
             io.clear_gui_cache()
             # close all figures
-            self.close_figs_action.trigger()
+            plt.close("all")
 
             # close all external windows
             for window in itertools.chain(self.external_windows.values(), self.enrichment_results):
