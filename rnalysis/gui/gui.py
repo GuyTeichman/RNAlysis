@@ -1519,7 +1519,7 @@ class TabPage(QtWidgets.QWidget):
         elif isinstance(outputs, pd.DataFrame):
             new_id = JOB_COUNTER.get_id()
             self.itemSpawned.emit(f"'{source_name}'\noutput", new_id, job_id, outputs)
-            self.object_views.append(gui_windows.DataFrameView(outputs, source_name))
+            self.object_views.append(gui_windows.DataFrameView(outputs, source_name, self))
             self.object_views[-1].show()
         elif isinstance(outputs, np.ndarray):
             df = pd.DataFrame(outputs)
