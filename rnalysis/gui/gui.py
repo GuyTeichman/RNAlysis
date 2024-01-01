@@ -4172,38 +4172,43 @@ class MainWindow(QtWidgets.QMainWindow):
                                                                     "RNAlysis session files (*.rnal);;"
                                                                     "All Files (*)")
         if session_filename:
-            items, item_names, item_types, item_properties, pipeline_names, pipeline_files = io.load_gui_session(
-                session_filename)
+            self._load_session_from(session_filename)
 
-            for pipeline_name, pipeline_file in zip(pipeline_names, pipeline_files):
-                self._import_pipeline_from_str(pipeline_name, pipeline_file)
+    def _load_session_from(self, session_filename: Union[str, Path]):
+        items, item_names, item_types, item_properties, item_ids, pipeline_names, pipeline_files = io.load_gui_session(
+            session_filename)
 
-            tab_to_close = None
-            if self.tabs.currentWidget().is_empty():
-                tab_to_close = self.tabs.currentIndex()
+        for pipeline_name, pipeline_file in zip(pipeline_names, pipeline_files):
+            self._import_pipeline_from_str(pipeline_name, pipeline_file)
 
-            for item, item_name, item_type, item_property in zip(items, item_names, item_types, item_properties):
-                tab_id = JOB_COUNTER.get_id()
-                if item_type == 'set':
-                    self.new_tab_from_gene_set(item, tab_id, item_name)
-                else:
-                    try:
-                        cls = getattr(filtering, item_type)
-                    except AttributeError:
-                        raise TypeError(f"Invalid object type in session file: '{item_type}'")
-                    obj = cls.from_dataframe(item, item_name, **item_property)
-                    self.new_tab_from_filter_obj(obj, tab_id)
+        tab_to_close = None
+        if self.tabs.currentWidget().is_empty():
+            tab_to_close = self.tabs.currentIndex()
 
-                QtWidgets.QApplication.processEvents()
+        for item, item_name, item_type, item_property, tab_id in (
+            zip(items, item_names, item_types, item_properties, item_ids)):
+            tab_id = JOB_COUNTER.get_id() if tab_id is None else tab_id
+            if item_type == 'set':
+                self.new_tab_from_gene_set(item, tab_id, item_name)
+            else:
+                try:
+                    cls = getattr(filtering, item_type)
+                except AttributeError:
+                    raise TypeError(f"Invalid object type in session file: '{item_type}'")
+                obj = cls.from_dataframe(item, item_name, **item_property)
+                self.new_tab_from_filter_obj(obj, tab_id)
 
-            if tab_to_close is not None:
-                self.tabs.removeTab(tab_to_close)
+            QtWidgets.QApplication.processEvents()
+
+        if tab_to_close is not None:
+            self.tabs.removeTab(tab_to_close)
 
     def _save_session_to(self, session_filename: Union[str, Path]):
         filenames = []
         item_names = []
         item_types = []
         item_properties = []
+        item_ids = []
         for ind in range(self.tabs.count()):
             tab = self.tabs.widget(ind)
             if not tab.is_empty():
@@ -4214,6 +4219,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 else:
                     item_types.append(tab.obj_type())
                 item_properties.append(tab.obj_properties())
+                item_ids.append(tab.obj_id)
 
         pipeline_names = []
         pipeline_files = []
@@ -4221,8 +4227,8 @@ class MainWindow(QtWidgets.QMainWindow):
             pipeline_files.append(pipeline.export_pipeline(filename=None))
             pipeline_names.append(pipeline_name)
 
-        io.save_gui_session(session_filename, filenames, item_names, item_types, item_properties, pipeline_names,
-                            pipeline_files)
+        io.save_gui_session(session_filename, filenames, item_names, item_types, item_properties, item_ids,
+                            pipeline_names, pipeline_files)
 
     def save_session(self):
         default_name = 'Untitled session.rnal'

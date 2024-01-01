@@ -237,3 +237,6 @@ class ReportGenerator:
                 with open(outfile_path, 'wb') as f:
                     f.write(content)
         webbrowser.open(save_file)
+
+    def pickle(self):
+        pass

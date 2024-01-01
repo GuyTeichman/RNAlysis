@@ -172,7 +172,7 @@ def check_changed_version():  # pragma: no cover
 
 
 def save_gui_session(session_filename: Union[str, Path], file_names: List[str], item_names: List[str], item_types: list,
-                     item_properties: list, pipeline_names: List[str], pipeline_files: List[str]):
+                     item_properties: list, item_ids: list, pipeline_names: List[str], pipeline_files: List[str]):
     session_filename = Path(session_filename)
     session_folder = session_filename
     if session_folder.exists():
@@ -183,7 +183,8 @@ def save_gui_session(session_filename: Union[str, Path], file_names: List[str], 
     session_folder.mkdir(parents=True)
 
     session_data = dict(files=dict(), pipelines=dict(), metadata=dict())
-    for file_name, item_name, item_type, item_property in zip(file_names, item_names, item_types, item_properties):
+    for file_name, item_name, item_type, item_property in (
+        zip(file_names, item_names, item_types, item_properties)):
         shutil.move(Path(get_gui_cache_dir().joinpath(file_name)), session_folder.joinpath(file_name))
         session_data['files'][file_name] = (item_name, item_type.__name__, item_property)
 
@@ -197,10 +198,13 @@ def save_gui_session(session_filename: Union[str, Path], file_names: List[str], 
     session_data['metadata']['n_tabs'] = len(session_data['files'])
     session_data['metadata']['n_pipelines'] = len(session_data['pipelines'])
     session_data['metadata']['tab_order'] = file_names
+    session_data['metadata']['rnalysis_version'] = __version__
+
+    session_data['session_report_data']['item_ids'] = item_ids
 
     with open(session_folder.joinpath('session_data.yaml'), 'w') as f:
         yaml.safe_dump(session_data, f)
-    shutil.make_archive(session_folder.with_suffix(''), 'zip', session_folder)
+    shutil.make_archive(session_folder.with_suffix('').as_posix(), 'zip', session_folder)
     shutil.rmtree(session_folder)
     session_filename.with_suffix('.zip').replace(session_filename.with_suffix('.rnal'))
 
@@ -247,8 +251,13 @@ def load_gui_session(session_filename: Union[str, Path]):
         pipeline_files.append(pipeline_path.read_text())
         pipeline_names.append(session_data['pipelines'][pipeline_filename])
 
+    if 'session_report_data' in session_data:
+        item_ids = session_data['session_report_data']['item_ids']
+    else:
+        item_ids = [None] * len(items)  # support for legacy sessions (or reportless sessions)
+
     shutil.rmtree(session_dir)
-    return items, item_names, item_types, item_properties, pipeline_names, pipeline_files
+    return items, item_names, item_types, item_properties, item_ids, pipeline_names, pipeline_files
 
 
 def load_table(filename: Union[str, Path], index_col: int = None, drop_columns: Union[str, List[str]] = False,
