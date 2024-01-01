@@ -4272,7 +4272,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self.close_figs_action.trigger()
 
             # close all external windows
-            for window in itertools.chain(self.external_windows, self.enrichment_results):
+            for window in itertools.chain(self.external_windows.values(), self.enrichment_results):
                 window.close()
             if self.error_window is not None:
                 self.error_window.close()
