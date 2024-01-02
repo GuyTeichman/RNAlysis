@@ -199,7 +199,7 @@ class GUISessionManager:
         self._write_session_data_to_file(session_data)
         self._archive_session_folder()
 
-    def load_session(self) -> tuple[list[FileData], list[PipelineData], Any]:
+    def load_session(self) -> Tuple[List[FileData], List[PipelineData], Any]:
         self._unpack_session_archive()
         session_dir = self._get_session_dir()
         with open(session_dir.joinpath('session_data.yaml')) as f:
@@ -271,7 +271,7 @@ class GUISessionManager:
         session_dir = get_gui_cache_dir().joinpath(self.session_filename.stem)
         return session_dir
 
-    def _process_session_data(self, session_data: dict) -> tuple[list[FileData], list[PipelineData]]:
+    def _process_session_data(self, session_data: dict) -> Tuple[List[FileData], List[PipelineData]]:
         file_data = []
         pipeline_data = []
 
