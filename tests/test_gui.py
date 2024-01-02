@@ -2713,8 +2713,7 @@ def test_MainWindow_save_session(use_temp_settings_file, main_window, monkeypatc
     session_fname = 'session filename.rnal'
     n_files = main_window.tabs.count()
     n_pipelines = len(main_window.pipelines)
-    item_types_truth = [filtering.FoldChangeFilter, filtering.CountFilter, filtering.Filter, filtering.DESeqFilter,
-                        set]
+    item_types_truth = ['FoldChangeFilter', 'CountFilter', 'Filter', 'DESeqFilter', 'set']
     item_properties_truth = [{'numerator_name': 'a', 'denominator_name': 'b'}, {'is_normalized': False}, {},
                              {'log2fc_col': 'log2FoldChange', 'padj_col': 'padj'}, {}]
     pipeline_names_truth = ['New Pipeline', 'Other Pipeline']
@@ -2722,31 +2721,31 @@ def test_MainWindow_save_session(use_temp_settings_file, main_window, monkeypatc
                             pipeline, p_id in main_window.pipelines.values()]
     func_called = []
 
-    def mock_save_session(session_filename: Union[str, Path], file_names: List[str], item_names: List[str],
-                          item_types: list, item_properties: list, pipeline_names: List[str],
-                          pipeline_files: List[str]):
-        pipeline_files = [re.sub('\d\d:\d\d:\d\d', '$EXPORTTIME', f) for f in pipeline_files]
-
-        assert session_filename == session_fname
-        assert len(file_names) == n_files
-        assert item_types == item_types_truth
-        assert item_properties == item_properties_truth
-
-        assert len(pipeline_names) == n_pipelines
-        assert len(pipeline_files) == n_pipelines
-        assert pipeline_names == pipeline_names_truth
-        assert pipeline_files == pipeline_files_truth
+    def mock_save_session(self, file_data: List[io.FileData], pipeline_data: List[io.PipelineData], report: dict,
+                          report_file_paths: dict):
+        assert len(file_data) == n_files
+        assert [file.item_type for file in file_data] == item_types_truth
+        assert [file.item_property for file in file_data] == item_properties_truth
+        assert len(pipeline_data) == n_pipelines
+        assert [pipeline.name for pipeline in pipeline_data] == pipeline_names_truth
+        assert [re.sub('\d\d:\d\d:\d\d', '$EXPORTTIME', pipeline.content) for pipeline in
+                pipeline_data] == pipeline_files_truth
 
         func_called.append(True)
 
-    monkeypatch.setattr(io, 'save_gui_session', mock_save_session)
+    monkeypatch.setattr(io.GUISessionManager, 'save_session', mock_save_session)
     monkeypatch.setattr(QtWidgets.QFileDialog, 'getSaveFileName', lambda *args, **kwargs: (session_fname, '.rnal'))
 
     main_window.save_session_action.trigger()
     assert func_called == [True]
 
 
-def test_MainWindow_load_session(use_temp_settings_file, main_window, monkeypatch):
+@pytest.mark.parametrize('legacy_session', [True, False])
+def test_MainWindow_load_session(use_temp_settings_file, main_window, monkeypatch, legacy_session):
+    if legacy_session:
+        session_file = 'tests/test_files/test_legacy_session.rnal'
+    else:
+        session_file = 'tests/test_files/test_session.rnal'
     pipelines_truth = {'New Pipeline': filtering.Pipeline('Filter'),
                        'Other Pipeline': filtering.Pipeline('DESeqFilter')}
     pipelines_truth['New Pipeline'].add_function('filter_top_n', by='log2FoldChange', n=99, ascending=True,
@@ -2771,7 +2770,7 @@ def test_MainWindow_load_session(use_temp_settings_file, main_window, monkeypatc
     objs_truth[3].fname = Path('test_deseq')
 
     monkeypatch.setattr(QtWidgets.QFileDialog, 'getOpenFileName',
-                        lambda *args, **kwargs: ('tests/test_files/test_session.rnal', '.rnal'))
+                        lambda *args, **kwargs: (session_file, '.rnal'))
     main_window.load_session_action.trigger()
     assert main_window.tabs.count() == 5
     assert len(main_window.pipelines) == 2

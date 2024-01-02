@@ -7,6 +7,7 @@ History
 Added
 *******
 * *RNAlysis* can now run functions from the Picardtools suite, including conversion functions (BAM to SAM, SAM to FASTQ, FASTQ to SAM, etc), quality control (validate SAM), and post-processing functions (remove PCR duplicates, sort SAM, create BAM index).
+* *RNAlysis* interactive session reports can now be resumed from any saved session, instead of having to start a new report from scratch. When loading a session created by *RNAlysis* 3.11 and beyond, you will have the option to resume the interactive report from the last saved state.
 
 Changed
 ********

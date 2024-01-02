@@ -1,4 +1,5 @@
 import itertools
+import json
 import re
 import shutil
 import typing
@@ -29,6 +30,32 @@ class Node:
         self._filename = None if filename is None else Path(filename)
         if node_type in self.DATA_TYPES:
             self._node_name += f' (#{node_id})'
+
+    def to_json(self):
+        # Convert the Node object to a JSON-compatible dictionary
+        data = {
+            "node_id": self.node_id,
+            "node_name": self.node_name,
+            "predecessors": parsing.data_to_list(self.predecessors),
+            "popup_element": self.popup_element,
+            "node_type": self.node_type,
+            "filename": str(self.filename) if self.filename else None
+        }
+        return json.dumps(data)
+
+    @classmethod
+    def from_json(cls, json_str):
+        # Convert the JSON string back to a dictionary
+        data = json.loads(json_str)
+        # Create a new Node object using the dictionary
+        return cls(
+            node_id=data["node_id"],
+            node_name=data["node_name"],
+            predecessors=parsing.data_to_set(data["predecessors"]),
+            popup_element=data["popup_element"],
+            node_type=data["node_type"],
+            filename=Path(data["filename"]) if data["filename"] else None
+        )
 
     @property
     def node_id(self) -> int:
@@ -64,8 +91,12 @@ class Node:
     def add_predecessor(self, pred: int):
         self._predecessors.add(pred)
 
+    def update_filename(self, filename: typing.Union[None, Path]):
+        self._filename = filename
+
 
 class ReportGenerator:
+    __slots__ = ('graph', 'nodes')
     CSS_TEMPLATE_PATHS = [Path(__file__).parent.parent.joinpath('data_files/report_templates/vis-network.min.css'),
                           Path(__file__).parent.parent.joinpath('data_files/report_templates/bootstrap.min.css')]
     JS_TEMPLATE_PATHS = [Path(__file__).parent.parent.joinpath('data_files/report_templates/vis-network.min.js'),
@@ -238,5 +269,17 @@ class ReportGenerator:
                     f.write(content)
         webbrowser.open(save_file)
 
-    def pickle(self):
-        pass
+    def serialize(self):
+        data = {}
+        data['graph'] = networkx.node_link_data(self.graph)
+        data['nodes'] = {ind: node.to_json() for ind, node in self.nodes.items()}
+        current_file_paths = {ind: node.filename for ind, node in self.nodes.items() if node.filename is not None}
+        current_file_paths.pop(0)  # do not reference session file to avoid infinite recursion
+        return data, current_file_paths
+
+    @classmethod
+    def deserialize(cls, data: dict):
+        obj = cls.__new__(cls)
+        obj.graph = networkx.node_link_graph(data['graph'])
+        obj.nodes = {ind: Node.from_json(node_json) for ind, node_json in data['nodes'].items()}
+        return obj

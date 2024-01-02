@@ -24,7 +24,7 @@ from io import StringIO
 from itertools import chain
 from pathlib import Path
 from sys import executable
-from typing import List, Set, Union, Iterable, Tuple, Dict, Any, Callable, Literal
+from typing import List, Set, Union, Iterable, Tuple, Dict, Any, Callable, Literal, NamedTuple
 from urllib.parse import urlparse, parse_qs, urlencode
 
 import aiohttp
@@ -171,8 +171,146 @@ def check_changed_version():  # pragma: no cover
     return ver != current_ver
 
 
+class FileData(NamedTuple):
+    filename: str
+    item_name: str
+    item_type: str
+    item_property: dict
+    item_id: int = None
+    obj: Union[set, pd.DataFrame] = None
+
+
+class PipelineData(NamedTuple):
+    name: str
+    content: str
+
+
+class GUISessionManager:
+    def __init__(self, session_filename: Union[str, Path]):
+        self.session_filename = Path(session_filename)
+
+    def save_session(self, file_data: List[FileData], pipeline_data: List[PipelineData],
+                     report: dict, report_file_paths: Dict[str, Path]):
+        self._prepare_session_folder()
+        self._save_report_files_to_session(report_file_paths)
+        session_data = self._create_session_data(file_data, pipeline_data, report, report_file_paths)
+        self._save_files_to_session(file_data)
+        self._save_pipelines_to_session(pipeline_data, session_data)
+        self._write_session_data_to_file(session_data)
+        self._archive_session_folder()
+
+    def load_session(self) -> tuple[list[FileData], list[PipelineData], Any]:
+        self._unpack_session_archive()
+        session_dir = self._get_session_dir()
+        with open(session_dir.joinpath('session_data.yaml')) as f:
+            session_data = yaml.safe_load(f)
+
+        file_data, pipeline_data = self._process_session_data(session_data)
+        shutil.rmtree(session_dir)
+        return file_data, pipeline_data, session_data.get('session_report_data', {'report': None})[
+            'report']
+
+    def _prepare_session_folder(self):
+        if self.session_filename.exists():
+            shutil.rmtree(self.session_filename) if self.session_filename.is_dir() else self.session_filename.unlink()
+        self.session_filename.mkdir(parents=True)
+
+    def _create_session_data(self, file_data: List[FileData], pipeline_data: List[PipelineData], report: dict,
+                             report_item_paths: dict) -> dict:
+        return {
+            'files': {file.filename: (file.item_name, file.item_type, file.item_property) for file in file_data},
+            'pipelines': {},
+            'metadata': self._create_metadata(len(file_data), len(pipeline_data),
+                                              [file.filename for file in file_data]),
+            'session_report_data': {'report': report,
+                                    'item_paths': {k: v.as_posix() for k, v in report_item_paths.items()}}}
+
+    def _create_metadata(self, n_files: int, n_pipelines: int, file_names: List[str]) -> dict:
+        return {
+            'creation_time': get_datetime(),
+            'name': self.session_filename.stem,
+            'n_tabs': n_files,
+            'n_pipelines': n_pipelines,
+            'tab_order': file_names,
+            'rnalysis_version': __version__
+        }
+
+    def _save_files_to_session(self, file_data: List[FileData]):
+        for file in file_data:
+            shutil.move(Path(get_gui_cache_dir().joinpath(file.filename)),
+                        self.session_filename.joinpath(file.filename))
+
+    def _save_report_files_to_session(self, report_file_paths: Dict[str, Path]) -> Dict[str, Path]:
+        cache_dir = get_gui_cache_dir()
+        for item_id, file_path in report_file_paths.items():
+            shutil.copy(cache_dir.joinpath(file_path), self.session_filename.joinpath(file_path))
+
+    def _save_pipelines_to_session(self, pipeline_data: List[PipelineData], session_data: dict):
+        for i, pipeline in enumerate(pipeline_data):
+            pipeline_filename = self.session_filename.joinpath(f"pipeline_{i}.yaml")
+            Path(pipeline_filename).write_text(pipeline.content)
+            session_data['pipelines'][pipeline_filename.name] = pipeline.name
+
+    def _write_session_data_to_file(self, session_data: dict):
+        with open(self.session_filename.joinpath('session_data.yaml'), 'w') as f:
+            yaml.safe_dump(session_data, f)
+
+    def _archive_session_folder(self):
+        shutil.make_archive(self.session_filename.with_suffix('').as_posix(), 'zip', self.session_filename)
+        shutil.rmtree(self.session_filename)
+        self.session_filename.with_suffix('.zip').replace(self.session_filename.with_suffix('.rnal'))
+
+    def _unpack_session_archive(self):
+        try:
+            self.session_filename.with_suffix('.rnal').rename(self.session_filename.with_suffix('.rnal.zip'))
+            shutil.unpack_archive(self.session_filename.with_suffix('.rnal.zip'), self._get_session_dir())
+        finally:
+            self.session_filename.with_suffix('.rnal.zip').rename(self.session_filename.with_suffix('.rnal'))
+
+    def _get_session_dir(self) -> Path:
+        session_dir = get_gui_cache_dir().joinpath(self.session_filename.stem)
+        return session_dir
+
+    def _process_session_data(self, session_data: dict) -> tuple[list[FileData], list[PipelineData]]:
+        file_data = []
+        pipeline_data = []
+
+        session_dir = self._get_session_dir()
+        filenames = session_data['metadata'].get('tab_order', list(session_data['files'].keys()))
+        for file_name in filenames:
+            file_path = session_dir.joinpath(file_name)
+            assert file_path.exists() and file_path.is_file()
+            if len(session_data['files'][file_name]) == 3:  # support for legacy session files
+                item_name, item_type, item_property = session_data['files'][file_name]
+                item_id = None
+            else:
+                item_name, item_type, item_property, item_id = session_data['files'][file_name]
+
+            obj = load_cached_gui_file(session_dir.joinpath(file_name))
+
+            file_data.append(FileData(filename=file_name,
+                                      item_name=item_name,
+                                      item_type=item_type,
+                                      item_property=item_property,
+                                      item_id=item_id,
+                                      obj=obj))
+
+        for pipeline_filename, pipeline_name in session_data['pipelines'].items():
+            pipeline_path = session_dir.joinpath(pipeline_filename)
+            assert pipeline_path.exists() and pipeline_path.is_file()
+            pipeline_data.append(PipelineData(name=pipeline_name, content=pipeline_path.read_text()))
+        # handle report files, if any by copying them to the cache directory
+        cache_dir = get_gui_cache_dir()
+        for item_id, file_path in session_data.get('session_report_data', {'item_paths': {}})['item_paths'].items():
+            new_pth = cache_dir.joinpath(file_path)
+            shutil.copy(session_dir.joinpath(file_path), new_pth)
+
+        return file_data, pipeline_data
+
+
 def save_gui_session(session_filename: Union[str, Path], file_names: List[str], item_names: List[str], item_types: list,
-                     item_properties: list, item_ids: list, pipeline_names: List[str], pipeline_files: List[str]):
+                     item_properties: list, item_ids: list, pipeline_names: List[str], pipeline_files: List[str],
+                     report: dict):
     session_filename = Path(session_filename)
     session_folder = session_filename
     if session_folder.exists():
@@ -201,6 +339,7 @@ def save_gui_session(session_filename: Union[str, Path], file_names: List[str], 
     session_data['metadata']['rnalysis_version'] = __version__
 
     session_data['session_report_data']['item_ids'] = item_ids
+    session_data['session_report_data']['report'] = report
 
     with open(session_folder.joinpath('session_data.yaml'), 'w') as f:
         yaml.safe_dump(session_data, f)
@@ -253,11 +392,13 @@ def load_gui_session(session_filename: Union[str, Path]):
 
     if 'session_report_data' in session_data:
         item_ids = session_data['session_report_data']['item_ids']
-    else:
-        item_ids = [None] * len(items)  # support for legacy sessions (or reportless sessions)
+        report = session_data['session_report_data']['report']
+    else:  # support for legacy sessions (or reportless sessions)
+        item_ids = [None] * len(items)
+        report = None
 
     shutil.rmtree(session_dir)
-    return items, item_names, item_types, item_properties, item_ids, pipeline_names, pipeline_files
+    return items, item_names, item_types, item_properties, item_ids, pipeline_names, pipeline_files, report
 
 
 def load_table(filename: Union[str, Path], index_col: int = None, drop_columns: Union[str, List[str]] = False,

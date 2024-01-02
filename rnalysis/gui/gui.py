@@ -3012,6 +3012,14 @@ class MainWindow(QtWidgets.QMainWindow):
         if settings.get_show_tutorial_settings():
             self.quickstart_window.show()
 
+    def _reset_reporting(self):
+        JOB_COUNTER.set_total(0)
+        if not self._generate_report:
+            self.report = None
+        else:
+            from rnalysis.gui import gui_report
+            self.report = gui_report.ReportGenerator()
+
     @QtCore.pyqtSlot(bool)
     def _toggle_reporting(self, state: bool):
         if state:
@@ -4164,6 +4172,8 @@ class MainWindow(QtWidgets.QMainWindow):
             self.pipelines = OrderedDict()
             self.clear_history(confirm_action=False)
             self._change_undo_stack(0)
+            self._reset_reporting()
+
         return response == QtWidgets.QMessageBox.Yes
 
     def load_session(self):
@@ -4175,27 +4185,39 @@ class MainWindow(QtWidgets.QMainWindow):
             self._load_session_from(session_filename)
 
     def _load_session_from(self, session_filename: Union[str, Path]):
-        items, item_names, item_types, item_properties, item_ids, pipeline_names, pipeline_files = io.load_gui_session(
-            session_filename)
+        session_manager = io.GUISessionManager(session_filename)
+        file_data, pipeline_data, report_data = session_manager.load_session()
 
-        for pipeline_name, pipeline_file in zip(pipeline_names, pipeline_files):
-            self._import_pipeline_from_str(pipeline_name, pipeline_file)
+        if report_data is None:
+            load_report = False
+        else:
+            load_report = QtWidgets.QMessageBox.question(self, 'Resume previous session report?',
+                                                         'Do you want to resume the previous session report?\n'
+                                                         'This will clear the current session and replace it. ',
+                                                         defaultButton=QtWidgets.QMessageBox.Yes) == QtWidgets.QMessageBox.Yes
+        if load_report:
+            self.clear_session(confirm_action=False)
+            self._toggle_reporting(True)
+
+        for pipeline in pipeline_data:
+            self._import_pipeline_from_str(pipeline.name, pipeline.content)
 
         tab_to_close = None
         if self.tabs.currentWidget().is_empty():
             tab_to_close = self.tabs.currentIndex()
 
-        for item, item_name, item_type, item_property, tab_id in (
-            zip(items, item_names, item_types, item_properties, item_ids)):
-            tab_id = JOB_COUNTER.get_id() if tab_id is None else tab_id
-            if item_type == 'set':
-                self.new_tab_from_gene_set(item, tab_id, item_name)
+        for this_file_data in file_data:
+            obj = this_file_data.obj
+            tab_id = JOB_COUNTER.get_id() if (this_file_data.item_id is None) or (not load_report) else this_file_data.item_id
+
+            if isinstance(obj, set):
+                self.new_tab_from_gene_set(obj, tab_id, this_file_data.item_name)
             else:
                 try:
-                    cls = getattr(filtering, item_type)
+                    cls = getattr(filtering, this_file_data.item_type)
                 except AttributeError:
-                    raise TypeError(f"Invalid object type in session file: '{item_type}'")
-                obj = cls.from_dataframe(item, item_name, **item_property)
+                    raise TypeError(f"Invalid object type in session file: '{this_file_data.item_type}'")
+                obj = cls.from_dataframe(obj, this_file_data.item_name, **this_file_data.item_property)
                 self.new_tab_from_filter_obj(obj, tab_id)
 
             QtWidgets.QApplication.processEvents()
@@ -4203,32 +4225,41 @@ class MainWindow(QtWidgets.QMainWindow):
         if tab_to_close is not None:
             self.tabs.removeTab(tab_to_close)
 
+        if load_report:
+            from rnalysis.gui import gui_report
+            self.report = gui_report.ReportGenerator.deserialize(report_data)
+            JOB_COUNTER.set_total(max(self.report.nodes.keys()))
+
+
     def _save_session_to(self, session_filename: Union[str, Path]):
-        filenames = []
-        item_names = []
-        item_types = []
-        item_properties = []
-        item_ids = []
+        file_data = []
+        pipeline_data = []
+
         for ind in range(self.tabs.count()):
             tab = self.tabs.widget(ind)
             if not tab.is_empty():
-                filenames.append(tab.cache())
-                item_names.append(self.tabs.tabText(ind).rstrip('*'))
-                if isinstance(tab, SetTabPage):
-                    item_types.append(set)
-                else:
-                    item_types.append(tab.obj_type())
-                item_properties.append(tab.obj_properties())
-                item_ids.append(tab.obj_id)
+                filename = tab.cache()
+                item_name = self.tabs.tabText(ind).rstrip('*')
+                item_type = set if isinstance(tab, SetTabPage) else tab.obj_type()
+                item_property = tab.obj_properties()
+                item_id = tab.tab_id
+                file_data.append(
+                    io.FileData(filename=filename, item_name=item_name, item_type=item_type.__name__,
+                                item_property=item_property, item_id=item_id))
 
-        pipeline_names = []
-        pipeline_files = []
-        for pipeline_name, (pipeline, pipeline_id) in self.pipelines.items():
-            pipeline_files.append(pipeline.export_pipeline(filename=None))
-            pipeline_names.append(pipeline_name)
+        for pipeline_name, (pipeline, _) in self.pipelines.items():
+            pipeline_content = pipeline.export_pipeline(filename=None)
+            pipeline_data.append(io.PipelineData(name=pipeline_name, content=pipeline_content))
 
-        io.save_gui_session(session_filename, filenames, item_names, item_types, item_properties, item_ids,
-                            pipeline_names, pipeline_files)
+        if self._generate_report:
+            report, report_file_paths = self.report.serialize()
+
+        else:
+            report = None
+            report_file_paths = {}
+
+        session_manager = io.GUISessionManager(session_filename)
+        session_manager.save_session(file_data, pipeline_data, report, report_file_paths)
 
     def save_session(self):
         default_name = 'Untitled session.rnal'

@@ -327,6 +327,10 @@ class JobCounter(QtCore.QObject):
         with self.lock:
             return self._count
 
+    def set_total(self, total: int):
+        with self.lock:
+            self._count = total
+
 
 class WorkerOutput:
     __slots__ = {'partial': 'partial function executed in the Worker',
