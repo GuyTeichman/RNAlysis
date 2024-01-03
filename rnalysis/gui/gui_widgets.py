@@ -481,9 +481,10 @@ def create_colormap_pixmap(map_name: str):
 
     return pixmap
 
-
+def init_color_map_pixmap_cache():
+    for map_name in plt.colormaps():
+        create_colormap_pixmap(map_name)
 class ColorMapComboBox(QtWidgets.QComboBox):
-    pixmaps = {map_name: create_colormap_pixmap(map_name) for map_name in plt.colormaps()}
 
     def __init__(self, default_choice: str, parent=None):
         super(ColorMapComboBox, self).__init__(parent)
@@ -492,8 +493,8 @@ class ColorMapComboBox(QtWidgets.QComboBox):
         self.setCurrentText(default_choice)
 
     def populate_color_maps(self):
-        for map_name, pixmap in self.pixmaps.items():
-            self.addItem(QtGui.QIcon(pixmap), map_name)
+        for map_name in plt.colormaps():
+            self.addItem(QtGui.QIcon(create_colormap_pixmap(map_name)), map_name)
 
 
 class TextWithCopyButton(QtWidgets.QWidget):

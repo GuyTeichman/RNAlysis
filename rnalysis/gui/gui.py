@@ -4565,6 +4565,8 @@ async def run():  # pragma: no cover
         base_message = f"<i>RNAlysis</i> version {__version__}:\t"
         splash.showMessage(base_message + 'loading dependencies', QtCore.Qt.AlignBottom | QtCore.Qt.AlignHCenter)
 
+        gui_widgets.init_color_map_pixmap_cache()
+
         if io.check_changed_version():
             video_files = gui_quickstart.QuickStartWizard.VIDEO_FILES
             splash.showMessage(base_message + 'validating tutorial videos',
