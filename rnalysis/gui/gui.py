@@ -1891,7 +1891,7 @@ class FilterTabPage(TabPage):
     GENERAL_FUNCS = {'sort', 'sort_by_principal_component', 'transform', 'translate_gene_ids',
                      'differential_expression_deseq2', 'fold_change', 'average_replicate_samples', 'drop_columns',
                      'differential_expression_limma_voom', 'map_orthologs_phylomedb', 'map_orthologs_orthoinspector',
-                     'map_orthologs_ensembl', 'map_orthologs_panther', 'find_paralogs_panther'}
+                     'map_orthologs_ensembl', 'map_orthologs_panther', 'find_paralogs_panther', 'find_paralogs_ensembl'}
     THREADED_FUNCS = {'translate_gene_ids', 'differential_expression_deseq2', 'filter_by_kegg_annotations',
                       'filter_by_go_annotations', 'differential_expression_limma_voom', 'map_orthologs_phylomedb',
                       'map_orthologs_orthoinspector',
@@ -4208,7 +4208,8 @@ class MainWindow(QtWidgets.QMainWindow):
 
         for this_file_data in file_data:
             obj = this_file_data.obj
-            tab_id = JOB_COUNTER.get_id() if (this_file_data.item_id is None) or (not load_report) else this_file_data.item_id
+            tab_id = JOB_COUNTER.get_id() if (this_file_data.item_id is None) or (
+                not load_report) else this_file_data.item_id
 
             if isinstance(obj, set):
                 self.new_tab_from_gene_set(obj, tab_id, this_file_data.item_name)
@@ -4229,7 +4230,6 @@ class MainWindow(QtWidgets.QMainWindow):
             from rnalysis.gui import gui_report
             self.report = gui_report.ReportGenerator.deserialize(report_data)
             JOB_COUNTER.set_total(max(self.report.nodes.keys()))
-
 
     def _save_session_to(self, session_filename: Union[str, Path]):
         file_data = []
