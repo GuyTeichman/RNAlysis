@@ -4716,6 +4716,16 @@ class CountFilter(Filter):
             clustergram = sns.clustermap(np.log2(self.df[sample_names] + 1), method=linkage, metric=metric,
                                          cmap=sns.color_palette(colormap, as_cmap=True), yticklabels=False,
                                          cbar_kws=dict(label=colormap_label))
+
+        # set colored borders for colorbar and heatmap
+        cbar = clustergram.ax_cbar.get_children()[-1]
+        cbar.set_edgecolor('black')
+        cbar.set_linewidth(2)
+        clustergram.ax_cbar.yaxis.set_label_position('left')
+        grid = clustergram.ax_heatmap.get_children()[-1]
+        grid.set_edgecolor('black')
+        grid.set_linewidth(2)
+
         if title == 'auto':
             title = f"Clustegram of {self.fname.stem}"
         clustergram.figure.suptitle(title, fontsize=title_fontsize)
