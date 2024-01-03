@@ -574,7 +574,7 @@ def validate_sam(input_folder: Union[str, Path], output_folder: Union[str, Path]
         this_call = base_call.copy()
 
         this_call.append(f"INPUT={sam_file.as_posix()}")
-        this_call.append(f"FASTQ={output_folder.joinpath(f'{sam_file.stem}_report.txt').as_posix()}")
+        this_call.append(f"OUTPUT={output_folder.joinpath(f'{sam_file.stem}_report.txt').as_posix()}")
         calls.append(this_call)
 
     _run_picard_calls(calls, script_name, output_folder)
@@ -621,7 +621,6 @@ def sort_sam(input_folder: Union[str, Path], output_folder: Union[str, Path],
         base_call.append("SORT_ORDER=duplicate")
     else:
         raise ValueError(f"Sort order '{sort_order}' is not supported by Picard.")
-
     legal_samples = _get_legal_samples(input_folder, 'alignment')
     assert (new_sample_names == 'auto') or (len(new_sample_names) == len(legal_samples)), \
         f'Number of samples ({len(legal_samples)}) does not match number of sample names ({len(new_sample_names)})!'
@@ -634,12 +633,13 @@ def sort_sam(input_folder: Union[str, Path], output_folder: Union[str, Path],
         else:
             this_name = new_sample_names[i]
         this_call.append(f"INPUT={sam_file.as_posix()}")
-        this_call.append(f"OUTPUT={output_folder.joinpath(f'{this_name}.{sam_file.suffix}').as_posix()}")
+        this_call.append(f"OUTPUT={output_folder.joinpath(f'{this_name}{sam_file.suffix}').as_posix()}")
         calls.append(this_call)
 
     _run_picard_calls(calls, script_name, output_folder)
 
 
+@_func_type('both')
 @readable_name('Find PCR/optical duplicates in SAM/BAM files')
 def find_duplicates(input_folder: Union[str, Path], output_folder: Union[str, Path],
                     picard_installation_folder: Union[str, Path, Literal['auto']] = 'auto',

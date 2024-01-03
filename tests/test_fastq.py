@@ -814,3 +814,74 @@ def test_PairedEndPipeline_apply_to():
                                    truth_dir.joinpath('03_featurecounts_paired_end'))
     finally:
         unlink_tree(out_dir)
+
+
+class TestPicardFunctions:
+    SINGLE_PATH = 'tests/test_files/picard_tests/single'
+    PAIRED_PATH = 'tests/test_files/picard_tests/paired'
+
+    @pytest.fixture(autouse=True)
+    def picard_mock_commands(self, monkeypatch):
+        def mock_generate_picard_basecall(command: str, picard_installation_folder):
+            return ['picard', command]
+
+        monkeypatch.setattr(fastq, '_generate_picard_basecall', mock_generate_picard_basecall)
+
+    @pytest.mark.parametrize('input_folder,output_folder,expected_command', [
+        (SINGLE_PATH, SINGLE_PATH, ['picard', 'BuildBamIndex', 'INPUT=tests/test_files/picard_tests/single/bamfile.bam',
+                                    'OUTPUT=tests/test_files/picard_tests/single/bamfile.bai']),
+        (PAIRED_PATH, PAIRED_PATH, ['picard', 'BuildBamIndex', 'INPUT=tests/test_files/picard_tests/paired/bamfile.bam',
+                                    'OUTPUT=tests/test_files/picard_tests/paired/bamfile.bai'])
+    ])
+    def test_picard_create_bam_index_command(self, monkeypatch, input_folder, output_folder,
+                                             expected_command):
+        def mock_run_picard_calls(calls, script_name, outdir):
+            assert len(calls) == 1
+            assert script_name == 'BuildBamIndex'
+            assert output_folder == outdir.as_posix()
+            assert calls[0] == expected_command
+
+        monkeypatch.setattr(fastq, '_run_picard_calls', mock_run_picard_calls)
+
+        create_bam_index(input_folder, output_folder)
+
+    @pytest.mark.parametrize('input_folder,output_folder,new_sample_names,sort_order,expected_command', [
+        (SINGLE_PATH, SINGLE_PATH, ['sample1'], 'coordinate',
+         ['picard', 'SortSam', 'SORT_ORDER=coordinate', 'INPUT=tests/test_files/picard_tests/single/bamfile.bam',
+          'OUTPUT=tests/test_files/picard_tests/single/sample1.bam']),
+        (PAIRED_PATH, PAIRED_PATH, 'auto', 'queryname',
+         ['picard', 'SortSam', 'SORT_ORDER=queryname', 'INPUT=tests/test_files/picard_tests/paired/bamfile.bam',
+          'OUTPUT=tests/test_files/picard_tests/paired/bamfile_sorted.bam'])
+    ])
+    def test_sort_sam_command(self, input_folder, output_folder, new_sample_names, sort_order, expected_command,
+                              monkeypatch):
+        def mock_run_picard_calls(calls, script_name, outdir):
+            assert len(calls) == 1, f"invalid number of calls: {calls}"
+            assert script_name == 'SortSam'
+            assert output_folder == outdir.as_posix()
+            assert calls[0] == expected_command
+
+        monkeypatch.setattr(fastq, '_run_picard_calls', mock_run_picard_calls)
+        sort_sam(input_folder, output_folder, 'auto', new_sample_names, sort_order)
+
+    @pytest.mark.parametrize('input_folder,output_folder,verbose,is_bisulfite,expected_command', [
+        (SINGLE_PATH, SINGLE_PATH, True, False, ['picard', 'ValidateSamFile', 'MODE=VERBOSE',
+                                                 'IS_BISULFITE_SEQUENCED=false',
+                                                 'INPUT=tests/test_files/picard_tests/single/bamfile.bam',
+                                                 'OUTPUT=tests/test_files/picard_tests/single/bamfile_report.txt']),
+        (PAIRED_PATH, PAIRED_PATH, False, True, ['picard', 'ValidateSamFile', 'MODE=SUMMARY',
+                                                 'IS_BISULFITE_SEQUENCED=true',
+                                                 'INPUT=tests/test_files/picard_tests/paired/bamfile.bam',
+                                                 'OUTPUT=tests/test_files/picard_tests/paired/bamfile_report.txt'])
+    ])
+    def test_validate_sam_command(self, input_folder, output_folder, verbose, is_bisulfite, expected_command,
+                                  monkeypatch):
+        def mock_run_picard_calls(calls, script_name, outdir):
+            assert len(calls) == 1
+            assert script_name == 'ValidateSamFile'
+            assert output_folder == outdir.as_posix()
+            assert calls[0] == expected_command
+
+        monkeypatch.setattr(fastq, '_run_picard_calls', mock_run_picard_calls)
+
+        validate_sam(input_folder, output_folder, 'auto', verbose, is_bisulfite)
