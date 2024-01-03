@@ -248,8 +248,6 @@ def test_HelpButton_param_help(qtbot, monkeypatch):
 def test_HelpButton_desc_help(qtbot, monkeypatch):
     desc = 'mydesc'
 
-
-
     qtbot, widget = widget_setup(qtbot, HelpButton)
     widget.set_desc_help(desc)
 
@@ -1359,3 +1357,43 @@ def test_export_selection(column_picker, tmp_path, monkeypatch, selected_columns
     finally:
         if Path(file_name).exists():
             Path(file_name).unlink()
+
+
+class TestCreateColormapPixmap:
+    @pytest.mark.parametrize("map_name", plt.colormaps())
+    def test_create_colormap_pixmap_valid(self, map_name, qtbot):
+        pixmap = create_colormap_pixmap(map_name)
+        assert isinstance(pixmap, QtGui.QPixmap)
+        assert not pixmap.isNull()
+
+    def test_create_colormap_pixmap_invalid(self):
+        with pytest.raises(ValueError):
+            create_colormap_pixmap("invalid_colormap_name")
+
+    # Additional tests can be added for cache behavior, image content, etc.
+
+
+def test_init_color_map_pixmap_cache(self, qtbot):
+    init_color_map_pixmap_cache()
+
+
+class TestColorMapComboBox:
+    @pytest.fixture
+    def combo_box(self, qtbot):
+        qtbot, widget = widget_setup(qtbot, ColorMapComboBox, "viridis")
+        return widget
+
+    def test_initialization(self, combo_box):
+        assert combo_box.currentText() == "viridis", "Default choice is not selected correctly"
+
+    def test_populate_color_maps(self, combo_box):
+        assert combo_box.count() == len(plt.colormaps()), "Not all colormaps are populated in the combo box"
+
+    def test_color_map_combobox_items(self, combo_box):
+        # Test if items in combobox are correctly set
+        for i in range(combo_box.count()):
+            item = combo_box.itemText(i)
+            assert item in plt.colormaps()
+
+            icon = combo_box.itemIcon(i)
+            assert not icon.isNull()

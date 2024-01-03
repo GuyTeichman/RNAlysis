@@ -481,9 +481,12 @@ def create_colormap_pixmap(map_name: str):
 
     return pixmap
 
+
 def init_color_map_pixmap_cache():
     for map_name in plt.colormaps():
         create_colormap_pixmap(map_name)
+
+
 class ColorMapComboBox(QtWidgets.QComboBox):
 
     def __init__(self, default_choice: str, parent=None):
