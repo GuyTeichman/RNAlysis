@@ -50,6 +50,18 @@ def readable_name(name: str):
     return decorator
 
 
+class TemporaryMatplotlibBackend:
+    def __init__(self, backend):
+        self.backend = backend
+        self.original_backend = matplotlib.get_backend()
+
+    def __enter__(self):
+        matplotlib.use(self.backend, force=True)
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        matplotlib.use(self.original_backend, force=True)
+
+
 class ProgressParallel(joblib.Parallel):
     # tqdm progress bar for parallel tasks based on:
     # https://stackoverflow.com/questions/37804279/how-can-we-use-tqdm-in-a-parallel-execution-with-joblib/50925708

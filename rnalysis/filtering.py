@@ -4667,7 +4667,7 @@ class CountFilter(Filter):
                     metric: str = 'Euclidean',
                     linkage: Literal['Single', 'Average', 'Complete', 'Ward', 'Weighted', 'Centroid', 'Median'
                     ] = 'Average', title: Union[str, Literal['auto']] = 'auto', title_fontsize: float = 20,
-                    tick_fontsize: float = 12, colormap: str = 'RdBu_r',
+                    tick_fontsize: float = 12, colormap: ColorMap = 'inferno',
                     colormap_label: str = r"$\log_2$(Normalized reads + 1)") -> plt.Figure:
         """
         Performs hierarchical clustering and plots a clustergram on the base-2 log of a given set of samples.

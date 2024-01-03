@@ -4,11 +4,14 @@ import functools
 import inspect
 import json
 import threading
+from functools import lru_cache
 from pathlib import Path
 from queue import Queue
 from typing import List, Dict, Tuple, Sequence, Iterable, Union, Callable, Literal
 
 import matplotlib
+import matplotlib.pyplot as plt
+import numpy as np
 import pandas as pd
 from PyQt5 import QtCore, QtWidgets, QtGui
 from joblib import Parallel, parallel_backend
@@ -458,6 +461,39 @@ class AltParallel(QtCore.QObject):
             self.prev_report = self.parallel.n_completed_tasks
             if self.prev_report == self.total:
                 self.barFinished.emit()
+
+
+@lru_cache(maxsize=256)
+def create_colormap_pixmap(map_name: str):
+    with generic.TemporaryMatplotlibBackend('Agg'):
+        fig, ax = plt.subplots(figsize=(1, 0.1), dpi=100)
+        colormap_array = np.outer(np.ones(10), np.arange(100))
+        ax.imshow(colormap_array, cmap=map_name)
+        ax.axis('off')
+        plt.subplots_adjust(left=0, right=1, top=1, bottom=0)
+
+        fig.canvas.draw()
+        data = np.frombuffer(fig.canvas.tostring_rgb(), dtype=np.uint8)
+        data = data.reshape(fig.canvas.get_width_height()[::-1] + (3,))
+        image = QtGui.QImage(data, data.shape[1], data.shape[0], QtGui.QImage.Format_RGB888)
+        pixmap = QtGui.QPixmap.fromImage(image)
+        plt.close(fig)
+
+    return pixmap
+
+
+class ColorMapComboBox(QtWidgets.QComboBox):
+    pixmaps = {map_name: create_colormap_pixmap(map_name) for map_name in plt.colormaps()}
+
+    def __init__(self, default_choice: str, parent=None):
+        super(ColorMapComboBox, self).__init__(parent)
+        self.setIconSize(QtCore.QSize(100, 10))
+        self.populate_color_maps()
+        self.setCurrentText(default_choice)
+
+    def populate_color_maps(self):
+        for map_name, pixmap in self.pixmaps.items():
+            self.addItem(QtGui.QIcon(pixmap), map_name)
 
 
 class TextWithCopyButton(QtWidgets.QWidget):
@@ -1725,6 +1761,11 @@ def param_to_widget(param, name: str,
                                                        actions_to_connect, pipeline_mode), this_default)
         for action in actions_to_connect:
             widget.currentIndexChanged.connect(action)
+
+    elif param.annotation == param_typing.ColorMap:
+        widget = ColorMapComboBox(param.default if is_default else '')
+        for action in actions_to_connect:
+            widget.currentTextChanged.connect(action)
 
     elif param.annotation == param_typing.Color:
         widget = ColorPicker(param.default if is_default else '')

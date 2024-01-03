@@ -53,7 +53,7 @@ GroupedColumns = typing.NewType('GroupedColumns', typing.List[typing.Iterable[Co
 
 Color = typing.NewType('Color', typing.Union[str, typing.Tuple[float, float, float]])
 ColorList = typing.NewType('ColorList', typing.Union[typing.List[Color], typing.Tuple[Color, ...]])
-
+ColorMap = typing.NewType('ColorMap', str)
 
 def type_to_supertype(this_type):
     if hasattr(this_type, '__supertype__'):
