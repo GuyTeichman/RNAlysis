@@ -3937,6 +3937,8 @@ class CountFilter(Filter):
                 title: Union[str, Literal['auto']] = 'auto', title_fontsize: float = 20,
                 label_fontsize: Union[float, Literal['auto']] = 'auto', tick_fontsize: float = 12) -> List[plt.Figure]:
         """
+        Generates M-A (log-ratio vs. log-intensity) plots for selected columns in the dataset. \
+        This plot is particularly useful for indicating whether a dataset is properly normalized.
 
         :param ref_column: the column to be used as reference for MA plot. If 'auto', \
         then the reference column will be chosen automatically to be \

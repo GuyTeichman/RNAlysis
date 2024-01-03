@@ -20,6 +20,7 @@ Fixed
 *******
 * Function "Summarize feature biotypes (based on a reference table)" (biotypes_from_ref_table) now treats rows with missing values as "_missing_from_biotype_reference" instead of ignoring them entirely.
 * Fixed bug where the Ensembl paralog-finding function would appear under the wrong tab in the graphical interface.
+* Fixed bug where the description of the MA Plot function and parameters would not display correctly in the graphical interface.
 
 3.10.1 (2023-11-22)
 -------------------
