@@ -1373,7 +1373,7 @@ class TestCreateColormapPixmap:
     # Additional tests can be added for cache behavior, image content, etc.
 
 
-def test_init_color_map_pixmap_cache(self, qtbot):
+def test_init_color_map_pixmap_cache(qtbot):
     init_color_map_pixmap_cache()
 
 
