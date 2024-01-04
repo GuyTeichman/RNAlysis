@@ -462,14 +462,14 @@ def fastq_to_sam_single(input_folder: Union[str, Path], output_folder: Union[str
     base_call, script_name = _parse_fastq2sam_misc_args(picard_installation_folder, quality_score_type)
     calls = []
 
-    legal_samples = _get_legal_samples(input_folder, 'alignment')
+    legal_samples = _get_legal_samples(input_folder)
     assert (new_sample_names == 'auto') or (len(new_sample_names) == len(legal_samples)), \
         f'Number of samples ({len(legal_samples)}) does not match number of sample names ({len(new_sample_names)})!'
 
     for i, fastq_file in enumerate(sorted(legal_samples)):
         this_call = base_call.copy()
         if new_sample_names == 'auto':
-            this_name = parsing.remove_suffixes(fastq_file).stem + '_sam2fastq'
+            this_name = parsing.remove_suffixes(fastq_file).stem + '_fastq2sam'
         else:
             this_name = new_sample_names[i]
         this_call.append(f"FASTQ={fastq_file.as_posix()}")
@@ -517,7 +517,7 @@ def fastq_to_sam_paired(r1_files: List[str], r2_files: List[str], output_folder:
         file1 = Path(file1)
         file2 = Path(file2)
         if new_sample_names == 'auto':
-            this_name = f"{parsing.remove_suffixes(file1).stem}_{parsing.remove_suffixes(file2).stem}_sam2fastq"
+            this_name = f"{parsing.remove_suffixes(file1).stem}_{parsing.remove_suffixes(file2).stem}_fastq2sam"
         else:
             this_name = new_sample_names[i]
         this_call.append(f"FASTQ={file1.as_posix()}")
@@ -721,12 +721,12 @@ def find_duplicates(input_folder: Union[str, Path], output_folder: Union[str, Pa
     for i, sam_file in enumerate(sorted(legal_samples)):
         this_call = base_call.copy()
         if new_sample_names == 'auto':
-            this_name = parsing.remove_suffixes(sam_file).stem + '_sam2fastq'
+            this_name = parsing.remove_suffixes(sam_file).stem + '_find_duplicates'
         else:
             this_name = new_sample_names[i]
         this_call.append(f"INPUT={sam_file.as_posix()}")
         this_call.append(f"OUTPUT={output_folder.joinpath(f'{this_name}.{output_format}').as_posix()}")
-        this_call.append(f"METRICS_FILE ={output_folder.joinpath(f'{this_name}_metrics.txt').as_posix()}")
+        this_call.append(f"METRICS_FILE={output_folder.joinpath(f'{this_name}_metrics.txt').as_posix()}")
         calls.append(this_call)
 
     _run_picard_calls(calls, script_name, output_folder)

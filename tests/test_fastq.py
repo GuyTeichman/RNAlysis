@@ -885,3 +885,156 @@ class TestPicardFunctions:
         monkeypatch.setattr(fastq, '_run_picard_calls', mock_run_picard_calls)
 
         validate_sam(input_folder, output_folder, 'auto', verbose, is_bisulfite)
+
+    @pytest.mark.parametrize('input_folder,output_folder,new_sample_names,output_format,expected_command', [
+        (SINGLE_PATH, SINGLE_PATH, 'auto', 'bam', ['picard', 'SamFormatConverter',
+                                                   'INPUT=tests/test_files/picard_tests/single/bamfile.bam',
+                                                   'OUTPUT=tests/test_files/picard_tests/single/bamfile.bam'
+                                                   ]),
+        (PAIRED_PATH, PAIRED_PATH, ['newname'], 'sam', ['picard', 'SamFormatConverter',
+                                                        'INPUT=tests/test_files/picard_tests/paired/bamfile.bam',
+                                                        'OUTPUT=tests/test_files/picard_tests/paired/newname.sam'
+                                                        ])
+    ])
+    def test_convert_sam_format_command(self, monkeypatch, input_folder, output_folder, new_sample_names, output_format,
+                                        expected_command):
+        def mock_run_picard_calls(calls, script_name, outdir):
+            assert len(calls) == 1
+            assert script_name == 'SamFormatConverter'
+            assert output_folder == outdir.as_posix()
+            assert calls[0] == expected_command
+
+        monkeypatch.setattr(fastq, '_run_picard_calls', mock_run_picard_calls)
+        convert_sam_format(input_folder, output_folder, 'auto', new_sample_names, output_format)
+
+    @pytest.mark.parametrize(
+        'input_folder,output_folder,new_sample_names,output_format,duplicate_handling,'
+        'duplicate_scoring_strategy,optical_duplicate_pixel_distance,expected_command',
+        [(SINGLE_PATH, SINGLE_PATH, 'auto', 'bam', 'mark', 'reference_length', 100,
+          ['picard', 'MarkDuplicates', 'OPTICAL_DUPLICATE_PIXEL_DISTANCE=100', 'REMOVE_DUPLICATES=false',
+           'REMOVE_SEQUENCING_DUPLICATES=false',
+           'DUPLICATE_SCORING_STRATEGY=TOTAL_MAPPED_REFERENCE_LENGTH',
+           'INPUT=tests/test_files/picard_tests/single/bamfile.bam',
+           'OUTPUT=tests/test_files/picard_tests/single/bamfile_find_duplicates.bam',
+           'METRICS_FILE=tests/test_files/picard_tests/single/bamfile_find_duplicates_metrics.txt']),
+         (PAIRED_PATH, PAIRED_PATH, ['newname'], 'sam', 'remove_all', 'sum_of_base_qualities', 50,
+          ['picard', 'MarkDuplicates', 'OPTICAL_DUPLICATE_PIXEL_DISTANCE=50', 'REMOVE_DUPLICATES=true',
+           'DUPLICATE_SCORING_STRATEGY=SUM_OF_BASE_QUALITIES',
+           'INPUT=tests/test_files/picard_tests/paired/bamfile.bam',
+           'OUTPUT=tests/test_files/picard_tests/paired/newname.sam',
+           'METRICS_FILE=tests/test_files/picard_tests/paired/newname_metrics.txt']),
+         (PAIRED_PATH, PAIRED_PATH, 'auto', 'bam', 'remove_optical', 'random', 75,
+          ['picard', 'MarkDuplicates', 'OPTICAL_DUPLICATE_PIXEL_DISTANCE=75', 'REMOVE_SEQUENCING_DUPLICATES=true',
+           'REMOVE_DUPLICATES=false', 'DUPLICATE_SCORING_STRATEGY=RANDOM',
+           'INPUT=tests/test_files/picard_tests/paired/bamfile.bam',
+           'OUTPUT=tests/test_files/picard_tests/paired/bamfile_find_duplicates.bam',
+           'METRICS_FILE=tests/test_files/picard_tests/paired/bamfile_find_duplicates_metrics.txt'])
+         ])
+    def test_find_duplicates_command(self, monkeypatch, input_folder, output_folder, new_sample_names, output_format,
+                                     duplicate_handling, duplicate_scoring_strategy, optical_duplicate_pixel_distance,
+                                     expected_command):
+        def mock_run_picard_calls(calls, script_name, outdir):
+            assert len(calls) == 1
+            assert script_name == 'MarkDuplicates'
+            assert output_folder == outdir.as_posix()
+            assert calls[0] == expected_command
+
+        monkeypatch.setattr(fastq, '_run_picard_calls', mock_run_picard_calls)
+        find_duplicates(input_folder, output_folder, 'auto', new_sample_names, output_format,
+                        duplicate_handling, duplicate_scoring_strategy, optical_duplicate_pixel_distance)
+
+    @pytest.mark.parametrize('input_folder,output_folder,new_sample_names,re_reverse_reads,'
+                             'include_non_primary_alignments,quality_trim,expected_command',
+                             [(SINGLE_PATH, SINGLE_PATH, 'auto', False, True, None,
+                               ['picard', 'SamToFastq', 'RE_REVERSE=false', 'INCLUDE_NON_PRIMARY_ALIGNMENTS=true',
+                                'INPUT=tests/test_files/picard_tests/single/bamfile.bam',
+                                'FASTQ=tests/test_files/picard_tests/single/bamfile_sam2fastq.fastq']),
+
+                              (SINGLE_PATH, SINGLE_PATH, ['samplename'], True, False, 20,
+                               ['picard', 'SamToFastq', 'RE_REVERSE=true', 'INCLUDE_NON_PRIMARY_ALIGNMENTS=false',
+                                'QUALITY=20',
+                                'INPUT=tests/test_files/picard_tests/single/bamfile.bam',
+                                'FASTQ=tests/test_files/picard_tests/single/samplename.fastq'])
+                              ])
+    def test_sam_to_fastq_single_command(self, monkeypatch, input_folder, output_folder, new_sample_names,
+                                         re_reverse_reads, include_non_primary_alignments, quality_trim,
+                                         expected_command):
+        def mock_run_picard_calls(calls, script_name, outdir):
+            assert len(calls) == 1
+            assert script_name == 'SamToFastq'
+            assert output_folder == outdir.as_posix()
+            assert calls[0] == expected_command
+
+        monkeypatch.setattr(fastq, '_run_picard_calls', mock_run_picard_calls)
+        sam_to_fastq_single(input_folder, output_folder, 'auto', new_sample_names, re_reverse_reads,
+                            include_non_primary_alignments, quality_trim)
+
+    @pytest.mark.parametrize(
+        'input_folder,output_folder,new_sample_names,re_reverse_reads,include_non_primary_alignments,quality_trim,expected_command',
+        [(PAIRED_PATH, PAIRED_PATH, 'auto', False, True, None,
+          ['picard', 'SamToFastq', 'RE_REVERSE=false', 'INCLUDE_NON_PRIMARY_ALIGNMENTS=true',
+           'INPUT=tests/test_files/picard_tests/paired/bamfile.bam',
+           'FASTQ=tests/test_files/picard_tests/paired/bamfile_sam2fastq_R1.fastq',
+           'SECOND_END_FASTQ=tests/test_files/picard_tests/paired/bamfile_sam2fastq_R2.fastq']),
+         (PAIRED_PATH, PAIRED_PATH, ['samplename'], True, False, 20,
+          ['picard', 'SamToFastq', 'RE_REVERSE=true', 'INCLUDE_NON_PRIMARY_ALIGNMENTS=false', 'QUALITY=20',
+           'INPUT=tests/test_files/picard_tests/paired/bamfile.bam',
+           'FASTQ=tests/test_files/picard_tests/paired/samplename_R1.fastq',
+           'SECOND_END_FASTQ=tests/test_files/picard_tests/paired/samplename_R2.fastq'])
+         ])
+    def test_sam_to_fastq_paired_command(self, monkeypatch, input_folder, output_folder, new_sample_names,
+                                         re_reverse_reads, include_non_primary_alignments, quality_trim,
+                                         expected_command):
+        def mock_run_picard_calls(calls, script_name, outdir):
+            assert len(calls) == 1
+            assert script_name == 'SamToFastq'
+            assert output_folder == outdir.as_posix()
+            assert calls[0] == expected_command
+
+        monkeypatch.setattr(fastq, '_run_picard_calls', mock_run_picard_calls)
+        sam_to_fastq_paired(input_folder, output_folder, 'auto', new_sample_names, re_reverse_reads,
+                            include_non_primary_alignments, quality_trim)
+
+    @pytest.mark.parametrize(
+        'input_folder,output_folder,new_sample_names,output_format,quality_score_type,expected_command',
+        [(SINGLE_PATH, SINGLE_PATH, 'auto', 'bam', 'phred33',
+          ['picard', 'FastqToSam', 'QUALITY_FORMAT=Standard', 'FASTQ=tests/test_files/picard_tests/single/reads.fastq',
+           'OUTPUT=tests/test_files/picard_tests/single/reads_fastq2sam.bam']),
+         (SINGLE_PATH, SINGLE_PATH, ['samplename'], 'sam', 'phred64',
+          ['picard', 'FastqToSam', 'QUALITY_FORMAT=Illumina', 'FASTQ=tests/test_files/picard_tests/single/reads.fastq',
+           'OUTPUT=tests/test_files/picard_tests/single/samplename.sam']),
+         ])
+    def test_fastq_to_sam_single_command(self, monkeypatch, input_folder, output_folder, new_sample_names,
+                                         output_format, quality_score_type, expected_command):
+        def mock_run_picard_calls(calls, script_name, outdir):
+            assert len(calls) == 1
+            assert script_name == 'FastqToSam'
+            assert output_folder == outdir.as_posix()
+            assert calls[0] == expected_command
+
+        monkeypatch.setattr(fastq, '_run_picard_calls', mock_run_picard_calls)
+        fastq_to_sam_single(input_folder, output_folder, 'auto', new_sample_names, output_format, quality_score_type)
+
+    @pytest.mark.parametrize(
+        'r1_files,r2_files,output_folder,new_sample_names,output_format,quality_score_type,expected_command',
+        [([PAIRED_PATH + '/reads1.fastq'], [PAIRED_PATH + '/reads2.fastq'], PAIRED_PATH, 'auto', 'bam', 'int-quals',
+          ['picard', 'FastqToSam', 'FASTQ=tests/test_files/picard_tests/paired/reads1.fastq',
+           'FASTQ2=tests/test_files/picard_tests/paired/reads2.fastq',
+           'OUTPUT=tests/test_files/picard_tests/paired/reads1_reads2_fastq2sam.bam']),
+         ([PAIRED_PATH + '/reads1.fastq'], [PAIRED_PATH + '/reads2.fastq'], PAIRED_PATH, ['samplename'], 'sam',
+          'solexa-quals',
+          ['picard', 'FastqToSam', 'QUALITY_FORMAT=Solexa', 'FASTQ=tests/test_files/picard_tests/paired/reads1.fastq',
+           'FASTQ2=tests/test_files/picard_tests/paired/reads2.fastq',
+           'OUTPUT=tests/test_files/picard_tests/paired/samplename.sam']),
+         ])
+    def test_fastq_to_sam_paired_command(self, monkeypatch, r1_files, r2_files, output_folder, new_sample_names,
+                                         output_format, quality_score_type, expected_command):
+        def mock_run_picard_calls(calls, script_name, outdir):
+            assert len(calls) == 1
+            assert script_name == 'FastqToSam'
+            assert output_folder == outdir.as_posix()
+            assert calls[0] == expected_command
+
+        monkeypatch.setattr(fastq, '_run_picard_calls', mock_run_picard_calls)
+        fastq_to_sam_paired(r1_files, r2_files, output_folder, 'auto', new_sample_names, output_format,
+                            quality_score_type)
