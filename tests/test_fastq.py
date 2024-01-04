@@ -3,6 +3,7 @@ import platform
 
 import pytest
 import yaml
+from unittest.mock import Mock, patch
 
 from rnalysis import fastq, __version__
 from rnalysis.fastq import *
@@ -1038,3 +1039,54 @@ class TestPicardFunctions:
         monkeypatch.setattr(fastq, '_run_picard_calls', mock_run_picard_calls)
         fastq_to_sam_paired(r1_files, r2_files, output_folder, 'auto', new_sample_names, output_format,
                             quality_score_type)
+
+
+@pytest.mark.parametrize('command', [
+    'BuildBamIndex',
+    'MarkDuplicates',
+    'SamFormatConverter',
+    'SamToFastq',
+    'SortSam',
+    'ValidateSamFile',
+    'FastqToSam'
+])
+def test_generate_picard_basecall(command):
+    expected = [installs.get_jdk_path().joinpath('java').as_posix(), '-jar', installs.PICARD_JAR.as_posix(), command]
+    out = fastq._generate_picard_basecall(command, 'auto')
+    assert out == expected
+
+
+class TestRunPicardCalls:
+    @pytest.fixture
+    def mock_subprocess(self, monkeypatch):
+        mock_run_subprocess = Mock(return_value=(0, [""]))
+        monkeypatch.setattr(io, 'run_subprocess', mock_run_subprocess)
+        return mock_run_subprocess
+
+    @pytest.fixture
+    def mock_print(self, monkeypatch):
+        mock_print = Mock()
+        monkeypatch.setattr('builtins.print', mock_print)
+        return mock_print
+
+    def test_successful_picard_call(self, mock_subprocess, mock_print, tmp_path):
+        calls = [["java", "-jar", "picard.jar", "arg1", "arg2"]]
+        script_name = "test_script"
+        output_folder = tmp_path
+
+        fastq._run_picard_calls(calls, script_name, output_folder)
+
+        mock_subprocess.assert_called_once()
+        mock_print.assert_called()
+        # Additional assertions for file creation, print statements, etc.
+
+    def test_picard_call_failure(self, mock_subprocess, tmp_path):
+        mock_subprocess.return_value = (1, ["Error message", "more details"])
+        calls = [["java", "-jar", "picard.jar", "arg1", "arg2"]]
+        script_name = "test_script"
+        output_folder = tmp_path
+
+        with pytest.raises(ChildProcessError) as excinfo:
+            fastq._run_picard_calls(calls, script_name, output_folder)
+
+        assert "Picard call failed to execute" in str(excinfo.value)
