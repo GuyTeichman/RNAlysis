@@ -4,7 +4,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>rnalysis.enrichment.FeatureSet.add &mdash; RNAlysis 3.10.1 documentation</title>
+  <title>rnalysis.enrichment.FeatureSet.add &mdash; RNAlysis 3.11.0 documentation</title>
       <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
     <link rel="shortcut icon" href="_static/favicon.ico"/>
@@ -22,7 +22,7 @@
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="rnalysis.enrichment.FeatureSet.biotypes_from_ref_table" href="rnalysis.enrichment.FeatureSet.biotypes_from_ref_table.html" />
+    <link rel="next" title="rnalysis.enrichment.FeatureSet.biotypes_from_gtf" href="rnalysis.enrichment.FeatureSet.biotypes_from_gtf.html" />
     <link rel="prev" title="rnalysis.enrichment.FeatureSet" href="rnalysis.enrichment.FeatureSet.html" /> 
 </head>
 
@@ -82,6 +82,7 @@
 <li class="toctree-l4"><a class="reference internal" href="#rnalysis.enrichment.FeatureSet.add"><code class="docutils literal notranslate"><span class="pre">FeatureSet.add()</span></code></a></li>
 </ul>
 </li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.FeatureSet.biotypes_from_gtf.html">rnalysis.enrichment.FeatureSet.biotypes_from_gtf</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.FeatureSet.biotypes_from_ref_table.html">rnalysis.enrichment.FeatureSet.biotypes_from_ref_table</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.FeatureSet.change_set_name.html">rnalysis.enrichment.FeatureSet.change_set_name</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.FeatureSet.clear.html">rnalysis.enrichment.FeatureSet.clear</a></li>
@@ -89,9 +90,13 @@
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.FeatureSet.difference.html">rnalysis.enrichment.FeatureSet.difference</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.FeatureSet.difference_update.html">rnalysis.enrichment.FeatureSet.difference_update</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.FeatureSet.discard.html">rnalysis.enrichment.FeatureSet.discard</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.FeatureSet.filter_biotype_from_gtf.html">rnalysis.enrichment.FeatureSet.filter_biotype_from_gtf</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.FeatureSet.filter_biotype_from_ref_table.html">rnalysis.enrichment.FeatureSet.filter_biotype_from_ref_table</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.FeatureSet.filter_by_attribute.html">rnalysis.enrichment.FeatureSet.filter_by_attribute</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.FeatureSet.filter_by_go_annotations.html">rnalysis.enrichment.FeatureSet.filter_by_go_annotations</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.FeatureSet.filter_by_kegg_annotations.html">rnalysis.enrichment.FeatureSet.filter_by_kegg_annotations</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.FeatureSet.find_paralogs_ensembl.html">rnalysis.enrichment.FeatureSet.find_paralogs_ensembl</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.FeatureSet.find_paralogs_panther.html">rnalysis.enrichment.FeatureSet.find_paralogs_panther</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.FeatureSet.go_enrichment.html">rnalysis.enrichment.FeatureSet.go_enrichment</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.FeatureSet.intersection.html">rnalysis.enrichment.FeatureSet.intersection</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.FeatureSet.intersection_update.html">rnalysis.enrichment.FeatureSet.intersection_update</a></li>
@@ -99,6 +104,10 @@
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.FeatureSet.issubset.html">rnalysis.enrichment.FeatureSet.issubset</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.FeatureSet.issuperset.html">rnalysis.enrichment.FeatureSet.issuperset</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.FeatureSet.kegg_enrichment.html">rnalysis.enrichment.FeatureSet.kegg_enrichment</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.FeatureSet.map_orthologs_ensembl.html">rnalysis.enrichment.FeatureSet.map_orthologs_ensembl</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.FeatureSet.map_orthologs_orthoinspector.html">rnalysis.enrichment.FeatureSet.map_orthologs_orthoinspector</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.FeatureSet.map_orthologs_panther.html">rnalysis.enrichment.FeatureSet.map_orthologs_panther</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.FeatureSet.map_orthologs_phylomedb.html">rnalysis.enrichment.FeatureSet.map_orthologs_phylomedb</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.FeatureSet.non_categorical_enrichment.html">rnalysis.enrichment.FeatureSet.non_categorical_enrichment</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.FeatureSet.pop.html">rnalysis.enrichment.FeatureSet.pop</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.FeatureSet.remove.html">rnalysis.enrichment.FeatureSet.remove</a></li>
@@ -169,7 +178,7 @@
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
         <a href="rnalysis.enrichment.FeatureSet.html" class="btn btn-neutral float-left" title="rnalysis.enrichment.FeatureSet" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="rnalysis.enrichment.FeatureSet.biotypes_from_ref_table.html" class="btn btn-neutral float-right" title="rnalysis.enrichment.FeatureSet.biotypes_from_ref_table" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="rnalysis.enrichment.FeatureSet.biotypes_from_gtf.html" class="btn btn-neutral float-right" title="rnalysis.enrichment.FeatureSet.biotypes_from_gtf" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>

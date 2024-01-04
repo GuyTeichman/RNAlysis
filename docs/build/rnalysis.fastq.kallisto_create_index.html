@@ -4,7 +4,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>rnalysis.fastq.kallisto_create_index &mdash; RNAlysis 3.10.1 documentation</title>
+  <title>rnalysis.fastq.kallisto_create_index &mdash; RNAlysis 3.11.0 documentation</title>
       <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
     <link rel="shortcut icon" href="_static/favicon.ico"/>
@@ -23,7 +23,7 @@
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="rnalysis.fastq.kallisto_quantify_paired_end" href="rnalysis.fastq.kallisto_quantify_paired_end.html" />
-    <link rel="prev" title="rnalysis.fastq.featurecounts_single_end" href="rnalysis.fastq.featurecounts_single_end.html" /> 
+    <link rel="prev" title="rnalysis.fastq.find_duplicates" href="rnalysis.fastq.find_duplicates.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -79,17 +79,26 @@
 <li class="toctree-l2"><a class="reference internal" href="rnalysis.fastq.bowtie2_align_paired_end.html">rnalysis.fastq.bowtie2_align_paired_end</a></li>
 <li class="toctree-l2"><a class="reference internal" href="rnalysis.fastq.bowtie2_align_single_end.html">rnalysis.fastq.bowtie2_align_single_end</a></li>
 <li class="toctree-l2"><a class="reference internal" href="rnalysis.fastq.bowtie2_create_index.html">rnalysis.fastq.bowtie2_create_index</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rnalysis.fastq.convert_sam_format.html">rnalysis.fastq.convert_sam_format</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rnalysis.fastq.create_bam_index.html">rnalysis.fastq.create_bam_index</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rnalysis.fastq.fastq_to_sam_paired.html">rnalysis.fastq.fastq_to_sam_paired</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rnalysis.fastq.fastq_to_sam_single.html">rnalysis.fastq.fastq_to_sam_single</a></li>
 <li class="toctree-l2"><a class="reference internal" href="rnalysis.fastq.featurecounts_paired_end.html">rnalysis.fastq.featurecounts_paired_end</a></li>
 <li class="toctree-l2"><a class="reference internal" href="rnalysis.fastq.featurecounts_single_end.html">rnalysis.fastq.featurecounts_single_end</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rnalysis.fastq.find_duplicates.html">rnalysis.fastq.find_duplicates</a></li>
 <li class="toctree-l2 current"><a class="current reference internal" href="#">rnalysis.fastq.kallisto_create_index</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#rnalysis.fastq.kallisto_create_index"><code class="docutils literal notranslate"><span class="pre">kallisto_create_index()</span></code></a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="rnalysis.fastq.kallisto_quantify_paired_end.html">rnalysis.fastq.kallisto_quantify_paired_end</a></li>
 <li class="toctree-l2"><a class="reference internal" href="rnalysis.fastq.kallisto_quantify_single_end.html">rnalysis.fastq.kallisto_quantify_single_end</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rnalysis.fastq.sam_to_fastq_paired.html">rnalysis.fastq.sam_to_fastq_paired</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rnalysis.fastq.sam_to_fastq_single.html">rnalysis.fastq.sam_to_fastq_single</a></li>
 <li class="toctree-l2"><a class="reference internal" href="rnalysis.fastq.shortstack_align_smallrna.html">rnalysis.fastq.shortstack_align_smallrna</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rnalysis.fastq.sort_sam.html">rnalysis.fastq.sort_sam</a></li>
 <li class="toctree-l2"><a class="reference internal" href="rnalysis.fastq.trim_adapters_paired_end.html">rnalysis.fastq.trim_adapters_paired_end</a></li>
 <li class="toctree-l2"><a class="reference internal" href="rnalysis.fastq.trim_adapters_single_end.html">rnalysis.fastq.trim_adapters_single_end</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rnalysis.fastq.validate_sam.html">rnalysis.fastq.validate_sam</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="rnalysis.filtering.html">rnalysis.filtering</a></li>
@@ -151,7 +160,7 @@
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="rnalysis.fastq.featurecounts_single_end.html" class="btn btn-neutral float-left" title="rnalysis.fastq.featurecounts_single_end" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="rnalysis.fastq.find_duplicates.html" class="btn btn-neutral float-left" title="rnalysis.fastq.find_duplicates" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
         <a href="rnalysis.fastq.kallisto_quantify_paired_end.html" class="btn btn-neutral float-right" title="rnalysis.fastq.kallisto_quantify_paired_end" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 

@@ -4,7 +4,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>rnalysis.enrichment.RankedSet.biotypes_from_ref_table &mdash; RNAlysis 3.10.1 documentation</title>
+  <title>rnalysis.enrichment.RankedSet.biotypes_from_ref_table &mdash; RNAlysis 3.11.0 documentation</title>
       <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
     <link rel="shortcut icon" href="_static/favicon.ico"/>
@@ -23,7 +23,7 @@
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="rnalysis.enrichment.RankedSet.change_set_name" href="rnalysis.enrichment.RankedSet.change_set_name.html" />
-    <link rel="prev" title="rnalysis.enrichment.RankedSet.add" href="rnalysis.enrichment.RankedSet.add.html" /> 
+    <link rel="prev" title="rnalysis.enrichment.RankedSet.biotypes_from_gtf" href="rnalysis.enrichment.RankedSet.biotypes_from_gtf.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -80,6 +80,7 @@
 <li class="toctree-l2 current"><a class="reference internal" href="rnalysis.enrichment.RankedSet.html">rnalysis.enrichment.RankedSet</a><ul class="current">
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.RankedSet.html#rnalysis.enrichment.RankedSet"><code class="docutils literal notranslate"><span class="pre">RankedSet</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.RankedSet.add.html">rnalysis.enrichment.RankedSet.add</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.RankedSet.biotypes_from_gtf.html">rnalysis.enrichment.RankedSet.biotypes_from_gtf</a></li>
 <li class="toctree-l3 current"><a class="current reference internal" href="#">rnalysis.enrichment.RankedSet.biotypes_from_ref_table</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#rnalysis.enrichment.RankedSet.biotypes_from_ref_table"><code class="docutils literal notranslate"><span class="pre">RankedSet.biotypes_from_ref_table()</span></code></a></li>
 </ul>
@@ -90,9 +91,13 @@
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.RankedSet.difference.html">rnalysis.enrichment.RankedSet.difference</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.RankedSet.difference_update.html">rnalysis.enrichment.RankedSet.difference_update</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.RankedSet.discard.html">rnalysis.enrichment.RankedSet.discard</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.RankedSet.filter_biotype_from_gtf.html">rnalysis.enrichment.RankedSet.filter_biotype_from_gtf</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.RankedSet.filter_biotype_from_ref_table.html">rnalysis.enrichment.RankedSet.filter_biotype_from_ref_table</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.RankedSet.filter_by_attribute.html">rnalysis.enrichment.RankedSet.filter_by_attribute</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.RankedSet.filter_by_go_annotations.html">rnalysis.enrichment.RankedSet.filter_by_go_annotations</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.RankedSet.filter_by_kegg_annotations.html">rnalysis.enrichment.RankedSet.filter_by_kegg_annotations</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.RankedSet.find_paralogs_ensembl.html">rnalysis.enrichment.RankedSet.find_paralogs_ensembl</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.RankedSet.find_paralogs_panther.html">rnalysis.enrichment.RankedSet.find_paralogs_panther</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.RankedSet.go_enrichment.html">rnalysis.enrichment.RankedSet.go_enrichment</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.RankedSet.intersection.html">rnalysis.enrichment.RankedSet.intersection</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.RankedSet.intersection_update.html">rnalysis.enrichment.RankedSet.intersection_update</a></li>
@@ -100,6 +105,10 @@
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.RankedSet.issubset.html">rnalysis.enrichment.RankedSet.issubset</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.RankedSet.issuperset.html">rnalysis.enrichment.RankedSet.issuperset</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.RankedSet.kegg_enrichment.html">rnalysis.enrichment.RankedSet.kegg_enrichment</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.RankedSet.map_orthologs_ensembl.html">rnalysis.enrichment.RankedSet.map_orthologs_ensembl</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.RankedSet.map_orthologs_orthoinspector.html">rnalysis.enrichment.RankedSet.map_orthologs_orthoinspector</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.RankedSet.map_orthologs_panther.html">rnalysis.enrichment.RankedSet.map_orthologs_panther</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.RankedSet.map_orthologs_phylomedb.html">rnalysis.enrichment.RankedSet.map_orthologs_phylomedb</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.RankedSet.non_categorical_enrichment.html">rnalysis.enrichment.RankedSet.non_categorical_enrichment</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.RankedSet.pop.html">rnalysis.enrichment.RankedSet.pop</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.RankedSet.remove.html">rnalysis.enrichment.RankedSet.remove</a></li>
@@ -161,7 +170,7 @@
 <dl class="py method">
 <dt class="sig sig-object py" id="rnalysis.enrichment.RankedSet.biotypes_from_ref_table">
 <span class="sig-prename descclassname"><span class="pre">RankedSet.</span></span><span class="sig-name descname"><span class="pre">biotypes_from_ref_table</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ref</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Path</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'predefined'</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'predefined'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rnalysis.enrichment.RankedSet.biotypes_from_ref_table" title="Permalink to this definition"></a></dt>
-<dd><p>Returns a DataFrame of the biotypes in the gene set and their count.</p>
+<dd><p>Returns a DataFrame describing the biotypes in the gene set and their count.</p>
 <dl class="field-list">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><p><strong>ref</strong> (<em>str</em><em> or </em><em>pathlib.Path</em><em> (</em><em>default='predefined'</em><em>)</em>) – Path of the reference file used to determine biotype.         Default is the path predefined in the settings file.</p>
@@ -188,7 +197,7 @@
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="rnalysis.enrichment.RankedSet.add.html" class="btn btn-neutral float-left" title="rnalysis.enrichment.RankedSet.add" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="rnalysis.enrichment.RankedSet.biotypes_from_gtf.html" class="btn btn-neutral float-left" title="rnalysis.enrichment.RankedSet.biotypes_from_gtf" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
         <a href="rnalysis.enrichment.RankedSet.change_set_name.html" class="btn btn-neutral float-right" title="rnalysis.enrichment.RankedSet.change_set_name" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 

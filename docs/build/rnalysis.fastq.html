@@ -4,7 +4,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>rnalysis.fastq &mdash; RNAlysis 3.10.1 documentation</title>
+  <title>rnalysis.fastq &mdash; RNAlysis 3.11.0 documentation</title>
       <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
     <link rel="shortcut icon" href="_static/favicon.ico"/>
@@ -79,14 +79,23 @@
 <li class="toctree-l2"><a class="reference internal" href="rnalysis.fastq.bowtie2_align_paired_end.html">rnalysis.fastq.bowtie2_align_paired_end</a></li>
 <li class="toctree-l2"><a class="reference internal" href="rnalysis.fastq.bowtie2_align_single_end.html">rnalysis.fastq.bowtie2_align_single_end</a></li>
 <li class="toctree-l2"><a class="reference internal" href="rnalysis.fastq.bowtie2_create_index.html">rnalysis.fastq.bowtie2_create_index</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rnalysis.fastq.convert_sam_format.html">rnalysis.fastq.convert_sam_format</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rnalysis.fastq.create_bam_index.html">rnalysis.fastq.create_bam_index</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rnalysis.fastq.fastq_to_sam_paired.html">rnalysis.fastq.fastq_to_sam_paired</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rnalysis.fastq.fastq_to_sam_single.html">rnalysis.fastq.fastq_to_sam_single</a></li>
 <li class="toctree-l2"><a class="reference internal" href="rnalysis.fastq.featurecounts_paired_end.html">rnalysis.fastq.featurecounts_paired_end</a></li>
 <li class="toctree-l2"><a class="reference internal" href="rnalysis.fastq.featurecounts_single_end.html">rnalysis.fastq.featurecounts_single_end</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rnalysis.fastq.find_duplicates.html">rnalysis.fastq.find_duplicates</a></li>
 <li class="toctree-l2"><a class="reference internal" href="rnalysis.fastq.kallisto_create_index.html">rnalysis.fastq.kallisto_create_index</a></li>
 <li class="toctree-l2"><a class="reference internal" href="rnalysis.fastq.kallisto_quantify_paired_end.html">rnalysis.fastq.kallisto_quantify_paired_end</a></li>
 <li class="toctree-l2"><a class="reference internal" href="rnalysis.fastq.kallisto_quantify_single_end.html">rnalysis.fastq.kallisto_quantify_single_end</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rnalysis.fastq.sam_to_fastq_paired.html">rnalysis.fastq.sam_to_fastq_paired</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rnalysis.fastq.sam_to_fastq_single.html">rnalysis.fastq.sam_to_fastq_single</a></li>
 <li class="toctree-l2"><a class="reference internal" href="rnalysis.fastq.shortstack_align_smallrna.html">rnalysis.fastq.shortstack_align_smallrna</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rnalysis.fastq.sort_sam.html">rnalysis.fastq.sort_sam</a></li>
 <li class="toctree-l2"><a class="reference internal" href="rnalysis.fastq.trim_adapters_paired_end.html">rnalysis.fastq.trim_adapters_paired_end</a></li>
 <li class="toctree-l2"><a class="reference internal" href="rnalysis.fastq.trim_adapters_single_end.html">rnalysis.fastq.trim_adapters_single_end</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rnalysis.fastq.validate_sam.html">rnalysis.fastq.validate_sam</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="rnalysis.filtering.html">rnalysis.filtering</a></li>
@@ -161,6 +170,19 @@ the <em>bowtie2</em> alignment tool, and the <em>featureCounts</em> feature coun
 <tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.fastq.bowtie2_create_index.html#rnalysis.fastq.bowtie2_create_index" title="rnalysis.fastq.bowtie2_create_index"><code class="xref py py-obj docutils literal notranslate"><span class="pre">bowtie2_create_index</span></code></a>(genome_fastas, ...[, ...])</p></td>
 <td><p>builds a bowtie index from FASTA formatted files of target sequences (genome).</p></td>
 </tr>
+<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.fastq.convert_sam_format.html#rnalysis.fastq.convert_sam_format" title="rnalysis.fastq.convert_sam_format"><code class="xref py py-obj docutils literal notranslate"><span class="pre">convert_sam_format</span></code></a>(input_folder, output_folder)</p></td>
+<td><p>Convert SAM files to BAM files or vice versa using     <a class="reference external" href="https://broadinstitute.github.io/picard/command-line-overview.html#SamFormatConverter">Picard SamFormatConverter</a>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.fastq.create_bam_index.html#rnalysis.fastq.create_bam_index" title="rnalysis.fastq.create_bam_index"><code class="xref py py-obj docutils literal notranslate"><span class="pre">create_bam_index</span></code></a>(input_folder, output_folder)</p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.fastq.fastq_to_sam_paired.html#rnalysis.fastq.fastq_to_sam_paired" title="rnalysis.fastq.fastq_to_sam_paired"><code class="xref py py-obj docutils literal notranslate"><span class="pre">fastq_to_sam_paired</span></code></a>(r1_files, r2_files, ...)</p></td>
+<td><p>Convert SAM/BAM files to FASTQ files using     <a class="reference external" href="https://broadinstitute.github.io/picard/command-line-overview.html#SamToFastq">Picard SamToFastq</a>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.fastq.fastq_to_sam_single.html#rnalysis.fastq.fastq_to_sam_single" title="rnalysis.fastq.fastq_to_sam_single"><code class="xref py py-obj docutils literal notranslate"><span class="pre">fastq_to_sam_single</span></code></a>(input_folder, output_folder)</p></td>
+<td><p><p>Convert SAM/BAM files to FASTQ files using     <a class="reference external" href="https://broadinstitute.github.io/picard/command-line-overview.html#SamToFastq">Picard SamToFastq</a>.</p>
+</p></td>
+</tr>
 <tr class="row-even"><td><p><a class="reference internal" href="rnalysis.fastq.featurecounts_paired_end.html#rnalysis.fastq.featurecounts_paired_end" title="rnalysis.fastq.featurecounts_paired_end"><code class="xref py py-obj docutils literal notranslate"><span class="pre">featurecounts_paired_end</span></code></a>(input_folder, ...)</p></td>
 <td><p>Assign mapped paired-end sequencing reads to specified genomic features using     <a class="reference external" href="https://doi.org/10.1093/bioinformatics/btt656">RSubread featureCounts</a>.</p></td>
 </tr>
@@ -168,18 +190,32 @@ the <em>bowtie2</em> alignment tool, and the <em>featureCounts</em> feature coun
 <td><p><p>Assign mapped single-end sequencing reads to specified genomic features using     <a class="reference external" href="https://doi.org/10.1093/bioinformatics/btt656">RSubread featureCounts</a>.</p>
 </p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.fastq.kallisto_create_index.html#rnalysis.fastq.kallisto_create_index" title="rnalysis.fastq.kallisto_create_index"><code class="xref py py-obj docutils literal notranslate"><span class="pre">kallisto_create_index</span></code></a>(transcriptome_fasta[, ...])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.fastq.find_duplicates.html#rnalysis.fastq.find_duplicates" title="rnalysis.fastq.find_duplicates"><code class="xref py py-obj docutils literal notranslate"><span class="pre">find_duplicates</span></code></a>(input_folder, output_folder)</p></td>
+<td><p>Find duplicate reads in SAM/BAM files using     <a class="reference external" href="https://broadinstitute.github.io/picard/command-line-overview.html#MarkDuplicates">Picard MarkDuplicates</a>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.fastq.kallisto_create_index.html#rnalysis.fastq.kallisto_create_index" title="rnalysis.fastq.kallisto_create_index"><code class="xref py py-obj docutils literal notranslate"><span class="pre">kallisto_create_index</span></code></a>(transcriptome_fasta[, ...])</p></td>
 <td><p>builds a kallisto index from a FASTA formatted file of target sequences (transcriptome).</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.fastq.kallisto_quantify_paired_end.html#rnalysis.fastq.kallisto_quantify_paired_end" title="rnalysis.fastq.kallisto_quantify_paired_end"><code class="xref py py-obj docutils literal notranslate"><span class="pre">kallisto_quantify_paired_end</span></code></a>(r1_files, ...)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.fastq.kallisto_quantify_paired_end.html#rnalysis.fastq.kallisto_quantify_paired_end" title="rnalysis.fastq.kallisto_quantify_paired_end"><code class="xref py py-obj docutils literal notranslate"><span class="pre">kallisto_quantify_paired_end</span></code></a>(r1_files, ...)</p></td>
 <td><p>Quantify transcript abundance in paired-end mRNA sequencing data using     <a class="reference external" href="https://pachterlab.github.io/kallisto/">kallisto</a>.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.fastq.kallisto_quantify_single_end.html#rnalysis.fastq.kallisto_quantify_single_end" title="rnalysis.fastq.kallisto_quantify_single_end"><code class="xref py py-obj docutils literal notranslate"><span class="pre">kallisto_quantify_single_end</span></code></a>(fastq_folder, ...)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.fastq.kallisto_quantify_single_end.html#rnalysis.fastq.kallisto_quantify_single_end" title="rnalysis.fastq.kallisto_quantify_single_end"><code class="xref py py-obj docutils literal notranslate"><span class="pre">kallisto_quantify_single_end</span></code></a>(fastq_folder, ...)</p></td>
 <td><p><p>Quantify transcript abundance in single-end mRNA sequencing data using     <a class="reference external" href="https://pachterlab.github.io/kallisto/">kallisto</a>.</p>
 </p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.fastq.shortstack_align_smallrna.html#rnalysis.fastq.shortstack_align_smallrna" title="rnalysis.fastq.shortstack_align_smallrna"><code class="xref py py-obj docutils literal notranslate"><span class="pre">shortstack_align_smallrna</span></code></a>(fastq_folder, ...)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.fastq.sam_to_fastq_paired.html#rnalysis.fastq.sam_to_fastq_paired" title="rnalysis.fastq.sam_to_fastq_paired"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sam_to_fastq_paired</span></code></a>(input_folder, output_folder)</p></td>
+<td><p><p>Convert SAM/BAM files to FASTQ files using     <a class="reference external" href="https://broadinstitute.github.io/picard/command-line-overview.html#SamToFastq">Picard SamToFastq</a>.</p>
+</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.fastq.sam_to_fastq_single.html#rnalysis.fastq.sam_to_fastq_single" title="rnalysis.fastq.sam_to_fastq_single"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sam_to_fastq_single</span></code></a>(input_folder, output_folder)</p></td>
+<td><p><p>Convert SAM/BAM files to FASTQ files using     <a class="reference external" href="https://broadinstitute.github.io/picard/command-line-overview.html#SamToFastq">Picard SamToFastq</a>.</p>
+</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.fastq.shortstack_align_smallrna.html#rnalysis.fastq.shortstack_align_smallrna" title="rnalysis.fastq.shortstack_align_smallrna"><code class="xref py py-obj docutils literal notranslate"><span class="pre">shortstack_align_smallrna</span></code></a>(fastq_folder, ...)</p></td>
 <td><p>Align small RNA single-end reads from FASTQ files to a reference sequence using the     <a class="reference external" href="https://github.com/MikeAxtell/ShortStack">ShortStack</a> aligner (version 4).</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.fastq.sort_sam.html#rnalysis.fastq.sort_sam" title="rnalysis.fastq.sort_sam"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sort_sam</span></code></a>(input_folder, output_folder[, ...])</p></td>
+<td><p>Sort SAM/BAM files using     <a class="reference external" href="https://broadinstitute.github.io/picard/command-line-overview.html#SortSam">Picard SortSam</a>.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="rnalysis.fastq.trim_adapters_paired_end.html#rnalysis.fastq.trim_adapters_paired_end" title="rnalysis.fastq.trim_adapters_paired_end"><code class="xref py py-obj docutils literal notranslate"><span class="pre">trim_adapters_paired_end</span></code></a>(r1_files, r2_files, ...)</p></td>
 <td><p>Trim adapters from paired-end reads using <a class="reference external" href="https://cutadapt.readthedocs.io/">CutAdapt</a>.</p></td>
@@ -187,6 +223,9 @@ the <em>bowtie2</em> alignment tool, and the <em>featureCounts</em> feature coun
 <tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.fastq.trim_adapters_single_end.html#rnalysis.fastq.trim_adapters_single_end" title="rnalysis.fastq.trim_adapters_single_end"><code class="xref py py-obj docutils literal notranslate"><span class="pre">trim_adapters_single_end</span></code></a>(fastq_folder, ...)</p></td>
 <td><p><p>Trim adapters from single-end reads using <a class="reference external" href="https://cutadapt.readthedocs.io/">CutAdapt</a>.</p>
 </p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.fastq.validate_sam.html#rnalysis.fastq.validate_sam" title="rnalysis.fastq.validate_sam"><code class="xref py py-obj docutils literal notranslate"><span class="pre">validate_sam</span></code></a>(input_folder, output_folder[, ...])</p></td>
+<td><p>Validate SAM/BAM files using     <a class="reference external" href="https://broadinstitute.github.io/picard/command-line-overview.html#ValidateSamFile">Picard ValidateSamFile</a>.</p></td>
 </tr>
 </tbody>
 </table>

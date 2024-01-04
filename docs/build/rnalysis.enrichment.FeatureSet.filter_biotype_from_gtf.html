@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>rnalysis.enrichment.FeatureSet.filter_biotype_from_gtf &mdash; RNAlysis 3.11.0 documentation</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+    <link rel="shortcut icon" href="_static/favicon.ico"/>
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/sphinx_highlight.js"></script>
+        <script src="_static/copybutton.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="rnalysis.enrichment.FeatureSet.filter_biotype_from_ref_table" href="rnalysis.enrichment.FeatureSet.filter_biotype_from_ref_table.html" />
+    <link rel="prev" title="rnalysis.enrichment.FeatureSet.discard" href="rnalysis.enrichment.FeatureSet.discard.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html">
+            
+              <img src="_static/logo.png" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">About RNAlysis:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="readme.html">What is <em>RNAlysis?</em></a></li>
+<li class="toctree-l1"><a class="reference internal" href="readme.html#what-can-i-do-with-rnalysis">What can I do with <em>RNAlysis</em>?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="readme.html#how-do-i-install-it">How do I install it?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="readme.html#how-do-i-use-it">How do I use it?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="readme.html#dependencies">Dependencies</a></li>
+<li class="toctree-l1"><a class="reference internal" href="readme.html#credits">Credits</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/GuyTeichman/RNAlysis">GitHub page</a></li>
+<li class="toctree-l1"><a class="reference internal" href="contributing.html">How can I contribute to <em>RNAlysis</em>?</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Starting with RNAlysis:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="quick_start.html"><em>RNAlysis</em> quick-start video guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tutorial.html">A-to-Z tutorial - example analysis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="faq.html">Frequently asked questions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="user_guide_gui.html">User guide - graphical interface</a></li>
+<li class="toctree-l1"><a class="reference internal" href="user_guide.html">User guide - programmatic interface</a></li>
+<li class="toctree-l1"><a class="reference internal" href="glossary.html">Glossary - programmatic interface</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Change history:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="history.html">History</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Modules:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="rnalysis.fastq.html">rnalysis.fastq</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rnalysis.filtering.html">rnalysis.filtering</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="rnalysis.enrichment.html">rnalysis.enrichment</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="rnalysis.enrichment.FeatureSet.html">rnalysis.enrichment.FeatureSet</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.FeatureSet.html#rnalysis.enrichment.FeatureSet"><code class="docutils literal notranslate"><span class="pre">FeatureSet</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.FeatureSet.add.html">rnalysis.enrichment.FeatureSet.add</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.FeatureSet.biotypes_from_gtf.html">rnalysis.enrichment.FeatureSet.biotypes_from_gtf</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.FeatureSet.biotypes_from_ref_table.html">rnalysis.enrichment.FeatureSet.biotypes_from_ref_table</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.FeatureSet.change_set_name.html">rnalysis.enrichment.FeatureSet.change_set_name</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.FeatureSet.clear.html">rnalysis.enrichment.FeatureSet.clear</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.FeatureSet.copy.html">rnalysis.enrichment.FeatureSet.copy</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.FeatureSet.difference.html">rnalysis.enrichment.FeatureSet.difference</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.FeatureSet.difference_update.html">rnalysis.enrichment.FeatureSet.difference_update</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.FeatureSet.discard.html">rnalysis.enrichment.FeatureSet.discard</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">rnalysis.enrichment.FeatureSet.filter_biotype_from_gtf</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#rnalysis.enrichment.FeatureSet.filter_biotype_from_gtf"><code class="docutils literal notranslate"><span class="pre">FeatureSet.filter_biotype_from_gtf()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.FeatureSet.filter_biotype_from_ref_table.html">rnalysis.enrichment.FeatureSet.filter_biotype_from_ref_table</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.FeatureSet.filter_by_attribute.html">rnalysis.enrichment.FeatureSet.filter_by_attribute</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.FeatureSet.filter_by_go_annotations.html">rnalysis.enrichment.FeatureSet.filter_by_go_annotations</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.FeatureSet.filter_by_kegg_annotations.html">rnalysis.enrichment.FeatureSet.filter_by_kegg_annotations</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.FeatureSet.find_paralogs_ensembl.html">rnalysis.enrichment.FeatureSet.find_paralogs_ensembl</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.FeatureSet.find_paralogs_panther.html">rnalysis.enrichment.FeatureSet.find_paralogs_panther</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.FeatureSet.go_enrichment.html">rnalysis.enrichment.FeatureSet.go_enrichment</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.FeatureSet.intersection.html">rnalysis.enrichment.FeatureSet.intersection</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.FeatureSet.intersection_update.html">rnalysis.enrichment.FeatureSet.intersection_update</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.FeatureSet.isdisjoint.html">rnalysis.enrichment.FeatureSet.isdisjoint</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.FeatureSet.issubset.html">rnalysis.enrichment.FeatureSet.issubset</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.FeatureSet.issuperset.html">rnalysis.enrichment.FeatureSet.issuperset</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.FeatureSet.kegg_enrichment.html">rnalysis.enrichment.FeatureSet.kegg_enrichment</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.FeatureSet.map_orthologs_ensembl.html">rnalysis.enrichment.FeatureSet.map_orthologs_ensembl</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.FeatureSet.map_orthologs_orthoinspector.html">rnalysis.enrichment.FeatureSet.map_orthologs_orthoinspector</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.FeatureSet.map_orthologs_panther.html">rnalysis.enrichment.FeatureSet.map_orthologs_panther</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.FeatureSet.map_orthologs_phylomedb.html">rnalysis.enrichment.FeatureSet.map_orthologs_phylomedb</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.FeatureSet.non_categorical_enrichment.html">rnalysis.enrichment.FeatureSet.non_categorical_enrichment</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.FeatureSet.pop.html">rnalysis.enrichment.FeatureSet.pop</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.FeatureSet.remove.html">rnalysis.enrichment.FeatureSet.remove</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.FeatureSet.save_txt.html">rnalysis.enrichment.FeatureSet.save_txt</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.FeatureSet.symmetric_difference.html">rnalysis.enrichment.FeatureSet.symmetric_difference</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.FeatureSet.symmetric_difference_update.html">rnalysis.enrichment.FeatureSet.symmetric_difference_update</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.FeatureSet.translate_gene_ids.html">rnalysis.enrichment.FeatureSet.translate_gene_ids</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.FeatureSet.union.html">rnalysis.enrichment.FeatureSet.union</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.FeatureSet.update.html">rnalysis.enrichment.FeatureSet.update</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.FeatureSet.user_defined_enrichment.html">rnalysis.enrichment.FeatureSet.user_defined_enrichment</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="rnalysis.enrichment.RankedSet.html">rnalysis.enrichment.RankedSet</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rnalysis.enrichment.enrichment_bar_plot.html">rnalysis.enrichment.enrichment_bar_plot</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rnalysis.enrichment.gene_ontology_graph.html">rnalysis.enrichment.gene_ontology_graph</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rnalysis.enrichment.kegg_pathway_graph.html">rnalysis.enrichment.kegg_pathway_graph</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rnalysis.enrichment.upset_plot.html">rnalysis.enrichment.upset_plot</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rnalysis.enrichment.venn_diagram.html">rnalysis.enrichment.venn_diagram</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="rnalysis.general.html">rnalysis.general</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Indices and tables:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="genindex.html">Index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api_reference.html">API Reference</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">RNAlysis</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="rnalysis.enrichment.html">rnalysis.enrichment</a></li>
+          <li class="breadcrumb-item"><a href="rnalysis.enrichment.FeatureSet.html">rnalysis.enrichment.FeatureSet</a></li>
+      <li class="breadcrumb-item active">rnalysis.enrichment.FeatureSet.filter_biotype_from_gtf</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/rnalysis.enrichment.FeatureSet.filter_biotype_from_gtf.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="rnalysis-enrichment-featureset-filter-biotype-from-gtf">
+<h1>rnalysis.enrichment.FeatureSet.filter_biotype_from_gtf<a class="headerlink" href="#rnalysis-enrichment-featureset-filter-biotype-from-gtf" title="Permalink to this heading"></a></h1>
+<dl class="py method">
+<dt class="sig sig-object py" id="rnalysis.enrichment.FeatureSet.filter_biotype_from_gtf">
+<span class="sig-prename descclassname"><span class="pre">FeatureSet.</span></span><span class="sig-name descname"><span class="pre">filter_biotype_from_gtf</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">gtf_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Path</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">biotype</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'protein_coding'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'pseudogene'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'lincRNA'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'miRNA'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'ncRNA'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'piRNA'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'rRNA'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'snoRNA'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'snRNA'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'tRNA'</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'protein_coding'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">attribute_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'biotype'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'gene_biotype'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'transcript_biotype'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'gene_type'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'transcript_type'</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'gene_biotype'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">feature_type</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'gene'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'transcript'</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'gene'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">opposite</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inplace</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rnalysis.enrichment.FeatureSet.filter_biotype_from_gtf" title="Permalink to this definition"></a></dt>
+<dd><p>Filters out all features that do not match the indicated biotype/biotypes         (for example: ‘protein_coding’, ‘ncRNA’, etc).         The data about feature biotypes is drawn from a GTF (Gene transfer format) file supplied by the user.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>gtf_path</strong> (<em>str</em><em> or </em><em>Path</em>) – Path to your GTF (Gene transfer format) file. The file should match the type of         gene names/IDs you use in your table, and should contain an attribute describing biotype.</p></li>
+<li><p><strong>biotype</strong> (<em>str</em><em> or </em><em>list</em><em> of </em><em>strings</em>) – the biotypes which will not be filtered out.</p></li>
+<li><p><strong>attribute_name</strong> (<em>str</em><em> (</em><em>default='gene_biotype'</em><em>)</em>) – name of the attribute in your GTF file that describes feature biotype.</p></li>
+<li><p><strong>feature_type</strong> (<em>'gene'</em><em> or </em><em>'transcript'</em><em> (</em><em>default='gene'</em><em>)</em>) – determined whether the features/rows in your data table describe         individual genes or transcripts.</p></li>
+<li><p><strong>opposite</strong> (<em>bool</em>) – If True, the output of the filtering will be the OPPOSITE of the specified         (instead of filtering out X, the function will filter out anything BUT X).         If False (default), the function will filter as expected.</p></li>
+<li><p><strong>inplace</strong> (<em>bool</em><em> (</em><em>default=True</em><em>)</em>) – If True (default), filtering will be applied to the current Filter object. If False,         the function will return a new Filter instance and the current instance will not be affected.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="rnalysis.enrichment.FeatureSet.discard.html" class="btn btn-neutral float-left" title="rnalysis.enrichment.FeatureSet.discard" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="rnalysis.enrichment.FeatureSet.filter_biotype_from_ref_table.html" class="btn btn-neutral float-right" title="rnalysis.enrichment.FeatureSet.filter_biotype_from_ref_table" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, Guy Teichman.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
