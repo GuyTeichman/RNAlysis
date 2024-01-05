@@ -37,7 +37,7 @@ def get_jdk_path():
     if len(matches) == 0:
         raise FileNotFoundError(f'No java executable found in {base_dir}')
 
-    return matches[0]
+    return matches[0].parent
 
 def is_jdk_installed():
     try:
