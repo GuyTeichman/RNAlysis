@@ -21,6 +21,7 @@ def mock_jdk_install(monkeypatch):
 def test_get_jdk_path_success(monkeypatch):
     monkeypatch.setattr('os.listdir', lambda x: MOCK_JDK_DIRS)
     monkeypatch.setattr('os.path.isdir', lambda x: True)
+    monkeypatch.setattr('pathlib.Path.rglob', lambda self, pattern: [JDK_ROOT.joinpath(f'{MOCK_JDK_DIRS[0]}/bin/java')])
     expected_path = JDK_ROOT.joinpath(f'{MOCK_JDK_DIRS[0]}/bin')
     assert get_jdk_path() == expected_path
 
