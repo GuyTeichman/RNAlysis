@@ -2,8 +2,13 @@
 History
 =======
 
-3.11.0 (2024-01-04)
+3.11.0 (2024-01-05)
 -------------------
+This release brings several exciting new features.
+Notably, these inclue the ability to run functions from the Picardtools suite, and the ability to automatically save interactive session reports and later resume them from any saved session.
+In addition, this release includes several visual upgrades, bug fixes, and quality-of-life improvements.
+Happy analysis!
+
 Added
 *******
 * *RNAlysis* can now run functions from the Picardtools suite, including conversion functions (BAM to SAM, SAM to FASTQ, FASTQ to SAM, etc), quality control (validate SAM), and post-processing functions (remove PCR duplicates, sort SAM, create BAM index).
