@@ -1,9 +1,9 @@
 import gzip
 import platform
+from unittest.mock import Mock
 
 import pytest
 import yaml
-from unittest.mock import Mock, patch
 
 from rnalysis import fastq, __version__
 from rnalysis.fastq import *
@@ -1053,8 +1053,8 @@ class TestPicardFunctions:
 def test_generate_picard_basecall(command):
     installs.install_jdk()
     print(installs.get_jdk_path())
-    print(Path(installs.get_jdk_path()).exists())
-    print(list(Path(installs.get_jdk_path()).rglob('java')))
+    print(Path(installs.get_jdk_path().parent).exists())
+    print(list(Path(installs.get_jdk_path().parent).rglob('java')))
     expected = [installs.get_jdk_path().joinpath('java').as_posix(), '-jar', installs.PICARD_JAR.as_posix(), command]
     out = fastq._generate_picard_basecall(command, 'auto')
     assert out == expected
