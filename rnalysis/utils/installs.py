@@ -1,4 +1,5 @@
 import os
+import platform
 import shutil
 import subprocess
 from pathlib import Path
@@ -23,8 +24,20 @@ def get_jdk_path():
                               item.startswith('jdk-') and os.path.isdir(os.path.join(JDK_ROOT, item))], reverse=True)
     if len(jdk_directories) == 0:
         raise FileNotFoundError('No JDK directory found')
-    return JDK_ROOT.joinpath(f'{jdk_directories[0]}/bin')
 
+    base_dir = JDK_ROOT.joinpath(f'{jdk_directories[0]}')
+
+    if platform.system() == 'Windows':
+        pattern = "java.exe"
+    else:
+        pattern = "java"
+
+    # Filter for files starting with 'java' or 'java.exe'
+    matches = list(base_dir.rglob(pattern))
+    if len(matches) == 0:
+        raise FileNotFoundError(f'No java executable found in {base_dir}')
+
+    return matches[0]
 
 def is_jdk_installed():
     try:
