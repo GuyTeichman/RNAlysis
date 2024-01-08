@@ -66,8 +66,15 @@ class _FASTQPipeline(generic.GenericPipeline, abc.ABC):
         raise NotImplementedError
 
     @staticmethod
-    def _is_paired_end_func(func: typing.Callable):
-        if func.__name__.endswith('paired_end'):
+    def _is_paired_end_func(func: typing.Callable, expected: bool = True):
+        if hasattr(func, 'func_type'):
+            if func.func_type == 'single':
+                return False
+            elif func.func_type == 'paired':
+                return True
+            elif func.func_type == 'both':
+                return expected
+        elif func.__name__.endswith('paired_end'):
             return True
         elif func.__name__.endswith('single_end'):
             return False
@@ -78,7 +85,7 @@ class _FASTQPipeline(generic.GenericPipeline, abc.ABC):
             thismodule = sys.modules[__name__]
             func = getattr(thismodule, func)
 
-        assert self._is_paired_end_func(func) == self.is_paired_end, \
+        assert self._is_paired_end_func(func, self.is_paired_end) == self.is_paired_end, \
             f"{'paired' * (not self.is_paired_end) + 'single' * self.is_paired_end}-end function " \
             f"cannot be added to {'single' * (not self.is_paired_end) + 'paired' * self.is_paired_end}-end Pipeline!"
 

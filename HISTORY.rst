@@ -2,6 +2,14 @@
 History
 =======
 
+
+3.11.1 (2024-??-??)
+-------------------
+
+Fixed
+*******
+* Fixed bug where some FASTQ/SAM functions could not be added to a FASTQ pipeline.
+
 3.11.0 (2024-01-05)
 -------------------
 This release brings several exciting new features.
