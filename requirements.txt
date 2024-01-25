@@ -25,3 +25,4 @@ aiodns>=3.0.0
 Brotli>=1.0.9
 aiolimiter>=1.0.0
 tenacity>=8.2.3
+mslex>=1.1.0

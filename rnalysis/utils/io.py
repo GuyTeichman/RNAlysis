@@ -2401,7 +2401,11 @@ def generate_base_call(command: str, installation_folder: Union[str, Path, Liter
         call = [command] + parsing.data_to_list(args)
     else:
         installation_folder = Path(installation_folder)
-        call = [installation_folder.joinpath(command).as_posix()] + parsing.data_to_list(args)
+        if shell:
+            cmd = parsing.quote_path(installation_folder.joinpath(command))
+        else:
+            cmd = installation_folder.joinpath(command).as_posix()
+        call = [cmd] + parsing.data_to_list(args)
 
     try:
         exit_code, stderr = run_subprocess(call + [version_command], shell=shell)

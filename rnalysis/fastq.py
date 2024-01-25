@@ -1104,7 +1104,7 @@ def bowtie2_create_index(genome_fastas: List[Union[str, Path]], output_folder: U
     genome_fastas = [Path(pth) for pth in parsing.data_to_list(genome_fastas)]
     for fasta in genome_fastas:
         assert fasta.exists(), f"the FASTA file '{fasta.as_posix()}' does not exist!"
-    call.append(','.join([fasta.as_posix() for fasta in genome_fastas]))
+    call.append(','.join([parsing.quote_path(fasta) for fasta in genome_fastas]))
 
     output_folder = Path(output_folder)
     assert output_folder.exists(), "output_folder does not exist!"
@@ -1113,7 +1113,7 @@ def bowtie2_create_index(genome_fastas: List[Union[str, Path]], output_folder: U
         index_name = parsing.remove_suffixes(genome_fastas[0]).stem
     else:
         assert isinstance(index_name, str), f"'index_name' must be a string, instead got {type(index_name)}."
-    call.append(output_folder.joinpath(index_name).as_posix())
+    call.append(parsing.quote_path(output_folder.joinpath(index_name)))
 
     print(f"Running command: \n{' '.join(call)}")
     with tqdm(total=1, desc='Building bowtie2 index', unit='index') as pbar:
@@ -1435,8 +1435,8 @@ def bowtie2_align_single_end(fastq_folder: Union[str, Path], output_folder: Unio
         else:
             this_name = new_sample_names[i]
 
-        this_call.extend(['-U', item.as_posix()])
-        this_call.extend(['-S', output_folder.joinpath(f'{this_name}.sam').as_posix()])
+        this_call.extend(['-U', parsing.quote_path(item)])
+        this_call.extend(['-S', parsing.quote_path(output_folder.joinpath(f'{this_name}.sam'))])
         calls.append(this_call)
 
     with tqdm(total=len(calls), desc='Aligning reads', unit='files') as pbar:
@@ -1565,8 +1565,8 @@ def bowtie2_align_paired_end(r1_files: List[str], r2_files: List[str], output_fo
         else:
             this_name = Path(new_sample_names[i]).with_suffix('.sam').name
 
-        this_call.extend(['-1', file1.as_posix(), '-2', file2.as_posix()])
-        this_call.extend(['-S', output_folder.joinpath(this_name).as_posix()])
+        this_call.extend(['-1', parsing.quote_path(file1), '-2', parsing.quote_path(file2)])
+        this_call.extend(['-S', parsing.quote_path(output_folder.joinpath(this_name))])
         calls.append(this_call)
 
     with tqdm(total=len(calls), desc='Aligning reads', unit='file pairs') as pbar:
@@ -1605,7 +1605,7 @@ def _parse_bowtie2_misc_args(output_folder, index_file: str, bowtie2_installatio
     assert isinstance(threads, int) and threads >= 0, "'threads' must be a non-negative int!"
     call.extend(['--threads', str(threads)])
 
-    call.extend(['-x', index_file.as_posix()])
+    call.extend(['-x', parsing.quote_path(index_file)])
 
     return call
 

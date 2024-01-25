@@ -1,16 +1,29 @@
 import itertools
+import platform
 import re
+import shlex
 import warnings
 from itertools import islice
 from pathlib import Path
 from typing import Any, Dict, Union, List, Tuple
 
+import mslex
 import numpy as np
 import pandas as pd
 import unicodedata
 from tqdm.auto import tqdm
 
 from rnalysis.utils import validation
+
+
+def quote_path(pth: Union[Path, str]) -> str:
+    if isinstance(pth, Path):
+        pth = pth.as_posix()
+
+    if platform.system() == 'Windows':
+        return mslex.quote(pth)
+    else:
+        return shlex.quote(pth)
 
 
 def python_to_r_kwargs(kwargs: dict, delimiter: str = ',\n'):
