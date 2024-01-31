@@ -2934,7 +2934,7 @@ class DESeqFilter(Filter):
             fig = plt.figure(constrained_layout=True)
             ax = fig.add_subplot(111)
             kwargs = {}
-        colors = pd.Series(index=self.df.index, dtype='float64')
+        colors = pd.Series(index=self.df.index, dtype='str')
         colors.loc[(self.df[self.padj_col] <= alpha) & (self.df[self.log2fc_col] > log2fc_threshold)] = 'tab:red'
         colors.loc[(self.df[self.padj_col] <= alpha) & (self.df[self.log2fc_col] < -log2fc_threshold)] = 'tab:blue'
         colors.fillna('grey', inplace=True)
