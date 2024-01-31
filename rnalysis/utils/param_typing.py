@@ -5,6 +5,7 @@ import typing
 import warnings
 
 import requests
+import tenacity
 import typing_extensions
 
 from rnalysis.utils import io, parsing
@@ -116,7 +117,7 @@ def get_phylomedb_taxons() -> typing.Tuple[str, ...]:
 def get_ensembl_taxons() -> typing.Tuple[str, ...]:
     try:
         taxons = parsing.data_to_tuple(io.get_legal_ensembl_taxons())
-    except requests.exceptions.ConnectionError:
+    except (requests.exceptions.ConnectionError, tenacity.RetryError):
         taxons = tuple()
         warnings.warn('Failed to retreive legal taxons from Ensembl. '
                       'Some features may not work as intended. '
