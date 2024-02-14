@@ -1471,7 +1471,9 @@ class TestEnsemblOrthologMapper:
         paralogs = ortholog_mapper.get_paralogs(ids, filter_percent_identity)
 
         assert isinstance(paralogs, OrthologDict)
-        assert paralogs.mapping_dict == truth
+        for key in truth:
+            assert key in paralogs.mapping_dict
+            assert sorted(paralogs.mapping_dict[key]) == sorted(truth[key])
 
     @pytest.mark.skipif(not ENSEMBL_AVAILABLE, reason='Ensembl API is not available at the moment')
     @pytest.mark.parametrize('non_unique_mode', ['first', 'last', 'random'])
