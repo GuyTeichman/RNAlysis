@@ -1,11 +1,19 @@
-from multiprocessing import freeze_support
 import asyncio
+from multiprocessing import freeze_support
+
+import nest_asyncio
+
 from rnalysis.gui import gui
 
 
 def main():
     freeze_support()
-    asyncio.run(gui.run())
+    try:
+        raise RuntimeError
+        asyncio.run(gui.run())
+    except RuntimeError:
+        nest_asyncio.apply()
+        asyncio.run(gui.run())
 
 
 if __name__ == '__main__':
