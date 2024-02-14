@@ -31,6 +31,7 @@ import aiohttp
 import aiolimiter
 import appdirs
 import matplotlib.pyplot as plt
+import nest_asyncio
 import numpy as np
 import pandas as pd
 import requests
@@ -1112,7 +1113,11 @@ class EnsemblRestClient:
         self.queue.put((req_type, endpoint, hdrs, params))
 
     def run(self):
-        res = asyncio.run(self._run())
+        try:
+            res = asyncio.run(self._run())
+        except RuntimeError:
+            nest_asyncio.apply()
+            res = asyncio.run(self._run())
         return res
 
     async def _run(self):
