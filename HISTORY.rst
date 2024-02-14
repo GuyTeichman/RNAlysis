@@ -11,7 +11,11 @@ Fixed
 * Fixed bug where some FASTQ/SAM functions could not be added to a FASTQ pipeline.
 * Fixed bug where bowtie2 could not be run in/from directories with spaces in their names.
 * Fixed bug where RNAlysis would crash when launched without an internet connection.
+* Fixed bug that caused R package installations (DESeq2, limma, etc) to fail on some computers (thanks to `Celine-075 <https://github.com/Celine-075>`_ in `#35 <https://github.com/GuyTeichman/RNAlysis/issues/35>`_).
 
+New Contributors
+*****************
+* `Celine-075`_ in `#35`_
 3.11.0 (2024-01-05)
 -------------------
 This release brings several exciting new features.

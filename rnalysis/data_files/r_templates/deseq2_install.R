@@ -1,4 +1,5 @@
 if (("DESeq2" %in% rownames(installed.packages()) == FALSE) || (!require("DESeq2", quietly = TRUE))) {
+    options(repos = c(CRAN="https://cloud.r-project.org/"))
     install.packages("png")
     pgks <- list("XML", "vctrs", "RCurl")
     for (pkg in pgks) {

@@ -12,6 +12,7 @@ for (pkg in pgks) {
     )
 }
 if (("limma" %in% rownames(installed.packages()) == FALSE) || (!require("limma", quietly = TRUE))) {
+    options(repos = c(CRAN="https://cloud.r-project.org/"))
     if (!require("BiocManager", quietly = TRUE)) {
         install.packages("BiocManager")
         }
