@@ -9,7 +9,6 @@ from rnalysis.gui import gui
 def main():
     freeze_support()
     try:
-        raise RuntimeError
         asyncio.run(gui.run())
     except RuntimeError:
         nest_asyncio.apply()
