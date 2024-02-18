@@ -39,6 +39,7 @@ def get_jdk_path():
 
     return matches[0].parent
 
+
 def is_jdk_installed():
     try:
         if not JDK_ROOT.exists():
@@ -103,3 +104,13 @@ def install_deseq2(r_installation_folder: Union[str, Path, Literal['auto']] = 'a
         raise AssertionError("Failed to install DESeq2. "
                              "Please make sure you have write premission to R's library folder, "
                              "or try to install DESeq2 manually.")
+
+
+def install_rsubread(r_installation_folder: Union[str, Path, Literal['auto']] = 'auto'):
+    script_path = Path(__file__).parent.parent.joinpath('data_files/r_templates/rsubread_install.R')
+    try:
+        io.run_r_script(script_path, r_installation_folder)
+    except AssertionError:
+        raise AssertionError("Failed to install RSubread. "
+                             "Please make sure you have write premission to R's library folder, "
+                             "or try to install RSubread manually.")

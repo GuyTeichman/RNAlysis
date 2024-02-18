@@ -1,26 +1,14 @@
 from pathlib import Path
-from typing import Union
+from typing import Union, Literal
 
-from typing import Literal
-
-from rnalysis.utils import io, parsing
+from rnalysis.utils import io, parsing, installs
 
 
 def run_featurecounts_analysis(kwargs: dict, output_dir: Path,
                                r_installation_folder: Union[str, Path, Literal['auto']] = 'auto'):
-    install_rsubread(r_installation_folder)
+    installs.install_rsubread(r_installation_folder)
     script_path = create_featurecounts_script(kwargs, output_dir)
     io.run_r_script(script_path, r_installation_folder)
-
-
-def install_rsubread(r_installation_folder: Union[str, Path, Literal['auto']] = 'auto'):
-    script_path = Path(__file__).parent.parent.joinpath('data_files/r_templates/rsubread_install.R')
-    try:
-        io.run_r_script(script_path, r_installation_folder)
-    except AssertionError:
-        raise AssertionError("Failed to install RSubread. "
-                             "Please make sure you have write premission to R's library folder, "
-                             "or try to install RSubread manually.")
 
 
 def create_featurecounts_script(kwargs: dict, output_dir: Path):

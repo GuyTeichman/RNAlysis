@@ -1,9 +1,6 @@
 from rnalysis.utils.feature_counting import *
 
 
-def test_install_rsubread():
-    install_rsubread()
-
 
 def test_create_featurecounts_script():
     expected_path = 'tests/test_files/expected_featurecounts_script.R'

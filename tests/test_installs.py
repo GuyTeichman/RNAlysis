@@ -119,3 +119,7 @@ def test_install_limma():
 
 def test_install_deseq2():
     install_deseq2()
+
+
+def test_install_rsubread():
+    install_rsubread()
