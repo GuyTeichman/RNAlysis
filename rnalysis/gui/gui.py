@@ -4066,8 +4066,11 @@ class MainWindow(QtWidgets.QMainWindow):
         gene_sets_menu = self.menu_bar.addMenu("&Gene sets")
         gene_sets_menu.addActions(
             [self.copy_action, self.import_set_action, self.import_multiple_sets_action,
-             self.export_set_action, self.set_op_action, self.set_vis_action, self.enrichment_action,
-             self.ontology_graph_action, self.pathway_graph_action, self.bar_plot_action])
+             self.export_set_action, self.set_op_action, self.set_vis_action])
+
+        enrichment_menu = self.menu_bar.addMenu("E&nrichment")
+        enrichment_menu.addActions([self.enrichment_action,
+                                    self.ontology_graph_action, self.pathway_graph_action, self.bar_plot_action])
 
         pipeline_menu = self.menu_bar.addMenu("&Pipelines")
         pipeline_menu.addActions([self.new_pipeline_action, self.import_pipeline_action, self.export_pipeline_action,
