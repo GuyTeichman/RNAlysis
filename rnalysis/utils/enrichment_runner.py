@@ -609,12 +609,13 @@ class EnrichmentRunner:
         if len(scores_no_inf) == 0:
             scores_no_inf.append(3)
 
+        for i in range(len(enrichment_scores)):
+            if enrichment_scores[i] == -np.inf:
+                enrichment_scores[i] = -max(scores_no_inf)
+            elif enrichment_scores[i] == np.inf:
+                enrichment_scores[i] = max(scores_no_inf)
+
         if ylim == 'auto':
-            for i in range(len(enrichment_scores)):
-                if enrichment_scores[i] == -np.inf:
-                    enrichment_scores[i] = -max(scores_no_inf)
-                elif enrichment_scores[i] == np.inf:
-                    enrichment_scores[i] = max(scores_no_inf)
             if len(scores_no_inf) > 0:
                 max_score = max(max(scores_no_inf), 3)
             else:
