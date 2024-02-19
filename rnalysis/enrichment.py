@@ -1863,6 +1863,12 @@ def enrichment_bar_plot(results_table_path: Union[str, Path], alpha: param_typin
     :type plot_style: 'bar' or 'lollipop' (default='bar')
     :param show_expected: if True, the observed/expected values will be shown on the plot.
     :type show_expected: bool (default=False)
+    :param title_fontsize: font size for the plot title.
+    :type title_fontsize: float (default=18)
+    :param label_fontsize: font size for the attribute labels on the plot.
+    :type label_fontsize: float (default=13)
+    :param ylabel_fontsize: font size for the y-axis colorbar label.
+    :type ylabel_fontsize: float (default=16)
     :return: Figure object containing the bar plot
     :rtype: matplotlib.figure.Figure instance
     """

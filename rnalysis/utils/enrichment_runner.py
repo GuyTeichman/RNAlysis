@@ -558,6 +558,12 @@ class EnrichmentRunner:
         :param ylim: set the Y-axis limits. If `ylim`='auto', determines the axis limits automatically based on the data. \
         If `ylim` is a number, set the Y-axis limits to [-ylim, ylim].
         :type ylim: float or 'auto' (default='auto')
+        :param title_fontsize: font size for the plot title.
+        :type title_fontsize: float (default=18)
+        :param label_fontsize: font size for the attribute labels on the plot.
+        :type label_fontsize: float (default=13)
+        :param ylabel_fontsize: font size for the y-axis colorbar label.
+        :type ylabel_fontsize: float (default=16)
         :return: Figure object containing the bar plot
         :rtype: matplotlib.figure.Figure instance
         """
