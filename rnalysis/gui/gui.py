@@ -4314,7 +4314,10 @@ class MainWindow(QtWidgets.QMainWindow):
             # close all external windows
             try:
                 for window in itertools.chain(self.external_windows.values(), self.enrichment_results):
-                    window.close()
+                    try:
+                        window.close()
+                    except RuntimeError:
+                        pass
                 if self.error_window is not None:
                     self.error_window.close()
             except AttributeError:  # Python 3.8/3.9 error on test suite
