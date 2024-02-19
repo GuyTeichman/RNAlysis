@@ -1829,7 +1829,9 @@ def enrichment_bar_plot(results_table_path: Union[str, Path], alpha: param_typin
                         plot_horizontal: bool = True, ylabel: Union[str, Literal[
         r"$\log_2$(Fold Enrichment)", r"$\log_2$(Enrichment Score)"]] = r"$\log_2$(Fold Enrichment)",
                         ylim: Union[float, Literal['auto']] = 'auto',
-                        plot_style: Literal['bar', 'lollipop'] = 'bar', show_expected: bool = False) -> plt.Figure:
+                        plot_style: Literal['bar', 'lollipop'] = 'bar', show_expected: bool = False,
+                        title_fontsize: float = 18, label_fontsize: float = 13, ylabel_fontsize: float = 16
+                        ) -> plt.Figure:
     """
     Generate an enrichment bar-plot based on an enrichment results table. \
     For the clarity of display, complete depletion (linear enrichment = 0) \
@@ -1870,7 +1872,8 @@ def enrichment_bar_plot(results_table_path: Union[str, Path], alpha: param_typin
                                                 plot_style=plot_style, show_expected=show_expected)
     runner.en_score_col = enrichment_score_column
     runner.results = results_table
-    return runner.enrichment_bar_plot(n_bars, center_bars, ylabel=ylabel, title=title, ylim=ylim)
+    return runner.enrichment_bar_plot(n_bars, center_bars, ylabel, title, ylim, title_fontsize, label_fontsize,
+                                      ylabel_fontsize)
 
 
 def _fetch_sets(objs: dict, ref: Union[str, Path, Literal['predefined']] = 'predefined'):

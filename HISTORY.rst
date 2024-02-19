@@ -3,8 +3,12 @@ History
 =======
 
 
-3.11.1 (2024-??-??)
+3.12.0 (2024-??-??)
 -------------------
+
+Changed
+********
+* Enrichment bar plots now have optional parameters that control font sizes for titles and labels.
 
 Fixed
 *******

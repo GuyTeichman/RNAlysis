@@ -535,9 +535,11 @@ class EnrichmentRunner:
         return self.enrichment_bar_plot(ylabel=self.ENRICHMENT_SCORE_YLABEL,
                                         title=f"Enrichment for gene set '{self.set_name}'")
 
-    def enrichment_bar_plot(self, n_bars: int = 'all', center_bars: bool = True,
+    def enrichment_bar_plot(self, n_bars: Union[param_typing.PositiveInt, Literal['all']] = 'all',
+                            center_bars: bool = True,
                             ylabel: str = r"$\log_2$(Fold Enrichment)", title: str = 'Enrichment results',
-                            ylim: Union[float, Literal['auto']] = 'auto', ) -> plt.Figure:
+                            ylim: Union[float, Literal['auto']] = 'auto', title_fontsize: float = 18,
+                            label_fontsize: float = 13, ylabel_fontsize: float = 16) -> plt.Figure:
 
         """
         Receives a DataFrame output from an enrichment function and plots it in a bar plot. \
@@ -564,9 +566,7 @@ class EnrichmentRunner:
 
         # determine number of entries/bars to plot
         if n_bars != 'all':
-            assert isinstance(n_bars, int)
-            if n_bars < 1:
-                return
+            assert isinstance(n_bars, int) and n_bars > 0, f"Invalid value for 'n_bars': {n_bars}."
             results = self.results.iloc[:n_bars]
         else:
             results = self.results
@@ -590,7 +590,7 @@ class EnrichmentRunner:
             cbar_orientation = 'horizontal'
             tick_func = plt.Axes.set_yticks
             ticklabels_func = plt.Axes.set_yticklabels
-            ticklabels_kwargs = dict(fontsize=13, rotation=0)
+            ticklabels_kwargs = dict(fontsize=label_fontsize, rotation=0)
 
             for lst in (enrichment_names, enrichment_scores, enrichment_pvalue, enrichment_obs, enrichment_exp):
                 lst.reverse()
@@ -602,7 +602,7 @@ class EnrichmentRunner:
             cbar_orientation = 'vertical'
             tick_func = plt.Axes.set_xticks
             ticklabels_func = plt.Axes.set_xticklabels
-            ticklabels_kwargs = dict(fontsize=13, rotation=45)
+            ticklabels_kwargs = dict(fontsize=label_fontsize, rotation=45)
 
         # set enrichment scores which are 'inf' or '-inf' to be the second highest/lowest enrichment score in the list
         scores_no_inf = [abs(score) for score in enrichment_scores if score != np.inf and score != -np.inf]
@@ -666,7 +666,7 @@ class EnrichmentRunner:
         ticklabels_func(ax, enrichment_names, **ticklabels_kwargs)
         ax.tick_params(axis='both', which='major', pad=10)
         # title
-        ax.set_title(title, fontsize=18)
+        ax.set_title(title, fontsize=title_fontsize)
         # add significance asterisks
         for i, (score, sig, obs, exp) in enumerate(
             zip(enrichment_scores, enrichment_pvalue, enrichment_obs, enrichment_exp)):
@@ -709,7 +709,7 @@ class EnrichmentRunner:
         cax = divider.append_axes(cbar_location, size=f"{5 * (1 + self.plot_horizontal)}%", pad=0.05)
         sm = ScalarMappable(cmap=my_cmap, norm=plt.Normalize(*bounds))
         sm.set_array(np.array([]))
-        cbar_label_kwargs = dict(label=ylabel, fontsize=16, labelpad=15, )
+        cbar_label_kwargs = dict(label=ylabel, fontsize=ylabel_fontsize, labelpad=15)
         cbar = fig.colorbar(sm, ticks=range(int(bounds[0]), int(bounds[1]) + 1), cax=cax, orientation=cbar_orientation)
         cbar.set_label(**cbar_label_kwargs)
         cax.tick_params(labelsize=14, pad=6)
