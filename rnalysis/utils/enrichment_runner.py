@@ -535,7 +535,7 @@ class EnrichmentRunner:
         return self.enrichment_bar_plot(ylabel=self.ENRICHMENT_SCORE_YLABEL,
                                         title=f"Enrichment for gene set '{self.set_name}'")
 
-    def enrichment_bar_plot(self, n_bars: Union[param_typing.PositiveInt, Literal['all']] = 'all',
+    def enrichment_bar_plot(self, n_bars: Union[int, Literal['all']] = 'all',
                             center_bars: bool = True,
                             ylabel: str = r"$\log_2$(Fold Enrichment)", title: str = 'Enrichment results',
                             ylim: Union[float, Literal['auto']] = 'auto', title_fontsize: float = 18,
@@ -572,7 +572,7 @@ class EnrichmentRunner:
 
         # determine number of entries/bars to plot
         if n_bars != 'all':
-            assert isinstance(n_bars, int) and n_bars > 0, f"Invalid value for 'n_bars': {n_bars}."
+            assert isinstance(n_bars, int) and n_bars >= 0, f"Invalid value for 'n_bars': {n_bars}."
             results = self.results.iloc[:n_bars]
         else:
             results = self.results
