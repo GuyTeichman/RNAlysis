@@ -25,6 +25,7 @@ Fixed
 * Fixed bug that cause ID-mapping functions to raise an error when called from the MacOS stand-alone app (thanks to `Mitchzw <https://github.com/Mitchzw>`_ in `#34 <https://github.com/GuyTeichman/RNAlysis/issues/34>`_).
 * Fixed bug that caused R package installations (DESeq2, limma, etc) to fail on some computers (thanks to `Celine-075 <https://github.com/Celine-075>`_ in `#35 <https://github.com/GuyTeichman/RNAlysis/issues/35>`_).
 * Fixed bug where generating enrichment bar plots with ylim='auto' would cause bars with 100% depletion (log2FC=-inf) to disappear.
+* Fixed bug where defining 10 or more sample groups in the graphical interface would cause the groups to be ordered incorrectly in graphs.
 
 New Contributors
 *****************

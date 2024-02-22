@@ -252,7 +252,7 @@ class TableColumnGroupPicker(TableColumnPicker):
         existing_groups = {}
         for combo, col_name in zip(self.column_combos, self.columns):
             if combo.isEnabled():
-                grp = combo.currentText()
+                grp = int(combo.currentText())
                 if grp not in existing_groups:
                     existing_groups[grp] = []
                 existing_groups[grp].append(col_name)
@@ -1305,6 +1305,159 @@ class OptionalWidget(QtWidgets.QWidget):
                 raise ValueError(f'Unable to set default value of {type(self.other)} to {val}')
 
 
+class DiffExpPickerGroup(QtWidgets.QWidget):
+    __slots__ = {'design_mat': 'design matrix',
+                 'widgets': 'widgets',
+                 'layout': 'layouts',
+                 'inputs': 'inputs',
+                 'input_labels': 'labels for inputs', }
+
+    def __init__(self, design_mat: pd.DataFrame, parent=None):
+        super().__init__(parent)
+        self.design_mat = design_mat
+        self.widgets = {}
+        self.layout = QtWidgets.QGridLayout(self)
+        self.inputs = []
+        self.input_labels = []
+        self.init_ui()
+
+    @QtCore.pyqtSlot()
+    def remove_comparison_widget(self):
+        if len(self.inputs) > 0:
+            self.inputs.pop(-1).deleteLater()
+            self.input_labels.pop(-1).deleteLater()
+            self.layout.setRowStretch(len(self.inputs) + 3, 2)
+
+    def get_comparison_values(self):
+        values = []
+        for widget in self.inputs:
+            values.append(widget.value())
+        return values
+
+
+class CovariatePicker(QtWidgets.QWidget):
+    def __init__(self, design_mat: pd.DataFrame, parent=None):
+        super().__init__(parent)
+        self.design_mat = design_mat
+        self.layout = QtWidgets.QHBoxLayout(self)
+        self.factor = QtWidgets.QComboBox(self)
+        self.init_ui()
+
+    def init_ui(self):
+        self.layout.addWidget(self.factor)
+        factors = [str(item) for item in self.design_mat.columns if
+                   pd.api.types.is_numeric_dtype(self.design_mat[item])]
+        self.factor.addItems(factors)
+
+    def update_combos(self):
+        pass  # TODO
+
+    def value(self):
+        pass  # TODO
+
+
+class CovariatePickerGroup(DiffExpPickerGroup):
+    def init_ui(self):
+        self.widgets['add_widget'] = QtWidgets.QPushButton('Add test')
+        self.widgets['add_widget'].clicked.connect(self.add_comparison_widget)
+        self.layout.addWidget(self.widgets['add_widget'], 0, 0, 1, 2)
+
+        self.widgets['remove_widget'] = QtWidgets.QPushButton('Remove test')
+        self.widgets['remove_widget'].clicked.connect(self.remove_comparison_widget)
+        self.layout.addWidget(self.widgets['remove_widget'], 1, 0, 1, 2)
+
+        self.layout.addWidget(QtWidgets.QLabel('<b>Covariate</b>', self), 2, 1)
+        self.layout.setColumnStretch(1, 1)
+
+    @QtCore.pyqtSlot()
+    def add_comparison_widget(self):
+        self.inputs.append(CovariatePicker(self.design_mat, self))
+        self.layout.addWidget(self.inputs[-1], len(self.inputs) + 2, 1, 1, 1)
+
+        self.input_labels.append(QtWidgets.QLabel(f'Test #{len(self.inputs)}:', self.inputs[-1]))
+        self.layout.addWidget(self.input_labels[-1], len(self.inputs) + 2, 0)
+
+        self.layout.setRowStretch(len(self.inputs) + 2, 1)
+        self.layout.setRowStretch(len(self.inputs) + 3, 2)
+
+
+class LRTPicker(QtWidgets.QWidget):
+    def __init__(self, design_mat: pd.DataFrame, parent=None):
+        super().__init__(parent)
+        self.design_mat = design_mat
+        self.layout = QtWidgets.QHBoxLayout(self)
+        self.factor = QtWidgets.QComboBox(self)
+        self.init_ui()
+
+    def init_ui(self):
+        self.layout.addWidget(self.factor)
+        factors = [str(item) for item in self.design_mat.columns]
+        poly = self._get_polynomial_terms(factors)
+        interactions = self._get_interaction_terms(factors)
+
+        self.factor.addItems(factors)
+        self.factor.insertSeparator(self.factor.count())
+        self.factor.addItems(poly)
+        self.factor.insertSeparator(self.factor.count())
+        self.factor.addItems(interactions)
+
+    @staticmethod
+    def _get_interaction_terms(factors: List[str]) -> List[str]:
+        # calculate only two-way and three-way interactions
+        # because higher order interactions are rarely ever relevant
+        two_way = []
+        three_way = []
+        for i in range(len(factors)):
+            for j in range(i + 1, len(factors)):
+                two_way.append(f'{factors[i]}*{factors[j]}')
+                for k in range(j + 1, len(factors)):
+                    three_way.append(f'{factors[i]}*{factors[j]}*{factors[k]}')
+
+        return two_way + three_way
+
+    def _get_polynomial_terms(self, factors: List[str]) -> List[str]:
+        # calculate only 2nd and 3rd degree polynomials because higher order polynomials are rarely ever relevant
+        second_degree = []
+        third_degree = []
+        numerical_factors = [factor for factor in factors if pd.api.types.is_numeric_dtype(self.design_mat[factor])]
+        for this_factor in numerical_factors:
+            second_degree.append(f'{this_factor}+{this_factor}^2')
+            third_degree.append(f'{this_factor}+{this_factor}^2+{this_factor}^3')
+        return second_degree + third_degree
+
+    def update_combos(self):
+        pass  # TODO
+
+    def value(self):
+        pass  # TODO
+
+
+class LRTPickerGroup(DiffExpPickerGroup):
+
+    def init_ui(self):
+        self.widgets['add_widget'] = QtWidgets.QPushButton('Add test')
+        self.widgets['add_widget'].clicked.connect(self.add_comparison_widget)
+        self.layout.addWidget(self.widgets['add_widget'], 0, 0, 1, 2)
+
+        self.widgets['remove_widget'] = QtWidgets.QPushButton('Remove test')
+        self.widgets['remove_widget'].clicked.connect(self.remove_comparison_widget)
+        self.layout.addWidget(self.widgets['remove_widget'], 1, 0, 1, 2)
+
+        self.layout.addWidget(QtWidgets.QLabel('<b>Design factor</b>', self), 2, 1)
+        self.layout.setColumnStretch(1, 1)
+
+    @QtCore.pyqtSlot()
+    def add_comparison_widget(self):
+        self.inputs.append(LRTPicker(self.design_mat, self))
+        self.layout.addWidget(self.inputs[-1], len(self.inputs) + 2, 1, 1, 1)
+
+        self.input_labels.append(QtWidgets.QLabel(f'Test #{len(self.inputs)}:', self.inputs[-1]))
+        self.layout.addWidget(self.input_labels[-1], len(self.inputs) + 2, 0)
+
+        self.layout.setRowStretch(len(self.inputs) + 2, 1)
+        self.layout.setRowStretch(len(self.inputs) + 3, 2)
+
+
 class ComparisonPicker(QtWidgets.QWidget):
     __slots__ = {'design_mat': 'design matrix',
                  'layout': 'layout',
@@ -1346,23 +1499,10 @@ class ComparisonPicker(QtWidgets.QWidget):
         return self.factor.currentText(), self.numerator.currentText(), self.denominator.currentText()
 
 
-class ComparisonPickerGroup(QtWidgets.QWidget):
-    __slots__ = {'design_mat': 'design matrix',
-                 'widgets': 'widgets',
-                 'layout': 'layouts',
-                 'inputs': 'inputs',
-                 'input_labels': 'labels for inputs'}
+class ComparisonPickerGroup(DiffExpPickerGroup):
 
     def __init__(self, design_mat: pd.DataFrame, parent=None):
-        super().__init__(parent)
-        self.design_mat = design_mat
-        self.widgets = {}
-        self.layout = QtWidgets.QGridLayout(self)
-
-        self.inputs = []
-        self.input_labels = []
-
-        self.init_ui()
+        super().__init__(design_mat, parent)
         self.add_comparison_widget()
 
     def init_ui(self):
@@ -1388,19 +1528,6 @@ class ComparisonPickerGroup(QtWidgets.QWidget):
 
         self.layout.setRowStretch(len(self.inputs) + 2, 1)
         self.layout.setRowStretch(len(self.inputs) + 3, 2)
-
-    @QtCore.pyqtSlot()
-    def remove_comparison_widget(self):
-        if len(self.inputs) > 0:
-            self.inputs.pop(-1).deleteLater()
-            self.input_labels.pop(-1).deleteLater()
-            self.layout.setRowStretch(len(self.inputs) + 3, 2)
-
-    def get_comparison_values(self):
-        values = []
-        for widget in self.inputs:
-            values.append(widget.value())
-        return values
 
 
 class QMultiInput(QtWidgets.QPushButton):
