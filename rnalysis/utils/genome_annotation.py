@@ -1,10 +1,9 @@
 import warnings
 from pathlib import Path
-from typing import Union
+from typing import Union, Literal
 
 import numpy as np
 from scipy.stats.mstats import gmean
-from typing import Literal
 
 from rnalysis.utils import validation, parsing, generic
 from rnalysis.utils.param_typing import LEGAL_GENE_LENGTH_METHODS
@@ -16,10 +15,12 @@ def map_transcripts_to_genes(gtf_path: Union[str, Path], use_name: bool = False,
 
     mapping = {}
     with open(gtf_path, errors="ignore") as f:
-        for line in f.readlines():
+        for i, line in enumerate(f.readlines()):
             if len(line) == 0 or line[0] == '#':
                 continue
             line_split = line.strip().split('\t')
+            if len(line_split) != 9:
+                raise ValueError(f'Invalid GTF format at line #{i + 1}: "{line}"')
             if line_split[2] == 'transcript':
                 attributes = line_split[8]
                 attributes_dict = parsing.parse_gtf_attributes(attributes)
