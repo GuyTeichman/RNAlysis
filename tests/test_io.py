@@ -1307,14 +1307,15 @@ class TestOrthoInspectorOrthologMapper:
     def test_get_database_organisms(self, ortholog_mapper):
         db_organisms = ortholog_mapper.get_database_organisms()
         assert isinstance(db_organisms, dict)
-        assert len(db_organisms) >= 4  # the current number of OrthoInspector databases
-        assert len(list(db_organisms.values())) == len(set(db_organisms.values()))  # check that all values are unique
-        time.sleep(5)
+        assert len(db_organisms) >= 11  # the current number of OrthoInspector databases
+        assert abs(len(list(db_organisms.values())) - len(
+            set(db_organisms.values()))) <= 2  # check that all databases are unique, with 2 allowed exceptions due to the newly-added databases
 
+    @pytest.mark.xfail(reason="temporary issues with the OrthoInspector server")
     @pytest.mark.parametrize('database,non_unique_mode', [
         ('auto', 'first'),
-        ('Eukaryota', 'last'),
-        ('Eukaryota', 'random')])
+        ('Eukaryota2016', 'last'),
+        ('Eukaryota2016', 'random')])
     def test_get_orthologs(self, database, non_unique_mode):
         mapper = OrthoInspectorOrthologMapper(map_to_organism=6238, map_from_organism=6239,
                                               gene_id_type='UniProtKB AC/ID')
