@@ -1,3 +1,4 @@
+import difflib
 import itertools
 import platform
 import re
@@ -432,3 +433,63 @@ def slugify(value, allow_unicode=False):
         )
     value = re.sub(r"[^\w\s-]", "", value)
     return re.sub(r"[-\s]+", "-", value).strip("-_")
+
+
+def longest_common_substring(s1, s2):
+    """Return the longest common substring between two strings using difflib."""
+    matcher = difflib.SequenceMatcher(None, s1, s2)
+    match = matcher.find_longest_match(0, len(s1), 0, len(s2))
+    return s1[match.a: match.a + match.size]
+
+
+def common_suffix(strings):
+    """Find the common suffix among a list of strings."""
+    if not strings:
+        return ''
+    if len(strings) == 1:
+        return strings[0]
+    s1 = min(strings)
+    s2 = max(strings)
+    for i, c in enumerate(reversed(s1)):
+        if c != s2[-(i + 1)]:
+            return s1[len(s1) - i:]
+    return s1
+
+
+def remove_suffix(s: str, suffix: Union[str, List[str]]):
+    """Remove a suffix from a string."""
+    suffixes = sorted(data_to_list(suffix), key=len, reverse=True)
+    for this_suffix in suffixes:
+        if s.endswith(this_suffix):
+            return s[:-len(this_suffix)]
+    return s
+
+
+def generate_common_name(file_pairs):
+    suffixes = ['_trimmed', '_sorted', '_']
+    file_pairs = [(remove_suffix(p1, suffixes), remove_suffix(p2, suffixes)) for p1, p2 in file_pairs]
+    lcs_list = [(pair[0], pair[1], longest_common_substring(pair[0], pair[1])) for pair in file_pairs]
+
+    # Find LCS among all LCSs
+    overall_lcs = lcs_list[0][2] if len(lcs_list) > 1 else ""
+    for _, _, lcs in lcs_list[1:]:
+        overall_lcs = longest_common_substring(overall_lcs, lcs)
+
+    # Prepare output based on comparison
+    initial_results = []
+    for s1, s2, lcs in lcs_list:
+        if len(lcs) > len(overall_lcs):
+            initial_results.append(lcs)
+        else:
+            initial_results.append(s1 + s2)
+    # Find and trim common suffix from LCSs
+    lcs_only = [result for result in initial_results if len(result) <= len(s1 + s2)]
+    suffix = common_suffix(lcs_only)
+    if suffix and len(lcs_only) > 1:
+        trimmed_results = [
+            result[:-len(suffix)] if result.endswith(suffix) and len(result[:-len(suffix)]) > 0 else result for result
+            in initial_results]
+    else:
+        trimmed_results = initial_results
+
+    return trimmed_results

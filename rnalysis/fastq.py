@@ -1454,7 +1454,7 @@ def bowtie2_align_single_end(fastq_folder: Union[str, Path], output_folder: Unio
 def bowtie2_align_paired_end(r1_files: List[str], r2_files: List[str], output_folder: Union[str, Path],
                              index_file: Union[str, Path],
                              bowtie2_installation_folder: Union[str, Path, Literal['auto']] = 'auto',
-                             new_sample_names: Union[List[str], Literal['auto']] = 'auto',
+                             new_sample_names: Union[List[str], Literal['auto', 'smart']] = 'smart',
                              mode: Literal[LEGAL_BOWTIE2_MODES] = 'end-to-end',
                              settings_preset: Literal[LEGAL_BOWTIE2_PRESETS] = 'very-sensitive',
                              ignore_qualities: bool = False,
@@ -1531,7 +1531,7 @@ def bowtie2_align_paired_end(r1_files: List[str], r2_files: List[str], output_fo
 
     assert len(r1_files) == len(r2_files), f"Got an uneven number of R1 and R2 files: " \
                                            f"{len(r1_files)} and {len(r2_files)} respectively"
-    assert (new_sample_names == 'auto') or (len(new_sample_names) == len(r1_files)), \
+    assert (new_sample_names in ['auto', 'smart']) or (len(new_sample_names) == len(r1_files)), \
         f'Number of samples ({len(r1_files)}) does not match number of sample names ({len(new_sample_names)})!'
 
     assert isinstance(min_fragment_length, int) and min_fragment_length >= 0, \
@@ -1555,15 +1555,20 @@ def bowtie2_align_paired_end(r1_files: List[str], r2_files: List[str], output_fo
     else:
         raise ValueError(f"Invalid value for 'mate_orientations': '{mate_orientations}'.")
 
+    if new_sample_names == 'smart':
+        prefix_pairs = [(parsing.remove_suffixes(Path(r1)).stem, parsing.remove_suffixes(Path(r2)).stem) for r1, r2 in
+                        zip(r1_files, r2_files)]
+        new_sample_names = parsing.generate_common_name(prefix_pairs)
+    elif new_sample_names == 'auto':
+        new_sample_names = [f"{parsing.remove_suffixes(Path(file1)).stem}_{parsing.remove_suffixes(Path(file2)).stem}"
+                            for
+                            file1, file2 in zip(r1_files, r2_files)]
     calls = []
     for i, (file1, file2) in enumerate(zip(r1_files, r2_files)):
         file1 = Path(file1)
         file2 = Path(file2)
         this_call = call.copy()
-        if new_sample_names == 'auto':
-            this_name = f"{parsing.remove_suffixes(file1).stem}_{parsing.remove_suffixes(file2).stem}.sam"
-        else:
-            this_name = Path(new_sample_names[i]).with_suffix('.sam').name
+        this_name = Path(new_sample_names[i]).with_suffix('.sam').name
 
         this_call.extend(['-1', parsing.quote_path(file1), '-2', parsing.quote_path(file2)])
         this_call.extend(['-S', parsing.quote_path(output_folder.joinpath(this_name))])
@@ -1780,7 +1785,7 @@ def kallisto_quantify_single_end(fastq_folder: Union[str, Path], output_folder: 
 def kallisto_quantify_paired_end(r1_files: List[str], r2_files: List[str], output_folder: Union[str, Path],
                                  index_file: Union[str, Path], gtf_file: Union[str, Path],
                                  kallisto_installation_folder: Union[str, Path, Literal['auto']] = 'auto',
-                                 new_sample_names: Union[List[str], Literal['auto']] = 'auto',
+                                 new_sample_names: Union[List[str], Literal['auto', 'smart']] = 'smart',
                                  stranded: Literal['no', 'forward', 'reverse'] = 'no',
                                  bootstrap_samples: Union[PositiveInt, None] = None,
                                  **legacy_args) -> filtering.CountFilter:
@@ -1845,11 +1850,11 @@ def kallisto_quantify_paired_end(r1_files: List[str], r2_files: List[str], outpu
     differential expression analysis, but not for more traditional tools such as DESeq2 and edgeR.
     :type bootstrap_samples: int >0 or None (default=None)
     """
-    if new_sample_names != 'auto':
+    if new_sample_names not in ['auto', 'smart']:
         new_sample_names = parsing.data_to_list(new_sample_names)
     assert len(r1_files) == len(r2_files), f"Got an uneven number of R1 and R2 files: " \
                                            f"{len(r1_files)} and {len(r2_files)} respectively"
-    assert (new_sample_names == 'auto') or (len(new_sample_names) == len(r1_files)), \
+    assert (new_sample_names in ['auto', 'smart']) or (len(new_sample_names) == len(r1_files)), \
         f'Number of samples ({len(r1_files)}) does not match number of sample names ({len(new_sample_names)})!'
 
     # handle legacy arguments
@@ -1861,14 +1866,20 @@ def kallisto_quantify_paired_end(r1_files: List[str], r2_files: List[str], outpu
                                      seek_fusion_genes, bootstrap_samples)
 
     calls = []
+
+    if new_sample_names == 'smart':
+        prefix_pairs = [(parsing.remove_suffixes(Path(r1)).stem, parsing.remove_suffixes(Path(r2)).stem) for r1, r2 in
+                        zip(r1_files, r2_files)]
+        new_sample_names = parsing.generate_common_name(prefix_pairs)
+    elif new_sample_names == 'auto':
+        new_sample_names = [f"{parsing.remove_suffixes(file1).stem}_{parsing.remove_suffixes(file2).stem}" for
+                            file1, file2 in zip(r1_files, r2_files)]
+
     for i, (file1, file2) in enumerate(zip(r1_files, r2_files)):
         file1 = Path(file1)
         file2 = Path(file2)
         this_call = call.copy()
-        if new_sample_names == 'auto':
-            this_name = f"{parsing.remove_suffixes(file1).stem}_{parsing.remove_suffixes(file2).stem}"
-        else:
-            this_name = new_sample_names[i]
+        this_name = new_sample_names[i]
 
         this_call[-1] = Path(this_call[-1]).joinpath(this_name).as_posix()
         this_call.extend([file1.as_posix(), file2.as_posix()])

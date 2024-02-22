@@ -35,7 +35,7 @@ params:
     max_fragment_length: 500
     min_fragment_length: 0
     mode: local
-    new_sample_names: auto
+    new_sample_names: smart
     quality_score_type: phred33
     random_seed: 0
     settings_preset: very-fast

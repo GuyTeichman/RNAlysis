@@ -6,6 +6,11 @@ History
 3.12.0 (2024-??-??)
 -------------------
 
+
+Added
+******
+* bowtie2 and kallisto paired-end modes now support the new file naming method 'smart', that attempts to automatically determine the common name of each pair of paired-end fastq files.
+
 Changed
 ********
 * Enrichment bar plots now have optional parameters that control font sizes for titles and labels.

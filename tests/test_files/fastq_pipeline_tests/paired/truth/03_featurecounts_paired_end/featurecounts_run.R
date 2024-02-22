@@ -1,6 +1,6 @@
 require("Rsubread")
 
-fc <- featureCounts(files = c("tests/test_files/fastq_pipeline_tests/paired/outdir/02_bowtie2_align_paired_end/reads_1_trimmed_reads_2_trimmed.sam"),
+fc <- featureCounts(files = c("tests/test_files/fastq_pipeline_tests/paired/outdir/02_bowtie2_align_paired_end/reads_.sam"),
 annot.ext = "tests/test_files/kallisto_tests/transcripts.gtf",
 isGTFAnnotationFile = TRUE,
 GTF.featureType = "exon",

@@ -53,6 +53,15 @@ def test_bowtie2_create_index_command(monkeypatch, genome_fastas, output_folder,
     "random_seed,threads,expected_command", [
         (['tests/test_files/kallisto_tests/reads_1.fastq'], ['tests/test_files/kallisto_tests/reads_2.fastq'],
          'tests/test_files/bowtie2_tests/outdir', 'tests/test_files/bowtie2_tests/index/transcripts', 'auto',
+         'smart', 'end-to-end', 'very-sensitive', False, 'phred33', 'fwd-rev', 50, 500, True, False, 0, 1,
+         ['bowtie2', '--end-to-end', '--very-sensitive', '--phred33', '--seed', '0', '--threads', '1', '-x',
+          'tests/test_files/bowtie2_tests/index/transcripts', '-I', '50', '-X', '500', '--no-discorcordant', '--fr',
+          '-1', 'tests/test_files/kallisto_tests/reads_1.fastq', '-2',
+          'tests/test_files/kallisto_tests/reads_2.fastq', '-S',
+          'tests/test_files/bowtie2_tests/outdir/reads_.sam']
+         ),
+        (['tests/test_files/kallisto_tests/reads_1.fastq'], ['tests/test_files/kallisto_tests/reads_2.fastq'],
+         'tests/test_files/bowtie2_tests/outdir', 'tests/test_files/bowtie2_tests/index/transcripts', 'auto',
          'auto', 'end-to-end', 'very-sensitive', False, 'phred33', 'fwd-rev', 50, 500, True, False, 0, 1,
          ['bowtie2', '--end-to-end', '--very-sensitive', '--phred33', '--seed', '0', '--threads', '1', '-x',
           'tests/test_files/bowtie2_tests/index/transcripts', '-I', '50', '-X', '500', '--no-discorcordant', '--fr',
@@ -401,6 +410,12 @@ def test_kallisto_quantify_single_end_command(monkeypatch, fastq_folder, output_
         (['tests/test_files/kallisto_tests/reads_1.fastq'], ['tests/test_files/kallisto_tests/reads_2.fastq'],
          'tests/test_files/kallisto_tests/outdir',
          'tests/test_files/kallisto_tests/transcripts_truth.idx', 'tests/test_files/kallisto_tests/transcripts.gtf',
+         'auto', 'smart', 'no', False, False, None,
+         ['kallisto', 'quant', '-i', 'tests/test_files/kallisto_tests/transcripts_truth.idx',
+          '-o', ]),
+        (['tests/test_files/kallisto_tests/reads_1.fastq'], ['tests/test_files/kallisto_tests/reads_2.fastq'],
+         'tests/test_files/kallisto_tests/outdir',
+         'tests/test_files/kallisto_tests/transcripts_truth.idx', 'tests/test_files/kallisto_tests/transcripts.gtf',
          'auto', 'auto', 'no', False, False, None,
          ['kallisto', 'quant', '-i', 'tests/test_files/kallisto_tests/transcripts_truth.idx',
           '-o', ]),
@@ -415,7 +430,8 @@ def test_kallisto_quantify_paired_end_command(monkeypatch, r1_files, r2_files, o
                                               kallisto_installation_folder, new_sample_names, stranded, learn_bias,
                                               seek_fusion_genes, bootstrap_samples, expected_command):
     pairs_to_cover = [('reads_1.fastq', 'reads_2.fastq'), ]
-    pair_stems = [('reads_1', 'reads_2'), ]
+    pair_stems = [('reads_1', 'reads_2')]
+    smart_pair_stems = ['reads_']
     pairs_covered = []
     output_processed = []
 
@@ -427,7 +443,11 @@ def test_kallisto_quantify_paired_end_command(monkeypatch, r1_files, r2_files, o
         for i in range(len(pairs_to_cover)):
             if pairs_to_cover[i][-1] in args[-1]:
                 if new_sample_names == 'auto':
-                    assert args == expected_command + [f'{output_folder}/{pair_stems[i][0]}_{pair_stems[i][1]}',
+                    assert args == expected_command + [f'{output_folder}/{pair_stems[i][0]}_{pair_stems[1]}',
+                                                       f'tests/test_files/kallisto_tests/{pairs_to_cover[i][0]}',
+                                                       f'tests/test_files/kallisto_tests/{pairs_to_cover[i][1]}', ]
+                elif new_sample_names == 'smart':
+                    assert args == expected_command + [f'{output_folder}/{smart_pair_stems[i]}',
                                                        f'tests/test_files/kallisto_tests/{pairs_to_cover[i][0]}',
                                                        f'tests/test_files/kallisto_tests/{pairs_to_cover[i][1]}', ]
                 else:
