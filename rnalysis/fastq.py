@@ -1872,8 +1872,8 @@ def kallisto_quantify_paired_end(r1_files: List[str], r2_files: List[str], outpu
                         zip(r1_files, r2_files)]
         new_sample_names = parsing.generate_common_name(prefix_pairs)
     elif new_sample_names == 'auto':
-        new_sample_names = [f"{parsing.remove_suffixes(file1).stem}_{parsing.remove_suffixes(file2).stem}" for
-                            file1, file2 in zip(r1_files, r2_files)]
+        new_sample_names = [f"{parsing.remove_suffixes(Path(file1)).stem}_{parsing.remove_suffixes(Path(file2)).stem}"
+                            for file1, file2 in zip(r1_files, r2_files)]
 
     for i, (file1, file2) in enumerate(zip(r1_files, r2_files)):
         file1 = Path(file1)

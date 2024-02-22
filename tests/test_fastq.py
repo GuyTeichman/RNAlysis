@@ -443,7 +443,7 @@ def test_kallisto_quantify_paired_end_command(monkeypatch, r1_files, r2_files, o
         for i in range(len(pairs_to_cover)):
             if pairs_to_cover[i][-1] in args[-1]:
                 if new_sample_names == 'auto':
-                    assert args == expected_command + [f'{output_folder}/{pair_stems[i][0]}_{pair_stems[1]}',
+                    assert args == expected_command + [f'{output_folder}/{pair_stems[i][0]}_{pair_stems[i][1]}',
                                                        f'tests/test_files/kallisto_tests/{pairs_to_cover[i][0]}',
                                                        f'tests/test_files/kallisto_tests/{pairs_to_cover[i][1]}', ]
                 elif new_sample_names == 'smart':
@@ -792,7 +792,7 @@ def test_PairedEndPipeline_import():
                           'three_prime_adapters_r2': 'AGTTTACCGTTGT', 'trim_n': True, 'gzip_output': False})
     truth.add_function(bowtie2_align_paired_end, **{'bowtie2_installation_folder': 'auto', 'ignore_qualities': False,
                                                     'index_file': 'tests/test_files/bowtie2_tests/index/transcripts.1.bt2',
-                                                    'mode': 'local', 'new_sample_names': 'auto',
+                                                    'mode': 'local', 'new_sample_names': 'smart',
                                                     'allow_disconcordant_alignment': True,
                                                     'allow_individual_alignment': True,
                                                     'quality_score_type': 'phred33', 'random_seed': 0,
