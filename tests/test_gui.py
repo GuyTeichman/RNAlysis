@@ -409,7 +409,7 @@ def test_KallistoPairedWindow_start_analysis(qtbot, kallisto_paired_window):
                         gtf_file=gtf_file,
                         index_file=index_file,
                         kallisto_installation_folder='auto',
-                        new_sample_names='auto',
+                        new_sample_names='smart',
                         stranded='no',
                         bootstrap_samples=None)
 
