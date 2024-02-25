@@ -2660,10 +2660,12 @@ class DESeqFilter(Filter):
         A string of all feature indices in the current DataFrame separated by newline.
 
     """
-    __slots__ = {'log2fc_col': 'name of the log2 fold change column', 'padj_col': 'name of the adjusted p-value column'}
+    __slots__ = {'log2fc_col': 'name of the log2 fold change column', 'padj_col': 'name of the adjusted p-value column',
+                 'pval_col': 'name of the p-value column'}
 
     def __init__(self, fname: Union[str, Path, tuple], drop_columns: Union[str, List[str]] = None,
-                 log2fc_col: str = 'log2FoldChange', padj_col: str = 'padj', suppress_warnings: bool = False):
+                 log2fc_col: str = 'log2FoldChange', padj_col: str = 'padj', pval_col='pvalue',
+                 suppress_warnings: bool = False):
         """
         Load a differential expression table. A valid differential expression table should have \
         a column containing log2(fold change) values for each gene, and another column containing \
@@ -2685,6 +2687,7 @@ class DESeqFilter(Filter):
         super().__init__(fname, drop_columns)
         self.log2fc_col = log2fc_col
         self.padj_col = padj_col
+        self.pval_col = pval_col
         if not suppress_warnings:
             self._init_warnings()
 
@@ -2696,16 +2699,20 @@ class DESeqFilter(Filter):
         if self.padj_col not in self.columns:
             warnings.warn(f"The specified padj_col '{self.padj_col}' does not appear in the DESeqFilter's columns: "
                           f"{self.columns}. DESeqFilter-specific functions that depend on p-values may fail to run. ")
+        if self.pval_col not in self.columns:
+            warnings.warn(f"The specified pval_col '{self.pval_col}' does not appear in the DESeqFilter's columns: "
+                          f"{self.columns}. DESeqFilter-specific functions that depend on p-values may fail to run. ")
 
     @classmethod
-    def from_dataframe(cls, df: pd.DataFrame, name: Union[str, Path],
-                       log2fc_col: str = 'log2FoldChange', padj_col: str = 'padj',
+    def from_dataframe(cls, df: pd.DataFrame, name: Union[str, Path], log2fc_col: str = 'log2FoldChange',
+                       padj_col: str = 'padj', pval_col: str = 'pvalue',
                        suppress_warnings: bool = False) -> 'DESeqFilter':
         obj = cls.__new__(cls)
         obj.df = df.copy(deep=True)
         obj.fname = Path(name)
         obj.log2fc_col = log2fc_col
         obj.padj_col = padj_col
+        obj.pval_col = pval_col
         if not suppress_warnings:
             obj._init_warnings()
         return obj
@@ -2717,6 +2724,12 @@ class DESeqFilter(Filter):
         if self.padj_col not in self.columns:
             raise KeyError(f"A column with adjusted p-values under the name padj_col='{self.padj_col}' "
                            f"could not be found. Try setting a different value for the parameter 'padj_col' "
+                           f"when creating the DESeqFilter object.")
+
+    def _assert_pval_col(self):
+        if self.pval_col not in self.columns:
+            raise KeyError(f"A column with p-values under the name pval_col='{self.pval_col}' "
+                           f"could not be found. Try setting a different value for the parameter 'pval_col' "
                            f"when creating the DESeqFilter object.")
 
     def _assert_log2fc_col(self):
@@ -2759,6 +2772,41 @@ class DESeqFilter(Filter):
         new_df = self.df[self.df[self.padj_col] <= alpha]
         suffix = f"_sig{alpha}"
         return self._inplace(new_df, opposite, inplace, suffix)
+
+    @readable_name('Plot histogram of p-values')
+    def pval_histogram(self, adjusted_pvals: bool = False, bin_size: Fraction = 0.05,
+                       title: Union[str, Literal['auto']] = 'auto') -> plt.Figure:
+        """
+        Plots a histogram of the p-values in the DESeqFilter object. \
+        This is often used to troubleshoot the results of a differential expression analysis. \
+        For more information about interpreting p-value histograms, see the following blog post by /
+        David Robinson: https://varianceexplained.org/statistics/interpreting-pvalue-histogram/
+
+        :param adjusted_pvals: if True, will plot a histogram of the adjusted p-values instead of the raw p-values.
+        :type adjusted_pvals: bool (default=False)
+        :param bin_size: determines the size of the bins in the histogram.
+        :type bin_size: float between 0 and 1 (default=0.05)
+        :param title: the title of the histogram. If 'auto', will be set automatically.
+        :type title: str or 'auto' (default='auto')
+        """
+        if adjusted_pvals:
+            self._assert_padj_col()
+            data = self.df[self.padj_col]
+            title = 'Histogram of adjusted p-values' if title == 'auto' else title
+            x_label = 'adjusted p-value'
+        else:
+            self._assert_pval_col()
+            data = self.df[self.pval_col]
+            title = 'Histogram of p-values' if title == 'auto' else title
+            x_label = 'p-value'
+        fig, ax = plt.subplots()
+        ax.hist(data, bins=int(1 / bin_size), color='skyblue', edgecolor='black', range=(0, 1))
+        ax.set_title(title)
+        ax.set_xlabel(x_label)
+        ax.set_ylabel('Frequency')
+        ax.set_xticks(np.arange(0, 1.1, 0.1))
+
+        return fig
 
     @readable_name('Filter by absolute log2 fold-change magnitude')
     def filter_abs_log2_fold_change(self, abslog2fc: float = 1, opposite: bool = False, inplace: bool = True):
