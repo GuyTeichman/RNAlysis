@@ -100,11 +100,14 @@ class TableColumnPicker(QtWidgets.QPushButton):
         self.dialog_table.horizontalHeader().setSectionResizeMode(QtWidgets.QHeaderView.ResizeToContents)
         self.dialog_table.horizontalHeader().setSectionResizeMode(0, QtWidgets.QHeaderView.Stretch)
 
+        screen_height = QtWidgets.QApplication.primaryScreen().size().height()
+
         self.dialog_table.resize(self.dialog_table.horizontalHeader().length() +
                                  self.dialog_table.verticalHeader().width(),
                                  self.dialog_table.verticalHeader().length() +
                                  self.dialog_table.horizontalHeader().height())
-        self.dialog.resize(self.dialog_table.size())
+        self.dialog.resize(self.dialog_table.size().width(),
+                           min(self.dialog_table.size().height(), int(screen_height * 0.75)))
 
     def update_table(self):
         if self.dialog_table.rowCount() < len(self.columns):
