@@ -288,8 +288,7 @@ class KallistoSingleWindow(gui_windows.FuncExternalWindow):
 
 
 class KallistoPairedWindow(gui_windows.PairedFuncExternalWindow):
-    EXCLUDED_PARAMS = gui_windows.PairedFuncExternalWindow.EXCLUDED_PARAMS.copy()
-    EXCLUDED_PARAMS.add('legacy_args')
+    EXCLUDED_PARAMS = gui_windows.PairedFuncExternalWindow.EXCLUDED_PARAMS | {'legacy_args'}
     __slots__ = {}
 
     def __init__(self, parent=None):
@@ -1732,7 +1731,7 @@ class SetTabPage(TabPage):
 
 
 class FuncTypeStack(QtWidgets.QWidget):
-    EXCLUDED_PARAMS = {'self', 'backend', 'gui_mode'}
+    EXCLUDED_PARAMS = {'self', 'backend', 'gui_mode', 'legacy_args'}
     if FROZEN_ENV:
         EXCLUDED_PARAMS.add('parallel_backend')
 
