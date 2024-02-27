@@ -1515,7 +1515,7 @@ class TabPage(QtWidgets.QWidget):
             new_id = JOB_COUNTER.get_id()
             self.itemSpawned.emit(f"'{source_name}'\noutput", new_id, job_id, outputs)
             self.featureSetCreated.emit(outputs, new_id)
-        elif isinstance(outputs, pd.DataFrame):
+        elif isinstance(outputs, (pd.DataFrame, pd.Series)):
             new_id = JOB_COUNTER.get_id()
             self.itemSpawned.emit(f"'{source_name}'\noutput", new_id, job_id, outputs)
             self.object_views.append(gui_windows.DataFrameView(outputs, source_name, self))
