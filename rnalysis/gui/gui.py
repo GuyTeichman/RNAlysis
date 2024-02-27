@@ -4168,6 +4168,7 @@ class MainWindow(QtWidgets.QMainWindow):
             response = QtWidgets.QMessageBox.Yes
 
         if response == QtWidgets.QMessageBox.Yes:
+            self.close_figs_action.trigger()
             while self.tabs.count() > 1:
                 self.close_tab(0)
             self.close_tab(0)
@@ -4297,6 +4298,7 @@ class MainWindow(QtWidgets.QMainWindow):
                                                quit_msg, QtWidgets.QMessageBox.No, QtWidgets.QMessageBox.Yes)
 
         if reply == QtWidgets.QMessageBox.Yes:
+            self.close_figs_action.trigger()
             # quit job and STDOUT listener threads
             try:
                 self.job_thread.quit()
@@ -4309,7 +4311,6 @@ class MainWindow(QtWidgets.QMainWindow):
             # clear cache
             io.clear_gui_cache()
             # close all figures
-            plt.close("all")
 
             # close all external windows
             try:
