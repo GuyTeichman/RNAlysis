@@ -4192,7 +4192,7 @@ class MainWindow(QtWidgets.QMainWindow):
         session_manager = io.GUISessionManager(session_filename)
         file_data, pipeline_data, report_data = session_manager.load_session()
 
-        if report_data is None:
+        if report_data is None or not self._generate_report:
             load_report = False
         else:
             load_report = QtWidgets.QMessageBox.question(self, 'Resume previous session report?',
