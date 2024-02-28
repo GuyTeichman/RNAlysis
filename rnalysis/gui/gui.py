@@ -4298,7 +4298,7 @@ class MainWindow(QtWidgets.QMainWindow):
                                                quit_msg, QtWidgets.QMessageBox.No, QtWidgets.QMessageBox.Yes)
 
         if reply == QtWidgets.QMessageBox.Yes:
-            self.close_figs_action.trigger()
+            plt.close('all')
             # quit job and STDOUT listener threads
             try:
                 self.job_thread.quit()
