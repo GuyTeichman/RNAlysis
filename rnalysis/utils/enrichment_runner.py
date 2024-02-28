@@ -529,6 +529,8 @@ class EnrichmentRunner:
         self.results.loc[self.results['padj'].notna(), 'significant'] = significant
 
     def plot_results(self) -> plt.Figure:
+        if self.results.empty:
+            return plt.Figure()
         if self.single_set:
             return self.enrichment_bar_plot(ylabel=self.SINGLE_SET_ENRICHMENT_SCORE_YLABEL,
                                             title=f"Single-list enrichment for gene set '{self.set_name}'")
@@ -568,8 +570,8 @@ class EnrichmentRunner:
         :rtype: matplotlib.figure.Figure instance
         """
         assert self.plot_style in ['bar', 'lollipop'], \
-            f"'plot_style' must be 'bar' or 'lollipop', instaed got '{self.plot_style}'."
-
+            f"'plot_style' must be 'bar' or 'lollipop', instead got '{self.plot_style}'."
+        assert not self.results.empty, "No enrichment results to plot."
         # determine number of entries/bars to plot
         if n_bars != 'all':
             assert isinstance(n_bars, int) and n_bars >= 0, f"Invalid value for 'n_bars': {n_bars}."
@@ -809,6 +811,8 @@ class NonCategoricalEnrichmentRunner(EnrichmentRunner):
                           f"P-values and plots will not be generated for those attributes. ")
 
     def plot_results(self) -> List[plt.Figure]:
+        if self.results.empty:
+            return []
         figs = []
         for attribute, padj in zip(self.attributes, self.results['padj']):
             if not np.isnan(padj):
@@ -996,6 +1000,8 @@ class KEGGEnrichmentRunner(EnrichmentRunner):
         self.attributes_set = parsing.data_to_set(self.attributes)
 
     def plot_results(self) -> List[plt.Figure]:
+        if self.results.empty:
+            return []
         figs = [super().plot_results()]
         if self.plot_pathway_graphs:
             for pathway in self.pathway_names_dict:
@@ -1191,6 +1197,8 @@ class GOEnrichmentRunner(EnrichmentRunner):
         self.results.loc[self.results['padj'].notna(), 'significant'] = significant
 
     def plot_results(self) -> List[plt.Figure]:
+        if self.results.empty:
+            return []
         n_bars = min(10, len(self.results))
         kwargs = dict()
         if self.single_set:

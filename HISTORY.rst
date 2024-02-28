@@ -29,6 +29,7 @@ Fixed
 * Fixed bug where defining 10 or more sample groups in the graphical interface would cause the groups to be ordered incorrectly in graphs.
 * Fixed bug where the 'return_scaling_factors' argument would not return the normalization scaling factors on the graphical interface.
 * Fixed various visual issues in the graphical interface
+* Fixed bug where running enrichment on an empty gene set would raise an error.
 
 New Contributors
 *****************
