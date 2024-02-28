@@ -1940,7 +1940,8 @@ class FilterTabPage(TabPage):
         if self.obj_type() == filtering.CountFilter:
             return dict(is_normalized=self.filter_obj.is_normalized)
         elif self.obj_type() == filtering.DESeqFilter:
-            return dict(log2fc_col=self.filter_obj.log2fc_col, padj_col=self.filter_obj.padj_col)
+            return dict(log2fc_col=self.filter_obj.log2fc_col, padj_col=self.filter_obj.padj_col,
+                        pval_col=self.filter_obj.pval_col)
         elif self.obj_type() == filtering.FoldChangeFilter:
             return dict(numerator_name=self.filter_obj.numerator, denominator_name=self.filter_obj.denominator)
         else:
