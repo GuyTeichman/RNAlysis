@@ -2664,7 +2664,7 @@ class DESeqFilter(Filter):
                  'pval_col': 'name of the p-value column'}
 
     def __init__(self, fname: Union[str, Path, tuple], drop_columns: Union[str, List[str]] = None,
-                 log2fc_col: str = 'log2FoldChange', padj_col: str = 'padj', pval_col='pvalue',
+                 log2fc_col: str = 'log2FoldChange', padj_col: str = 'padj', pval_col: str = 'pvalue',
                  suppress_warnings: bool = False):
         """
         Load a differential expression table. A valid differential expression table should have \

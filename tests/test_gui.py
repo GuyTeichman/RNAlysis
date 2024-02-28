@@ -2129,7 +2129,8 @@ def test_MultiOpenWindow_init(multi_open_window):
        'tests/counted.tsv': {'drop_columns': []},
        'tests/test_deseq.csv': {'drop_columns': [],
                                 'log2fc_col': 'log2FoldChange',
-                                'padj_col': 'padj'}})),
+                                'padj_col': 'padj',
+                                'pval_col': 'pvalue'}})),
 
     ({1: 'tests/big_counted.csv'}, {}, {},
      ({'tests/counted.csv': 'tests/counted.csv', 'tests/test_deseq.csv': 'tests/big_counted.csv',
@@ -2150,7 +2151,8 @@ def test_MultiOpenWindow_init(multi_open_window):
        'tests/counted.tsv': {'drop_columns': []},
        'tests/test_deseq.csv': {'drop_columns': [],
                                 'log2fc_col': 'log2FoldChange',
-                                'padj_col': 'padj'}})),
+                                'padj_col': 'padj',
+                                'pval_col': 'pvalue'}})),
 ])
 def test_MultiOpenWindow_result(qtbot, multi_open_window, path_ops, type_ops, name_ops, truth):
     files = multi_open_window_files
