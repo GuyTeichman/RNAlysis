@@ -383,7 +383,7 @@ def test_KallistoSingleWindow_start_analysis(qtbot, kallisto_single_window):
                         new_sample_names='auto',
                         stranded='no',
                         bootstrap_samples=None,
-                        summation_method='tpm')
+                        summation_method='scaled_tpm')
 
     kallisto_single_window.param_widgets['fastq_folder'].setText(fq_folder)
     kallisto_single_window.param_widgets['output_folder'].setText(out_folder)
