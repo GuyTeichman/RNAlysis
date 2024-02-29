@@ -303,25 +303,16 @@ def test_countfilter_norm_reads_with_scaling_factors():
     assert h_norm.df.equals(h.df)
 
 
-def test_filter_low_reads():
-    truth = io.load_table("tests/test_files/counted_low_rpm_truth.csv", 0)
-    h = CountFilter("tests/test_files/counted_low_rpm.csv")
-    h.filter_low_reads(threshold=5)
-    assert np.isclose(truth, h.df).all()
-
-
-def test_filter_low_reads_reverse():
-    h = CountFilter("tests/test_files/counted.csv")
-    low_truth = io.load_table(r"tests/test_files/counted_below60_rpm.csv", 0)
-    h.filter_low_reads(threshold=60, opposite=True)
-    h.df.sort_index(inplace=True)
-    low_truth.sort_index(inplace=True)
-    print(h.shape)
-    print(low_truth.shape)
-    print(h.df)
-    print(low_truth)
-
-    assert np.all(h.df == low_truth)
+@pytest.mark.parametrize('input_path,threshold,n_samples,opposite,truth_path', [
+    ("tests/test_files/counted_low_rpm.csv", 5, 1, False, "tests/test_files/counted_low_rpm_truth.csv"),
+    ("tests/test_files/counted_low_rpm.csv", 6, 2, False, "tests/test_files/counted_low_rpm_2samples_truth.csv"),
+    ("tests/test_files/counted.csv", 60, 1, True, "tests/test_files/counted_below60_rpm.csv"),
+])
+def test_filter_low_reads(input_path, threshold, n_samples, opposite, truth_path):
+    truth = io.load_table(truth_path, 0)
+    h = CountFilter(input_path)
+    h.filter_low_reads(threshold, n_samples, opposite=opposite)
+    assert np.isclose(truth.sort_index(), h.df.sort_index()).all()
 
 
 @pytest.mark.parametrize('interactive', [True, False])

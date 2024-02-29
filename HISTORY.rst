@@ -15,6 +15,7 @@ Added
 Changed
 ********
 * When running differential expression analysis, RNAlysis will automatically ensure that the order of samples in your design matrix matches the order of samples in your count matrix, avoiding erronious results.
+* The 'Filter genes with low expression in all columns' function (CountFilter.filter_low_reads) now supports the 'n_samples' parameter, allowing users to filter genes with a minimal expression threshold in a specific number of samples.
 * Enrichment bar plots now have optional parameters that control font sizes for titles and labels.
 * Moved the enrichment analysis and enrichment graphs actions to the "Enrichment" menu in the graphical interface to make the actions easier to find.
 * Improved the clarity of error messages when attempting to read an invalid GTF file.

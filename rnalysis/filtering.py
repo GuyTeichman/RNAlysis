@@ -4072,15 +4072,19 @@ class CountFilter(Filter):
         return [fig]
 
     @readable_name('Filter genes with low expression in all columns')
-    def filter_low_reads(self, threshold: float = 5, opposite: bool = False, inplace: bool = True):
+    def filter_low_reads(self, threshold: float = 5, n_samples: PositiveInt = 1, opposite: bool = False,
+                         inplace: bool = True):
 
         """
         Filter out features which are lowly-expressed in all columns, keeping only features with at least 'threshold' \
-        reads in at least one column.
+        reads in at least 'n_samples' columns.
 
         :type threshold: float
         :param threshold: The minimal number of reads (counts, rpm, rpkm, tpm, etc) a feature should have \
-        in at least one sample in order not to be filtered out.
+        in at least `n_samples` samples in order not to be filtered out.
+        :param n_samples: the minimal number of samples a feature should have at least 'threshold' reads in \
+        in order not to be filtered out.
+        :type n_samples: positive integer (default=1)
         :type opposite: bool
         :param opposite: If True, the output of the filtering will be the OPPOSITE of the specified \
         (instead of filtering out X, the function will filter out anything BUT X). \
@@ -4100,10 +4104,9 @@ class CountFilter(Filter):
         """
         validation.validate_threshold(threshold)
         self._validate_is_normalized()
-
-        new_df = self.df.loc[[True if max(vals) > threshold else False for gene, vals in
-                              self.df.loc[:, self._numeric_columns].iterrows()]]
-        suffix = f"_filt{threshold}reads"
+        mask = (self.df[self._numeric_columns] >= threshold).sum(axis=1) >= n_samples
+        new_df = self.df[mask]
+        suffix = f"_filt{threshold}reads{n_samples}samples"
         return self._inplace(new_df, opposite, inplace, suffix)
 
     @readable_name('Split into Higly and Lowly expressed genes')
@@ -4821,7 +4824,6 @@ class CountFilter(Filter):
         assert validation.isinstanceiter(features, str), "'features' must be a string or list of strings!"
         for feature in features:
             assert feature in self.df.index, f"Supplied feature '{feature}' does not appear in this table. "
-
         if isinstance(samples, str) and samples.lower() == 'all':
             samples = [[item] for item in self.columns]
         else:
