@@ -1502,7 +1502,7 @@ def test_FilterTabPage_cache(qtbot, monkeypatch):
 
 @pytest.mark.parametrize('filter_obj,truth', [
     (filtering.DESeqFilter('tests/test_files/test_deseq.csv', log2fc_col='my log2fc col', padj_col='my padj col'),
-     {'log2fc_col': 'my log2fc col', 'padj_col': 'my padj col'}),
+     {'log2fc_col': 'my log2fc col', 'padj_col': 'my padj col', 'pval_col': 'pvalue'}),
     (filtering.CountFilter('tests/test_files/counted.tsv'), {'is_normalized': False}),
     (filtering.FoldChangeFilter('tests/test_files/fc_1.csv', 'num_name', 'denom_name'),
      {'numerator_name': 'num_name', 'denominator_name': 'denom_name'}),
