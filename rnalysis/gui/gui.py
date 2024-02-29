@@ -3511,11 +3511,11 @@ class MainWindow(QtWidgets.QMainWindow):
         obj = spawn
         if validation.isinstanceinh(spawn, filtering.Filter):
             obj = spawn.df
-            filename = parsing.slugify(f'{suffix}_{spawn.fname.stem}') + '.csv'
+            filename = parsing.slugify(f'{suffix}_{spawn.fname.stem}') + '.parquet'
         elif validation.isinstanceinh(spawn, enrichment.FeatureSet):
             filename = parsing.slugify(f'{suffix}_{spawn.set_name}') + '.txt'
         elif isinstance(spawn, (pd.Series, pd.DataFrame)):
-            filename = parsing.slugify(suffix) + '.csv'
+            filename = parsing.slugify(suffix) + '.parquet'
         elif isinstance(spawn, plt.Figure):
             filename = parsing.slugify(suffix) + '.svg'
         elif validation.isinstanceinh(spawn, generic.GenericPipeline):

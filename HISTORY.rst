@@ -23,6 +23,7 @@ Changed
 * Improved the clarity of error messages when attempting to read an invalid GTF file.
 * RNAlysis now supports the latest version of OrthoInspector API.
 * Improved annotation for the 'metric' parameter of the 'Hierarchical clustergram plot' function (CountFilter.clustergram).
+* Improved performance of RNAlysis when generating automatic session reports.
 
 Fixed
 *******
