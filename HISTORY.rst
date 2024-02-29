@@ -22,6 +22,7 @@ Changed
 * Moved the enrichment analysis and enrichment graphs actions to the "Enrichment" menu in the graphical interface to make the actions easier to find.
 * Improved the clarity of error messages when attempting to read an invalid GTF file.
 * RNAlysis now supports the latest version of OrthoInspector API.
+* Improved annotation for the 'metric' parameter of the 'Hierarchical clustergram plot' function (CountFilter.clustergram).
 
 Fixed
 *******

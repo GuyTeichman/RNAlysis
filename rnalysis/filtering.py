@@ -4833,7 +4833,7 @@ class CountFilter(Filter):
 
     @readable_name('Hierarchical clustergram plot')
     def clustergram(self, sample_names: Union[param_typing.ColumnNames, Literal['all']] = 'all',
-                    metric: str = 'Euclidean',
+                    metric: Union[Literal['Correlation', 'Cosine', 'Euclidean', 'Jaccard'], str] = 'Euclidean',
                     linkage: Literal['Single', 'Average', 'Complete', 'Ward', 'Weighted', 'Centroid', 'Median'
                     ] = 'Average', title: Union[str, Literal['auto']] = 'auto', title_fontsize: float = 20,
                     tick_fontsize: float = 12, colormap: ColorMap = 'inferno',
