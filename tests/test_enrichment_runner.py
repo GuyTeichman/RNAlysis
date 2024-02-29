@@ -745,6 +745,7 @@ def test_enrichment_runner_plot_results(monkeypatch, single_list):
     runner = EnrichmentRunner.__new__(EnrichmentRunner)
     runner.single_set = single_list
     runner.set_name = 'name of the set'
+    runner.results = pd.DataFrame([1])
     res = runner.plot_results()
     assert isinstance(res, plt.Figure)
 

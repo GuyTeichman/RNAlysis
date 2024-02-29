@@ -529,7 +529,7 @@ class EnrichmentRunner:
         self.results.loc[self.results['padj'].notna(), 'significant'] = significant
 
     def plot_results(self) -> plt.Figure:
-        if self.results.empty:
+        if len(self.results) == 0:
             return plt.Figure()
         if self.single_set:
             return self.enrichment_bar_plot(ylabel=self.SINGLE_SET_ENRICHMENT_SCORE_YLABEL,
@@ -811,7 +811,7 @@ class NonCategoricalEnrichmentRunner(EnrichmentRunner):
                           f"P-values and plots will not be generated for those attributes. ")
 
     def plot_results(self) -> List[plt.Figure]:
-        if self.results.empty:
+        if len(self.results) == 0:
             return []
         figs = []
         for attribute, padj in zip(self.attributes, self.results['padj']):
@@ -1197,7 +1197,7 @@ class GOEnrichmentRunner(EnrichmentRunner):
         self.results.loc[self.results['padj'].notna(), 'significant'] = significant
 
     def plot_results(self) -> List[plt.Figure]:
-        if self.results.empty:
+        if len(self.results) == 0:
             return []
         n_bars = min(10, len(self.results))
         kwargs = dict()
