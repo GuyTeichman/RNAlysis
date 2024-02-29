@@ -17,6 +17,7 @@ Changed
 * Enrichment bar plots now have optional parameters that control font sizes for titles and labels.
 * Moved the enrichment analysis and enrichment graphs actions to the "Enrichment" menu in the graphical interface to make the actions easier to find.
 * Improved the clarity of error messages when attempting to read an invalid GTF file.
+* RNAlysis now supports the latest version of OrthoInspector API.
 
 Fixed
 *******

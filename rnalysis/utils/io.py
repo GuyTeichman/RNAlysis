@@ -1480,13 +1480,13 @@ class OrthoInspectorOrthologMapper:
         for annotation in content:
             rel_type = annotation['type'].lower()
             if rel_type == 'one-to-one':
-                to_id = annotation['orthologs']
-                from_id = annotation['query']
+                to_id = annotation['orthologs'][0]
+                from_id = annotation['inparalogs'][0]
                 mapping_one2many[from_id] = [to_id]
                 mapping_one2one[from_id] = to_id
             elif rel_type == 'one-to-many':
                 to_ids = annotation['orthologs']
-                from_id = annotation['query']
+                from_id = annotation['inparalogs'][0]
                 mapping_one2many[from_id] = to_ids
                 if non_unique_mode == 'first':
                     mapping_one2one[from_id] = to_ids[0]
@@ -1496,14 +1496,14 @@ class OrthoInspectorOrthologMapper:
                     mapping_one2one[from_id] = random.choice(to_ids)
 
             elif rel_type == 'many-to-one':
-                to_id = annotation['orthologs']
-                from_ids = annotation['query']
+                to_id = annotation['orthologs'][0]
+                from_ids = annotation['inparalogs']
                 for from_id in from_ids:
                     mapping_one2many[from_id] = [to_id]
                     mapping_one2one[from_id] = to_id
             elif rel_type == 'many-to-many':
                 to_ids = annotation['orthologs']
-                from_ids = annotation['query']
+                from_ids = annotation['inparalogs']
                 for from_id in from_ids:
                     mapping_one2many[from_id] = to_ids
                     if non_unique_mode == 'first':

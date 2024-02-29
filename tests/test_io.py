@@ -1311,7 +1311,6 @@ class TestOrthoInspectorOrthologMapper:
         assert abs(len(list(db_organisms.values())) - len(
             set(db_organisms.values()))) <= 2  # check that all databases are unique, with 2 allowed exceptions due to the newly-added databases
 
-    @pytest.mark.xfail(reason="temporary issues with the OrthoInspector server")
     @pytest.mark.parametrize('database,non_unique_mode', [
         ('auto', 'first'),
         ('Eukaryota2016', 'last'),
