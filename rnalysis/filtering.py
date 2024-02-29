@@ -3166,7 +3166,7 @@ class CountFilter(Filter):
             assert output_folder.exists(), 'Output folder does not exist!'
 
         self._validate_is_normalized(expect_normalized=True)
-        data_path = io.get_todays_cache_dir().joinpath(self.fname.name)
+        data_path = io.get_todays_cache_dir().joinpath(f'{self.fname.name}.csv')
         design_mat_path = None
         i = 0
         while design_mat_path is None or design_mat_path.exists():
@@ -3177,6 +3177,8 @@ class CountFilter(Filter):
         # use Pandas to automatically detect file delimiter type, then export it as a CSV file.
         design_mat_df = io.load_table(design_matrix, index_col=0)
         self._diff_exp_assertions(design_mat_df)
+        design_mat_df = design_mat_df.sort_index(key=lambda ind: [self.columns.index(i) for i in ind])
+        assert list(design_mat_df.index) == list(self.columns), "The sample names in the design matrix do not match!"
         io.save_table(design_mat_df, design_mat_path)
 
         r_output_dir = differential_expression.run_limma_analysis(data_path, design_mat_path, comparisons,
@@ -3236,7 +3238,7 @@ class CountFilter(Filter):
             assert output_folder.exists(), 'Output folder does not exist!'
 
         self._validate_is_normalized(expect_normalized=False)
-        data_path = io.get_todays_cache_dir().joinpath(self.fname.name)
+        data_path = io.get_todays_cache_dir().joinpath(f'{self.fname.name}.csv')
         design_mat_path = None
         i = 0
         while design_mat_path is None or design_mat_path.exists():
@@ -3247,6 +3249,8 @@ class CountFilter(Filter):
         # use Pandas to automatically detect file delimiter type, then export it as a CSV file.
         design_mat_df = io.load_table(design_matrix, index_col=0)
         self._diff_exp_assertions(design_mat_df)
+        design_mat_df = design_mat_df.sort_index(key=lambda ind: [self.columns.index(i) for i in ind])
+        assert list(design_mat_df.index) == list(self.columns), "The sample names in the design matrix do not match!"
         io.save_table(design_mat_df, design_mat_path)
 
         r_output_dir = differential_expression.run_deseq2_analysis(data_path, design_mat_path, comparisons,
