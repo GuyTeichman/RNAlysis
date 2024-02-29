@@ -5199,11 +5199,8 @@ class CountFilter(Filter):
         self._validate_is_normalized()
         sample1, sample2 = parsing.data_to_list(sample1), parsing.data_to_list(sample2)
 
-        xvals = np.log10(self.df[sample1].values + 1) if isinstance(sample1, str) else np.log10(
-            self.df[sample1].mean(axis=1).values + 1)
-        yvals = np.log10(self.df[sample2].values + 1) if isinstance(sample2, str) else np.log10(
-            self.df[sample2].mean(axis=1).values + 1)
-
+        xvals = np.log10(self.df[sample1].mean(axis=1) + 1)
+        yvals = np.log10(self.df[sample2].mean(axis=1) + 1)
         if xlabel.lower() == 'auto':
             xlabel = r'$\log_{10}$(normalized reads + 1) from ' + f'{sample1}'
         if ylabel.lower() == 'auto':
@@ -5232,24 +5229,24 @@ class CountFilter(Filter):
             highlight_features = highlight.index_set if validation.isinstanceinh(highlight,
                                                                                  Filter) else parsing.data_to_set(
                 highlight)
-            highlight_valid = highlight_features.intersection(self.index_set)
+            highlight_valid = parsing.data_to_list(highlight_features.intersection(self.index_set))
             if len(highlight_valid) < len(highlight_features):
                 warnings.warn(
                     f'Out of {len(highlight_features)} features to be highlighted, '
                     f'{len(highlight_features) - len(highlight_valid)} features are missing from the '
                     f'CountFilter object and will not be highlighted.')
 
-            colors = pd.Series(index=self.df.index, dtype='float64')
-            colors.loc[parsing.data_to_list(highlight_valid)] = highlight_color
-            colors.fillna(point_color, inplace=True)
-            kwargs['c'] = colors
         else:
-            kwargs['c'] = point_color
+            highlight_valid = []
 
-        ax.scatter(xvals, yvals, s=point_size, alpha=opacity, **kwargs)
+        base_set = parsing.data_to_list(self.index_set.difference(highlight_valid))
+        ax.scatter(xvals.loc[base_set], yvals.loc[base_set], s=point_size, alpha=opacity, c=point_color, **kwargs)
+        ax.scatter(xvals.loc[highlight_valid], yvals.loc[highlight_valid], s=point_size, alpha=opacity,
+                   c=highlight_color, **kwargs)
+        plt.plot([0, 5], [0, 5], c='green')
 
         xlim, ylim = ax.get_xlim(), ax.get_ylim()
-        axis_lims = (min(xlim[0], ylim[0]), max(xlim[1], ylim[1]))
+        axis_lims = (0, max(xlim[1], ylim[1]))
         ax.set_xlim(axis_lims)
         ax.set_ylim(axis_lims)
 
