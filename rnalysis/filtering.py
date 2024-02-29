@@ -3124,6 +3124,9 @@ class CountFilter(Filter):
     @readable_name('Run Limma-Voom differential expression')
     def differential_expression_limma_voom(self, design_matrix: Union[str, Path],
                                            comparisons: Iterable[Tuple[str, str, str]],
+                                           covariates: Iterable[str] = tuple(),
+                                           lrt_factors: Iterable[str] = tuple(),
+                                           model_factors: Union[Literal['auto'], Iterable[str]] = 'auto',
                                            r_installation_folder: Union[str, Path, Literal['auto']] = 'auto',
                                            output_folder: Union[str, Path, None] = None,
                                            random_effect: Union[str, None] = None) -> Tuple['DESeqFilter', ...]:
@@ -3144,11 +3147,21 @@ class CountFilter(Filter):
         (see the User Guide and Tutorial for a complete example). \
         The analysis formula will contain all the factors in the design matrix.
         :type design_matrix: str or Path
-        :param comparisons: specifies what comparisons to build results tables out of. \
+       :param comparisons: specifies what comparisons to build results tables out of. \
         each individual comparison should be a tuple with exactly three elements: \
         the name of a factor in the design formula, the name of the numerator level for the fold change, \
         and the name of the denominator level for the fold change.
         :type comparisons: Iterable of tuple(factor, numerator_value, denominator_value)
+        :param lrt_factors: optionally, specify factors to be tested using the likelihood ratio test (LRT). \
+        If the factors are a continuous variable, you can also specify the number of polynomial degree to fit.
+        :type lrt_factors: Iterable of tuple(factor, polynomial_degree) or None (default=None)
+        :param covariates: optionally, specify a list of continuous covariates to include in the analysis. \
+        The covariates should be column names in the design matrix. \
+        The reported fold change values correspond to the expected fold change \
+        for every increase of 1 unit in the covariate.
+        :param model_factors: optionally, specify a list of factors to include in the differential expression model. \
+        If 'auto', all factors in the design matrix will be included.
+        :type model_factors: Iterable of factor names or 'auto' (default='auto')
         :param r_installation_folder: Path to the installation folder of R. For example: \
         'C:/Program Files/R/R-4.2.1'
         :type r_installation_folder: str, Path, or 'auto' (default='auto')
@@ -3181,8 +3194,9 @@ class CountFilter(Filter):
         assert list(design_mat_df.index) == list(self.columns), "The sample names in the design matrix do not match!"
         io.save_table(design_mat_df, design_mat_path)
 
-        r_output_dir = differential_expression.run_limma_analysis(data_path, design_mat_path, comparisons,
-                                                                  r_installation_folder, random_effect)
+        r_output_dir = differential_expression.LimmaVoomRunner(data_path, design_mat_path, comparisons, covariates,
+                                                               lrt_factors, model_factors, r_installation_folder,
+                                                               random_effect).run()
         outputs = []
         for item in r_output_dir.iterdir():
             if not item.is_file():
@@ -3196,12 +3210,60 @@ class CountFilter(Filter):
 
         return parsing.data_to_tuple(outputs)
 
+    @readable_name('Run Limma-Voom differential expression (simplified mode)')
+    def differential_expression_limma_voom_simplified(self, design_matrix: Union[str, Path],
+                                                      comparisons: Iterable[Tuple[str, str, str]],
+                                                      r_installation_folder: Union[str, Path, Literal['auto']] = 'auto',
+                                                      output_folder: Union[str, Path, None] = None,
+                                                      random_effect: Union[str, None] = None
+                                                      ) -> Tuple['DESeqFilter', ...]:
+        """
+       Run differential expression analysis on the count matrix using the \
+       `Limma-Voom <https://doi.org/10.1186/gb-2014-15-2-r29>`_ pipeline. \
+       The simplified mode supports only pairwise comparisons. \
+       The count matrix you are analyzing should be normalized (typically to Reads Per Million). \
+       The analysis will be based on a design matrix supplied by the user. \
+       The design matrix should contain at least two columns: the first column contains all the sample names, \
+       and each of the following columns contains an experimental design factor (e.g. 'condition', 'replicate', etc). \
+       (see the User Guide and Tutorial for a complete example). \
+       The analysis formula will contain all the factors in the design matrix. \
+       To run this function, a version of R must be installed.
+
+       :param design_matrix: path to a csv file containing the experiment's design matrix. \
+       The design matrix should contain at least two columns: the first column contains all the sample names, \
+       and each of the following columns contains an experimental design factor (e.g. 'condition', 'replicate', etc). \
+       (see the User Guide and Tutorial for a complete example). \
+       The analysis formula will contain all the factors in the design matrix.
+       :type design_matrix: str or Path
+      :param comparisons: specifies what comparisons to build results tables out of. \
+       each individual comparison should be a tuple with exactly three elements: \
+       the name of a factor in the design formula, the name of the numerator level for the fold change, \
+       and the name of the denominator level for the fold change.
+       :type comparisons: Iterable of tuple(factor, numerator_value, denominator_value)
+       :param r_installation_folder: Path to the installation folder of R. For example: \
+       'C:/Program Files/R/R-4.2.1'
+       :type r_installation_folder: str, Path, or 'auto' (default='auto')
+       :param output_folder: Path to a folder in which the analysis results, \
+       as well as the log files and R script used to generate them, will be saved. \
+       if output_folder is None, the results will not be saved to a specified directory.
+       :type output_folder: str, Path, or None
+       :param random_effect: optionally, specify a single factor to model as a random effect. \
+       This is useful when your experimental design is nested. limma-voom can only treat one factor as a random effect.
+       :type random_effect: str or None
+       :return: a tuple of DESeqFilter objects, one for each comparison
+        """
+        return self.differential_expression_limma_voom(design_matrix, comparisons,
+                                                       r_installation_folder=r_installation_folder,
+                                                       output_folder=output_folder, random_effect=random_effect)
+
     @readable_name('Run DESeq2 differential expression')
     def differential_expression_deseq2(self, design_matrix: Union[str, Path],
                                        comparisons: Iterable[Tuple[str, str, str]],
+                                       covariates: Iterable[str] = tuple(),
+                                       lrt_factors: Iterable[str] = tuple(),
+                                       model_factors: Union[Literal['auto'], Iterable[str]] = 'auto',
                                        r_installation_folder: Union[str, Path, Literal['auto']] = 'auto',
-                                       output_folder: Union[str, Path, None] = None
-                                       ) -> Tuple['DESeqFilter', ...]:
+                                       output_folder: Union[str, Path, None] = None) -> Tuple['DESeqFilter', ...]:
         """
         Run differential expression analysis on the count matrix using the \
         `DESeq2 <https://doi.org/10.1186/s13059-014-0550-8>`_ algorithm. \
@@ -3224,6 +3286,17 @@ class CountFilter(Filter):
         the name of a factor in the design formula, the name of the numerator level for the fold change, \
         and the name of the denominator level for the fold change.
         :type comparisons: Iterable of tuple(factor, numerator_value, denominator_value)
+        :param lrt_factors: optionally, specify factors to be tested using the likelihood ratio test (LRT). \
+        If the factors are a continuous variable, you can also specify the number of polynomial degree to fit.
+        :type lrt_factors: Iterable of factor names (default=tuple())
+        :param covariates: optionally, specify a list of continuous covariates to include in the analysis. \
+        The covariates should be column names in the design matrix. \
+        The reported fold change values correspond to the expected fold change \
+        for every increase of 1 unit in the covariate.
+        :type covariates: Iterable of covariate names (default=tuple())
+        :param model_factors: optionally, specify a list of factors to include in the differential expression model. \
+        If 'auto', all factors in the design matrix will be included.
+        :type model_factors: Iterable of factor names or 'auto' (default='auto')
         :param r_installation_folder: Path to the installation folder of R. For example: \
         'C:/Program Files/R/R-4.2.1'
         :type r_installation_folder: str, Path, or 'auto' (default='auto')
@@ -3253,8 +3326,8 @@ class CountFilter(Filter):
         assert list(design_mat_df.index) == list(self.columns), "The sample names in the design matrix do not match!"
         io.save_table(design_mat_df, design_mat_path)
 
-        r_output_dir = differential_expression.run_deseq2_analysis(data_path, design_mat_path, comparisons,
-                                                                   r_installation_folder)
+        r_output_dir = differential_expression.DESeqRunner(data_path, design_mat_path, comparisons, covariates,
+                                                           lrt_factors, model_factors, r_installation_folder).run()
         outputs = []
         for item in r_output_dir.iterdir():
             if not item.is_file():
@@ -3268,10 +3341,51 @@ class CountFilter(Filter):
 
         return parsing.data_to_tuple(outputs)
 
+    @readable_name('Run DESeq2 differential expression (simplified mode)')
+    def differential_expression_deseq2_simplified(self, design_matrix: Union[str, Path],
+                                                  comparisons: Iterable[Tuple[str, str, str]],
+                                                  r_installation_folder: Union[str, Path, Literal['auto']] = 'auto',
+                                                  output_folder: Union[str, Path, None] = None
+                                                  ) -> Tuple['DESeqFilter', ...]:
+        """
+        Run differential expression analysis on the count matrix using the \
+        `DESeq2 <https://doi.org/10.1186/s13059-014-0550-8>`_ algorithm. \
+        The simplified mode supports only pairwise comparisons. \
+        The count matrix you are analyzing should be unnormalized (meaning, raw read counts). \
+        The analysis will be based on a design matrix supplied by the user. \
+        The design matrix should contain at least two columns: the first column contains all the sample names, \
+        and each of the following columns contains an experimental design factor (e.g. 'condition', 'replicate', etc). \
+        (see the User Guide and Tutorial for a complete example). \
+        The analysis formula will contain all the factors in the design matrix. \
+        To run this function, a version of R must be installed.
+
+        :param design_matrix: path to a csv file containing the experiment's design matrix. \
+        The design matrix should contain at least two columns: the first column contains all the sample names, \
+        and each of the following columns contains an experimental design factor (e.g. 'condition', 'replicate', etc). \
+        (see the User Guide and Tutorial for a complete example). \
+        The analysis formula will contain all the factors in the design matrix.
+        :type design_matrix: str or Path
+        :param comparisons: specifies what comparisons to build results tables out of. \
+        each individual comparison should be a tuple with exactly three elements: \
+        the name of a factor in the design formula, the name of the numerator level for the fold change, \
+        and the name of the denominator level for the fold change.
+        :type comparisons: Iterable of tuple(factor, numerator_value, denominator_value)
+        :param r_installation_folder: Path to the installation folder of R. For example: \
+        'C:/Program Files/R/R-4.2.1'
+        :type r_installation_folder: str, Path, or 'auto' (default='auto')
+        :param output_folder: Path to a folder in which the analysis results, \
+        as well as the log files and R script used to generate them, will be saved. \
+        if output_folder is None, the results will not be saved to a specified directory.
+        :type output_folder: str, Path, or None
+        :return: a tuple of DESeqFilter objects, one for each comparison
+        """
+        return self.differential_expression_deseq2(design_matrix, comparisons,
+                                                   r_installation_folder=r_installation_folder,
+                                                   output_folder=output_folder)
+
     @readable_name('Calculate fold change')
     def fold_change(self, numerator: param_typing.ColumnNames, denominator: param_typing.ColumnNames,
                     numer_name: str = 'default', denom_name: str = 'default') -> 'FoldChangeFilter':
-
         """
         Calculate the fold change between the numerator condition and the denominator condition, \
         and return it as a FoldChangeFilter object.
@@ -3461,7 +3575,6 @@ class CountFilter(Filter):
         assert function in {'mean', 'median', 'geometric_mean'}, \
             "'function' must be 'mean', 'median', or 'geometric_mean'!"
 
-        averaged_df = pd.DataFrame(index=self.df.index)
         if new_column_names == 'auto':
             new_column_names = []
             for i, group in enumerate(sample_grouping):
@@ -3476,6 +3589,7 @@ class CountFilter(Filter):
                 f"The number of new column names {len(new_column_names)} " \
                 f"does not match the number of sample groups {len(sample_grouping)}!"
 
+        averaged_df = pd.DataFrame(index=self.df.index, columns=new_column_names)
         for group, new_name in zip(sample_grouping, new_column_names):
             if isinstance(group, str):
                 assert group in self.columns, f"Column '{group}' does not exist in the original table!"
@@ -4834,7 +4948,7 @@ class CountFilter(Filter):
             if not validation.isinstanceiter(samples[i], str):
                 for j in range(len(samples[i])):
                     samples[i][j] = self.columns[samples[i][j]]
-        sample_names = [name.replace(',', '\n') for name in self._avg_subsamples(samples).columns]
+        sample_names = [name.replace(',', '\n') for name in self._avg_subsamples(samples).columns]  # TODO: replace
 
         if not split_plots:
             g = strategies.SquareStrategy()

@@ -328,53 +328,85 @@ class CutAdaptPairedWindow(gui_windows.PairedFuncExternalWindow):
 
 
 class DiffExpWindow(gui_windows.FuncExternalWindow):
-    EXCLUDED_PARAMS = {'self', 'comparisons'}
+    EXCLUDED_PARAMS = {'self', 'comparisons', 'covariates', 'lrt_factors', 'model_factors'}
     IGNORED_WIDGETS = gui_windows.FuncExternalWindow.IGNORED_WIDGETS | {'load_design'}
 
     __slots__ = {'comparisons': 'list of comparisons to make',
                  'design_mat': 'design matrix',
                  'comparisons_group': 'widget group for choosing comparisons',
                  'comparisons_grid': 'layout for choosing comparisons',
-                 'comparisons_widgets': 'widgets for choosing comparisons'}
+                 'comparisons_widgets': 'widgets for choosing comparisons',
+                 'simplified': 'show simplified view'}
 
-    def __init__(self, func: Callable, name: str, parent=None):
+    def __init__(self, func: Callable, name: str, parent=None, simplified: bool = False):
         self.name = name
         help_link = f"https://guyteichman.github.io/RNAlysis/build/rnalysis.filtering.CountFilter.{func.__name__}.html"
         super().__init__(name, func, help_link, self.EXCLUDED_PARAMS, parent=parent)
 
+        self.simplified = simplified
         self.comparisons = []
+        self.covariates = []
         self.design_mat = None
 
-        self.comparisons_group = QtWidgets.QGroupBox(f"2. Choose pairwise comparisons for {name}")
+        self.righthand_widget = QtWidgets.QWidget(self)
+        self.righthand_layout = QtWidgets.QVBoxLayout(self.righthand_widget)
+
+        cmp_title = "2. Choose pairwise comparisons" if self.simplified else "2. Choose pairwise comparisons (optional)"
+        self.comparisons_group = QtWidgets.QGroupBox(cmp_title)
         self.comparisons_grid = QtWidgets.QGridLayout(self.comparisons_group)
         self.comparisons_widgets = {}
+
+        self.covariates_group = QtWidgets.QGroupBox("3. Choose covariates to test (optional)")
+        self.covariates_grid = QtWidgets.QGridLayout(self.covariates_group)
+        self.covariates_widgets = {}
+
+        self.lrt_group = QtWidgets.QGroupBox("4. Choose factors for Likelihood Ratio tests (optional)")
+        self.lrt_grid = QtWidgets.QGridLayout(self.lrt_group)
+        self.lrt_widgets = {}
 
         self.init_ui()
 
     def init_ui(self):
         self.setWindowTitle(f'{self.name} differential expression setup')
-        self.scroll_layout.addWidget(self.comparisons_group, 0, 1)
+
+        self.scroll_layout.addWidget(self.righthand_widget, 0, 1)
+        self.righthand_layout.addWidget(self.comparisons_group)
         super().init_ui()
-        _, _, width, height = self.scroll.geometry().getRect()
-        self.resize(1100, height)
+        if self.simplified:
+            _, _, width, height = self.scroll.geometry().getRect()
+            self.resize(1200, height)
+        else:
+            self.righthand_layout.addWidget(self.covariates_group)
+            self.righthand_layout.addWidget(self.lrt_group)
+            self.resize(1200, 800)
 
     def init_param_ui(self):
         super().init_param_ui()
         self.param_widgets['load_design'] = QtWidgets.QPushButton('Load design matrix')
         self.param_widgets['load_design'].setEnabled(False)
-        self.param_widgets['load_design'].clicked.connect(self.init_comparisons_ui)
+        self.param_widgets['load_design'].clicked.connect(self.init_righthand_uis)
         self.param_grid.addWidget(self.param_widgets['load_design'], self.param_grid.rowCount(), 0, 1, 2)
         self.param_widgets['design_matrix'].textChanged.connect(self._change_accept_button_state)
 
     def _change_accept_button_state(self, is_legal: bool):
         self.param_widgets['load_design'].setEnabled(is_legal)
 
-    def init_comparisons_ui(self):
+    def init_righthand_uis(self):
+        self.init_design_mat()
+
+        self.init_comparisons_ui()
+        if not self.simplified:
+            self.init_covariates_ui()
+            self.init_lrt_ui()
+
+    def init_design_mat(self):
         design_mat = io.load_table(self.param_widgets['design_matrix'].text(), index_col=0)
         for factor in design_mat.columns:
             assert parsing.slugify(factor) == factor, f"Invalid factor name '{factor}': contains invalid characters." \
                                                       f" \nSuggested alternative name: '{parsing.slugify(factor)}'. "
         self.design_mat = design_mat
+
+    def init_comparisons_ui(self):
         if 'picker' in self.comparisons_widgets:
             self.comparisons_grid.removeWidget(self.comparisons_widgets['picker'])
             self.comparisons_widgets['picker'].deleteLater()
@@ -382,24 +414,57 @@ class DiffExpWindow(gui_windows.FuncExternalWindow):
         self.comparisons_widgets['picker'] = gui_widgets.ComparisonPickerGroup(self.design_mat, self)
         self.comparisons_grid.addWidget(self.comparisons_widgets['picker'], 0, 0)
 
+    def init_covariates_ui(self):
+        if 'picker' in self.covariates_widgets:
+            self.covariates_grid.removeWidget(self.covariates_widgets['picker'])
+            self.covariates_widgets['picker'].deleteLater()
+
+        self.covariates_widgets['picker'] = gui_widgets.CovariatePickerGroup(self.design_mat, self)
+        self.covariates_grid.addWidget(self.covariates_widgets['picker'], 0, 0)
+
+    def init_lrt_ui(self):
+        if 'picker' in self.lrt_widgets:
+            self.lrt_grid.removeWidget(self.lrt_widgets['picker'])
+            self.lrt_widgets['picker'].deleteLater()
+
+        self.lrt_widgets['picker'] = gui_widgets.LRTPickerGroup(self.design_mat, self)
+        self.lrt_grid.addWidget(self.lrt_widgets['picker'], 0, 0)
+
     def get_analysis_kwargs(self):
         kwargs = super().get_analysis_kwargs()
         kwargs['comparisons'] = self.comparisons_widgets['picker'].get_comparison_values()
+        if not self.simplified:
+            kwargs['covariates'] = self.covariates_widgets['picker'].get_comparison_values()
+            kwargs['lrt_factors'] = self.lrt_widgets['picker'].get_comparison_values()
         return kwargs
 
 
 class DESeqWindow(DiffExpWindow):
-    def __init__(self, parent=None):
+    def __init__(self, parent=None, simplified: bool = False):
         func = filtering.CountFilter.differential_expression_deseq2
         name = 'DESeq2'
-        super().__init__(func, name, parent)
+        super().__init__(func, name, parent, simplified)
 
 
 class LimmaWindow(DiffExpWindow):
-    def __init__(self, parent=None):
+    def __init__(self, parent=None, simplified: bool = False):
         func = filtering.CountFilter.differential_expression_limma_voom
         name = 'Limma-Voom'
-        super().__init__(func, name, parent)
+        super().__init__(func, name, parent, simplified)
+
+
+class SimpleDESeqWindow(DiffExpWindow):
+    def __init__(self, parent=None):
+        func = filtering.CountFilter.differential_expression_deseq2_simplified
+        name = 'DESeq2'
+        super().__init__(func, name, parent, simplified=True)
+
+
+class SimpleLimmaWindow(DiffExpWindow):
+    def __init__(self, parent=None):
+        func = filtering.CountFilter.differential_expression_limma_voom_simplified
+        name = 'Limma-Voom'
+        super().__init__(func, name, parent, simplified=True)
 
 
 class ClicomWindow(gui_windows.FuncExternalWindow):
@@ -1731,7 +1796,7 @@ class SetTabPage(TabPage):
 
 
 class FuncTypeStack(QtWidgets.QWidget):
-    EXCLUDED_PARAMS = {'self', 'backend', 'gui_mode', 'legacy_args'}
+    EXCLUDED_PARAMS = {'self', 'backend', 'gui_mode', 'legacy_args', 'function_kwargs'}
     if FROZEN_ENV:
         EXCLUDED_PARAMS.add('parallel_backend')
 
@@ -1888,14 +1953,17 @@ class FilterTabPage(TabPage):
                         'split_clicom': 'CLICOM (Ensemble)'}
     SUMMARY_FUNCS = {'describe', 'head', 'tail', 'biotypes_from_ref_table', 'biotypes_from_gtf', 'print_features'}
     GENERAL_FUNCS = {'sort', 'sort_by_principal_component', 'transform', 'translate_gene_ids',
-                     'differential_expression_deseq2', 'fold_change', 'average_replicate_samples', 'drop_columns',
-                     'differential_expression_limma_voom', 'map_orthologs_phylomedb', 'map_orthologs_orthoinspector',
+                     'differential_expression_deseq2', 'differential_expression_deseq2_simplified', 'fold_change',
+                     'average_replicate_samples', 'drop_columns',
+                     'differential_expression_limma_voom', 'differential_expression_limma_voom_simplified',
+                     'map_orthologs_phylomedb', 'map_orthologs_orthoinspector',
                      'map_orthologs_ensembl', 'map_orthologs_panther', 'find_paralogs_panther', 'find_paralogs_ensembl'}
-    THREADED_FUNCS = {'translate_gene_ids', 'differential_expression_deseq2', 'filter_by_kegg_annotations',
-                      'filter_by_go_annotations', 'differential_expression_limma_voom', 'map_orthologs_phylomedb',
-                      'map_orthologs_orthoinspector',
-                      'map_orthologs_ensembl', 'map_orthologs_panther', 'find_paralogs_panther',
-                      'find_paralogs_ensembl'}
+    THREADED_FUNCS = {'translate_gene_ids', 'differential_expression_deseq2',
+                      'differential_expression_deseq2_simplified', 'filter_by_kegg_annotations',
+                      'filter_by_go_annotations', 'differential_expression_limma_voom',
+                      'differential_expression_limma_voom_simplified', 'map_orthologs_phylomedb',
+                      'map_orthologs_orthoinspector', 'map_orthologs_ensembl', 'map_orthologs_panther',
+                      'find_paralogs_panther', 'find_paralogs_ensembl'}
     startedClustering = QtCore.pyqtSignal(object, object, object)
     widthChanged = QtCore.pyqtSignal()
 
@@ -2100,14 +2168,16 @@ class FilterTabPage(TabPage):
             self.clicom_window.paramsAccepted.connect(
                 functools.partial(self._apply_function_from_params, func_name))
             self.clicom_window.show()
-        elif func_name == 'differential_expression_deseq2':
+        elif func_name.startswith('differential_expression_deseq2'):
             this_stack.deselect()
-            self.deseq_window = DESeqWindow(self)
+            window_type = SimpleDESeqWindow if func_name.endswith('simplified') else DESeqWindow
+            self.deseq_window = window_type(self)
             self.deseq_window.paramsAccepted.connect(functools.partial(self._apply_function_from_params, func_name))
             self.deseq_window.show()
-        elif func_name == 'differential_expression_limma_voom':
+        elif func_name.startswith('differential_expression_limma_voom'):
             this_stack.deselect()
-            self.limma_window = LimmaWindow(self)
+            window_type = SimpleLimmaWindow if func_name.endswith('simplified') else LimmaWindow
+            self.limma_window = window_type(self)
             self.limma_window.paramsAccepted.connect(functools.partial(self._apply_function_from_params, func_name))
             self.limma_window.show()
 

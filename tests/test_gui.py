@@ -382,7 +382,8 @@ def test_KallistoSingleWindow_start_analysis(qtbot, kallisto_single_window):
                         kallisto_installation_folder='auto',
                         new_sample_names='auto',
                         stranded='no',
-                        bootstrap_samples=None)
+                        bootstrap_samples=None,
+                        summation_method='tpm')
 
     kallisto_single_window.param_widgets['fastq_folder'].setText(fq_folder)
     kallisto_single_window.param_widgets['output_folder'].setText(out_folder)
@@ -411,7 +412,8 @@ def test_KallistoPairedWindow_start_analysis(qtbot, kallisto_paired_window):
                         kallisto_installation_folder='auto',
                         new_sample_names='smart',
                         stranded='no',
-                        bootstrap_samples=None)
+                        bootstrap_samples=None,
+                        summation_method='scaled_tpm')
 
     kallisto_paired_window.pairs_widgets['r1_files'].add_items(r1_files)
     kallisto_paired_window.pairs_widgets['r2_files'].add_items(r2_files)

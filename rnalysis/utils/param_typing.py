@@ -10,6 +10,8 @@ import typing_extensions
 
 from rnalysis.utils import io, parsing
 
+SUMMATION_METHODS = ('scaled_tpm', 'raw')
+
 K_CRITERIA = ('gap', 'silhouette', 'calinski_harabasz', 'davies_bouldin', 'bic')
 
 LEGAL_GENE_LENGTH_METHODS = ('mean', 'median', 'max', 'min', 'geometric_mean', 'merged_exons')

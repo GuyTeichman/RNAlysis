@@ -22,7 +22,7 @@ from rnalysis import filtering
 from rnalysis.utils import validation, parsing, io, feature_counting, genome_annotation, generic, installs
 from rnalysis.utils.generic import readable_name
 from rnalysis.utils.param_typing import PositiveInt, NonNegativeInt, Fraction, LEGAL_FASTQ_SUFFIXES, \
-    LEGAL_BOWTIE2_PRESETS, LEGAL_BOWTIE2_MODES, LEGAL_QUAL_SCORE_TYPES, LEGAL_ALIGNMENT_SUFFIXES
+    LEGAL_BOWTIE2_PRESETS, LEGAL_BOWTIE2_MODES, SUMMATION_METHODS, LEGAL_QUAL_SCORE_TYPES, LEGAL_ALIGNMENT_SUFFIXES
 
 try:
     from cutadapt.cli import main as cutadapt_main
@@ -122,7 +122,7 @@ class SingleEndPipeline(_FASTQPipeline):
             params = generic.get_method_signature(func)
             current_out_dir = output_folder.joinpath(f'{i + 1:02d}_{func.__name__}')
             try:
-                current_out_dir.mkdir(parents=True)
+                current_out_dir.mkdir(parents=True, exist_ok=True)
             except OSError:
                 pass
 
@@ -173,7 +173,7 @@ class PairedEndPipeline(_FASTQPipeline):
         params = generic.get_method_signature(self.functions[0])
         if 'input_folder' in params:
             try:
-                current_in_dir.mkdir(parents=True)
+                current_in_dir.mkdir(parents=True, exist_ok=True)
             except OSError:
                 pass
             with tqdm(total=len(r1_files) + len(r2_files), desc='Copying files', unit='files') as pbar:
@@ -1672,6 +1672,7 @@ def kallisto_quantify_single_end(fastq_folder: Union[str, Path], output_folder: 
                                  kallisto_installation_folder: Union[str, Path, Literal['auto']] = 'auto',
                                  new_sample_names: Union[List[str], Literal['auto']] = 'auto',
                                  stranded: Literal['no', 'forward', 'reverse'] = 'no',
+                                 summation_method: Literal[SUMMATION_METHODS] = 'scaled_tpm',
                                  bootstrap_samples: Union[PositiveInt, None] = None,
                                  **legacy_args) -> filtering.CountFilter:
     """
@@ -1688,6 +1689,8 @@ def kallisto_quantify_single_end(fastq_folder: Union[str, Path], output_folder: 
     and can therefore be used directly by count-based statistical inference tools such as DESeq2.
     *RNAlysis* will return this table once the analysis is finished.
 
+    :param summation_method:
+    :type summation_method:
     :param fastq_folder: Path to the folder containing the FASTQ files you want to quantify
     :type fastq_folder: str or Path
     :param output_folder: Path to a folder in which the quantified results, as well as the log files, will be saved. \
@@ -1725,6 +1728,10 @@ def kallisto_quantify_single_end(fastq_folder: Union[str, Path], output_folder: 
     to the forward strand of a transcript. 'reverse' indicates the data is stranded, where the first read in the pair \
     pseudoaligns to the reverse strand of a transcript.
     :type stranded: 'no', 'forward', 'reverse' (default='no')
+    :param summation_method: Determines the method used to sum the transcript-level abundances to gene-level abundances. \
+    'scaled_tpm' sums the transcript TPM estimates the gene level, and then scales then to the library size. \
+    'raw' sums the transcript estimated counts to the gene level without scaling.
+    :type summation_method: 'scaled_tpm' or 'raw' (default='scaled_tpm')
     :param learn_bias: if True, kallisto learns parameters for a model of sequences specific bias \
     and corrects the abundances accordlingly. \
     Note that this feature is not supported by kallisto versions beyond 0.48.0.
@@ -1759,13 +1766,13 @@ def kallisto_quantify_single_end(fastq_folder: Union[str, Path], output_folder: 
     assert (new_sample_names == 'auto') or (len(new_sample_names) == len(legal_samples)), \
         f'Number of samples ({len(legal_samples)}) does not match number of sample names ({len(new_sample_names)})!'
 
+    if new_sample_names == 'auto':
+        new_sample_names = [parsing.remove_suffixes(item).stem for item in legal_samples]
+
     calls = []
     for i, item in enumerate(sorted(legal_samples)):
         this_call = call.copy()
-        if new_sample_names == 'auto':
-            this_name = parsing.remove_suffixes(item).stem
-        else:
-            this_name = new_sample_names[i]
+        this_name = new_sample_names[i]
 
         this_call[-6] = Path(this_call[-6]).joinpath(this_name).as_posix()
         this_call.append(item.as_posix())
@@ -1777,7 +1784,7 @@ def kallisto_quantify_single_end(fastq_folder: Union[str, Path], output_folder: 
             print(f"File saved successfully at {kallisto_call[-7]}")
             pbar.update(1)
 
-    return _process_kallisto_outputs(output_folder, gtf_file)
+    return _process_kallisto_outputs(output_folder, gtf_file, summation_method, new_sample_names)
 
 
 @_func_type('paired')
@@ -1787,6 +1794,7 @@ def kallisto_quantify_paired_end(r1_files: List[str], r2_files: List[str], outpu
                                  kallisto_installation_folder: Union[str, Path, Literal['auto']] = 'auto',
                                  new_sample_names: Union[List[str], Literal['auto', 'smart']] = 'smart',
                                  stranded: Literal['no', 'forward', 'reverse'] = 'no',
+                                 summation_method: Literal[SUMMATION_METHODS] = 'scaled_tpm',
                                  bootstrap_samples: Union[PositiveInt, None] = None,
                                  **legacy_args) -> filtering.CountFilter:
     """
@@ -1803,6 +1811,8 @@ def kallisto_quantify_paired_end(r1_files: List[str], r2_files: List[str], outpu
     and can therefore be used directly by count-based statistical inference tools such as DESeq2.
     *RNAlysis* will return this table once the analysis is finished.
 
+    :param summation_method:
+    :type summation_method:
     :param r1_files: a list of paths to your Read#1 files. The files should be sorted in tandem with r2_files, \
     so that they line up to form pairs of R1 and R2 files.
     :type r1_files: list of str/Path to existing FASTQ files
@@ -1835,6 +1845,10 @@ def kallisto_quantify_paired_end(r1_files: List[str], r2_files: List[str], outpu
     to the forward strand of a transcript. 'reverse' indicates the data is stranded, where the first read in the pair \
     pseudoaligns to the reverse strand of a transcript.
     :type stranded: 'no', 'forward', 'reverse' (default='no')
+    :param summation_method: Determines the method used to sum the transcript-level abundances to gene-level abundances. \
+    'scaled_tpm' sums the transcript TPM estimates the gene level, and then scales then to the library size. \
+    'raw' sums the transcript estimated counts to the gene level without scaling.
+    :type summation_method: 'scaled_tpm' or 'raw' (default='scaled_tpm')
     :param learn_bias: if True, kallisto learns parameters for a model of sequences specific bias \
     and corrects the abundances accordlingly. \
     Note that this feature is not supported by kallisto versions beyond 0.48.0.
@@ -1891,19 +1905,20 @@ def kallisto_quantify_paired_end(r1_files: List[str], r2_files: List[str], outpu
             print(f"Files saved successfully at {kallisto_call[-3]}")
             pbar.update(1)
 
-    return _process_kallisto_outputs(output_folder, gtf_file)
+    return _process_kallisto_outputs(output_folder, gtf_file, summation_method, new_sample_names)
 
 
-def _process_kallisto_outputs(output_folder, gtf_file):
-    counts, tpm = _merge_kallisto_outputs(output_folder)
-    genes_scaled_tpm = _sum_transcripts_to_genes(tpm, counts, gtf_file)
+def _process_kallisto_outputs(output_folder, gtf_file, summation_method: Literal[SUMMATION_METHODS],
+                              new_sample_names: List[str]):
+    counts, tpm = _merge_kallisto_outputs(output_folder, new_sample_names)
+    counts_per_gene = _sum_transcripts_to_genes(tpm, counts, gtf_file, summation_method)
 
     io.save_table(counts, output_folder.joinpath('transcript_counts.csv'))
     io.save_table(tpm, output_folder.joinpath('transcript_tpm.csv'))
-    io.save_table(genes_scaled_tpm, output_folder.joinpath('kallisto_output_scaled_per_gene.csv'))
+    countfile_name = 'kallisto_output_scaled_per_gene' if summation_method == 'scaled_tpm' else 'kallisto_output_count_per_gene'
+    io.save_table(counts_per_gene, output_folder.joinpath(f'{countfile_name}.csv'))
 
-    return filtering.CountFilter.from_dataframe(genes_scaled_tpm, 'kallisto_output_scaled_per_gene',
-                                                is_normalized=False)
+    return filtering.CountFilter.from_dataframe(counts_per_gene, countfile_name, is_normalized=False)
 
 
 def _parse_kallisto_misc_args(output_folder, index_file: str, kallisto_installation_folder: Union[str, Path],
@@ -1947,29 +1962,25 @@ def _parse_kallisto_misc_args(output_folder, index_file: str, kallisto_installat
     return call
 
 
-def _merge_kallisto_outputs(output_folder: Union[str, Path]):
+def _merge_kallisto_outputs(output_folder: Union[str, Path], new_sample_names: List[str]):
     """
     output a merged csv file of transcript estimated counts, and a merged csv file of transcript estimated TPMs.
-
-    :param output_folder:
-    :type output_folder:
-    :return:
-    :rtype:
     """
     counts = pd.DataFrame()
     tpm = pd.DataFrame()
-    for item in sorted(Path(output_folder).iterdir()):
-        if item.is_dir():
-            abundance_path = item.joinpath('abundance.tsv')
-            if abundance_path.exists():
-                this_df = io.load_table(abundance_path, index_col=0)
-                sample_name = item.name
-                counts[sample_name] = this_df['est_counts']
-                tpm[sample_name] = this_df['tpm']
+    for name in new_sample_names:
+        abundance_path = Path(output_folder).joinpath(name, 'abundance.tsv')
+        if abundance_path.exists():
+            this_df = io.load_table(abundance_path, index_col=0)
+            counts[name] = this_df['est_counts']
+            tpm[name] = this_df['tpm']
+        else:
+            raise FileNotFoundError(f"Could not find the kallisto output for sample '{name}' at {abundance_path}")
     return counts, tpm
 
 
-def _sum_transcripts_to_genes(tpm: pd.DataFrame, counts: pd.DataFrame, gtf_path: Union[str, Path]):
+def _sum_transcripts_to_genes(tpm: pd.DataFrame, counts: pd.DataFrame, gtf_path: Union[str, Path],
+                              summation_method: Literal[SUMMATION_METHODS]):
     with tqdm(desc='Parsing GTF file', total=8) as pbar:
         for use_name in [False, True]:
             for use_version in [True, False]:
@@ -1980,18 +1991,25 @@ def _sum_transcripts_to_genes(tpm: pd.DataFrame, counts: pd.DataFrame, gtf_path:
                     if len(transcript_to_gene_map) == 0:
                         continue
 
-                    library_sizes = counts.sum(axis=0) / (10 ** 6)
-                    tpm_cpy = tpm.copy()
-                    tpm_cpy['Gene ID'] = pd.Series(transcript_to_gene_map)
-                    tpm_by_gene = tpm_cpy.groupby('Gene ID').sum()
+                    if summation_method == 'scaled_tpm':
+                        library_sizes = counts.sum(axis=0) / (10 ** 6)
+                        tpm_cpy = tpm.copy()
+                        tpm_cpy['Gene ID'] = pd.Series(transcript_to_gene_map)
+                        tpm_by_gene = tpm_cpy.groupby('Gene ID').sum()
+                        count_per_gene = tpm_by_gene.multiply(library_sizes, axis=1)
+                    elif summation_method == 'raw':
+                        count_cpy = counts.copy()
+                        count_cpy['Gene ID'] = pd.Series(transcript_to_gene_map)
+                        count_per_gene = count_cpy.groupby('Gene ID').sum()
+                    else:
+                        raise ValueError(f"Invalid value for 'summation_method': '{summation_method}'.")
 
-                    if tpm_by_gene.shape[0] == 0:
+                    if count_per_gene.shape[0] == 0:
                         continue
-                    scaled_tpm = tpm_by_gene.multiply(library_sizes, axis=1)
                     pbar.update(8)
-                    if isinstance(scaled_tpm, pd.Series):
-                        scaled_tpm = scaled_tpm.to_frame()
-                    return scaled_tpm
+                    if isinstance(count_per_gene, pd.Series):
+                        count_per_gene = count_per_gene.to_frame()
+                    return count_per_gene
 
     raise ValueError("Failed to map transcripts to genes with the given GTF file!")
 
@@ -2269,6 +2287,7 @@ def trim_adapters_paired_end(r1_files: List[Union[str, Path]], r2_files: List[Un
             infile2_stem = parsing.remove_suffixes(Path(cutadapt_call[-1])).stem
             log_filename = Path(output_folder).joinpath(
                 f'cutadapt_log_{infile1_stem}_{infile2_stem}.log').absolute().as_posix()
+
             if found_cli:
                 io.run_subprocess(cutadapt_call, log_filename=log_filename)
             else:

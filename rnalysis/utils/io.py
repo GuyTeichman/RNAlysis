@@ -14,6 +14,7 @@ import re
 import shlex
 import shutil
 import subprocess
+import sys
 import threading
 import time
 import typing
@@ -42,7 +43,12 @@ from requests.adapters import HTTPAdapter, Retry
 from tqdm import tqdm
 
 from rnalysis import __version__
-from rnalysis.utils import parsing, validation, __path__
+from rnalysis.utils import parsing, validation
+
+
+def get_datafile_dir() -> Path:
+    bundle_dir = getattr(sys, '_MEIPASS', '')
+    return Path(bundle_dir)
 
 
 def get_gui_cache_dir() -> Path:
