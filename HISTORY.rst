@@ -37,6 +37,7 @@ Fixed
 * Fixed various visual issues in the graphical interface
 * Fixed bug where running enrichment on an empty gene set would raise an error.
 * Fixed bug where RNAlysis would suggest resuming an auto-report from loaded session even when auto-report is turned off.
+* Fixed bug where disabling auto-report in the middle of the session would raise errors when trying to create new graphs.
 
 New Contributors
 *****************

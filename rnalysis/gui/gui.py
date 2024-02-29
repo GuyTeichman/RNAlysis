@@ -3322,11 +3322,10 @@ class MainWindow(QtWidgets.QMainWindow):
         tab.tabNameChange.connect(self.rename_tab)
         tab.geneSetsRequested.connect(self.update_gene_sets_widget)
 
-        if self._generate_report:
-            tab.functionApplied.connect(self.update_report_from_worker)
-            tab.itemSpawned.connect(self.update_report_spawn)
-            tab.tabLoaded.connect(self.add_loaded_item_to_report)
-            tab.tabReverted.connect(self.remove_tab_from_report)
+        tab.functionApplied.connect(self.update_report_from_worker)
+        tab.itemSpawned.connect(self.update_report_spawn)
+        tab.tabLoaded.connect(self.add_loaded_item_to_report)
+        tab.tabReverted.connect(self.remove_tab_from_report)
 
         self.tabs.addTab(tab, name)
         self.tabs.setCurrentIndex(self.tabs.count() - 1)
@@ -3436,6 +3435,8 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def add_loaded_item_to_report(self, item_id: int, item_name: str,
                                   obj: Union[filtering.Filter, enrichment.FeatureSet, generic.GenericPipeline]):
+        if not self._generate_report:
+            return
         if item_id in self.report.nodes:
             if self.report.nodes[item_id].is_active:
                 return
@@ -3458,6 +3459,8 @@ class MainWindow(QtWidgets.QMainWindow):
 
     @QtCore.pyqtSlot(gui_widgets.WorkerOutput)
     def update_report_from_worker(self, worker_output: gui_widgets.WorkerOutput):
+        if not self._generate_report:
+            return
         if worker_output.raised_exception:
             return
         partial = worker_output.partial
@@ -3469,6 +3472,8 @@ class MainWindow(QtWidgets.QMainWindow):
     def update_report_spawn(self, name: str, spawn_id: int, predecessor_id: int,
                             spawn: Union[filtering.Filter, enrichment.FeatureSet,
                             pd.DataFrame, plt.Figure, generic.GenericPipeline]):
+        if not self._generate_report:
+            return
         if spawn is None:
             return
         assert self.is_valid_spawn(spawn), f"Invalid spawn type '{type(spawn)}'!"
