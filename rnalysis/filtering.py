@@ -1801,7 +1801,7 @@ class Filter:
             Filtered 3 features, leaving 25 of the original 28 features. Filtering result saved to new object.
             >>> filt_no_nan_basemean = filt.filter_missing_values(columns='baseMean', inplace=False)
             Filtered 1 features, leaving 27 of the original 28 features. Filtering result saved to new object.
-            >>> filt_no_nan_basemean_pval = filt.filter_missing_values(columns=['baseMean','pval'], inplace=False)
+            >>> filt_no_nan_basemean_pval = filt.filter_missing_values(columns=['baseMean','pvalue'], inplace=False)
             Filtered 2 features, leaving 26 of the original 28 features. Filtering result saved to new object.
 
         """
@@ -3188,7 +3188,7 @@ class CountFilter(Filter):
             if not item.is_file():
                 continue
             if item.suffix == '.csv':
-                outputs.append(DESeqFilter(item, log2fc_col='logFC', padj_col='adj.P.Val'))
+                outputs.append(DESeqFilter(item, log2fc_col='logFC', padj_col='adj.P.Val', pval_col='P.Value'))
 
             if output_folder is not None:
                 with open(item) as infile, open(output_folder.joinpath(item.name), 'w') as outfile:

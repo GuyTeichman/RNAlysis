@@ -2717,7 +2717,7 @@ def test_MainWindow_save_session(use_temp_settings_file, main_window, monkeypatc
     n_pipelines = len(main_window.pipelines)
     item_types_truth = ['FoldChangeFilter', 'CountFilter', 'Filter', 'DESeqFilter', 'set']
     item_properties_truth = [{'numerator_name': 'a', 'denominator_name': 'b'}, {'is_normalized': False}, {},
-                             {'log2fc_col': 'log2FoldChange', 'padj_col': 'padj'}, {}]
+                             {'log2fc_col': 'log2FoldChange', 'padj_col': 'padj', 'pval_col': 'pvalue'}, {}]
     pipeline_names_truth = ['New Pipeline', 'Other Pipeline']
     pipeline_files_truth = [re.sub('\d\d:\d\d:\d\d', '$EXPORTTIME', pipeline.export_pipeline(filename=None)) for
                             pipeline, p_id in main_window.pipelines.values()]
