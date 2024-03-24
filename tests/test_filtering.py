@@ -337,6 +337,7 @@ class TestFilterConcatenate:
         with pytest.raises(AssertionError) as exc_info:
             self.filter1.concatenate(filter4)
 
+
 def test_countfilter_norm_reads_with_scaling_factors():
     truth = io.load_table(r"tests/test_files/test_norm_scaling_factors.csv", 0)
     h = CountFilter("tests/test_files/counted.csv")
@@ -435,17 +436,21 @@ def test_countfilter_scatter_sample_vs_sample_api(s1, s2, xlabel, ylabel, title,
     plt.close('all')
 
 
-def test_countfilter_pca_api():
+@pytest.mark.parametrize('kwargs,xfail', [({}, False),
+                                          (dict(samples=['cond1', ['cond2', 'cond3']], n_components=2, labels=False,
+                                                power_transform=False), False),
+                                          (dict(n_components=2.0), True),
+                                          (dict(n_components=1), True)])
+def test_countfilter_pca_api(kwargs, xfail):
     c = CountFilter("tests/test_files/counted.csv")
     c.filter_low_reads(1)
     try:
-        _ = c.pca()
-        _ = c.pca(samples=['cond1', ['cond2', 'cond3']], n_components=2, labels=False,
-                  power_transform=True)
-        with pytest.raises(AssertionError):
-            _ = c.pca(n_components=2.0)
-        with pytest.raises(AssertionError):
-            _ = c.pca(n_components=1)
+        if xfail:
+            with pytest.raises(AssertionError):
+                c.pca(**kwargs)
+
+        else:
+            _ = c.pca()
     finally:
         plt.close('all')
 
