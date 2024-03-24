@@ -19,8 +19,8 @@ from rnalysis.utils.differential_expression import *
 def test_create_limma_script(data, design_matrix, comparisons, random_effect, expected_path):
     with open(expected_path) as f:
         expected = f.read()
-
-    out_path = create_limma_script(data, design_matrix, comparisons, random_effect)
+    runner = LimmaVoomRunner(data, design_matrix, comparisons, random_effect=random_effect)
+    out_path = runner.create_script()
     assert Path(out_path).exists()
     with open(out_path) as f:
         out = f.read()
@@ -40,7 +40,8 @@ def test_create_limma_script(data, design_matrix, comparisons, random_effect, ex
 def test_run_limma_analysis(comparisons, expected_paths):
     data_path = 'tests/test_files/big_counted.csv'
     design_mat_path = 'tests/test_files/test_design_matrix.csv'
-    output_dir = run_limma_analysis(data_path, design_mat_path, comparisons)
+    runner = LimmaVoomRunner(data_path, design_mat_path, comparisons)
+    output_dir = runner.run()
 
     dfs = []
     for item in output_dir.iterdir():
@@ -67,10 +68,11 @@ def test_run_limma_analysis(comparisons, expected_paths):
      'tests/test_files/deseq2_tests/case2/expected_deseq_script_2.R')
 ])
 def test_create_deseq2_script(data, design_matrix, comparisons, expected_path):
+    runner = DESeqRunner(data, design_matrix, comparisons)
     with open(expected_path) as f:
         expected = f.read()
 
-    out_path = create_deseq2_script(data, design_matrix, comparisons)
+    out_path = runner.create_script()
     assert Path(out_path).exists()
     with open(out_path) as f:
         out = f.read()
@@ -88,7 +90,8 @@ def test_create_deseq2_script(data, design_matrix, comparisons, expected_path):
 def test_run_deseq2_analysis(comparisons, expected_paths):
     data_path = 'tests/test_files/big_counted.csv'
     design_mat_path = 'tests/test_files/test_design_matrix.csv'
-    output_dir = run_deseq2_analysis(data_path, design_mat_path, comparisons)
+    runner = DESeqRunner(data_path, design_mat_path, comparisons)
+    output_dir = runner.run()
 
     dfs = []
     for item in output_dir.iterdir():

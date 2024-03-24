@@ -1,11 +1,11 @@
 require("limma")
 
 design_matrix <- read.table("tests/test_files/test_design_matrix.csv", header=TRUE, sep= ",")
-condition <- factor(design_matrix$condition, levels=c("cond1", "cond2", "cond3"))
-replicate <- factor(design_matrix$replicate, levels=c("rep1", "rep2", "rep3"))
+design_matrix$condition <- factor(design_matrix$condition, levels=c("cond1", "cond2", "cond3"))
+design_matrix$replicate <- factor(design_matrix$replicate, levels=c("rep1", "rep2", "rep3"))
 
-design <- model.matrix(~ condition)
-colnames(design)[1] <- "Intercept"
+design <- model.matrix(~ condition + replicate, design_matrix)
+colnames(design)[1] <- "Intercept" # rename the intercept column from "(Intercept)" to "Intercept"
 
 count_data <- read.table("tests/test_files/big_counted.csv", header=TRUE, sep= ",", row.names = 1)
 voom_object <- voom(count_data, design, plot=FALSE, save.plot=TRUE)

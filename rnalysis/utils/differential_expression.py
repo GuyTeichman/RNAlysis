@@ -1,9 +1,10 @@
 import abc
 import hashlib
 import itertools
+import re
 import time
 from pathlib import Path
-from typing import Union, Iterable, Tuple, Literal, List
+from typing import Union, Iterable, Tuple, Literal, List, Set, Dict
 
 import pandas as pd
 
@@ -11,6 +12,7 @@ from rnalysis.utils import io, generic, installs, validation, parsing
 
 
 class DiffExpRunner(abc.ABC):
+    POLY_PATTERN = r"poly\s*\(\s*(\w+)\s*,\s*degree\s*=\s*(\d+)\s*\)"
     TEMPLATES_DIR = Path(__file__).parent.parent.joinpath('data_files/r_templates')
 
     def __init__(self, data_path: Union[str, Path], design_mat_path: Union[str, Path],
@@ -32,13 +34,20 @@ class DiffExpRunner(abc.ABC):
 
         self.design_mat = io.load_table(self.design_mat_path, index_col=0)
         if model_factors == 'auto':
-            self.model_factors = parsing.data_to_set(
-                list(self.design_mat.columns) + parsing.data_to_list(self.lrt_factors) + parsing.data_to_list(
-                    self.covariates))
+            self.model_factors = []
+            for factor in itertools.chain(self.design_mat.columns, self.covariates):
+                present = False
+                for lrt in self.lrt_factors:
+                    if lrt.startswith(f'poly({factor}'):
+                        present = True
+                        break
+                if not present:
+                    self.model_factors.append(factor)
+            self.model_factors = parsing.data_to_set(self.model_factors + parsing.data_to_list(self.lrt_factors))
         else:
             self.model_factors = model_factors
-        for factor in itertools.chain(self.lrt_factors, self.covariates, [comp[0] for comp in self.comparisons]):
-            assert factor in self.model_factors, f"factor {factor} not found in design matrix columns"
+            for factor in itertools.chain(self.lrt_factors, self.covariates, [comp[0] for comp in self.comparisons]):
+                assert factor in self.model_factors, f"factor {factor} not found in design matrix columns"
 
     def run(self) -> Path:
         self.install_required_packages()
@@ -67,9 +76,6 @@ class DiffExpRunner(abc.ABC):
 
     def create_formula(self, without: Union[List[str], Tuple[str, ...]] = tuple()) -> str:
         return "~ " + " + ".join([factor for factor in self.model_factors if factor not in without])
-
-    def expand_factors(self, factors: str) -> List[str]:
-        return factors.split(' + ')  # TODO
 
 
 class DESeqRunner(DiffExpRunner):
@@ -140,6 +146,56 @@ class LimmaVoomRunner(DiffExpRunner):
     def install_required_packages(self):
         installs.install_limma(self.r_installation_folder)
 
+    def _generate_interaction_terms(self, interaction):
+        # Split the interaction string into individual variables
+        variables = interaction.split(':')
+
+        # Check if each variable is numeric or factor (non-numeric) and store this information
+        is_numeric = {var: pd.api.types.is_numeric_dtype(self.design_mat[var]) for var in variables}
+
+        # Initialize a list to hold the names of the interaction terms
+        interaction_terms = []
+
+        # Generate interaction terms
+        for var in variables:
+            if is_numeric[var]:
+                # Numeric variables are used as they are
+                interaction_terms.append([var])
+            else:
+                # For non-numeric (factor) variables, create a term for each level except the first (reference)
+                levels = sorted(self.design_mat[var].unique())  # Sort levels to ensure consistent order
+                interaction_terms.append([f"{var}_{level}" for level in levels[1:]])
+
+        # Generate all possible combinations of interaction terms
+        # If a variable is numeric, it appears as is; if it's a factor, we get one term per level (except the reference level)
+        all_combinations = list(itertools.product(*interaction_terms))
+
+        # Convert combinations into coefficient names
+        coefficient_names = {":".join(comb) for comb in all_combinations}
+
+        return coefficient_names
+
+    def _get_coef_names(self) -> Dict[str, Set[str]]:
+        coefs = {}
+        for factor in self.model_factors:
+            coefs[factor] = set()
+            if re.match(self.POLY_PATTERN, factor):
+                match = re.match(self.POLY_PATTERN, factor)
+                base_factor = match.group(1)
+                degree = int(match.group(2))
+                for i in range(degree):
+                    coefs[factor].add(f"poly({base_factor}, degree = {degree}){i + 1}")
+            elif factor in self.design_mat and pd.api.types.is_numeric_dtype(self.design_mat[factor]):
+                coefs[factor].add(factor)
+            elif ':' in factor:
+                coefs[factor] = self._generate_interaction_terms(factor)
+            else:
+                values = sorted(self.design_mat[factor].unique())
+                for value in values[1:]:
+                    coefs[factor].add(f"{factor}{value}")
+        coef_makenames = {factor: set(parsing.r_make_names(list(names))) for factor, names in coefs.items()}
+        return coef_makenames
+
     @staticmethod
     def _get_random_effect_code(random_effect: Union[str, None]) -> str:
         if random_effect is None:
@@ -171,6 +227,7 @@ class LimmaVoomRunner(DiffExpRunner):
         cache_dir = self._get_cache_dir()
         save_path = cache_dir.joinpath('limma_run.R')
         run_template, comparison_template, covariate_template, lrt_template = self._get_templates()
+        coef_names = self._get_coef_names()
 
         with open(save_path, 'w') as outfile:
             baselines = {}
@@ -218,15 +275,14 @@ class LimmaVoomRunner(DiffExpRunner):
             # covariates
             for covariate in self.covariates:
                 export_path = cache_dir.joinpath(f"LimmaVoom_{covariate[0]}_covariate.csv").as_posix()
-                coef = covariate
+                coef = covariate if covariate in self.model_factors else f"poly({covariate}, degree = 1)1"
                 this_covar = covariate_template.replace("$COEF", coef)
                 this_covar = this_covar.replace("$OUTFILE_NAME", export_path)
                 outfile.write(this_covar)
             # likelihood ratio tests
             for lrt_factor in self.lrt_factors:
                 export_path = cache_dir.joinpath(f"LimmaVoom_{lrt_factor[0]}_LRT.csv").as_posix()
-                # coefficient count starts at 1, and the first coefficient is always "intercept", so start count from 2
-                coefs = ""  # TODO
+                coefs = "c(" + ', '.join([f'"{coef}"' for coef in coef_names[lrt_factor]]) + ")"
                 this_lrt = lrt_template.replace("$COEFS", coefs)
                 this_lrt = this_lrt.replace("$OUTFILE_NAME", export_path)
                 outfile.write(this_lrt)

@@ -37,6 +37,7 @@ Fixed
 * Fixed bug where RNAlysis would crash when launched without an internet connection.
 * Fixed bug that cause ID-mapping functions to raise an error when called from the MacOS stand-alone app (thanks to `Mitchzw <https://github.com/Mitchzw>`_ in `#34 <https://github.com/GuyTeichman/RNAlysis/issues/34>`_).
 * Fixed bug that caused R package installations (DESeq2, limma, etc) to fail on some computers (thanks to `Celine-075 <https://github.com/Celine-075>`_ in `#35 <https://github.com/GuyTeichman/RNAlysis/issues/35>`_).
+* Fixed bug where Limma-Voom differential expression would fit numerical covariates as categorical factors.
 * Fixed bug where generating enrichment bar plots with ylim='auto' would cause bars with 100% depletion (log2FC=-inf) to disappear.
 * Fixed bug where defining 10 or more sample groups in the graphical interface would cause the groups to be ordered incorrectly in graphs.
 * Fixed bug where the 'return_scaling_factors' argument would not return the normalization scaling factors on the graphical interface.
