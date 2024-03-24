@@ -2674,6 +2674,9 @@ class DESeqFilter(Filter):
     def __init__(self, fname: Union[str, Path, tuple], drop_columns: Union[str, List[str]] = None,
                  log2fc_col: str = 'log2FoldChange', padj_col: str = 'padj', pval_col: str = 'pvalue',
                  suppress_warnings: bool = False):
+                 log2fc_col: Union[str, Literal['log2FoldChange', 'logFC']] = 'log2FoldChange',
+                 padj_col: Union[str, Literal['padj', 'adj.P.Val']] = 'padj',
+                 pval_col: Union[str, Literal['pvalue', 'P.Value']] = 'pvalue',
         """
         Load a differential expression table. A valid differential expression table should have \
         a column containing log2(fold change) values for each gene, and another column containing \
@@ -2714,6 +2717,9 @@ class DESeqFilter(Filter):
     @classmethod
     def from_dataframe(cls, df: pd.DataFrame, name: Union[str, Path], log2fc_col: str = 'log2FoldChange',
                        padj_col: str = 'padj', pval_col: str = 'pvalue',
+                       log2fc_col: Union[str, Literal['log2FoldChange', 'logFC']] = 'log2FoldChange',
+                       padj_col: Union[str, Literal['padj', 'adj.P.Val']] = 'padj',
+                       pval_col: Union[str, Literal['pvalue', 'P.Value']] = 'pvalue',
                        suppress_warnings: bool = False) -> 'DESeqFilter':
         obj = cls.__new__(cls)
         obj.df = df.copy(deep=True)
