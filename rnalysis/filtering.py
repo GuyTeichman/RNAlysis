@@ -3129,7 +3129,8 @@ class CountFilter(Filter):
                                                                     f"match the sample names in the count matrix: " \
                                                                     f"{sorted(design_mat_df.index)} != " \
                                                                     f"{sorted(self.columns)}"
-
+        assert len(design_mat_df.columns) == len(design_mat_df.columns.unique()), "The design matrix contains " \
+                                                                                  "duplicate factor names."
         for factor in design_mat_df.columns:
             assert generic.sanitize_variable_name(
                 factor) == factor, f"Invalid factor name '{factor}': contains invalid characters." \
