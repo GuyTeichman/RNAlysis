@@ -1352,11 +1352,8 @@ class CovariatePicker(QtWidgets.QWidget):
                    pd.api.types.is_numeric_dtype(self.design_mat[item])]
         self.factor.addItems(factors)
 
-    def update_combos(self):
-        pass  # TODO
-
-    def value(self):
-        pass  # TODO
+    def value(self) -> str:
+        return self.factor.currentText()
 
 
 class CovariatePickerGroup(DiffExpPickerGroup):
@@ -1390,19 +1387,20 @@ class LRTPicker(QtWidgets.QWidget):
         self.design_mat = design_mat
         self.layout = QtWidgets.QHBoxLayout(self)
         self.factor = QtWidgets.QComboBox(self)
+        self.factors = [str(item) for item in self.design_mat.columns]
+        self.poly = self._get_polynomial_terms(self.factors)
+        self.interactions = self._get_interaction_terms(self.factors)
+
         self.init_ui()
 
     def init_ui(self):
         self.layout.addWidget(self.factor)
-        factors = [str(item) for item in self.design_mat.columns]
-        poly = self._get_polynomial_terms(factors)
-        interactions = self._get_interaction_terms(factors)
 
-        self.factor.addItems(factors)
+        self.factor.addItems(self.factors)
         self.factor.insertSeparator(self.factor.count())
-        self.factor.addItems(poly)
+        self.factor.addItems(self.poly.keys())
         self.factor.insertSeparator(self.factor.count())
-        self.factor.addItems(interactions)
+        self.factor.addItems(self.interactions)
 
     @staticmethod
     def _get_interaction_terms(factors: List[str]) -> List[str]:
@@ -1412,27 +1410,26 @@ class LRTPicker(QtWidgets.QWidget):
         three_way = []
         for i in range(len(factors)):
             for j in range(i + 1, len(factors)):
-                two_way.append(f'{factors[i]}*{factors[j]}')
+                two_way.append(f'{factors[i]}:{factors[j]}')
                 for k in range(j + 1, len(factors)):
-                    three_way.append(f'{factors[i]}*{factors[j]}*{factors[k]}')
+                    three_way.append(f'{factors[i]}:{factors[j]}:{factors[k]}')
 
         return two_way + three_way
 
-    def _get_polynomial_terms(self, factors: List[str]) -> List[str]:
+    def _get_polynomial_terms(self, factors: List[str]) -> Dict[str, str]:
         # calculate only 2nd and 3rd degree polynomials because higher order polynomials are rarely ever relevant
-        second_degree = []
-        third_degree = []
+        poly = {}
         numerical_factors = [factor for factor in factors if pd.api.types.is_numeric_dtype(self.design_mat[factor])]
         for this_factor in numerical_factors:
-            second_degree.append(f'{this_factor}+{this_factor}^2')
-            third_degree.append(f'{this_factor}+{this_factor}^2+{this_factor}^3')
-        return second_degree + third_degree
-
-    def update_combos(self):
-        pass  # TODO
+            poly[f'{this_factor}+{this_factor}^2'] = f'poly({this_factor}, degree = 2)'
+            poly[f'{this_factor}+{this_factor}^2+{this_factor}^3'] = f'poly({this_factor}, degree = 3)'
+        return poly
 
     def value(self):
-        pass  # TODO
+        txt = self.factor.currentText()
+        if txt in self.poly:
+            return self.poly[txt]
+        return txt
 
 
 class LRTPickerGroup(DiffExpPickerGroup):
@@ -1497,6 +1494,8 @@ class ComparisonPicker(QtWidgets.QWidget):
 
         self.numerator.addItems(options)
         self.denominator.addItems(options)
+        if len(options) > 1:
+            self.denominator.setCurrentIndex(1)  # ensure the numerator and denominator start at different values
 
     def value(self) -> Tuple[str, str, str]:
         return self.factor.currentText(), self.numerator.currentText(), self.denominator.currentText()
