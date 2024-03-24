@@ -11,6 +11,7 @@ Added
 ******
 * bowtie2 and kallisto paired-end modes now support the new file naming method 'smart', that attempts to automatically determine the common name of each pair of paired-end fastq files.
 * Added a p-value histogram plot (DESeqFilter.pval_histogram) that displays the distribution of p-values in a differential expression table.
+* Added new visualization options for 'plot expression of specific genes' function (CountFilter.plot_expression).
 
 Changed
 ********
@@ -39,6 +40,7 @@ Fixed
 * Fixed bug where running enrichment on an empty gene set would raise an error.
 * Fixed bug where RNAlysis would suggest resuming an auto-report from loaded session even when auto-report is turned off.
 * Fixed bug where disabling auto-report in the middle of the session would raise errors when trying to create new graphs.
+* Fixed bug where generating multiple gene expression plots (split_plots=True) with auto-generated report would only add the last graph to the session report.
 
 New Contributors
 *****************

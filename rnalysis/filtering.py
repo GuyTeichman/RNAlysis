@@ -21,7 +21,7 @@ import numpy as np
 import pandas as pd
 import seaborn as sns
 from grid_strategy import strategies
-from scipy.stats import spearmanr
+from scipy.stats import gstd, norm, spearmanr
 from scipy.stats.mstats import gmean
 from sklearn.decomposition import PCA
 from sklearn.preprocessing import PowerTransformer, StandardScaler
@@ -4910,10 +4910,13 @@ class CountFilter(Filter):
     @readable_name('Plot expression of specific genes')
     def plot_expression(self, features: Union[List[str], str],
                         samples: Union[param_typing.GroupedColumns, Literal['all']] = 'all',
+                        avg_function: Literal['mean', 'median', 'geometric_mean'] = 'mean',
+                        spread_function: Literal['sem', 'std', 'gstd', 'gsem', 'iqr', 'range'] = 'sem',
+                        bar_colors: ColorList = 'deepskyblue', edge_color: Color = 'black',
+                        scatter_color: Color = 'grey',
                         count_unit: str = 'Normalized reads', split_plots: bool = False) -> plt.Figure:
         """
-        Plot the average expression and standard error of the specified features under the specified conditions.
-
+        Plot the average expression and spread of the specified features under the specified conditions.
         :type features: str or list of strings
         :param features: the feature/features to plot expression for.
         :param samples: A list of the sample names and/or grouped sample names to be plotted. \
@@ -4921,7 +4924,17 @@ class CountFilter(Filter):
         To average multiple replicates of the same condition, they can be grouped in an inner list. \
         Example input: \
         [['SAMPLE1A', 'SAMPLE1B', 'SAMPLE1C'], ['SAMPLE2A', 'SAMPLE2B', 'SAMPLE2C'],'SAMPLE3' , 'SAMPLE6']
-        :type count_unit: str, default 'Reads per million'
+        :param avg_function: The function used to calculate the average expression value for each condition.
+        :type avg_function: 'mean', 'median', or 'geometric_mean' (default='mean')
+        :param spread_function: The function used to calculate the error bars of expression values for each condition.
+        :type spread_function: 'sem', 'std', 'gstd', 'gsem', 'iqr', or 'range' (default='sem')
+        :param bar_colors: The color or list of colors to use for the bars in the plot.
+        :type bar_colors: str or list of color strings (default='deepskyblue')
+        :param edge_color: The color of the edges around the bars.
+        :type edge_color: str (default='black')
+        :param scatter_color: The color of the scatter points representing individual samples.
+        :type scatter_color: str (default='grey')
+        :type count_unit: str (default='Reads per million')
         :param count_unit: The unit of the count data. Will be displayed in the y axis.
         :type split_plots: bool (default=False)
         :param split_plots: if True, each gene will be plotted in its own Figure. \
@@ -4949,6 +4962,9 @@ class CountFilter(Filter):
                 for j in range(len(samples[i])):
                     samples[i][j] = self.columns[samples[i][j]]
         sample_names = [name.replace(',', '\n') for name in self._avg_subsamples(samples).columns]  # TODO: replace
+        figs = []
+        axes = []
+        ylims = []
 
         if not split_plots:
             g = strategies.SquareStrategy()
@@ -4956,22 +4972,62 @@ class CountFilter(Filter):
             plt.close()
             fig = plt.figure()
             fig.tight_layout()
-        axes = []
-        ylims = []
+            figs.append(fig)
         for i, feature in enumerate(features):
             if split_plots:
                 fig, ax = plt.subplots()
                 fig.tight_layout()
+                figs.append(fig)
             else:
                 ax = fig.add_subplot(subplots[i])
             axes.append(ax)
-            mean = [self.df.loc[feature].iloc[ind].mean() if validation.isinstanceiter(ind, int) else
-                    self.df.loc[feature, ind].mean() for ind in samples]
 
-            sem = [self.df.loc[feature].iloc[ind].sem() if validation.isinstanceiter(ind, int) else
-                   self.df.loc[feature, ind].sem() for ind in samples]
-            sem = [0 if np.isnan(this_sem) else this_sem for this_sem in sem]
+            if avg_function == 'mean':
+                mean = [self.df.loc[feature].iloc[ind].mean() if validation.isinstanceiter(ind, int) else
+                        self.df.loc[feature, ind].mean() for ind in samples]
+            elif avg_function == 'median':
+                mean = [self.df.loc[feature].iloc[ind].median() if validation.isinstanceiter(ind, int) else
+                        self.df.loc[feature, ind].median() for ind in samples]
+            elif avg_function == 'geometric_mean':
+                mean = [np.exp(np.log(self.df.loc[feature].iloc[ind]).mean()) if validation.isinstanceiter(ind, int)
+                        else np.exp(np.log(self.df.loc[feature, ind]).mean()) for ind in samples]
+            else:
+                raise ValueError(f"Invalid average function {avg_function}.")
 
+            if spread_function == 'sem':
+                spread = [self.df.loc[feature].iloc[ind].sem() if validation.isinstanceiter(ind, int) else
+                          self.df.loc[feature, ind].sem() for ind in samples]
+            elif spread_function == 'std':
+                spread = [self.df.loc[feature].iloc[ind].std() if validation.isinstanceiter(ind, int) else
+                          self.df.loc[feature, ind].std() for ind in samples]
+            elif spread_function == 'gstd':
+                spread = np.array([
+                    [m - m / gstd(self.df.loc[feature].iloc[ind]) if validation.isinstanceiter(ind, int)
+                     else m - m / gstd(self.df.loc[feature, ind]) for m, ind in zip(mean, samples)],
+                    [m * gstd(self.df.loc[feature].iloc[ind]) - m if validation.isinstanceiter(ind, int)
+                     else m * gstd(self.df.loc[feature, ind]) - m for m, ind in zip(mean, samples)]
+                ])
+            elif spread_function == 'gsem':
+                spread = np.array([
+                    [m - m / np.exp(np.log(self.df.loc[feature].iloc[ind]).sem()) if validation.isinstanceiter(ind, int)
+                     else m - m / np.exp(np.log(self.df.loc[feature, ind]).sem()) for m, ind in zip(mean, samples)],
+                    [m * np.exp(np.log(self.df.loc[feature].iloc[ind]).sem()) - m if validation.isinstanceiter(ind, int)
+                     else m * np.exp(np.log(self.df.loc[feature, ind]).sem()) - m for m, ind in zip(mean, samples)]
+                ])
+            elif spread_function == 'iqr':
+                spread = [
+                    np.percentile(self.df.loc[feature].iloc[ind], 75) - np.percentile(self.df.loc[feature].iloc[ind],
+                                                                                      25)
+                    if validation.isinstanceiter(ind, int)
+                    else np.percentile(self.df.loc[feature, ind], 75) - np.percentile(self.df.loc[feature, ind], 25)
+                    for ind in samples]
+            elif spread_function == 'range':
+                spread = [self.df.loc[feature].iloc[ind].max() - self.df.loc[feature].iloc[ind].min()
+                          if validation.isinstanceiter(ind, int)
+                          else self.df.loc[feature, ind].max() - self.df.loc[feature, ind].min()
+                          for ind in samples]
+            else:
+                raise ValueError(f"Invalid spread function {spread_function}.")
             points_y = parsing.flatten(
                 [[self.df.loc[feature].iloc[i] for i in ind] if validation.isinstanceiter(ind, int) else
                  [self.df.loc[feature, i] for i in ind] for ind in samples])
@@ -4979,9 +5035,9 @@ class CountFilter(Filter):
             for i, grouping in enumerate(samples):
                 for _ in grouping:
                     points_x.append(i)
-            ax.bar(np.arange(len(samples)), mean, yerr=sem, edgecolor='k', width=0.5,
-                   facecolor='slateblue', capsize=6.5, error_kw=dict(capthick=2, lw=2))
-            ax.scatter(points_x, points_y, edgecolor='k', facecolor=[0.90, 0.6, 0.25], linewidths=0.9)
+            ax.bar(np.arange(len(samples)), mean, yerr=spread, edgecolor=edge_color, width=0.5,
+                   color=bar_colors, capsize=6.5, error_kw=dict(capthick=2, lw=2))
+            ax.scatter(points_x, points_y, edgecolor=edge_color, facecolor=scatter_color, linewidths=0.9)
             ax.set_xticks(np.arange(len(samples)))
             ax.set_xticklabels(list(sample_names), fontsize=12)
             ax.set_title(feature, fontsize=16)
@@ -4992,7 +5048,7 @@ class CountFilter(Filter):
             for ax in axes:
                 ax.set_ylim((0.0, max(ylims)))
         plt.show()
-        return fig
+        return figs
 
     @readable_name('Sort table by contribution to a Principal Component (PCA)')
     def sort_by_principal_component(self, component: PositiveInt, ascending: bool = True, power_transform: bool = True,
