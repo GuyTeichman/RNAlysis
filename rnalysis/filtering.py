@@ -3596,7 +3596,7 @@ class CountFilter(Filter):
                 if isinstance(group, str):
                     new_column_names.append(group)
                 elif validation.isiterable(group):
-                    new_column_names.append(",".join(group))
+                    new_column_names.append("\n".join(group))
         else:
             assert validation.isiterable(new_column_names) and validation.isinstanceiter(new_column_names, str), \
                 "'new_column_names' must be either 'auto' or a list of strings!"

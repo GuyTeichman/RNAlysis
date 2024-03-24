@@ -27,6 +27,7 @@ Changed
 * Improved annotation for the 'metric' parameter of the 'Hierarchical clustergram plot' function (CountFilter.clustergram).
 * Improved performance of RNAlysis when generating automatic session reports.
 * RNAlysis now offers default values for differential expression tables' column names.
+* Functions that average replicates now display clearer group names by default.
 
 Fixed
 *******
