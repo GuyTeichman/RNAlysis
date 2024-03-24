@@ -330,3 +330,45 @@ def test_items_to_html_table(items, expected_output):
 ])
 def test_format_dict_for_display(d, expected):
     assert format_dict_for_display(d) == expected
+
+
+class TestRMakeNames:
+    def test_valid_names(self):
+        names = ['validname', 'another.validname', 'yet.another.valid.name']
+        expected_output = ['validname', 'another.validname', 'yet.another.valid.name']
+        assert r_make_names(names) == expected_output
+
+    def test_names_with_invalid_characters(self):
+        names = ['invalid!name', 'another@invalid#name', 'yet$another%invalid^name']
+        expected_output = ['invalid.name', 'another.invalid.name', 'yet.another.invalid.name']
+        assert r_make_names(names) == expected_output
+
+    def test_names_with_underscore(self):
+        names = ['invalid_name', 'another_invalid_name', 'yet_another_invalid_name']
+        expected_output = ['invalid.name', 'another.invalid.name', 'yet.another.invalid.name']
+        assert r_make_names(names) == expected_output
+
+    def test_names_starting_with_invalid_characters(self):
+        names = ['!invalidname', '@anotherinvalidname', '$yetanotherinvalidname']
+        expected_output = ['.invalidname', '.anotherinvalidname', '.yetanotherinvalidname']
+        assert r_make_names(names) == expected_output
+
+    def test_names_starting_with_dot_followed_by_number(self):
+        names = ['.1invalidname', '.2anotherinvalidname', '.3yetanotherinvalidname']
+        expected_output = ['..1invalidname', '..2anotherinvalidname', '..3yetanotherinvalidname']
+        assert r_make_names(names) == expected_output
+
+    def test_duplicate_names(self):
+        names = ['duplicate', 'duplicate', 'anotherduplicate', 'anotherduplicate', 'unique']
+        expected_output = ['duplicate', 'duplicate.1', 'anotherduplicate', 'anotherduplicate.1', 'unique']
+        assert r_make_names(names) == expected_output
+
+    def test_duplicate_names_with_invalid_characters(self):
+        names = ['duplicate!', 'duplicate@', 'another#duplicate', 'another$duplicate', 'unique%']
+        expected_output = ['duplicate.', 'duplicate..1', 'another.duplicate', 'another.duplicate.1', 'unique.']
+        assert r_make_names(names) == expected_output
+
+    def test_empty_list(self):
+        names = []
+        expected_output = []
+        assert r_make_names(names) == expected_output

@@ -4,6 +4,7 @@ import platform
 import re
 import shlex
 import warnings
+from collections import Counter
 from itertools import islice
 from pathlib import Path
 from typing import Any, Dict, Union, List, Tuple
@@ -25,6 +26,31 @@ def quote_path(pth: Union[Path, str]) -> str:
         return mslex.quote(pth)
     else:
         return shlex.quote(pth)
+
+
+def r_make_names(names: List[str]):
+    # Replace invalid characters with a dot
+    valid_names = [re.sub(r'[^a-zA-Z0-9]', '.', name) for name in names]
+    # Ensure names start with a letter or a dot not followed by a number
+    valid_names = [name if re.match(r'^[a-zA-Z].*|^\.[^0-9]', name) else '.' + name for name in valid_names]
+    # Check for duplicates and append numbers if necessary
+    counts = Counter(valid_names)
+    name_map = {}
+    for name, count in counts.items():
+        if count > 1:  # Duplicate exists
+            suffix_count = 1
+            for i in range(len(valid_names)):
+                if valid_names[i] == name:
+                    new_name = name
+                    # Append a number if this is not the first occurrence
+                    if name in name_map:
+                        new_name = f"{name}.{suffix_count}"
+                        suffix_count += 1
+                    valid_names[i] = new_name
+                    name_map[name] = True  # Mark as processed
+        else:
+            name_map[name] = True  # Mark as unique
+    return valid_names
 
 
 def python_to_r_kwargs(kwargs: dict, delimiter: str = ',\n'):
