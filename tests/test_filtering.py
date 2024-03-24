@@ -293,6 +293,50 @@ def test_countfilter_normalize_to_quantile(quantile, truth_path):
     assert np.isclose(truth, h.df).all()
 
 
+class TestFilterConcatenate:
+    def setup_method(self):
+        # Create Filter objects for testing
+        df1 = pd.DataFrame({'A': [1, 2, 3], 'B': [4, 5, 6]}, index=['a', 'b', 'c'])
+        df2 = pd.DataFrame({'A': [7, 8, 9], 'B': [10, 11, 12]}, index=['d', 'e', 'f'])
+        self.filter1 = Filter.from_dataframe(df1, 'filter1.csv')
+        self.filter2 = Filter.from_dataframe(df2, 'filter2.csv')
+
+    def test_concatenate_with_valid_filter(self):
+        # Call the concatenate method
+        result = self.filter1.concatenate(self.filter2)
+
+        # Assert that the resulting Filter object has the expected data and filename
+        expected_df = pd.DataFrame({'A': [1, 2, 3, 7, 8, 9], 'B': [4, 5, 6, 10, 11, 12]},
+                                   index=['a', 'b', 'c', 'd', 'e', 'f'])
+        assert result.df.equals(expected_df)
+        assert result.fname == Path('filter1_filter2.csv')
+
+    def test_concatenate_with_invalid_filter(self):
+        # Create a non-Filter object
+        non_filter_obj = "not a Filter object"
+
+        # Assert that concatenating with a non-Filter object raises an AssertionError
+        with pytest.raises(AssertionError) as exc_info:
+            self.filter1.concatenate(non_filter_obj)
+
+    def test_concatenate_with_different_columns(self):
+        # Create a Filter object with different columns
+        df3 = pd.DataFrame({'C': [7, 8, 9], 'D': [10, 11, 12]}, index=['d', 'e', 'f'])
+        filter3 = Filter.from_dataframe(df3, 'filter3.csv')
+
+        # Assert that concatenating Filter objects with different columns raises an AssertionError
+        with pytest.raises(AssertionError) as exc_info:
+            self.filter1.concatenate(filter3)
+
+    def test_concatenate_with_overlapping_indices(self):
+        # Create a Filter object with overlapping indices
+        df4 = pd.DataFrame({'A': [7, 8, 9], 'B': [10, 11, 12]}, index=['c', 'd', 'e'])
+        filter4 = Filter.from_dataframe(df4, 'filter4.csv')
+
+        # Assert that concatenating Filter objects with overlapping indices raises an AssertionError
+        with pytest.raises(AssertionError) as exc_info:
+            self.filter1.concatenate(filter4)
+
 def test_countfilter_norm_reads_with_scaling_factors():
     truth = io.load_table(r"tests/test_files/test_norm_scaling_factors.csv", 0)
     h = CountFilter("tests/test_files/counted.csv")

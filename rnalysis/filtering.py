@@ -346,6 +346,14 @@ class Filter:
         """
         return self.df.tail(n)
 
+    @readable_name('Concatenate two tables (based on column names)')
+    def concatenate(self, other: Sequence[str]) -> 'Filter':
+        assert isinstance(other, Filter), f"Expected a Filter object, got {type(other)} instead."
+        assert sorted(self.columns) == sorted(other.columns), "The two tables do not have the same columns!"
+        assert self.df.index.intersection(other.df.index).empty, "The two tables have overlapping indices!"
+        new_df = pd.concat([self.df, other.df])
+        return self.from_dataframe(new_df, Path(self.fname.stem + '_' + other.fname.stem + '.csv'))
+
     @readable_name('Filter rows with duplicate names/IDs')
     def filter_duplicate_ids(self, keep: Literal['first', 'last', 'neither'] = 'first', opposite: bool = False,
                              inplace: bool = True):
