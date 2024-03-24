@@ -39,6 +39,7 @@ Fixed
 * Fixed bug where defining 10 or more sample groups in the graphical interface would cause the groups to be ordered incorrectly in graphs.
 * Fixed bug where the 'return_scaling_factors' argument would not return the normalization scaling factors on the graphical interface.
 * Fixed various visual issues in the graphical interface
+* Fixed bug where the 'filter_by_row_sum' function would raise an error when the table contains non-numerical columns
 * Fixed bug where running enrichment on an empty gene set would raise an error.
 * Fixed bug where RNAlysis would suggest resuming an auto-report from loaded session even when auto-report is turned off.
 * Fixed bug where disabling auto-report in the middle of the session would raise errors when trying to create new graphs.

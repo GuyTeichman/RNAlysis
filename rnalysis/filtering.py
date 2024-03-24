@@ -4302,7 +4302,7 @@ class CountFilter(Filter):
         validation.validate_threshold(threshold)
         self._validate_is_normalized()
 
-        new_df = self.df.loc[self.df.sum(axis=1) >= threshold]
+        new_df = self.df.loc[self.df[self._numeric_columns].sum(axis=1) >= threshold]
         suffix = f"_filt{threshold}sum"
         return self._inplace(new_df, opposite, inplace, suffix)
 
