@@ -28,6 +28,7 @@ Changed
 * Improved performance of RNAlysis when generating automatic session reports.
 * RNAlysis now offers default values for differential expression tables' column names.
 * Functions that average replicates now display clearer group names by default.
+* The RNAlysis interface to ShortStack now uses the most recent API (replace 'knownRNAs' with 'known_miRNAs').
 
 Fixed
 *******

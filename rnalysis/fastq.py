@@ -1302,7 +1302,7 @@ def shortstack_align_smallrna(fastq_folder: Union[str, Path], output_folder: Uni
             known_rnas = Path(known_rnas)
             assert known_rnas.exists() and known_rnas.is_file(), \
                 f"File 'known_rnas' at {known_rnas.as_posix()} does not exist!"
-            call.extend(['--knownRNAs', known_rnas.as_posix()])
+            call.extend(['--known_miRNAs', known_rnas.as_posix()])
     else:
         if known_rnas is not None:
             warnings.warn(f"'search_microrna' was set to '{search_microrna}', "

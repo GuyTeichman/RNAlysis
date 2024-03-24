@@ -180,7 +180,7 @@ def test_bowtie2_align_single_end_command(monkeypatch, fastq_folder, output_fold
          None, 'known-rnas', 0.9, 1.2, 3, 12,
          ['path/to/shortstackinst/ShortStack', '--genomefile', 'tests/test_files/shortstack_tests/transcripts.fasta',
           '--mmap', 'r', '--adapter', 'autotrim', '--align_only', '--locifile', 'tests/test_files/counted.csv',
-          '--knownRNAs', 'tests/test_files/test_deseq.csv',
+          '--known_miRNAs', 'tests/test_files/test_deseq.csv',
           '--dicermin', '21', '--dicermax', '24', '--strand_cutoff',
           '0.9', '--mincov', '1.2', '--pad', '3', '--threads', '12', '--readfile',
           'tests/test_files/kallisto_tests/reads_1.fastq', '--outdir',
