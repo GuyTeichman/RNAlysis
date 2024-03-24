@@ -262,7 +262,7 @@ def test_ComparisonPicker_init(qtbot):
 
 def test_ComparisonPicker_get_value(qtbot):
     qtbot, widget = widget_setup(qtbot, ComparisonPicker, io.load_table('tests/test_files/test_design_matrix.csv', 0))
-    assert widget.value() == ('condition', 'cond1', 'cond1')
+    assert widget.value() == ('condition', 'cond1', 'cond2')
 
     widget.factor.setCurrentText('replicate')
     widget.numerator.setCurrentText('rep3')
@@ -301,7 +301,7 @@ def test_ComparisonPickerGroup_get_comparison_values(qtbot):
     widget.inputs[0].factor.setCurrentText('replicate')
     widget.inputs[0].numerator.setCurrentText('rep3')
     widget.inputs[0].denominator.setCurrentText('rep2')
-    assert widget.get_comparison_values() == [('replicate', 'rep3', 'rep2'), ('condition', 'cond1', 'cond1')]
+    assert widget.get_comparison_values() == [('replicate', 'rep3', 'rep2'), ('condition', 'cond1', 'cond2')]
 
 
 def test_PathLineEdit_disable(qtbot):
