@@ -36,6 +36,9 @@ FROZEN_ENV = getattr(sys, 'frozen', False) and hasattr(sys, '_MEIPASS')
 
 JOB_COUNTER = gui_widgets.JobCounter()
 
+ORIG_TQDM = filtering.tqdm
+ORIG_PARALLEL = generic.ProgressParallel
+
 
 def check_run_success(result: gui_widgets.WorkerOutput):
     if result.raised_exception:
@@ -4570,6 +4573,27 @@ class MainWindow(QtWidgets.QMainWindow):
                 dict(iter_obj=None, desc=desc, unit=unit, bar_format=bar_format, total=total))
             return obj
 
+        self._monkeypatch_setup(alt_tqdm, alt_parallel)
+
+        #  Move worker to the thread
+        self.current_worker.moveToThread(self.job_thread)
+        #  Connect signals and slots
+        self.current_worker.startProgBar.connect(self.start_progress_bar)
+        self.job_thread.started.connect(self.current_worker.run)
+        for slot in parsing.data_to_list(output_slots):
+            if slot is not None:
+                self.current_worker.finished.connect(slot)
+        self.current_worker.finished.connect(self._monkeypatch_cleanup)
+        self.current_worker.finished.connect(self.job_thread.quit)
+        self.current_worker.finished.connect(self.run_threaded_workers)
+        self.current_worker.finished.connect(self.current_worker.deleteLater)
+
+        self.job_thread.start()
+
+        self._update_queue_window(True)
+
+    @staticmethod
+    def _monkeypatch_setup(alt_tqdm, alt_parallel):
         enrichment.enrichment_runner.generic.ProgressParallel = alt_parallel
         generic.ProgressParallel = alt_parallel
         filtering.clustering.generic.ProgressParallel = alt_parallel
@@ -4581,21 +4605,18 @@ class MainWindow(QtWidgets.QMainWindow):
         filtering.tqdm = alt_tqdm
         fastq.tqdm = alt_tqdm
 
-        #  Move worker to the thread
-        self.current_worker.moveToThread(self.job_thread)
-        #  Connect signals and slots
-        self.current_worker.startProgBar.connect(self.start_progress_bar)
-        self.job_thread.started.connect(self.current_worker.run)
-        for slot in parsing.data_to_list(output_slots):
-            if slot is not None:
-                self.current_worker.finished.connect(slot)
-        self.current_worker.finished.connect(self.job_thread.quit)
-        self.current_worker.finished.connect(self.run_threaded_workers)
-        self.current_worker.finished.connect(self.current_worker.deleteLater)
+    @staticmethod
+    def _monkeypatch_cleanup():
+        enrichment.enrichment_runner.generic.ProgressParallel = ORIG_PARALLEL
+        generic.ProgressParallel = ORIG_PARALLEL
+        filtering.clustering.generic.ProgressParallel = ORIG_PARALLEL
 
-        self.job_thread.start()
-
-        self._update_queue_window(True)
+        enrichment.enrichment_runner.parsing.tqdm = ORIG_TQDM
+        enrichment.enrichment_runner.io.tqdm = ORIG_TQDM
+        enrichment.enrichment_runner.tqdm = ORIG_TQDM
+        filtering.clustering.tqdm = ORIG_TQDM
+        filtering.tqdm = ORIG_TQDM
+        fastq.tqdm = ORIG_TQDM
 
     def _update_queue_window(self, job_running: bool):
         jobs = [self.current_worker.partial.func.__name__ + ' (running)'] if job_running else []
