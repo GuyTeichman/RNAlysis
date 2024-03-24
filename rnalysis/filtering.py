@@ -3858,7 +3858,7 @@ class CountFilter(Filter):
             >>> c.normalize_to_quantile(0.75)
            Normalized 22 features. Normalized inplace.
         """
-        suffix = f'_normto{quantile}quantile'
+        suffix = f'_normto{int(quantile * 100)}quantile'
         data = self.df[self._numeric_columns]
         expressed_genes = data[data.sum(axis=1) != 0]
         quantiles = expressed_genes.quantile(quantile, axis=0)

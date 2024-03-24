@@ -43,6 +43,7 @@ Fixed
 * Fixed bug where RNAlysis would suggest resuming an auto-report from loaded session even when auto-report is turned off.
 * Fixed bug where disabling auto-report in the middle of the session would raise errors when trying to create new graphs.
 * Fixed bug where generating multiple gene expression plots (split_plots=True) with auto-generated report would only add the last graph to the session report.
+* Fixed bug where the function 'normalize_to_quantile' generated unclear table names.
 
 New Contributors
 *****************
