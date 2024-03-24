@@ -5286,7 +5286,7 @@ class CountFilter(Filter):
             item_inds = []
             for item in grp:
                 item_inds.append(sample_names.index(item))
-            ax.scatter(final_df.iloc[item_inds, 0], final_df.iloc[item_inds, 1], c=colors[i], label=label, s=75)
+            ax.scatter(final_df.iloc[item_inds, 0], final_df.iloc[item_inds, 1], color=colors[i], label=label, s=75)
 
         if legend is not None:
             ax.legend(title="Legend", draggable=True)
