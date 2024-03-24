@@ -1891,8 +1891,9 @@ def test_set_ops_wrong_type():
 def test_avg_subsamples(sample_list, truth_path):
     counts = CountFilter('tests/test_files/counted.csv')
     truth = io.load_table(truth_path, 0)
-    res = counts._avg_subsamples(sample_list)
+    res = counts._avg_subsamples(sample_list, new_column_names='auto')
 
+    print(res.columns == truth.columns)
     assert np.all(res.columns == truth.columns)
     assert np.all(res.index == truth.index)
     assert np.isclose(res, truth, atol=0, rtol=0.001).all()

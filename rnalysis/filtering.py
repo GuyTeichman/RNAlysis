@@ -3567,7 +3567,7 @@ class CountFilter(Filter):
 
     def _avg_subsamples(self, sample_grouping: param_typing.GroupedColumns,
                         function: Literal['mean', 'median', 'geometric_mean'] = 'mean',
-                        new_column_names: Union[Literal['auto'], List[str]] = 'auto'):
+                        new_column_names: Union[Literal['auto'], Literal['display'], List[str]] = 'display'):
 
         """
         Avarages subsamples/replicates according to the specified sample list. \
@@ -3589,13 +3589,14 @@ class CountFilter(Filter):
         assert function in {'mean', 'median', 'geometric_mean'}, \
             "'function' must be 'mean', 'median', or 'geometric_mean'!"
 
-        if new_column_names == 'auto':
+        if new_column_names in ('auto', 'display'):
+            sep = '\n' if new_column_names == 'display' else ';'
             new_column_names = []
             for i, group in enumerate(sample_grouping):
                 if isinstance(group, str):
                     new_column_names.append(group)
                 elif validation.isiterable(group):
-                    new_column_names.append("\n".join(group))
+                    new_column_names.append(sep.join(group))
         else:
             assert validation.isiterable(new_column_names) and validation.isinstanceiter(new_column_names, str), \
                 "'new_column_names' must be either 'auto' or a list of strings!"
@@ -4975,7 +4976,7 @@ class CountFilter(Filter):
             if not validation.isinstanceiter(samples[i], str):
                 for j in range(len(samples[i])):
                     samples[i][j] = self.columns[samples[i][j]]
-        sample_names = [name.replace(',', '\n') for name in self._avg_subsamples(samples).columns]  # TODO: replace
+        sample_names = self._avg_subsamples(samples).columns  # TODO: replace
         figs = []
         axes = []
         ylims = []
