@@ -204,16 +204,16 @@ def clicom_window(qtbot):
 
 
 @pytest.fixture
-def deseq_window(qtbot) -> DESeqWindow:
-    qtbot, window = widget_setup(qtbot, DESeqWindow)
+def simple_deseq_window(qtbot) -> SimpleDESeqWindow:
+    qtbot, window = widget_setup(qtbot, SimpleDESeqWindow)
     yield window
     window.close()
     _pytestqt_graceful_shutdown()
 
 
 @pytest.fixture
-def limma_window(qtbot) -> LimmaWindow:
-    qtbot, window = widget_setup(qtbot, LimmaWindow)
+def simple_limma_window(qtbot) -> SimpleLimmaWindow:
+    qtbot, window = widget_setup(qtbot, SimpleLimmaWindow)
     yield window
     window.close()
     _pytestqt_graceful_shutdown()
@@ -486,107 +486,107 @@ def test_CutAdaptPairedWindow_start_analysis(qtbot, cutadapt_paired_window):
     assert blocker.args[1] == truth_kwargs
 
 
-def test_DESeqWindow_init(deseq_window):
-    _ = deseq_window
+def test_SimpleDESeqWindow_init(simple_deseq_window):
+    _ = simple_deseq_window
 
 
-def test_DESeqWindow_load_design_mat(qtbot, deseq_window):
+def test_SimpleDESeqWindow_load_design_mat(qtbot, simple_deseq_window):
     design_mat_path = 'tests/test_files/test_design_matrix.csv'
     design_mat_truth = io.load_table(design_mat_path, 0)
-    deseq_window.param_widgets['design_matrix'].setText(design_mat_path)
-    qtbot.mouseClick(deseq_window.param_widgets['load_design'], LEFT_CLICK)
-    assert deseq_window.design_mat.equals(design_mat_truth)
-    assert deseq_window.comparisons_widgets['picker'].design_mat.equals(design_mat_truth)
+    simple_deseq_window.param_widgets['design_matrix'].setText(design_mat_path)
+    qtbot.mouseClick(simple_deseq_window.param_widgets['load_design'], LEFT_CLICK)
+    assert simple_deseq_window.design_mat.equals(design_mat_truth)
+    assert simple_deseq_window.comparisons_widgets['picker'].design_mat.equals(design_mat_truth)
 
 
-def test_DESeqWindow_get_analysis_params(qtbot, deseq_window):
+def test_SimpleDESeqWindow_get_analysis_params(qtbot, simple_deseq_window):
     design_mat_path = 'tests/test_files/test_design_matrix.csv'
     truth = dict(r_installation_folder='auto', design_matrix=design_mat_path, output_folder=None,
-                 comparisons=[('replicate', 'rep3', 'rep2'), ('condition', 'cond1', 'cond1')])
+                 comparisons=[('replicate', 'rep3', 'rep2'), ('condition', 'cond1', 'cond2')])
 
-    deseq_window.param_widgets['design_matrix'].setText(design_mat_path)
-    qtbot.mouseClick(deseq_window.param_widgets['load_design'], LEFT_CLICK)
+    simple_deseq_window.param_widgets['design_matrix'].setText(design_mat_path)
+    qtbot.mouseClick(simple_deseq_window.param_widgets['load_design'], LEFT_CLICK)
 
-    deseq_window.comparisons_widgets['picker'].add_comparison_widget()
+    simple_deseq_window.comparisons_widgets['picker'].add_comparison_widget()
 
-    deseq_window.comparisons_widgets['picker'].inputs[0].factor.setCurrentText('replicate')
-    deseq_window.comparisons_widgets['picker'].inputs[0].numerator.setCurrentText('rep3')
-    deseq_window.comparisons_widgets['picker'].inputs[0].denominator.setCurrentText('rep2')
+    simple_deseq_window.comparisons_widgets['picker'].inputs[0].factor.setCurrentText('replicate')
+    simple_deseq_window.comparisons_widgets['picker'].inputs[0].numerator.setCurrentText('rep3')
+    simple_deseq_window.comparisons_widgets['picker'].inputs[0].denominator.setCurrentText('rep2')
 
-    assert deseq_window.get_analysis_kwargs() == truth
+    assert simple_deseq_window.get_analysis_kwargs() == truth
 
 
-def test_DESeqWindow_start_analysis(qtbot, deseq_window):
+def test_SimpleDESeqWindow_start_analysis(qtbot, simple_deseq_window):
     design_mat_path = 'tests/test_files/test_design_matrix.csv'
 
     truth_args = []
     truth_kwargs = dict(r_installation_folder='auto', design_matrix=design_mat_path, output_folder=None,
-                        comparisons=[('replicate', 'rep3', 'rep2'), ('condition', 'cond1', 'cond1')])
+                        comparisons=[('replicate', 'rep3', 'rep2'), ('condition', 'cond1', 'cond2')])
 
-    deseq_window.param_widgets['design_matrix'].setText(design_mat_path)
-    qtbot.mouseClick(deseq_window.param_widgets['load_design'], LEFT_CLICK)
+    simple_deseq_window.param_widgets['design_matrix'].setText(design_mat_path)
+    qtbot.mouseClick(simple_deseq_window.param_widgets['load_design'], LEFT_CLICK)
 
-    deseq_window.comparisons_widgets['picker'].add_comparison_widget()
+    simple_deseq_window.comparisons_widgets['picker'].add_comparison_widget()
 
-    deseq_window.comparisons_widgets['picker'].inputs[0].factor.setCurrentText('replicate')
-    deseq_window.comparisons_widgets['picker'].inputs[0].numerator.setCurrentText('rep3')
-    deseq_window.comparisons_widgets['picker'].inputs[0].denominator.setCurrentText('rep2')
+    simple_deseq_window.comparisons_widgets['picker'].inputs[0].factor.setCurrentText('replicate')
+    simple_deseq_window.comparisons_widgets['picker'].inputs[0].numerator.setCurrentText('rep3')
+    simple_deseq_window.comparisons_widgets['picker'].inputs[0].denominator.setCurrentText('rep2')
 
-    with qtbot.waitSignal(deseq_window.paramsAccepted) as blocker:
-        qtbot.mouseClick(deseq_window.start_button, LEFT_CLICK)
+    with qtbot.waitSignal(simple_deseq_window.paramsAccepted) as blocker:
+        qtbot.mouseClick(simple_deseq_window.start_button, LEFT_CLICK)
     assert blocker.args[0] == truth_args
     assert blocker.args[1] == truth_kwargs
 
 
-def test_LimmaWindow_init(limma_window):
-    _ = limma_window
+def test_SimpleLimmaWindow_init(simple_limma_window):
+    _ = simple_limma_window
 
 
-def test_LimmaWindow_load_design_mat(qtbot, limma_window):
+def test_SimpleLimmaWindow_load_design_mat(qtbot, simple_limma_window):
     design_mat_path = 'tests/test_files/test_design_matrix.csv'
     design_mat_truth = io.load_table(design_mat_path, 0)
-    limma_window.param_widgets['design_matrix'].setText(design_mat_path)
-    qtbot.mouseClick(limma_window.param_widgets['load_design'], LEFT_CLICK)
-    assert limma_window.design_mat.equals(design_mat_truth)
-    assert limma_window.comparisons_widgets['picker'].design_mat.equals(design_mat_truth)
+    simple_limma_window.param_widgets['design_matrix'].setText(design_mat_path)
+    qtbot.mouseClick(simple_limma_window.param_widgets['load_design'], LEFT_CLICK)
+    assert simple_limma_window.design_mat.equals(design_mat_truth)
+    assert simple_limma_window.comparisons_widgets['picker'].design_mat.equals(design_mat_truth)
 
 
-def test_LimmaWindow_get_analysis_params(qtbot, limma_window):
+def test_SimpleLimmaWindow_get_analysis_params(qtbot, simple_limma_window):
     design_mat_path = 'tests/test_files/test_design_matrix.csv'
     truth = dict(r_installation_folder='auto', design_matrix=design_mat_path, output_folder=None,
-                 comparisons=[('replicate', 'rep3', 'rep2'), ('condition', 'cond1', 'cond1')], random_effect=None)
+                 comparisons=[('replicate', 'rep3', 'rep2'), ('condition', 'cond1', 'cond2')], random_effect=None)
 
-    limma_window.param_widgets['design_matrix'].setText(design_mat_path)
-    qtbot.mouseClick(limma_window.param_widgets['load_design'], LEFT_CLICK)
+    simple_limma_window.param_widgets['design_matrix'].setText(design_mat_path)
+    qtbot.mouseClick(simple_limma_window.param_widgets['load_design'], LEFT_CLICK)
 
-    limma_window.comparisons_widgets['picker'].add_comparison_widget()
+    simple_limma_window.comparisons_widgets['picker'].add_comparison_widget()
 
-    limma_window.comparisons_widgets['picker'].inputs[0].factor.setCurrentText('replicate')
-    limma_window.comparisons_widgets['picker'].inputs[0].numerator.setCurrentText('rep3')
-    limma_window.comparisons_widgets['picker'].inputs[0].denominator.setCurrentText('rep2')
+    simple_limma_window.comparisons_widgets['picker'].inputs[0].factor.setCurrentText('replicate')
+    simple_limma_window.comparisons_widgets['picker'].inputs[0].numerator.setCurrentText('rep3')
+    simple_limma_window.comparisons_widgets['picker'].inputs[0].denominator.setCurrentText('rep2')
 
-    assert limma_window.get_analysis_kwargs() == truth
+    assert simple_limma_window.get_analysis_kwargs() == truth
 
 
-def test_LimmaWindow_start_analysis(qtbot, limma_window):
+def test_SimpleLimmaWindow_start_analysis(qtbot, simple_limma_window):
     design_mat_path = 'tests/test_files/test_design_matrix.csv'
 
     truth_args = []
     truth_kwargs = dict(r_installation_folder='auto', design_matrix=design_mat_path, output_folder=None,
-                        comparisons=[('replicate', 'rep3', 'rep2'), ('condition', 'cond1', 'cond1')],
+                        comparisons=[('replicate', 'rep3', 'rep2'), ('condition', 'cond1', 'cond2')],
                         random_effect=None)
 
-    limma_window.param_widgets['design_matrix'].setText(design_mat_path)
-    qtbot.mouseClick(limma_window.param_widgets['load_design'], LEFT_CLICK)
+    simple_limma_window.param_widgets['design_matrix'].setText(design_mat_path)
+    qtbot.mouseClick(simple_limma_window.param_widgets['load_design'], LEFT_CLICK)
 
-    limma_window.comparisons_widgets['picker'].add_comparison_widget()
+    simple_limma_window.comparisons_widgets['picker'].add_comparison_widget()
 
-    limma_window.comparisons_widgets['picker'].inputs[0].factor.setCurrentText('replicate')
-    limma_window.comparisons_widgets['picker'].inputs[0].numerator.setCurrentText('rep3')
-    limma_window.comparisons_widgets['picker'].inputs[0].denominator.setCurrentText('rep2')
+    simple_limma_window.comparisons_widgets['picker'].inputs[0].factor.setCurrentText('replicate')
+    simple_limma_window.comparisons_widgets['picker'].inputs[0].numerator.setCurrentText('rep3')
+    simple_limma_window.comparisons_widgets['picker'].inputs[0].denominator.setCurrentText('rep2')
 
-    with qtbot.waitSignal(limma_window.paramsAccepted) as blocker:
-        qtbot.mouseClick(limma_window.start_button, LEFT_CLICK)
+    with qtbot.waitSignal(simple_limma_window.paramsAccepted) as blocker:
+        qtbot.mouseClick(simple_limma_window.start_button, LEFT_CLICK)
     assert blocker.args[0] == truth_args
     assert blocker.args[1] == truth_kwargs
 
