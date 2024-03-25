@@ -37,7 +37,7 @@ jobs:
             -   name: Setup Qt requirements for Linux
                 uses: tlambert03/setup-qt-libs@v1
             -   name: Setup Graphviz
-                uses: ts-graphviz/setup-graphviz
+                uses: ts-graphviz/setup-graphviz@v2
                 with:
                     # Skip to run brew update command on macOS.
                     macos-skip-brew-update: 'true' # defalt false

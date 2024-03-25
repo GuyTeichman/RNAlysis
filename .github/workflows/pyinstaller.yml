@@ -81,7 +81,7 @@ jobs:
                 if: runner.os == 'MacOS'
                 run: brew update
             -   name: Setup Graphviz
-                uses: ts-graphviz/setup-graphviz
+                uses: ts-graphviz/setup-graphviz@v2
                 with:
                     macos-skip-brew-update: 'true' # defalt false
             -   name: Cache LLVM and Clang
