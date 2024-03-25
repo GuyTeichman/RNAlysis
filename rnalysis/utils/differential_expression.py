@@ -36,14 +36,14 @@ class DiffExpRunner(abc.ABC):
         if model_factors == 'auto':
             self.model_factors = []
             for factor in itertools.chain(self.design_mat.columns, self.covariates):
-                present = False
+                present = factor in self.model_factors
                 for lrt in self.lrt_factors:
                     if lrt.startswith(f'poly({factor}'):
                         present = True
                         break
                 if not present:
                     self.model_factors.append(factor)
-            self.model_factors = parsing.data_to_set(self.model_factors + parsing.data_to_list(self.lrt_factors))
+            self.model_factors = self.model_factors + parsing.data_to_list(self.lrt_factors)
         else:
             self.model_factors = model_factors
             for factor in itertools.chain(self.lrt_factors, self.covariates, [comp[0] for comp in self.comparisons]):
@@ -75,6 +75,7 @@ class DiffExpRunner(abc.ABC):
         raise NotImplementedError
 
     def create_formula(self, without: Union[List[str], Tuple[str, ...]] = tuple()) -> str:
+        print(self.model_factors, type(self.model_factors))
         return "~ " + " + ".join([factor for factor in self.model_factors if factor not in without])
 
 
@@ -100,7 +101,6 @@ class DESeqRunner(DiffExpRunner):
 
         with open(save_path, 'w') as outfile:
             formula = self.create_formula()
-            print(formula)
 
             run_template = run_template.replace("$COUNT_MATRIX", Path(self.data_path).as_posix())
             run_template = run_template.replace("$DESIGN_MATRIX", (Path(self.design_mat_path).as_posix()))

@@ -4,7 +4,7 @@ design_matrix <- read.table("tests/test_files/test_design_matrix.csv", header=TR
 design_matrix$condition <- factor(design_matrix$condition, levels=c("cond1", "cond2", "cond3"))
 design_matrix$replicate <- factor(design_matrix$replicate, levels=c("rep1", "rep2", "rep3"))
 
-design <- model.matrix(~ replicate + condition, design_matrix)
+design <- model.matrix(~ condition + replicate, design_matrix)
 colnames(design)[1] <- "Intercept" # rename the intercept column from "(Intercept)" to "Intercept"
 colnames(design) <- make.names(colnames(design)) # make coefficient names syntactically correct
 
