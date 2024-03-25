@@ -4267,9 +4267,9 @@ class CountFilter(Filter):
         validation.validate_threshold(threshold)
         self._validate_is_normalized()
 
-        high_expr = self.df.loc[[True if max(vals) > threshold else False for gene, vals in
+        high_expr = self.df.loc[[True if max(vals) >= threshold else False for gene, vals in
                                  self.df.loc[:, self._numeric_columns].iterrows()]]
-        low_expr = self.df.loc[[False if max(vals) > threshold else True for gene, vals in
+        low_expr = self.df.loc[[False if max(vals) >= threshold else True for gene, vals in
                                 self.df.loc[:, self._numeric_columns].iterrows()]]
         return self._inplace(high_expr, opposite=False, inplace=False, suffix=f'_above{threshold}reads'), self._inplace(
             low_expr, opposite=False, inplace=False, suffix=f'_below{threshold}reads')

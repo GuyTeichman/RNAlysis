@@ -855,8 +855,8 @@ def test_htcount_split_by_reads():
     high_truth = io.load_table(r"tests/test_files/counted_above60_rpm.csv", 0)
     low_truth = io.load_table(r"tests/test_files/counted_below60_rpm.csv", 0)
     high, low = h.split_by_reads(threshold=60)
-    assert np.all(high.df == high_truth)
-    assert np.all(low.df == low_truth)
+    assert np.all(high.df.sort_index() == high_truth.sort_index())
+    assert np.all(low.df.sort_index() == low_truth.sort_index())
 
 
 def test_filter_percentile():
