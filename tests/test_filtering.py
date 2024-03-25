@@ -2124,15 +2124,15 @@ def test_differential_expression_deseq2(monkeypatch, comparisons, expected_paths
     truth = parsing.data_to_tuple([DESeqFilter(file) for file in expected_paths])
     c = CountFilter('tests/test_files/big_counted.csv')
 
-    def mock_run_analysis(data_path, design_mat_path, comps, r_installation_folder):
-        assert r_installation_folder == 'auto'
-        assert comps == comparisons
-        assert CountFilter(data_path) == c
-        assert io.load_table(design_mat_path, 0).equals(io.load_table(sample_table_path, 0))
+    def mock_run_analysis(self):
+        assert self.r_installation_folder == 'auto'
+        assert self.comparisons == comparisons
+        assert CountFilter(self.data_path) == c
+        assert io.load_table(self.design_mat_path, 0).equals(io.load_table(sample_table_path, 0))
 
         return Path(script_path).parent
 
-    monkeypatch.setattr(differential_expression, 'run_deseq2_analysis', mock_run_analysis)
+    monkeypatch.setattr(differential_expression.DESeqRunner, 'run', mock_run_analysis)
     try:
         res = c.differential_expression_deseq2(sample_table_path, comparisons, output_folder=outdir)
         assert sorted(res, key=lambda filter_obj: filter_obj.fname.name) == sorted(truth, key=lambda
@@ -2159,16 +2159,16 @@ def test_differential_expression_limma(monkeypatch, comparisons, expected_paths,
         [DESeqFilter(file, log2fc_col='logFC', padj_col='adj.P.Val') for file in expected_paths])
     c = CountFilter('tests/test_files/big_counted.csv')
 
-    def mock_run_analysis(data_path, design_mat_path, comps, r_installation_folder, rand_eff):
-        assert r_installation_folder == 'auto'
-        assert comps == comparisons
-        assert rand_eff == random_effect
-        assert CountFilter(data_path) == c
-        assert io.load_table(design_mat_path, 0).equals(io.load_table(sample_table_path, 0))
+    def mock_run_analysis(self):
+        assert self.r_installation_folder == 'auto'
+        assert self.comparisons == comparisons
+        assert CountFilter(self.data_path) == c
+        assert io.load_table(self.design_mat_path, 0).equals(io.load_table(sample_table_path, 0))
+        assert self.random_effect == random_effect
 
         return Path(script_path).parent
 
-    monkeypatch.setattr(differential_expression, 'run_limma_analysis', mock_run_analysis)
+    monkeypatch.setattr(differential_expression.LimmaVoomRunner, 'run', mock_run_analysis)
     try:
         res = c.differential_expression_limma_voom(sample_table_path, comparisons, output_folder=outdir,
                                                    random_effect=random_effect)

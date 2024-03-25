@@ -2,7 +2,7 @@ require("DESeq2")
 
 count_data <- read.table("tests/test_files/big_counted.csv", header=TRUE, sep= ",", row.names = 1)
 design_matrix <- read.table("tests/test_files/test_design_matrix.csv", header=TRUE, sep= ",")
-dds <- DESeqDataSetFromMatrix(count_data, design_matrix, ~ condition + replicate)
+dds <- DESeqDataSetFromMatrix(count_data, design_matrix, ~ replicate + condition)
 dds_res <- DESeq(dds)
 res <- results(dds_res, contrast=c('condition', 'cond2', 'cond1'))
 res_ordered <- res[order(res$padj),]
