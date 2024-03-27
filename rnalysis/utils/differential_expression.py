@@ -75,7 +75,6 @@ class DiffExpRunner(abc.ABC):
         raise NotImplementedError
 
     def create_formula(self, without: Union[List[str], Tuple[str, ...]] = tuple()) -> str:
-        print(self.model_factors, type(self.model_factors))
         return "~ " + " + ".join([factor for factor in self.model_factors if factor not in without])
 
 
