@@ -93,16 +93,20 @@ def cache_file(content: str, filename: str):
         f.write(content)
 
 
-def clear_directory(directory: Union[str, Path]):
+def clear_directory(directory: Union[str, Path], skip_ok=False):
     directory = Path(directory)
     if not directory.exists():
         return
 
     for item in directory.iterdir():
-        if item.is_file():
-            item.unlink()
-        elif item.is_dir():
-            shutil.rmtree(item, ignore_errors=True)
+        try:
+            if item.is_file():
+                item.unlink()
+            elif item.is_dir():
+                shutil.rmtree(item, ignore_errors=True)
+        except PermissionError as e:
+            if not skip_ok:
+                raise e
 
 
 def clear_cache():
@@ -112,7 +116,7 @@ def clear_cache():
 
 def clear_gui_cache():
     directory = get_gui_cache_dir()
-    clear_directory(directory)
+    clear_directory(directory, skip_ok=True)
 
 
 def load_cached_gui_file(filename: Union[str, Path], load_as_obj: bool = True) -> Union[
