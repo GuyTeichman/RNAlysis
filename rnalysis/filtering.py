@@ -3687,6 +3687,8 @@ class CountFilter(Filter):
            Normalized 22 features. Normalized inplace.
 
         """
+        self._validate_is_normalized(expect_normalized=False)
+
         suffix = '_normtoRPMhtseqcount'
         scaling_factors = {}
 
@@ -3731,6 +3733,8 @@ class CountFilter(Filter):
            Normalized 22 features. Normalized inplace.
 
         """
+        self._validate_is_normalized(expect_normalized=False)
+
         suffix = '_normtoRPM'
         scaling_factors = {}
 
@@ -3777,6 +3781,8 @@ class CountFilter(Filter):
         :type return_scaling_factors: bool (default=False)
         :return: If inplace is False, returns a new instance of the Filter object.
         """
+        self._validate_is_normalized(expect_normalized=False)
+
         suffix = f"_normtoRPKM{method.replace('_', '')}"
         gene_lengths_kbp = pd.Series(
             genome_annotation.get_genomic_feature_lengths(gtf_file, feature_type, method)) / 1000
@@ -3823,6 +3829,8 @@ class CountFilter(Filter):
         :type return_scaling_factors: bool (default=False)
         :return: If inplace is False, returns a new instance of the Filter object.
         """
+        self._validate_is_normalized(expect_normalized=False)
+
         suffix = f"_normtoTPM{method.replace('_', '')}"
         gene_lengths_kbp = pd.Series(
             genome_annotation.get_genomic_feature_lengths(gtf_file, feature_type, method)) / 1000
@@ -3867,6 +3875,8 @@ class CountFilter(Filter):
             >>> c.normalize_to_quantile(0.75)
            Normalized 22 features. Normalized inplace.
         """
+        self._validate_is_normalized(expect_normalized=False)
+
         suffix = f'_normto{int(quantile * 100)}quantile'
         data = self.df[self._numeric_columns]
         expressed_genes = data[data.sum(axis=1) != 0]
@@ -3926,6 +3936,8 @@ class CountFilter(Filter):
             >>> c.normalize_tmm()
            Normalized 22 features. Normalized inplace.
         """
+        self._validate_is_normalized(expect_normalized=False)
+
         assert 0 <= log_ratio_trim < 0.5, "'log_ratio_trim' must be a value in the range 0 <= log_ratio_trim < 5"
         assert 0 <= sum_trim < 0.5, "'sum_trim' must be a value in the range 0 <= sum_trim < 5"
 
@@ -3991,6 +4003,8 @@ class CountFilter(Filter):
             >>> c.normalize_rle()
            Normalized 22 features. Normalized inplace.
         """
+        self._validate_is_normalized(expect_normalized=False)
+
         suffix = '_normRLE'
         data = self.df[self._numeric_columns].dropna(axis=0)
         with np.errstate(invalid='ignore', divide='ignore'):
@@ -4040,6 +4054,8 @@ class CountFilter(Filter):
             >>> c.normalize_median_of_ratios([['cond1','cond2'],['cond3','cond4']])
            Normalized 22 features. Normalized inplace.
         """
+        self._validate_is_normalized(expect_normalized=False)
+
         flat_grouping = parsing.flatten(sample_grouping)
         assert len(flat_grouping) >= len(self._numeric_columns), f"'sample_grouping' must include all columns. " \
                                                                  f"Only {len(flat_grouping)} out of " \
@@ -4095,6 +4111,8 @@ class CountFilter(Filter):
            Normalized 22 features. Normalized inplace.
 
         """
+        self._validate_is_normalized(expect_normalized=False)
+
         suffix = '_normwithscalingfactors'
         if isinstance(scaling_factor_fname, (str, Path)):
             scaling_factors = io.load_table(scaling_factor_fname).squeeze()
@@ -5578,7 +5596,7 @@ class CountFilter(Filter):
 
     @readable_name('Violin plot')
     def violin_plot(self, samples: Union[param_typing.GroupedColumns, Literal['all']] = 'all',
-                    ylabel: str = '$\log_10$(normalized reads + 1)', title: Union[str, Literal['auto']] = 'auto',
+                    ylabel: str = r'$\log_10$(normalized reads + 1)', title: Union[str, Literal['auto']] = 'auto',
                     title_fontsize: float = 20, label_fontsize: float = 16, tick_fontsize: float = 12) -> plt.Figure:
         """
         Generates a violin plot of the specified samples in the CountFilter object in log10 scale. \
