@@ -9,6 +9,8 @@ History
 
 Added
 ******
+* Added support for advanced differential expression analysis with DESeq2/Limma-Voom, including testing continuous covariates, as well as likelihood ratio tests for factors, interactions, and polynomials.
+* Added support for sample quality weights in Limma-Voom differential expression analysis.
 * bowtie2 and kallisto paired-end modes now support the new file naming method 'smart', that attempts to automatically determine the common name of each pair of paired-end fastq files.
 * Added a p-value histogram plot (DESeqFilter.pval_histogram) that displays the distribution of p-values in a differential expression table.
 * Added new visualization options for 'plot expression of specific genes' function (CountFilter.plot_expression).

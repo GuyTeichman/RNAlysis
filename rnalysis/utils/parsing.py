@@ -30,7 +30,7 @@ def quote_path(pth: Union[Path, str]) -> str:
 
 def r_make_names(names: List[str]):
     # Replace invalid characters with a dot
-    valid_names = [re.sub(r'[^a-zA-Z0-9]', '.', name) for name in names]
+    valid_names = [re.sub(r'[^a-zA-Z0-9_]', '.', name) for name in names]
     # Ensure names start with a letter or a dot not followed by a number
     valid_names = [name if re.match(r'^[a-zA-Z].*|^\.[^0-9]', name) else '.' + name for name in valid_names]
     # Check for duplicates and append numbers if necessary

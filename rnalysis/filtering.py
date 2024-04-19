@@ -3138,12 +3138,12 @@ class CountFilter(Filter):
     @readable_name('Run Limma-Voom differential expression')
     def differential_expression_limma_voom(self, design_matrix: Union[str, Path],
                                            comparisons: Iterable[Tuple[str, str, str]],
-                                           covariates: Iterable[str] = tuple(),
-                                           lrt_factors: Iterable[str] = tuple(),
+                                           covariates: Iterable[str] = tuple(), lrt_factors: Iterable[str] = tuple(),
                                            model_factors: Union[Literal['auto'], Iterable[str]] = 'auto',
                                            r_installation_folder: Union[str, Path, Literal['auto']] = 'auto',
                                            output_folder: Union[str, Path, None] = None,
-                                           random_effect: Union[str, None] = None) -> Tuple['DESeqFilter', ...]:
+                                           random_effect: Union[str, None] = None, quality_weights: bool = False) -> \
+        Tuple['DESeqFilter', ...]:
         """
         Run differential expression analysis on the count matrix using the \
         `Limma-Voom <https://doi.org/10.1186/gb-2014-15-2-r29>`_ pipeline. \
@@ -3186,13 +3186,16 @@ class CountFilter(Filter):
         :param random_effect: optionally, specify a single factor to model as a random effect. \
         This is useful when your experimental design is nested. limma-voom can only treat one factor as a random effect.
         :type random_effect: str or None
+        :param quality_weights: if True, the analysis will use estimate sample-specific quality weights \
+        using the 'arrayWeights' function im limma. This is useful when lower quality samples are present in the data.
+        :type quality_weights: bool (default=False)
         :return: a tuple of DESeqFilter objects, one for each comparison
         """
         if output_folder is not None:
             output_folder = Path(output_folder)
             assert output_folder.exists(), 'Output folder does not exist!'
 
-        self._validate_is_normalized(expect_normalized=True)
+        self._validate_is_normalized(expect_normalized=False)
         data_path = io.get_todays_cache_dir().joinpath(f'{self.fname.name}.csv')
         design_mat_path = None
         i = 0
@@ -3210,7 +3213,7 @@ class CountFilter(Filter):
 
         r_output_dir = differential_expression.LimmaVoomRunner(data_path, design_mat_path, comparisons, covariates,
                                                                lrt_factors, model_factors, r_installation_folder,
-                                                               random_effect).run()
+                                                               random_effect, quality_weights).run()
         outputs = []
         for item in r_output_dir.iterdir():
             if not item.is_file():
@@ -3229,7 +3232,8 @@ class CountFilter(Filter):
                                                       comparisons: Iterable[Tuple[str, str, str]],
                                                       r_installation_folder: Union[str, Path, Literal['auto']] = 'auto',
                                                       output_folder: Union[str, Path, None] = None,
-                                                      random_effect: Union[str, None] = None
+                                                      random_effect: Union[str, None] = None,
+                                                      quality_weights: bool = False
                                                       ) -> Tuple['DESeqFilter', ...]:
         """
        Run differential expression analysis on the count matrix using the \
@@ -3264,11 +3268,15 @@ class CountFilter(Filter):
        :param random_effect: optionally, specify a single factor to model as a random effect. \
        This is useful when your experimental design is nested. limma-voom can only treat one factor as a random effect.
        :type random_effect: str or None
+       :param quality_weights: if True, the analysis will use estimate sample-specific quality weights \
+        using the 'arrayWeights' function im limma. This is useful when lower quality samples are present in the data.
+        :type quality_weights: bool (default=False)
        :return: a tuple of DESeqFilter objects, one for each comparison
         """
         return self.differential_expression_limma_voom(design_matrix, comparisons,
                                                        r_installation_folder=r_installation_folder,
-                                                       output_folder=output_folder, random_effect=random_effect)
+                                                       output_folder=output_folder, random_effect=random_effect,
+                                                       quality_weights=quality_weights)
 
     @readable_name('Run DESeq2 differential expression')
     def differential_expression_deseq2(self, design_matrix: Union[str, Path],

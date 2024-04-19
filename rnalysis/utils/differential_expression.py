@@ -137,10 +137,11 @@ class LimmaVoomRunner(DiffExpRunner):
                  lrt_factors: Iterable[str] = tuple(),
                  model_factors: Iterable[str] = 'auto',
                  r_installation_folder: Union[str, Path, Literal['auto']] = 'auto',
-                 random_effect: Union[str, None] = None):
+                 random_effect: Union[str, None] = None, quality_weights: bool = False):
         super().__init__(data_path, design_mat_path, comparisons, covariates, lrt_factors, model_factors,
                          r_installation_folder)
         self.random_effect = random_effect
+        self.quality_weights = quality_weights
 
     def install_required_packages(self):
         installs.install_limma(self.r_installation_folder)
@@ -163,7 +164,7 @@ class LimmaVoomRunner(DiffExpRunner):
             else:
                 # For non-numeric (factor) variables, create a term for each level except the first (reference)
                 levels = sorted(self.design_mat[var].unique())  # Sort levels to ensure consistent order
-                interaction_terms.append([f"{var}_{level}" for level in levels[1:]])
+                interaction_terms.append([f"{var}{level}" for level in levels[1:]])
 
         # Generate all possible combinations of interaction terms
         # If a variable is numeric, it appears as is; if it's a factor, we get one term per level (except the reference level)
@@ -200,11 +201,12 @@ class LimmaVoomRunner(DiffExpRunner):
         if random_effect is None:
             random_effect_fit_code = "fit <- lmFit(voom_object, design)"
         else:
-            random_effect_fit_code = (f"cor <- duplicateCorrelation(voom_object, design, block={random_effect})\n"
+            random_effect_fit_code = ("cor <- duplicateCorrelation(voom_object, design, "
+                                      f"block=design_matrix${random_effect})\n"
                                       "if (cor$consensus.correlation > 0) { "
                                       "#only include random effect if the correlation is positive\n"
-                                      f"  fit <- lmFit(voom_object, design, block={random_effect}, "
-                                      f"correlation=cor$consensus.correlation)\n"
+                                      f"  fit <- lmFit(voom_object, design, block=design_matrix${random_effect}, "
+                                      "correlation=cor$consensus.correlation)\n"
                                       "}"
                                       "else {"
                                       "   fit <- lmFit(voom_object, design)"
@@ -251,13 +253,15 @@ class LimmaVoomRunner(DiffExpRunner):
                     values_str = ', '.join([f'"{val}"' for val in values])
                     factors_str += f'design_matrix${factor_name} <- factor(design_matrix${factor}, levels=c({values_str}))\n'
 
-            formula = self.create_formula()
+            formula = self.create_formula(without=tuple() if random_effect is None else [random_effect])
             random_effect_fit_code = self._get_random_effect_code(random_effect)
 
             run_template = run_template.replace("$COUNT_MATRIX", Path(self.data_path).as_posix())
             run_template = run_template.replace("$DESIGN_MATRIX", (Path(self.design_mat_path).as_posix()))
             run_template = run_template.replace("$DEFINE_FACTORS", factors_str)
             run_template = run_template.replace("$FORMULA", formula)
+            run_template = run_template.replace("$VOOMFUNC",
+                                                'voomWithQualityWeights' if self.quality_weights else 'voom')
             run_template = run_template.replace("$RANDOM_EFFECT_FIT", random_effect_fit_code)
 
             outfile.write(run_template)
@@ -273,14 +277,14 @@ class LimmaVoomRunner(DiffExpRunner):
                 outfile.write(this_comparison)
             # covariates
             for covariate in self.covariates:
-                export_path = cache_dir.joinpath(f"LimmaVoom_{covariate[0]}_covariate.csv").as_posix()
+                export_path = cache_dir.joinpath(f"LimmaVoom_{covariate}_covariate.csv").as_posix()
                 coef = covariate if covariate in self.model_factors else f"poly({covariate}, degree = 1)1"
                 this_covar = covariate_template.replace("$COEF", coef)
                 this_covar = this_covar.replace("$OUTFILE_NAME", export_path)
                 outfile.write(this_covar)
             # likelihood ratio tests
             for lrt_factor in self.lrt_factors:
-                export_path = cache_dir.joinpath(f"LimmaVoom_{lrt_factor[0]}_LRT.csv").as_posix()
+                export_path = cache_dir.joinpath(f"LimmaVoom_{lrt_factor.replace(':', 'X')}_LRT.csv").as_posix()
                 coefs = "c(" + ', '.join([f'"{coef}"' for coef in coef_names[lrt_factor]]) + ")"
                 this_lrt = lrt_template.replace("$COEFS", coefs)
                 this_lrt = this_lrt.replace("$OUTFILE_NAME", export_path)
