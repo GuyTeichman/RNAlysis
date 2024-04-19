@@ -409,6 +409,9 @@ class DiffExpWindow(gui_windows.FuncExternalWindow):
                                                       f" \nSuggested alternative name: '{parsing.slugify(factor)}'. "
         self.design_mat = design_mat
 
+    def init_model_ui(self):
+        raise NotImplementedError
+
     def init_comparisons_ui(self):
         if 'picker' in self.comparisons_widgets:
             self.comparisons_grid.removeWidget(self.comparisons_widgets['picker'])
@@ -4247,6 +4250,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
         if response == QtWidgets.QMessageBox.Yes:
             self.close_figs_action.trigger()
+            self.close_external_windows()
             while self.tabs.count() > 1:
                 self.close_tab(0)
             self.close_tab(0)
@@ -4391,19 +4395,22 @@ class MainWindow(QtWidgets.QMainWindow):
             # close all figures
 
             # close all external windows
-            try:
-                for window in itertools.chain(self.external_windows.values(), self.enrichment_results):
-                    try:
-                        window.close()
-                    except RuntimeError:
-                        pass
-                if self.error_window is not None:
-                    self.error_window.close()
-            except AttributeError:  # Python 3.8/3.9 error on test suite
-                pass
+            self.close_external_windows()
             event.accept()
         else:
             event.ignore()
+
+    def close_external_windows(self):
+        try:
+            for window in itertools.chain(self.external_windows.values(), self.enrichment_results):
+                try:
+                    window.close()
+                except RuntimeError:
+                    pass
+            if self.error_window is not None:
+                self.error_window.close()
+        except AttributeError:  # Python 3.8/3.9 error on test suite
+            pass
 
     @QtCore.pyqtSlot(object, object, object)
     def start_generic_job(self, parent_tab: Union[FilterTabPage, None], worker: gui_widgets.Worker,
