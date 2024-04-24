@@ -554,7 +554,8 @@ def test_SimpleLimmaWindow_load_design_mat(qtbot, simple_limma_window):
 def test_SimpleLimmaWindow_get_analysis_params(qtbot, simple_limma_window):
     design_mat_path = 'tests/test_files/test_design_matrix.csv'
     truth = dict(r_installation_folder='auto', design_matrix=design_mat_path, output_folder=None,
-                 comparisons=[('replicate', 'rep3', 'rep2'), ('condition', 'cond1', 'cond2')], random_effect=None)
+                 comparisons=[('replicate', 'rep3', 'rep2'), ('condition', 'cond1', 'cond2')], random_effect=None,
+                 quality_weights=False)
 
     simple_limma_window.param_widgets['design_matrix'].setText(design_mat_path)
     qtbot.mouseClick(simple_limma_window.param_widgets['load_design'], LEFT_CLICK)
@@ -574,7 +575,7 @@ def test_SimpleLimmaWindow_start_analysis(qtbot, simple_limma_window):
     truth_args = []
     truth_kwargs = dict(r_installation_folder='auto', design_matrix=design_mat_path, output_folder=None,
                         comparisons=[('replicate', 'rep3', 'rep2'), ('condition', 'cond1', 'cond2')],
-                        random_effect=None)
+                        random_effect=None, quality_weights=False)
 
     simple_limma_window.param_widgets['design_matrix'].setText(design_mat_path)
     qtbot.mouseClick(simple_limma_window.param_widgets['load_design'], LEFT_CLICK)
