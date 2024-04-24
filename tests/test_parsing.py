@@ -344,8 +344,8 @@ class TestRMakeNames:
         assert r_make_names(names) == expected_output
 
     def test_names_with_underscore(self):
-        names = ['invalid_name', 'another_invalid_name', 'yet_another_invalid_name']
-        expected_output = ['invalid.name', 'another.invalid.name', 'yet.another.invalid.name']
+        names = ['valid_name', 'another_valid_name_', 'yet_another__valid_name', '_invalid']
+        expected_output = ['valid_name', 'another_valid_name_', 'yet_another__valid_name', '._invalid']
         assert r_make_names(names) == expected_output
 
     def test_names_starting_with_invalid_characters(self):
