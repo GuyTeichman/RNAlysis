@@ -285,7 +285,7 @@ class LimmaVoomRunner(DiffExpRunner):
             # likelihood ratio tests
             for lrt_factor in self.lrt_factors:
                 export_path = cache_dir.joinpath(f"LimmaVoom_{lrt_factor.replace(':', 'X')}_LRT.csv").as_posix()
-                coefs = "c(" + ', '.join([f'"{coef}"' for coef in coef_names[lrt_factor]]) + ")"
+                coefs = "c(" + ', '.join(sorted([f'"{coef}"' for coef in coef_names[lrt_factor]])) + ")"
                 this_lrt = lrt_template.replace("$COEFS", coefs)
                 this_lrt = this_lrt.replace("$OUTFILE_NAME", export_path)
                 outfile.write(this_lrt)

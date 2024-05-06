@@ -1,0 +1,10 @@
+sample_id,condition,replicate,covariate1,covariate2,factor1,factor2
+sample1,cond1,rep1,10,0.5,A,X
+sample2,cond1,rep2,15,0.8,B,Y
+sample3,cond1,rep3,12,0.6,C,Z
+sample4,cond2,rep1,8,0.3,A,Y
+sample5,cond2,rep2,11,0.7,B,X
+sample6,cond2,rep3,9,0.4,C,Z
+sample7,cond3,rep1,14,0.9,A,Z
+sample8,cond3,rep2,13,0.2,B,X
+sample9,cond3,rep3,16,0.1,C,Y
