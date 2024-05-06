@@ -1,4 +1,5 @@
 import pytest
+from matplotlib.backend_bases import PickEvent
 
 from rnalysis.utils.generic import *
 
@@ -213,3 +214,52 @@ def test_bic_score_empty_input():
     X = np.empty((0, 2))
     labels = np.array([])
     assert np.isnan(bic_score(X, labels))
+
+
+class MockMouseEvent:
+    def __init__(self):
+        self.guiEvent = None
+
+
+class TestInteractiveScatterFigure:
+    @pytest.fixture(autouse=True)
+    def setup(self):
+        self.labels = ['A', 'B', 'C']
+        self.fig = InteractiveScatterFigure(self.labels, annotation_fontsize=12, show_cursor=True)
+        self.fig.ax.scatter([1, 2, 3], [4, 5, 6], picker=True)
+
+    def test_initialization(self):
+        assert isinstance(self.fig.ax, plt.Axes)
+        assert self.fig.labels == ['A', 'B', 'C']
+        assert self.fig.annotation_fontsize == 12
+        assert self.fig.is_labeled == {}
+
+    def test_on_exit(self):
+        event = PickEvent('axes_leave_event', self.fig.canvas, mouseevent=MockMouseEvent(), artist=self.fig.ax)
+        self.fig.on_exit(event)
+
+    def test_on_move(self):
+        event = PickEvent('motion_notify_event', self.fig.canvas, mouseevent=MockMouseEvent(), artist=self.fig.ax)
+        self.fig.on_move(event)
+        # No specific assertions, but ensure the canvas is redrawn
+
+    def test_on_pick_add_annotation(self):
+        event = PickEvent('pick_event', self.fig.canvas, mouseevent=MockMouseEvent(), artist=self.fig.ax.collections[0],
+                          ind=[0])
+        self.fig.on_pick(event)
+        assert 0 in self.fig.is_labeled
+        assert isinstance(self.fig.is_labeled[0], plt.Annotation)
+        assert self.fig.is_labeled[0].get_text() == 'A'
+
+    def test_on_pick_remove_annotation(self):
+        event = PickEvent('pick_event', self.fig.canvas, mouseevent=MockMouseEvent(), artist=self.fig.ax.collections[0],
+                          ind=[0])
+        self.fig.on_pick(event)
+        self.fig.on_pick(event)
+        assert 0 not in self.fig.is_labeled
+
+    def test_on_pick_invalid_artist(self):
+        event = PickEvent('pick_event', self.fig.canvas, mouseevent=MockMouseEvent(),
+                          artist=plt.Rectangle((0, 0), 1, 1), ind=[0])
+        self.fig.on_pick(event)
+        assert self.fig.is_labeled == {}
