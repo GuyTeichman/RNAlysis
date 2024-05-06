@@ -3076,3 +3076,117 @@ def test_monkeypatch_cleanup(main_window):
     assert filtering.tqdm == ORIG_TQDM
     assert fastq.tqdm == ORIG_TQDM
 
+
+class TestLimmaWindow:
+    design_mat_path = 'tests/test_files/test_design_matrix_advanced.csv'
+
+    @pytest.fixture(autouse=True)
+    def test_init(self, qtbot, monkeypatch, limma_window):
+        assert limma_window.windowTitle() == 'Limma-Voom differential expression setup'
+        monkeypatch.setattr(QtWidgets.QFileDialog, 'getOpenFileName',
+                            lambda *args, **kwargs: (self.design_mat_path, ''))
+        qtbot.mouseClick(limma_window.param_widgets['design_matrix'].open_button, LEFT_CLICK)
+        qtbot.mouseClick(limma_window.param_widgets['load_design'], LEFT_CLICK)
+
+    def test_load_design_mat(self, limma_window):
+        design_mat_truth = io.load_table(self.design_mat_path, 0)
+        assert limma_window.design_mat.equals(design_mat_truth)
+        assert limma_window.comparisons_widgets['picker'].design_mat.equals(design_mat_truth)
+
+    def test_get_analysis_params(self, limma_window):
+        truth = dict(r_installation_folder='auto', design_matrix=self.design_mat_path, output_folder=None,
+                     comparisons=[('replicate', 'rep3', 'rep2'), ('condition', 'cond1', 'cond2')],
+                     covariates=['covariate1'], lrt_factors=['factor1'], random_effect=None, quality_weights=False)
+
+        limma_window.comparisons_widgets['picker'].add_comparison_widget()
+        limma_window.comparisons_widgets['picker'].inputs[0].factor.setCurrentText('replicate')
+        limma_window.comparisons_widgets['picker'].inputs[0].numerator.setCurrentText('rep3')
+        limma_window.comparisons_widgets['picker'].inputs[0].denominator.setCurrentText('rep2')
+
+        limma_window.covariates_widgets['picker'].add_comparison_widget()
+        limma_window.covariates_widgets['picker'].inputs[0].factor.setCurrentText('covariate1')
+
+        limma_window.lrt_widgets['picker'].add_comparison_widget()
+        limma_window.lrt_widgets['picker'].inputs[0].factor.setCurrentText('factor1')
+
+        assert limma_window.get_analysis_kwargs() == truth
+
+    def test_start_analysis(self, qtbot, monkeypatch, limma_window):
+        truth_args = []
+        truth_kwargs = dict(r_installation_folder='auto', design_matrix=self.design_mat_path, output_folder=None,
+                            comparisons=[('replicate', 'rep3', 'rep2'), ('condition', 'cond1', 'cond2')],
+                            covariates=['covariate1'], lrt_factors=['factor1'], random_effect=None,
+                            quality_weights=False)
+
+        limma_window.comparisons_widgets['picker'].add_comparison_widget()
+        limma_window.comparisons_widgets['picker'].inputs[0].factor.setCurrentText('replicate')
+        limma_window.comparisons_widgets['picker'].inputs[0].numerator.setCurrentText('rep3')
+        limma_window.comparisons_widgets['picker'].inputs[0].denominator.setCurrentText('rep2')
+
+        limma_window.covariates_widgets['picker'].add_comparison_widget()
+        limma_window.covariates_widgets['picker'].inputs[0].factor.setCurrentText('covariate1')
+
+        limma_window.lrt_widgets['picker'].add_comparison_widget()
+        limma_window.lrt_widgets['picker'].inputs[0].factor.setCurrentText('factor1')
+
+        with qtbot.waitSignal(limma_window.paramsAccepted) as blocker:
+            qtbot.mouseClick(limma_window.start_button, LEFT_CLICK)
+        assert blocker.args[0] == truth_args
+        assert blocker.args[1] == truth_kwargs
+
+
+class TestDESeqWindow:
+    design_mat_path = 'tests/test_files/test_design_matrix_advanced.csv'
+
+    @pytest.fixture(autouse=True)
+    def test_init(self, deseq_window, qtbot, monkeypatch):
+        assert deseq_window.windowTitle() == 'DESeq2 differential expression setup'
+        monkeypatch.setattr(QtWidgets.QFileDialog, 'getOpenFileName',
+                            lambda *args, **kwargs: (self.design_mat_path, ''))
+        qtbot.mouseClick(deseq_window.param_widgets['design_matrix'].open_button, LEFT_CLICK)
+        qtbot.mouseClick(deseq_window.param_widgets['load_design'], LEFT_CLICK)
+
+    def test_load_design_mat(self, deseq_window):
+        design_mat_truth = io.load_table(self.design_mat_path, 0)
+        assert deseq_window.design_mat.equals(design_mat_truth)
+        assert deseq_window.comparisons_widgets['picker'].design_mat.equals(design_mat_truth)
+
+    def test_get_analysis_params(self, deseq_window):
+        truth = dict(r_installation_folder='auto', design_matrix=self.design_mat_path, output_folder=None,
+                     comparisons=[('replicate', 'rep3', 'rep2'), ('condition', 'cond1', 'cond2')],
+                     covariates=['covariate1'], lrt_factors=['factor1'])
+
+        deseq_window.comparisons_widgets['picker'].add_comparison_widget()
+        deseq_window.comparisons_widgets['picker'].inputs[0].factor.setCurrentText('replicate')
+        deseq_window.comparisons_widgets['picker'].inputs[0].numerator.setCurrentText('rep3')
+        deseq_window.comparisons_widgets['picker'].inputs[0].denominator.setCurrentText('rep2')
+
+        deseq_window.covariates_widgets['picker'].add_comparison_widget()
+        deseq_window.covariates_widgets['picker'].inputs[0].factor.setCurrentText('covariate1')
+
+        deseq_window.lrt_widgets['picker'].add_comparison_widget()
+        deseq_window.lrt_widgets['picker'].inputs[0].factor.setCurrentText('factor1')
+
+        assert deseq_window.get_analysis_kwargs() == truth
+
+    def test_start_analysis(self, qtbot, monkeypatch, deseq_window):
+        truth_args = []
+        truth_kwargs = dict(r_installation_folder='auto', design_matrix=self.design_mat_path, output_folder=None,
+                            comparisons=[('replicate', 'rep3', 'rep2'), ('condition', 'cond1', 'cond2')],
+                            covariates=['covariate1'], lrt_factors=['factor1'])
+
+        deseq_window.comparisons_widgets['picker'].add_comparison_widget()
+        deseq_window.comparisons_widgets['picker'].inputs[0].factor.setCurrentText('replicate')
+        deseq_window.comparisons_widgets['picker'].inputs[0].numerator.setCurrentText('rep3')
+        deseq_window.comparisons_widgets['picker'].inputs[0].denominator.setCurrentText('rep2')
+
+        deseq_window.covariates_widgets['picker'].add_comparison_widget()
+        deseq_window.covariates_widgets['picker'].inputs[0].factor.setCurrentText('covariate1')
+
+        deseq_window.lrt_widgets['picker'].add_comparison_widget()
+        deseq_window.lrt_widgets['picker'].inputs[0].factor.setCurrentText('factor1')
+
+        with qtbot.waitSignal(deseq_window.paramsAccepted) as blocker:
+            qtbot.mouseClick(deseq_window.start_button, LEFT_CLICK)
+        assert blocker.args[0] == truth_args
+        assert blocker.args[1] == truth_kwargs
