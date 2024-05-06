@@ -93,7 +93,7 @@ def is_phylomedb_available():
         s = socket.create_connection((host, 21), timeout=5)
         s.close()
         return True
-    except (socket.gaierror, ConnectionError, TimeoutError):
+    except (socket.gaierror, socket.timeout, ConnectionError, TimeoutError):
         return False
 
 
