@@ -1397,3 +1397,96 @@ class TestColorMapComboBox:
 
             icon = combo_box.itemIcon(i)
             assert not icon.isNull()
+
+
+class TestCovariatePicker:
+    design_mat_path = 'tests/test_files/test_design_matrix_advanced.csv'
+
+    def test_init(self, qtbot):
+        _ = widget_setup(qtbot, CovariatePicker, io.load_table(self.design_mat_path, 0))
+
+    def test_get_value(self, qtbot):
+        qtbot, widget = widget_setup(qtbot, CovariatePicker,
+                                     io.load_table(self.design_mat_path, 0))
+        assert widget.value() == 'covariate1'
+        widget.factor.setCurrentText('covariate2')
+        assert widget.value() == 'covariate2'
+
+
+class TestCovariatePickerGroup:
+    design_mat_path = 'tests/test_files/test_design_matrix_advanced.csv'
+
+    def test_init(self, qtbot):
+        _ = widget_setup(qtbot, CovariatePickerGroup,
+                         io.load_table(self.design_mat_path, 0))
+
+    def test_add_widget(self, qtbot):
+        qtbot, widget = widget_setup(qtbot, CovariatePickerGroup,
+                                     io.load_table(self.design_mat_path, 0))
+        widget.add_comparison_widget()
+        assert len(widget.inputs) == 1
+        widget.add_comparison_widget()
+        assert len(widget.inputs) == 2
+
+    def test_remove_widget(self, qtbot):
+        qtbot, widget = widget_setup(qtbot, CovariatePickerGroup,
+                                     io.load_table(self.design_mat_path, 0))
+        widget.remove_comparison_widget()
+        assert len(widget.inputs) == 0
+        widget.remove_comparison_widget()
+        assert len(widget.inputs) == 0
+
+    def test_get_comparison_values(self, qtbot):
+        qtbot, widget = widget_setup(qtbot, CovariatePickerGroup,
+                                     io.load_table(self.design_mat_path, 0))
+        widget.add_comparison_widget()
+        widget.add_comparison_widget()
+
+        widget.inputs[1].factor.setCurrentText('covariate2')
+        assert widget.get_comparison_values() == ['covariate1', 'covariate2']
+
+
+class TestLRTPicker:
+    design_mat_path = 'tests/test_files/test_design_matrix_advanced.csv'
+
+    def test_init(self, qtbot):
+        _ = widget_setup(qtbot, LRTPicker, io.load_table(self.design_mat_path, 0))
+
+    def test_get_value(self, qtbot):
+        qtbot, widget = widget_setup(qtbot, LRTPicker,
+                                     io.load_table(self.design_mat_path, 0))
+        assert widget.value() == 'condition'
+        widget.factor.setCurrentText('covariate1+covariate1^2')
+        assert widget.value() == 'poly(covariate1, degree = 2)'
+
+
+class TestLRTPickerGroup:
+    design_mat_path = 'tests/test_files/test_design_matrix_advanced.csv'
+
+    def test_init(self, qtbot):
+        _ = widget_setup(qtbot, LRTPickerGroup, io.load_table(self.design_mat_path, 0))
+
+    def test_add_widget(self, qtbot):
+        qtbot, widget = widget_setup(qtbot, LRTPickerGroup,
+                                     io.load_table(self.design_mat_path, 0))
+        widget.add_comparison_widget()
+        assert len(widget.inputs) == 1
+        widget.add_comparison_widget()
+        assert len(widget.inputs) == 2
+
+    def test_remove_widget(self, qtbot):
+        qtbot, widget = widget_setup(qtbot, LRTPickerGroup,
+                                     io.load_table(self.design_mat_path, 0))
+        widget.remove_comparison_widget()
+        assert len(widget.inputs) == 0
+        widget.remove_comparison_widget()
+        assert len(widget.inputs) == 0
+
+    def test_get_comparison_values(self, qtbot):
+        qtbot, widget = widget_setup(qtbot, LRTPickerGroup,
+                                     io.load_table(self.design_mat_path, 0))
+        widget.add_comparison_widget()
+        widget.add_comparison_widget()
+
+        widget.inputs[1].factor.setCurrentText('covariate1+covariate1^2')
+        assert widget.get_comparison_values() == ['condition', 'poly(covariate1, degree = 2)']
