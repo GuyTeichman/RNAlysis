@@ -220,6 +220,22 @@ def simple_limma_window(qtbot) -> SimpleLimmaWindow:
 
 
 @pytest.fixture
+def deseq_window(qtbot) -> DESeqWindow:
+    qtbot, window = widget_setup(qtbot, DESeqWindow)
+    yield window
+    window.close()
+    _pytestqt_graceful_shutdown()
+
+
+@pytest.fixture
+def limma_window(qtbot) -> LimmaWindow:
+    qtbot, window = widget_setup(qtbot, LimmaWindow)
+    yield window
+    window.close()
+    _pytestqt_graceful_shutdown()
+
+
+@pytest.fixture
 def cutadapt_single_window(qtbot) -> CutAdaptSingleWindow:
     qtbot, window = widget_setup(qtbot, CutAdaptSingleWindow)
     yield window
@@ -3032,3 +3048,31 @@ class TestPromptAutoReportGen:
 
         # Check if the toggle_report_action is checked and no log message was generated
         assert main_window.toggle_report_action.isChecked() == preset_choice
+
+
+def test_monkeypatch_setup(main_window):
+    main_window._monkeypatch_setup('alt_tqdm', 'alt_parallel')
+    assert enrichment.enrichment_runner.generic.ProgressParallel == 'alt_parallel'
+    assert generic.ProgressParallel == 'alt_parallel'
+    assert filtering.clustering.generic.ProgressParallel == 'alt_parallel'
+    assert enrichment.enrichment_runner.parsing.tqdm == 'alt_tqdm'
+    assert enrichment.enrichment_runner.io.tqdm == 'alt_tqdm'
+    assert enrichment.enrichment_runner.tqdm == 'alt_tqdm'
+    assert filtering.clustering.tqdm == 'alt_tqdm'
+    assert filtering.tqdm == 'alt_tqdm'
+    assert fastq.tqdm == 'alt_tqdm'
+
+
+def test_monkeypatch_cleanup(main_window):
+    main_window._monkeypatch_setup('alt_tqdm', 'alt_parallel')
+    main_window._monkeypatch_cleanup()
+    assert enrichment.enrichment_runner.generic.ProgressParallel == ORIG_PARALLEL
+    assert generic.ProgressParallel == ORIG_PARALLEL
+    assert filtering.clustering.generic.ProgressParallel == ORIG_PARALLEL
+    assert enrichment.enrichment_runner.parsing.tqdm == ORIG_TQDM
+    assert enrichment.enrichment_runner.io.tqdm == ORIG_TQDM
+    assert enrichment.enrichment_runner.tqdm == ORIG_TQDM
+    assert filtering.clustering.tqdm == ORIG_TQDM
+    assert filtering.tqdm == ORIG_TQDM
+    assert fastq.tqdm == ORIG_TQDM
+
