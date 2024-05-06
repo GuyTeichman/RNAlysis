@@ -2417,3 +2417,52 @@ def test_map_orthologs_orthoinspector(mock_mapper, non_unique_mode, remove_unmap
     mock_mapper.assert_called_once_with(9606, 6239, 'UniProtKB')
     mock_mapper_instance.get_orthologs.assert_called_once_with(
         parsing.data_to_tuple(filter_obj.index_set), non_unique_mode)
+
+
+@pytest.mark.parametrize('component,ascending,power_transform', [
+    (1, True, True),
+    (2, False, False),
+    (3, True, True)
+])
+def test_sort_by_principal_component(component, ascending, power_transform):
+    c = CountFilter('tests/test_files/big_counted.csv').filter_low_reads(100, 2, inplace=False)
+    c_sorted = c.sort_by_principal_component(component, ascending=ascending, power_transform=power_transform,
+                                             inplace=False)
+    assert isinstance(c_sorted, CountFilter)
+    assert not c_sorted.df.equals(c.df)
+
+    c.sort_by_principal_component(component, ascending=ascending, power_transform=power_transform)
+    assert c.df.equals(c_sorted.df)
+
+    with pytest.raises(AssertionError):
+        c.sort_by_principal_component(0)
+    with pytest.raises(AssertionError):
+        c.sort_by_principal_component(c.shape[0] + 1)
+
+
+@pytest.mark.parametrize('adjusted_pvals,bin_size,title', [
+    (False, 0.05, 'auto'),
+    (True, 0.1, 'Custom Title')
+])
+def test_pval_histogram(adjusted_pvals, bin_size, title, monkeypatch):
+    monkeypatch.setattr(plt, 'show', lambda: None)
+    d = DESeqFilter('tests/test_files/test_deseq.csv')
+    fig = d.pval_histogram(adjusted_pvals=adjusted_pvals, bin_size=bin_size, title=title)
+    assert isinstance(fig, plt.Figure)
+    plt.close(fig)
+
+
+@pytest.mark.parametrize('features,samples,avg_function,spread_function,count_unit,split_plots', [
+    ('WBGene00007063', 'all', 'mean', 'sem', 'Normalized reads', False),
+    (['WBGene00007063', 'WBGene00007064'], [['cond1', 'cond2'], ['cond3', 'cond4']], 'median', 'std', 'TPM', True),
+    ('WBGene00007066', ['cond1', 'cond2'], 'geometric_mean', 'range', 'RPKM', False)
+])
+def test_plot_expression(features, samples, avg_function, spread_function, count_unit, split_plots, monkeypatch):
+    monkeypatch.setattr(plt, 'show', lambda: None)
+    c = CountFilter('tests/test_files/counted.csv')
+    figs = c.plot_expression(features, samples, avg_function, spread_function, count_unit=count_unit,
+                             split_plots=split_plots)
+    assert isinstance(figs, list)
+    assert all(isinstance(fig, plt.Figure) for fig in figs)
+    for fig in figs:
+        plt.close(fig)
