@@ -1144,6 +1144,8 @@ class TestOrthologDict:
             ortholog_dict['gene1']
 
 
+@pytest.mark.skipif(not PHYLOMEDB_AVAILABLE,
+                    reason="No internet connection or FTP server is down. Skipping PhylomeDBOrthologMapper tests.")
 class TestPhylomeDBOrthologMapper:
 
     # Define a fixture to create an instance of PhylomeDBOrthologMapper for testing
@@ -1159,10 +1161,6 @@ class TestPhylomeDBOrthologMapper:
     @staticmethod
     def mock_translate_ids(self, ids):
         return ['gene1', 'gene2'], ['trans_gene1', 'trans_gene2']
-
-    # Check if internet connection is available before running the tests
-    if not PHYLOMEDB_AVAILABLE:
-        pytest.skip("No internet connection or FTP server is down. Skipping PhylomeDBOrthologMapper tests.")
 
     # Test the constructor of PhylomeDBOrthologMapper
     def test_constructor(self, ortholog_mapper):
