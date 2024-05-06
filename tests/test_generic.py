@@ -43,8 +43,8 @@ def test_color_generator():
     for i in range(150):
         color = next(gen)
         assert (isinstance(color, str) and color in preset_colors) or (
-                isinstance(color, np.ndarray) and len(color) == 3 and
-                                          np.max(color) <= 1 and np.min(color) >= 0)
+            isinstance(color, np.ndarray) and len(color) == 3 and
+            np.max(color) <= 1 and np.min(color) >= 0)
 
 
 @pytest.mark.parametrize("this_set,other_sets,majority_threshold,truth",
@@ -172,3 +172,44 @@ def test_get_method_readable_name():
 
     func2.readable_name = "readable name"
     assert get_method_readable_name(func2) == "readable name"
+
+
+@pytest.mark.parametrize(
+    "X, labels, expected_bic",
+    [
+        (
+            np.array([[1, 2], [1.5, 2.5], [3, 4], [4, 5]]),
+            np.array([0, 0, 1, 1]),
+            -13.510391348997054
+        ),
+        (
+            np.array([[1, 1], [2, 2], [3, 3], [4, 4], [5, 5]]),
+            np.array([0, 0, 0, 1, 1]),
+            -23.462198946075148
+        ),
+        (
+            np.array([[1, 1, 1], [2, 2, 2], [3, 3, 3], [4, 4, 4], [5, 5, 5]]),
+            np.array([0, 0, 0, 1, 1]),
+            -33.747038606183764
+        ),
+    ]
+)
+def test_bic_score(X, labels, expected_bic):
+    assert np.isclose(bic_score(X, labels), expected_bic)
+
+
+def test_bic_score_single_cluster():
+    X = np.array([[1, 2], [1.5, 2.5], [2, 3]])
+    labels = np.array([0, 0, 0])
+    m = np.mean(X, axis=0)
+    var = np.sum((X[labels == 0] - m) ** 2) / float(3 - 1)
+    log_likelihood = 3 * (-np.log(2 * np.pi * var) - 1)
+    n_params = 3
+    expected_bic = log_likelihood - 0.5 * n_params * np.log(3)
+    assert np.isclose(bic_score(X, labels), expected_bic)
+
+
+def test_bic_score_empty_input():
+    X = np.empty((0, 2))
+    labels = np.array([])
+    assert np.isnan(bic_score(X, labels))

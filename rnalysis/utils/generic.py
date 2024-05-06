@@ -249,10 +249,8 @@ def bic_score(X: np.ndarray, labels: np.ndarray):
         centroid = np.mean(X_cluster, axis=0)
         variance = np.sum((X_cluster - centroid) ** 2) / (len(X_cluster) - 1)
         loglikelihood += \
-            n_points_cluster * np.log(n_points_cluster) \
-            - n_points_cluster * np.log(n_points) \
-            - n_points_cluster * n_dimensions / 2 * np.log(2 * math.pi * variance) \
-            - (n_points_cluster - 1) / 2
+            n_points_cluster * (np.log(n_points_cluster) - np.log(n_points) - (n_dimensions / 2) * np.log(
+                2 * math.pi * variance) - (n_points_cluster - 1) / 2)
 
     bic = loglikelihood - (n_parameters / 2) * np.log(n_points)
 
