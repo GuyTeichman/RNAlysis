@@ -4363,7 +4363,7 @@ class MainWindow(QtWidgets.QMainWindow):
     def cite(self):
         self.cite_window.exec()
 
-    def input(self, message: str = ''):
+    def input(self, message: str = ''):  # pragma: no cover
         dialog = gui_widgets.PathInputDialog(message, parent=self)
         self.external_windows['input'] = dialog
         accepted = dialog.exec()

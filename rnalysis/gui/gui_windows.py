@@ -1113,7 +1113,7 @@ class ApplyTablePipelineWindow(gui_widgets.MinMaxDialog):
         return [item.text() for item in self.list.get_sorted_selection()]
 
 
-class ReportGenerationMessageBox(QtWidgets.QMessageBox):
+class ReportGenerationMessageBox(QtWidgets.QMessageBox):  # pragma: no cover
     def __init__(self, parent=None):
         super().__init__(parent=parent)
         self.setWindowTitle("Report Generation")
