@@ -3142,7 +3142,8 @@ class CountFilter(Filter):
                                            model_factors: Union[Literal['auto'], Iterable[str]] = 'auto',
                                            r_installation_folder: Union[str, Path, Literal['auto']] = 'auto',
                                            output_folder: Union[str, Path, None] = None,
-                                           random_effect: Union[str, None] = None, quality_weights: bool = False) -> \
+                                           random_effect: Union[str, None] = None, quality_weights: bool = False,
+                                           return_design_matrix: bool = False, return_code: bool = False) -> \
         Tuple['DESeqFilter', ...]:
         """
         Run differential expression analysis on the count matrix using the \
@@ -3189,6 +3190,10 @@ class CountFilter(Filter):
         :param quality_weights: if True, the analysis will use estimate sample-specific quality weights \
         using the 'arrayWeights' function im limma. This is useful when lower quality samples are present in the data.
         :type quality_weights: bool (default=False)
+        :param return_design_matrix: if True, the function will return the sanitized design matrix used in the analysis.
+        :type return_design_matrix: bool (default=False)
+        :param return_code: if True, the function will return the R script used to generate the analysis results.
+        :type return_code: bool (default=False)
         :return: a tuple of DESeqFilter objects, one for each comparison
         """
         if output_folder is not None:
@@ -3214,18 +3219,27 @@ class CountFilter(Filter):
         r_output_dir = differential_expression.LimmaVoomRunner(data_path, design_mat_path, comparisons, covariates,
                                                                lrt_factors, model_factors, r_installation_folder,
                                                                random_effect, quality_weights).run()
+        code_path = None
         outputs = []
         for item in r_output_dir.iterdir():
             if not item.is_file():
                 continue
             if item.suffix == '.csv':
                 outputs.append(DESeqFilter(item, log2fc_col='logFC', padj_col='adj.P.Val', pval_col='P.Value'))
-
+            if item.suffix == '.R':
+                code_path = item
             if output_folder is not None:
                 with open(item) as infile, open(output_folder.joinpath(item.name), 'w') as outfile:
                     outfile.write(infile.read())
-
-        return parsing.data_to_tuple(outputs)
+        return_val = parsing.data_to_tuple(outputs)
+        if return_design_matrix:
+            return_val = [return_val, design_mat_df]
+        if return_code:
+            if code_path is None:
+                warnings.warn("No R script was generated during the analysis")
+            else:
+                return_val = [return_val, code_path]
+        return return_val
 
     @readable_name('Run Limma-Voom differential expression (simplified mode)')
     def differential_expression_limma_voom_simplified(self, design_matrix: Union[str, Path],
@@ -3233,7 +3247,8 @@ class CountFilter(Filter):
                                                       r_installation_folder: Union[str, Path, Literal['auto']] = 'auto',
                                                       output_folder: Union[str, Path, None] = None,
                                                       random_effect: Union[str, None] = None,
-                                                      quality_weights: bool = False
+                                                      quality_weights: bool = False,
+                                                      return_design_matrix: bool = False, return_code: bool = False
                                                       ) -> Tuple['DESeqFilter', ...]:
         """
        Run differential expression analysis on the count matrix using the \
@@ -3271,12 +3286,18 @@ class CountFilter(Filter):
        :param quality_weights: if True, the analysis will use estimate sample-specific quality weights \
         using the 'arrayWeights' function im limma. This is useful when lower quality samples are present in the data.
         :type quality_weights: bool (default=False)
+        :param return_design_matrix: if True, the function will return the sanitized design matrix used in the analysis.
+        :type return_design_matrix: bool (default=False)
+        :param return_code: if True, the function will return the R script used to generate the analysis results.
+        :type return_code: bool (default=False)
        :return: a tuple of DESeqFilter objects, one for each comparison
         """
         return self.differential_expression_limma_voom(design_matrix, comparisons,
                                                        r_installation_folder=r_installation_folder,
                                                        output_folder=output_folder, random_effect=random_effect,
-                                                       quality_weights=quality_weights)
+                                                       quality_weights=quality_weights,
+                                                       return_design_matrix=return_design_matrix,
+                                                       return_code=return_code)
 
     @readable_name('Run DESeq2 differential expression')
     def differential_expression_deseq2(self, design_matrix: Union[str, Path],
@@ -3285,7 +3306,8 @@ class CountFilter(Filter):
                                        lrt_factors: Iterable[str] = tuple(),
                                        model_factors: Union[Literal['auto'], Iterable[str]] = 'auto',
                                        r_installation_folder: Union[str, Path, Literal['auto']] = 'auto',
-                                       output_folder: Union[str, Path, None] = None) -> Tuple['DESeqFilter', ...]:
+                                       output_folder: Union[str, Path, None] = None, return_design_matrix: bool = False,
+                                       return_code: bool = False) -> Tuple['DESeqFilter', ...]:
         """
         Run differential expression analysis on the count matrix using the \
         `DESeq2 <https://doi.org/10.1186/s13059-014-0550-8>`_ algorithm. \
@@ -3326,6 +3348,10 @@ class CountFilter(Filter):
         as well as the log files and R script used to generate them, will be saved. \
         if output_folder is None, the results will not be saved to a specified directory.
         :type output_folder: str, Path, or None
+        :param return_design_matrix: if True, the function will return the sanitized design matrix used in the analysis.
+        :type return_design_matrix: bool (default=False)
+        :param return_code: if True, the function will return the R script used to generate the analysis results.
+        :type return_code: bool (default=False)
         :return: a tuple of DESeqFilter objects, one for each comparison
         """
         if output_folder is not None:
@@ -3351,23 +3377,33 @@ class CountFilter(Filter):
         r_output_dir = differential_expression.DESeqRunner(data_path, design_mat_path, comparisons, covariates,
                                                            lrt_factors, model_factors, r_installation_folder).run()
         outputs = []
+        code_path = None
         for item in r_output_dir.iterdir():
             if not item.is_file():
                 continue
             if item.suffix == '.csv':
                 outputs.append(DESeqFilter(item))
-
+            if item.suffix == '.R':
+                code_path = item
             if output_folder is not None:
                 with open(item) as infile, open(output_folder.joinpath(item.name), 'w') as outfile:
                     outfile.write(infile.read())
-
-        return parsing.data_to_tuple(outputs)
+        return_val = parsing.data_to_tuple(outputs)
+        if return_design_matrix:
+            return_val = [return_val, design_mat_df]
+        if return_code:
+            if code_path is None:
+                warnings.warn("No R script was generated during the analysis")
+            else:
+                return_val = [return_val, code_path]
+        return return_val
 
     @readable_name('Run DESeq2 differential expression (simplified mode)')
     def differential_expression_deseq2_simplified(self, design_matrix: Union[str, Path],
                                                   comparisons: Iterable[Tuple[str, str, str]],
                                                   r_installation_folder: Union[str, Path, Literal['auto']] = 'auto',
-                                                  output_folder: Union[str, Path, None] = None
+                                                  output_folder: Union[str, Path, None] = None,
+                                                  return_design_matrix: bool = False, return_code: bool = False
                                                   ) -> Tuple['DESeqFilter', ...]:
         """
         Run differential expression analysis on the count matrix using the \
@@ -3399,11 +3435,16 @@ class CountFilter(Filter):
         as well as the log files and R script used to generate them, will be saved. \
         if output_folder is None, the results will not be saved to a specified directory.
         :type output_folder: str, Path, or None
+        :param return_design_matrix: if True, the function will return the sanitized design matrix used in the analysis.
+        :type return_design_matrix: bool (default=False)
+        :param return_code: if True, the function will return the R script used to generate the analysis results.
+        :type return_code: bool (default=False)
         :return: a tuple of DESeqFilter objects, one for each comparison
         """
         return self.differential_expression_deseq2(design_matrix, comparisons,
                                                    r_installation_folder=r_installation_folder,
-                                                   output_folder=output_folder)
+                                                   output_folder=output_folder,
+                                                   return_design_matrix=return_design_matrix, return_code=return_code)
 
     @readable_name('Calculate fold change')
     def fold_change(self, numerator: param_typing.ColumnNames, denominator: param_typing.ColumnNames,
