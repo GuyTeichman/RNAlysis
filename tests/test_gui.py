@@ -3193,3 +3193,210 @@ class TestDESeqWindow:
             qtbot.mouseClick(deseq_window.start_button, LEFT_CLICK)
         assert blocker.args[0] == truth_args
         assert blocker.args[1] == truth_kwargs
+
+
+class TestMainWindowJobRunning:
+    def test_start_generic_job(self, main_window, mocker):
+        parent_tab = mocker.Mock(spec=FilterTabPage)
+        worker = mocker.Mock(spec=gui_widgets.Worker)
+        finish_slots = mocker.Mock()
+
+        main_window.queue_worker = mocker.Mock()
+        main_window.start_generic_job(parent_tab, worker, finish_slots)
+
+        main_window.queue_worker.assert_called_once_with(worker, [mocker.ANY, finish_slots])
+
+    def test_finish_generic_job(self, main_window, mocker):
+        worker_output = mocker.Mock(spec=gui_widgets.WorkerOutput)
+        worker_output.raised_exception = None
+        worker_output.result = ["result"]
+        worker_output.emit_args = ["func_name"]
+        worker_output.job_id = 1
+
+        parent_tab = mocker.Mock(spec=TabPage)
+
+        main_window.update_report_from_worker = mocker.Mock()
+        main_window.update_report_spawn = mocker.Mock()
+        main_window.new_tab_from_filter_obj = mocker.Mock()
+
+        main_window.finish_generic_job(worker_output, parent_tab)
+
+        parent_tab.update_tab.assert_called_once()
+        parent_tab.process_outputs.assert_called_once_with(worker_output.result, worker_output.job_id, "func_name")
+
+    def test_start_generic_job_from_params(self, main_window, mocker):
+        func_name = "func_name"
+        func = mocker.Mock()
+        args = ["arg1", "arg2"]
+        kwargs = {"kwarg1": "value1"}
+        finish_slots = mocker.Mock()
+        predecessor = 1
+
+        main_window.start_generic_job = mocker.Mock()
+
+        main_window.start_generic_job_from_params(func_name, func, args, kwargs, finish_slots, predecessor)
+
+        main_window.start_generic_job.assert_called_once_with(None, mocker.ANY, finish_slots)
+
+    def test_start_clustering(self, main_window, mocker):
+        parent_tab = mocker.Mock(spec=FilterTabPage)
+        worker = mocker.Mock(spec=gui_widgets.Worker)
+        finish_slot = mocker.Mock()
+
+        main_window.queue_worker = mocker.Mock()
+        main_window.start_clustering(parent_tab, worker, finish_slot)
+
+        main_window.queue_worker.assert_called_once_with(worker, (mocker.ANY, finish_slot))
+
+    def test_start_enrichment(self, main_window, mocker):
+        worker = mocker.Mock(spec=gui_widgets.Worker)
+        finish_slot = mocker.Mock()
+
+        main_window.queue_worker = mocker.Mock()
+        main_window.start_enrichment(worker, finish_slot)
+
+        main_window.queue_worker.assert_called_once_with(worker, (main_window.finish_enrichment, finish_slot))
+
+    def test_finish_enrichment(self, main_window, mocker):
+        worker_output = mocker.Mock(spec=gui_widgets.WorkerOutput)
+        worker_output.raised_exception = None
+        worker_output.result = [mocker.Mock(spec=pd.DataFrame),
+                                mocker.Mock(spec=enrichment.enrichment_runner.EnrichmentRunner)]
+        worker_output.emit_args = ["set_name"]
+        worker_output.job_id = 1
+
+        main_window.show = mocker.Mock()
+        main_window.display_enrichment_results = mocker.Mock()
+        main_window.update_report_spawn = mocker.Mock()
+
+        main_window.finish_enrichment(worker_output)
+
+        main_window.show.assert_called_once()
+        main_window.display_enrichment_results.assert_called_once_with(worker_output.result[0], "set_name")
+        main_window.update_report_spawn.assert_any_call(mocker.ANY, mocker.ANY, worker_output.job_id,
+                                                        worker_output.result[0])
+
+    def test_queue_worker(self, main_window, mocker, monkeypatch):
+        worker = mocker.Mock(spec=gui_widgets.Worker)
+        output_slots = mocker.Mock()
+
+        main_window.job_queue = mocker.Mock(spec=Queue)
+        main_window.jobQueued = mocker.Mock()
+        monkeypatch.setattr(main_window, 'run_threaded_workers', lambda *args, **kwargs: None)
+
+        main_window.queue_worker(worker, output_slots)
+
+        main_window.job_queue.put.assert_called_once_with((worker, output_slots))
+        main_window.jobQueued.emit.assert_called_once()
+
+    def test_finish_generic_job_with_exception(self, main_window, mocker):
+        worker_output = mocker.Mock(spec=gui_widgets.WorkerOutput)
+        worker_output.raised_exception = Exception("Test Exception")
+        worker_output.result = []
+        worker_output.emit_args = ["func_name"]
+        worker_output.job_id = 1
+
+        parent_tab = mocker.Mock(spec=TabPage)
+
+        main_window.update_report_from_worker = mocker.Mock()
+        main_window.update_report_spawn = mocker.Mock()
+        main_window.new_tab_from_filter_obj = mocker.Mock()
+
+        with pytest.raises(Exception, match="Test Exception"):
+            main_window.finish_generic_job(worker_output, parent_tab)
+
+        parent_tab.update_tab.assert_not_called()
+        parent_tab.process_outputs.assert_not_called()
+
+    def test_cancel_job_running(self, main_window, mocker, qtbot):
+        index = 0
+        func_name = "func_name"
+
+        worker = mocker.Mock(spec=gui_widgets.Worker)
+        main_window.job_queue = mocker.Mock(spec=Queue)
+        main_window.job_queue.queue = [worker]
+        main_window.run_threaded_workers = mocker.Mock()
+
+        warning_message_box = mocker.patch.object(QtWidgets.QMessageBox, 'warning', create=True)
+
+        main_window.cancel_job(index, func_name)
+
+        worker.deleteLater.assert_not_called()
+        main_window.job_queue.empty.assert_not_called()
+        main_window.job_queue.get.assert_not_called()
+        main_window.job_queue.put.assert_not_called()
+        main_window.run_threaded_workers.assert_not_called()
+
+        warning_message_box.assert_called_once_with(main_window, "Can't stop a running job!", mocker.ANY)
+
+    def test_cancel_job_queued(self, main_window, mocker):
+        index = 2
+        func_name = "func_name"
+
+        main_window.run_threaded_workers = mocker.Mock()
+        worker1 = mocker.Mock(spec=gui_widgets.Worker)
+        worker2 = mocker.Mock(spec=gui_widgets.Worker)
+        main_window.job_queue = mocker.Mock(spec=Queue)
+        main_window.job_queue.queue = (worker1, worker2)
+
+        main_window.cancel_job(index, func_name)
+
+        worker1.deleteLater.assert_not_called()
+        worker2.deleteLater.assert_called_once()
+        main_window.job_queue.empty.assert_called_once()
+        main_window.job_queue.put.assert_called_once_with(worker1)
+        main_window.run_threaded_workers.assert_called_once()
+
+    def test_finish_clustering(self, main_window, mocker):
+        worker_output = mocker.Mock(spec=gui_widgets.WorkerOutput)
+        worker_output.raised_exception = None
+        clustering_runner = mocker.Mock(spec=clustering.ClusteringRunner)
+        worker_output.result = [mocker.Mock(spec=clustering.ClusteringRunner), clustering_runner]
+        worker_output.job_id = 1
+        parent_tab = mocker.Mock(spec=FilterTabPage)
+        func_name = worker_output.partial.func.readable_name
+        figs = worker_output.result[1].plot_clustering()
+
+        main_window.finish_clustering(worker_output, parent_tab)
+
+        parent_tab.update_tab.assert_called_once()
+        parent_tab.process_outputs.assert_any_call(worker_output.result[0], 1, func_name)
+        parent_tab.process_outputs.assert_any_call(figs, 1, func_name)
+
+    def test_finish_enrichment_report_enabled(self, main_window, mocker):
+        worker_output = mocker.Mock(spec=gui_widgets.WorkerOutput)
+        worker_output.raised_exception = None
+        worker_output.result = [mocker.Mock(spec=pd.DataFrame),
+                                mocker.Mock(spec=enrichment.enrichment_runner.EnrichmentRunner)]
+        worker_output.emit_args = ["set_name"]
+        worker_output.job_id = 1
+
+        main_window._generate_report = True
+        main_window.show = mocker.Mock()
+        main_window.display_enrichment_results = mocker.Mock()
+        main_window.update_report_spawn = mocker.Mock()
+
+        main_window.finish_enrichment(worker_output)
+
+        main_window.show.assert_called_once()
+        main_window.display_enrichment_results.assert_called_once_with(worker_output.result[0], "set_name")
+        main_window.update_report_spawn.assert_called()
+
+    def test_finish_enrichment_report_disabled(self, main_window, mocker):
+        worker_output = mocker.Mock(spec=gui_widgets.WorkerOutput)
+        worker_output.raised_exception = None
+        worker_output.result = [mocker.Mock(spec=pd.DataFrame),
+                                mocker.Mock(spec=enrichment.enrichment_runner.EnrichmentRunner)]
+        worker_output.emit_args = ["set_name"]
+        worker_output.job_id = 1
+
+        main_window._generate_report = False
+        main_window.show = mocker.Mock()
+        main_window.display_enrichment_results = mocker.Mock()
+        main_window.update_report_spawn = mocker.Mock()
+
+        main_window.finish_enrichment(worker_output)
+
+        main_window.show.assert_called_once()
+        main_window.display_enrichment_results.assert_called_once_with(worker_output.result[0], "set_name")
+        main_window.update_report_spawn.assert_not_called()

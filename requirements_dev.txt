@@ -18,3 +18,4 @@ pyinstaller-hooks-contrib
 rst-to-myst
 requests-mock
 pytest-randomly
+pytest-mock
