@@ -3439,8 +3439,6 @@ class MainWindow(QtWidgets.QMainWindow):
         if gene_set_name is None and validation.isinstanceinh(gene_set, enrichment.FeatureSet):
             gene_set_name = gene_set.set_name
         self.add_new_tab(gene_set_name, is_set=True)
-        if tab_id == -1:
-            tab_id = self.tabs.currentWidget().tab_id
         self.tabs.currentWidget().start_from_gene_set(tab_id, gene_set)
         if self._generate_report:
             self.add_loaded_item_to_report(tab_id, self.tabs.currentWidget().name, self.tabs.currentWidget().obj())
@@ -3657,7 +3655,7 @@ class MainWindow(QtWidgets.QMainWindow):
             if self.tabs.currentWidget().is_empty():
                 tabs_to_close = self.tabs.currentIndex()
             gene_set = self._filename_to_gene_set(filename)
-            self.new_tab_from_gene_set(gene_set, -1, Path(filename).stem)
+            self.new_tab_from_gene_set(gene_set, JOB_COUNTER.get_id(), Path(filename).stem)
             if tabs_to_close is not None:
                 self.tabs.removeTab(tabs_to_close)
 
