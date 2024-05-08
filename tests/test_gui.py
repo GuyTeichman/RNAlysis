@@ -3051,16 +3051,19 @@ class TestPromptAutoReportGen:
 
 
 def test_monkeypatch_setup(main_window):
-    main_window._monkeypatch_setup('alt_tqdm', 'alt_parallel')
-    assert enrichment.enrichment_runner.generic.ProgressParallel == 'alt_parallel'
-    assert generic.ProgressParallel == 'alt_parallel'
-    assert filtering.clustering.generic.ProgressParallel == 'alt_parallel'
-    assert enrichment.enrichment_runner.parsing.tqdm == 'alt_tqdm'
-    assert enrichment.enrichment_runner.io.tqdm == 'alt_tqdm'
-    assert enrichment.enrichment_runner.tqdm == 'alt_tqdm'
-    assert filtering.clustering.tqdm == 'alt_tqdm'
-    assert filtering.tqdm == 'alt_tqdm'
-    assert fastq.tqdm == 'alt_tqdm'
+    try:
+        main_window._monkeypatch_setup('alt_tqdm', 'alt_parallel')
+        assert enrichment.enrichment_runner.generic.ProgressParallel == 'alt_parallel'
+        assert generic.ProgressParallel == 'alt_parallel'
+        assert filtering.clustering.generic.ProgressParallel == 'alt_parallel'
+        assert enrichment.enrichment_runner.parsing.tqdm == 'alt_tqdm'
+        assert enrichment.enrichment_runner.io.tqdm == 'alt_tqdm'
+        assert enrichment.enrichment_runner.tqdm == 'alt_tqdm'
+        assert filtering.clustering.tqdm == 'alt_tqdm'
+        assert filtering.tqdm == 'alt_tqdm'
+        assert fastq.tqdm == 'alt_tqdm'
+    finally:
+        main_window._monkeypatch_cleanup()
 
 
 def test_monkeypatch_cleanup(main_window):
