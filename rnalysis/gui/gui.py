@@ -1388,7 +1388,7 @@ class TabPage(QtWidgets.QWidget):
     filterObjectCreated = QtCore.pyqtSignal(object, int)
     featureSetCreated = QtCore.pyqtSignal(object, int)
     startedJob = QtCore.pyqtSignal(object, object, object)
-    tabNameChange = QtCore.pyqtSignal(str, bool, int, int)
+    tabNameChange = QtCore.pyqtSignal(str, bool)
     tabSaved = QtCore.pyqtSignal()
     changeIcon = QtCore.pyqtSignal(str)
     geneSetsRequested = QtCore.pyqtSignal(object)
@@ -1638,7 +1638,7 @@ class TabPage(QtWidgets.QWidget):
         prev_id = self.tab_id
         self.tab_id = JOB_COUNTER.get_id() if job_id is not None else prev_id
 
-        self.tabNameChange.emit(new_name, True, self.tab_id, prev_id)
+        self.tabNameChange.emit(new_name, True)
         self.overview_widgets['table_name_label'].setText(f"Table name: '<b>{new_name}</b>'")
         self.overview_widgets['table_name'].setText('')
         self.name = new_name.rstrip('*')
@@ -2223,7 +2223,7 @@ class FilterTabPage(TabPage):
         self.update_filter_obj_shape()
         self.update_table_preview()
         self.name = str(self.obj_name())
-        self.tabNameChange.emit(self.name, is_unsaved, -1, -1)
+        self.tabNameChange.emit(self.name, is_unsaved)
         self.update_table_name_label()
 
     def _apply_function_from_params(self, func_name, args: list, kwargs: dict, finish_slot=None, job_id: int = None,
@@ -2298,15 +2298,15 @@ class FilterTabPage(TabPage):
             kwargs[name] = gui_widgets.get_val_from_widget(widget)
         self.filter_obj = filter_obj_type(file_path, **kwargs)
 
-        print(self.filter_obj)
-
         table_name_user_input = self.basic_widgets['table_name'].text()
         if table_name_user_input != '':
             new_name = table_name_user_input
             self.filter_obj._update(fname=Path(new_name).with_suffix('.csv'))
         else:
             new_name = self.filter_obj.fname.stem
-        self.tabNameChange.emit(new_name, False, -1, -1)
+        self.tab_id = JOB_COUNTER.get_id()
+        print(self.filter_obj)
+        self.tabNameChange.emit(new_name, False)
 
         self.init_overview_ui()
         self.init_function_ui()
@@ -3306,7 +3306,6 @@ class MainWindow(QtWidgets.QMainWindow):
         self.tabs.tabBar().moveTab(self.tabs.currentIndex(), index)
 
     def add_new_tab(self, name: str = None, is_set: bool = False):
-        tab_id = JOB_COUNTER.get_id()
         new_undo_stack = QtWidgets.QUndoStack()
         self.undo_group.addStack(new_undo_stack)
         if name is None:
@@ -3316,9 +3315,9 @@ class MainWindow(QtWidgets.QMainWindow):
             print(name)
 
         if is_set:
-            tab = SetTabPage(name, parent=self.tabs, undo_stack=new_undo_stack, tab_id=tab_id)
+            tab = SetTabPage(name, parent=self.tabs, undo_stack=new_undo_stack)
         else:
-            tab = FilterTabPage(self.tabs, undo_stack=new_undo_stack, tab_id=tab_id)
+            tab = FilterTabPage(self.tabs, undo_stack=new_undo_stack)
             tab.startedClustering.connect(self.start_clustering)
 
         tab.startedJob.connect(self.start_generic_job)
@@ -3340,8 +3339,8 @@ class MainWindow(QtWidgets.QMainWindow):
     def update_gene_sets_widget(self, widget: gui_widgets.GeneSetComboBox):
         widget.update_gene_sets(self.get_available_objects())
 
-    @QtCore.pyqtSlot(str, bool, int, int)
-    def rename_tab(self, new_name: str, is_unsaved: bool, new_id: int = -1, prev_id: int = -1):
+    @QtCore.pyqtSlot(str, bool)
+    def rename_tab(self, new_name: str, is_unsaved: bool):
         if is_unsaved:
             new_name += '*'
         else:

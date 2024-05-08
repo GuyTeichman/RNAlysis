@@ -320,13 +320,15 @@ class PathInputDialog(QtWidgets.QDialog):
 
 
 class JobCounter(QtCore.QObject):
-    def __init__(self):
+    def __init__(self, parent=None):
+        super().__init__(parent)
         self._count = 0
         self.lock = threading.Lock()
 
     def get_id(self):
         with self.lock:
             self._count += 1
+            print(self._count)
             return self._count
 
     def get_total(self):

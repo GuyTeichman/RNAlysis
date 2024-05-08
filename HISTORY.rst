@@ -50,6 +50,7 @@ Fixed
 * Fixed bug where disabling auto-report in the middle of the session would raise errors when trying to create new graphs.
 * Fixed bug where generating multiple gene expression plots (split_plots=True) with auto-generated report would only add the last graph to the session report.
 * Fixed bug where the function 'normalize_to_quantile' generated unclear table names.
+* Fixed bug where sometimes the first operation performed in a session would not display correctly in the automatic session report.
 
 New Contributors
 *****************
