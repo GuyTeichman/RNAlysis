@@ -3396,3 +3396,103 @@ class TestMainWindowJobRunning:
         main_window.show.assert_called_once()
         main_window.display_enrichment_results.assert_called_once_with(worker_output.result[0], "set_name")
         main_window.update_report_spawn.assert_not_called()
+
+    def test_finish_generic_job_empty_result(self, main_window, mocker, monkeypatch):
+        worker_output = mocker.Mock(spec=gui_widgets.WorkerOutput)
+        worker_output.raised_exception = None
+        worker_output.result = None
+        worker_output.emit_args = ["func_name"]
+        worker_output.job_id = 1
+
+        parent_tab = mocker.Mock(spec=TabPage)
+
+        monkeypatch.setattr(main_window, 'update_report_from_worker', mocker.Mock())
+        monkeypatch.setattr(main_window, 'update_report_spawn', mocker.Mock())
+        monkeypatch.setattr(main_window, 'new_tab_from_filter_obj', mocker.Mock())
+
+        main_window.finish_generic_job(worker_output, parent_tab)
+
+        parent_tab.update_tab.assert_not_called()
+        parent_tab.process_outputs.assert_not_called()
+
+    def test_finish_generic_job_no_parent_tab(self, main_window, mocker, monkeypatch):
+        worker_output = mocker.Mock(spec=gui_widgets.WorkerOutput)
+        worker_output.raised_exception = None
+        worker_output.result = ["result"]
+        worker_output.emit_args = ["func_name"]
+        worker_output.job_id = 1
+
+        monkeypatch.setattr(main_window, 'update_report_from_worker', mocker.Mock())
+        monkeypatch.setattr(main_window, 'update_report_spawn', mocker.Mock())
+        monkeypatch.setattr(main_window, 'new_tab_from_filter_obj', mocker.Mock())
+        monkeypatch.setattr(main_window, 'is_valid_spawn', lambda *args: True)
+
+        main_window.finish_generic_job(worker_output, None)
+
+        main_window.update_report_from_worker.assert_called_once_with(worker_output)
+        main_window.update_report_spawn.assert_called_once()
+
+    def test_finish_clustering_empty_result(self, main_window, mocker):
+        worker_output = mocker.Mock(spec=gui_widgets.WorkerOutput)
+        worker_output.raised_exception = None
+        worker_output.result = []
+        worker_output.partial.func.__name__ = "func_name"
+        worker_output.job_id = 1
+
+        parent_tab = mocker.Mock(spec=FilterTabPage)
+
+        main_window.finish_clustering(worker_output, parent_tab)
+
+        parent_tab.update_tab.assert_not_called()
+        parent_tab.process_outputs.assert_not_called()
+
+    def test_finish_clustering_exception_raised(self, main_window, mocker, monkeypatch):
+        worker_output = mocker.Mock(spec=gui_widgets.WorkerOutput)
+        worker_output.raised_exception = Exception("Test Exception")
+        worker_output.result = []
+        worker_output.partial.func.__name__ = "func_name"
+        worker_output.job_id = 1
+
+        parent_tab = mocker.Mock(spec=FilterTabPage)
+
+        with pytest.raises(Exception, match="Test Exception"):
+            main_window.finish_clustering(worker_output, parent_tab)
+
+        parent_tab.update_tab.assert_not_called()
+        parent_tab.process_outputs.assert_not_called()
+
+    def test_finish_enrichment_empty_result(self, main_window, mocker, monkeypatch):
+        worker_output = mocker.Mock(spec=gui_widgets.WorkerOutput)
+        worker_output.raised_exception = None
+        worker_output.result = []
+        worker_output.emit_args = ["set_name"]
+        worker_output.job_id = 1
+
+        monkeypatch.setattr(main_window, 'update_report_spawn', mocker.Mock())
+        monkeypatch.setattr(main_window, 'display_enrichment_results', mocker.Mock())
+        monkeypatch.setattr(main_window, 'show', mocker.Mock())
+        monkeypatch.setattr(main_window, '_generate_report', True)
+
+        main_window.finish_enrichment(worker_output)
+
+        main_window.display_enrichment_results.assert_not_called()
+        main_window.update_report_spawn.assert_not_called()
+
+    def test_finish_enrichment_exception_raised(self, main_window, mocker, monkeypatch):
+        worker_output = mocker.Mock(spec=gui_widgets.WorkerOutput)
+        worker_output.raised_exception = Exception("Test Exception")
+        worker_output.result = []
+        worker_output.emit_args = ["set_name"]
+        worker_output.job_id = 1
+
+        monkeypatch.setattr(main_window, 'update_report_spawn', mocker.Mock())
+        monkeypatch.setattr(main_window, 'display_enrichment_results', mocker.Mock())
+        monkeypatch.setattr(main_window, 'show', mocker.Mock())
+        monkeypatch.setattr(main_window, '_generate_report', True)
+
+        with pytest.raises(Exception, match="Test Exception"):
+            main_window.finish_enrichment(worker_output)
+
+        main_window.show.assert_not_called()
+        main_window.display_enrichment_results.assert_not_called()
+        main_window.update_report_spawn.assert_not_called()
