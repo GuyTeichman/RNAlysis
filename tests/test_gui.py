@@ -3312,8 +3312,7 @@ class TestMainWindowJobRunning:
         func_name = "func_name"
         worker = mocker.Mock(spec=gui_widgets.Worker)
         monkeypatch.setattr(main_window, 'run_threaded_workers', mocker.Mock())
-        monkeypatch.setattr(main_window, 'job_queue', mocker.Mock(spec=Queue))
-        monkeypatch.setattr(main_window.job_queue, 'queue', [worker])
+        monkeypatch.setattr(main_window, 'job_queue', mocker.Mock(spec=Queue, queue=[worker]))
 
         warning_message_box = mocker.patch.object(QtWidgets.QMessageBox, 'warning', create=True)
 
@@ -3334,8 +3333,7 @@ class TestMainWindowJobRunning:
         worker1 = mocker.Mock(spec=gui_widgets.Worker)
         worker2 = mocker.Mock(spec=gui_widgets.Worker)
         monkeypatch.setattr(main_window, 'run_threaded_workers', mocker.Mock())
-        monkeypatch.setattr(main_window, 'job_queue', mocker.Mock(spec=Queue))
-        monkeypatch.setattr(main_window.job_queue, 'queue', (worker1, worker2))
+        monkeypatch.setattr(main_window, 'job_queue', mocker.Mock(spec=Queue, queue=(worker1, worker2)))
 
         main_window.cancel_job(index, func_name)
 
