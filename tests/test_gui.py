@@ -57,8 +57,8 @@ def green_icon():
 def use_temp_settings_file():
     settings.make_temp_copy_of_settings_file()
     yield
-    settings.remove_temp_copy_of_settings_file()
     settings.set_temp_copy_of_settings_file_as_default()
+    settings.remove_temp_copy_of_settings_file()
 
 
 @pytest.fixture
