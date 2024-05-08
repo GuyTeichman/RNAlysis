@@ -331,7 +331,8 @@ class CutAdaptPairedWindow(gui_windows.PairedFuncExternalWindow):
 
 
 class DiffExpWindow(gui_windows.FuncExternalWindow):
-    EXCLUDED_PARAMS = {'self', 'comparisons', 'covariates', 'lrt_factors', 'model_factors'}
+    EXCLUDED_PARAMS = {'self', 'comparisons', 'covariates', 'lrt_factors', 'model_factors', 'return_design_matrix',
+                       'return_code'}
     IGNORED_WIDGETS = gui_windows.FuncExternalWindow.IGNORED_WIDGETS | {'load_design'}
 
     __slots__ = {'comparisons': 'list of comparisons to make',
@@ -438,6 +439,9 @@ class DiffExpWindow(gui_windows.FuncExternalWindow):
 
     def get_analysis_kwargs(self):
         kwargs = super().get_analysis_kwargs()
+        kwargs['return_design_matrix'] = True
+        kwargs['return_code'] = True
+
         kwargs['comparisons'] = self.comparisons_widgets['picker'].get_comparison_values()
         if not self.simplified:
             kwargs['covariates'] = self.covariates_widgets['picker'].get_comparison_values()
@@ -1610,6 +1614,9 @@ class TabPage(QtWidgets.QWidget):
             tab_name = self.get_tab_name()
             for this_src_name, output in outputs.items():
                 self.process_outputs(output, job_id, f"{this_src_name} {tab_name}")
+        elif isinstance(outputs, Path):
+            new_id = JOB_COUNTER.get_id()
+            self.itemSpawned.emit(f"'{source_name}'\noutput", new_id, job_id, outputs)
 
     def _multi_keep_window_accepted(self, dialog: 'MultiKeepWindow', source_name: str):
         kept_outputs = dialog.result()
@@ -3492,7 +3499,7 @@ class MainWindow(QtWidgets.QMainWindow):
     def is_valid_spawn(spawn: object):
         if validation.isinstanceinh(spawn, filtering.Filter) \
             or validation.isinstanceinh(spawn, enrichment.FeatureSet) \
-            or isinstance(spawn, (pd.Series, pd.DataFrame, plt.Figure)) \
+            or isinstance(spawn, (pd.Series, pd.DataFrame, plt.Figure, Path)) \
             or validation.isinstanceinh(spawn, generic.GenericPipeline):
             return True
         return False
@@ -3503,7 +3510,7 @@ class MainWindow(QtWidgets.QMainWindow):
             spawn_type = FILTER_OBJ_TYPES_INV.get(type(spawn).__name__, 'Other table')
         elif validation.isinstanceinh(spawn, enrichment.FeatureSet):
             spawn_type = 'Gene set'
-        elif isinstance(spawn, (pd.Series, pd.DataFrame, plt.Figure)):
+        elif isinstance(spawn, (pd.Series, pd.DataFrame, plt.Figure, Path)):
             spawn_type = 'Other output'
         elif validation.isinstanceinh(spawn, generic.GenericPipeline):
             spawn_type = 'Pipeline'
@@ -3526,6 +3533,8 @@ class MainWindow(QtWidgets.QMainWindow):
         elif validation.isinstanceinh(spawn, generic.GenericPipeline):
             filename = parsing.slugify(suffix) + '.yaml'
             obj = spawn.export_pipeline(None)
+        elif isinstance(spawn, Path):
+            filename = parsing.slugify(suffix) + spawn.suffix
         else:
             raise TypeError(f"Invalid spawn type '{type(spawn)}' for spawn '{spawn}'!")
         io.cache_gui_file(obj, filename)
@@ -3554,6 +3563,9 @@ class MainWindow(QtWidgets.QMainWindow):
             desc = f'<img src="data/{filename}" alt="Figure" height="400">'
         elif validation.isinstanceinh(obj, generic.GenericPipeline):
             desc = str(obj).replace('\n', '<br>')
+        elif isinstance(obj, Path):
+            data = io.load_cached_gui_file(obj)
+            desc = f'<pre><code>{data}</code></pre>'.replace('\n', '<br>')
         else:
             raise TypeError(f"Invalid object type '{type(obj)}' of object '{obj}'.")
 

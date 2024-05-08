@@ -31,6 +31,8 @@ Changed
 * RNAlysis now offers default values for differential expression tables' column names.
 * Functions that average replicates now display clearer group names by default.
 * The RNAlysis interface to ShortStack now uses the most recent API (replace 'knownRNAs' with 'known_miRNAs').
+* When running differential expression, RNAlysis session reports will automatically include the auto-generated R script, as well as the sanitized design matrix used.
+* Added optional parameters to all differential expression samples, allowing users to return a path to the auto-generated R script and data sanitized design matrix used.
 
 Fixed
 *******
