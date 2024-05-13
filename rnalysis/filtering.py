@@ -1665,7 +1665,7 @@ class Filter:
 
     @readable_name('Filter with a number filter')
     def number_filters(self, column: param_typing.ColumnName,
-                       operator: Literal['greater than', 'equals', 'lesser than'], value: float,
+                       operator: Literal['greater than', 'equals', 'lesser than', 'abs greater than'], value: float,
                        opposite: bool = False, inplace: bool = True):
 
         """
@@ -1707,7 +1707,8 @@ class Filter:
         """
         # determine whether operator is valid
         operator_dict = {'gt': 'gt', 'greater than': 'gt', '>': 'gt', 'eq': 'eq', 'equals': 'eq', '=': 'eq', 'lt': 'lt',
-                         'lesser than': 'lt', '<': 'lt', 'equal': 'eq'}
+                         'lesser than': 'lt', '<': 'lt', 'equal': 'eq', 'abs greater than': 'abs_gt',
+                         'abs_gt': 'abs_gt', '|x|>': 'abs_gt'}
         operator = operator.lower()
         assert operator in operator_dict, f"Invalid operator {operator}"
         op = operator_dict[operator]
@@ -1724,6 +1725,8 @@ class Filter:
             new_df = self.df[self.df[column] > value]
         elif op == 'lt':
             new_df = self.df[self.df[column] < value]
+        elif op == 'abs_gt':
+            new_df = self.df[abs(self.df[column]) > value]
 
         # noinspection PyUnboundLocalVariable
         return self._inplace(new_df, opposite, inplace, suffix)

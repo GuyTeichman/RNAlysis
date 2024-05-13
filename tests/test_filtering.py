@@ -1083,6 +1083,21 @@ def test_fcfilter_filter_fold_change_direction_bad_input():
         fc.filter_fold_change_direction('bad_input')
 
 
+def test_number_filters_absgt():
+    truth = io.load_table(r'tests/test_files/test_deseq_absgt.csv', 0)
+    d = DESeqFilter(r'tests/test_files/test_deseq.csv')
+    filt_1 = d.number_filters('log2FoldChange', '|x|>', 4, inplace=False)
+    filt_2 = d.number_filters('log2FoldChange', 'abs_gt', 4, inplace=False)
+    filt_3 = d.number_filters('log2FoldChange', 'abs greater than', 4, inplace=False)
+    filt_1.df.sort_index(inplace=True)
+    filt_2.df.sort_index(inplace=True)
+    filt_3.df.sort_index(inplace=True)
+    truth.sort_index(inplace=True)
+    assert np.all(filt_1.df == filt_2.df)
+    assert np.all(filt_2.df == filt_3.df)
+    assert np.all(np.squeeze(truth) == np.squeeze(filt_1.df))
+
+
 def test_number_filters_gt():
     truth = io.load_table(r'tests/test_files/test_deseq_gt.csv', 0)
     d = DESeqFilter(r'tests/test_files/test_deseq.csv')

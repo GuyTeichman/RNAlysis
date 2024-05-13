@@ -17,6 +17,7 @@ Added
 * Added a p-value histogram plot (DESeqFilter.pval_histogram) that displays the distribution of p-values in a differential expression table.
 * Added new visualization options for 'plot expression of specific genes' function (CountFilter.plot_expression).
 * Added new function 'Concatenate two tables' (Filter.concatenate) that concatenates two tables along their rows.
+* The filtering function 'Filter with a number filter' now supports filtering based on absolute values.
 
 Changed
 ********
