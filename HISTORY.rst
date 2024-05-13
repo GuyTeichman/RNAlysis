@@ -11,6 +11,8 @@ Added
 ******
 * Added support for advanced differential expression analysis with DESeq2/Limma-Voom, including testing continuous covariates, as well as likelihood ratio tests for factors, interactions, and polynomials.
 * Added support for sample quality weights in Limma-Voom differential expression analysis.
+* Added support for the 'cooksCutoff' parameter in DESq2 differential expression analysis.
+* Added support for user-provided scaling factors in DESeq2 differential expression analysis.
 * bowtie2 and kallisto paired-end modes now support the new file naming method 'smart', that attempts to automatically determine the common name of each pair of paired-end fastq files.
 * Added a p-value histogram plot (DESeqFilter.pval_histogram) that displays the distribution of p-values in a differential expression table.
 * Added new visualization options for 'plot expression of specific genes' function (CountFilter.plot_expression).
@@ -30,9 +32,9 @@ Changed
 * Improved performance of RNAlysis when generating automatic session reports.
 * RNAlysis now offers default values for differential expression tables' column names.
 * Functions that average replicates now display clearer group names by default.
-* The RNAlysis interface to ShortStack now uses the most recent API (replace 'knownRNAs' with 'known_miRNAs').
+* The RNAlysis interface to ShortStack now uses the most recent API (replaced 'knownRNAs' with 'known_miRNAs').
 * When running differential expression, RNAlysis session reports will automatically include the auto-generated R script, as well as the sanitized design matrix used.
-* Added optional parameters to all differential expression samples, allowing users to return a path to the auto-generated R script and data sanitized design matrix used.
+* Added optional parameters to all differential expression functions, allowing users to return a path to the auto-generated R script and data sanitized design matrix used.
 
 Fixed
 *******

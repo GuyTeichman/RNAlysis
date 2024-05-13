@@ -79,6 +79,20 @@ class DiffExpRunner(abc.ABC):
 
 
 class DESeqRunner(DiffExpRunner):
+    def __init__(self, data_path: Union[str, Path], design_mat_path: Union[str, Path],
+                 comparisons: Iterable[Tuple[str, str, str]],
+                 covariates: Iterable[str] = tuple(),
+                 lrt_factors: Iterable[str] = tuple(),
+                 model_factors: Iterable[str] = 'auto',
+                 r_installation_folder: Union[str, Path, Literal['auto']] = 'auto',
+                 scale_factor_path: Union[str, Path, None] = None, cooks_cutoff: bool = True,
+                 scale_factors_ndims: int = 1, ):
+        super().__init__(data_path, design_mat_path, comparisons, covariates, lrt_factors, model_factors,
+                         r_installation_folder)
+        self.scale_factor_path = scale_factor_path
+        self.cooks_cutoff = cooks_cutoff
+        assert scale_factors_ndims in [1, 2], "scale_factors_ndims must be 1 or 2!"
+        self.scaling_factors_ndims = scale_factors_ndims
     def install_required_packages(self):
         installs.install_deseq2(self.r_installation_folder)
 
@@ -105,18 +119,35 @@ class DESeqRunner(DiffExpRunner):
             run_template = run_template.replace("$DESIGN_MATRIX", (Path(self.design_mat_path).as_posix()))
             run_template = run_template.replace("$FORMULA", formula)
 
+            if self.scale_factor_path is None:
+                run_template = run_template.replace("$NORMFACTORS\n", '')
+            else:
+                if self.scaling_factors_ndims == 1:
+                    run_template = run_template.replace('$NORMFACTORS',
+                                                        f"sizeFactors <- read.csv('{Path(self.scale_factor_path).as_posix()}', "
+                                                        "row.names=1, header=TRUE)\n"
+                                                        "sizeFactors(dds) <- as.numeric(unlist(sizeFactors))\n")
+                elif self.scaling_factors_ndims == 2:
+                    run_template = run_template.replace('$NORMFACTORS',
+                                                        f"normFactors <- read.csv('{Path(self.scale_factor_path).as_posix()}', "
+                                                        "row.names=1, header=TRUE)\n"
+                                                        "normFactors <- normFactors / exp(rowMeans(log(normFactors)))\n"
+                                                        "normalizationFactors(dds) <- data.matrix(normFactors)\n")
+
             outfile.write(run_template)
+
+            cooks = "TRUE" if self.cooks_cutoff else "FALSE"
             # pairwise comparisons
             for contrast in self.comparisons:
                 export_path = cache_dir.joinpath(f"DESeq2_{contrast[0]}_{contrast[1]}_vs_{contrast[2]}.csv").as_posix()
                 this_comparison = comparison_template.replace("$CONTRAST", str(contrast))
-                this_comparison = this_comparison.replace("$OUTFILE_NAME", export_path)
+                this_comparison = this_comparison.replace("$OUTFILE_NAME", export_path).replace("$COOKS", cooks)
                 outfile.write(this_comparison)
             # covariates
             for covariate in self.covariates:
                 export_path = cache_dir.joinpath(f"DESeq2_{covariate}_covariate.csv").as_posix()
                 this_covar = covariate_template.replace("$COVARIATE", covariate)
-                this_covar = this_covar.replace("$OUTFILE_NAME", export_path)
+                this_covar = this_covar.replace("$OUTFILE_NAME", export_path).replace("$COOKS", cooks)
                 outfile.write(this_covar)
             # likelihood ratio tests
             for lrt_factor in self.lrt_factors:
@@ -124,7 +155,7 @@ class DESeqRunner(DiffExpRunner):
                 reduced_model = self.create_formula([lrt_factor])
                 print(reduced_model)
                 this_lrt = lrt_template.replace("$REDUCED", reduced_model)
-                this_lrt = this_lrt.replace("$OUTFILE_NAME", export_path)
+                this_lrt = this_lrt.replace("$OUTFILE_NAME", export_path).replace("$COOKS", cooks)
                 outfile.write(this_lrt)
 
         return save_path

@@ -154,16 +154,16 @@ class TestLimmaVoomRunner:
 
 
 class TestDESeqRunner:
-    @pytest.mark.parametrize("data,design_matrix,comparisons,expected_path", [
+    @pytest.mark.parametrize("data,design_matrix,comparisons,cooks_cutoff,expected_path", [
         ('tests/test_files/big_counted.csv', 'tests/test_files/test_design_matrix.csv',
-         [('condition', 'cond2', 'cond1')],
+         [('condition', 'cond2', 'cond1')], False,
          'tests/test_files/deseq2_tests/case1/expected_deseq_script_1.R'),
         ('counted.csv', 'tests/test_files/test_design_matrix.csv',
-         [('condition', 'cond3', 'cond2'), ('replicate', 'rep2', 'rep1'), ('condition', 'cond1', 'cond2')],
+         [('condition', 'cond3', 'cond2'), ('replicate', 'rep2', 'rep1'), ('condition', 'cond1', 'cond2')], True,
          'tests/test_files/deseq2_tests/case2/expected_deseq_script_2.R')
     ])
-    def test_create_deseq2_script(self, data, design_matrix, comparisons, expected_path):
-        runner = DESeqRunner(data, design_matrix, comparisons)
+    def test_create_deseq2_script(self, data, design_matrix, comparisons, cooks_cutoff, expected_path):
+        runner = DESeqRunner(data, design_matrix, comparisons, cooks_cutoff=cooks_cutoff)
         with open(expected_path) as f:
             expected = f.read()
 

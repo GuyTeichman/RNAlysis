@@ -3161,7 +3161,8 @@ class TestDESeqWindow:
     def test_get_analysis_params(self, deseq_window):
         truth = dict(r_installation_folder='auto', design_matrix=self.design_mat_path, output_folder=None,
                      comparisons=[('replicate', 'rep3', 'rep2'), ('condition', 'cond1', 'cond2')],
-                     covariates=['covariate1'], lrt_factors=['factor1'], return_code=True, return_design_matrix=True)
+                     covariates=['covariate1'], lrt_factors=['factor1'], return_code=True, return_design_matrix=True,
+                     cooks_cutoff=True, scaling_factors=None)
 
         deseq_window.comparisons_widgets['picker'].add_comparison_widget()
         deseq_window.comparisons_widgets['picker'].inputs[0].factor.setCurrentText('replicate')
@@ -3181,7 +3182,7 @@ class TestDESeqWindow:
         truth_kwargs = dict(r_installation_folder='auto', design_matrix=self.design_mat_path, output_folder=None,
                             comparisons=[('replicate', 'rep3', 'rep2'), ('condition', 'cond1', 'cond2')],
                             covariates=['covariate1'], lrt_factors=['factor1'], return_code=True,
-                            return_design_matrix=True)
+                            return_design_matrix=True, cooks_cutoff=True, scaling_factors=None)
 
         deseq_window.comparisons_widgets['picker'].add_comparison_widget()
         deseq_window.comparisons_widgets['picker'].inputs[0].factor.setCurrentText('replicate')

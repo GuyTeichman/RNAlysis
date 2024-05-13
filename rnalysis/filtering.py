@@ -3307,6 +3307,8 @@ class CountFilter(Filter):
                                        model_factors: Union[Literal['auto'], Iterable[str]] = 'auto',
                                        r_installation_folder: Union[str, Path, Literal['auto']] = 'auto',
                                        output_folder: Union[str, Path, None] = None, return_design_matrix: bool = False,
+                                       scaling_factors: Union[str, Path, None] = None,
+                                       cooks_cutoff: bool = True,
                                        return_code: bool = False) -> Tuple['DESeqFilter', ...]:
         """
         Run differential expression analysis on the count matrix using the \
@@ -3374,8 +3376,37 @@ class CountFilter(Filter):
         assert list(design_mat_df.index) == list(self.columns), "The sample names in the design matrix do not match!"
         io.save_table(design_mat_df, design_mat_path)
 
+        if scaling_factors is None:
+            scale_factor_path = None
+            scale_factor_ndims = 1
+        else:
+            scaling_factors_df = io.load_table(scaling_factors, index_col=0).squeeze()
+            if isinstance(scaling_factors_df, pd.Series):
+                scale_factor_ndims = 1
+                scaling_factors_df = scaling_factors_df.sort_index(
+                    key=lambda ind: pd.Index([self.columns.index(i) for i in ind]))
+                assert sorted(scaling_factors_df.index) == sorted(self.columns), \
+                    "The sample names in the scaling factors table do not match the sample names in the count matrix!"
+            else:
+                scale_factor_ndims = 2
+                scaling_factors_df = scaling_factors_df.sort_index(axis=1,
+                                                                   key=lambda ind: [self.columns.index(i) for i in ind])
+                assert sorted(scaling_factors_df.columns) == sorted(self.columns), \
+                    "The sample names in the scaling factors table do not match the sample names in the count matrix!"
+                scaling_factors_df = scaling_factors_df.sort_index(
+                    key=lambda ind: [self.df.index.get_loc(i) for i in ind])
+                assert all(scaling_factors_df.index == self.df.index), \
+                    "The gene names in the scaling factors table do not match the gene names in the count matrix!"
+            scale_factor_path = None
+            i = 0
+            while scale_factor_path is None or scale_factor_path.exists():
+                scale_factor_path = io.get_todays_cache_dir().joinpath(f'scaling_factors_{i}.csv')
+                i += 1
+            io.save_table(scaling_factors_df, scale_factor_path)
+
         r_output_dir = differential_expression.DESeqRunner(data_path, design_mat_path, comparisons, covariates,
-                                                           lrt_factors, model_factors, r_installation_folder).run()
+                                                           lrt_factors, model_factors, r_installation_folder,
+                                                           scale_factor_path, cooks_cutoff, scale_factor_ndims).run()
         outputs = []
         code_path = None
         for item in r_output_dir.iterdir():
