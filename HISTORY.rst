@@ -3,9 +3,20 @@ History
 =======
 
 
-3.12.0 (2024-??-??)
+3.12.0 (2024-05-14)
 -------------------
+I'm happy to announce the latest release of RNAlysis, which brings a variety of new features and improvements.
 
+One of the key additions in this version is expanded support for advanced differential expression analysis using DESeq2 and Limma-Voom.
+You can now test continuous covariates, perform likelihood ratio tests for factors, interactions, and polynomials, and take advantage of sample quality weights in Limma-Voom analysis.
+We've also added several new visualization options, such as a p-value histogram plot and more customization choices for gene expression plots.
+
+This release also includes various usability enhancements and bug fixes to provide a smoother analysis experience. We've clarified error messages, improved parameter annotations, and resolved issues that could lead to crashes or incorrect results in certain scenarios. RNAlysis now integrates with the latest versions of the OrthoInspector and ShortStack APIs as well.
+
+As always, your support and feedback are greatly appreciated.
+If you have any questions, encounter issues, or have suggestions for future development, please don't hesitate to reach out.
+Happy analysis!
+Guy
 
 Added
 ******
