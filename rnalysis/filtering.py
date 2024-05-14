@@ -3688,13 +3688,7 @@ class CountFilter(Filter):
             "'function' must be 'mean', 'median', or 'geometric_mean'!"
 
         if new_column_names in ('auto', 'display'):
-            sep = '\n' if new_column_names == 'display' else ';'
-            new_column_names = []
-            for i, group in enumerate(sample_grouping):
-                if isinstance(group, str):
-                    new_column_names.append(group)
-                elif validation.isiterable(group):
-                    new_column_names.append(sep.join(group))
+            new_column_names = parsing.make_group_names(sample_grouping, new_column_names)
         else:
             assert validation.isiterable(new_column_names) and validation.isinstanceiter(new_column_names, str), \
                 "'new_column_names' must be either 'auto' or a list of strings!"

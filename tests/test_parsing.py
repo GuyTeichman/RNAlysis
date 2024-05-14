@@ -372,3 +372,26 @@ class TestRMakeNames:
         names = []
         expected_output = []
         assert r_make_names(names) == expected_output
+
+
+@pytest.mark.parametrize(
+    "sample_grouping, mode, expected_output",
+    [
+        (["group1", "group2"], "display", ["group1", "group2"]),
+        (["group1", "group2"], "auto", ["group1", "group2"]),
+        ([["group1", "subgroup1"], "group2"], "display", ["group1\nsubgroup1", "group2"]),
+        ([["group1", "subgroup1"], "group2"], "auto", ["group1;subgroup1", "group2"]),
+        ([("group1", "subgroup1"), "group2"], "display", ["group1\nsubgroup1", "group2"]),
+        ([("group1", "subgroup1"), "group2"], "auto", ["group1;subgroup1", "group2"]),
+        ([["sample1", "sample2"], ["sample3"], ["sample4", "sample5", "sample6"]], "display",
+         ["sample1\nsample2", "sample3", "sample4\nsample5\nsample6"]),
+        ([["sample1", "sample2"], ["sample3"], ["sample4", "sample5", "sample6"]], "auto",
+         ["sample1;sample2", "sample3", "sample4;sample5;sample6"]),
+        ([("sample1", "sample2"), ("sample3",), ("sample4", "sample5", "sample6")], "display",
+         ["sample1\nsample2", "sample3", "sample4\nsample5\nsample6"]),
+        ([("sample1", "sample2"), ("sample3",), ("sample4", "sample5", "sample6")], "auto",
+         ["sample1;sample2", "sample3", "sample4;sample5;sample6"]),
+    ]
+)
+def test_make_group_names(sample_grouping, mode, expected_output):
+    assert make_group_names(sample_grouping, mode) == expected_output

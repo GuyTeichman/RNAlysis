@@ -7,7 +7,7 @@ import warnings
 from collections import Counter
 from itertools import islice
 from pathlib import Path
-from typing import Any, Dict, Union, List, Tuple
+from typing import Any, Dict, Union, List, Tuple, Iterable, Literal
 
 import mslex
 import numpy as np
@@ -519,3 +519,15 @@ def generate_common_name(file_pairs):
         trimmed_results = initial_results
 
     return trimmed_results
+
+
+def make_group_names(sample_grouping: List[Iterable[str]], mode: Literal['auto', 'display'] = 'display'):
+    assert mode in ['auto', 'display'], f"Invalid mode: {mode}. Must be 'auto' or 'display'."
+    sep = '\n' if mode == 'display' else ';'
+    group_names = []
+    for i, group in enumerate(sample_grouping):
+        if isinstance(group, str):
+            group_names.append(group)
+        elif validation.isiterable(group):
+            group_names.append(sep.join(group))
+    return group_names
