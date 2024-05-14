@@ -1548,6 +1548,9 @@ class EnsemblOrthologMapper:
         self.map_from_organism = map_from_organism
         self.map_to_organism = map_to_organism
 
+    def get_species_name(self):
+        return map_taxon_id(self.map_from_organism)[1].replace(' ', '_')
+
     def translate_ids(self, ids: Tuple[str, ...]) -> Tuple[List[str], List[str]]:
         if self.gene_id_type == 'auto':
             translator, self.gene_id_type, _ = find_best_gene_mapping(ids, None, map_to_options=('Ensembl Genomes',))
@@ -1563,9 +1566,10 @@ class EnsemblOrthologMapper:
         ids, translated_ids = self.translate_ids(ids)
         client = EnsemblRestClient()
         mapping_one2many = {}
+        species_name = self.get_species_name()
 
         for gene_id in tqdm(translated_ids, 'Submitting requests', unit='requests'):
-            client.queue_action('get', f'{self.ENDPOINT}{gene_id}',
+            client.queue_action('get', f'{self.ENDPOINT}{species_name}/{gene_id}',
                                 params=dict(target_taxon=self.map_to_organism, type='paralogues',
                                             sequence='none', cigar_line=0))
 
@@ -1607,12 +1611,13 @@ class EnsemblOrthologMapper:
     def get_orthologs(self, ids: Tuple[str, ...], non_unique_mode: str, filter_percent_identity: bool = True) -> \
         Tuple[OrthologDict, OrthologDict]:
         ids, translated_ids = self.translate_ids(ids)
+        species_name = self.get_species_name()
         client = EnsemblRestClient()
         mapping_one2one = {}
         mapping_one2many = {}
 
         for gene_id in tqdm(translated_ids, 'Submitting requests', unit='requests'):
-            client.queue_action('get', f'{self.ENDPOINT}{gene_id}',
+            client.queue_action('get', f'{self.ENDPOINT}{species_name}/{gene_id}',
                                 params=dict(target_taxon=self.map_to_organism, type='orthologues',
                                             sequence='none', cigar_line=0))
 
@@ -1620,6 +1625,7 @@ class EnsemblOrthologMapper:
             pbar.update()
             for json_res in client.run():
                 req_output = json_res['data'][0]
+                print(req_output)
                 if len(req_output['homologies']) == 0:
                     continue
 

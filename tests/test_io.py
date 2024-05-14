@@ -1491,7 +1491,7 @@ class TestEnsemblOrthologMapper:
 
         if non_unique_mode == 'first':
             assert ortholog_one2one['G5EDF7'] == 'ENSG00000085511'
-            assert ortholog_one2one['P34544'] == 'ENSG00000143379'
+            assert ortholog_one2one['P34544'] == 'ENSG00000055609'
 
 
 class TestRunRScript:
