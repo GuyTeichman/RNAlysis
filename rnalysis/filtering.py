@@ -5039,7 +5039,9 @@ class CountFilter(Filter):
                         spread_function: Literal['sem', 'std', 'gstd', 'gsem', 'iqr', 'range'] = 'sem',
                         bar_colors: ColorList = 'deepskyblue', edge_color: Color = 'black',
                         scatter_color: Color = 'grey',
-                        count_unit: str = 'Normalized reads', split_plots: bool = False) -> plt.Figure:
+                        count_unit: str = 'Normalized reads', split_plots: bool = False,
+                        jitter: Fraction = 0, group_names: Union[List[str], None] = None,
+                        log_scale: bool = False) -> plt.Figure:
         """
         Plot the average expression and spread of the specified features under the specified conditions.
         :type features: str or list of strings
@@ -5064,6 +5066,14 @@ class CountFilter(Filter):
         :type split_plots: bool (default=False)
         :param split_plots: if True, each gene will be plotted in its own Figure. \
         Otherwise, all genes will be plotted in the same Figure.
+        :type jitter: float (default=0)
+        :param jitter: The amount of jitter to apply to the scatter points. \
+        This can help visualize overlapping points.
+        :type group_names: list of strings or None (default=None)
+        :param group_names: Optionally, specify the names of the groups in the plot. \
+        If None, the names of the samples will be used.
+        :type log_scale: bool (default=False)
+        :param log_scale: If True, the y-axis will be displayed in logarithmic scale.
 
         .. figure:: /figures/plot_expression.png
            :align:   center
@@ -5086,7 +5096,7 @@ class CountFilter(Filter):
             if not validation.isinstanceiter(samples[i], str):
                 for j in range(len(samples[i])):
                     samples[i][j] = self.columns[samples[i][j]]
-        sample_names = self._avg_subsamples(samples).columns  # TODO: replace
+        sample_names = parsing.make_group_names(samples) if group_names is None else group_names
         figs = []
         axes = []
         ylims = []
@@ -5105,6 +5115,7 @@ class CountFilter(Filter):
                 figs.append(fig)
             else:
                 ax = fig.add_subplot(subplots[i])
+            ax.set_yscale('log' if log_scale else 'linear')
             axes.append(ax)
 
             if avg_function == 'mean':
@@ -5158,8 +5169,9 @@ class CountFilter(Filter):
                  [self.df.loc[feature, i] for i in ind] for ind in samples])
             points_x = []
             for i, grouping in enumerate(samples):
-                for _ in grouping:
-                    points_x.append(i)
+                this_group = generic.jitter(len(grouping), jitter) + i
+                points_x.extend(parsing.data_to_list(this_group))
+
             ax.bar(np.arange(len(samples)), mean, yerr=spread, edgecolor=edge_color, width=0.5,
                    color=bar_colors, capsize=6.5, error_kw=dict(capthick=2, lw=2))
             ax.scatter(points_x, points_y, edgecolor=edge_color, facecolor=scatter_color, linewidths=0.9)

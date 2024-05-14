@@ -24,6 +24,7 @@ Changed
 ********
 * When running differential expression analysis, RNAlysis will automatically ensure that the order of samples in your design matrix matches the order of samples in your count matrix, avoiding erronious results.
 * The 'Filter genes with low expression in all columns' function (CountFilter.filter_low_reads) now supports the 'n_samples' parameter, allowing users to filter genes with a minimal expression threshold in a specific number of samples.
+* The 'Plot expressino of specific genes' function (CountFilter.plot_expression) now supports the 'jitter', 'group_names' and 'log_scale' parameters, allowing users to further customize the plot.
 * The 'Scatter plot - sample VS sample' function (CountFilter.scatter_sample_vs_sample) now always displays highlighted points on top of the plot, making it easier to see which points are highlighted.
 * Kallisto quantification (kallisto_quantify_single_end and kallisto_quantify_paired_end) now supports the 'summation_method' parameter, allowing users to choose between 'raw' and 'scaled_tpm' transcript summation methods. The default behavior of the functions did not change (it corresponds to 'scaled_tpm').
 * Enrichment bar plots now have optional parameters that control font sizes for titles and labels.
