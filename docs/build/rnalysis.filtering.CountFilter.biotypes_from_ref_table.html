@@ -1,12 +1,14 @@
 <!DOCTYPE html>
-<html class="writer-html5" lang="en" >
+<html class="writer-html5" lang="en">
 <head>
-  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>rnalysis.filtering.CountFilter.biotypes_from_ref_table &mdash; RNAlysis 3.11.0 documentation</title>
-      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <title>rnalysis.filtering.CountFilter.biotypes_from_ref_table &mdash; RNAlysis 3.12.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css" />
+
+  
     <link rel="shortcut icon" href="_static/favicon.ico"/>
   <!--[if lt IE 9]>
     <script src="_static/js/html5shiv.min.js"></script>
@@ -17,7 +19,6 @@
         <script src="_static/underscore.js"></script>
         <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
         <script src="_static/doctools.js"></script>
-        <script src="_static/sphinx_highlight.js"></script>
         <script src="_static/copybutton.js"></script>
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
@@ -76,19 +77,18 @@
 <li class="toctree-l1"><a class="reference internal" href="rnalysis.fastq.html">rnalysis.fastq</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="rnalysis.filtering.html">rnalysis.filtering</a><ul class="current">
 <li class="toctree-l2 current"><a class="reference internal" href="rnalysis.filtering.CountFilter.html">rnalysis.filtering.CountFilter</a><ul class="current">
-<li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.html#rnalysis.filtering.CountFilter"><code class="docutils literal notranslate"><span class="pre">CountFilter</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.average_replicate_samples.html">rnalysis.filtering.CountFilter.average_replicate_samples</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.biotypes_from_gtf.html">rnalysis.filtering.CountFilter.biotypes_from_gtf</a></li>
-<li class="toctree-l3 current"><a class="current reference internal" href="#">rnalysis.filtering.CountFilter.biotypes_from_ref_table</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#rnalysis.filtering.CountFilter.biotypes_from_ref_table"><code class="docutils literal notranslate"><span class="pre">CountFilter.biotypes_from_ref_table()</span></code></a></li>
-</ul>
-</li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">rnalysis.filtering.CountFilter.biotypes_from_ref_table</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.box_plot.html">rnalysis.filtering.CountFilter.box_plot</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.clustergram.html">rnalysis.filtering.CountFilter.clustergram</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.concatenate.html">rnalysis.filtering.CountFilter.concatenate</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.describe.html">rnalysis.filtering.CountFilter.describe</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.difference.html">rnalysis.filtering.CountFilter.difference</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.differential_expression_deseq2.html">rnalysis.filtering.CountFilter.differential_expression_deseq2</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.differential_expression_deseq2_simplified.html">rnalysis.filtering.CountFilter.differential_expression_deseq2_simplified</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.differential_expression_limma_voom.html">rnalysis.filtering.CountFilter.differential_expression_limma_voom</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.differential_expression_limma_voom_simplified.html">rnalysis.filtering.CountFilter.differential_expression_limma_voom_simplified</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.drop_columns.html">rnalysis.filtering.CountFilter.drop_columns</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.enhanced_box_plot.html">rnalysis.filtering.CountFilter.enhanced_box_plot</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.filter_biotype_from_gtf.html">rnalysis.filtering.CountFilter.filter_biotype_from_gtf</a></li>
@@ -110,6 +110,7 @@
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.from_folder.html">rnalysis.filtering.CountFilter.from_folder</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.from_folder_htseqcount.html">rnalysis.filtering.CountFilter.from_folder_htseqcount</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.head.html">rnalysis.filtering.CountFilter.head</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.histogram.html">rnalysis.filtering.CountFilter.histogram</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.intersection.html">rnalysis.filtering.CountFilter.intersection</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.ma_plot.html">rnalysis.filtering.CountFilter.ma_plot</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.majority_vote_intersection.html">rnalysis.filtering.CountFilter.majority_vote_intersection</a></li>
@@ -210,7 +211,7 @@ which also provides descriptive statistics of each column per biotype.
 :rtype: pandas.DataFrame
 :returns: a pandas DataFrame showing the number of values belonging to each biotype,         as well as additional descriptive statistics of format==’long’.</p>
 <dl class="field-list">
-<dt class="field-odd">Examples</dt>
+<dt class="field-odd">Examples<span class="colon">:</span></dt>
 <dd class="field-odd"><div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">rnalysis</span> <span class="kn">import</span> <span class="n">filtering</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">d</span> <span class="o">=</span> <span class="n">filtering</span><span class="o">.</span><span class="n">Filter</span><span class="p">(</span><span class="s2">&quot;tests/test_files/test_deseq.csv&quot;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="c1"># short-form view</span>

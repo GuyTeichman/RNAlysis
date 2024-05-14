@@ -1,12 +1,14 @@
 <!DOCTYPE html>
-<html class="writer-html5" lang="en" >
+<html class="writer-html5" lang="en">
 <head>
-  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>rnalysis.filtering.FoldChangeFilter.biotypes_from_ref_table &mdash; RNAlysis 3.11.0 documentation</title>
-      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <title>rnalysis.filtering.FoldChangeFilter.biotypes_from_ref_table &mdash; RNAlysis 3.12.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css" />
+
+  
     <link rel="shortcut icon" href="_static/favicon.ico"/>
   <!--[if lt IE 9]>
     <script src="_static/js/html5shiv.min.js"></script>
@@ -17,12 +19,11 @@
         <script src="_static/underscore.js"></script>
         <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
         <script src="_static/doctools.js"></script>
-        <script src="_static/sphinx_highlight.js"></script>
         <script src="_static/copybutton.js"></script>
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="rnalysis.filtering.FoldChangeFilter.describe" href="rnalysis.filtering.FoldChangeFilter.describe.html" />
+    <link rel="next" title="rnalysis.filtering.FoldChangeFilter.concatenate" href="rnalysis.filtering.FoldChangeFilter.concatenate.html" />
     <link rel="prev" title="rnalysis.filtering.FoldChangeFilter.biotypes_from_gtf" href="rnalysis.filtering.FoldChangeFilter.biotypes_from_gtf.html" /> 
 </head>
 
@@ -79,12 +80,9 @@
 <li class="toctree-l2"><a class="reference internal" href="rnalysis.filtering.DESeqFilter.html">rnalysis.filtering.DESeqFilter</a></li>
 <li class="toctree-l2"><a class="reference internal" href="rnalysis.filtering.Filter.html">rnalysis.filtering.Filter</a></li>
 <li class="toctree-l2 current"><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.html">rnalysis.filtering.FoldChangeFilter</a><ul class="current">
-<li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.html#rnalysis.filtering.FoldChangeFilter"><code class="docutils literal notranslate"><span class="pre">FoldChangeFilter</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.biotypes_from_gtf.html">rnalysis.filtering.FoldChangeFilter.biotypes_from_gtf</a></li>
-<li class="toctree-l3 current"><a class="current reference internal" href="#">rnalysis.filtering.FoldChangeFilter.biotypes_from_ref_table</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#rnalysis.filtering.FoldChangeFilter.biotypes_from_ref_table"><code class="docutils literal notranslate"><span class="pre">FoldChangeFilter.biotypes_from_ref_table()</span></code></a></li>
-</ul>
-</li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">rnalysis.filtering.FoldChangeFilter.biotypes_from_ref_table</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.concatenate.html">rnalysis.filtering.FoldChangeFilter.concatenate</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.describe.html">rnalysis.filtering.FoldChangeFilter.describe</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.difference.html">rnalysis.filtering.FoldChangeFilter.difference</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.drop_columns.html">rnalysis.filtering.FoldChangeFilter.drop_columns</a></li>
@@ -104,6 +102,7 @@
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.find_paralogs_panther.html">rnalysis.filtering.FoldChangeFilter.find_paralogs_panther</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.from_dataframe.html">rnalysis.filtering.FoldChangeFilter.from_dataframe</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.head.html">rnalysis.filtering.FoldChangeFilter.head</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.histogram.html">rnalysis.filtering.FoldChangeFilter.histogram</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.intersection.html">rnalysis.filtering.FoldChangeFilter.intersection</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.majority_vote_intersection.html">rnalysis.filtering.FoldChangeFilter.majority_vote_intersection</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.map_orthologs_ensembl.html">rnalysis.filtering.FoldChangeFilter.map_orthologs_ensembl</a></li>
@@ -180,7 +179,7 @@ which also provides descriptive statistics of each column per biotype.
 :rtype: pandas.DataFrame
 :returns: a pandas DataFrame showing the number of values belonging to each biotype,         as well as additional descriptive statistics of format==’long’.</p>
 <dl class="field-list">
-<dt class="field-odd">Examples</dt>
+<dt class="field-odd">Examples<span class="colon">:</span></dt>
 <dd class="field-odd"><div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">rnalysis</span> <span class="kn">import</span> <span class="n">filtering</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">d</span> <span class="o">=</span> <span class="n">filtering</span><span class="o">.</span><span class="n">Filter</span><span class="p">(</span><span class="s2">&quot;tests/test_files/test_deseq.csv&quot;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="c1"># short-form view</span>
@@ -215,7 +214,7 @@ which also provides descriptive statistics of each column per biotype.
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
         <a href="rnalysis.filtering.FoldChangeFilter.biotypes_from_gtf.html" class="btn btn-neutral float-left" title="rnalysis.filtering.FoldChangeFilter.biotypes_from_gtf" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="rnalysis.filtering.FoldChangeFilter.describe.html" class="btn btn-neutral float-right" title="rnalysis.filtering.FoldChangeFilter.describe" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="rnalysis.filtering.FoldChangeFilter.concatenate.html" class="btn btn-neutral float-right" title="rnalysis.filtering.FoldChangeFilter.concatenate" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>

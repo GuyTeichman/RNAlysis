@@ -1,12 +1,14 @@
 <!DOCTYPE html>
-<html class="writer-html5" lang="en" >
+<html class="writer-html5" lang="en">
 <head>
-  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>rnalysis.enrichment.RankedSet.biotypes_from_gtf &mdash; RNAlysis 3.11.0 documentation</title>
-      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <title>rnalysis.enrichment.RankedSet.biotypes_from_gtf &mdash; RNAlysis 3.12.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css" />
+
+  
     <link rel="shortcut icon" href="_static/favicon.ico"/>
   <!--[if lt IE 9]>
     <script src="_static/js/html5shiv.min.js"></script>
@@ -17,7 +19,6 @@
         <script src="_static/underscore.js"></script>
         <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
         <script src="_static/doctools.js"></script>
-        <script src="_static/sphinx_highlight.js"></script>
         <script src="_static/copybutton.js"></script>
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
@@ -78,12 +79,8 @@
 <li class="toctree-l1 current"><a class="reference internal" href="rnalysis.enrichment.html">rnalysis.enrichment</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="rnalysis.enrichment.FeatureSet.html">rnalysis.enrichment.FeatureSet</a></li>
 <li class="toctree-l2 current"><a class="reference internal" href="rnalysis.enrichment.RankedSet.html">rnalysis.enrichment.RankedSet</a><ul class="current">
-<li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.RankedSet.html#rnalysis.enrichment.RankedSet"><code class="docutils literal notranslate"><span class="pre">RankedSet</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.RankedSet.add.html">rnalysis.enrichment.RankedSet.add</a></li>
-<li class="toctree-l3 current"><a class="current reference internal" href="#">rnalysis.enrichment.RankedSet.biotypes_from_gtf</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#rnalysis.enrichment.RankedSet.biotypes_from_gtf"><code class="docutils literal notranslate"><span class="pre">RankedSet.biotypes_from_gtf()</span></code></a></li>
-</ul>
-</li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">rnalysis.enrichment.RankedSet.biotypes_from_gtf</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.RankedSet.biotypes_from_ref_table.html">rnalysis.enrichment.RankedSet.biotypes_from_ref_table</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.RankedSet.change_set_name.html">rnalysis.enrichment.RankedSet.change_set_name</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.RankedSet.clear.html">rnalysis.enrichment.RankedSet.clear</a></li>
@@ -172,7 +169,7 @@
 <span class="sig-prename descclassname"><span class="pre">RankedSet.</span></span><span class="sig-name descname"><span class="pre">biotypes_from_gtf</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">gtf_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Path</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">attribute_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'biotype'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'gene_biotype'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'transcript_biotype'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'gene_type'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'transcript_type'</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'gene_biotype'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">feature_type</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'gene'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'transcript'</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'gene'</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">DataFrame</span></span></span><a class="headerlink" href="#rnalysis.enrichment.RankedSet.biotypes_from_gtf" title="Permalink to this definition"></a></dt>
 <dd><p>Returns a DataFrame describing the biotypes in the table and their count.         The data about feature biotypes is drawn from a GTF (Gene transfer format) file supplied by the user.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>gtf_path</strong> (<em>str</em><em> or </em><em>Path</em>) – Path to your GTF (Gene transfer format) file. The file should match the type of         gene names/IDs you use in your table, and should contain an attribute describing biotype.</p></li>
 <li><p><strong>attribute_name</strong> (<em>str</em><em> (</em><em>default='gene_biotype'</em><em>)</em>) – name of the attribute in your GTF file that describes feature biotype.</p></li>

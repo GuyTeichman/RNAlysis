@@ -1,12 +1,14 @@
 <!DOCTYPE html>
-<html class="writer-html5" lang="en" >
+<html class="writer-html5" lang="en">
 <head>
-  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>rnalysis.filtering.CountFilter &mdash; RNAlysis 3.11.0 documentation</title>
-      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <title>rnalysis.filtering.CountFilter &mdash; RNAlysis 3.12.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css" />
+
+  
     <link rel="shortcut icon" href="_static/favicon.ico"/>
   <!--[if lt IE 9]>
     <script src="_static/js/html5shiv.min.js"></script>
@@ -17,7 +19,6 @@
         <script src="_static/underscore.js"></script>
         <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
         <script src="_static/doctools.js"></script>
-        <script src="_static/sphinx_highlight.js"></script>
         <script src="_static/copybutton.js"></script>
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
@@ -76,19 +77,18 @@
 <li class="toctree-l1"><a class="reference internal" href="rnalysis.fastq.html">rnalysis.fastq</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="rnalysis.filtering.html">rnalysis.filtering</a><ul class="current">
 <li class="toctree-l2 current"><a class="current reference internal" href="#">rnalysis.filtering.CountFilter</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#rnalysis.filtering.CountFilter"><code class="docutils literal notranslate"><span class="pre">CountFilter</span></code></a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#rnalysis.filtering.CountFilter.__init__"><code class="docutils literal notranslate"><span class="pre">CountFilter.__init__()</span></code></a></li>
-</ul>
-</li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.average_replicate_samples.html">rnalysis.filtering.CountFilter.average_replicate_samples</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.biotypes_from_gtf.html">rnalysis.filtering.CountFilter.biotypes_from_gtf</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.biotypes_from_ref_table.html">rnalysis.filtering.CountFilter.biotypes_from_ref_table</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.box_plot.html">rnalysis.filtering.CountFilter.box_plot</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.clustergram.html">rnalysis.filtering.CountFilter.clustergram</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.concatenate.html">rnalysis.filtering.CountFilter.concatenate</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.describe.html">rnalysis.filtering.CountFilter.describe</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.difference.html">rnalysis.filtering.CountFilter.difference</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.differential_expression_deseq2.html">rnalysis.filtering.CountFilter.differential_expression_deseq2</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.differential_expression_deseq2_simplified.html">rnalysis.filtering.CountFilter.differential_expression_deseq2_simplified</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.differential_expression_limma_voom.html">rnalysis.filtering.CountFilter.differential_expression_limma_voom</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.differential_expression_limma_voom_simplified.html">rnalysis.filtering.CountFilter.differential_expression_limma_voom_simplified</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.drop_columns.html">rnalysis.filtering.CountFilter.drop_columns</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.enhanced_box_plot.html">rnalysis.filtering.CountFilter.enhanced_box_plot</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.filter_biotype_from_gtf.html">rnalysis.filtering.CountFilter.filter_biotype_from_gtf</a></li>
@@ -110,6 +110,7 @@
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.from_folder.html">rnalysis.filtering.CountFilter.from_folder</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.from_folder_htseqcount.html">rnalysis.filtering.CountFilter.from_folder_htseqcount</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.head.html">rnalysis.filtering.CountFilter.head</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.histogram.html">rnalysis.filtering.CountFilter.histogram</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.intersection.html">rnalysis.filtering.CountFilter.intersection</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.ma_plot.html">rnalysis.filtering.CountFilter.ma_plot</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.majority_vote_intersection.html">rnalysis.filtering.CountFilter.majority_vote_intersection</a></li>
@@ -223,10 +224,10 @@
 <span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fname</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Path</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">tuple</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">drop_columns</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_normalized</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rnalysis.filtering.CountFilter.__init__" title="Permalink to this definition"></a></dt>
 <dd><p>Load a count matrix. A valid count matrix should have one row per gene/genomic feature         and one column per condition/RNA library. The contents of the count matrix can be raw or pre-normalized.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>fname</strong> (<em>Union</em><em>[</em><em>str</em><em>, </em><em>Path</em><em>]</em>) – full path/filename of the .csv file to be loaded into the Filter object</p></li>
-<li><p><strong>drop_columns</strong> (<em>str</em><em>, </em><em>list</em><em> of </em><em>str</em><em>, or </em><em>None</em><em> (</em><em>default=None</em><em>)</em>) – if a string or list of strings are specified,         the columns of the same name/s will be dropped from the loaded table.</p></li>
+<li><p><strong>drop_columns</strong> (<em>str</em><em>, </em><em>list of str</em><em>, or </em><em>None</em><em> (</em><em>default=None</em><em>)</em>) – if a string or list of strings are specified,         the columns of the same name/s will be dropped from the loaded table.</p></li>
 <li><p><strong>is_normalized</strong> (<em>bool</em><em> (</em><em>default=False</em><em>)</em>) – indicates whether this count table is pre-normalized.         RNAlysis issues a warning when a function meant for normalized tables is applied to a         table that was not already normalized.</p></li>
 </ul>
 </dd>
@@ -236,10 +237,6 @@
 </dd></dl>
 
 <table class="autosummary longtable docutils align-default">
-<colgroup>
-<col style="width: 10%" />
-<col style="width: 90%" />
-</colgroup>
 <tbody>
 <tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.CountFilter.average_replicate_samples.html#rnalysis.filtering.CountFilter.average_replicate_samples" title="rnalysis.filtering.CountFilter.average_replicate_samples"><code class="xref py py-obj docutils literal notranslate"><span class="pre">CountFilter.average_replicate_samples</span></code></a>(...[, ...])</p></td>
 <td><p>Average the expression values of gene expression for each group of replicate samples.</p></td>
@@ -256,80 +253,94 @@
 <tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.CountFilter.clustergram.html#rnalysis.filtering.CountFilter.clustergram" title="rnalysis.filtering.CountFilter.clustergram"><code class="xref py py-obj docutils literal notranslate"><span class="pre">CountFilter.clustergram</span></code></a>([sample_names, ...])</p></td>
 <td><p>Performs hierarchical clustering and plots a clustergram on the base-2 log of a given set of samples.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.CountFilter.describe.html#rnalysis.filtering.CountFilter.describe" title="rnalysis.filtering.CountFilter.describe"><code class="xref py py-obj docutils literal notranslate"><span class="pre">CountFilter.describe</span></code></a>([percentiles])</p></td>
-<td><p>Generate descriptive statistics that summarize the central tendency, dispersion and shape         of the dataset’s distribution, excluding NaN values.</p></td>
-</tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.CountFilter.difference.html#rnalysis.filtering.CountFilter.difference" title="rnalysis.filtering.CountFilter.difference"><code class="xref py py-obj docutils literal notranslate"><span class="pre">CountFilter.difference</span></code></a>(*others[, ...])</p></td>
-<td><p>Keep only the features that exist in the first Filter object/set but NOT in the others.</p></td>
-</tr>
-<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.CountFilter.differential_expression_deseq2.html#rnalysis.filtering.CountFilter.differential_expression_deseq2" title="rnalysis.filtering.CountFilter.differential_expression_deseq2"><code class="xref py py-obj docutils literal notranslate"><span class="pre">CountFilter.differential_expression_deseq2</span></code></a>(...)</p></td>
-<td><p>Run differential expression analysis on the count matrix using the         <a class="reference external" href="https://doi.org/10.1186/s13059-014-0550-8">DESeq2</a> algorithm.</p></td>
-</tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.CountFilter.differential_expression_limma_voom.html#rnalysis.filtering.CountFilter.differential_expression_limma_voom" title="rnalysis.filtering.CountFilter.differential_expression_limma_voom"><code class="xref py py-obj docutils literal notranslate"><span class="pre">CountFilter.differential_expression_limma_voom</span></code></a>(...)</p></td>
-<td><p>Run differential expression analysis on the count matrix using the         <a class="reference external" href="https://doi.org/10.1186/gb-2014-15-2-r29">Limma-Voom</a> pipeline.</p></td>
-</tr>
-<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.CountFilter.drop_columns.html#rnalysis.filtering.CountFilter.drop_columns" title="rnalysis.filtering.CountFilter.drop_columns"><code class="xref py py-obj docutils literal notranslate"><span class="pre">CountFilter.drop_columns</span></code></a>(columns[, inplace])</p></td>
-<td><p>Drop specific columns from the table.</p></td>
-</tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.CountFilter.enhanced_box_plot.html#rnalysis.filtering.CountFilter.enhanced_box_plot" title="rnalysis.filtering.CountFilter.enhanced_box_plot"><code class="xref py py-obj docutils literal notranslate"><span class="pre">CountFilter.enhanced_box_plot</span></code></a>([samples, ...])</p></td>
-<td><p>Generates an enhanced box-plot of the specified samples in the CountFilter object in log10 scale.</p></td>
-</tr>
-<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.CountFilter.filter_biotype_from_gtf.html#rnalysis.filtering.CountFilter.filter_biotype_from_gtf" title="rnalysis.filtering.CountFilter.filter_biotype_from_gtf"><code class="xref py py-obj docutils literal notranslate"><span class="pre">CountFilter.filter_biotype_from_gtf</span></code></a>(gtf_path)</p></td>
-<td><p>Filters out all features that do not match the indicated biotype/biotypes         (for example: 'protein_coding', 'ncRNA', etc).</p></td>
-</tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.CountFilter.filter_biotype_from_ref_table.html#rnalysis.filtering.CountFilter.filter_biotype_from_ref_table" title="rnalysis.filtering.CountFilter.filter_biotype_from_ref_table"><code class="xref py py-obj docutils literal notranslate"><span class="pre">CountFilter.filter_biotype_from_ref_table</span></code></a>([...])</p></td>
-<td><p>Filters out all features that do not match the indicated biotype/biotypes         (for example: 'protein_coding', 'ncRNA', etc).</p></td>
-</tr>
-<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.CountFilter.filter_by_attribute.html#rnalysis.filtering.CountFilter.filter_by_attribute" title="rnalysis.filtering.CountFilter.filter_by_attribute"><code class="xref py py-obj docutils literal notranslate"><span class="pre">CountFilter.filter_by_attribute</span></code></a>([...])</p></td>
-<td><p>Filters features according to user-defined attributes from an Attribute Reference Table.</p></td>
-</tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.CountFilter.filter_by_go_annotations.html#rnalysis.filtering.CountFilter.filter_by_go_annotations" title="rnalysis.filtering.CountFilter.filter_by_go_annotations"><code class="xref py py-obj docutils literal notranslate"><span class="pre">CountFilter.filter_by_go_annotations</span></code></a>(go_ids)</p></td>
-<td><p>Filters genes according to GO annotations, keeping only genes that are annotated with a specific GO term.</p></td>
-</tr>
-<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.CountFilter.filter_by_kegg_annotations.html#rnalysis.filtering.CountFilter.filter_by_kegg_annotations" title="rnalysis.filtering.CountFilter.filter_by_kegg_annotations"><code class="xref py py-obj docutils literal notranslate"><span class="pre">CountFilter.filter_by_kegg_annotations</span></code></a>(kegg_ids)</p></td>
-<td><p>Filters genes according to KEGG pathways, keeping only genes that belong to specific KEGG pathway.</p></td>
-</tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.CountFilter.filter_by_row_name.html#rnalysis.filtering.CountFilter.filter_by_row_name" title="rnalysis.filtering.CountFilter.filter_by_row_name"><code class="xref py py-obj docutils literal notranslate"><span class="pre">CountFilter.filter_by_row_name</span></code></a>(row_names[, ...])</p></td>
-<td><p>Filter out specific rows from the table by their name (index).</p></td>
-</tr>
-<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.CountFilter.filter_by_row_sum.html#rnalysis.filtering.CountFilter.filter_by_row_sum" title="rnalysis.filtering.CountFilter.filter_by_row_sum"><code class="xref py py-obj docutils literal notranslate"><span class="pre">CountFilter.filter_by_row_sum</span></code></a>([threshold, ...])</p></td>
-<td><p>Removes features/rows whose sum is belove 'threshold'.</p></td>
-</tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.CountFilter.filter_duplicate_ids.html#rnalysis.filtering.CountFilter.filter_duplicate_ids" title="rnalysis.filtering.CountFilter.filter_duplicate_ids"><code class="xref py py-obj docutils literal notranslate"><span class="pre">CountFilter.filter_duplicate_ids</span></code></a>([keep, ...])</p></td>
-<td><p>Filter out rows with duplicate names/IDs (index).</p></td>
-</tr>
-<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.CountFilter.filter_low_reads.html#rnalysis.filtering.CountFilter.filter_low_reads" title="rnalysis.filtering.CountFilter.filter_low_reads"><code class="xref py py-obj docutils literal notranslate"><span class="pre">CountFilter.filter_low_reads</span></code></a>([threshold, ...])</p></td>
-<td><p>Filter out features which are lowly-expressed in all columns, keeping only features with at least 'threshold'         reads in at least one column.</p></td>
-</tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.CountFilter.filter_missing_values.html#rnalysis.filtering.CountFilter.filter_missing_values" title="rnalysis.filtering.CountFilter.filter_missing_values"><code class="xref py py-obj docutils literal notranslate"><span class="pre">CountFilter.filter_missing_values</span></code></a>([columns, ...])</p></td>
-<td><p>Remove all rows whose values in the specified columns are missing (NaN).</p></td>
-</tr>
-<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.CountFilter.filter_percentile.html#rnalysis.filtering.CountFilter.filter_percentile" title="rnalysis.filtering.CountFilter.filter_percentile"><code class="xref py py-obj docutils literal notranslate"><span class="pre">CountFilter.filter_percentile</span></code></a>(percentile, column)</p></td>
-<td><p>Removes all entries above the specified percentile in the specified column.</p></td>
-</tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.CountFilter.filter_top_n.html#rnalysis.filtering.CountFilter.filter_top_n" title="rnalysis.filtering.CountFilter.filter_top_n"><code class="xref py py-obj docutils literal notranslate"><span class="pre">CountFilter.filter_top_n</span></code></a>(by[, n, ascending, ...])</p></td>
-<td><p>Sort the rows by the values of specified column or columns, then keep only the top 'n' rows.</p></td>
-</tr>
-<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.CountFilter.find_paralogs_ensembl.html#rnalysis.filtering.CountFilter.find_paralogs_ensembl" title="rnalysis.filtering.CountFilter.find_paralogs_ensembl"><code class="xref py py-obj docutils literal notranslate"><span class="pre">CountFilter.find_paralogs_ensembl</span></code></a>([...])</p></td>
-<td><p>Find paralogs within the same species using the Ensembl database.</p></td>
-</tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.CountFilter.find_paralogs_panther.html#rnalysis.filtering.CountFilter.find_paralogs_panther" title="rnalysis.filtering.CountFilter.find_paralogs_panther"><code class="xref py py-obj docutils literal notranslate"><span class="pre">CountFilter.find_paralogs_panther</span></code></a>([...])</p></td>
-<td><p>Find paralogs within the same species using the PantherDB database.</p></td>
-</tr>
-<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.CountFilter.fold_change.html#rnalysis.filtering.CountFilter.fold_change" title="rnalysis.filtering.CountFilter.fold_change"><code class="xref py py-obj docutils literal notranslate"><span class="pre">CountFilter.fold_change</span></code></a>(numerator, denominator)</p></td>
-<td><p>Calculate the fold change between the numerator condition and the denominator condition,         and return it as a FoldChangeFilter object.</p></td>
-</tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.CountFilter.from_dataframe.html#rnalysis.filtering.CountFilter.from_dataframe" title="rnalysis.filtering.CountFilter.from_dataframe"><code class="xref py py-obj docutils literal notranslate"><span class="pre">CountFilter.from_dataframe</span></code></a>(df, name[, ...])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.CountFilter.concatenate.html#rnalysis.filtering.CountFilter.concatenate" title="rnalysis.filtering.CountFilter.concatenate"><code class="xref py py-obj docutils literal notranslate"><span class="pre">CountFilter.concatenate</span></code></a>(other)</p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.CountFilter.from_folder.html#rnalysis.filtering.CountFilter.from_folder" title="rnalysis.filtering.CountFilter.from_folder"><code class="xref py py-obj docutils literal notranslate"><span class="pre">CountFilter.from_folder</span></code></a>(folder_path[, ...])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.CountFilter.describe.html#rnalysis.filtering.CountFilter.describe" title="rnalysis.filtering.CountFilter.describe"><code class="xref py py-obj docutils literal notranslate"><span class="pre">CountFilter.describe</span></code></a>([percentiles])</p></td>
+<td><p>Generate descriptive statistics that summarize the central tendency, dispersion and shape         of the dataset’s distribution, excluding NaN values.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.CountFilter.difference.html#rnalysis.filtering.CountFilter.difference" title="rnalysis.filtering.CountFilter.difference"><code class="xref py py-obj docutils literal notranslate"><span class="pre">CountFilter.difference</span></code></a>(*others[, ...])</p></td>
+<td><p>Keep only the features that exist in the first Filter object/set but NOT in the others.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.CountFilter.differential_expression_deseq2.html#rnalysis.filtering.CountFilter.differential_expression_deseq2" title="rnalysis.filtering.CountFilter.differential_expression_deseq2"><code class="xref py py-obj docutils literal notranslate"><span class="pre">CountFilter.differential_expression_deseq2</span></code></a>(...)</p></td>
+<td><p>Run differential expression analysis on the count matrix using the         <a class="reference external" href="https://doi.org/10.1186/s13059-014-0550-8">DESeq2</a> algorithm.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.CountFilter.differential_expression_deseq2_simplified.html#rnalysis.filtering.CountFilter.differential_expression_deseq2_simplified" title="rnalysis.filtering.CountFilter.differential_expression_deseq2_simplified"><code class="xref py py-obj docutils literal notranslate"><span class="pre">CountFilter.differential_expression_deseq2_simplified</span></code></a>(...)</p></td>
+<td><p><p>Run differential expression analysis on the count matrix using the         <a class="reference external" href="https://doi.org/10.1186/s13059-014-0550-8">DESeq2</a> algorithm.</p>
+</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.CountFilter.differential_expression_limma_voom.html#rnalysis.filtering.CountFilter.differential_expression_limma_voom" title="rnalysis.filtering.CountFilter.differential_expression_limma_voom"><code class="xref py py-obj docutils literal notranslate"><span class="pre">CountFilter.differential_expression_limma_voom</span></code></a>(...)</p></td>
+<td><p>Run differential expression analysis on the count matrix using the         <a class="reference external" href="https://doi.org/10.1186/gb-2014-15-2-r29">Limma-Voom</a> pipeline.         The count matrix you are analyzing should be normalized (typically to Reads Per Million).         The analysis will be based on a design matrix supplied by the user.         The design matrix should contain at least two columns: the first column contains all the sample names,         and each of the following columns contains an experimental design factor (e.g. 'condition', 'replicate', etc).         (see the User Guide and Tutorial for a complete example).         The analysis formula will contain all the factors in the design matrix.         To run this function, a version of R must be installed.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.CountFilter.differential_expression_limma_voom_simplified.html#rnalysis.filtering.CountFilter.differential_expression_limma_voom_simplified" title="rnalysis.filtering.CountFilter.differential_expression_limma_voom_simplified"><code class="xref py py-obj docutils literal notranslate"><span class="pre">CountFilter.differential_expression_limma_voom_simplified</span></code></a>(...)</p></td>
+<td><p><p>Run differential expression analysis on the count matrix using the        <a class="reference external" href="https://doi.org/10.1186/gb-2014-15-2-r29">Limma-Voom</a> pipeline.        The simplified mode supports only pairwise comparisons.        The count matrix you are analyzing should be normalized (typically to Reads Per Million).        The analysis will be based on a design matrix supplied by the user.        The design matrix should contain at least two columns: the first column contains all the sample names,        and each of the following columns contains an experimental design factor (e.g. 'condition', 'replicate', etc).        (see the User Guide and Tutorial for a complete example).        The analysis formula will contain all the factors in the design matrix.        To run this function, a version of R must be installed.</p>
+</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.CountFilter.drop_columns.html#rnalysis.filtering.CountFilter.drop_columns" title="rnalysis.filtering.CountFilter.drop_columns"><code class="xref py py-obj docutils literal notranslate"><span class="pre">CountFilter.drop_columns</span></code></a>(columns[, inplace])</p></td>
+<td><p>Drop specific columns from the table.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.CountFilter.enhanced_box_plot.html#rnalysis.filtering.CountFilter.enhanced_box_plot" title="rnalysis.filtering.CountFilter.enhanced_box_plot"><code class="xref py py-obj docutils literal notranslate"><span class="pre">CountFilter.enhanced_box_plot</span></code></a>([samples, ...])</p></td>
+<td><p>Generates an enhanced box-plot of the specified samples in the CountFilter object in log10 scale.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.CountFilter.filter_biotype_from_gtf.html#rnalysis.filtering.CountFilter.filter_biotype_from_gtf" title="rnalysis.filtering.CountFilter.filter_biotype_from_gtf"><code class="xref py py-obj docutils literal notranslate"><span class="pre">CountFilter.filter_biotype_from_gtf</span></code></a>(gtf_path)</p></td>
+<td><p>Filters out all features that do not match the indicated biotype/biotypes         (for example: 'protein_coding', 'ncRNA', etc).</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.CountFilter.filter_biotype_from_ref_table.html#rnalysis.filtering.CountFilter.filter_biotype_from_ref_table" title="rnalysis.filtering.CountFilter.filter_biotype_from_ref_table"><code class="xref py py-obj docutils literal notranslate"><span class="pre">CountFilter.filter_biotype_from_ref_table</span></code></a>([...])</p></td>
+<td><p>Filters out all features that do not match the indicated biotype/biotypes         (for example: 'protein_coding', 'ncRNA', etc).</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.CountFilter.filter_by_attribute.html#rnalysis.filtering.CountFilter.filter_by_attribute" title="rnalysis.filtering.CountFilter.filter_by_attribute"><code class="xref py py-obj docutils literal notranslate"><span class="pre">CountFilter.filter_by_attribute</span></code></a>([...])</p></td>
+<td><p>Filters features according to user-defined attributes from an Attribute Reference Table.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.CountFilter.filter_by_go_annotations.html#rnalysis.filtering.CountFilter.filter_by_go_annotations" title="rnalysis.filtering.CountFilter.filter_by_go_annotations"><code class="xref py py-obj docutils literal notranslate"><span class="pre">CountFilter.filter_by_go_annotations</span></code></a>(go_ids)</p></td>
+<td><p>Filters genes according to GO annotations, keeping only genes that are annotated with a specific GO term.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.CountFilter.filter_by_kegg_annotations.html#rnalysis.filtering.CountFilter.filter_by_kegg_annotations" title="rnalysis.filtering.CountFilter.filter_by_kegg_annotations"><code class="xref py py-obj docutils literal notranslate"><span class="pre">CountFilter.filter_by_kegg_annotations</span></code></a>(kegg_ids)</p></td>
+<td><p>Filters genes according to KEGG pathways, keeping only genes that belong to specific KEGG pathway.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.CountFilter.filter_by_row_name.html#rnalysis.filtering.CountFilter.filter_by_row_name" title="rnalysis.filtering.CountFilter.filter_by_row_name"><code class="xref py py-obj docutils literal notranslate"><span class="pre">CountFilter.filter_by_row_name</span></code></a>(row_names[, ...])</p></td>
+<td><p>Filter out specific rows from the table by their name (index).</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.CountFilter.filter_by_row_sum.html#rnalysis.filtering.CountFilter.filter_by_row_sum" title="rnalysis.filtering.CountFilter.filter_by_row_sum"><code class="xref py py-obj docutils literal notranslate"><span class="pre">CountFilter.filter_by_row_sum</span></code></a>([threshold, ...])</p></td>
+<td><p>Removes features/rows whose sum is belove 'threshold'.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.CountFilter.filter_duplicate_ids.html#rnalysis.filtering.CountFilter.filter_duplicate_ids" title="rnalysis.filtering.CountFilter.filter_duplicate_ids"><code class="xref py py-obj docutils literal notranslate"><span class="pre">CountFilter.filter_duplicate_ids</span></code></a>([keep, ...])</p></td>
+<td><p>Filter out rows with duplicate names/IDs (index).</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.CountFilter.filter_low_reads.html#rnalysis.filtering.CountFilter.filter_low_reads" title="rnalysis.filtering.CountFilter.filter_low_reads"><code class="xref py py-obj docutils literal notranslate"><span class="pre">CountFilter.filter_low_reads</span></code></a>([threshold, ...])</p></td>
+<td><p>Filter out features which are lowly-expressed in all columns, keeping only features with at least 'threshold'         reads in at least 'n_samples' columns.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.CountFilter.filter_missing_values.html#rnalysis.filtering.CountFilter.filter_missing_values" title="rnalysis.filtering.CountFilter.filter_missing_values"><code class="xref py py-obj docutils literal notranslate"><span class="pre">CountFilter.filter_missing_values</span></code></a>([columns, ...])</p></td>
+<td><p>Remove all rows whose values in the specified columns are missing (NaN).</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.CountFilter.filter_percentile.html#rnalysis.filtering.CountFilter.filter_percentile" title="rnalysis.filtering.CountFilter.filter_percentile"><code class="xref py py-obj docutils literal notranslate"><span class="pre">CountFilter.filter_percentile</span></code></a>(percentile, column)</p></td>
+<td><p>Removes all entries above the specified percentile in the specified column.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.CountFilter.filter_top_n.html#rnalysis.filtering.CountFilter.filter_top_n" title="rnalysis.filtering.CountFilter.filter_top_n"><code class="xref py py-obj docutils literal notranslate"><span class="pre">CountFilter.filter_top_n</span></code></a>(by[, n, ascending, ...])</p></td>
+<td><p>Sort the rows by the values of specified column or columns, then keep only the top 'n' rows.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.CountFilter.find_paralogs_ensembl.html#rnalysis.filtering.CountFilter.find_paralogs_ensembl" title="rnalysis.filtering.CountFilter.find_paralogs_ensembl"><code class="xref py py-obj docutils literal notranslate"><span class="pre">CountFilter.find_paralogs_ensembl</span></code></a>([...])</p></td>
+<td><p>Find paralogs within the same species using the Ensembl database.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.CountFilter.find_paralogs_panther.html#rnalysis.filtering.CountFilter.find_paralogs_panther" title="rnalysis.filtering.CountFilter.find_paralogs_panther"><code class="xref py py-obj docutils literal notranslate"><span class="pre">CountFilter.find_paralogs_panther</span></code></a>([...])</p></td>
+<td><p>Find paralogs within the same species using the PantherDB database.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.CountFilter.fold_change.html#rnalysis.filtering.CountFilter.fold_change" title="rnalysis.filtering.CountFilter.fold_change"><code class="xref py py-obj docutils literal notranslate"><span class="pre">CountFilter.fold_change</span></code></a>(numerator, denominator)</p></td>
+<td><p>Calculate the fold change between the numerator condition and the denominator condition,         and return it as a FoldChangeFilter object.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.CountFilter.from_dataframe.html#rnalysis.filtering.CountFilter.from_dataframe" title="rnalysis.filtering.CountFilter.from_dataframe"><code class="xref py py-obj docutils literal notranslate"><span class="pre">CountFilter.from_dataframe</span></code></a>(df, name[, ...])</p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.CountFilter.from_folder.html#rnalysis.filtering.CountFilter.from_folder" title="rnalysis.filtering.CountFilter.from_folder"><code class="xref py py-obj docutils literal notranslate"><span class="pre">CountFilter.from_folder</span></code></a>(folder_path[, ...])</p></td>
 <td><p>Iterates over count .txt files in a given folder and combines them into a single CountFilter table.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.CountFilter.from_folder_htseqcount.html#rnalysis.filtering.CountFilter.from_folder_htseqcount" title="rnalysis.filtering.CountFilter.from_folder_htseqcount"><code class="xref py py-obj docutils literal notranslate"><span class="pre">CountFilter.from_folder_htseqcount</span></code></a>(folder_path)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.CountFilter.from_folder_htseqcount.html#rnalysis.filtering.CountFilter.from_folder_htseqcount" title="rnalysis.filtering.CountFilter.from_folder_htseqcount"><code class="xref py py-obj docutils literal notranslate"><span class="pre">CountFilter.from_folder_htseqcount</span></code></a>(folder_path)</p></td>
 <td><p>Iterates over HTSeq count .txt files in a given folder and combines them into a single CountFilter table.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.CountFilter.head.html#rnalysis.filtering.CountFilter.head" title="rnalysis.filtering.CountFilter.head"><code class="xref py py-obj docutils literal notranslate"><span class="pre">CountFilter.head</span></code></a>([n])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.CountFilter.head.html#rnalysis.filtering.CountFilter.head" title="rnalysis.filtering.CountFilter.head"><code class="xref py py-obj docutils literal notranslate"><span class="pre">CountFilter.head</span></code></a>([n])</p></td>
 <td><p>Return the first n rows of the Filter object.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.CountFilter.histogram.html#rnalysis.filtering.CountFilter.histogram" title="rnalysis.filtering.CountFilter.histogram"><code class="xref py py-obj docutils literal notranslate"><span class="pre">CountFilter.histogram</span></code></a>(column[, bins, ...])</p></td>
+<td><p></p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.CountFilter.intersection.html#rnalysis.filtering.CountFilter.intersection" title="rnalysis.filtering.CountFilter.intersection"><code class="xref py py-obj docutils literal notranslate"><span class="pre">CountFilter.intersection</span></code></a>(*others[, ...])</p></td>
 <td><p>Keep only the features that exist in ALL of the given Filter objects/sets.</p></td>
@@ -389,7 +400,7 @@
 <td><p>Performs Principal Component Analysis (PCA), visualizing the principal components that explain the most        variance between the different samples.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.CountFilter.plot_expression.html#rnalysis.filtering.CountFilter.plot_expression" title="rnalysis.filtering.CountFilter.plot_expression"><code class="xref py py-obj docutils literal notranslate"><span class="pre">CountFilter.plot_expression</span></code></a>(features[, ...])</p></td>
-<td><p>Plot the average expression and standard error of the specified features under the specified conditions.</p></td>
+<td><p>Plot the average expression and spread of the specified features under the specified conditions.</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.CountFilter.print_features.html#rnalysis.filtering.CountFilter.print_features" title="rnalysis.filtering.CountFilter.print_features"><code class="xref py py-obj docutils literal notranslate"><span class="pre">CountFilter.print_features</span></code></a>()</p></td>
 <td><p>Print the feature indices in the Filter object, sorted by their current order in the FIlter object,         and separated by newline.</p></td>

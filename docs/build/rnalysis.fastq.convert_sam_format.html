@@ -1,12 +1,14 @@
 <!DOCTYPE html>
-<html class="writer-html5" lang="en" >
+<html class="writer-html5" lang="en">
 <head>
-  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>rnalysis.fastq.convert_sam_format &mdash; RNAlysis 3.11.0 documentation</title>
-      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <title>rnalysis.fastq.convert_sam_format &mdash; RNAlysis 3.12.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css" />
+
+  
     <link rel="shortcut icon" href="_static/favicon.ico"/>
   <!--[if lt IE 9]>
     <script src="_static/js/html5shiv.min.js"></script>
@@ -17,7 +19,6 @@
         <script src="_static/underscore.js"></script>
         <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
         <script src="_static/doctools.js"></script>
-        <script src="_static/sphinx_highlight.js"></script>
         <script src="_static/copybutton.js"></script>
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
@@ -79,10 +80,7 @@
 <li class="toctree-l2"><a class="reference internal" href="rnalysis.fastq.bowtie2_align_paired_end.html">rnalysis.fastq.bowtie2_align_paired_end</a></li>
 <li class="toctree-l2"><a class="reference internal" href="rnalysis.fastq.bowtie2_align_single_end.html">rnalysis.fastq.bowtie2_align_single_end</a></li>
 <li class="toctree-l2"><a class="reference internal" href="rnalysis.fastq.bowtie2_create_index.html">rnalysis.fastq.bowtie2_create_index</a></li>
-<li class="toctree-l2 current"><a class="current reference internal" href="#">rnalysis.fastq.convert_sam_format</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#rnalysis.fastq.convert_sam_format"><code class="docutils literal notranslate"><span class="pre">convert_sam_format()</span></code></a></li>
-</ul>
-</li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">rnalysis.fastq.convert_sam_format</a></li>
 <li class="toctree-l2"><a class="reference internal" href="rnalysis.fastq.create_bam_index.html">rnalysis.fastq.create_bam_index</a></li>
 <li class="toctree-l2"><a class="reference internal" href="rnalysis.fastq.fastq_to_sam_paired.html">rnalysis.fastq.fastq_to_sam_paired</a></li>
 <li class="toctree-l2"><a class="reference internal" href="rnalysis.fastq.fastq_to_sam_single.html">rnalysis.fastq.fastq_to_sam_single</a></li>
@@ -143,12 +141,12 @@
 <span class="sig-prename descclassname"><span class="pre">rnalysis.fastq.</span></span><span class="sig-name descname"><span class="pre">convert_sam_format</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_folder</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Path</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_folder</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Path</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">picard_installation_folder</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Path</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'auto'</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'auto'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">new_sample_names</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'auto'</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'auto'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_format</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'sam'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'bam'</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'bam'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rnalysis.fastq.convert_sam_format" title="Permalink to this definition"></a></dt>
 <dd><p>Convert SAM files to BAM files or vice versa using     <a class="reference external" href="https://broadinstitute.github.io/picard/command-line-overview.html#SamFormatConverter">Picard SamFormatConverter</a>.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>input_folder</strong> (<em>str</em><em> or </em><em>Path</em>) – Path to the folder containing the SAM/BAM files you want to convert.</p></li>
 <li><p><strong>output_folder</strong> (<em>str</em><em> or </em><em>Path</em>) – Path to a folder in which the converted FASTQ files will be saved.</p></li>
 <li><p><strong>picard_installation_folder</strong> (<em>str</em><em>, </em><em>Path</em><em>, or </em><em>'auto'</em><em> (</em><em>default='auto'</em><em>)</em>) – Path to the installation folder of Picard. For example:     ‘C:/Program Files/Picard’</p></li>
-<li><p><strong>new_sample_names</strong> (<em>list</em><em> of </em><em>str</em><em> or </em><em>'auto'</em><em> (</em><em>default='auto'</em><em>)</em>) – Give a new name to each converted sample (optional).     If sample_names=’auto’, sample names     will be given automatically. Otherwise, sample_names should be a list of new names, with the order of the names     matching the order of the files in the directory.</p></li>
+<li><p><strong>new_sample_names</strong> (<em>list of str</em><em> or </em><em>'auto'</em><em> (</em><em>default='auto'</em><em>)</em>) – Give a new name to each converted sample (optional).     If sample_names=’auto’, sample names     will be given automatically. Otherwise, sample_names should be a list of new names, with the order of the names     matching the order of the files in the directory.</p></li>
 <li><p><strong>output_format</strong> (<em>'sam'</em><em> or </em><em>'bam'</em><em> (</em><em>default='bam'</em><em>)</em>) – format to convert the files into.</p></li>
 </ul>
 </dd>

@@ -1,12 +1,14 @@
 <!DOCTYPE html>
-<html class="writer-html5" lang="en" >
+<html class="writer-html5" lang="en">
 <head>
-  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>rnalysis.filtering.CountFilter.intersection &mdash; RNAlysis 3.11.0 documentation</title>
-      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <title>rnalysis.filtering.CountFilter.intersection &mdash; RNAlysis 3.12.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css" />
+
+  
     <link rel="shortcut icon" href="_static/favicon.ico"/>
   <!--[if lt IE 9]>
     <script src="_static/js/html5shiv.min.js"></script>
@@ -17,13 +19,12 @@
         <script src="_static/underscore.js"></script>
         <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
         <script src="_static/doctools.js"></script>
-        <script src="_static/sphinx_highlight.js"></script>
         <script src="_static/copybutton.js"></script>
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="rnalysis.filtering.CountFilter.ma_plot" href="rnalysis.filtering.CountFilter.ma_plot.html" />
-    <link rel="prev" title="rnalysis.filtering.CountFilter.head" href="rnalysis.filtering.CountFilter.head.html" /> 
+    <link rel="prev" title="rnalysis.filtering.CountFilter.histogram" href="rnalysis.filtering.CountFilter.histogram.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -76,16 +77,18 @@
 <li class="toctree-l1"><a class="reference internal" href="rnalysis.fastq.html">rnalysis.fastq</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="rnalysis.filtering.html">rnalysis.filtering</a><ul class="current">
 <li class="toctree-l2 current"><a class="reference internal" href="rnalysis.filtering.CountFilter.html">rnalysis.filtering.CountFilter</a><ul class="current">
-<li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.html#rnalysis.filtering.CountFilter"><code class="docutils literal notranslate"><span class="pre">CountFilter</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.average_replicate_samples.html">rnalysis.filtering.CountFilter.average_replicate_samples</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.biotypes_from_gtf.html">rnalysis.filtering.CountFilter.biotypes_from_gtf</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.biotypes_from_ref_table.html">rnalysis.filtering.CountFilter.biotypes_from_ref_table</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.box_plot.html">rnalysis.filtering.CountFilter.box_plot</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.clustergram.html">rnalysis.filtering.CountFilter.clustergram</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.concatenate.html">rnalysis.filtering.CountFilter.concatenate</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.describe.html">rnalysis.filtering.CountFilter.describe</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.difference.html">rnalysis.filtering.CountFilter.difference</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.differential_expression_deseq2.html">rnalysis.filtering.CountFilter.differential_expression_deseq2</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.differential_expression_deseq2_simplified.html">rnalysis.filtering.CountFilter.differential_expression_deseq2_simplified</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.differential_expression_limma_voom.html">rnalysis.filtering.CountFilter.differential_expression_limma_voom</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.differential_expression_limma_voom_simplified.html">rnalysis.filtering.CountFilter.differential_expression_limma_voom_simplified</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.drop_columns.html">rnalysis.filtering.CountFilter.drop_columns</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.enhanced_box_plot.html">rnalysis.filtering.CountFilter.enhanced_box_plot</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.filter_biotype_from_gtf.html">rnalysis.filtering.CountFilter.filter_biotype_from_gtf</a></li>
@@ -107,10 +110,8 @@
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.from_folder.html">rnalysis.filtering.CountFilter.from_folder</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.from_folder_htseqcount.html">rnalysis.filtering.CountFilter.from_folder_htseqcount</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.head.html">rnalysis.filtering.CountFilter.head</a></li>
-<li class="toctree-l3 current"><a class="current reference internal" href="#">rnalysis.filtering.CountFilter.intersection</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#rnalysis.filtering.CountFilter.intersection"><code class="docutils literal notranslate"><span class="pre">CountFilter.intersection()</span></code></a></li>
-</ul>
-</li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.histogram.html">rnalysis.filtering.CountFilter.histogram</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">rnalysis.filtering.CountFilter.intersection</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.ma_plot.html">rnalysis.filtering.CountFilter.ma_plot</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.majority_vote_intersection.html">rnalysis.filtering.CountFilter.majority_vote_intersection</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.map_orthologs_ensembl.html">rnalysis.filtering.CountFilter.map_orthologs_ensembl</a></li>
@@ -203,20 +204,20 @@
 <span class="sig-prename descclassname"><span class="pre">CountFilter.</span></span><span class="sig-name descname"><span class="pre">intersection</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">others</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="rnalysis.filtering.Filter.html#rnalysis.filtering.Filter" title="rnalysis.filtering.Filter"><span class="pre">Filter</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">set</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_type</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'set'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'str'</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'set'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inplace</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rnalysis.filtering.CountFilter.intersection" title="Permalink to this definition"></a></dt>
 <dd><p>Keep only the features that exist in ALL of the given Filter objects/sets.         Can be done either inplace on the first Filter object, or return a set/string of features.</p>
 <dl class="field-list">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>others</strong> (<a class="reference internal" href="rnalysis.filtering.Filter.html#rnalysis.filtering.Filter" title="rnalysis.filtering.Filter"><em>Filter</em></a><em> or </em><em>set objects.</em>) – Objects to calculate intersection with.</p></li>
 <li><p><strong>return_type</strong> (<em>'set'</em><em> or </em><em>'str'</em><em> (</em><em>default='set'</em><em>)</em>) – If ‘set’, returns a set of the intersecting features. If ‘str’, returns a string of         the intersecting features, delimited by a comma.</p></li>
 <li><p><strong>inplace</strong> (<em>bool</em><em> (</em><em>default=False</em><em>)</em>) – If True, the function will be applied in-place to the current Filter object.         If False (default), the function will return a set/str that contains the intersecting indices.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Return type</dt>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p>set or str</p>
 </dd>
-<dt class="field-odd">Returns</dt>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><p>If inplace=False, returns a set/string of the features that         intersect between the given Filter objects/sets.</p>
 </dd>
-<dt class="field-even">Examples</dt>
+<dt class="field-even">Examples<span class="colon">:</span></dt>
 <dd class="field-even"><div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">rnalysis</span> <span class="kn">import</span> <span class="n">filtering</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">d</span> <span class="o">=</span> <span class="n">filtering</span><span class="o">.</span><span class="n">Filter</span><span class="p">(</span><span class="s2">&quot;tests/test_files/test_deseq.csv&quot;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">a_set</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;WBGene00000001&#39;</span><span class="p">,</span><span class="s1">&#39;WBGene00000002&#39;</span><span class="p">,</span><span class="s1">&#39;WBGene00000003&#39;</span><span class="p">}</span>
@@ -238,7 +239,7 @@ Filtered 26 features, leaving 2 of the original 28 features. Filtered inplace.</
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="rnalysis.filtering.CountFilter.head.html" class="btn btn-neutral float-left" title="rnalysis.filtering.CountFilter.head" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="rnalysis.filtering.CountFilter.histogram.html" class="btn btn-neutral float-left" title="rnalysis.filtering.CountFilter.histogram" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
         <a href="rnalysis.filtering.CountFilter.ma_plot.html" class="btn btn-neutral float-right" title="rnalysis.filtering.CountFilter.ma_plot" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 

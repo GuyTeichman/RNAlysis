@@ -1,12 +1,14 @@
 <!DOCTYPE html>
-<html class="writer-html5" lang="en" >
+<html class="writer-html5" lang="en">
 <head>
-  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>rnalysis.enrichment.RankedSet.difference &mdash; RNAlysis 3.11.0 documentation</title>
-      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <title>rnalysis.enrichment.RankedSet.difference &mdash; RNAlysis 3.12.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css" />
+
+  
     <link rel="shortcut icon" href="_static/favicon.ico"/>
   <!--[if lt IE 9]>
     <script src="_static/js/html5shiv.min.js"></script>
@@ -17,7 +19,6 @@
         <script src="_static/underscore.js"></script>
         <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
         <script src="_static/doctools.js"></script>
-        <script src="_static/sphinx_highlight.js"></script>
         <script src="_static/copybutton.js"></script>
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
@@ -78,17 +79,13 @@
 <li class="toctree-l1 current"><a class="reference internal" href="rnalysis.enrichment.html">rnalysis.enrichment</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="rnalysis.enrichment.FeatureSet.html">rnalysis.enrichment.FeatureSet</a></li>
 <li class="toctree-l2 current"><a class="reference internal" href="rnalysis.enrichment.RankedSet.html">rnalysis.enrichment.RankedSet</a><ul class="current">
-<li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.RankedSet.html#rnalysis.enrichment.RankedSet"><code class="docutils literal notranslate"><span class="pre">RankedSet</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.RankedSet.add.html">rnalysis.enrichment.RankedSet.add</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.RankedSet.biotypes_from_gtf.html">rnalysis.enrichment.RankedSet.biotypes_from_gtf</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.RankedSet.biotypes_from_ref_table.html">rnalysis.enrichment.RankedSet.biotypes_from_ref_table</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.RankedSet.change_set_name.html">rnalysis.enrichment.RankedSet.change_set_name</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.RankedSet.clear.html">rnalysis.enrichment.RankedSet.clear</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.RankedSet.copy.html">rnalysis.enrichment.RankedSet.copy</a></li>
-<li class="toctree-l3 current"><a class="current reference internal" href="#">rnalysis.enrichment.RankedSet.difference</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#rnalysis.enrichment.RankedSet.difference"><code class="docutils literal notranslate"><span class="pre">RankedSet.difference()</span></code></a></li>
-</ul>
-</li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">rnalysis.enrichment.RankedSet.difference</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.RankedSet.difference_update.html">rnalysis.enrichment.RankedSet.difference_update</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.RankedSet.discard.html">rnalysis.enrichment.RankedSet.discard</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.RankedSet.filter_biotype_from_gtf.html">rnalysis.enrichment.RankedSet.filter_biotype_from_gtf</a></li>
@@ -172,16 +169,16 @@
 <span class="sig-prename descclassname"><span class="pre">RankedSet.</span></span><span class="sig-name descname"><span class="pre">difference</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">others</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">set</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="rnalysis.enrichment.FeatureSet.html#rnalysis.enrichment.FeatureSet" title="rnalysis.enrichment.FeatureSet"><span class="pre">FeatureSet</span></a><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="rnalysis.enrichment.FeatureSet.html#rnalysis.enrichment.FeatureSet" title="rnalysis.enrichment.FeatureSet"><span class="pre">FeatureSet</span></a></span></span><a class="headerlink" href="#rnalysis.enrichment.RankedSet.difference" title="Permalink to this definition"></a></dt>
 <dd><p>Calculates the set difference of the indices from multiple FeatureSet objects         (the indices that appear in the first FeatureSet object but NOT in the other objects).</p>
 <dl class="field-list">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>others</strong> (<a class="reference internal" href="rnalysis.enrichment.FeatureSet.html#rnalysis.enrichment.FeatureSet" title="rnalysis.enrichment.FeatureSet"><em>FeatureSet</em></a><em>, </em><a class="reference internal" href="rnalysis.enrichment.RankedSet.html#rnalysis.enrichment.RankedSet" title="rnalysis.enrichment.RankedSet"><em>RankedSet</em></a><em> or </em><em>set</em>) – The objects against which the current object will be compared.</p>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>a new FeatureSet with elements in this FeatureSet that are not in the other objects.</p>
 </dd>
-<dt class="field-odd">Return type</dt>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><a class="reference internal" href="rnalysis.enrichment.FeatureSet.html#rnalysis.enrichment.FeatureSet" title="rnalysis.enrichment.FeatureSet">FeatureSet</a></p>
 </dd>
-<dt class="field-even">Examples</dt>
+<dt class="field-even">Examples<span class="colon">:</span></dt>
 <dd class="field-even"><div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">rnalysis</span> <span class="kn">import</span> <span class="n">enrichment</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">en</span> <span class="o">=</span> <span class="n">enrichment</span><span class="o">.</span><span class="n">FeatureSet</span><span class="p">({</span><span class="s1">&#39;WBGene00000001&#39;</span><span class="p">,</span><span class="s1">&#39;WBGene00000002&#39;</span><span class="p">,</span><span class="s1">&#39;WBGene00000006&#39;</span><span class="p">},</span> <span class="s1">&#39;set name&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">s</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;WBGene00000001&#39;</span><span class="p">,</span><span class="s1">&#39;WBGene00000002&#39;</span><span class="p">,</span><span class="s1">&#39;WBGene00000003&#39;</span><span class="p">}</span>

@@ -1,12 +1,14 @@
 <!DOCTYPE html>
-<html class="writer-html5" lang="en" >
+<html class="writer-html5" lang="en">
 <head>
-  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>rnalysis.filtering.FoldChangeFilter.filter_percentile &mdash; RNAlysis 3.11.0 documentation</title>
-      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <title>rnalysis.filtering.FoldChangeFilter.filter_percentile &mdash; RNAlysis 3.12.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css" />
+
+  
     <link rel="shortcut icon" href="_static/favicon.ico"/>
   <!--[if lt IE 9]>
     <script src="_static/js/html5shiv.min.js"></script>
@@ -17,7 +19,6 @@
         <script src="_static/underscore.js"></script>
         <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
         <script src="_static/doctools.js"></script>
-        <script src="_static/sphinx_highlight.js"></script>
         <script src="_static/copybutton.js"></script>
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
@@ -79,9 +80,9 @@
 <li class="toctree-l2"><a class="reference internal" href="rnalysis.filtering.DESeqFilter.html">rnalysis.filtering.DESeqFilter</a></li>
 <li class="toctree-l2"><a class="reference internal" href="rnalysis.filtering.Filter.html">rnalysis.filtering.Filter</a></li>
 <li class="toctree-l2 current"><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.html">rnalysis.filtering.FoldChangeFilter</a><ul class="current">
-<li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.html#rnalysis.filtering.FoldChangeFilter"><code class="docutils literal notranslate"><span class="pre">FoldChangeFilter</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.biotypes_from_gtf.html">rnalysis.filtering.FoldChangeFilter.biotypes_from_gtf</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.biotypes_from_ref_table.html">rnalysis.filtering.FoldChangeFilter.biotypes_from_ref_table</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.concatenate.html">rnalysis.filtering.FoldChangeFilter.concatenate</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.describe.html">rnalysis.filtering.FoldChangeFilter.describe</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.difference.html">rnalysis.filtering.FoldChangeFilter.difference</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.drop_columns.html">rnalysis.filtering.FoldChangeFilter.drop_columns</a></li>
@@ -95,15 +96,13 @@
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.filter_duplicate_ids.html">rnalysis.filtering.FoldChangeFilter.filter_duplicate_ids</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.filter_fold_change_direction.html">rnalysis.filtering.FoldChangeFilter.filter_fold_change_direction</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.filter_missing_values.html">rnalysis.filtering.FoldChangeFilter.filter_missing_values</a></li>
-<li class="toctree-l3 current"><a class="current reference internal" href="#">rnalysis.filtering.FoldChangeFilter.filter_percentile</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#rnalysis.filtering.FoldChangeFilter.filter_percentile"><code class="docutils literal notranslate"><span class="pre">FoldChangeFilter.filter_percentile()</span></code></a></li>
-</ul>
-</li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">rnalysis.filtering.FoldChangeFilter.filter_percentile</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.filter_top_n.html">rnalysis.filtering.FoldChangeFilter.filter_top_n</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.find_paralogs_ensembl.html">rnalysis.filtering.FoldChangeFilter.find_paralogs_ensembl</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.find_paralogs_panther.html">rnalysis.filtering.FoldChangeFilter.find_paralogs_panther</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.from_dataframe.html">rnalysis.filtering.FoldChangeFilter.from_dataframe</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.head.html">rnalysis.filtering.FoldChangeFilter.head</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.histogram.html">rnalysis.filtering.FoldChangeFilter.histogram</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.intersection.html">rnalysis.filtering.FoldChangeFilter.intersection</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.majority_vote_intersection.html">rnalysis.filtering.FoldChangeFilter.majority_vote_intersection</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.map_orthologs_ensembl.html">rnalysis.filtering.FoldChangeFilter.map_orthologs_ensembl</a></li>
@@ -173,14 +172,14 @@
 <span class="sig-prename descclassname"><span class="pre">FoldChangeFilter.</span></span><span class="sig-name descname"><span class="pre">filter_percentile</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">percentile</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Fraction</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">opposite</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inplace</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rnalysis.filtering.FoldChangeFilter.filter_percentile" title="Permalink to this definition"></a></dt>
 <dd><p>Removes all entries above the specified percentile.            For example, if the percentile was 0.5, then all features whose value is above            the median value will be filtered out.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>percentile</strong> (<em>float between 0 and 1</em>) – The percentile that all features above it will be filtered out.</p></li>
 <li><p><strong>opposite</strong> (<em>bool</em>) – If True, the output of the filtering will be the OPPOSITE of the specified            (instead of filtering out X, the function will filter out anything BUT X).            If False (default), the function will filter as expected.</p></li>
 <li><p><strong>inplace</strong> (<em>bool</em><em> (</em><em>default=True</em><em>)</em>) – If True (default), filtering will be applied to the current Filter object. If False,            the function will return a new CountFilter instance and the current instance will not be affected.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>If inplace is False, returns a new and filtered instance of the Filter object.</p>
 </dd>
 </dl>

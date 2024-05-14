@@ -18,6 +18,7 @@
     
     FoldChangeFilter.biotypes_from_gtf
     FoldChangeFilter.biotypes_from_ref_table
+    FoldChangeFilter.concatenate
     FoldChangeFilter.describe
     FoldChangeFilter.difference
     FoldChangeFilter.drop_columns
@@ -37,6 +38,7 @@
     FoldChangeFilter.find_paralogs_panther
     FoldChangeFilter.from_dataframe
     FoldChangeFilter.head
+    FoldChangeFilter.histogram
     FoldChangeFilter.intersection
     FoldChangeFilter.majority_vote_intersection
     FoldChangeFilter.map_orthologs_ensembl

@@ -1,12 +1,14 @@
 <!DOCTYPE html>
-<html class="writer-html5" lang="en" >
+<html class="writer-html5" lang="en">
 <head>
-  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>A-to-Z tutorial - example analysis &mdash; RNAlysis 3.11.0 documentation</title>
-      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <title>A-to-Z tutorial - example analysis &mdash; RNAlysis 3.12.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css" />
+
+  
     <link rel="shortcut icon" href="_static/favicon.ico"/>
   <!--[if lt IE 9]>
     <script src="_static/js/html5shiv.min.js"></script>
@@ -17,7 +19,6 @@
         <script src="_static/underscore.js"></script>
         <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
         <script src="_static/doctools.js"></script>
-        <script src="_static/sphinx_highlight.js"></script>
         <script src="_static/copybutton.js"></script>
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
@@ -610,11 +611,6 @@ The first column of the design matrix should contain the names of the samples in
 Each other column should contain a variable to be added to the experimental design formula of the dataset. For example: experimental condition, genotype, or biological replicate/batch.
 For example, the design matrix for our osmotic stress dataset would look like this:</p>
 <table class="docutils align-default">
-<colgroup>
-<col style="width: 26%" />
-<col style="width: 44%" />
-<col style="width: 30%" />
-</colgroup>
 <thead>
 <tr class="row-odd"><th class="head"><p>Name</p></th>
 <th class="head"><p>condition</p></th>
@@ -800,12 +796,6 @@ If the gene IDs in your data tables do not match those of your Attribute Referen
 In each cell, set the value to NaN if the gene in this row is negative for the attribute (in our example - not an epigenetic gene), and any other value if the gene in this row is positive for the attirbute.
 As an example, see this mock Attribute Reference Table:</p>
 <table class="docutils align-default">
-<colgroup>
-<col style="width: 24%" />
-<col style="width: 30%" />
-<col style="width: 21%" />
-<col style="width: 25%" />
-</colgroup>
 <thead>
 <tr class="row-odd"><th class="head"><p>feature_indices</p></th>
 <th class="head"><p>Epigenetic genes</p></th>

@@ -18,6 +18,7 @@
     
     Filter.biotypes_from_gtf
     Filter.biotypes_from_ref_table
+    Filter.concatenate
     Filter.describe
     Filter.difference
     Filter.drop_columns
@@ -35,6 +36,7 @@
     Filter.find_paralogs_panther
     Filter.from_dataframe
     Filter.head
+    Filter.histogram
     Filter.intersection
     Filter.majority_vote_intersection
     Filter.map_orthologs_ensembl

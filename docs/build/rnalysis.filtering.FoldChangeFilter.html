@@ -1,12 +1,14 @@
 <!DOCTYPE html>
-<html class="writer-html5" lang="en" >
+<html class="writer-html5" lang="en">
 <head>
-  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>rnalysis.filtering.FoldChangeFilter &mdash; RNAlysis 3.11.0 documentation</title>
-      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <title>rnalysis.filtering.FoldChangeFilter &mdash; RNAlysis 3.12.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css" />
+
+  
     <link rel="shortcut icon" href="_static/favicon.ico"/>
   <!--[if lt IE 9]>
     <script src="_static/js/html5shiv.min.js"></script>
@@ -17,7 +19,6 @@
         <script src="_static/underscore.js"></script>
         <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
         <script src="_static/doctools.js"></script>
-        <script src="_static/sphinx_highlight.js"></script>
         <script src="_static/copybutton.js"></script>
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
@@ -79,12 +80,9 @@
 <li class="toctree-l2"><a class="reference internal" href="rnalysis.filtering.DESeqFilter.html">rnalysis.filtering.DESeqFilter</a></li>
 <li class="toctree-l2"><a class="reference internal" href="rnalysis.filtering.Filter.html">rnalysis.filtering.Filter</a></li>
 <li class="toctree-l2 current"><a class="current reference internal" href="#">rnalysis.filtering.FoldChangeFilter</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#rnalysis.filtering.FoldChangeFilter"><code class="docutils literal notranslate"><span class="pre">FoldChangeFilter</span></code></a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#rnalysis.filtering.FoldChangeFilter.__init__"><code class="docutils literal notranslate"><span class="pre">FoldChangeFilter.__init__()</span></code></a></li>
-</ul>
-</li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.biotypes_from_gtf.html">rnalysis.filtering.FoldChangeFilter.biotypes_from_gtf</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.biotypes_from_ref_table.html">rnalysis.filtering.FoldChangeFilter.biotypes_from_ref_table</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.concatenate.html">rnalysis.filtering.FoldChangeFilter.concatenate</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.describe.html">rnalysis.filtering.FoldChangeFilter.describe</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.difference.html">rnalysis.filtering.FoldChangeFilter.difference</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.drop_columns.html">rnalysis.filtering.FoldChangeFilter.drop_columns</a></li>
@@ -104,6 +102,7 @@
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.find_paralogs_panther.html">rnalysis.filtering.FoldChangeFilter.find_paralogs_panther</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.from_dataframe.html">rnalysis.filtering.FoldChangeFilter.from_dataframe</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.head.html">rnalysis.filtering.FoldChangeFilter.head</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.histogram.html">rnalysis.filtering.FoldChangeFilter.histogram</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.intersection.html">rnalysis.filtering.FoldChangeFilter.intersection</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.majority_vote_intersection.html">rnalysis.filtering.FoldChangeFilter.majority_vote_intersection</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.map_orthologs_ensembl.html">rnalysis.filtering.FoldChangeFilter.map_orthologs_ensembl</a></li>
@@ -198,7 +197,7 @@
 <span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fname</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Path</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">tuple</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">numerator_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">denominator_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">suppress_warnings</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rnalysis.filtering.FoldChangeFilter.__init__" title="Permalink to this definition"></a></dt>
 <dd><p>Load a fold-change table. Valid fold-change tables should contain exactly two columns:         the first column containing gene names/indices, and the second column containing log2(fold change) values.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>fname</strong> (<em>Union</em><em>[</em><em>str</em><em>, </em><em>Path</em><em>]</em>) – full path/filename of the .csv file to be loaded into the Filter object</p></li>
 <li><p><strong>numerator_name</strong> (<em>str</em>) – name of the numerator condition in the fold-change table</p></li>
@@ -212,10 +211,6 @@
 </dd></dl>
 
 <table class="autosummary longtable docutils align-default">
-<colgroup>
-<col style="width: 10%" />
-<col style="width: 90%" />
-</colgroup>
 <tbody>
 <tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.biotypes_from_gtf.html#rnalysis.filtering.FoldChangeFilter.biotypes_from_gtf" title="rnalysis.filtering.FoldChangeFilter.biotypes_from_gtf"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FoldChangeFilter.biotypes_from_gtf</span></code></a>(gtf_path)</p></td>
 <td><p>Returns a DataFrame describing the biotypes in the table and their count.</p></td>
@@ -223,62 +218,68 @@
 <tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.biotypes_from_ref_table.html#rnalysis.filtering.FoldChangeFilter.biotypes_from_ref_table" title="rnalysis.filtering.FoldChangeFilter.biotypes_from_ref_table"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FoldChangeFilter.biotypes_from_ref_table</span></code></a>([...])</p></td>
 <td><p>Returns a DataFrame describing the biotypes in the table and their count.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.describe.html#rnalysis.filtering.FoldChangeFilter.describe" title="rnalysis.filtering.FoldChangeFilter.describe"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FoldChangeFilter.describe</span></code></a>([percentiles])</p></td>
-<td><p>Generate descriptive statistics that summarize the central tendency, dispersion and shape         of the dataset’s distribution, excluding NaN values.</p></td>
-</tr>
-<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.difference.html#rnalysis.filtering.FoldChangeFilter.difference" title="rnalysis.filtering.FoldChangeFilter.difference"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FoldChangeFilter.difference</span></code></a>(*others[, ...])</p></td>
-<td><p>Keep only the features that exist in the first Filter object/set but NOT in the others.</p></td>
-</tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.drop_columns.html#rnalysis.filtering.FoldChangeFilter.drop_columns" title="rnalysis.filtering.FoldChangeFilter.drop_columns"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FoldChangeFilter.drop_columns</span></code></a>(columns[, inplace])</p></td>
-<td><p>Drop specific columns from the table.</p></td>
-</tr>
-<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.filter_abs_log2_fold_change.html#rnalysis.filtering.FoldChangeFilter.filter_abs_log2_fold_change" title="rnalysis.filtering.FoldChangeFilter.filter_abs_log2_fold_change"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FoldChangeFilter.filter_abs_log2_fold_change</span></code></a>([...])</p></td>
-<td><p>Filters out all features whose absolute log2 fold change is below the indicated threshold.</p></td>
-</tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.filter_biotype_from_gtf.html#rnalysis.filtering.FoldChangeFilter.filter_biotype_from_gtf" title="rnalysis.filtering.FoldChangeFilter.filter_biotype_from_gtf"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FoldChangeFilter.filter_biotype_from_gtf</span></code></a>(...)</p></td>
-<td><p>Filters out all features that do not match the indicated biotype/biotypes         (for example: 'protein_coding', 'ncRNA', etc).</p></td>
-</tr>
-<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.filter_biotype_from_ref_table.html#rnalysis.filtering.FoldChangeFilter.filter_biotype_from_ref_table" title="rnalysis.filtering.FoldChangeFilter.filter_biotype_from_ref_table"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FoldChangeFilter.filter_biotype_from_ref_table</span></code></a>([...])</p></td>
-<td><p>Filters out all features that do not match the indicated biotype/biotypes         (for example: 'protein_coding', 'ncRNA', etc).</p></td>
-</tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.filter_by_attribute.html#rnalysis.filtering.FoldChangeFilter.filter_by_attribute" title="rnalysis.filtering.FoldChangeFilter.filter_by_attribute"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FoldChangeFilter.filter_by_attribute</span></code></a>([...])</p></td>
-<td><p>Filters features according to user-defined attributes from an Attribute Reference Table.</p></td>
-</tr>
-<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.filter_by_go_annotations.html#rnalysis.filtering.FoldChangeFilter.filter_by_go_annotations" title="rnalysis.filtering.FoldChangeFilter.filter_by_go_annotations"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FoldChangeFilter.filter_by_go_annotations</span></code></a>(go_ids)</p></td>
-<td><p>Filters genes according to GO annotations, keeping only genes that are annotated with a specific GO term.</p></td>
-</tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.filter_by_kegg_annotations.html#rnalysis.filtering.FoldChangeFilter.filter_by_kegg_annotations" title="rnalysis.filtering.FoldChangeFilter.filter_by_kegg_annotations"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FoldChangeFilter.filter_by_kegg_annotations</span></code></a>(...)</p></td>
-<td><p>Filters genes according to KEGG pathways, keeping only genes that belong to specific KEGG pathway.</p></td>
-</tr>
-<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.filter_by_row_name.html#rnalysis.filtering.FoldChangeFilter.filter_by_row_name" title="rnalysis.filtering.FoldChangeFilter.filter_by_row_name"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FoldChangeFilter.filter_by_row_name</span></code></a>(row_names)</p></td>
-<td><p>Filter out specific rows from the table by their name (index).</p></td>
-</tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.filter_duplicate_ids.html#rnalysis.filtering.FoldChangeFilter.filter_duplicate_ids" title="rnalysis.filtering.FoldChangeFilter.filter_duplicate_ids"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FoldChangeFilter.filter_duplicate_ids</span></code></a>([...])</p></td>
-<td><p>Filter out rows with duplicate names/IDs (index).</p></td>
-</tr>
-<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.filter_fold_change_direction.html#rnalysis.filtering.FoldChangeFilter.filter_fold_change_direction" title="rnalysis.filtering.FoldChangeFilter.filter_fold_change_direction"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FoldChangeFilter.filter_fold_change_direction</span></code></a>([...])</p></td>
-<td><p>Filters out features according to the direction in which they changed between the two conditions.</p></td>
-</tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.filter_missing_values.html#rnalysis.filtering.FoldChangeFilter.filter_missing_values" title="rnalysis.filtering.FoldChangeFilter.filter_missing_values"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FoldChangeFilter.filter_missing_values</span></code></a>([...])</p></td>
-<td><p>Remove all rows with missing values.</p></td>
-</tr>
-<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.filter_percentile.html#rnalysis.filtering.FoldChangeFilter.filter_percentile" title="rnalysis.filtering.FoldChangeFilter.filter_percentile"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FoldChangeFilter.filter_percentile</span></code></a>(percentile)</p></td>
-<td><p>Removes all entries above the specified percentile.</p></td>
-</tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.filter_top_n.html#rnalysis.filtering.FoldChangeFilter.filter_top_n" title="rnalysis.filtering.FoldChangeFilter.filter_top_n"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FoldChangeFilter.filter_top_n</span></code></a>(by[, n, ...])</p></td>
-<td><p>Sort the rows by the values of specified column or columns, then keep only the top 'n' rows.</p></td>
-</tr>
-<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.find_paralogs_ensembl.html#rnalysis.filtering.FoldChangeFilter.find_paralogs_ensembl" title="rnalysis.filtering.FoldChangeFilter.find_paralogs_ensembl"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FoldChangeFilter.find_paralogs_ensembl</span></code></a>([...])</p></td>
-<td><p>Find paralogs within the same species using the Ensembl database.</p></td>
-</tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.find_paralogs_panther.html#rnalysis.filtering.FoldChangeFilter.find_paralogs_panther" title="rnalysis.filtering.FoldChangeFilter.find_paralogs_panther"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FoldChangeFilter.find_paralogs_panther</span></code></a>([...])</p></td>
-<td><p>Find paralogs within the same species using the PantherDB database.</p></td>
-</tr>
-<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.from_dataframe.html#rnalysis.filtering.FoldChangeFilter.from_dataframe" title="rnalysis.filtering.FoldChangeFilter.from_dataframe"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FoldChangeFilter.from_dataframe</span></code></a>(df, name[, ...])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.concatenate.html#rnalysis.filtering.FoldChangeFilter.concatenate" title="rnalysis.filtering.FoldChangeFilter.concatenate"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FoldChangeFilter.concatenate</span></code></a>(other)</p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.head.html#rnalysis.filtering.FoldChangeFilter.head" title="rnalysis.filtering.FoldChangeFilter.head"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FoldChangeFilter.head</span></code></a>([n])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.describe.html#rnalysis.filtering.FoldChangeFilter.describe" title="rnalysis.filtering.FoldChangeFilter.describe"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FoldChangeFilter.describe</span></code></a>([percentiles])</p></td>
+<td><p>Generate descriptive statistics that summarize the central tendency, dispersion and shape         of the dataset’s distribution, excluding NaN values.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.difference.html#rnalysis.filtering.FoldChangeFilter.difference" title="rnalysis.filtering.FoldChangeFilter.difference"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FoldChangeFilter.difference</span></code></a>(*others[, ...])</p></td>
+<td><p>Keep only the features that exist in the first Filter object/set but NOT in the others.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.drop_columns.html#rnalysis.filtering.FoldChangeFilter.drop_columns" title="rnalysis.filtering.FoldChangeFilter.drop_columns"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FoldChangeFilter.drop_columns</span></code></a>(columns[, inplace])</p></td>
+<td><p>Drop specific columns from the table.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.filter_abs_log2_fold_change.html#rnalysis.filtering.FoldChangeFilter.filter_abs_log2_fold_change" title="rnalysis.filtering.FoldChangeFilter.filter_abs_log2_fold_change"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FoldChangeFilter.filter_abs_log2_fold_change</span></code></a>([...])</p></td>
+<td><p>Filters out all features whose absolute log2 fold change is below the indicated threshold.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.filter_biotype_from_gtf.html#rnalysis.filtering.FoldChangeFilter.filter_biotype_from_gtf" title="rnalysis.filtering.FoldChangeFilter.filter_biotype_from_gtf"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FoldChangeFilter.filter_biotype_from_gtf</span></code></a>(...)</p></td>
+<td><p>Filters out all features that do not match the indicated biotype/biotypes         (for example: 'protein_coding', 'ncRNA', etc).</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.filter_biotype_from_ref_table.html#rnalysis.filtering.FoldChangeFilter.filter_biotype_from_ref_table" title="rnalysis.filtering.FoldChangeFilter.filter_biotype_from_ref_table"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FoldChangeFilter.filter_biotype_from_ref_table</span></code></a>([...])</p></td>
+<td><p>Filters out all features that do not match the indicated biotype/biotypes         (for example: 'protein_coding', 'ncRNA', etc).</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.filter_by_attribute.html#rnalysis.filtering.FoldChangeFilter.filter_by_attribute" title="rnalysis.filtering.FoldChangeFilter.filter_by_attribute"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FoldChangeFilter.filter_by_attribute</span></code></a>([...])</p></td>
+<td><p>Filters features according to user-defined attributes from an Attribute Reference Table.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.filter_by_go_annotations.html#rnalysis.filtering.FoldChangeFilter.filter_by_go_annotations" title="rnalysis.filtering.FoldChangeFilter.filter_by_go_annotations"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FoldChangeFilter.filter_by_go_annotations</span></code></a>(go_ids)</p></td>
+<td><p>Filters genes according to GO annotations, keeping only genes that are annotated with a specific GO term.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.filter_by_kegg_annotations.html#rnalysis.filtering.FoldChangeFilter.filter_by_kegg_annotations" title="rnalysis.filtering.FoldChangeFilter.filter_by_kegg_annotations"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FoldChangeFilter.filter_by_kegg_annotations</span></code></a>(...)</p></td>
+<td><p>Filters genes according to KEGG pathways, keeping only genes that belong to specific KEGG pathway.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.filter_by_row_name.html#rnalysis.filtering.FoldChangeFilter.filter_by_row_name" title="rnalysis.filtering.FoldChangeFilter.filter_by_row_name"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FoldChangeFilter.filter_by_row_name</span></code></a>(row_names)</p></td>
+<td><p>Filter out specific rows from the table by their name (index).</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.filter_duplicate_ids.html#rnalysis.filtering.FoldChangeFilter.filter_duplicate_ids" title="rnalysis.filtering.FoldChangeFilter.filter_duplicate_ids"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FoldChangeFilter.filter_duplicate_ids</span></code></a>([...])</p></td>
+<td><p>Filter out rows with duplicate names/IDs (index).</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.filter_fold_change_direction.html#rnalysis.filtering.FoldChangeFilter.filter_fold_change_direction" title="rnalysis.filtering.FoldChangeFilter.filter_fold_change_direction"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FoldChangeFilter.filter_fold_change_direction</span></code></a>([...])</p></td>
+<td><p>Filters out features according to the direction in which they changed between the two conditions.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.filter_missing_values.html#rnalysis.filtering.FoldChangeFilter.filter_missing_values" title="rnalysis.filtering.FoldChangeFilter.filter_missing_values"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FoldChangeFilter.filter_missing_values</span></code></a>([...])</p></td>
+<td><p>Remove all rows with missing values.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.filter_percentile.html#rnalysis.filtering.FoldChangeFilter.filter_percentile" title="rnalysis.filtering.FoldChangeFilter.filter_percentile"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FoldChangeFilter.filter_percentile</span></code></a>(percentile)</p></td>
+<td><p>Removes all entries above the specified percentile.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.filter_top_n.html#rnalysis.filtering.FoldChangeFilter.filter_top_n" title="rnalysis.filtering.FoldChangeFilter.filter_top_n"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FoldChangeFilter.filter_top_n</span></code></a>(by[, n, ...])</p></td>
+<td><p>Sort the rows by the values of specified column or columns, then keep only the top 'n' rows.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.find_paralogs_ensembl.html#rnalysis.filtering.FoldChangeFilter.find_paralogs_ensembl" title="rnalysis.filtering.FoldChangeFilter.find_paralogs_ensembl"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FoldChangeFilter.find_paralogs_ensembl</span></code></a>([...])</p></td>
+<td><p>Find paralogs within the same species using the Ensembl database.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.find_paralogs_panther.html#rnalysis.filtering.FoldChangeFilter.find_paralogs_panther" title="rnalysis.filtering.FoldChangeFilter.find_paralogs_panther"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FoldChangeFilter.find_paralogs_panther</span></code></a>([...])</p></td>
+<td><p>Find paralogs within the same species using the PantherDB database.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.from_dataframe.html#rnalysis.filtering.FoldChangeFilter.from_dataframe" title="rnalysis.filtering.FoldChangeFilter.from_dataframe"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FoldChangeFilter.from_dataframe</span></code></a>(df, name[, ...])</p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.head.html#rnalysis.filtering.FoldChangeFilter.head" title="rnalysis.filtering.FoldChangeFilter.head"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FoldChangeFilter.head</span></code></a>([n])</p></td>
 <td><p>Return the first n rows of the Filter object.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.histogram.html#rnalysis.filtering.FoldChangeFilter.histogram" title="rnalysis.filtering.FoldChangeFilter.histogram"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FoldChangeFilter.histogram</span></code></a>(column[, bins, ...])</p></td>
+<td><p></p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.intersection.html#rnalysis.filtering.FoldChangeFilter.intersection" title="rnalysis.filtering.FoldChangeFilter.intersection"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FoldChangeFilter.intersection</span></code></a>(*others[, ...])</p></td>
 <td><p>Keep only the features that exist in ALL of the given Filter objects/sets.</p></td>

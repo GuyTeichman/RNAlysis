@@ -1,12 +1,14 @@
 <!DOCTYPE html>
-<html class="writer-html5" lang="en" >
+<html class="writer-html5" lang="en">
 <head>
-  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>rnalysis.filtering.Filter.map_orthologs_phylomedb &mdash; RNAlysis 3.11.0 documentation</title>
-      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <title>rnalysis.filtering.Filter.map_orthologs_phylomedb &mdash; RNAlysis 3.12.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css" />
+
+  
     <link rel="shortcut icon" href="_static/favicon.ico"/>
   <!--[if lt IE 9]>
     <script src="_static/js/html5shiv.min.js"></script>
@@ -17,7 +19,6 @@
         <script src="_static/underscore.js"></script>
         <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
         <script src="_static/doctools.js"></script>
-        <script src="_static/sphinx_highlight.js"></script>
         <script src="_static/copybutton.js"></script>
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
@@ -78,9 +79,9 @@
 <li class="toctree-l2"><a class="reference internal" href="rnalysis.filtering.CountFilter.html">rnalysis.filtering.CountFilter</a></li>
 <li class="toctree-l2"><a class="reference internal" href="rnalysis.filtering.DESeqFilter.html">rnalysis.filtering.DESeqFilter</a></li>
 <li class="toctree-l2 current"><a class="reference internal" href="rnalysis.filtering.Filter.html">rnalysis.filtering.Filter</a><ul class="current">
-<li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.Filter.html#rnalysis.filtering.Filter"><code class="docutils literal notranslate"><span class="pre">Filter</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.Filter.biotypes_from_gtf.html">rnalysis.filtering.Filter.biotypes_from_gtf</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.Filter.biotypes_from_ref_table.html">rnalysis.filtering.Filter.biotypes_from_ref_table</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.Filter.concatenate.html">rnalysis.filtering.Filter.concatenate</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.Filter.describe.html">rnalysis.filtering.Filter.describe</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.Filter.difference.html">rnalysis.filtering.Filter.difference</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.Filter.drop_columns.html">rnalysis.filtering.Filter.drop_columns</a></li>
@@ -98,15 +99,13 @@
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.Filter.find_paralogs_panther.html">rnalysis.filtering.Filter.find_paralogs_panther</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.Filter.from_dataframe.html">rnalysis.filtering.Filter.from_dataframe</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.Filter.head.html">rnalysis.filtering.Filter.head</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.Filter.histogram.html">rnalysis.filtering.Filter.histogram</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.Filter.intersection.html">rnalysis.filtering.Filter.intersection</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.Filter.majority_vote_intersection.html">rnalysis.filtering.Filter.majority_vote_intersection</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.Filter.map_orthologs_ensembl.html">rnalysis.filtering.Filter.map_orthologs_ensembl</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.Filter.map_orthologs_orthoinspector.html">rnalysis.filtering.Filter.map_orthologs_orthoinspector</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.Filter.map_orthologs_panther.html">rnalysis.filtering.Filter.map_orthologs_panther</a></li>
-<li class="toctree-l3 current"><a class="current reference internal" href="#">rnalysis.filtering.Filter.map_orthologs_phylomedb</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#rnalysis.filtering.Filter.map_orthologs_phylomedb"><code class="docutils literal notranslate"><span class="pre">Filter.map_orthologs_phylomedb()</span></code></a></li>
-</ul>
-</li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">rnalysis.filtering.Filter.map_orthologs_phylomedb</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.Filter.number_filters.html">rnalysis.filtering.Filter.number_filters</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.Filter.print_features.html">rnalysis.filtering.Filter.print_features</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.Filter.save_csv.html">rnalysis.filtering.Filter.save_csv</a></li>
@@ -170,56 +169,56 @@
 <dd><blockquote>
 <div><p>Map genes to their nearest orthologs in a different species using the PhylomeDB database.         This function generates a table describing all matching discovered ortholog pairs (both unique and non-unique)         and returns it, and can also translate the genes in this data table into their nearest ortholog,         as well as remove unmapped genes.</p>
 <dl class="field-list simple">
-<dt class="field-odd">param map_to_organism</dt>
+<dt class="field-odd">param map_to_organism<span class="colon">:</span></dt>
 <dd class="field-odd"><p>organism name or NCBI taxon ID of the target species for ortholog mapping.</p>
 </dd>
-<dt class="field-even">type map_to_organism</dt>
+<dt class="field-even">type map_to_organism<span class="colon">:</span></dt>
 <dd class="field-even"><p>str or int</p>
 </dd>
-<dt class="field-odd">param map_from_organism</dt>
+<dt class="field-odd">param map_from_organism<span class="colon">:</span></dt>
 <dd class="field-odd"><p>organism name or NCBI taxon ID of the input genes’ source species.</p>
 </dd>
-<dt class="field-even">type map_from_organism</dt>
+<dt class="field-even">type map_from_organism<span class="colon">:</span></dt>
 <dd class="field-even"><p>str or int</p>
 </dd>
-<dt class="field-odd">param gene_id_type</dt>
+<dt class="field-odd">param gene_id_type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>the identifier type of the genes/features in the FeatureSet object         (for example: ‘UniProtKB’, ‘WormBase’, ‘RNACentral’, ‘Entrez Gene ID’).         If the annotations fetched from the KEGG server do not match your gene_id_type, RNAlysis will attempt to map         the annotations’ gene IDs to your identifier type.         For a full list of legal ‘gene_id_type’ names, see the UniProt website:         <a class="reference external" href="https://www.uniprot.org/help/api_idmapping">https://www.uniprot.org/help/api_idmapping</a></p>
 </dd>
-<dt class="field-even">type gene_id_type</dt>
+<dt class="field-even">type gene_id_type<span class="colon">:</span></dt>
 <dd class="field-even"><p>str or ‘auto’ (default=’auto’)</p>
 </dd>
 </dl>
 </div></blockquote>
 <dl class="simple">
 <dt>`   :param consistency_score_threshold: the minimum consistency score required for an ortholog mapping to be         considered valid. Consistency scores are calculated by PhylomeDB and represent the confidence of the         ortholog mapping. setting consistency_score_threshold to 0 will keep all mappings. You can read more about         PhylomeDB consistency score on the PhylomeDB website: orthology.phylomedb.org/help</dt><dd><dl class="field-list simple">
-<dt class="field-odd">type consistency_score_threshold</dt>
+<dt class="field-odd">type consistency_score_threshold<span class="colon">:</span></dt>
 <dd class="field-odd"><p>float between 0 and 1 (default=0.5)</p>
 </dd>
-<dt class="field-even">param filter_consistency_score</dt>
+<dt class="field-even">param filter_consistency_score<span class="colon">:</span></dt>
 <dd class="field-even"><p>if True (default), when encountering non-unique ortholog mappings,         <em>RNAlysis</em> will only keep the mappings with the highest consistency score.</p>
 </dd>
-<dt class="field-odd">type filter_consistency_score</dt>
+<dt class="field-odd">type filter_consistency_score<span class="colon">:</span></dt>
 <dd class="field-odd"><p>bool (default=True)</p>
 </dd>
-<dt class="field-even">param non_unique_mode</dt>
+<dt class="field-even">param non_unique_mode<span class="colon">:</span></dt>
 <dd class="field-even"><p>How to handle non-unique mappings. ‘first’ will keep the first mapping found for each         gene; ‘last’ will keep the last; ‘random’ will keep a random mapping;         and ‘none’ will discard all non-unique mappings.</p>
 </dd>
-<dt class="field-odd">type non_unique_mode</dt>
+<dt class="field-odd">type non_unique_mode<span class="colon">:</span></dt>
 <dd class="field-odd"><p>‘first’, ‘last’, ‘random’, or ‘none’ (default=’first’)</p>
 </dd>
-<dt class="field-even">param remove_unmapped_genes</dt>
+<dt class="field-even">param remove_unmapped_genes<span class="colon">:</span></dt>
 <dd class="field-even"><p>if True, rows with gene names/IDs that could not be mapped to an ortholog         will be dropped from the table.         Otherwise, they will remain in the table with their original gene name/ID.</p>
 </dd>
-<dt class="field-odd">type remove_unmapped_genes</dt>
+<dt class="field-odd">type remove_unmapped_genes<span class="colon">:</span></dt>
 <dd class="field-odd"><p>bool (default=False)</p>
 </dd>
-<dt class="field-even">type inplace</dt>
+<dt class="field-even">type inplace<span class="colon">:</span></dt>
 <dd class="field-even"><p>bool (default=True)</p>
 </dd>
-<dt class="field-odd">param inplace</dt>
+<dt class="field-odd">param inplace<span class="colon">:</span></dt>
 <dd class="field-odd"><p>If True (default), filtering will be applied to the current Filter object. If False,         the function will return a new Filter instance and the current instance will not be affected.</p>
 </dd>
-<dt class="field-even">return</dt>
+<dt class="field-even">return<span class="colon">:</span></dt>
 <dd class="field-even"><p>DataFrame describing all discovered mappings (unique and otherwise). If inplace=True,         returns a filtered instance of the Filter object as well.</p>
 </dd>
 </dl>

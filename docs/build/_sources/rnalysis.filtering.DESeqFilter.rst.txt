@@ -18,6 +18,7 @@
     
     DESeqFilter.biotypes_from_gtf
     DESeqFilter.biotypes_from_ref_table
+    DESeqFilter.concatenate
     DESeqFilter.describe
     DESeqFilter.difference
     DESeqFilter.drop_columns
@@ -38,6 +39,7 @@
     DESeqFilter.find_paralogs_panther
     DESeqFilter.from_dataframe
     DESeqFilter.head
+    DESeqFilter.histogram
     DESeqFilter.intersection
     DESeqFilter.majority_vote_intersection
     DESeqFilter.map_orthologs_ensembl
@@ -46,6 +48,7 @@
     DESeqFilter.map_orthologs_phylomedb
     DESeqFilter.number_filters
     DESeqFilter.print_features
+    DESeqFilter.pval_histogram
     DESeqFilter.save_csv
     DESeqFilter.save_parquet
     DESeqFilter.save_table

@@ -1,12 +1,14 @@
 <!DOCTYPE html>
-<html class="writer-html5" lang="en" >
+<html class="writer-html5" lang="en">
 <head>
-  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>rnalysis.enrichment.upset_plot &mdash; RNAlysis 3.11.0 documentation</title>
-      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <title>rnalysis.enrichment.upset_plot &mdash; RNAlysis 3.12.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css" />
+
+  
     <link rel="shortcut icon" href="_static/favicon.ico"/>
   <!--[if lt IE 9]>
     <script src="_static/js/html5shiv.min.js"></script>
@@ -17,7 +19,6 @@
         <script src="_static/underscore.js"></script>
         <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
         <script src="_static/doctools.js"></script>
-        <script src="_static/sphinx_highlight.js"></script>
         <script src="_static/copybutton.js"></script>
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
@@ -81,10 +82,7 @@
 <li class="toctree-l2"><a class="reference internal" href="rnalysis.enrichment.enrichment_bar_plot.html">rnalysis.enrichment.enrichment_bar_plot</a></li>
 <li class="toctree-l2"><a class="reference internal" href="rnalysis.enrichment.gene_ontology_graph.html">rnalysis.enrichment.gene_ontology_graph</a></li>
 <li class="toctree-l2"><a class="reference internal" href="rnalysis.enrichment.kegg_pathway_graph.html">rnalysis.enrichment.kegg_pathway_graph</a></li>
-<li class="toctree-l2 current"><a class="current reference internal" href="#">rnalysis.enrichment.upset_plot</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#rnalysis.enrichment.upset_plot"><code class="docutils literal notranslate"><span class="pre">upset_plot()</span></code></a></li>
-</ul>
-</li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">rnalysis.enrichment.upset_plot</a></li>
 <li class="toctree-l2"><a class="reference internal" href="rnalysis.enrichment.venn_diagram.html">rnalysis.enrichment.venn_diagram</a></li>
 </ul>
 </li>
@@ -128,10 +126,10 @@
 <span class="sig-prename descclassname"><span class="pre">rnalysis.enrichment.</span></span><span class="sig-name descname"><span class="pre">upset_plot</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">objs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="rnalysis.enrichment.FeatureSet.html#rnalysis.enrichment.FeatureSet" title="rnalysis.enrichment.FeatureSet"><span class="pre">FeatureSet</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Set</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">set_colors</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ColorList</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">('black',)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">title</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'UpSet</span> <span class="pre">Plot'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">title_fontsize</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">20</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">show_percentages</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">attr_ref_table_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Path</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'predefined'</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'predefined'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fig</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Figure</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Figure</span></span></span><a class="headerlink" href="#rnalysis.enrichment.upset_plot" title="Permalink to this definition"></a></dt>
 <dd><p>Generate an UpSet plot of 2 or more sets, FeatureSets or attributes from the Attribute Reference Table.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>objs</strong> (<em>a dictionary with 2</em><em> or </em><em>more entries</em><em>, </em><em>where the keys are the names</em><em> of </em><em>the sets</em><em>, </em><em>and the values are either     a FeatureSet</em><em>, </em><em>a python set</em><em> of </em><em>feature indices</em><em>, or </em><em>a name</em><em> of </em><em>a column in the Attribute Reference Table.     For example:     {'first set':{'gene1'</em><em>,</em><em>'gene2'</em><em>,</em><em>'gene3'}</em><em>, </em><em>'second set':'name_of_attribute_from_reference_table'}</em>) – the FeatureSets, python sets or user-defined attributes to plot.</p></li>
-<li><p><strong>set_colors</strong> (<em>Iterable</em><em> of </em><em>colors</em><em> (</em><em>default=</em><em>(</em><em>'black'</em><em>,</em><em>)</em>) – Iif one color is supplied, this will determine the color of all sets on the plot.     If multiple colors are supplied, this will determine the color of each set on the plot, and the subset colors     will be determined by mixing.</p></li>
+<li><p><strong>objs</strong> (<em>a dictionary with 2</em><em> or </em><em>more entries</em><em>, </em><em>where the keys are the names of the sets</em><em>, </em><em>and the values are either     a FeatureSet</em><em>, </em><em>a python set of feature indices</em><em>, or </em><em>a name of a column in the Attribute Reference Table.     For example:     {'first set':{'gene1'</em><em>,</em><em>'gene2'</em><em>,</em><em>'gene3'}</em><em>, </em><em>'second set':'name_of_attribute_from_reference_table'}</em>) – the FeatureSets, python sets or user-defined attributes to plot.</p></li>
+<li><p><strong>set_colors</strong> (<em>Iterable of colors</em><em> (</em><em>default=</em><em>(</em><em>'black'</em><em>,</em><em>)</em>) – Iif one color is supplied, this will determine the color of all sets on the plot.     If multiple colors are supplied, this will determine the color of each set on the plot, and the subset colors     will be determined by mixing.</p></li>
 <li><p><strong>title</strong> (<em>str</em>) – determines the title of the plot.</p></li>
 <li><p><strong>title_fontsize</strong> (<em>float</em><em> (</em><em>default=20</em><em>)</em>) – font size for the plot’s title</p></li>
 <li><p><strong>show_percentages</strong> (<em>bool</em><em> (</em><em>default=True</em><em>)</em>) – if True, shows the percentage that each set or subset takes out of the entire dataset.</p></li>
@@ -139,7 +137,7 @@
 <li><p><strong>fig</strong> (<em>matplotlib.Figure</em>) – optionally, supply your own Figure to generate the plot onto.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p><p>plt.Figure</p>
 <figure class="align-center" id="id1">
 <a class="reference internal image-reference" href="_images/upsetplot.png"><img alt="_images/upsetplot.png" src="_images/upsetplot.png" style="width: 552.3px; height: 340.2px;" /></a>

@@ -1,12 +1,14 @@
 <!DOCTYPE html>
-<html class="writer-html5" lang="en" >
+<html class="writer-html5" lang="en">
 <head>
-  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>rnalysis.filtering.Filter &mdash; RNAlysis 3.11.0 documentation</title>
-      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <title>rnalysis.filtering.Filter &mdash; RNAlysis 3.12.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css" />
+
+  
     <link rel="shortcut icon" href="_static/favicon.ico"/>
   <!--[if lt IE 9]>
     <script src="_static/js/html5shiv.min.js"></script>
@@ -17,7 +19,6 @@
         <script src="_static/underscore.js"></script>
         <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
         <script src="_static/doctools.js"></script>
-        <script src="_static/sphinx_highlight.js"></script>
         <script src="_static/copybutton.js"></script>
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
@@ -78,12 +79,9 @@
 <li class="toctree-l2"><a class="reference internal" href="rnalysis.filtering.CountFilter.html">rnalysis.filtering.CountFilter</a></li>
 <li class="toctree-l2"><a class="reference internal" href="rnalysis.filtering.DESeqFilter.html">rnalysis.filtering.DESeqFilter</a></li>
 <li class="toctree-l2 current"><a class="current reference internal" href="#">rnalysis.filtering.Filter</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#rnalysis.filtering.Filter"><code class="docutils literal notranslate"><span class="pre">Filter</span></code></a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#rnalysis.filtering.Filter.__init__"><code class="docutils literal notranslate"><span class="pre">Filter.__init__()</span></code></a></li>
-</ul>
-</li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.Filter.biotypes_from_gtf.html">rnalysis.filtering.Filter.biotypes_from_gtf</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.Filter.biotypes_from_ref_table.html">rnalysis.filtering.Filter.biotypes_from_ref_table</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.Filter.concatenate.html">rnalysis.filtering.Filter.concatenate</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.Filter.describe.html">rnalysis.filtering.Filter.describe</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.Filter.difference.html">rnalysis.filtering.Filter.difference</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.Filter.drop_columns.html">rnalysis.filtering.Filter.drop_columns</a></li>
@@ -101,6 +99,7 @@
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.Filter.find_paralogs_panther.html">rnalysis.filtering.Filter.find_paralogs_panther</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.Filter.from_dataframe.html">rnalysis.filtering.Filter.from_dataframe</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.Filter.head.html">rnalysis.filtering.Filter.head</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.Filter.histogram.html">rnalysis.filtering.Filter.histogram</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.Filter.intersection.html">rnalysis.filtering.Filter.intersection</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.Filter.majority_vote_intersection.html">rnalysis.filtering.Filter.majority_vote_intersection</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.Filter.map_orthologs_ensembl.html">rnalysis.filtering.Filter.map_orthologs_ensembl</a></li>
@@ -187,13 +186,13 @@
 <span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fname</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Path</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">drop_columns</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rnalysis.filtering.Filter.__init__" title="Permalink to this definition"></a></dt>
 <dd><p>Load a table.</p>
 <dl class="field-list">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>fname</strong> (<em>Union</em><em>[</em><em>str</em><em>, </em><em>Path</em><em>]</em>) – full path/filename of the .csv file to be loaded into the Filter object</p></li>
-<li><p><strong>drop_columns</strong> (<em>str</em><em>, </em><em>list</em><em> of </em><em>str</em><em>, or </em><em>None</em><em> (</em><em>default=None</em><em>)</em>) – if a string or list of strings are specified,         the columns of the same name/s will be dropped from the loaded table.</p></li>
+<li><p><strong>drop_columns</strong> (<em>str</em><em>, </em><em>list of str</em><em>, or </em><em>None</em><em> (</em><em>default=None</em><em>)</em>) – if a string or list of strings are specified,         the columns of the same name/s will be dropped from the loaded table.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Examples</dt>
+<dt class="field-even">Examples<span class="colon">:</span></dt>
 <dd class="field-even"><div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">rnalysis</span> <span class="kn">import</span> <span class="n">filtering</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">d</span> <span class="o">=</span> <span class="n">filtering</span><span class="o">.</span><span class="n">Filter</span><span class="p">(</span><span class="s2">&quot;tests/test_files/counted.csv&quot;</span><span class="p">)</span>
 </pre></div>
@@ -205,10 +204,6 @@
 </dd></dl>
 
 <table class="autosummary longtable docutils align-default">
-<colgroup>
-<col style="width: 10%" />
-<col style="width: 90%" />
-</colgroup>
 <tbody>
 <tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.Filter.biotypes_from_gtf.html#rnalysis.filtering.Filter.biotypes_from_gtf" title="rnalysis.filtering.Filter.biotypes_from_gtf"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Filter.biotypes_from_gtf</span></code></a>(gtf_path[, ...])</p></td>
 <td><p>Returns a DataFrame describing the biotypes in the table and their count.</p></td>
@@ -216,56 +211,62 @@
 <tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.Filter.biotypes_from_ref_table.html#rnalysis.filtering.Filter.biotypes_from_ref_table" title="rnalysis.filtering.Filter.biotypes_from_ref_table"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Filter.biotypes_from_ref_table</span></code></a>([...])</p></td>
 <td><p>Returns a DataFrame describing the biotypes in the table and their count.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.Filter.describe.html#rnalysis.filtering.Filter.describe" title="rnalysis.filtering.Filter.describe"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Filter.describe</span></code></a>([percentiles])</p></td>
-<td><p>Generate descriptive statistics that summarize the central tendency, dispersion and shape         of the dataset’s distribution, excluding NaN values.</p></td>
-</tr>
-<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.Filter.difference.html#rnalysis.filtering.Filter.difference" title="rnalysis.filtering.Filter.difference"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Filter.difference</span></code></a>(*others[, return_type, ...])</p></td>
-<td><p>Keep only the features that exist in the first Filter object/set but NOT in the others.</p></td>
-</tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.Filter.drop_columns.html#rnalysis.filtering.Filter.drop_columns" title="rnalysis.filtering.Filter.drop_columns"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Filter.drop_columns</span></code></a>(columns[, inplace])</p></td>
-<td><p>Drop specific columns from the table.</p></td>
-</tr>
-<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.Filter.filter_biotype_from_gtf.html#rnalysis.filtering.Filter.filter_biotype_from_gtf" title="rnalysis.filtering.Filter.filter_biotype_from_gtf"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Filter.filter_biotype_from_gtf</span></code></a>(gtf_path[, ...])</p></td>
-<td><p>Filters out all features that do not match the indicated biotype/biotypes         (for example: 'protein_coding', 'ncRNA', etc).</p></td>
-</tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.Filter.filter_biotype_from_ref_table.html#rnalysis.filtering.Filter.filter_biotype_from_ref_table" title="rnalysis.filtering.Filter.filter_biotype_from_ref_table"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Filter.filter_biotype_from_ref_table</span></code></a>([...])</p></td>
-<td><p>Filters out all features that do not match the indicated biotype/biotypes         (for example: 'protein_coding', 'ncRNA', etc).</p></td>
-</tr>
-<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.Filter.filter_by_attribute.html#rnalysis.filtering.Filter.filter_by_attribute" title="rnalysis.filtering.Filter.filter_by_attribute"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Filter.filter_by_attribute</span></code></a>([attributes, ...])</p></td>
-<td><p>Filters features according to user-defined attributes from an Attribute Reference Table.</p></td>
-</tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.Filter.filter_by_go_annotations.html#rnalysis.filtering.Filter.filter_by_go_annotations" title="rnalysis.filtering.Filter.filter_by_go_annotations"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Filter.filter_by_go_annotations</span></code></a>(go_ids[, ...])</p></td>
-<td><p>Filters genes according to GO annotations, keeping only genes that are annotated with a specific GO term.</p></td>
-</tr>
-<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.Filter.filter_by_kegg_annotations.html#rnalysis.filtering.Filter.filter_by_kegg_annotations" title="rnalysis.filtering.Filter.filter_by_kegg_annotations"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Filter.filter_by_kegg_annotations</span></code></a>(kegg_ids)</p></td>
-<td><p>Filters genes according to KEGG pathways, keeping only genes that belong to specific KEGG pathway.</p></td>
-</tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.Filter.filter_by_row_name.html#rnalysis.filtering.Filter.filter_by_row_name" title="rnalysis.filtering.Filter.filter_by_row_name"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Filter.filter_by_row_name</span></code></a>(row_names[, ...])</p></td>
-<td><p>Filter out specific rows from the table by their name (index).</p></td>
-</tr>
-<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.Filter.filter_duplicate_ids.html#rnalysis.filtering.Filter.filter_duplicate_ids" title="rnalysis.filtering.Filter.filter_duplicate_ids"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Filter.filter_duplicate_ids</span></code></a>([keep, ...])</p></td>
-<td><p>Filter out rows with duplicate names/IDs (index).</p></td>
-</tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.Filter.filter_missing_values.html#rnalysis.filtering.Filter.filter_missing_values" title="rnalysis.filtering.Filter.filter_missing_values"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Filter.filter_missing_values</span></code></a>([columns, ...])</p></td>
-<td><p>Remove all rows whose values in the specified columns are missing (NaN).</p></td>
-</tr>
-<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.Filter.filter_percentile.html#rnalysis.filtering.Filter.filter_percentile" title="rnalysis.filtering.Filter.filter_percentile"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Filter.filter_percentile</span></code></a>(percentile, column)</p></td>
-<td><p>Removes all entries above the specified percentile in the specified column.</p></td>
-</tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.Filter.filter_top_n.html#rnalysis.filtering.Filter.filter_top_n" title="rnalysis.filtering.Filter.filter_top_n"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Filter.filter_top_n</span></code></a>(by[, n, ascending, ...])</p></td>
-<td><p>Sort the rows by the values of specified column or columns, then keep only the top 'n' rows.</p></td>
-</tr>
-<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.Filter.find_paralogs_ensembl.html#rnalysis.filtering.Filter.find_paralogs_ensembl" title="rnalysis.filtering.Filter.find_paralogs_ensembl"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Filter.find_paralogs_ensembl</span></code></a>([organism, ...])</p></td>
-<td><p>Find paralogs within the same species using the Ensembl database.</p></td>
-</tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.Filter.find_paralogs_panther.html#rnalysis.filtering.Filter.find_paralogs_panther" title="rnalysis.filtering.Filter.find_paralogs_panther"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Filter.find_paralogs_panther</span></code></a>([organism, ...])</p></td>
-<td><p>Find paralogs within the same species using the PantherDB database.</p></td>
-</tr>
-<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.Filter.from_dataframe.html#rnalysis.filtering.Filter.from_dataframe" title="rnalysis.filtering.Filter.from_dataframe"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Filter.from_dataframe</span></code></a>(df, name)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.Filter.concatenate.html#rnalysis.filtering.Filter.concatenate" title="rnalysis.filtering.Filter.concatenate"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Filter.concatenate</span></code></a>(other)</p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.Filter.head.html#rnalysis.filtering.Filter.head" title="rnalysis.filtering.Filter.head"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Filter.head</span></code></a>([n])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.Filter.describe.html#rnalysis.filtering.Filter.describe" title="rnalysis.filtering.Filter.describe"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Filter.describe</span></code></a>([percentiles])</p></td>
+<td><p>Generate descriptive statistics that summarize the central tendency, dispersion and shape         of the dataset’s distribution, excluding NaN values.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.Filter.difference.html#rnalysis.filtering.Filter.difference" title="rnalysis.filtering.Filter.difference"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Filter.difference</span></code></a>(*others[, return_type, ...])</p></td>
+<td><p>Keep only the features that exist in the first Filter object/set but NOT in the others.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.Filter.drop_columns.html#rnalysis.filtering.Filter.drop_columns" title="rnalysis.filtering.Filter.drop_columns"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Filter.drop_columns</span></code></a>(columns[, inplace])</p></td>
+<td><p>Drop specific columns from the table.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.Filter.filter_biotype_from_gtf.html#rnalysis.filtering.Filter.filter_biotype_from_gtf" title="rnalysis.filtering.Filter.filter_biotype_from_gtf"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Filter.filter_biotype_from_gtf</span></code></a>(gtf_path[, ...])</p></td>
+<td><p>Filters out all features that do not match the indicated biotype/biotypes         (for example: 'protein_coding', 'ncRNA', etc).</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.Filter.filter_biotype_from_ref_table.html#rnalysis.filtering.Filter.filter_biotype_from_ref_table" title="rnalysis.filtering.Filter.filter_biotype_from_ref_table"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Filter.filter_biotype_from_ref_table</span></code></a>([...])</p></td>
+<td><p>Filters out all features that do not match the indicated biotype/biotypes         (for example: 'protein_coding', 'ncRNA', etc).</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.Filter.filter_by_attribute.html#rnalysis.filtering.Filter.filter_by_attribute" title="rnalysis.filtering.Filter.filter_by_attribute"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Filter.filter_by_attribute</span></code></a>([attributes, ...])</p></td>
+<td><p>Filters features according to user-defined attributes from an Attribute Reference Table.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.Filter.filter_by_go_annotations.html#rnalysis.filtering.Filter.filter_by_go_annotations" title="rnalysis.filtering.Filter.filter_by_go_annotations"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Filter.filter_by_go_annotations</span></code></a>(go_ids[, ...])</p></td>
+<td><p>Filters genes according to GO annotations, keeping only genes that are annotated with a specific GO term.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.Filter.filter_by_kegg_annotations.html#rnalysis.filtering.Filter.filter_by_kegg_annotations" title="rnalysis.filtering.Filter.filter_by_kegg_annotations"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Filter.filter_by_kegg_annotations</span></code></a>(kegg_ids)</p></td>
+<td><p>Filters genes according to KEGG pathways, keeping only genes that belong to specific KEGG pathway.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.Filter.filter_by_row_name.html#rnalysis.filtering.Filter.filter_by_row_name" title="rnalysis.filtering.Filter.filter_by_row_name"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Filter.filter_by_row_name</span></code></a>(row_names[, ...])</p></td>
+<td><p>Filter out specific rows from the table by their name (index).</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.Filter.filter_duplicate_ids.html#rnalysis.filtering.Filter.filter_duplicate_ids" title="rnalysis.filtering.Filter.filter_duplicate_ids"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Filter.filter_duplicate_ids</span></code></a>([keep, ...])</p></td>
+<td><p>Filter out rows with duplicate names/IDs (index).</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.Filter.filter_missing_values.html#rnalysis.filtering.Filter.filter_missing_values" title="rnalysis.filtering.Filter.filter_missing_values"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Filter.filter_missing_values</span></code></a>([columns, ...])</p></td>
+<td><p>Remove all rows whose values in the specified columns are missing (NaN).</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.Filter.filter_percentile.html#rnalysis.filtering.Filter.filter_percentile" title="rnalysis.filtering.Filter.filter_percentile"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Filter.filter_percentile</span></code></a>(percentile, column)</p></td>
+<td><p>Removes all entries above the specified percentile in the specified column.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.Filter.filter_top_n.html#rnalysis.filtering.Filter.filter_top_n" title="rnalysis.filtering.Filter.filter_top_n"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Filter.filter_top_n</span></code></a>(by[, n, ascending, ...])</p></td>
+<td><p>Sort the rows by the values of specified column or columns, then keep only the top 'n' rows.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.Filter.find_paralogs_ensembl.html#rnalysis.filtering.Filter.find_paralogs_ensembl" title="rnalysis.filtering.Filter.find_paralogs_ensembl"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Filter.find_paralogs_ensembl</span></code></a>([organism, ...])</p></td>
+<td><p>Find paralogs within the same species using the Ensembl database.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.Filter.find_paralogs_panther.html#rnalysis.filtering.Filter.find_paralogs_panther" title="rnalysis.filtering.Filter.find_paralogs_panther"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Filter.find_paralogs_panther</span></code></a>([organism, ...])</p></td>
+<td><p>Find paralogs within the same species using the PantherDB database.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.Filter.from_dataframe.html#rnalysis.filtering.Filter.from_dataframe" title="rnalysis.filtering.Filter.from_dataframe"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Filter.from_dataframe</span></code></a>(df, name)</p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.Filter.head.html#rnalysis.filtering.Filter.head" title="rnalysis.filtering.Filter.head"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Filter.head</span></code></a>([n])</p></td>
 <td><p>Return the first n rows of the Filter object.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.Filter.histogram.html#rnalysis.filtering.Filter.histogram" title="rnalysis.filtering.Filter.histogram"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Filter.histogram</span></code></a>(column[, bins, x_label, ...])</p></td>
+<td><p></p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.Filter.intersection.html#rnalysis.filtering.Filter.intersection" title="rnalysis.filtering.Filter.intersection"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Filter.intersection</span></code></a>(*others[, return_type, ...])</p></td>
 <td><p>Keep only the features that exist in ALL of the given Filter objects/sets.</p></td>

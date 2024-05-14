@@ -1,12 +1,14 @@
 <!DOCTYPE html>
-<html class="writer-html5" lang="en" >
+<html class="writer-html5" lang="en">
 <head>
-  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>rnalysis.filtering.Pipeline.export_pipeline &mdash; RNAlysis 3.11.0 documentation</title>
-      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <title>rnalysis.filtering.Pipeline.export_pipeline &mdash; RNAlysis 3.12.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css" />
+
+  
     <link rel="shortcut icon" href="_static/favicon.ico"/>
   <!--[if lt IE 9]>
     <script src="_static/js/html5shiv.min.js"></script>
@@ -17,7 +19,6 @@
         <script src="_static/underscore.js"></script>
         <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
         <script src="_static/doctools.js"></script>
-        <script src="_static/sphinx_highlight.js"></script>
         <script src="_static/copybutton.js"></script>
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
@@ -80,13 +81,9 @@
 <li class="toctree-l2"><a class="reference internal" href="rnalysis.filtering.Filter.html">rnalysis.filtering.Filter</a></li>
 <li class="toctree-l2"><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.html">rnalysis.filtering.FoldChangeFilter</a></li>
 <li class="toctree-l2 current"><a class="reference internal" href="rnalysis.filtering.Pipeline.html">rnalysis.filtering.Pipeline</a><ul class="current">
-<li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.Pipeline.html#rnalysis.filtering.Pipeline"><code class="docutils literal notranslate"><span class="pre">Pipeline</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.Pipeline.add_function.html">rnalysis.filtering.Pipeline.add_function</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.Pipeline.apply_to.html">rnalysis.filtering.Pipeline.apply_to</a></li>
-<li class="toctree-l3 current"><a class="current reference internal" href="#">rnalysis.filtering.Pipeline.export_pipeline</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#rnalysis.filtering.Pipeline.export_pipeline"><code class="docutils literal notranslate"><span class="pre">Pipeline.export_pipeline()</span></code></a></li>
-</ul>
-</li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">rnalysis.filtering.Pipeline.export_pipeline</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.Pipeline.import_pipeline.html">rnalysis.filtering.Pipeline.import_pipeline</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.Pipeline.remove_last_function.html">rnalysis.filtering.Pipeline.remove_last_function</a></li>
 </ul>
@@ -135,10 +132,10 @@
 <span class="sig-prename descclassname"><span class="pre">Pipeline.</span></span><span class="sig-name descname"><span class="pre">export_pipeline</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Path</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">None</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#rnalysis.filtering.Pipeline.export_pipeline" title="Permalink to this definition"></a></dt>
 <dd><p>Export a Pipeline to a Pipeline YAML file or YAML-like string.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>filename</strong> (<em>str</em><em>, </em><em>pathlib.Path</em><em>, or </em><em>None</em>) – filename to save the Pipeline YAML to, or None to return a YAML-like string instead.</p>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>if filename is None, returns the Pipeline YAML-like string.</p>
 </dd>
 </dl>

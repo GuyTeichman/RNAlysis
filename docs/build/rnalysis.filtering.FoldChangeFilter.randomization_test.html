@@ -1,12 +1,14 @@
 <!DOCTYPE html>
-<html class="writer-html5" lang="en" >
+<html class="writer-html5" lang="en">
 <head>
-  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>rnalysis.filtering.FoldChangeFilter.randomization_test &mdash; RNAlysis 3.11.0 documentation</title>
-      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <title>rnalysis.filtering.FoldChangeFilter.randomization_test &mdash; RNAlysis 3.12.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css" />
+
+  
     <link rel="shortcut icon" href="_static/favicon.ico"/>
   <!--[if lt IE 9]>
     <script src="_static/js/html5shiv.min.js"></script>
@@ -17,7 +19,6 @@
         <script src="_static/underscore.js"></script>
         <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
         <script src="_static/doctools.js"></script>
-        <script src="_static/sphinx_highlight.js"></script>
         <script src="_static/copybutton.js"></script>
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
@@ -79,9 +80,9 @@
 <li class="toctree-l2"><a class="reference internal" href="rnalysis.filtering.DESeqFilter.html">rnalysis.filtering.DESeqFilter</a></li>
 <li class="toctree-l2"><a class="reference internal" href="rnalysis.filtering.Filter.html">rnalysis.filtering.Filter</a></li>
 <li class="toctree-l2 current"><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.html">rnalysis.filtering.FoldChangeFilter</a><ul class="current">
-<li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.html#rnalysis.filtering.FoldChangeFilter"><code class="docutils literal notranslate"><span class="pre">FoldChangeFilter</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.biotypes_from_gtf.html">rnalysis.filtering.FoldChangeFilter.biotypes_from_gtf</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.biotypes_from_ref_table.html">rnalysis.filtering.FoldChangeFilter.biotypes_from_ref_table</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.concatenate.html">rnalysis.filtering.FoldChangeFilter.concatenate</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.describe.html">rnalysis.filtering.FoldChangeFilter.describe</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.difference.html">rnalysis.filtering.FoldChangeFilter.difference</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.drop_columns.html">rnalysis.filtering.FoldChangeFilter.drop_columns</a></li>
@@ -101,6 +102,7 @@
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.find_paralogs_panther.html">rnalysis.filtering.FoldChangeFilter.find_paralogs_panther</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.from_dataframe.html">rnalysis.filtering.FoldChangeFilter.from_dataframe</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.head.html">rnalysis.filtering.FoldChangeFilter.head</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.histogram.html">rnalysis.filtering.FoldChangeFilter.histogram</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.intersection.html">rnalysis.filtering.FoldChangeFilter.intersection</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.majority_vote_intersection.html">rnalysis.filtering.FoldChangeFilter.majority_vote_intersection</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.map_orthologs_ensembl.html">rnalysis.filtering.FoldChangeFilter.map_orthologs_ensembl</a></li>
@@ -109,10 +111,7 @@
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.map_orthologs_phylomedb.html">rnalysis.filtering.FoldChangeFilter.map_orthologs_phylomedb</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.number_filters.html">rnalysis.filtering.FoldChangeFilter.number_filters</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.print_features.html">rnalysis.filtering.FoldChangeFilter.print_features</a></li>
-<li class="toctree-l3 current"><a class="current reference internal" href="#">rnalysis.filtering.FoldChangeFilter.randomization_test</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#rnalysis.filtering.FoldChangeFilter.randomization_test"><code class="docutils literal notranslate"><span class="pre">FoldChangeFilter.randomization_test()</span></code></a></li>
-</ul>
-</li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">rnalysis.filtering.FoldChangeFilter.randomization_test</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.save_csv.html">rnalysis.filtering.FoldChangeFilter.save_csv</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.save_parquet.html">rnalysis.filtering.FoldChangeFilter.save_parquet</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.save_table.html">rnalysis.filtering.FoldChangeFilter.save_table</a></li>
@@ -173,7 +172,7 @@
 <span class="sig-prename descclassname"><span class="pre">FoldChangeFilter.</span></span><span class="sig-name descname"><span class="pre">randomization_test</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ref</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Fraction</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.05</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reps</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">PositiveInt</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">10000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_csv</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fname</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">random_seed</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">DataFrame</span></span></span><a class="headerlink" href="#rnalysis.filtering.FoldChangeFilter.randomization_test" title="Permalink to this definition"></a></dt>
 <dd><p>Perform a randomization test to examine whether the fold change of a group of specific genomic features         is significantly different than the fold change of a background set of genomic features.</p>
 <dl class="field-list">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>ref</strong> (<a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.html#rnalysis.filtering.FoldChangeFilter" title="rnalysis.filtering.FoldChangeFilter"><em>FoldChangeFilter</em></a>) – A reference FoldChangeFilter object which contains the fold change for every reference gene.         Will be used to calculate the expected score and to perform randomizations.</p></li>
 <li><p><strong>alpha</strong> (<em>float between 0 and 1</em>) – Indicates the threshold for significance (alpha).</p></li>
@@ -182,13 +181,13 @@
 <li><p><strong>fname</strong> (<em>str</em><em> or </em><em>pathlib.Path</em>) – The full path and name of the file to which to save the results. For example:         ‘C:/dir/file’. No ‘.csv’ suffix is required. If None (default), fname will be requested in a manual prompt.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Return type</dt>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p>pandas DataFrame</p>
 </dd>
-<dt class="field-odd">Returns</dt>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><p>A Dataframe with the number of given genes, the observed fold change for the given group of genes,         the expected fold change for a group of genes of that size and the p value for the comparison.</p>
 </dd>
-<dt class="field-even">Examples</dt>
+<dt class="field-even">Examples<span class="colon">:</span></dt>
 <dd class="field-even"><div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">rnalysis</span> <span class="kn">import</span> <span class="n">filtering</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="n">filtering</span><span class="o">.</span><span class="n">FoldChangeFilter</span><span class="p">(</span><span class="s1">&#39;tests/test_files/fc_1.csv&#39;</span> <span class="p">,</span> <span class="s1">&#39;numerator&#39;</span> <span class="p">,</span> <span class="s1">&#39;denominator&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">f_background</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">filter_biotype_from_ref_table</span><span class="p">(</span><span class="s1">&#39;protein_coding&#39;</span><span class="p">,</span> <span class="n">ref</span><span class="o">=</span><span class="s1">&#39;tests/biotype_ref_table_for_tests.csv&#39;</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span> <span class="c1">#keep only protein-coding genes as reference</span>

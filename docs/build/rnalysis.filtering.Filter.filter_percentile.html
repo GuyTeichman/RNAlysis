@@ -1,12 +1,14 @@
 <!DOCTYPE html>
-<html class="writer-html5" lang="en" >
+<html class="writer-html5" lang="en">
 <head>
-  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>rnalysis.filtering.Filter.filter_percentile &mdash; RNAlysis 3.11.0 documentation</title>
-      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <title>rnalysis.filtering.Filter.filter_percentile &mdash; RNAlysis 3.12.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css" />
+
+  
     <link rel="shortcut icon" href="_static/favicon.ico"/>
   <!--[if lt IE 9]>
     <script src="_static/js/html5shiv.min.js"></script>
@@ -17,7 +19,6 @@
         <script src="_static/underscore.js"></script>
         <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
         <script src="_static/doctools.js"></script>
-        <script src="_static/sphinx_highlight.js"></script>
         <script src="_static/copybutton.js"></script>
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
@@ -78,9 +79,9 @@
 <li class="toctree-l2"><a class="reference internal" href="rnalysis.filtering.CountFilter.html">rnalysis.filtering.CountFilter</a></li>
 <li class="toctree-l2"><a class="reference internal" href="rnalysis.filtering.DESeqFilter.html">rnalysis.filtering.DESeqFilter</a></li>
 <li class="toctree-l2 current"><a class="reference internal" href="rnalysis.filtering.Filter.html">rnalysis.filtering.Filter</a><ul class="current">
-<li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.Filter.html#rnalysis.filtering.Filter"><code class="docutils literal notranslate"><span class="pre">Filter</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.Filter.biotypes_from_gtf.html">rnalysis.filtering.Filter.biotypes_from_gtf</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.Filter.biotypes_from_ref_table.html">rnalysis.filtering.Filter.biotypes_from_ref_table</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.Filter.concatenate.html">rnalysis.filtering.Filter.concatenate</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.Filter.describe.html">rnalysis.filtering.Filter.describe</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.Filter.difference.html">rnalysis.filtering.Filter.difference</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.Filter.drop_columns.html">rnalysis.filtering.Filter.drop_columns</a></li>
@@ -92,15 +93,13 @@
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.Filter.filter_by_row_name.html">rnalysis.filtering.Filter.filter_by_row_name</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.Filter.filter_duplicate_ids.html">rnalysis.filtering.Filter.filter_duplicate_ids</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.Filter.filter_missing_values.html">rnalysis.filtering.Filter.filter_missing_values</a></li>
-<li class="toctree-l3 current"><a class="current reference internal" href="#">rnalysis.filtering.Filter.filter_percentile</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#rnalysis.filtering.Filter.filter_percentile"><code class="docutils literal notranslate"><span class="pre">Filter.filter_percentile()</span></code></a></li>
-</ul>
-</li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">rnalysis.filtering.Filter.filter_percentile</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.Filter.filter_top_n.html">rnalysis.filtering.Filter.filter_top_n</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.Filter.find_paralogs_ensembl.html">rnalysis.filtering.Filter.find_paralogs_ensembl</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.Filter.find_paralogs_panther.html">rnalysis.filtering.Filter.find_paralogs_panther</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.Filter.from_dataframe.html">rnalysis.filtering.Filter.from_dataframe</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.Filter.head.html">rnalysis.filtering.Filter.head</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.Filter.histogram.html">rnalysis.filtering.Filter.histogram</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.Filter.intersection.html">rnalysis.filtering.Filter.intersection</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.Filter.majority_vote_intersection.html">rnalysis.filtering.Filter.majority_vote_intersection</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.Filter.map_orthologs_ensembl.html">rnalysis.filtering.Filter.map_orthologs_ensembl</a></li>
@@ -169,7 +168,7 @@
 <span class="sig-prename descclassname"><span class="pre">Filter.</span></span><span class="sig-name descname"><span class="pre">filter_percentile</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">percentile</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Fraction</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">column</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ColumnName</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">opposite</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inplace</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rnalysis.filtering.Filter.filter_percentile" title="Permalink to this definition"></a></dt>
 <dd><p>Removes all entries above the specified percentile in the specified column.         For example, if the column were ‘pvalue’ and the percentile was 0.5, then all features whose pvalue is above         the median pvalue will be filtered out.</p>
 <dl class="field-list">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>percentile</strong> (<em>float between 0 and 1</em>) – The percentile that all features above it will be filtered out.</p></li>
 <li><p><strong>column</strong> (<em>str</em>) – Name of the DataFrame column according to which the filtering will be performed.</p></li>
@@ -177,10 +176,10 @@
 <li><p><strong>inplace</strong> (<em>bool</em><em> (</em><em>default=True</em><em>)</em>) – If True (default), filtering will be applied to the current Filter object. If False,         the function will return a new Filter instance and the current instance will not be affected.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>If inplace is False, returns a new and filtered instance of the Filter object.</p>
 </dd>
-<dt class="field-odd">Examples</dt>
+<dt class="field-odd">Examples<span class="colon">:</span></dt>
 <dd class="field-odd"><div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">rnalysis</span> <span class="kn">import</span> <span class="n">filtering</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">d</span> <span class="o">=</span> <span class="n">filtering</span><span class="o">.</span><span class="n">Filter</span><span class="p">(</span><span class="s2">&quot;tests/test_files/test_deseq.csv&quot;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="c1"># keep only the rows whose value in the column &#39;log2FoldChange&#39; is below the 75th percentile</span>

@@ -21,10 +21,13 @@
     CountFilter.biotypes_from_ref_table
     CountFilter.box_plot
     CountFilter.clustergram
+    CountFilter.concatenate
     CountFilter.describe
     CountFilter.difference
     CountFilter.differential_expression_deseq2
+    CountFilter.differential_expression_deseq2_simplified
     CountFilter.differential_expression_limma_voom
+    CountFilter.differential_expression_limma_voom_simplified
     CountFilter.drop_columns
     CountFilter.enhanced_box_plot
     CountFilter.filter_biotype_from_gtf
@@ -46,6 +49,7 @@
     CountFilter.from_folder
     CountFilter.from_folder_htseqcount
     CountFilter.head
+    CountFilter.histogram
     CountFilter.intersection
     CountFilter.ma_plot
     CountFilter.majority_vote_intersection

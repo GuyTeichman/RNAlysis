@@ -1,12 +1,14 @@
 <!DOCTYPE html>
-<html class="writer-html5" lang="en" >
+<html class="writer-html5" lang="en">
 <head>
-  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>rnalysis.fastq.bowtie2_create_index &mdash; RNAlysis 3.11.0 documentation</title>
-      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <title>rnalysis.fastq.bowtie2_create_index &mdash; RNAlysis 3.12.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css" />
+
+  
     <link rel="shortcut icon" href="_static/favicon.ico"/>
   <!--[if lt IE 9]>
     <script src="_static/js/html5shiv.min.js"></script>
@@ -17,7 +19,6 @@
         <script src="_static/underscore.js"></script>
         <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
         <script src="_static/doctools.js"></script>
-        <script src="_static/sphinx_highlight.js"></script>
         <script src="_static/copybutton.js"></script>
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
@@ -78,10 +79,7 @@
 <li class="toctree-l2"><a class="reference internal" href="rnalysis.fastq.SingleEndPipeline.html">rnalysis.fastq.SingleEndPipeline</a></li>
 <li class="toctree-l2"><a class="reference internal" href="rnalysis.fastq.bowtie2_align_paired_end.html">rnalysis.fastq.bowtie2_align_paired_end</a></li>
 <li class="toctree-l2"><a class="reference internal" href="rnalysis.fastq.bowtie2_align_single_end.html">rnalysis.fastq.bowtie2_align_single_end</a></li>
-<li class="toctree-l2 current"><a class="current reference internal" href="#">rnalysis.fastq.bowtie2_create_index</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#rnalysis.fastq.bowtie2_create_index"><code class="docutils literal notranslate"><span class="pre">bowtie2_create_index()</span></code></a></li>
-</ul>
-</li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">rnalysis.fastq.bowtie2_create_index</a></li>
 <li class="toctree-l2"><a class="reference internal" href="rnalysis.fastq.convert_sam_format.html">rnalysis.fastq.convert_sam_format</a></li>
 <li class="toctree-l2"><a class="reference internal" href="rnalysis.fastq.create_bam_index.html">rnalysis.fastq.create_bam_index</a></li>
 <li class="toctree-l2"><a class="reference internal" href="rnalysis.fastq.fastq_to_sam_paired.html">rnalysis.fastq.fastq_to_sam_paired</a></li>
@@ -143,9 +141,9 @@
 <span class="sig-prename descclassname"><span class="pre">rnalysis.fastq.</span></span><span class="sig-name descname"><span class="pre">bowtie2_create_index</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">genome_fastas</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Path</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_folder</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Path</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">index_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'auto'</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'auto'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bowtie2_installation_folder</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Path</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'auto'</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'auto'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">random_seed</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">NonNegativeInt</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threads</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">PositiveInt</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rnalysis.fastq.bowtie2_create_index" title="Permalink to this definition"></a></dt>
 <dd><p>builds a bowtie index from FASTA formatted files of target sequences (genome).     The index files will be saved in the same folder as your first FASTA file, with the <cite>.bt2</cite> suffix.     Be aware that there are pre-built bowtie2 indices for popular model organisms.     These can be downloaded from  the     <a class="reference external" href="https://bowtie-bio.sourceforge.net/bowtie2/manual.shtml">bowtie2 website</a> (from menu on the right).</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>genome_fastas</strong> (<em>list</em><em> of </em><em>str</em><em> or </em><em>Path</em>) – Path to the FASTA file/files which contain reference sequences to be aligned to.</p></li>
+<li><p><strong>genome_fastas</strong> (<em>list of str</em><em> or </em><em>Path</em>) – Path to the FASTA file/files which contain reference sequences to be aligned to.</p></li>
 <li><p><strong>output_folder</strong> (<em>str</em><em> or </em><em>Path</em>) – Path to the folder in which the bowtie2 index files will be saved.</p></li>
 <li><p><strong>index_name</strong> (<em>str</em><em> or </em><em>'auto'</em><em> (</em><em>default='auto'</em><em>)</em>) – The basename of the index files.     bowtie2 will create files named index_name.1.bt2, index_name.2.bt2, index_name.3.bt2, index_name.4.bt2,     index_name.rev.1.bt2, and index_name.rev.2.bt2.     if index_name=’auto’, the index name used will be the stem of the first supplied genome FASTA file     (for example: if the first genome FASTA file is ‘path/to/genome.fa.gz’, the index name will be ‘genome’).</p></li>
 <li><p><strong>bowtie2_installation_folder</strong> – Path to the installation folder of bowtie2. For example:</p></li>

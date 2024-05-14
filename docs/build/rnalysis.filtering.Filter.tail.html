@@ -1,12 +1,14 @@
 <!DOCTYPE html>
-<html class="writer-html5" lang="en" >
+<html class="writer-html5" lang="en">
 <head>
-  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>rnalysis.filtering.Filter.tail &mdash; RNAlysis 3.11.0 documentation</title>
-      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <title>rnalysis.filtering.Filter.tail &mdash; RNAlysis 3.12.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css" />
+
+  
     <link rel="shortcut icon" href="_static/favicon.ico"/>
   <!--[if lt IE 9]>
     <script src="_static/js/html5shiv.min.js"></script>
@@ -17,7 +19,6 @@
         <script src="_static/underscore.js"></script>
         <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
         <script src="_static/doctools.js"></script>
-        <script src="_static/sphinx_highlight.js"></script>
         <script src="_static/copybutton.js"></script>
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
@@ -78,9 +79,9 @@
 <li class="toctree-l2"><a class="reference internal" href="rnalysis.filtering.CountFilter.html">rnalysis.filtering.CountFilter</a></li>
 <li class="toctree-l2"><a class="reference internal" href="rnalysis.filtering.DESeqFilter.html">rnalysis.filtering.DESeqFilter</a></li>
 <li class="toctree-l2 current"><a class="reference internal" href="rnalysis.filtering.Filter.html">rnalysis.filtering.Filter</a><ul class="current">
-<li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.Filter.html#rnalysis.filtering.Filter"><code class="docutils literal notranslate"><span class="pre">Filter</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.Filter.biotypes_from_gtf.html">rnalysis.filtering.Filter.biotypes_from_gtf</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.Filter.biotypes_from_ref_table.html">rnalysis.filtering.Filter.biotypes_from_ref_table</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.Filter.concatenate.html">rnalysis.filtering.Filter.concatenate</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.Filter.describe.html">rnalysis.filtering.Filter.describe</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.Filter.difference.html">rnalysis.filtering.Filter.difference</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.Filter.drop_columns.html">rnalysis.filtering.Filter.drop_columns</a></li>
@@ -98,6 +99,7 @@
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.Filter.find_paralogs_panther.html">rnalysis.filtering.Filter.find_paralogs_panther</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.Filter.from_dataframe.html">rnalysis.filtering.Filter.from_dataframe</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.Filter.head.html">rnalysis.filtering.Filter.head</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.Filter.histogram.html">rnalysis.filtering.Filter.histogram</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.Filter.intersection.html">rnalysis.filtering.Filter.intersection</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.Filter.majority_vote_intersection.html">rnalysis.filtering.Filter.majority_vote_intersection</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.Filter.map_orthologs_ensembl.html">rnalysis.filtering.Filter.map_orthologs_ensembl</a></li>
@@ -113,10 +115,7 @@
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.Filter.split_by_attribute.html">rnalysis.filtering.Filter.split_by_attribute</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.Filter.split_by_percentile.html">rnalysis.filtering.Filter.split_by_percentile</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.Filter.symmetric_difference.html">rnalysis.filtering.Filter.symmetric_difference</a></li>
-<li class="toctree-l3 current"><a class="current reference internal" href="#">rnalysis.filtering.Filter.tail</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#rnalysis.filtering.Filter.tail"><code class="docutils literal notranslate"><span class="pre">Filter.tail()</span></code></a></li>
-</ul>
-</li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">rnalysis.filtering.Filter.tail</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.Filter.text_filters.html">rnalysis.filtering.Filter.text_filters</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.Filter.transform.html">rnalysis.filtering.Filter.transform</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.Filter.translate_gene_ids.html">rnalysis.filtering.Filter.translate_gene_ids</a></li>
@@ -169,16 +168,16 @@
 <span class="sig-prename descclassname"><span class="pre">Filter.</span></span><span class="sig-name descname"><span class="pre">tail</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">PositiveInt</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">5</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">DataFrame</span></span></span><a class="headerlink" href="#rnalysis.filtering.Filter.tail" title="Permalink to this definition"></a></dt>
 <dd><p>Return the last n rows of the Filter object. See pandas.DataFrame.tail documentation.</p>
 <dl class="field-list">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>n</strong> (<em>positive int</em><em>, </em><em>default 5</em>) – Number of rows to show.</p>
 </dd>
-<dt class="field-even">Return type</dt>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p>pandas.DataFrame</p>
 </dd>
-<dt class="field-odd">Returns</dt>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><p>returns the last n rows of the Filter object.</p>
 </dd>
-<dt class="field-even">Examples</dt>
+<dt class="field-even">Examples<span class="colon">:</span></dt>
 <dd class="field-even"><div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">rnalysis</span> <span class="kn">import</span> <span class="n">filtering</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">d</span> <span class="o">=</span> <span class="n">filtering</span><span class="o">.</span><span class="n">Filter</span><span class="p">(</span><span class="s2">&quot;tests/test_files/test_deseq.csv&quot;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">d</span><span class="o">.</span><span class="n">tail</span><span class="p">()</span>

@@ -1,12 +1,14 @@
 <!DOCTYPE html>
-<html class="writer-html5" lang="en" >
+<html class="writer-html5" lang="en">
 <head>
-  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>rnalysis.filtering.DESeqFilter.text_filters &mdash; RNAlysis 3.11.0 documentation</title>
-      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <title>rnalysis.filtering.DESeqFilter.text_filters &mdash; RNAlysis 3.12.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css" />
+
+  
     <link rel="shortcut icon" href="_static/favicon.ico"/>
   <!--[if lt IE 9]>
     <script src="_static/js/html5shiv.min.js"></script>
@@ -17,7 +19,6 @@
         <script src="_static/underscore.js"></script>
         <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
         <script src="_static/doctools.js"></script>
-        <script src="_static/sphinx_highlight.js"></script>
         <script src="_static/copybutton.js"></script>
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
@@ -77,9 +78,9 @@
 <li class="toctree-l1 current"><a class="reference internal" href="rnalysis.filtering.html">rnalysis.filtering</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="rnalysis.filtering.CountFilter.html">rnalysis.filtering.CountFilter</a></li>
 <li class="toctree-l2 current"><a class="reference internal" href="rnalysis.filtering.DESeqFilter.html">rnalysis.filtering.DESeqFilter</a><ul class="current">
-<li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.DESeqFilter.html#rnalysis.filtering.DESeqFilter"><code class="docutils literal notranslate"><span class="pre">DESeqFilter</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.DESeqFilter.biotypes_from_gtf.html">rnalysis.filtering.DESeqFilter.biotypes_from_gtf</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.DESeqFilter.biotypes_from_ref_table.html">rnalysis.filtering.DESeqFilter.biotypes_from_ref_table</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.DESeqFilter.concatenate.html">rnalysis.filtering.DESeqFilter.concatenate</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.DESeqFilter.describe.html">rnalysis.filtering.DESeqFilter.describe</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.DESeqFilter.difference.html">rnalysis.filtering.DESeqFilter.difference</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.DESeqFilter.drop_columns.html">rnalysis.filtering.DESeqFilter.drop_columns</a></li>
@@ -100,6 +101,7 @@
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.DESeqFilter.find_paralogs_panther.html">rnalysis.filtering.DESeqFilter.find_paralogs_panther</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.DESeqFilter.from_dataframe.html">rnalysis.filtering.DESeqFilter.from_dataframe</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.DESeqFilter.head.html">rnalysis.filtering.DESeqFilter.head</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.DESeqFilter.histogram.html">rnalysis.filtering.DESeqFilter.histogram</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.DESeqFilter.intersection.html">rnalysis.filtering.DESeqFilter.intersection</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.DESeqFilter.majority_vote_intersection.html">rnalysis.filtering.DESeqFilter.majority_vote_intersection</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.DESeqFilter.map_orthologs_ensembl.html">rnalysis.filtering.DESeqFilter.map_orthologs_ensembl</a></li>
@@ -108,6 +110,7 @@
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.DESeqFilter.map_orthologs_phylomedb.html">rnalysis.filtering.DESeqFilter.map_orthologs_phylomedb</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.DESeqFilter.number_filters.html">rnalysis.filtering.DESeqFilter.number_filters</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.DESeqFilter.print_features.html">rnalysis.filtering.DESeqFilter.print_features</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.DESeqFilter.pval_histogram.html">rnalysis.filtering.DESeqFilter.pval_histogram</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.DESeqFilter.save_csv.html">rnalysis.filtering.DESeqFilter.save_csv</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.DESeqFilter.save_parquet.html">rnalysis.filtering.DESeqFilter.save_parquet</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.DESeqFilter.save_table.html">rnalysis.filtering.DESeqFilter.save_table</a></li>
@@ -117,10 +120,7 @@
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.DESeqFilter.split_fold_change_direction.html">rnalysis.filtering.DESeqFilter.split_fold_change_direction</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.DESeqFilter.symmetric_difference.html">rnalysis.filtering.DESeqFilter.symmetric_difference</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.DESeqFilter.tail.html">rnalysis.filtering.DESeqFilter.tail</a></li>
-<li class="toctree-l3 current"><a class="current reference internal" href="#">rnalysis.filtering.DESeqFilter.text_filters</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#rnalysis.filtering.DESeqFilter.text_filters"><code class="docutils literal notranslate"><span class="pre">DESeqFilter.text_filters()</span></code></a></li>
-</ul>
-</li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">rnalysis.filtering.DESeqFilter.text_filters</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.DESeqFilter.transform.html">rnalysis.filtering.DESeqFilter.transform</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.DESeqFilter.translate_gene_ids.html">rnalysis.filtering.DESeqFilter.translate_gene_ids</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.DESeqFilter.union.html">rnalysis.filtering.DESeqFilter.union</a></li>
@@ -174,7 +174,7 @@
 <span class="sig-prename descclassname"><span class="pre">DESeqFilter.</span></span><span class="sig-name descname"><span class="pre">text_filters</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">column</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ColumnName</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">operator</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'equals'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'contains'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'starts</span> <span class="pre">with'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'ends</span> <span class="pre">with'</span></span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">value</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">opposite</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inplace</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rnalysis.filtering.DESeqFilter.text_filters" title="Permalink to this definition"></a></dt>
 <dd><p>Applay a text filter (equals, contains, starts with, ends with) on a particular column in the Filter object.</p>
 <dl class="field-list">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>column</strong> (<em>str</em>) – name of the column to filter by</p></li>
 <li><p><strong>operator</strong> (<em>str: 'eq' / 'equals' / '='</em><em>, </em><em>'ct' / 'contains' / 'in'</em><em>, </em><em>'sw' / 'starts with'</em><em>, </em><em>'ew' / 'ends with'</em>) – the operator to filter the column by (equals, contains, starts with, ends with)</p></li>
@@ -183,10 +183,10 @@
 <li><p><strong>inplace</strong> (<em>bool</em><em> (</em><em>default=True</em><em>)</em>) – If True (default), filtering will be applied to the current Filter object. If False,         the function will return a new Filter instance and the current instance will not be affected.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>If ‘inplace’ is False, returns a new instance of the Filter object.</p>
 </dd>
-<dt class="field-odd">Examples</dt>
+<dt class="field-odd">Examples<span class="colon">:</span></dt>
 <dd class="field-odd"><div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">rnalysis</span> <span class="kn">import</span> <span class="n">filtering</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">filt</span> <span class="o">=</span> <span class="n">filtering</span><span class="o">.</span><span class="n">Filter</span><span class="p">(</span><span class="s1">&#39;tests/test_files/text_filters.csv&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="c1"># keep only rows that have a value that starts with &#39;AC3&#39; in the column &#39;name&#39;.</span>

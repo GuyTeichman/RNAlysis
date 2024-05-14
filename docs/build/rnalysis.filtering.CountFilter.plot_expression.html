@@ -1,12 +1,14 @@
 <!DOCTYPE html>
-<html class="writer-html5" lang="en" >
+<html class="writer-html5" lang="en">
 <head>
-  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>rnalysis.filtering.CountFilter.plot_expression &mdash; RNAlysis 3.11.0 documentation</title>
-      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <title>rnalysis.filtering.CountFilter.plot_expression &mdash; RNAlysis 3.12.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css" />
+
+  
     <link rel="shortcut icon" href="_static/favicon.ico"/>
   <!--[if lt IE 9]>
     <script src="_static/js/html5shiv.min.js"></script>
@@ -17,7 +19,6 @@
         <script src="_static/underscore.js"></script>
         <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
         <script src="_static/doctools.js"></script>
-        <script src="_static/sphinx_highlight.js"></script>
         <script src="_static/copybutton.js"></script>
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
@@ -76,16 +77,18 @@
 <li class="toctree-l1"><a class="reference internal" href="rnalysis.fastq.html">rnalysis.fastq</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="rnalysis.filtering.html">rnalysis.filtering</a><ul class="current">
 <li class="toctree-l2 current"><a class="reference internal" href="rnalysis.filtering.CountFilter.html">rnalysis.filtering.CountFilter</a><ul class="current">
-<li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.html#rnalysis.filtering.CountFilter"><code class="docutils literal notranslate"><span class="pre">CountFilter</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.average_replicate_samples.html">rnalysis.filtering.CountFilter.average_replicate_samples</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.biotypes_from_gtf.html">rnalysis.filtering.CountFilter.biotypes_from_gtf</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.biotypes_from_ref_table.html">rnalysis.filtering.CountFilter.biotypes_from_ref_table</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.box_plot.html">rnalysis.filtering.CountFilter.box_plot</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.clustergram.html">rnalysis.filtering.CountFilter.clustergram</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.concatenate.html">rnalysis.filtering.CountFilter.concatenate</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.describe.html">rnalysis.filtering.CountFilter.describe</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.difference.html">rnalysis.filtering.CountFilter.difference</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.differential_expression_deseq2.html">rnalysis.filtering.CountFilter.differential_expression_deseq2</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.differential_expression_deseq2_simplified.html">rnalysis.filtering.CountFilter.differential_expression_deseq2_simplified</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.differential_expression_limma_voom.html">rnalysis.filtering.CountFilter.differential_expression_limma_voom</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.differential_expression_limma_voom_simplified.html">rnalysis.filtering.CountFilter.differential_expression_limma_voom_simplified</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.drop_columns.html">rnalysis.filtering.CountFilter.drop_columns</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.enhanced_box_plot.html">rnalysis.filtering.CountFilter.enhanced_box_plot</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.filter_biotype_from_gtf.html">rnalysis.filtering.CountFilter.filter_biotype_from_gtf</a></li>
@@ -107,6 +110,7 @@
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.from_folder.html">rnalysis.filtering.CountFilter.from_folder</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.from_folder_htseqcount.html">rnalysis.filtering.CountFilter.from_folder_htseqcount</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.head.html">rnalysis.filtering.CountFilter.head</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.histogram.html">rnalysis.filtering.CountFilter.histogram</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.intersection.html">rnalysis.filtering.CountFilter.intersection</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.ma_plot.html">rnalysis.filtering.CountFilter.ma_plot</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.majority_vote_intersection.html">rnalysis.filtering.CountFilter.majority_vote_intersection</a></li>
@@ -126,10 +130,7 @@
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.number_filters.html">rnalysis.filtering.CountFilter.number_filters</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.pairplot.html">rnalysis.filtering.CountFilter.pairplot</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.pca.html">rnalysis.filtering.CountFilter.pca</a></li>
-<li class="toctree-l3 current"><a class="current reference internal" href="#">rnalysis.filtering.CountFilter.plot_expression</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#rnalysis.filtering.CountFilter.plot_expression"><code class="docutils literal notranslate"><span class="pre">CountFilter.plot_expression()</span></code></a></li>
-</ul>
-</li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">rnalysis.filtering.CountFilter.plot_expression</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.print_features.html">rnalysis.filtering.CountFilter.print_features</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.save_csv.html">rnalysis.filtering.CountFilter.save_csv</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.save_parquet.html">rnalysis.filtering.CountFilter.save_parquet</a></li>
@@ -200,18 +201,31 @@
 <h1>rnalysis.filtering.CountFilter.plot_expression<a class="headerlink" href="#rnalysis-filtering-countfilter-plot-expression" title="Permalink to this heading"></a></h1>
 <dl class="py method">
 <dt class="sig sig-object py" id="rnalysis.filtering.CountFilter.plot_expression">
-<span class="sig-prename descclassname"><span class="pre">CountFilter.</span></span><span class="sig-name descname"><span class="pre">plot_expression</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">features</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">samples</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">GroupedColumns</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'all'</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'all'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">count_unit</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'Normalized</span> <span class="pre">reads'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">split_plots</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Figure</span></span></span><a class="headerlink" href="#rnalysis.filtering.CountFilter.plot_expression" title="Permalink to this definition"></a></dt>
-<dd><p>Plot the average expression and standard error of the specified features under the specified conditions.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>features</strong> (<em>str</em><em> or </em><em>list</em><em> of </em><em>strings</em>) – the feature/features to plot expression for.</p></li>
-<li><p><strong>samples</strong> – A list of the sample names and/or grouped sample names to be plotted.         All specified samples must be present in the CountFilter object.         To average multiple replicates of the same condition, they can be grouped in an inner list.         Example input:         [[‘SAMPLE1A’, ‘SAMPLE1B’, ‘SAMPLE1C’], [‘SAMPLE2A’, ‘SAMPLE2B’, ‘SAMPLE2C’],’SAMPLE3’ , ‘SAMPLE6’]</p></li>
-<li><p><strong>count_unit</strong> (<em>str</em><em>, </em><em>default 'Reads per million'</em>) – The unit of the count data. Will be displayed in the y axis.</p></li>
-<li><p><strong>split_plots</strong> (<em>bool</em><em> (</em><em>default=False</em><em>)</em>) – if True, each gene will be plotted in its own Figure.         Otherwise, all genes will be plotted in the same Figure.</p></li>
-</ul>
-</dd>
-</dl>
+<span class="sig-prename descclassname"><span class="pre">CountFilter.</span></span><span class="sig-name descname"><span class="pre">plot_expression</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">features</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">samples</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">GroupedColumns</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'all'</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'all'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">avg_function</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'mean'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'median'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'geometric_mean'</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'mean'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">spread_function</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'sem'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'std'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'gstd'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'gsem'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'iqr'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'range'</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'sem'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bar_colors</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ColorList</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'deepskyblue'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">edge_color</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Color</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'black'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scatter_color</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Color</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'grey'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">count_unit</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'Normalized</span> <span class="pre">reads'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">split_plots</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">jitter</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Fraction</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">group_names</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log_scale</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Figure</span></span></span><a class="headerlink" href="#rnalysis.filtering.CountFilter.plot_expression" title="Permalink to this definition"></a></dt>
+<dd><p>Plot the average expression and spread of the specified features under the specified conditions.
+:type features: str or list of strings
+:param features: the feature/features to plot expression for.
+:param samples: A list of the sample names and/or grouped sample names to be plotted.         All specified samples must be present in the CountFilter object.         To average multiple replicates of the same condition, they can be grouped in an inner list.         Example input:         [[‘SAMPLE1A’, ‘SAMPLE1B’, ‘SAMPLE1C’], [‘SAMPLE2A’, ‘SAMPLE2B’, ‘SAMPLE2C’],’SAMPLE3’ , ‘SAMPLE6’]
+:param avg_function: The function used to calculate the average expression value for each condition.
+:type avg_function: ‘mean’, ‘median’, or ‘geometric_mean’ (default=’mean’)
+:param spread_function: The function used to calculate the error bars of expression values for each condition.
+:type spread_function: ‘sem’, ‘std’, ‘gstd’, ‘gsem’, ‘iqr’, or ‘range’ (default=’sem’)
+:param bar_colors: The color or list of colors to use for the bars in the plot.
+:type bar_colors: str or list of color strings (default=’deepskyblue’)
+:param edge_color: The color of the edges around the bars.
+:type edge_color: str (default=’black’)
+:param scatter_color: The color of the scatter points representing individual samples.
+:type scatter_color: str (default=’grey’)
+:type count_unit: str (default=’Reads per million’)
+:param count_unit: The unit of the count data. Will be displayed in the y axis.
+:type split_plots: bool (default=False)
+:param split_plots: if True, each gene will be plotted in its own Figure.         Otherwise, all genes will be plotted in the same Figure.
+:type jitter: float (default=0)
+:param jitter: The amount of jitter to apply to the scatter points.         This can help visualize overlapping points.
+:type group_names: list of strings or None (default=None)
+:param group_names: Optionally, specify the names of the groups in the plot.         If None, the names of the samples will be used.
+:type log_scale: bool (default=False)
+:param log_scale: If True, the y-axis will be displayed in logarithmic scale.</p>
 <figure class="align-center" id="id1">
 <a class="reference internal image-reference" href="_images/plot_expression.png"><img alt="_images/plot_expression.png" src="_images/plot_expression.png" style="width: 256.0px; height: 192.0px;" /></a>
 <figcaption>
