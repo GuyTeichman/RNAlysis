@@ -421,6 +421,21 @@ class Filter:
         new_df = self.df.drop(columns, axis=1)
         return self._inplace(new_df, False, inplace, suffix, 'transform')
 
+    @readable_name('Histogram of a column')
+    def histogram(self, column: param_typing.ColumnName, bins: int = 100,
+                  x_label: Union[str, Literal['auto']] = 'auto', y_logscale: bool = False, x_logscale: bool = False):
+        assert column in self.columns, f"column '{column}' does not exist!"
+        fig, ax = plt.subplots()
+        self.df[column].hist(bins=bins, ax=ax)
+        ax.set_xlabel(column if x_label == 'auto' else x_label)
+        ax.set_ylabel('Frequency')
+        ax.set_title(f'Histogram of column "{column}"')
+        if y_logscale:
+            ax.set_yscale('log')
+        if x_logscale:
+            ax.set_xscale('log')
+        return fig
+
     @staticmethod
     def _create_one2many_table(one2many_dict: io.OrthologDict, mode: Literal['ortholog', 'paralog'] = 'ortholog'):
         pairs = []

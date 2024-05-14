@@ -2481,3 +2481,15 @@ def test_plot_expression(features, samples, avg_function, spread_function, count
     assert all(isinstance(fig, plt.Figure) for fig in figs)
     for fig in figs:
         plt.close(fig)
+
+
+@pytest.mark.parametrize('x_logscale', [True, False])
+@pytest.mark.parametrize('y_logscale', [True, False])
+@pytest.mark.parametrize('column,bins,x_label', [
+    ('baseMean', 100, 'auto'),
+    ('padj', 16, 'adj. p-value')])
+def test_histogram(column, bins, x_label, x_logscale, y_logscale):
+    d = DESeqFilter('tests/test_files/test_deseq.csv')
+    fig = d.histogram(column, bins, x_label, x_logscale, y_logscale)
+    assert isinstance(fig, plt.Figure)
+    plt.close(fig)
