@@ -263,3 +263,14 @@ class TestInteractiveScatterFigure:
                           artist=plt.Rectangle((0, 0), 1, 1), ind=[0])
         self.fig.on_pick(event)
         assert self.fig.is_labeled == {}
+
+
+@pytest.mark.parametrize('n', [1, 2, 3, 4, 5, 10, 100])
+@pytest.mark.parametrize('jitter_range', [0, 0.01, 0.1, 0.5, 1, 5])
+def test_jitter(n, jitter_range):
+    res = jitter(n, jitter_range)
+    assert len(res) == n
+    assert isinstance(res, np.ndarray)
+    assert np.isclose(np.mean(res), 0, atol=0.001)
+    assert max(res) <= jitter_range or np.isclose(max(res), jitter_range, atol=0.001)
+    assert min(res) >= -jitter_range or np.isclose(min(res), -jitter_range, atol=0.001)

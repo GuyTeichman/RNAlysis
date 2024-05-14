@@ -476,3 +476,16 @@ class GenericPipeline(abc.ABC):
     @abc.abstractmethod
     def apply_to(self, *args, **kwargs):
         raise NotImplementedError
+
+
+def jitter(n: int, jitter_range: float = 0.2) -> np.ndarray:
+    if n == 0:
+        return np.array([])
+    if jitter_range == 0:
+        return np.zeros(n)
+
+    jittered = np.random.uniform(-jitter_range, jitter_range, n)
+    jittered -= np.mean(jittered)  # center the jittered points
+    scaling_factor = jitter_range / max(np.max(np.abs(jittered)), 1e-6)
+    jittered *= scaling_factor  # scale the jitter points to the jitter range
+    return jittered
