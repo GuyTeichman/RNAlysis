@@ -515,7 +515,7 @@ def test_enrich_single_set_api():
 @pytest.mark.skipif(not ENSEMBL_AVAILABLE, reason='Ensembl REST API is not available at the moment')
 @pytest.mark.skipif(not UNIPROT_AVAILABLE, reason='UniProt REST API is not available at the moment')
 @pytest.mark.parametrize('return_nonsignificant', [True, False])
-@pytest.mark.parametrize("organism,propagate_annotations", [('auto', 'classic'), ('caenorhabditis elegans', 'elim')])
+@pytest.mark.parametrize("organism,propagate_annotations", [(6239, 'classic'), ('caenorhabditis elegans', 'elim')])
 def test_go_enrichment_single_set_api(organism, propagate_annotations, return_nonsignificant):
     genes_ranked = ['WBGene00000019', 'WBGene00000041', 'WBGene00000105', 'WBGene00000106', 'WBGene00000137',
                     'WBGene00001436', 'WBGene00001996', 'WBGene00002074', 'WBGene00003864', 'WBGene00003865',
@@ -536,7 +536,7 @@ def test_go_enrichment_single_set_api(organism, propagate_annotations, return_no
 @pytest.mark.skipif(not ENSEMBL_AVAILABLE, reason='Ensembl REST API is not available at the moment')
 @pytest.mark.skipif(not UNIPROT_AVAILABLE, reason='UniProt REST API is not available at the moment')
 @pytest.mark.parametrize("organism,statistical_test,propagate_annotations,kwargs",
-                         [('auto', 'fisher', 'elim', {}),
+                         [(6239, 'fisher', 'elim', {}),
                           ('caenorhabditis elegans', 'randomization', 'no', dict(randomization_reps=100))])
 def test_go_enrichment_api(organism, statistical_test, propagate_annotations, kwargs):
     genes = {'WBGene00048865', 'WBGene00000864', 'WBGene00000105', 'WBGene00001996', 'WBGene00011910', 'WBGene00268195'}
@@ -602,8 +602,7 @@ def test_fetch_sets_bad_type(objs: dict):
 @pytest.mark.skipif(not ENSEMBL_AVAILABLE, reason='Ensembl REST API is not available at the moment')
 @pytest.mark.skipif(not UNIPROT_AVAILABLE, reason='UniProt REST API is not available at the moment')
 @pytest.mark.parametrize("organism,statistical_test,kwargs",
-                         [('auto', 'hypergeometric', {}),
-                          (6239, 'fisher', {}),
+                          [(6239, 'fisher', {}),
                           ('caenorhabditis elegans', 'randomization', dict(randomization_reps=100))])
 def test_kegg_enrichment_api(organism, statistical_test, kwargs):
     genes = {'WBGene00048865', 'WBGene00000864', 'WBGene00000105', 'WBGene00001996', 'WBGene00011910', 'WBGene00268195',

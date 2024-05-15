@@ -2104,7 +2104,7 @@ def test_filter_by_go_annotations(monkeypatch, ids, mode, truth_path):
     monkeypatch.setattr(ontology, 'fetch_go_basic', lambda: MockDAGTree())
 
     f = Filter('tests/test_files/counted.csv')
-    res = f.filter_by_go_annotations(ids, mode, gene_id_type='WormBase', inplace=False)
+    res = f.filter_by_go_annotations(ids, mode, gene_id_type='WormBase', organism=6239, inplace=False)
 
     try:
         assert res.df.sort_index().equals(truth.sort_index())
