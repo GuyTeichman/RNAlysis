@@ -30,7 +30,7 @@ jobs:
                 run: |
                     (Get-CimInstance Win32_PageFileUsage).AllocatedBaseSize
             -   name: Get repository
-                uses: actions/checkout@v3
+                uses: actions/checkout@v4
             -   name: apt-get update (Linux)
                 if: runner.os == 'Linux'
                 run: sudo apt-get update
