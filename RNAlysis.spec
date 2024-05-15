@@ -78,6 +78,7 @@ exe = EXE(
     target_arch=None,
     codesign_identity=None,
     entitlements_file=None,
+    hide_console='hide-late'
 )
 
 if not is_darwin:
