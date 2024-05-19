@@ -12,6 +12,7 @@ from typing import Any, Dict, Union, List, Tuple, Iterable, Literal
 import mslex
 import numpy as np
 import pandas as pd
+import polars as pl
 import unicodedata
 from tqdm.auto import tqdm
 
@@ -401,30 +402,52 @@ def items_to_html_table(items):
     return table
 
 
-def df_to_html(df: pd.DataFrame, max_rows: int = 5, max_cols: int = 4):
+def df_to_html(df: pl.DataFrame, max_rows: int = 5, max_cols: int = 4):
     """
-    Convert a pandas DataFrame to an HTML table.
+    Convert a Polars DataFrame to an HTML table.
 
     :param max_cols: maximum number of columns to display in the HTML table.
     :type max_cols: int (default=4)
     :param max_rows: maximum number of rows to display in the HTML table.
     :type max_rows: int (default=5)
-    :param df: A pandas DataFrame to be converted.
-    :type df: pandas.DataFrame
+    :param df: A Polars DataFrame to be converted.
+    :type df: polars.DataFrame
     :return: A string representation of the HTML table.
     :rtype: str
     """
-    if isinstance(df, pd.Series):
+    if isinstance(df, pl.Series):
         df = df.to_frame()
 
-    styler = df.style.format(precision=2)
-    styler.set_table_styles(
-        [{'selector': 'td', 'props': 'border: 1px solid grey; border-collapse: collapse;'},
-         {'selector': 'th', 'props': 'border: 1px solid grey; border-collapse: collapse;'}], )
-    html = styler.to_html(max_rows=max_rows, max_columns=max_cols, float_format=lambda x: f"{x:.2f}")
-    if df.shape[0] > max_rows and df.shape[1] > max_cols:
-        # remove a redundant '...' from the end of the table
-        html = replace_last_occurrence(r'<td class="data col[\d]+ row_trim" >...<\/td>', '', html)
+    # Limit the number of rows and columns
+    df_subset = df.head(max_rows).select(df.columns[:max_cols])
+
+    # Create the HTML table
+    html = '<table style="border-collapse: collapse;">\n'
+    html += '<thead>\n'
+    html += '<tr>\n'
+    for column in df_subset.columns:
+        html += f'<th style="border: 1px solid grey; border-collapse: collapse;">{column}</th>\n'
+    html += '</tr>\n'
+    html += '</thead>\n'
+    html += '<tbody>\n'
+    for row in df_subset.iter_rows():
+        html += '<tr>\n'
+        for cell in row:
+            if isinstance(cell, (int, float)):
+                html += f'<td style="border: 1px solid grey; border-collapse: collapse;">{cell:.2f}</td>\n'
+            else:
+                html += f'<td style="border: 1px solid grey; border-collapse: collapse;">{cell}</td>\n'
+        html += '</tr>\n'
+    html += '</tbody>\n'
+    html += '</table>\n'
+
+    if df.shape[0] > max_rows:
+        html += '<tr><td colspan="100%">...</td></tr>\n'
+    if df.shape[1] > max_cols:
+        html += '<tr>'
+        html += f'<td colspan="{max_cols}">...</td>\n'
+        html += '</tr>\n'
+
     return html
 
 

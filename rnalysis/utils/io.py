@@ -35,6 +35,7 @@ import matplotlib.pyplot as plt
 import nest_asyncio
 import numpy as np
 import pandas as pd
+import polars as pl
 import requests
 import tenacity
 import yaml
@@ -150,13 +151,13 @@ def load_cached_gui_file(filename: Union[str, Path], load_as_obj: bool = True) -
         return None
 
 
-def cache_gui_file(item: Union[pd.DataFrame, set, str], filename: str):
+def cache_gui_file(item: Union[pl.DataFrame, set, str], filename: str):
     directory = get_gui_cache_dir()
     if not directory.exists():
         directory.mkdir(parents=True)
     file_path = directory.joinpath(filename)
-    if isinstance(item, (pd.DataFrame, pd.Series)):
-        save_table(item, file_path, index=True)
+    if isinstance(item, (pl.DataFrame, pl.Series)):
+        save_table(item, file_path)
     elif isinstance(item, set):
         save_gene_set(item, file_path)
     elif isinstance(item, Path) and item.suffix == '.R':
@@ -325,15 +326,13 @@ class GUISessionManager:
         return file_data, pipeline_data
 
 
-def load_table(filename: Union[str, Path], index_col: int = None, drop_columns: Union[str, List[str]] = False,
-               squeeze=False, comment: str = None, engine: Literal['pyarrow', 'auto'] = 'auto'):
+def load_table(filename: Union[str, Path], drop_columns: Union[str, List[str]] = False,
+               squeeze=False, comment: str = None):
     """
-    loads a csv/parquet table into a pandas dataframe.
+    Loads a CSV, TSV, or Parquet file into a Polars DataFrame.
 
     :type filename: str or pathlib.Path
-    :param filename: name of the csv file to be loaded
-    :type index_col: int, default None
-    :param index_col: number of column to be used as index. default is None, meaning no column will be used as index.
+    :param filename: name of the file to be loaded
     :type drop_columns: str, list of str, or False (default False)
     :param drop_columns: if a string or list of strings are specified, \
     the columns of the same name/s will be dropped from the loaded DataFrame.
@@ -342,7 +341,7 @@ def load_table(filename: Union[str, Path], index_col: int = None, drop_columns: 
     :type comment: str (optional)
     :param comment: Indicates remainder of line should not be parsed. \
     If found at the beginning of a line, the line will be ignored altogether. This parameter must be a single character.
-    :return: a pandas dataframe of the csv file
+    :return: a Polars DataFrame of the loaded file
     """
     assert isinstance(filename,
                       (str, Path)), f"Filename must be of type str or pathlib.Path, is instead {type(filename)}."
@@ -352,48 +351,44 @@ def load_table(filename: Union[str, Path], index_col: int = None, drop_columns: 
         f"RNAlysis cannot load files of type '{filename.suffix}'. " \
         f"Please convert your file to a .csv, .tsv, .txt, or .parquet file and try again."
 
+    kwargs = {}
+    if comment is not None:
+        kwargs['comment_char'] = comment
     if filename.suffix.lower() == '.parquet':
-        df = pd.read_parquet(filename, engine=engine)
+        df = pl.read_parquet(filename)
     else:
-        kwargs = dict(sep=None, engine='python' if engine == 'auto' else engine, encoding='ISO-8859-1', comment=comment,
-                      skipinitialspace=True)
-        if index_col is not None:
-            kwargs['index_col'] = index_col
-        df = pd.read_csv(filename, **kwargs)
+        sep = None
+        if filename.suffix.lower() == '.csv':
+            sep = ','
+        elif filename.suffix.lower() == '.tsv':
+            sep = '\t'
+        df = pl.read_csv(filename, separator=sep, has_header=True, encoding='ISO-8859-1',
+                         null_values=['nan', 'NaN', 'NA'], **kwargs)
+        if squeeze and df.shape[1] == 1:
+            df = df.to_series()
 
-    if squeeze:
-        df = df.squeeze("columns")
+        # Identify string columns
+        string_cols = [col for col in df.columns if df[col].dtype in [pl.Utf8, pl.String]]
+        # Apply str.strip() to string columns
+        df = df.with_columns([pl.col(col).str.strip() for col in string_cols])
 
-    if index_col is not None:
-        df.index = df.index.astype('str')
-    df.index = [ind.strip() if isinstance(ind, str) else ind for ind in df.index]
-    if isinstance(df, pd.DataFrame):
-        df.columns = [col.strip() if isinstance(col, str) else str(col).strip() for col in df.columns]
-
-        for col in df.columns:
-            # check if the columns contains string data
-            if pd.api.types.is_string_dtype(df[col]):
-                df[col] = df[col].str.strip()
-    else:
-        if pd.api.types.is_string_dtype(df):
-            df = df.str.strip()
-    # if there remained only empty string "", change to Nan
-    df = df.replace({"": np.nan})
-    if drop_columns:
-        drop_columns_lst = parsing.data_to_list(drop_columns)
-        assert validation.isinstanceiter(drop_columns_lst,
-                                         str), f"'drop_columns' must be str, list of str, or False; " \
-                                               f"is instead {type(drop_columns)}."
-        for col in drop_columns_lst:
-            col_stripped = col.strip()
-            if col_stripped in df:
-                df.drop(col_stripped, axis=1, inplace=True)
-            else:
-                raise IndexError(f"The argument {col} in 'drop_columns' is not a column in the loaded csv file!")
+        # if there remained only empty string "", change to Nan
+        df = df.with_columns([pl.col(col).replace("", None) for col in string_cols])
+        if drop_columns:
+            drop_columns_lst = parsing.data_to_list(drop_columns)
+            assert validation.isinstanceiter(drop_columns_lst,
+                                             str), f"'drop_columns' must be str, list of str, or False; " \
+                                                   f"is instead {type(drop_columns)}."
+            for col in drop_columns_lst:
+                col_stripped = col.strip()
+                if col_stripped in df.columns:
+                    df = df.drop(col_stripped)
+                else:
+                    raise IndexError(f"The argument {col} in 'drop_columns' is not a column in the loaded file!")
     return df
 
 
-def save_table(df: pd.DataFrame, filename: Union[str, Path], postfix: str = None, index: bool = True):
+def save_table(df: pl.DataFrame, filename: Union[str, Path], postfix: str = None):
     """
     save a pandas DataFrame to csv/parquet file.
 
@@ -412,9 +407,9 @@ def save_table(df: pd.DataFrame, filename: Union[str, Path], postfix: str = None
     if fname.suffix.lower() == '.parquet':
         if isinstance(df, pd.Series):
             df = df.to_frame()
-        df.to_parquet(new_fname, index=index)
+        df.write_parquet(new_fname)
     else:
-        df.to_csv(new_fname, header=True, index=index)
+        df.write_csv(new_fname)
 
 
 def get_session(retries: Retry):
@@ -1026,7 +1021,7 @@ def map_taxon_id(taxon_name: Union[str, int]) -> Tuple[int, str]:
     req = requests.get(url, params=params)
     if not req.ok:
         req.raise_for_status()
-    res = pd.read_csv(StringIO(req.text), sep='\t').sort_values(by='Taxon Id', ascending=True)
+    res = pd.read_csv(StringIO(req.text), separator='\t').sort_values(by='Taxon Id', ascending=True)
     if res.shape[0] == 0:
         raise ValueError(f"No taxons match the search query '{taxon_name}'.")
 
@@ -1318,7 +1313,7 @@ class PhylomeDBOrthologMapper:
             os.remove(local_zip_file)
 
             # Load into pandas dataframe
-            df = pd.read_csv(cache_file.with_suffix('.txt'), sep='\t', index_col=1, engine="pyarrow")
+            df = pd.read_csv(cache_file.with_suffix('.txt'), separator='\t', index_col=1, engine="pyarrow")
 
             # cache file locally
             save_table(df, cache_file)
@@ -1349,7 +1344,7 @@ class PhylomeDBOrthologMapper:
             os.remove(local_zip_file)
 
             # Load into pandas dataframe
-            df = pd.read_csv(cache_file.with_suffix('.txt'), index_col=0, sep='\t', dtype_backend='pyarrow',
+            df = pd.read_csv(cache_file.with_suffix('.txt'), index_col=0, separator='\t', dtype_backend='pyarrow',
                              usecols=[0, 2], names=['#extid', 'protid'], header=None, skiprows=1)
             # cache file locally
             save_table(df, cache_file)
@@ -1373,8 +1368,7 @@ class PhylomeDBOrthologMapper:
         cache_file = cache_dir.joinpath("phylomedb_species.parquet")
 
         if cache_file.exists():
-            df = load_table(cache_file, squeeze=True, index_col=0, engine='pyarrow')
-            df.index = df.index.astype(int)
+            df = load_table(cache_file)
         else:
             ftp = PhylomeDBOrthologMapper._connect()
             # Download the file
@@ -1391,12 +1385,9 @@ class PhylomeDBOrthologMapper:
             os.remove(local_zip_file)
 
             # Load into pandas dataframe
-            df = pd.read_csv(cache_file.with_suffix('.txt'), sep='\t', index_col=0, engine='pyarrow').dropna()
-
+            df = pl.read_csv(cache_file.with_suffix('.txt'), separator='\t').drop_nulls()
             # Extract necessary columns and sort by name
-            df.index = df.index.astype(int)
-            df = df['name'].sort_index()
-
+            df = df.select(pl.col('#specieTaxId').cast(pl.UInt32).alias('taxid'), pl.col('name')).sort('name')
             # cache file locally
             save_table(df, cache_file)
         return df
@@ -2147,7 +2138,7 @@ def get_legal_ensembl_taxons():
 @functools.lru_cache(maxsize=2)
 def get_legal_phylomedb_taxons():
     entries = PhylomeDBOrthologMapper.get_legal_species()
-    taxons = tuple(name for name in entries.unique() if name[0].isupper())
+    taxons = tuple(name for name in entries.select(pl.col('name')).unique() if name[0].isupper())
     return taxons
 
 

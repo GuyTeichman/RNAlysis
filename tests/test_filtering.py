@@ -78,24 +78,24 @@ def test_filter_inplace():
 
 
 def test_head():
-    df = io.load_table('tests/test_files/test_deseq.csv', 0)
+    df = io.load_table('tests/test_files/test_deseq.csv')
     d = DESeqFilter('tests/test_files/test_deseq.csv')
     assert np.all(df.head(7) == d.head(7))
     assert np.all(df.head(1) == d.head(1))
 
-    df2 = io.load_table('tests/test_files/counted.csv', 0)
+    df2 = io.load_table('tests/test_files/counted.csv')
     f = Filter('tests/test_files/counted.csv')
     assert np.all(df2.head() == f.head())
     assert np.all(df2.head(1000) == f.head(1000))
 
 
 def test_tail():
-    df = io.load_table('tests/test_files/test_deseq.csv', 0)
+    df = io.load_table('tests/test_files/test_deseq.csv')
     d = DESeqFilter('tests/test_files/test_deseq.csv')
     assert np.all(df.tail(7) == d.tail(7))
     assert np.all(df.tail(1) == d.tail(1))
 
-    df2 = io.load_table('tests/test_files/counted.csv', 0)
+    df2 = io.load_table('tests/test_files/counted.csv')
     f = Filter('tests/test_files/counted.csv')
     assert np.all(df2.tail() == f.tail())
     assert np.all(df2.tail(1000) == f.tail(1000))
@@ -103,8 +103,8 @@ def test_tail():
 
 def test_describe():
     fc_df = io.load_table('tests/test_files/fc_1.csv', 0, squeeze=True)
-    count_df = io.load_table('tests/test_files/counted.csv', 0)
-    deseq_df = io.load_table('tests/test_files/test_deseq.csv', 0)
+    count_df = io.load_table('tests/test_files/counted.csv')
+    deseq_df = io.load_table('tests/test_files/test_deseq.csv')
 
     fc = FoldChangeFilter('tests/test_files/fc_1.csv', 'a', 'b')
     count = CountFilter('tests/test_files/counted.csv')
@@ -147,9 +147,9 @@ def test_filter_translate_gene_ids(map_to, map_from, remove_unmapped_genes, expe
     f = Filter('tests/test_files/counted.csv')
 
     res = f.translate_gene_ids(map_to, map_from, remove_unmapped_genes, inplace=False)
-    assert res.df.sort_index().equals(truth.sort_index())
+    assert res.df.sort(pl.first()).equals(truth.sort(pl.first()))
     f.translate_gene_ids(map_to, map_from, remove_unmapped_genes, inplace=True)
-    assert f.df.sort_index().equals(truth.sort_index())
+    assert f.df.sort(pl.first()).equals(truth.sort(pl.first()))
 
 
 def test_countfilter_normalize_to_rpm_htseqcount():
@@ -238,7 +238,7 @@ def test_countfilter_normalize_to_tpm(monkeypatch, gtf_path, feature_type, metho
 
 
 def test_countfilter_normalize_rle():
-    truth = io.load_table(r"tests/test_files/test_norm_rle.csv", 0)
+    truth = io.load_table(r"tests/test_files/test_norm_rle.csv")
     h = CountFilter("tests/test_files/counted.csv")
     not_inplace, factors = h.normalize_rle(inplace=False, return_scaling_factors=True)
     assert np.isclose(truth, not_inplace.df).all()
@@ -250,7 +250,7 @@ def test_countfilter_normalize_rle():
 
 
 def test_countfilter_normalize_tmm():
-    truth = io.load_table(r"tests/test_files/test_norm_tmm.csv", 0)
+    truth = io.load_table(r"tests/test_files/test_norm_tmm.csv")
     h = CountFilter("tests/test_files/counted.csv")
     not_inplace, factors = h.normalize_tmm(ref_column='cond1', inplace=False, return_scaling_factors=True)
     assert np.isclose(truth, not_inplace.df).all()
@@ -263,7 +263,7 @@ def test_countfilter_normalize_tmm():
 
 
 def test_countfilter_normalize_median_of_ratios():
-    truth = io.load_table(r"tests/test_files/test_norm_mrn.csv", 0)
+    truth = io.load_table(r"tests/test_files/test_norm_mrn.csv")
     h = CountFilter("tests/test_files/counted.csv")
     not_inplace, factors = h.normalize_median_of_ratios([['cond1', 'cond2'], ['cond3', 'cond4']], inplace=False,
                                                         return_scaling_factors=True)
@@ -281,7 +281,7 @@ def test_countfilter_normalize_median_of_ratios():
     (0.32, "tests/test_files/test_norm_quantile_32.csv"),
 ])
 def test_countfilter_normalize_to_quantile(quantile, truth_path):
-    truth = io.load_table(truth_path, 0)
+    truth = io.load_table(truth_path)
     h = CountFilter("tests/test_files/counted.csv")
     not_inplace, factors = h.normalize_to_quantile(quantile, inplace=False, return_scaling_factors=True)
     assert np.isclose(truth, not_inplace.df).all()
@@ -296,8 +296,8 @@ def test_countfilter_normalize_to_quantile(quantile, truth_path):
 class TestFilterConcatenate:
     def setup_method(self):
         # Create Filter objects for testing
-        df1 = pd.DataFrame({'A': [1, 2, 3], 'B': [4, 5, 6]}, index=['a', 'b', 'c'])
-        df2 = pd.DataFrame({'A': [7, 8, 9], 'B': [10, 11, 12]}, index=['d', 'e', 'f'])
+        df1 = pl.DataFrame({'A': [1, 2, 3], 'B': [4, 5, 6]}, index=['a', 'b', 'c'])
+        df2 = pl.DataFrame({'A': [7, 8, 9], 'B': [10, 11, 12]}, index=['d', 'e', 'f'])
         self.filter1 = Filter.from_dataframe(df1, 'filter1.csv')
         self.filter2 = Filter.from_dataframe(df2, 'filter2.csv')
 
@@ -306,7 +306,7 @@ class TestFilterConcatenate:
         result = self.filter1.concatenate(self.filter2)
 
         # Assert that the resulting Filter object has the expected data and filename
-        expected_df = pd.DataFrame({'A': [1, 2, 3, 7, 8, 9], 'B': [4, 5, 6, 10, 11, 12]},
+        expected_df = pl.DataFrame({'A': [1, 2, 3, 7, 8, 9], 'B': [4, 5, 6, 10, 11, 12]},
                                    index=['a', 'b', 'c', 'd', 'e', 'f'])
         assert result.df.equals(expected_df)
         assert result.fname == Path('filter1_filter2.csv')
@@ -321,7 +321,7 @@ class TestFilterConcatenate:
 
     def test_concatenate_with_different_columns(self):
         # Create a Filter object with different columns
-        df3 = pd.DataFrame({'C': [7, 8, 9], 'D': [10, 11, 12]}, index=['d', 'e', 'f'])
+        df3 = pl.DataFrame({'C': [7, 8, 9], 'D': [10, 11, 12]}, index=['d', 'e', 'f'])
         filter3 = Filter.from_dataframe(df3, 'filter3.csv')
 
         # Assert that concatenating Filter objects with different columns raises an AssertionError
@@ -330,7 +330,7 @@ class TestFilterConcatenate:
 
     def test_concatenate_with_overlapping_indices(self):
         # Create a Filter object with overlapping indices
-        df4 = pd.DataFrame({'A': [7, 8, 9], 'B': [10, 11, 12]}, index=['c', 'd', 'e'])
+        df4 = pl.DataFrame({'A': [7, 8, 9], 'B': [10, 11, 12]}, index=['c', 'd', 'e'])
         filter4 = Filter.from_dataframe(df4, 'filter4.csv')
 
         # Assert that concatenating Filter objects with overlapping indices raises an AssertionError
@@ -339,7 +339,7 @@ class TestFilterConcatenate:
 
 
 def test_countfilter_norm_reads_with_scaling_factors():
-    truth = io.load_table(r"tests/test_files/test_norm_scaling_factors.csv", 0)
+    truth = io.load_table(r"tests/test_files/test_norm_scaling_factors.csv")
     h = CountFilter("tests/test_files/counted.csv")
     factors = io.load_table("tests/test_files/scaling_factors.csv")
     h_norm = h.normalize_with_scaling_factors("tests/test_files/scaling_factors.csv", inplace=False)
@@ -354,10 +354,10 @@ def test_countfilter_norm_reads_with_scaling_factors():
     ("tests/test_files/counted.csv", 60, 1, True, "tests/test_files/counted_below60_rpm.csv"),
 ])
 def test_filter_low_reads(input_path, threshold, n_samples, opposite, truth_path):
-    truth = io.load_table(truth_path, 0)
+    truth = io.load_table(truth_path)
     h = CountFilter(input_path)
     h.filter_low_reads(threshold, n_samples, opposite=opposite)
-    assert np.isclose(truth.sort_index(), h.df.sort_index()).all()
+    assert np.isclose(truth.sort(pl.first()), h.df.sort(pl.first())).all()
 
 
 @pytest.mark.parametrize('interactive', [True, False])
@@ -477,92 +477,83 @@ def _filter_biotype_tester(filter_obj, truth_protein_coding, truth_pirna, from_t
         gtf_path = 'tests/test_files/test_gtf_for_biotypes.gtf'
         protein_coding = filter_obj.filter_biotype_from_gtf(gtf_path, inplace=False, **kwargs)
         pirna = filter_obj.filter_biotype_from_gtf(gtf_path, 'piRNA', inplace=False, **kwargs)
-    pirna.df.sort_index(inplace=True)
-    protein_coding.df.sort_index(inplace=True)
-    truth_protein_coding.sort_index(inplace=True)
-    truth_pirna.sort_index(inplace=True)
-    assert np.all(truth_protein_coding == protein_coding.df)
-    assert np.all(truth_pirna == pirna.df)
+    assert np.all(truth_protein_coding.sort(pl.first()) == protein_coding.df.sort(pl.first()))
+    assert np.all(truth_pirna.sort(pl.first()) == pirna.df.sort(pl.first()))
 
 
-def test_htcount_filter_biotype_from_ref_table():
-    truth_protein_coding = io.load_table('tests/test_files/counted_biotype_protein_coding.csv', 0)
-    truth_pirna = io.load_table('tests/test_files/counted_biotype_piRNA.csv', 0)
+def test_countfilter_filter_biotype_from_ref_table():
+    truth_protein_coding = io.load_table('tests/test_files/counted_biotype_protein_coding.csv')
+    truth_pirna = io.load_table('tests/test_files/counted_biotype_piRNA.csv')
     h = CountFilter("tests/test_files/counted_biotype.csv")
     _filter_biotype_tester(h, truth_protein_coding=truth_protein_coding, truth_pirna=truth_pirna)
 
 
-def test_htcount_filter_biotype_from_ref_table_opposite():
-    truth_no_pc = io.load_table(r'tests/test_files/counted_biotype_no_protein_coding.csv', 0)
-    truth_no_pirna = io.load_table(r'tests/test_files/counted_biotype_no_piRNA.csv', 0)
+def test_countfilter_filter_biotype_from_ref_table_opposite():
+    truth_no_pc = io.load_table(r'tests/test_files/counted_biotype_no_protein_coding.csv')
+    truth_no_pirna = io.load_table(r'tests/test_files/counted_biotype_no_piRNA.csv')
     h = CountFilter("tests/test_files/counted_biotype.csv")
     _filter_biotype_tester(h, truth_protein_coding=truth_no_pc, truth_pirna=truth_no_pirna, opposite=True)
 
 
-def test_htcount_filter_biotype_from_gtf():
-    truth_protein_coding = io.load_table('tests/test_files/counted_biotype_protein_coding.csv', 0)
-    truth_pirna = io.load_table('tests/test_files/counted_biotype_piRNA.csv', 0)
+def test_countfilter_filter_biotype_from_gtf():
+    truth_protein_coding = io.load_table('tests/test_files/counted_biotype_protein_coding.csv')
+    truth_pirna = io.load_table('tests/test_files/counted_biotype_piRNA.csv')
     h = CountFilter("tests/test_files/counted_biotype.csv")
     _filter_biotype_tester(h, truth_protein_coding=truth_protein_coding, truth_pirna=truth_pirna, from_table=False)
 
 
-def test_htcount_filter_biotype_from_gtf_opposite():
-    truth_no_pc = io.load_table(r'tests/test_files/counted_biotype_no_protein_coding.csv', 0)
-    truth_no_pirna = io.load_table(r'tests/test_files/counted_biotype_no_piRNA.csv', 0)
+def test_countfilter_filter_biotype_from_gtf_opposite():
+    truth_no_pc = io.load_table(r'tests/test_files/counted_biotype_no_protein_coding.csv')
+    truth_no_pirna = io.load_table(r'tests/test_files/counted_biotype_no_piRNA.csv')
     h = CountFilter("tests/test_files/counted_biotype.csv")
     _filter_biotype_tester(h, truth_protein_coding=truth_no_pc, truth_pirna=truth_no_pirna, from_table=False,
                            opposite=True)
 
 
 def test_filter_by_attribute():
-    truth = io.load_table('tests/test_files/test_deseq_filter_by_attr1.csv', 0)
+    truth = io.load_table('tests/test_files/test_deseq_filter_by_attr1.csv').sort(pl.first())
     d = DESeqFilter('tests/test_files/test_deseq.csv')
     d_notinplace = d.filter_by_attribute('attribute1', ref=__attr_ref__, inplace=False)
     d.filter_by_attribute('attribute1', ref=__attr_ref__)
-    truth.sort_index(inplace=True)
-    d.df.sort_index(inplace=True)
-    d_notinplace.df.sort_index(inplace=True)
-    assert np.all(truth == d.df)
-    assert np.all(truth == d_notinplace.df)
+    assert np.all(truth == d.df.sort(pl.first()))
+    assert np.all(truth == d_notinplace.df.sort(pl.first()))
 
 
 def test_filter_by_attribute_from_string(monkeypatch):
     monkeypatch.setattr('builtins.input', lambda x: 'attribute1\nattribute2\n')
-    union_truth = io.load_table('tests/test_files/counted_filter_by_bigtable_union_truth.csv', 0)
+    union_truth = io.load_table('tests/test_files/counted_filter_by_bigtable_union_truth.csv')
     h = CountFilter('tests/test_files/counted_filter_by_bigtable.csv')
-    assert np.all(union_truth.sort_index() == h.filter_by_attribute(mode='union',
+    assert np.all(union_truth.sort(pl.first()) == h.filter_by_attribute(mode='union',
                                                                     ref=__attr_ref__,
-                                                                    inplace=False).df.sort_index())
+                                                                    inplace=False).df.sort(pl.first()))
 
     monkeypatch.setattr('builtins.input', lambda x: 'attribute1\nattribute2')
-    assert np.all(union_truth.sort_index() == h.filter_by_attribute(mode='union',
+    assert np.all(union_truth.sort(pl.first()) == h.filter_by_attribute(mode='union',
                                                                     ref=__attr_ref__,
-                                                                    inplace=False).df.sort_index())
+                                                                    inplace=False).df.sort(pl.first()))
 
     monkeypatch.setattr('builtins.input', lambda x: 'attribute1')
-    deseq_truth = io.load_table('tests/test_files/test_deseq_filter_by_attr1.csv', 0)
+    deseq_truth = io.load_table('tests/test_files/test_deseq_filter_by_attr1.csv')
     d = DESeqFilter('tests/test_files/test_deseq.csv')
     assert np.all(
-        deseq_truth.sort_index() == d.filter_by_attribute(ref=__attr_ref__, inplace=False).df.sort_index())
+        deseq_truth.sort(pl.first()) == d.filter_by_attribute(ref=__attr_ref__, inplace=False).df.sort(pl.first()))
 
 
 def test_filter_by_attribute_union():
-    union_truth = io.load_table('tests/test_files/counted_filter_by_bigtable_union_truth.csv', 0)
+    union_truth = io.load_table('tests/test_files/counted_filter_by_bigtable_union_truth.csv')
     h = CountFilter('tests/test_files/counted_filter_by_bigtable.csv')
     union = h.filter_by_attribute(['attribute1', 'attribute2'], mode='union',
                                   ref=__attr_ref__, inplace=False)
-    assert np.all(union.df.sort_index() == union_truth.sort_index())
+    assert np.all(union.df.sort(pl.first()) == union_truth.sort(pl.first()))
 
 
 def test_filter_by_attribute_intersection():
-    intersection_truth = io.load_table(r'tests/test_files/counted_filter_by_bigtable_intersect_truth.csv', 0)
+    intersection_truth = io.load_table(r'tests/test_files/counted_filter_by_bigtable_intersect_truth.csv')
     h = CountFilter('tests/test_files/counted_filter_by_bigtable.csv')
     intersection = h.filter_by_attribute(['attribute1', 'attribute2'], mode='intersection',
                                          ref=__attr_ref__,
                                          inplace=False)
-    intersection.df.sort_index(inplace=True)
-    intersection_truth.sort_index(inplace=True)
-    assert np.all(intersection.df == intersection_truth)
+    assert np.all(intersection.df.sort(pl.first()) == intersection_truth.sort(pl.first()))
 
 
 def test_filter_by_attribute_invalid_mode():
@@ -579,8 +570,8 @@ def test_split_by_attribute():
     assert len(newobjs) == len(attrs)
     for i, attr in enumerate(attrs):
         assert np.all(
-            newobjs[i].df.sort_index() == h.filter_by_attribute(attr, ref=__attr_ref__,
-                                                                inplace=False).df.sort_index())
+            newobjs[i].df.sort(pl.first()) == h.filter_by_attribute(attr, ref=__attr_ref__,
+                                                                inplace=False).df.sort(pl.first()))
 
 
 def test_split_by_attribute_multiple():
@@ -590,8 +581,8 @@ def test_split_by_attribute_multiple():
     assert len(newobjs) == len(attrs)
     for i, attr in enumerate(attrs):
         assert np.all(
-            newobjs[i].df.sort_index() == f.filter_by_attribute(attr, ref=__attr_ref__,
-                                                                inplace=False).df.sort_index())
+            newobjs[i].df.sort(pl.first()) == f.filter_by_attribute(attr, ref=__attr_ref__,
+                                                                inplace=False).df.sort(pl.first()))
 
 
 def test_split_by_attribute_only_one_attribute():
@@ -599,8 +590,8 @@ def test_split_by_attribute_only_one_attribute():
     newobj = f.split_by_attribute(['attribute1'], ref=__attr_ref__)
     assert len(newobj) == 1
     assert np.all(
-        newobj[0].df.sort_index() == f.filter_by_attribute('attribute1', ref=__attr_ref__,
-                                                           inplace=False).df.sort_index())
+        newobj[0].df.sort(pl.first()) == f.filter_by_attribute('attribute1', ref=__attr_ref__,
+                                                           inplace=False).df.sort(pl.first()))
     with pytest.raises(AssertionError):
         f.split_by_attribute('attribute1', ref=__attr_ref__)
 
@@ -622,52 +613,45 @@ def test_deseq_filter_significant():
 
 
 def test_deseq_filter_significant_opposite():
-    truth = io.load_table(r'tests/test_files/test_deseq_not_sig_truth.csv', 0).sort_index()
+    truth = io.load_table(r'tests/test_files/test_deseq_not_sig_truth.csv').sort(pl.first())
     d = DESeqFilter("tests/test_files/test_deseq_sig.csv")
     d.filter_significant(alpha=0.05, opposite=True)
-    d.df.sort_index(inplace=True)
-    assert d.df.equals(truth)
+    assert d.df.sort(pl.first()).equals(truth)
 
 
 def test_filter_top_n_ascending_number():
-    truth = io.load_table("tests/test_files/test_deseq_top10.csv", 0).sort_index()
+    truth = io.load_table("tests/test_files/test_deseq_top10.csv").sort(pl.first())
     d = DESeqFilter("tests/test_files/test_deseq.csv")
     d.filter_top_n('padj', 10)
-    d.df.sort_index(inplace=True)
-    assert np.isclose(truth, d.df).all()
+    assert np.isclose(truth, d.df.sort(pl.first())).all()
 
 
 def test_filter_top_n_ascending_text():
-    truth = io.load_table("tests/test_files/test_deseq_top10_text_ascend.csv", 0).sort_index()
+    truth = io.load_table("tests/test_files/test_deseq_top10_text_ascend.csv").sort(pl.first())
     d = DESeqFilter("tests/test_files/test_deseq_textcol.csv")
-    print(d.sort('textcol', inplace=False).df)
     d.filter_top_n('textcol', 10, True)
-    d.df.sort_index(inplace=True)
-    assert d.df.equals(truth)
+    assert d.df.sort(pl.first()).equals(truth)
 
 
 def test_filter_top_n_multiple_columns():
-    truth = io.load_table("tests/test_files/test_deseq_textcol_top15_text_basemean.csv", 0).sort_index()
+    truth = io.load_table("tests/test_files/test_deseq_textcol_top15_text_basemean.csv").sort(pl.first())
     d = DESeqFilter("tests/test_files/test_deseq_textcol.csv")
     d.filter_top_n(['textcol', 'baseMean'], 15, True)
-    d.df.sort_index(inplace=True)
-    assert d.df.equals(truth)
+    assert d.df.sort(pl.first()).equals(truth)
 
 
 def test_filter_top_n_descending_number():
-    truth = io.load_table("tests/test_files/test_deseq_bottom7.csv", 0).sort_index()
+    truth = io.load_table("tests/test_files/test_deseq_bottom7.csv").sort(pl.first())
     d = DESeqFilter("tests/test_files/test_deseq.csv")
     d.filter_top_n('log2FoldChange', 7, False)
-    d.df.sort_index(inplace=True)
-    assert np.isclose(truth, d.df).all()
+    assert np.isclose(truth, d.df.sort(pl.first())).all()
 
 
 def test_filter_top_n_descending_text():
-    truth = io.load_table("tests/test_files/test_deseq_bottom10_text_descend.csv", 0).sort_index()
+    truth = io.load_table("tests/test_files/test_deseq_bottom10_text_descend.csv").sort(pl.first())
     d = DESeqFilter("tests/test_files/test_deseq_textcol.csv")
     d.filter_top_n('textcol', 10, False)
-    d.df.sort_index(inplace=True)
-    assert np.all(truth == d.df)
+    assert np.all(truth == d.df.sort(pl.first()))
 
 
 def test_filter_top_n_nonexisting_column():
@@ -680,12 +664,10 @@ def test_filter_top_n_nonexisting_column():
 
 
 def test_deseq_filter_abs_log2_fold_change():
-    truth = io.load_table("tests/test_files/test_deseq_fc_4_truth.csv", 0)
+    truth = io.load_table("tests/test_files/test_deseq_fc_4_truth.csv").sort(pl.first())
     d = DESeqFilter("tests/test_files/test_deseq_fc.csv")
     fc4 = d.filter_abs_log2_fold_change(4, inplace=False)
-    fc4.df.sort_index(inplace=True)
-    truth.sort_index(inplace=True)
-    assert np.all(fc4.df == truth)
+    assert np.all(fc4.df.sort(pl.first()) == truth)
 
 
 def test_deseq_filter_fold_change_direction():
@@ -838,36 +820,35 @@ def test_set_ops_multiple_variable_types():
     assert set1.symmetric_difference(set2) == set1_unique.union(set2_unique)
 
 
-def test_htcount_rpm_negative_threshold():
+def test_countfilter_rpm_negative_threshold():
     h = CountFilter("tests/test_files/counted.csv")
     with pytest.raises(AssertionError):
         h.filter_low_reads(threshold=-3)
 
 
-def test_htcount_threshold_invalid():
+def test_countfilter_threshold_invalid():
     h = CountFilter("tests/test_files/counted.csv")
     with pytest.raises(AssertionError):
         h.filter_low_reads("5")
 
 
-def test_htcount_split_by_reads():
+def test_countfilter_split_by_reads():
     h = CountFilter("tests/test_files/counted.csv")
     high_truth = io.load_table(r"tests/test_files/counted_above60_rpm.csv", 0)
     low_truth = io.load_table(r"tests/test_files/counted_below60_rpm.csv", 0)
     high, low = h.split_by_reads(threshold=60)
-    assert np.all(high.df.sort_index() == high_truth.sort_index())
-    assert np.all(low.df.sort_index() == low_truth.sort_index())
+    assert np.all(high.df.sort(pl.first()) == high_truth.sort(pl.first()))
+    assert np.all(low.df.sort(pl.first()) == low_truth.sort(pl.first()))
 
 
 def test_filter_percentile():
-    truth = io.load_table(r'tests/test_files/test_deseq_percentile_0.25.csv', 0)
+    truth = io.load_table(r'tests/test_files/test_deseq_percentile_0.25.csv').sort(pl.first())
     h = DESeqFilter(r'tests/test_files/test_deseq_percentile.csv')
     h.filter_percentile(0.25, 'padj', inplace=True)
-    h.df.sort_index(inplace=True)
-    truth.sort_index(inplace=True)
-    assert truth.equals(h.df)
+    print(h.df.sort(pl.first()), truth)
+    assert truth.equals(h.df.sort(pl.first()))
     h.filter_percentile(1, 'baseMean')
-    assert truth.equals(h.df)
+    assert truth.equals(h.df.sort(pl.first()))
     h.filter_percentile(0, 'padj')
     assert len(h) == 1
     assert h.df['padj'].values == truth['padj'].min()
@@ -884,72 +865,58 @@ def test_filter_percentile_bad_input():
 
 
 def test_split_by_percentile():
-    truth_below = io.load_table(r'tests/test_files/test_deseq_percentile_0.25.csv', 0)
-    truth_above = io.load_table(r'tests/test_files/test_deseq_percentile_0.75.csv', 0)
+    truth_below = io.load_table(r'tests/test_files/test_deseq_percentile_0.25.csv').sort(pl.first())
+    truth_above = io.load_table(r'tests/test_files/test_deseq_percentile_0.75.csv').sort(pl.first())
     h = DESeqFilter(r'tests/test_files/test_deseq_percentile.csv')
     below, above = h.split_by_percentile(0.25, 'padj')
-    for i in [truth_below, truth_above, below.df, above.df]:
-        i.sort_index(inplace=True)
-    assert np.all(truth_below == below.df)
-    assert np.all(truth_above == above.df)
+    assert np.all(truth_below == below.df.sort(pl.first()))
+    assert np.all(truth_above == above.df.sort(pl.first()))
 
 
-def test_htcount_filter_biotype_from_ref_table_multiple():
-    truth = io.load_table('tests/test_files/counted_biotype_piRNA_protein_coding.csv', 0)
+def test_countfilter_filter_biotype_from_ref_table_multiple():
+    truth = io.load_table('tests/test_files/counted_biotype_piRNA_protein_coding.csv').sort(pl.first())
     h = CountFilter("tests/test_files/counted_biotype.csv")
-    both = h.filter_biotype_from_ref_table(['protein_coding', 'piRNA'], ref=__biotype_ref__,
-                                           inplace=False)
-    both.df.sort_index(inplace=True)
-    truth.sort_index(inplace=True)
-    assert np.all(truth == both.df)
+    both = h.filter_biotype_from_ref_table(['protein_coding', 'piRNA'], ref=__biotype_ref__, inplace=False)
+    assert np.all(truth == both.df.sort(pl.first()))
 
 
-def test_htcount_filter_biotype_from_ref_table_multiple_opposite():
-    truth = io.load_table('tests/test_files/counted_biotype_piRNA_protein_coding_opposite.csv', 0)
+def test_countfilter_filter_biotype_from_ref_table_multiple_opposite():
+    truth = io.load_table('tests/test_files/counted_biotype_piRNA_protein_coding_opposite.csv').sort(pl.first())
     h = CountFilter("tests/test_files/counted_biotype.csv")
     neither = h.filter_biotype_from_ref_table(['protein_coding', 'piRNA'], ref=__biotype_ref__,
-                                              inplace=False,
-                                              opposite=True)
-    neither.df.sort_index(inplace=True)
-    truth.sort_index(inplace=True)
-    assert np.all(truth == neither.df)
+                                              inplace=False, opposite=True)
+    assert np.all(truth == neither.df.sort(pl.first()))
 
 
 def test_deseq_filter_biotype_from_ref_table():
-    truth_protein_coding = io.load_table('tests/test_files/test_deseq_biotype_protein_coding.csv', 0)
-    truth_pirna = io.load_table('tests/test_files/test_deseq_biotype_piRNA.csv', 0)
+    truth_protein_coding = io.load_table('tests/test_files/test_deseq_biotype_protein_coding.csv')
+    truth_pirna = io.load_table('tests/test_files/test_deseq_biotype_piRNA.csv')
     d = DESeqFilter("tests/test_files/test_deseq_biotype.csv")
     _filter_biotype_tester(d, truth_protein_coding=truth_protein_coding, truth_pirna=truth_pirna)
 
 
 def test_deseq_filter_biotype_from_ref_table_opposite():
-    truth_no_pirna = io.load_table(r'tests/test_files/test_deseq_biotype_piRNA_opposite.csv', 0)
+    truth_no_pirna = io.load_table(r'tests/test_files/test_deseq_biotype_piRNA_opposite.csv').sort(pl.first())
     d = DESeqFilter("tests/test_files/test_deseq_biotype.csv")
     d.filter_biotype_from_ref_table('piRNA', ref=__biotype_ref__, opposite=True, inplace=True)
-    d.df.sort_index(inplace=True)
-    truth_no_pirna.sort_index(inplace=True)
-    assert np.all(d.df == truth_no_pirna)
+    assert np.all(d.df.sort(pl.first()) == truth_no_pirna)
 
 
 def test_deseq_filter_biotype_from_ref_table_multiple():
-    truth = io.load_table('tests/test_files/test_deseq_biotype_piRNA_protein_coding.csv', 0)
+    truth = io.load_table('tests/test_files/test_deseq_biotype_piRNA_protein_coding.csv').sort(pl.first())
     d = DESeqFilter("tests/test_files/test_deseq_biotype.csv")
     both = d.filter_biotype_from_ref_table(['protein_coding', 'piRNA'], ref=__biotype_ref__,
                                            inplace=False)
-    both.df.sort_index(inplace=True)
-    truth.sort_index(inplace=True)
-    assert np.all(truth == both.df)
+    assert np.all(truth == both.df.sort(pl.first()))
 
 
 def test_deseq_filter_biotype_from_ref_table_multiple_opposite():
-    truth = io.load_table('tests/test_files/test_deseq_biotype_piRNA_protein_coding_opposite.csv', 0)
+    truth = io.load_table('tests/test_files/test_deseq_biotype_piRNA_protein_coding_opposite.csv').sort(pl.first())
     d = DESeqFilter("tests/test_files/test_deseq_biotype.csv")
     neither = d.filter_biotype_from_ref_table(['protein_coding', 'piRNA'], ref=__biotype_ref__,
                                               inplace=False,
                                               opposite=True)
-    neither.df.sort_index(inplace=True)
-    truth.sort_index(inplace=True)
-    assert np.all(truth == neither.df)
+    assert np.all(truth == neither.df.sort(pl.first()))
 
 
 def test_deseqfilter_union_multiple():
@@ -999,45 +966,35 @@ def test_deseqfilter_difference_multiple():
 
 
 def test_intersection_inplace():
-    set1_truth = io.load_table('tests/test_files/test_deseq_set_ops_1_inplace_intersection.csv', 0)
-    set2_truth = io.load_table('tests/test_files/test_deseq_set_ops_2_inplace_intersection.csv', 0)
+    set1_truth = io.load_table('tests/test_files/test_deseq_set_ops_1_inplace_intersection.csv').sort(pl.first())
+    set2_truth = io.load_table('tests/test_files/test_deseq_set_ops_2_inplace_intersection.csv').sort(pl.first())
     set1 = DESeqFilter('tests/test_files/test_deseq_set_ops_1.csv')
     set2 = DESeqFilter('tests/test_files/test_deseq_set_ops_2.csv')
     set1_int = set1.__copy__()
     set2_int = set2.__copy__()
     set1_int.intersection(set2, inplace=True)
     set2_int.intersection(set1, inplace=True)
-    set1_int.df.sort_index(inplace=True)
-    set2_int.df.sort_index(inplace=True)
-    set1_truth.sort_index(inplace=True)
-    set2_truth.sort_index(inplace=True)
-
-    assert np.all(set1_truth == set1_int.df)
-    assert np.all(set2_truth == set2_int.df)
+    assert np.all(set1_truth == set1_int.df.sort(pl.first()))
+    assert np.all(set2_truth == set2_int.df.sort(pl.first()))
 
 
 def test_difference_inplace():
-    set1_truth = io.load_table('tests/test_files/test_deseq_set_ops_1_inplace_difference.csv', 0)
-    set2_truth = io.load_table('tests/test_files/test_deseq_set_ops_2_inplace_difference.csv', 0)
+    set1_truth = io.load_table('tests/test_files/test_deseq_set_ops_1_inplace_difference.csv').sort(pl.first())
+    set2_truth = io.load_table('tests/test_files/test_deseq_set_ops_2_inplace_difference.csv').sort(pl.first())
     set1 = DESeqFilter('tests/test_files/test_deseq_set_ops_1.csv')
     set2 = DESeqFilter('tests/test_files/test_deseq_set_ops_2.csv')
     set1_diff = set1.__copy__()
     set2_diff = set2.__copy__()
     set1_diff.difference(set2, inplace=True)
     set2_diff.difference(set1, inplace=True)
-    set1_diff.df.sort_index(inplace=True)
-    set2_diff.df.sort_index(inplace=True)
-    set1_truth.sort_index(inplace=True)
-    set2_truth.sort_index(inplace=True)
-
-    assert np.all(set1_truth == set1_diff.df)
-    assert np.all(set2_truth == set2_diff.df)
+    assert np.all(set1_truth == set1_diff.df.sort(pl.first()))
+    assert np.all(set2_truth == set2_diff.df.sort(pl.first()))
 
 
-def test_htcount_fold_change():
+def test_countfilter_fold_change():
     truth_num_name = f"Mean of {['cond1_rep1', 'cond1_rep2']}"
     truth_denom_name = f"Mean of {['cond2_rep1', 'cond2_rep2']}"
-    truth = io.load_table(r'tests/test_files/counted_fold_change_truth.csv', 0)
+    truth = io.load_table(r'tests/test_files/counted_fold_change_truth.csv')
     truth = truth.squeeze()
     h = CountFilter(r'tests/test_files/counted_fold_change.csv')
     fc = h.fold_change(['cond1_rep1', 'cond1_rep2'], ['cond2_rep1', 'cond2_rep2'])
@@ -1047,15 +1004,10 @@ def test_htcount_fold_change():
 
 
 def test_fcfilter_filter_abs_fc():
-    truth = io.load_table('tests/test_files/fcfilter_abs_fold_change_truth.csv', 0)
-    truth = truth.squeeze()
-    truth.sort_index(inplace=True)
+    truth = io.load_table('tests/test_files/fcfilter_abs_fold_change_truth.csv').sort(pl.first())
     f = FoldChangeFilter('tests/test_files/counted_fold_change_truth.csv', 'numer', 'denom')
     f.filter_abs_log2_fold_change(1)
-    f.df.sort_index(inplace=True)
-    print(f.df.values)
-    print(truth.values)
-    assert np.all(np.squeeze(f.df.values) == np.squeeze(truth.values))
+    assert np.all(np.squeeze(f.df.sort(pl.first())) == np.squeeze(truth))
 
 
 def test_fcfilter_fold_change_direction():
@@ -1084,63 +1036,47 @@ def test_fcfilter_filter_fold_change_direction_bad_input():
 
 
 def test_number_filters_absgt():
-    truth = io.load_table(r'tests/test_files/test_deseq_absgt.csv', 0)
+    truth = io.load_table(r'tests/test_files/test_deseq_absgt.csv').sort(pl.first())
     d = DESeqFilter(r'tests/test_files/test_deseq.csv')
     filt_1 = d.number_filters('log2FoldChange', '|x|>', 4, inplace=False)
     filt_2 = d.number_filters('log2FoldChange', 'abs_gt', 4, inplace=False)
     filt_3 = d.number_filters('log2FoldChange', 'abs greater than', 4, inplace=False)
-    filt_1.df.sort_index(inplace=True)
-    filt_2.df.sort_index(inplace=True)
-    filt_3.df.sort_index(inplace=True)
-    truth.sort_index(inplace=True)
-    assert np.all(filt_1.df == filt_2.df)
-    assert np.all(filt_2.df == filt_3.df)
-    assert np.all(np.squeeze(truth) == np.squeeze(filt_1.df))
+    assert np.all(filt_1.df.sort(pl.first()) == filt_2.df.sort(pl.first()))
+    assert np.all(filt_2.df.sort(pl.first()) == filt_3.df.sort(pl.first()))
+    assert np.all(np.squeeze(truth) == np.squeeze(filt_1.df.sort(pl.first())))
 
 
 def test_number_filters_gt():
-    truth = io.load_table(r'tests/test_files/test_deseq_gt.csv', 0)
+    truth = io.load_table(r'tests/test_files/test_deseq_gt.csv').sort(pl.first())
     d = DESeqFilter(r'tests/test_files/test_deseq.csv')
     filt_1 = d.number_filters('baseMean', '>', 1000, inplace=False)
     filt_2 = d.number_filters('baseMean', 'GT', 1000, inplace=False)
     filt_3 = d.number_filters('baseMean', 'greater tHAn', 1000, inplace=False)
-    filt_1.df.sort_index(inplace=True)
-    filt_2.df.sort_index(inplace=True)
-    filt_3.df.sort_index(inplace=True)
-    truth.sort_index(inplace=True)
-    assert np.all(filt_1.df == filt_2.df)
-    assert np.all(filt_2.df == filt_3.df)
-    assert np.all(np.squeeze(truth) == np.squeeze(filt_1.df))
+    assert np.all(filt_1.df.sort(pl.first()) == filt_2.df.sort(pl.first()))
+    assert np.all(filt_2.df.sort(pl.first()) == filt_3.df.sort(pl.first()))
+    assert np.all(np.squeeze(truth) == np.squeeze(filt_1.df.sort(pl.first())))
 
 
 def test_number_filters_lt():
-    truth = io.load_table(r'tests/test_files/test_deseq_lt.csv', 0)
+    truth = io.load_table(r'tests/test_files/test_deseq_lt.csv').sort(pl.first())
     d = DESeqFilter(r'tests/test_files/test_deseq.csv')
     filt_1 = d.number_filters('lfcSE', 'Lesser than', 0.2, inplace=False)
     filt_2 = d.number_filters('lfcSE', 'lt', 0.2, inplace=False)
     filt_3 = d.number_filters('lfcSE', '<', 0.2, inplace=False)
-    filt_1.df.sort_index(inplace=True)
-    filt_2.df.sort_index(inplace=True)
-    filt_3.df.sort_index(inplace=True)
-    truth.sort_index(inplace=True)
-    assert np.all(filt_1.df == filt_2.df)
-    assert np.all(filt_2.df == filt_3.df)
-    assert np.all(np.squeeze(truth) == np.squeeze(filt_1.df))
+    assert np.all(filt_1.df.sort(pl.first()) == filt_2.df.sort(pl.first()))
+    assert np.all(filt_2.df.sort(pl.first()) == filt_3.df.sort(pl.first()))
+    assert np.all(np.squeeze(truth) == np.squeeze(filt_1.df.sort(pl.first())))
 
 
 def test_number_filters_eq():
-    truth = io.load_table(r'tests/test_files/counted_eq.csv', 0)
+    truth = io.load_table(r'tests/test_files/counted_eq.csv').sort(pl.first())
     d = CountFilter(r'tests/test_files/counted.csv')
     filt_1 = d.number_filters('cond2', 'eQ', 0, inplace=False)
     filt_2 = d.number_filters('cond2', '=', 0, inplace=False)
     filt_3 = d.number_filters('cond2', 'Equals', 0, inplace=False)
-    filt_1.df.sort_index(inplace=True)
-    filt_2.df.sort_index(inplace=True)
-    filt_3.df.sort_index(inplace=True)
-    truth.sort_index(inplace=True)
-    assert np.all(filt_1.df == filt_2.df)
-    assert np.all(filt_2.df == filt_3.df)
-    assert np.all(np.squeeze(truth) == np.squeeze(filt_1.df))
+    assert np.all(filt_1.df.sort(pl.first()) == filt_2.df.sort(pl.first()))
+    assert np.all(filt_2.df.sort(pl.first()) == filt_3.df.sort(pl.first()))
+    assert np.all(np.squeeze(truth) == np.squeeze(filt_1.df.sort(pl.first())))
 
 
 def test_number_filters_invalid_input():
@@ -1154,59 +1090,43 @@ def test_number_filters_invalid_input():
 
 
 def test_text_filters_eq():
-    truth = io.load_table('tests/test_files/text_filters_eq.csv', 0)
+    truth = io.load_table('tests/test_files/text_filters_eq.csv').sort(pl.first())
     d = CountFilter('tests/test_files/text_filters.csv')
     filt_1 = d.text_filters('class', 'eQ', 'B', inplace=False)
     filt_2 = d.text_filters('class', '=', 'B', inplace=False)
     filt_3 = d.text_filters('class', 'Equals', 'B', inplace=False)
-    filt_1.df.sort_index(inplace=True)
-    filt_2.df.sort_index(inplace=True)
-    filt_3.df.sort_index(inplace=True)
-    truth.sort_index(inplace=True)
-    assert np.all(filt_1.df == filt_2.df)
-    assert np.all(filt_2.df == filt_3.df)
-    assert np.all(np.squeeze(truth) == np.squeeze(filt_1.df))
+    assert np.all(filt_1.df.sort(pl.first()) == filt_2.df.sort(pl.first()))
+    assert np.all(filt_2.df.sort(pl.first()) == filt_3.df.sort(pl.first()))
+    assert np.all(np.squeeze(truth) == np.squeeze(filt_1.df.sort(pl.first())))
 
 
 def test_text_filters_ct():
-    truth = io.load_table('tests/test_files/text_filters_ct.csv', 0)
+    truth = io.load_table('tests/test_files/text_filters_ct.csv').sort(pl.first())
     d = CountFilter('tests/test_files/text_filters.csv')
     filt_1 = d.text_filters('name', 'ct', 'C3.', inplace=False)
     filt_2 = d.text_filters('name', 'IN', 'C3.', inplace=False)
     filt_3 = d.text_filters('name', 'contaiNs', 'C3.', inplace=False)
-    filt_1.df.sort_index(inplace=True)
-    filt_2.df.sort_index(inplace=True)
-    filt_3.df.sort_index(inplace=True)
-    truth.sort_index(inplace=True)
-    assert np.all(filt_1.df == filt_2.df)
-    assert np.all(filt_2.df == filt_3.df)
-    assert np.all(np.squeeze(truth) == np.squeeze(filt_1.df))
+    assert np.all(filt_1.df.sort(pl.first()) == filt_2.df.sort(pl.first()))
+    assert np.all(filt_2.df.sort(pl.first()) == filt_3.df.sort(pl.first()))
+    assert np.all(np.squeeze(truth) == np.squeeze(filt_1.df.sort(pl.first())))
 
 
 def test_text_filters_sw():
-    truth = io.load_table('tests/test_files/text_filters_sw.csv', 0)
+    truth = io.load_table('tests/test_files/text_filters_sw.csv').sort(pl.first())
     d = CountFilter('tests/test_files/text_filters.csv')
     filt_1 = d.text_filters('name', 'sw', '2R', inplace=False)
     filt_2 = d.text_filters('name', 'Starts With', '2R', inplace=False)
-    filt_1.df.sort_index(inplace=True)
-    filt_2.df.sort_index(inplace=True)
-    truth.sort_index(inplace=True)
-    print(filt_1.df)
-    assert np.all(filt_1.df == filt_2.df)
-    assert np.all(np.squeeze(truth) == np.squeeze(filt_1.df))
+    assert np.all(filt_1.df.sort(pl.first()) == filt_2.df.sort(pl.first()))
+    assert np.all(np.squeeze(truth) == np.squeeze(filt_1.df.sort(pl.first())))
 
 
 def test_text_filters_ew():
-    truth = io.load_table('tests/test_files/text_filters_ew.csv', 0)
+    truth = io.load_table('tests/test_files/text_filters_ew.csv').sort(pl.first())
     d = CountFilter('tests/test_files/text_filters.csv')
     filt_1 = d.text_filters('name', 'ew', '3', inplace=False)
     filt_2 = d.text_filters('name', 'ends With', '3', inplace=False)
-    filt_1.df.sort_index(inplace=True)
-    filt_2.df.sort_index(inplace=True)
-    truth.sort_index(inplace=True)
-    print(filt_1.df)
-    assert np.all(filt_1.df == filt_2.df)
-    assert np.all(np.squeeze(truth) == np.squeeze(filt_1.df))
+    assert np.all(filt_1.df.sort(pl.first()) == filt_2.df.sort(pl.first()))
+    assert np.all(np.squeeze(truth) == np.squeeze(filt_1.df.sort(pl.first())))
 
 
 def test_text_filters_invalid_input():
@@ -1223,20 +1143,16 @@ def test_count_filter_from_folder():
     counted_fname = '__allexpr_temporary_testfile.csv'
     uncounted_fname = '__allfeature_temporary_testfile.csv'
 
-    truth_all_expr = io.load_table('tests/test_files/test_count_from_folder_all_expr.csv', 0).sort_index()
-    truth_all_feature = io.load_table('tests/test_files/test_count_from_folder_all_feature.csv', 0).sort_index()
+    truth_all_expr = io.load_table('tests/test_files/test_count_from_folder_all_expr.csv').sort(pl.first())
+    truth_all_feature = io.load_table('tests/test_files/test_count_from_folder_all_feature.csv').sort(pl.first())
     counts = CountFilter.from_folder_htseqcount('tests/test_files/test_count_from_folder', norm_to_rpm=False,
                                                 save_csv=True,
                                                 counted_fname=counted_fname, uncounted_fname=uncounted_fname)
 
     try:
-        print('counts:')
-        print(counts.df.sort_index())
-        print('truth:')
-        print(truth_all_expr)
-        assert np.all(np.isclose(counts.df.sort_index(), truth_all_expr, atol=0, rtol=0.0001))
+        assert np.all(np.isclose(counts.df.sort(pl.first()), truth_all_expr, atol=0, rtol=0.0001))
 
-        all_feature = io.load_table(f'tests/test_files/test_count_from_folder/{uncounted_fname}', 0).sort_index()
+        all_feature = io.load_table(f'tests/test_files/test_count_from_folder/{uncounted_fname}').sort(pl.first())
         assert all_feature.equals(truth_all_feature)
 
     finally:
@@ -1257,54 +1173,45 @@ def test_count_filter_from_folder_save_without_suffix():
 
 
 def test_count_filter_from_folder_norm():
-    truth_norm = io.load_table('tests/test_files/test_count_from_folder_norm.csv', 0)
+    truth_norm = io.load_table('tests/test_files/test_count_from_folder_norm.csv')
     counts_norm = CountFilter.from_folder_htseqcount('tests/test_files/test_count_from_folder', norm_to_rpm=True,
                                                      save_csv=False)
     assert np.all(np.isclose(counts_norm.df, truth_norm, atol=0, rtol=0.0001))
 
 
 def test_biotypes_from_ref_table():
-    truth = io.load_table('tests/test_files/biotypes_truth.csv', 0).sort_index()
+    truth = io.load_table('tests/test_files/biotypes_truth.csv').sort(pl.first())
     c = CountFilter('tests/test_files/counted_biotype.csv')
-    df = c.biotypes_from_ref_table(ref=__biotype_ref__).sort_index()
-    print('\n')
-    print(df, truth)
+    df = c.biotypes_from_ref_table(ref=__biotype_ref__).sort(pl.first())
     assert df.equals(truth)
 
 
 def test_biotypes_from_ref_table_long_form():
-    truth = pd.read_csv('tests/test_files/biotypes_long_format_truth.csv', index_col=0).sort_index()
+    truth = pl.read_csv('tests/test_files/biotypes_long_format_truth.csv').sort(pl.first())
     c = CountFilter('tests/test_files/counted_biotype.csv')
-    df = c.biotypes_from_ref_table(long_format=True, ref=__biotype_ref__).sort_index()
+    df = c.biotypes_from_ref_table(long_format=True, ref=__biotype_ref__).sort(pl.first())
     assert np.isclose(df, truth, equal_nan=True).all()
 
 
 def test_biotypes_from_gtf():
-    truth = io.load_table('tests/test_files/biotypes_truth.csv', 0).sort_index()
+    truth = io.load_table('tests/test_files/biotypes_truth.csv').sort(pl.first())
     c = CountFilter('tests/test_files/counted_biotype.csv')
-    df = c.biotypes_from_gtf('tests/test_files/test_gtf_for_biotypes.gtf').sort_index()
-    print('\n')
-    print(df, truth)
+    df = c.biotypes_from_gtf('tests/test_files/test_gtf_for_biotypes.gtf').sort(pl.first())
     assert df.equals(truth)
 
 
 def test_biotypes_from_gtf_long_form():
-    truth = pd.read_csv('tests/test_files/biotypes_long_format_truth.csv', index_col=0).sort_index()
+    truth = pl.read_csv('tests/test_files/biotypes_long_format_truth.csv').sort(pl.first())
     c = CountFilter('tests/test_files/counted_biotype.csv')
-    df = c.biotypes_from_gtf('tests/test_files/test_gtf_for_biotypes.gtf', long_format=True).sort_index()
-    print(df.index, truth.index)
-    print(truth)
-    print(df)
+    df = c.biotypes_from_gtf('tests/test_files/test_gtf_for_biotypes.gtf', long_format=True).sort(pl.first())
     assert np.isclose(df, truth, equal_nan=True).all()
 
 
 def test_filter_by_row_sum():
-    truth = io.load_table('tests/test_files/test_filter_row_sum.csv', 0)
+    truth = io.load_table('tests/test_files/test_filter_row_sum.csv').sort(pl.first())
     h = CountFilter('tests/test_files/counted.csv')
     h.filter_by_row_sum(29)
-    h.df.sort_index(inplace=True)
-    truth.sort_index(inplace=True)
-    assert np.all(h.df == truth)
+    assert np.all(h.df.sort(pl.first()) == truth)
 
 
 def test_sort_inplace():
@@ -1315,22 +1222,22 @@ def test_sort_inplace():
 
 def test_sort_not_inplace():
     c = CountFilter('tests/test_files/counted.csv')
-    c_copy = io.load_table('tests/test_files/counted.csv', 0)
+    c_copy = io.load_table('tests/test_files/counted.csv')
     c_sorted = c.sort(by='cond3', ascending=True, inplace=False)
     assert c_sorted.df['cond3'].is_monotonic_increasing
     assert np.all(c.df == c_copy)
 
 
 def test_sort_by_multiple_columns():
-    truth = io.load_table('tests/test_files/counted_sorted_multiple_truth.csv', 0)
+    truth = io.load_table('tests/test_files/counted_sorted_multiple_truth.csv')
     c = CountFilter('tests/test_files/counted.csv')
     c.sort(by=['cond3', 'cond4', 'cond1', 'cond2'], ascending=[True, False, True, False], inplace=True)
     assert np.all(truth == c.df)
 
 
 def test_sort_with_na_first():
-    truth_first = io.load_table('tests/test_files/test_deseq_with_nan_sorted_nanfirst_truth.csv', 0)
-    truth_last = io.load_table('tests/test_files/test_deseq_with_nan_sorted_nanlast_truth.csv', 0)
+    truth_first = io.load_table('tests/test_files/test_deseq_with_nan_sorted_nanfirst_truth.csv')
+    truth_last = io.load_table('tests/test_files/test_deseq_with_nan_sorted_nanlast_truth.csv')
     c = CountFilter('tests/test_files/test_deseq_with_nan.csv')
     c.sort(by='padj', ascending=True, na_position='first', inplace=True)
     assert truth_first.equals(c.df)
@@ -1345,10 +1252,10 @@ def test_sort_descending():
 
 
 def test_filter_missing_values():
-    truth = io.load_table('tests/test_files/test_deseq_with_nan_all_removed.csv', 0)
+    truth = io.load_table('tests/test_files/test_deseq_with_nan_all_removed.csv')
     f = Filter('tests/test_files/test_deseq_with_nan.csv')
     f.filter_missing_values()
-    assert np.all(f.df.sort_index() == truth.sort_index())
+    assert np.all(f.df.sort(pl.first()) == truth.sort(pl.first()))
 
 
 def test_filter_missing_values_foldchangefilter():
@@ -1361,22 +1268,16 @@ def test_filter_missing_values_foldchangefilter():
 
 
 def test_filter_missing_values_one_columns():
-    truth = io.load_table('tests/test_files/test_deseq_with_nan_basemean_removed.csv', 0)
+    truth = io.load_table('tests/test_files/test_deseq_with_nan_basemean_removed.csv')
     f = Filter('tests/test_files/test_deseq_with_nan.csv')
     f.filter_missing_values('baseMean')
-    print(f.df.sort_index())
-    print(truth.sort_index())
-    print(f.df.sort_index() == truth.sort_index())
     assert truth.equals(f.df)
 
 
 def test_filter_missing_values_multiple_columns():
-    truth = io.load_table('tests/test_files/test_deseq_with_nan_basemean_pvalue_removed.csv', 0)
+    truth = io.load_table('tests/test_files/test_deseq_with_nan_basemean_pvalue_removed.csv')
     f = Filter('tests/test_files/test_deseq_with_nan.csv')
     f.filter_missing_values(['baseMean', 'pvalue'])
-    print(f.df.sort_index())
-    print(truth.sort_index())
-    print(f.df.sort_index() == truth.sort_index())
     assert truth.equals(f.df)
 
 
@@ -1527,7 +1428,7 @@ def test_pipeline_apply_to_with_multiple_functions():
 def test_pipeline_apply_to_invalid_object():
     pl = Pipeline('deseqfilter')
     pl.add_function(DESeqFilter.filter_significant, alpha=10 ** -70)
-    cnt = io.load_table('tests/test_files/counted.csv', 0)
+    cnt = io.load_table('tests/test_files/counted.csv')
     with pytest.raises(AssertionError):
         pl.apply_to(cnt)
 
@@ -1593,8 +1494,6 @@ def _get_pipeline_with_plot(inplace: bool):
     else:
         d_pipelined, res = p.apply_to(d_copy, inplace=False)
         assert d.df.equals(d_pipelined.df)
-    print(res)
-    print(res_truth)
     assert res.keys() == res_truth.keys()
     assert res['biotypes_from_ref_table_1'].equals(res_truth['biotypes_from_ref_table_1'])
     assert type(res['volcano_plot_1']) == type(res_truth['volcano_plot_1'])
@@ -1913,10 +1812,9 @@ def test_avg_subsamples(sample_list, truth_path):
     truth = io.load_table(truth_path, 0)
     res = counts._avg_subsamples(sample_list, new_column_names='auto')
 
-    print(res.columns == truth.columns)
     assert np.all(res.columns == truth.columns)
-    assert np.all(res.index == truth.index)
-    assert np.isclose(res, truth, atol=0, rtol=0.001).all()
+    assert np.all(res.select(pl.first()).equals(truth.select(pl.first())))
+    assert np.isclose(res.drop(pl.selectors.first()), truth.drop(pl.selectors.first()), atol=0, rtol=0.001).all()
 
 
 @pytest.mark.parametrize('input_file,expected_triplicates',
@@ -1928,19 +1826,19 @@ def test_triplicates(input_file, expected_triplicates):
     assert counted.triplicates == expected_triplicates
 
 
-def _log2_plus1(df: pd.DataFrame):
+def _log2_plus1(df: pl.DataFrame):
     return np.log2(df + 1)
 
 
-def _log10_plus1(df: pd.DataFrame):
+def _log10_plus1(df: pl.DataFrame):
     return np.log10(df + 1)
 
 
-def _box_cox_plus1(df: pd.DataFrame):
+def _box_cox_plus1(df: pl.DataFrame):
     return PowerTransformer(method='box-cox').fit_transform(df + 1)
 
 
-def _multiply_by_3_reduce_2(df: pd.DataFrame):
+def _multiply_by_3_reduce_2(df: pl.DataFrame):
     return (df * 3) - 2
 
 
@@ -2017,7 +1915,7 @@ def test_split_by_principal_components(components, gene_fraction, truth_paths):
     res = c.split_by_principal_components(components, gene_fraction)
     assert len(res) == len(truth)
     for i in range(len(truth)):
-        assert res[i].df.sort_index().equals(truth[i].df.sort_index())
+        assert res[i].df.sort(pl.first()).equals(truth[i].df.sort(pl.first()))
 
 
 @pytest.mark.parametrize('ids,mode,truth_path', [
@@ -2049,10 +1947,8 @@ def test_filter_by_kegg_annotations(monkeypatch, ids, mode, truth_path):
     res = f.filter_by_kegg_annotations(ids, mode, gene_id_type='WormBase', inplace=False)
 
     try:
-        assert res.df.sort_index().equals(truth.sort_index())
+        assert res.df.sort(pl.first()).equals(truth.sort(pl.first()))
     except Exception as e:
-        print(res.df)
-        print(truth)
         raise e
 
 
@@ -2105,13 +2001,7 @@ def test_filter_by_go_annotations(monkeypatch, ids, mode, truth_path):
 
     f = Filter('tests/test_files/counted.csv')
     res = f.filter_by_go_annotations(ids, mode, gene_id_type='WormBase', organism=6239, inplace=False)
-
-    try:
-        assert res.df.sort_index().equals(truth.sort_index())
-    except Exception as e:
-        print(res.df)
-        print(truth)
-        raise e
+    assert res.df.sort(pl.first()).equals(truth.sort(pl.first()))
 
 
 @pytest.mark.parametrize("pth,cols,truth_pth", [
@@ -2122,7 +2012,7 @@ def test_drop_columns(pth, cols, truth_pth):
     obj = Filter(pth)
     truth = Filter(truth_pth)
     obj.drop_columns(cols)
-    assert obj.df.sort_index().equals(truth.df.sort_index())
+    assert obj.df.sort(pl.first()).equals(truth.df.sort(pl.first()))
 
 
 @pytest.mark.parametrize('comparisons,expected_paths,script_path', [
@@ -2212,7 +2102,7 @@ def test_filter_duplicate_ids(keep, exp_path):
 def test_filter_by_row_name():
     names = ['WBGene00044951', 'WBGene00014997', 'WBGene00007069']
     f = Filter('tests/test_files/counted_duplicates.csv')
-    truth = io.load_table('tests/test_files/counted_drop_names.csv', 0)
+    truth = io.load_table('tests/test_files/counted_drop_names.csv')
     res = f.filter_by_row_name(names, inplace=False)
     assert res.df.equals(truth)
     f.filter_by_row_name(names)
@@ -2226,7 +2116,7 @@ class TestOrthologDictTableGenerator:
             'gene1': ['ortholog1', 'ortholog2'],
             'gene2': ['ortholog3'],
         }
-        expected_table = pd.DataFrame([
+        expected_table = pl.DataFrame([
             ('gene1', 'ortholog1'),
             ('gene1', 'ortholog2'),
             ('gene2', 'ortholog3'),
@@ -2241,7 +2131,7 @@ class TestOrthologDictTableGenerator:
             'gene1': ['paralog1', 'paralog2'],
             'gene2': ['paralog3'],
         }
-        expected_table = pd.DataFrame([
+        expected_table = pl.DataFrame([
             ('gene1', 'paralog1'),
             ('gene1', 'paralog2'),
             ('gene2', 'paralog3'),
@@ -2253,14 +2143,14 @@ class TestOrthologDictTableGenerator:
     def test_create_one2many_table_empty(self):
         # Test when the mapping_dict is empty
         mapping_dict = {}
-        expected_table = pd.DataFrame(columns=['gene', 'ortholog'])
+        expected_table = pl.DataFrame(columns=['gene', 'ortholog'])
 
         result_table = Filter._create_one2many_table(io.OrthologDict(mapping_dict))
         pd.testing.assert_frame_equal(result_table, expected_table)
 
     def test_create_one2many_table_no_mapping(self):
         # Test when no mapping_dict is provided (None)
-        expected_table = pd.DataFrame(columns=['gene', 'ortholog'])
+        expected_table = pl.DataFrame(columns=['gene', 'ortholog'])
 
         result_table = Filter._create_one2many_table(io.OrthologDict())
         pd.testing.assert_frame_equal(result_table, expected_table)
@@ -2268,7 +2158,7 @@ class TestOrthologDictTableGenerator:
 
 @patch('rnalysis.utils.io.PantherOrthologMapper')
 def test_find_paralogs_panther(mock_mapper):
-    df_truth = pd.DataFrame({'gene': ['gene1', 'gene1', 'gene2'], 'paralog': ['paralog1', 'paralog2', 'paralog3']})
+    df_truth = pl.DataFrame({'gene': ['gene1', 'gene1', 'gene2'], 'paralog': ['paralog1', 'paralog2', 'paralog3']})
     mock_mapper_instance = Mock()
     mock_mapper.return_value = mock_mapper_instance
     mock_mapper_instance.get_paralogs.return_value = io.OrthologDict(
@@ -2285,7 +2175,7 @@ def test_find_paralogs_panther(mock_mapper):
 @pytest.mark.parametrize('filter_percent_identity', [True, False])
 @patch('rnalysis.utils.io.EnsemblOrthologMapper')
 def test_find_paralogs_ensembl(mock_mapper, filter_percent_identity):
-    df_truth = pd.DataFrame({'gene': ['gene1', 'gene1', 'gene2'], 'paralog': ['paralog1', 'paralog2', 'paralog3']})
+    df_truth = pl.DataFrame({'gene': ['gene1', 'gene1', 'gene2'], 'paralog': ['paralog1', 'paralog2', 'paralog3']})
     mock_mapper_instance = Mock()
     mock_mapper.return_value = mock_mapper_instance
     mock_mapper_instance.get_paralogs.return_value = io.OrthologDict(
@@ -2313,7 +2203,7 @@ def test_map_orthologs_panther(mock_mapper, non_unique_mode, filter_least_diverg
     else:
         filter_obj_path = 'tests/test_files/test_map_orthologs_truth.csv'
     filter_obj_truth = Filter(filter_obj_path)
-    one2many_truth = pd.DataFrame(
+    one2many_truth = pl.DataFrame(
         {'gene': ['gene1', 'gene1', 'gene2'], 'ortholog': ['ortholog1', 'ortholog2', 'ortholog3']})
     mock_mapper_instance = Mock()
     mock_mapper.return_value = mock_mapper_instance
@@ -2347,7 +2237,7 @@ def test_map_orthologs_ensembl(mock_mapper, non_unique_mode, filter_percent_iden
     else:
         filter_obj_path = 'tests/test_files/test_map_orthologs_truth.csv'
     filter_obj_truth = Filter(filter_obj_path)
-    one2many_truth = pd.DataFrame(
+    one2many_truth = pl.DataFrame(
         {'gene': ['gene1', 'gene1', 'gene2'], 'ortholog': ['ortholog1', 'ortholog2', 'ortholog3']})
     mock_mapper_instance = Mock()
     mock_mapper.return_value = mock_mapper_instance
@@ -2381,7 +2271,7 @@ def test_map_orthologs_phylomedb(mock_mapper, non_unique_mode, filter_consistenc
     else:
         filter_obj_path = 'tests/test_files/test_map_orthologs_truth.csv'
     filter_obj_truth = Filter(filter_obj_path)
-    one2many_truth = pd.DataFrame(
+    one2many_truth = pl.DataFrame(
         {'gene': ['gene1', 'gene1', 'gene2'], 'ortholog': ['ortholog1', 'ortholog2', 'ortholog3']})
     mock_mapper_instance = Mock()
     mock_mapper.return_value = mock_mapper_instance
@@ -2413,7 +2303,7 @@ def test_map_orthologs_orthoinspector(mock_mapper, non_unique_mode, remove_unmap
     else:
         filter_obj_path = 'tests/test_files/test_map_orthologs_truth.csv'
     filter_obj_truth = Filter(filter_obj_path)
-    one2many_truth = pd.DataFrame(
+    one2many_truth = pl.DataFrame(
         {'gene': ['gene1', 'gene1', 'gene2'], 'ortholog': ['ortholog1', 'ortholog2', 'ortholog3']})
     mock_mapper_instance = Mock()
     mock_mapper.return_value = mock_mapper_instance
