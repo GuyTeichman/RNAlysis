@@ -3,13 +3,6 @@ History
 =======
 
 
-
-3.12.1 (2024-05-19)
--------------------
-Fixed
-*******
-* Fixed bug that caused RNAlysis to crash after clearing the GUI cache.
-
 3.12.0 (2024-05-14)
 -------------------
 I'm happy to announce the latest release of RNAlysis, which brings a variety of new features and improvements.
