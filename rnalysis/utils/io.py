@@ -2147,7 +2147,7 @@ def get_legal_ensembl_taxons():
 @functools.lru_cache(maxsize=2)
 def get_legal_phylomedb_taxons():
     entries = PhylomeDBOrthologMapper.get_legal_species()
-    taxons = tuple(name for name in entries.unique() if name[0].isupper())
+    taxons = tuple(name for name in entries['name'].unique() if name[0].isupper())
     return taxons
 
 
