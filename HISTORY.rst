@@ -2,6 +2,13 @@
 History
 =======
 
+3.13.0 (2024-06-??)
+-------------------
+
+
+Fixed
+******
+* Fixed bug where the visualization functions 'Plot histogram of p-values' and 'Histogram of a column' would not display a graph immediately when using the stand-alone app.
 
 3.12.0 (2024-05-14)
 -------------------

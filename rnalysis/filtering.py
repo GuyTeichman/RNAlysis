@@ -434,6 +434,7 @@ class Filter:
             ax.set_yscale('log')
         if x_logscale:
             ax.set_xscale('log')
+        plt.show()
         return fig
 
     @staticmethod
@@ -2836,7 +2837,7 @@ class DESeqFilter(Filter):
         ax.set_xlabel(x_label)
         ax.set_ylabel('Frequency')
         ax.set_xticks(np.arange(0, 1.1, 0.1))
-
+        plt.show()
         return fig
 
     @readable_name('Filter by absolute log2 fold-change magnitude')
