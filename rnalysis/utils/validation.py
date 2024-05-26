@@ -161,11 +161,10 @@ def validate_attr_table(attr_df: pd.DataFrame):
     :type attr_df: pandas DataFrame
 
     """
-    assert attr_df.shape[
-               1] >= 2, f"Attribute Reference Table must have at least two columns, found only  {attr_df.shape[1]}!"
-    assert attr_df.shape[
-               0] >= 2, f"Attribute Reference Table must have at least two rows, found only  {attr_df.shape[0]}!"
-    attr_df.rename(columns={attr_df.columns[0]: 'gene'}, inplace=True)
+    assert attr_df.shape[1] >= 2, \
+        f"Attribute Reference Table must have at least two columns, found only  {attr_df.shape[1]}!"
+    assert attr_df.shape[0] >= 1, \
+        f"Attribute Reference Table must have at least one row, found only  {attr_df.shape[0]}!"
 
 
 def validate_uniprot_dataset_name(dataset_dicts: Tuple[dict, dict], map_to_names: Iterable[str],

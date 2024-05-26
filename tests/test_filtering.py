@@ -13,6 +13,36 @@ from tests import __attr_ref__, __biotype_ref__
 matplotlib.use('Agg')
 
 
+@pytest.fixture(scope='session')
+def _basic_filter():
+    return Filter('tests/test_files/counted.csv')
+
+
+@pytest.fixture
+def basic_filter(_basic_filter):
+    return _basic_filter.__copy__()
+
+
+@pytest.fixture(scope='session')
+def _basic_countfilter():
+    return CountFilter('tests/test_files/counted.csv')
+
+
+@pytest.fixture
+def basic_countfilter(_basic_countfilter):
+    return _basic_countfilter.__copy__()
+
+
+@pytest.fixture(scope='session')
+def _basic_deseqfilter():
+    return DESeqFilter('tests/test_files/test_deseq.csv')
+
+
+@pytest.fixture
+def basic_deseqfilter(_basic_deseqfilter):
+    return _basic_deseqfilter.__copy__()
+
+
 def unlink_tree(dir):
     for item in Path(dir).iterdir():
         if 'gitignore' in item.name:
@@ -29,16 +59,14 @@ def test_filter_api():
     assert f.__repr__() == "Filter('tests/test_files/uncounted.csv')"
 
 
-def test_countfilter_api():
-    h = CountFilter('tests/test_files/counted.csv')
-    assert h.__str__() == "Count matrix named 'counted.csv'"
-    assert h.__repr__() == "CountFilter('tests/test_files/counted.csv')"
+def test_countfilter_api(basic_countfilter):
+    assert basic_countfilter.__str__() == "Count matrix named 'counted.csv'"
+    assert basic_countfilter.__repr__() == "CountFilter('tests/test_files/counted.csv')"
 
 
-def test_deseqfilter_api():
-    d = DESeqFilter('tests/test_files/test_deseq.csv')
-    assert d.__str__() == "Differential expression table named 'test_deseq.csv'"
-    assert d.__repr__() == "DESeqFilter('tests/test_files/test_deseq.csv')"
+def test_deseqfilter_api(basic_deseqfilter):
+    assert basic_deseqfilter.__str__() == "Differential expression table named 'test_deseq.csv'"
+    assert basic_deseqfilter.__repr__() == "DESeqFilter('tests/test_files/test_deseq.csv')"
 
 
 def test_foldchangefilter_api():
@@ -47,12 +75,12 @@ def test_foldchangefilter_api():
     assert fc.__repr__() == "FoldChangeFilter('tests/test_files/fc_1.csv', 'a', 'b')"
 
 
-def test_filter_contains():
-    objs = [Filter('tests/test_files/test_deseq.csv'), CountFilter('tests/test_files/counted.csv'),
-            DESeqFilter('tests/test_files/counted.csv'), FoldChangeFilter('tests/test_files/fc_1.csv', 'num', 'denom')]
+def test_filter_contains(basic_countfilter, basic_deseqfilter, basic_filter):
+    objs = [basic_deseqfilter, basic_countfilter, basic_filter,
+            FoldChangeFilter('tests/test_files/fc_1.csv', 'num', 'denom')]
     neither = ['WBGene' + str(i) for i in range(10)]
     for obj in objs:
-        for ind in obj.df.index:
+        for ind in obj.df.select(pl.first()):
             assert ind in obj
         for false_ind in neither:
             assert false_ind not in obj
@@ -71,54 +99,47 @@ def test_filter_inplace():
     d_copy = DESeqFilter('tests/test_files/test_deseq_no_nans.csv')
     truth = io.load_table('tests/test_files/counted.csv')
     d_inplace_false = d._inplace(truth, opposite=False, inplace=False, suffix='suffix')
-    assert np.all(d_inplace_false.df == truth)
-    assert np.all(d.df == d_copy.df)
+    assert d_inplace_false.df.equals(truth)
+    assert d.df.equals(d_copy.df)
     d._inplace(truth, opposite=False, inplace=True, suffix='other_suffix')
-    assert np.all(d.df == truth)
+    assert d.df.equals(truth)
 
 
-def test_head():
+def test_head(basic_filter, basic_deseqfilter):
     df = io.load_table('tests/test_files/test_deseq.csv')
-    d = DESeqFilter('tests/test_files/test_deseq.csv')
-    assert np.all(df.head(7) == d.head(7))
-    assert np.all(df.head(1) == d.head(1))
+    assert np.all(df.head(7) == basic_deseqfilter.head(7))
+    assert np.all(df.head(1) == basic_deseqfilter.head(1))
 
     df2 = io.load_table('tests/test_files/counted.csv')
-    f = Filter('tests/test_files/counted.csv')
-    assert np.all(df2.head() == f.head())
-    assert np.all(df2.head(1000) == f.head(1000))
+    assert np.all(df2.head() == basic_filter.head())
+    assert np.all(df2.head(1000) == basic_filter.head(1000))
 
 
-def test_tail():
+def test_tail(basic_filter, basic_deseqfilter):
     df = io.load_table('tests/test_files/test_deseq.csv')
-    d = DESeqFilter('tests/test_files/test_deseq.csv')
-    assert np.all(df.tail(7) == d.tail(7))
-    assert np.all(df.tail(1) == d.tail(1))
+    assert np.all(df.tail(7) == basic_deseqfilter.tail(7))
+    assert np.all(df.tail(1) == basic_deseqfilter.tail(1))
 
     df2 = io.load_table('tests/test_files/counted.csv')
-    f = Filter('tests/test_files/counted.csv')
-    assert np.all(df2.tail() == f.tail())
-    assert np.all(df2.tail(1000) == f.tail(1000))
+    assert np.all(df2.tail() == basic_filter.tail())
+    assert np.all(df2.tail(1000) == basic_filter.tail(1000))
 
 
-def test_describe():
+def test_describe(basic_countfilter, basic_deseqfilter):
     fc_df = io.load_table('tests/test_files/fc_1.csv', 0, squeeze=True)
-    count_df = io.load_table('tests/test_files/counted.csv')
-    deseq_df = io.load_table('tests/test_files/test_deseq.csv')
+    count_df = basic_countfilter.df.clone()
+    deseq_df = basic_deseqfilter.df.clone()
 
     fc = FoldChangeFilter('tests/test_files/fc_1.csv', 'a', 'b')
-    count = CountFilter('tests/test_files/counted.csv')
-    deseq = DESeqFilter('tests/test_files/test_deseq.csv')
     default_percentiles = (0.01, 0.25, 0.5, 0.75, 0.99)
     deciles = [i / 10 for i in range(1, 10)]
-    for filter_obj, df in zip([count, deseq, fc], [count_df, deseq_df, fc_df]):
+    for filter_obj, df in zip([basic_countfilter, basic_deseqfilter, fc], [count_df, deseq_df, fc_df]):
         assert np.all(filter_obj.describe() == df.describe(percentiles=default_percentiles))
         assert np.all(filter_obj.describe(deciles) == df.describe(percentiles=deciles))
 
 
-def test_print_features_api():
-    count = CountFilter('tests/test_files/counted.csv')
-    count.print_features()
+def test_print_features_api(basic_countfilter):
+    basic_countfilter.print_features()
 
 
 def test_from_string(monkeypatch):
@@ -132,7 +153,7 @@ def test_from_string(monkeypatch):
     ('UniProtKB AC/ID', 'WormBase', False, 'tests/test_files/counted_translated_with_unmapped.csv'),
     ('UniProtKB', 'auto', True, 'tests/test_files/counted_translated_remove_unmapped.csv'),
 ])
-def test_filter_translate_gene_ids(map_to, map_from, remove_unmapped_genes, expected, monkeypatch):
+def test_filter_translate_gene_ids(map_to, map_from, remove_unmapped_genes, expected, monkeypatch, basic_countfilter):
     def mock_map_gene_ids(self, ids):
         if self.map_from == 'WormBase':
             return io.GeneIDDict(
@@ -144,68 +165,37 @@ def test_filter_translate_gene_ids(map_to, map_from, remove_unmapped_genes, expe
 
     monkeypatch.setattr(io.GeneIDTranslator, 'run', mock_map_gene_ids)
     truth = io.load_table(expected, index_col=0)
-    f = Filter('tests/test_files/counted.csv')
 
-    res = f.translate_gene_ids(map_to, map_from, remove_unmapped_genes, inplace=False)
+    res = basic_countfilter.translate_gene_ids(map_to, map_from, remove_unmapped_genes, inplace=False)
     assert res.df.sort(pl.first()).equals(truth.sort(pl.first()))
-    f.translate_gene_ids(map_to, map_from, remove_unmapped_genes, inplace=True)
-    assert f.df.sort(pl.first()).equals(truth.sort(pl.first()))
+    basic_countfilter.translate_gene_ids(map_to, map_from, remove_unmapped_genes, inplace=True)
+    assert basic_countfilter.df.sort(pl.first()).equals(truth.sort(pl.first()))
 
 
-def test_countfilter_normalize_to_rpm_htseqcount():
-    truth = io.load_table(r"tests/test_files/test_norm_reads_rpm_htseqcount.csv", 0)
-    h = CountFilter("tests/test_files/counted.csv")
-    not_inplace, factors = h.normalize_to_rpm_htseqcount("tests/test_files/uncounted.csv", inplace=False,
-                                                         return_scaling_factors=True)
-    assert np.isclose(truth, not_inplace.df).all()
+def test_countfilter_normalize_to_rpm_htseqcount(basic_countfilter):
+    truth = io.load_table(r"tests/test_files/test_norm_reads_rpm_htseqcount.csv")
+    not_inplace, factors = basic_countfilter.normalize_to_rpm_htseqcount("tests/test_files/uncounted.csv",
+                                                                         inplace=False,
+                                                                         return_scaling_factors=True)
+    assert np.isclose(truth.drop(cs.first()), not_inplace.df.drop(cs.first())).all()
 
-    norm_df = h._norm_scaling_factors(factors)
-    assert np.isclose(truth, norm_df).all()
+    norm_df = basic_countfilter._norm_scaling_factors(factors)
+    assert np.isclose(truth.drop(cs.first()), norm_df.drop(cs.first())).all()
 
-    h.normalize_to_rpm_htseqcount("tests/test_files/uncounted.csv")
-    assert np.isclose(truth, h.df).all()
-
-
-def test_countfilter_normalize_to_rpm():
-    truth = io.load_table(r"tests/test_files/test_norm_to_rpm.csv", 0)
-    h = CountFilter("tests/test_files/counted.csv")
-    not_inplace, factors = h.normalize_to_rpm(inplace=False, return_scaling_factors=True)
-    assert np.isclose(truth, not_inplace.df).all()
-
-    norm_df = h._norm_scaling_factors(factors)
-    assert np.isclose(truth, norm_df).all()
-
-    h.normalize_to_rpm()
-    assert np.isclose(truth, h.df).all()
+    basic_countfilter.normalize_to_rpm_htseqcount("tests/test_files/uncounted.csv")
+    assert np.isclose(truth.drop(cs.first()), basic_countfilter.df.drop(cs.first())).all()
 
 
-@pytest.mark.parametrize('gtf_path,feature_type,method',
-                         [
-                             ('tests/test_files/test_gtf_wormbase.gtf', 'gene', 'merged_exons'),
-                             ('tests/test_files/test_gff3_wormbase.gff3', 'gene', 'geometric_mean'),
-                             ('tests/test_files/test_gtf_wormbase.gtf', 'transcript', 'mean'),
-                             ('tests/test_files/test_gff3_wormbase.gff3', 'transcript', 'max')
-                         ])
-def test_countfilter_normalize_to_rpkm(monkeypatch, gtf_path, feature_type, method):
-    def mock_get_feature_lengths(this_gtf_path, this_feature_type, this_method):
-        assert this_gtf_path == gtf_path
-        assert this_feature_type == feature_type
-        assert this_method == method
-        with open('tests/test_files/feature_lengths.json') as f:
-            return json.load(f)
+def test_countfilter_normalize_to_rpm(basic_countfilter):
+    truth = io.load_table(r"tests/test_files/test_norm_to_rpm.csv")
+    not_inplace, factors = basic_countfilter.normalize_to_rpm(inplace=False, return_scaling_factors=True)
+    assert np.isclose(truth.drop(cs.first()), not_inplace.df.drop(cs.first())).all()
 
-    monkeypatch.setattr(genome_annotation, 'get_genomic_feature_lengths', mock_get_feature_lengths)
-    truth = io.load_table(r"tests/test_files/test_norm_to_rpkm.csv", 0)
-    h = CountFilter("tests/test_files/counted.csv")
-    not_inplace, factors = h.normalize_to_rpkm(gtf_path, feature_type, method, inplace=False,
-                                               return_scaling_factors=True)
-    assert np.isclose(truth, not_inplace.df).all()
+    norm_df = basic_countfilter._norm_scaling_factors(factors)
+    assert np.isclose(truth.drop(cs.first()), norm_df.drop(cs.first())).all()
 
-    norm_df = h._norm_scaling_factors(factors)
-    assert np.isclose(truth, norm_df).all()
-
-    h.normalize_to_rpkm(gtf_path, feature_type, method, )
-    assert np.isclose(truth, h.df).all()
+    basic_countfilter.normalize_to_rpm()
+    assert np.isclose(truth.drop(cs.first()), basic_countfilter.df.drop(cs.first())).all()
 
 
 @pytest.mark.parametrize('gtf_path,feature_type,method',
@@ -215,7 +205,7 @@ def test_countfilter_normalize_to_rpkm(monkeypatch, gtf_path, feature_type, meth
                              ('tests/test_files/test_gtf_wormbase.gtf', 'transcript', 'mean'),
                              ('tests/test_files/test_gff3_wormbase.gff3', 'transcript', 'max')
                          ])
-def test_countfilter_normalize_to_tpm(monkeypatch, gtf_path, feature_type, method):
+def test_countfilter_normalize_to_rpkm(monkeypatch, gtf_path, feature_type, method, basic_countfilter):
     def mock_get_feature_lengths(this_gtf_path, this_feature_type, this_method):
         assert this_gtf_path == gtf_path
         assert this_feature_type == feature_type
@@ -224,80 +214,105 @@ def test_countfilter_normalize_to_tpm(monkeypatch, gtf_path, feature_type, metho
             return json.load(f)
 
     monkeypatch.setattr(genome_annotation, 'get_genomic_feature_lengths', mock_get_feature_lengths)
-    truth = io.load_table(r"tests/test_files/test_norm_to_tpm.csv", 0)
-    h = CountFilter("tests/test_files/counted.csv")
-    not_inplace, factors = h.normalize_to_tpm(gtf_path, feature_type, method, inplace=False,
-                                              return_scaling_factors=True)
-    assert np.isclose(truth, not_inplace.df).all()
+    truth = io.load_table(r"tests/test_files/test_norm_to_rpkm.csv")
+    not_inplace, factors = basic_countfilter.normalize_to_rpkm(gtf_path, feature_type, method, inplace=False,
+                                                               return_scaling_factors=True)
+    assert np.isclose(truth.drop(cs.first()), not_inplace.df.drop(cs.first())).all()
 
-    norm_df = h._norm_scaling_factors(factors)
-    assert np.isclose(truth, norm_df).all()
+    norm_df = basic_countfilter._norm_scaling_factors(factors)
+    assert np.isclose(truth.drop(cs.first()), norm_df.drop(cs.first())).all()
 
-    h.normalize_to_tpm(gtf_path, feature_type, method)
-    assert np.isclose(truth, h.df).all()
+    basic_countfilter.normalize_to_rpkm(gtf_path, feature_type, method, )
+    assert np.isclose(truth.drop(cs.first()), basic_countfilter.df.drop(cs.first())).all()
 
 
-def test_countfilter_normalize_rle():
+@pytest.mark.parametrize('gtf_path,feature_type,method',
+                         [
+                             ('tests/test_files/test_gtf_wormbase.gtf', 'gene', 'merged_exons'),
+                             ('tests/test_files/test_gff3_wormbase.gff3', 'gene', 'geometric_mean'),
+                             ('tests/test_files/test_gtf_wormbase.gtf', 'transcript', 'mean'),
+                             ('tests/test_files/test_gff3_wormbase.gff3', 'transcript', 'max')
+                         ])
+def test_countfilter_normalize_to_tpm(monkeypatch, gtf_path, feature_type, method, basic_countfilter):
+    def mock_get_feature_lengths(this_gtf_path, this_feature_type, this_method):
+        assert this_gtf_path == gtf_path
+        assert this_feature_type == feature_type
+        assert this_method == method
+        with open('tests/test_files/feature_lengths.json') as f:
+            return json.load(f)
+
+    monkeypatch.setattr(genome_annotation, 'get_genomic_feature_lengths', mock_get_feature_lengths)
+    truth = io.load_table(r"tests/test_files/test_norm_to_tpm.csv")
+    not_inplace, factors = basic_countfilter.normalize_to_tpm(gtf_path, feature_type, method, inplace=False,
+                                                              return_scaling_factors=True)
+    assert np.isclose(truth.drop(cs.first()), not_inplace.df.drop(cs.first())).all()
+
+    norm_df = basic_countfilter._norm_scaling_factors(factors)
+    assert np.isclose(truth.drop(cs.first()), norm_df.drop(cs.first())).all()
+
+    basic_countfilter.normalize_to_tpm(gtf_path, feature_type, method)
+    assert np.isclose(truth.drop(cs.first()), basic_countfilter.df.drop(cs.first())).all()
+
+
+def test_countfilter_normalize_rle(basic_countfilter):
     truth = io.load_table(r"tests/test_files/test_norm_rle.csv")
-    h = CountFilter("tests/test_files/counted.csv")
-    not_inplace, factors = h.normalize_rle(inplace=False, return_scaling_factors=True)
-    assert np.isclose(truth, not_inplace.df).all()
+    not_inplace, factors = basic_countfilter.normalize_rle(inplace=False, return_scaling_factors=True)
+    assert np.isclose(truth.drop(cs.first()), not_inplace.df.drop(cs.first())).all()
 
-    norm_df = h._norm_scaling_factors(factors)
-    assert np.isclose(truth, norm_df).all()
-    h.normalize_rle()
-    assert np.isclose(truth, h.df).all()
+    norm_df = basic_countfilter._norm_scaling_factors(factors)
+    assert np.isclose(truth.drop(cs.first()), norm_df.drop(cs.first())).all()
+    basic_countfilter.normalize_rle()
+    assert np.isclose(truth.drop(cs.first()), basic_countfilter.df.drop(cs.first())).all()
 
 
-def test_countfilter_normalize_tmm():
+def test_countfilter_normalize_tmm(basic_countfilter):
     truth = io.load_table(r"tests/test_files/test_norm_tmm.csv")
-    h = CountFilter("tests/test_files/counted.csv")
-    not_inplace, factors = h.normalize_tmm(ref_column='cond1', inplace=False, return_scaling_factors=True)
-    assert np.isclose(truth, not_inplace.df).all()
+    not_inplace, factors = basic_countfilter.normalize_tmm(ref_column='cond1', inplace=False,
+                                                           return_scaling_factors=True)
+    assert np.isclose(truth.drop(cs.first()), not_inplace.df.drop(cs.first())).all()
 
-    norm_df = h._norm_scaling_factors(factors)
-    assert np.isclose(truth, norm_df).all()
+    norm_df = basic_countfilter._norm_scaling_factors(factors)
+    assert np.isclose(truth.drop(cs.first()), norm_df.drop(cs.first())).all()
 
-    h.normalize_tmm(ref_column='cond1')
-    assert np.isclose(truth, h.df).all()
+    basic_countfilter.normalize_tmm(ref_column='cond1')
+    assert np.isclose(truth.drop(cs.first()), basic_countfilter.df.drop(cs.first())).all()
 
 
-def test_countfilter_normalize_median_of_ratios():
+def test_countfilter_normalize_median_of_ratios(basic_countfilter):
     truth = io.load_table(r"tests/test_files/test_norm_mrn.csv")
-    h = CountFilter("tests/test_files/counted.csv")
-    not_inplace, factors = h.normalize_median_of_ratios([['cond1', 'cond2'], ['cond3', 'cond4']], inplace=False,
-                                                        return_scaling_factors=True)
-    assert np.isclose(truth, not_inplace.df).all()
+    not_inplace, factors = basic_countfilter.normalize_median_of_ratios([['cond1', 'cond2'], ['cond3', 'cond4']],
+                                                                        inplace=False,
+                                                                        return_scaling_factors=True)
+    assert np.isclose(truth.drop(cs.first()), not_inplace.df.drop(cs.first())).all()
 
-    norm_df = h._norm_scaling_factors(factors)
-    assert np.isclose(truth, norm_df).all()
+    norm_df = basic_countfilter._norm_scaling_factors(factors)
+    assert np.isclose(truth.drop(cs.first()), norm_df.drop(cs.first())).all()
 
-    h.normalize_median_of_ratios([['cond1', 'cond2'], ['cond3', 'cond4']])
-    assert np.isclose(truth, h.df).all()
+    basic_countfilter.normalize_median_of_ratios([['cond1', 'cond2'], ['cond3', 'cond4']])
+    assert np.isclose(truth.drop(cs.first()), basic_countfilter.df.drop(cs.first())).all()
 
 
 @pytest.mark.parametrize('quantile,truth_path', [
     (0.75, "tests/test_files/test_norm_quantile_75.csv"),
     (0.32, "tests/test_files/test_norm_quantile_32.csv"),
 ])
-def test_countfilter_normalize_to_quantile(quantile, truth_path):
+def test_countfilter_normalize_to_quantile(quantile, truth_path, basic_countfilter):
     truth = io.load_table(truth_path)
-    h = CountFilter("tests/test_files/counted.csv")
-    not_inplace, factors = h.normalize_to_quantile(quantile, inplace=False, return_scaling_factors=True)
-    assert np.isclose(truth, not_inplace.df).all()
+    not_inplace, factors = basic_countfilter.normalize_to_quantile(quantile, inplace=False, return_scaling_factors=True)
+    assert np.isclose(truth.drop(cs.first()), not_inplace.df.drop(cs.first())).all()
 
-    norm_df = h._norm_scaling_factors(factors)
-    assert np.isclose(truth, norm_df).all()
+    norm_df = basic_countfilter._norm_scaling_factors(factors)
+    assert np.isclose(truth.drop(cs.first()), norm_df.drop(cs.first())).all()
 
-    h.normalize_to_quantile(quantile)
-    assert np.isclose(truth, h.df).all()
+    basic_countfilter.normalize_to_quantile(quantile)
+    assert np.isclose(truth.drop(cs.first()), basic_countfilter.df.drop(cs.first())).all()
 
 
 class TestFilterConcatenate:
     def setup_method(self):
         # Create Filter objects for testing
-        df1 = pl.DataFrame({'A': [1, 2, 3], 'B': [4, 5, 6]}, index=['a', 'b', 'c'])
-        df2 = pl.DataFrame({'A': [7, 8, 9], 'B': [10, 11, 12]}, index=['d', 'e', 'f'])
+        df1 = pl.DataFrame({'index': ['a', 'b', 'c'], 'A': [1, 2, 3], 'B': [4, 5, 6]})
+        df2 = pl.DataFrame({'index': ['d', 'e', 'f'], 'A': [7, 8, 9], 'B': [10, 11, 12]})
         self.filter1 = Filter.from_dataframe(df1, 'filter1.csv')
         self.filter2 = Filter.from_dataframe(df2, 'filter2.csv')
 
@@ -306,8 +321,8 @@ class TestFilterConcatenate:
         result = self.filter1.concatenate(self.filter2)
 
         # Assert that the resulting Filter object has the expected data and filename
-        expected_df = pl.DataFrame({'A': [1, 2, 3, 7, 8, 9], 'B': [4, 5, 6, 10, 11, 12]},
-                                   index=['a', 'b', 'c', 'd', 'e', 'f'])
+        expected_df = pl.DataFrame(
+            {'index': ['a', 'b', 'c', 'd', 'e', 'f'], 'A': [1, 2, 3, 7, 8, 9], 'B': [4, 5, 6, 10, 11, 12]})
         assert result.df.equals(expected_df)
         assert result.fname == Path('filter1_filter2.csv')
 
@@ -321,7 +336,7 @@ class TestFilterConcatenate:
 
     def test_concatenate_with_different_columns(self):
         # Create a Filter object with different columns
-        df3 = pl.DataFrame({'C': [7, 8, 9], 'D': [10, 11, 12]}, index=['d', 'e', 'f'])
+        df3 = pl.DataFrame({'index': ['d', 'e', 'f'], 'C': [7, 8, 9], 'D': [10, 11, 12]})
         filter3 = Filter.from_dataframe(df3, 'filter3.csv')
 
         # Assert that concatenating Filter objects with different columns raises an AssertionError
@@ -330,7 +345,7 @@ class TestFilterConcatenate:
 
     def test_concatenate_with_overlapping_indices(self):
         # Create a Filter object with overlapping indices
-        df4 = pl.DataFrame({'A': [7, 8, 9], 'B': [10, 11, 12]}, index=['c', 'd', 'e'])
+        df4 = pl.DataFrame({'index': ['c', 'd', 'e'], 'A': [7, 8, 9], 'B': [10, 11, 12]})
         filter4 = Filter.from_dataframe(df4, 'filter4.csv')
 
         # Assert that concatenating Filter objects with overlapping indices raises an AssertionError
@@ -338,14 +353,13 @@ class TestFilterConcatenate:
             self.filter1.concatenate(filter4)
 
 
-def test_countfilter_norm_reads_with_scaling_factors():
+def test_countfilter_norm_reads_with_scaling_factors(basic_countfilter):
     truth = io.load_table(r"tests/test_files/test_norm_scaling_factors.csv")
-    h = CountFilter("tests/test_files/counted.csv")
     factors = io.load_table("tests/test_files/scaling_factors.csv")
-    h_norm = h.normalize_with_scaling_factors("tests/test_files/scaling_factors.csv", inplace=False)
-    h.normalize_with_scaling_factors(factors)
-    assert np.isclose(truth, h.df).all()
-    assert h_norm.df.equals(h.df)
+    h_norm = basic_countfilter.normalize_with_scaling_factors("tests/test_files/scaling_factors.csv", inplace=False)
+    assert np.isclose(truth.drop(cs.first()), h_norm.df.drop(cs.first())).all()
+    basic_countfilter.normalize_with_scaling_factors(factors)
+    assert np.isclose(truth.drop(cs.first()), basic_countfilter.df.drop(cs.first())).all()
 
 
 @pytest.mark.parametrize('input_path,threshold,n_samples,opposite,truth_path', [
@@ -357,7 +371,7 @@ def test_filter_low_reads(input_path, threshold, n_samples, opposite, truth_path
     truth = io.load_table(truth_path)
     h = CountFilter(input_path)
     h.filter_low_reads(threshold, n_samples, opposite=opposite)
-    assert np.isclose(truth.sort(pl.first()), h.df.sort(pl.first())).all()
+    assert np.isclose(truth.sort(pl.first()).drop(cs.first()), h.df.sort(pl.first()).drop(cs.first())).all()
 
 
 @pytest.mark.parametrize('interactive', [True, False])
@@ -366,9 +380,8 @@ def test_filter_low_reads(input_path, threshold, n_samples, opposite, truth_path
     ('auto', 0.05, None),
     ('title', 0.1, 0),
     ('title', 0.001, 1)])
-def test_deseqfilter_volcano_plot_api(interactive, show_cursor, title, alpha, log2fc_threshold):
-    d = DESeqFilter("tests/test_files/test_deseq.csv")
-    d.volcano_plot(alpha, log2fc_threshold, title, interactive=interactive, show_cursor=show_cursor)
+def test_deseqfilter_volcano_plot_api(interactive, show_cursor, title, alpha, log2fc_threshold, basic_deseqfilter):
+    basic_deseqfilter.volcano_plot(alpha, log2fc_threshold, title, interactive=interactive, show_cursor=show_cursor)
     plt.close('all')
 
 
@@ -377,48 +390,54 @@ def test_deseqfilter_volcano_plot_api(interactive, show_cursor, title, alpha, lo
     ('cond2', ['cond1', 'cond2'], True),
     ('cond1', 'cond2', False)
 ])
-def test_countfilter_ma_plot_api(ref_column, columns, split_plots):
-    c = CountFilter("tests/test_files/counted.csv")
-    c.ma_plot(ref_column, columns, split_plots)
+def test_countfilter_ma_plot_api(ref_column, columns, split_plots, basic_countfilter):
+    basic_countfilter.ma_plot(ref_column, columns, split_plots)
     plt.close('all')
 
 
-def test_countfilter_pairplot_api():
-    c = CountFilter("tests/test_files/counted.csv")
-    c.pairplot(log2=False)
-    c.pairplot(['cond1', 'cond3'], log2=True)
+@pytest.mark.parametrize('args,kwargs', [
+    (tuple(), dict(log2=False)),
+    ((['cond1', 'cond3'],), dict(log2=True)),
+])
+def test_countfilter_pairplot_api(basic_countfilter, args, kwargs):
+    basic_countfilter.pairplot(*args, **kwargs)
     plt.close('all')
 
 
-def test_countfilter_clustergram_api():
-    c = CountFilter("tests/test_files/counted.csv")
+@pytest.mark.parametrize('args,kwargs,xfail', [
+    (tuple(), dict(), False),
+    ((['cond1', 'cond2'],), dict(metric='euclidean', linkage='Ward'), False),
+    ((['cond1', 'cond2'],), dict(metric='euclidean', linkage='single'), False),
+    (tuple(), dict(linkage='invalid'), True),
+    (tuple(), dict(metric='invalid'), True),
+    (tuple(), dict(linkage=5), True),
+
+])
+def test_countfilter_clustergram_api(basic_countfilter, args, kwargs, xfail):
     try:
-        c.clustergram()
-        c.clustergram(c.columns[0:2], metric='euclidean', linkage='Ward')
-        c.clustergram(c.columns[0:2], metric='euclidean', linkage='single')
-        with pytest.raises(AssertionError):
-            c.clustergram(linkage='invalid')
-        with pytest.raises(AssertionError):
-            c.clustergram(metric='invalid')
-        with pytest.raises(AssertionError):
-            c.clustergram(linkage=5)
+        if xfail:
+            with pytest.raises(AssertionError):
+                basic_countfilter.clustergram(*args, **kwargs)
+        else:
+            basic_countfilter.clustergram(*args, **kwargs)
     finally:
         plt.close('all')
 
 
-def test_countfilter_box_plot_api():
-    c = CountFilter("tests/test_files/counted.csv")
-    c.enhanced_box_plot(ylabel='A different label')
-    c.enhanced_box_plot(samples=['cond1', 'cond3'], scatter=True)
+def test_countfilter_box_plot_api(basic_countfilter):
+    basic_countfilter.enhanced_box_plot(ylabel='A different label')
+    basic_countfilter.enhanced_box_plot(samples=['cond1', 'cond3'], scatter=True)
     plt.close('all')
 
 
-def test_countfilter_plot_expression_api():
-    c = CountFilter("tests/test_files/counted.csv")
-    c.plot_expression(['WBGene00007063'], 'all')
-    c.plot_expression('WBGene00007063', [[0, 1], ['cond3', 'cond4']])
-    c.plot_expression(['WBGene00007064', 'WBGene00044951', 'WBGene00043988', 'WBGene00007066'], ['cond1'])
-    c.plot_expression(['WBGene00007064', 'WBGene00044951'], [['cond1'], [1]])
+@pytest.mark.parametrize('args', [
+    (['WBGene00007063'], 'all'),
+    ('WBGene00007063', [[0, 1], ['cond3', 'cond4']]),
+    (['WBGene00007064', 'WBGene00044951', 'WBGene00043988', 'WBGene00007066'], ['cond1']),
+    (['WBGene00007064', 'WBGene00044951'], [['cond1'], [1]])
+])
+def test_countfilter_plot_expression_api(basic_countfilter, args):
+    basic_countfilter.plot_expression(*args)
     plt.close('all')
 
 
@@ -429,10 +448,10 @@ def test_countfilter_plot_expression_api():
 @pytest.mark.parametrize('s1,s2,xlabel,ylabel,title', [
     ('cond1', 'cond2', 'auto', 'auto', 'auto'),
     ('cond3', ['cond2', 'cond1', 'cond4'], 'x', 'y', 'title')])
-def test_countfilter_scatter_sample_vs_sample_api(s1, s2, xlabel, ylabel, title, interactive, show_cursor, highlight):
-    c = CountFilter("tests/test_files/counted.csv")
-    c.scatter_sample_vs_sample(s1, s2, xlabel, ylabel, title, interactive=interactive, show_cursor=show_cursor,
-                               highlight=highlight)
+def test_countfilter_scatter_sample_vs_sample_api(basic_countfilter, s1, s2, xlabel, ylabel, title, interactive,
+                                                  show_cursor, highlight):
+    basic_countfilter.scatter_sample_vs_sample(s1, s2, xlabel, ylabel, title, interactive=interactive,
+                                               show_cursor=show_cursor, highlight=highlight)
     plt.close('all')
 
 
@@ -441,31 +460,28 @@ def test_countfilter_scatter_sample_vs_sample_api(s1, s2, xlabel, ylabel, title,
                                                 power_transform=False), False),
                                           (dict(n_components=2.0), True),
                                           (dict(n_components=1), True)])
-def test_countfilter_pca_api(kwargs, xfail):
-    c = CountFilter("tests/test_files/counted.csv")
-    c.filter_low_reads(1)
+def test_countfilter_pca_api(kwargs, xfail, basic_countfilter):
+    basic_countfilter.filter_low_reads(1)
     try:
         if xfail:
             with pytest.raises(AssertionError):
-                c.pca(**kwargs)
+                basic_countfilter.pca(**kwargs)
 
         else:
-            _ = c.pca()
+            basic_countfilter.pca()
     finally:
         plt.close('all')
 
 
-def test_countfilter_enhanced_box_plot_api():
-    c = CountFilter("tests/test_files/counted.csv")
-    c.box_plot(notch=True, ylabel='A different label')
-    c.box_plot(samples=['cond1', 'cond3'], scatter=True)
+def test_countfilter_enhanced_box_plot_api(basic_countfilter):
+    basic_countfilter.box_plot(notch=True, ylabel='A different label')
+    basic_countfilter.box_plot(samples=['cond1', 'cond3'], scatter=True)
     plt.close('all')
 
 
-def test_countfilter_violin_plot_api():
-    c = CountFilter("tests/test_files/counted.csv")
-    c.violin_plot(ylabel='A different label')
-    c.violin_plot(samples=['cond1', 'cond4'])
+def test_countfilter_violin_plot_api(basic_countfilter):
+    basic_countfilter.violin_plot(ylabel='A different label')
+    basic_countfilter.violin_plot(samples=['cond1', 'cond4'])
     plt.close('all')
 
 
@@ -510,33 +526,32 @@ def test_countfilter_filter_biotype_from_gtf_opposite():
                            opposite=True)
 
 
-def test_filter_by_attribute():
+def test_filter_by_attribute(basic_deseqfilter):
     truth = io.load_table('tests/test_files/test_deseq_filter_by_attr1.csv').sort(pl.first())
-    d = DESeqFilter('tests/test_files/test_deseq.csv')
-    d_notinplace = d.filter_by_attribute('attribute1', ref=__attr_ref__, inplace=False)
-    d.filter_by_attribute('attribute1', ref=__attr_ref__)
-    assert np.all(truth == d.df.sort(pl.first()))
+    d_notinplace = basic_deseqfilter.filter_by_attribute('attribute1', ref=__attr_ref__, inplace=False)
     assert np.all(truth == d_notinplace.df.sort(pl.first()))
+    basic_deseqfilter.filter_by_attribute('attribute1', ref=__attr_ref__)
+    assert np.all(truth == basic_deseqfilter.df.sort(pl.first()))
 
 
-def test_filter_by_attribute_from_string(monkeypatch):
+def test_filter_by_attribute_from_string(monkeypatch, basic_deseqfilter):
     monkeypatch.setattr('builtins.input', lambda x: 'attribute1\nattribute2\n')
     union_truth = io.load_table('tests/test_files/counted_filter_by_bigtable_union_truth.csv')
     h = CountFilter('tests/test_files/counted_filter_by_bigtable.csv')
     assert np.all(union_truth.sort(pl.first()) == h.filter_by_attribute(mode='union',
-                                                                    ref=__attr_ref__,
-                                                                    inplace=False).df.sort(pl.first()))
+                                                                        ref=__attr_ref__,
+                                                                        inplace=False).df.sort(pl.first()))
 
     monkeypatch.setattr('builtins.input', lambda x: 'attribute1\nattribute2')
     assert np.all(union_truth.sort(pl.first()) == h.filter_by_attribute(mode='union',
-                                                                    ref=__attr_ref__,
-                                                                    inplace=False).df.sort(pl.first()))
+                                                                        ref=__attr_ref__,
+                                                                        inplace=False).df.sort(pl.first()))
 
     monkeypatch.setattr('builtins.input', lambda x: 'attribute1')
     deseq_truth = io.load_table('tests/test_files/test_deseq_filter_by_attr1.csv')
-    d = DESeqFilter('tests/test_files/test_deseq.csv')
     assert np.all(
-        deseq_truth.sort(pl.first()) == d.filter_by_attribute(ref=__attr_ref__, inplace=False).df.sort(pl.first()))
+        deseq_truth.sort(pl.first()) == basic_deseqfilter.filter_by_attribute(ref=__attr_ref__, inplace=False).df.sort(
+            pl.first()))
 
 
 def test_filter_by_attribute_union():
@@ -571,96 +586,91 @@ def test_split_by_attribute():
     for i, attr in enumerate(attrs):
         assert np.all(
             newobjs[i].df.sort(pl.first()) == h.filter_by_attribute(attr, ref=__attr_ref__,
-                                                                inplace=False).df.sort(pl.first()))
+                                                                    inplace=False).df.sort(pl.first()))
 
 
-def test_split_by_attribute_multiple():
-    f = Filter('tests/test_files/test_deseq.csv')
+def test_split_by_attribute_multiple(basic_deseqfilter):
     attrs = ['attribute2', 'attribute3', 'attribute4', 'attribute1']
-    newobjs = f.split_by_attribute(attrs, ref=__attr_ref__)
+    newobjs = basic_deseqfilter.split_by_attribute(attrs, ref=__attr_ref__)
     assert len(newobjs) == len(attrs)
     for i, attr in enumerate(attrs):
         assert np.all(
-            newobjs[i].df.sort(pl.first()) == f.filter_by_attribute(attr, ref=__attr_ref__,
-                                                                inplace=False).df.sort(pl.first()))
+            newobjs[i].df.sort(pl.first()) == basic_deseqfilter.filter_by_attribute(attr, ref=__attr_ref__,
+                                                                                    inplace=False).df.sort(pl.first()))
 
 
-def test_split_by_attribute_only_one_attribute():
-    f = Filter('tests/test_files/test_deseq.csv')
-    newobj = f.split_by_attribute(['attribute1'], ref=__attr_ref__)
+def test_split_by_attribute_only_one_attribute(basic_deseqfilter):
+    newobj = basic_deseqfilter.split_by_attribute(['attribute1'], ref=__attr_ref__)
     assert len(newobj) == 1
     assert np.all(
-        newobj[0].df.sort(pl.first()) == f.filter_by_attribute('attribute1', ref=__attr_ref__,
-                                                           inplace=False).df.sort(pl.first()))
+        newobj[0].df.sort(pl.first()) == basic_deseqfilter.filter_by_attribute('attribute1', ref=__attr_ref__,
+                                                                               inplace=False).df.sort(pl.first()))
     with pytest.raises(AssertionError):
-        f.split_by_attribute('attribute1', ref=__attr_ref__)
+        basic_deseqfilter.split_by_attribute('attribute1', ref=__attr_ref__)
 
 
-def test_split_by_attribute_faulty_attributes():
-    f = Filter('tests/test_files/test_deseq.csv')
+def test_split_by_attribute_faulty_attributes(basic_filter):
     with pytest.raises(AssertionError):
-        f.split_by_attribute(['attribute1', ['attribute2', 'attribute3']],
-                             ref=__attr_ref__)
+        basic_filter.split_by_attribute(['attribute1', ['attribute2', 'attribute3']],
+                                        ref=__attr_ref__)
     with pytest.raises(AssertionError):
-        f.split_by_attribute(['attribute1', 2], ref=__attr_ref__)
+        basic_filter.split_by_attribute(['attribute1', 2], ref=__attr_ref__)
 
 
 def test_deseq_filter_significant():
-    truth = io.load_table("tests/test_files/test_deseq_sig_truth.csv", 0)
-    d = DESeqFilter("tests/test_files/test_deseq_sig.csv")
-    d.filter_significant(alpha=0.05)
-    assert np.all(d.df == truth)
+    deseqfilter = DESeqFilter('tests/test_files/test_deseq_sig.csv')
+    truth = io.load_table("tests/test_files/test_deseq_sig_truth.csv").sort(pl.first())
+    result = deseqfilter.filter_significant(alpha=0.05, inplace=False)
+    assert result.df.sort(pl.first()).equals(truth)
 
 
 def test_deseq_filter_significant_opposite():
+    deseqfilter = DESeqFilter('tests/test_files/test_deseq_sig.csv')
     truth = io.load_table(r'tests/test_files/test_deseq_not_sig_truth.csv').sort(pl.first())
-    d = DESeqFilter("tests/test_files/test_deseq_sig.csv")
-    d.filter_significant(alpha=0.05, opposite=True)
-    assert d.df.sort(pl.first()).equals(truth)
+    deseqfilter.filter_significant(alpha=0.05, opposite=True)
+    assert deseqfilter.df.sort(pl.first()).equals(truth)
 
 
-def test_filter_top_n_ascending_number():
+def test_filter_top_n_ascending_number(basic_deseqfilter):
     truth = io.load_table("tests/test_files/test_deseq_top10.csv").sort(pl.first())
-    d = DESeqFilter("tests/test_files/test_deseq.csv")
-    d.filter_top_n('padj', 10)
-    assert np.isclose(truth, d.df.sort(pl.first())).all()
+    basic_deseqfilter.filter_top_n('padj', 10)
+    assert np.isclose(truth.drop(cs.first()), basic_deseqfilter.df.sort(pl.first()).drop(cs.first())).all()
 
 
 def test_filter_top_n_ascending_text():
+    deseqfilter = DESeqFilter("tests/test_files/test_deseq_textcol.csv")
     truth = io.load_table("tests/test_files/test_deseq_top10_text_ascend.csv").sort(pl.first())
-    d = DESeqFilter("tests/test_files/test_deseq_textcol.csv")
-    d.filter_top_n('textcol', 10, True)
-    assert d.df.sort(pl.first()).equals(truth)
+    deseqfilter.filter_top_n('textcol', 10, True)
+    assert deseqfilter.df.sort(pl.first()).equals(truth)
 
 
 def test_filter_top_n_multiple_columns():
+    deseqfilter = DESeqFilter("tests/test_files/test_deseq_textcol.csv")
     truth = io.load_table("tests/test_files/test_deseq_textcol_top15_text_basemean.csv").sort(pl.first())
-    d = DESeqFilter("tests/test_files/test_deseq_textcol.csv")
-    d.filter_top_n(['textcol', 'baseMean'], 15, True)
-    assert d.df.sort(pl.first()).equals(truth)
+    deseqfilter.filter_top_n(['textcol', 'baseMean'], 15, True)
+    assert deseqfilter.df.sort(pl.first()).equals(truth)
 
 
-def test_filter_top_n_descending_number():
+def test_filter_top_n_descending_number(basic_deseqfilter):
     truth = io.load_table("tests/test_files/test_deseq_bottom7.csv").sort(pl.first())
-    d = DESeqFilter("tests/test_files/test_deseq.csv")
-    d.filter_top_n('log2FoldChange', 7, False)
-    assert np.isclose(truth, d.df.sort(pl.first())).all()
+    basic_deseqfilter.filter_top_n('log2FoldChange', 7, False)
+    assert np.isclose(truth.drop(cs.first()), basic_deseqfilter.df.sort(pl.first()).drop(cs.first())).all()
 
 
 def test_filter_top_n_descending_text():
+    deseqfilter = DESeqFilter("tests/test_files/test_deseq_textcol.csv")
     truth = io.load_table("tests/test_files/test_deseq_bottom10_text_descend.csv").sort(pl.first())
-    d = DESeqFilter("tests/test_files/test_deseq_textcol.csv")
-    d.filter_top_n('textcol', 10, False)
-    assert np.all(truth == d.df.sort(pl.first()))
+    deseqfilter.filter_top_n('textcol', 10, False)
+    assert np.all(truth == deseqfilter.df.sort(pl.first()))
 
 
-def test_filter_top_n_nonexisting_column():
-    d = DESeqFilter("tests/test_files/test_deseq.csv")
+def test_filter_top_n_nonexisting_column(basic_deseqfilter):
     colname = 'somecol'
     with pytest.raises(AssertionError):
-        d.filter_top_n(colname, 5)
-        d.filter_top_n([d.df.columns[0], colname])
-    assert colname not in d.df.columns
+        basic_deseqfilter.filter_top_n(colname, 5)
+    with pytest.raises(AssertionError):
+        basic_deseqfilter.filter_top_n([basic_deseqfilter.df.columns[0], colname])
+    assert colname not in basic_deseqfilter.df.columns
 
 
 def test_deseq_filter_abs_log2_fold_change():
@@ -671,8 +681,8 @@ def test_deseq_filter_abs_log2_fold_change():
 
 
 def test_deseq_filter_fold_change_direction():
-    pos_truth = io.load_table("tests/test_files/test_deseq_fc_pos_truth.csv", 0)
-    neg_truth = io.load_table("tests/test_files/test_deseq_fc_neg_truth.csv", 0)
+    pos_truth = io.load_table("tests/test_files/test_deseq_fc_pos_truth.csv")
+    neg_truth = io.load_table("tests/test_files/test_deseq_fc_neg_truth.csv")
     d = DESeqFilter("tests/test_files/test_deseq_fc.csv")
     pos = d.filter_fold_change_direction('pos', inplace=False)
     neg = d.filter_fold_change_direction('neg', inplace=False)
@@ -682,8 +692,8 @@ def test_deseq_filter_fold_change_direction():
 
 def test_deseq_split_fold_change():
     d = DESeqFilter("tests/test_files/test_deseq_fc.csv")
-    pos_truth = io.load_table("tests/test_files/test_deseq_fc_pos_truth.csv", 0)
-    neg_truth = io.load_table("tests/test_files/test_deseq_fc_neg_truth.csv", 0)
+    pos_truth = io.load_table("tests/test_files/test_deseq_fc_pos_truth.csv")
+    neg_truth = io.load_table("tests/test_files/test_deseq_fc_neg_truth.csv")
     d = DESeqFilter("tests/test_files/test_deseq_fc.csv")
     pos, neg = d.split_fold_change_direction()
     assert np.all(pos.df == pos_truth)
@@ -820,23 +830,20 @@ def test_set_ops_multiple_variable_types():
     assert set1.symmetric_difference(set2) == set1_unique.union(set2_unique)
 
 
-def test_countfilter_rpm_negative_threshold():
-    h = CountFilter("tests/test_files/counted.csv")
+def test_countfilter_rpm_negative_threshold(basic_countfilter):
     with pytest.raises(AssertionError):
-        h.filter_low_reads(threshold=-3)
+        basic_countfilter.filter_low_reads(threshold=-3)
 
 
-def test_countfilter_threshold_invalid():
-    h = CountFilter("tests/test_files/counted.csv")
+def test_countfilter_threshold_invalid(basic_countfilter):
     with pytest.raises(AssertionError):
-        h.filter_low_reads("5")
+        basic_countfilter.filter_low_reads("5")
 
 
-def test_countfilter_split_by_reads():
-    h = CountFilter("tests/test_files/counted.csv")
-    high_truth = io.load_table(r"tests/test_files/counted_above60_rpm.csv", 0)
-    low_truth = io.load_table(r"tests/test_files/counted_below60_rpm.csv", 0)
-    high, low = h.split_by_reads(threshold=60)
+def test_countfilter_split_by_reads(basic_countfilter):
+    high_truth = io.load_table(r"tests/test_files/counted_above60_rpm.csv")
+    low_truth = io.load_table(r"tests/test_files/counted_below60_rpm.csv")
+    high, low = basic_countfilter.split_by_reads(threshold=60)
     assert np.all(high.df.sort(pl.first()) == high_truth.sort(pl.first()))
     assert np.all(low.df.sort(pl.first()) == low_truth.sort(pl.first()))
 
@@ -845,13 +852,12 @@ def test_filter_percentile():
     truth = io.load_table(r'tests/test_files/test_deseq_percentile_0.25.csv').sort(pl.first())
     h = DESeqFilter(r'tests/test_files/test_deseq_percentile.csv')
     h.filter_percentile(0.25, 'padj', inplace=True)
-    print(h.df.sort(pl.first()), truth)
     assert truth.equals(h.df.sort(pl.first()))
     h.filter_percentile(1, 'baseMean')
     assert truth.equals(h.df.sort(pl.first()))
     h.filter_percentile(0, 'padj')
     assert len(h) == 1
-    assert h.df['padj'].values == truth['padj'].min()
+    assert (h.df['padj'] == truth['padj'].min()).all()
 
 
 def test_filter_percentile_bad_input():
@@ -995,7 +1001,6 @@ def test_countfilter_fold_change():
     truth_num_name = f"Mean of {['cond1_rep1', 'cond1_rep2']}"
     truth_denom_name = f"Mean of {['cond2_rep1', 'cond2_rep2']}"
     truth = io.load_table(r'tests/test_files/counted_fold_change_truth.csv')
-    truth = truth.squeeze()
     h = CountFilter(r'tests/test_files/counted_fold_change.csv')
     fc = h.fold_change(['cond1_rep1', 'cond1_rep2'], ['cond2_rep1', 'cond2_rep2'])
     assert truth_num_name == fc.numerator
@@ -1035,58 +1040,58 @@ def test_fcfilter_filter_fold_change_direction_bad_input():
         fc.filter_fold_change_direction('bad_input')
 
 
-def test_number_filters_absgt():
+@pytest.mark.parametrize('args', [
+    ('log2FoldChange', '|x|>', 4),
+    ('log2FoldChange', 'abs_gt', 4),
+    ('log2FoldChange', 'abs greater than', 4)
+])
+def test_number_filters_absgt(basic_deseqfilter, args):
     truth = io.load_table(r'tests/test_files/test_deseq_absgt.csv').sort(pl.first())
-    d = DESeqFilter(r'tests/test_files/test_deseq.csv')
-    filt_1 = d.number_filters('log2FoldChange', '|x|>', 4, inplace=False)
-    filt_2 = d.number_filters('log2FoldChange', 'abs_gt', 4, inplace=False)
-    filt_3 = d.number_filters('log2FoldChange', 'abs greater than', 4, inplace=False)
-    assert np.all(filt_1.df.sort(pl.first()) == filt_2.df.sort(pl.first()))
-    assert np.all(filt_2.df.sort(pl.first()) == filt_3.df.sort(pl.first()))
-    assert np.all(np.squeeze(truth) == np.squeeze(filt_1.df.sort(pl.first())))
+    result = basic_deseqfilter.number_filters(*args, inplace=False)
+    assert np.all(np.squeeze(truth) == np.squeeze(result.df.sort(pl.first())))
 
 
-def test_number_filters_gt():
+@pytest.mark.parametrize('args', [
+    ('baseMean', 'greater tHAn', 1000),
+    ('baseMean', 'GT', 1000),
+    ('baseMean', '>', 1000)
+])
+def test_number_filters_gt(basic_deseqfilter, args):
     truth = io.load_table(r'tests/test_files/test_deseq_gt.csv').sort(pl.first())
-    d = DESeqFilter(r'tests/test_files/test_deseq.csv')
-    filt_1 = d.number_filters('baseMean', '>', 1000, inplace=False)
-    filt_2 = d.number_filters('baseMean', 'GT', 1000, inplace=False)
-    filt_3 = d.number_filters('baseMean', 'greater tHAn', 1000, inplace=False)
-    assert np.all(filt_1.df.sort(pl.first()) == filt_2.df.sort(pl.first()))
-    assert np.all(filt_2.df.sort(pl.first()) == filt_3.df.sort(pl.first()))
-    assert np.all(np.squeeze(truth) == np.squeeze(filt_1.df.sort(pl.first())))
+    result = basic_deseqfilter.number_filters(*args, inplace=False)
+    assert np.all(np.squeeze(truth) == np.squeeze(result.df.sort(pl.first())))
 
 
-def test_number_filters_lt():
+@pytest.mark.parametrize('args', [
+    ('lfcSE', 'lt', 0.2),
+    ('lfcSE', '<', 0.2),
+    ('lfcSE', 'Lesser than', 0.2)
+])
+def test_number_filters_lt(basic_deseqfilter, args):
     truth = io.load_table(r'tests/test_files/test_deseq_lt.csv').sort(pl.first())
-    d = DESeqFilter(r'tests/test_files/test_deseq.csv')
-    filt_1 = d.number_filters('lfcSE', 'Lesser than', 0.2, inplace=False)
-    filt_2 = d.number_filters('lfcSE', 'lt', 0.2, inplace=False)
-    filt_3 = d.number_filters('lfcSE', '<', 0.2, inplace=False)
-    assert np.all(filt_1.df.sort(pl.first()) == filt_2.df.sort(pl.first()))
-    assert np.all(filt_2.df.sort(pl.first()) == filt_3.df.sort(pl.first()))
-    assert np.all(np.squeeze(truth) == np.squeeze(filt_1.df.sort(pl.first())))
+    result = basic_deseqfilter.number_filters(*args, inplace=False)
+    assert np.all(np.squeeze(truth) == np.squeeze(result.df.sort(pl.first())))
 
 
-def test_number_filters_eq():
+@pytest.mark.parametrize('args', [
+    ('cond2', 'eq', 0),
+    ('cond2', '=', 0),
+    ('cond2', 'Equals', 0)
+])
+def test_number_filters_eq(basic_countfilter, args):
     truth = io.load_table(r'tests/test_files/counted_eq.csv').sort(pl.first())
-    d = CountFilter(r'tests/test_files/counted.csv')
-    filt_1 = d.number_filters('cond2', 'eQ', 0, inplace=False)
-    filt_2 = d.number_filters('cond2', '=', 0, inplace=False)
-    filt_3 = d.number_filters('cond2', 'Equals', 0, inplace=False)
-    assert np.all(filt_1.df.sort(pl.first()) == filt_2.df.sort(pl.first()))
-    assert np.all(filt_2.df.sort(pl.first()) == filt_3.df.sort(pl.first()))
-    assert np.all(np.squeeze(truth) == np.squeeze(filt_1.df.sort(pl.first())))
+    result = basic_countfilter.number_filters(*args, inplace=False)
+    assert np.all(np.squeeze(truth) == np.squeeze(result.df.sort(pl.first())))
 
 
-def test_number_filters_invalid_input():
-    d = CountFilter(r'tests/test_files/counted.csv')
+@pytest.mark.parametrize('args', [
+    ('Cond2', 'lt', 5),
+    ('cond2', 'contains', 6),
+    ('cond2', 'equals', '55')
+])
+def test_number_filters_invalid_input(basic_countfilter, args):
     with pytest.raises(AssertionError):
-        d.number_filters('Cond2', 'lt', 5)
-    with pytest.raises(AssertionError):
-        d.number_filters('cond2', 'contains', 6)
-    with pytest.raises(AssertionError):
-        d.number_filters('cond2', 'equals', '55')
+        basic_countfilter.number_filters(*args)
 
 
 def test_text_filters_eq():
@@ -1129,54 +1134,53 @@ def test_text_filters_ew():
     assert np.all(np.squeeze(truth) == np.squeeze(filt_1.df.sort(pl.first())))
 
 
-def test_text_filters_invalid_input():
-    d = CountFilter(r'tests/test_files/counted.csv')
+@pytest.mark.parametrize('args', [
+    ('Cond2', 'contains', '5'),
+    ('cond2', 'lt', '6'),
+    ('cond2', 'equals', 55)
+])
+def test_text_filters_invalid_input(basic_countfilter, args):
     with pytest.raises(AssertionError):
-        d.text_filters('Cond2', 'contains', '5')
-    with pytest.raises(AssertionError):
-        d.text_filters('cond2', 'lt', '6')
-    with pytest.raises(AssertionError):
-        d.text_filters('cond2', 'equals', 55)
+        basic_countfilter.text_filters(*args)
 
 
-def test_count_filter_from_folder():
-    counted_fname = '__allexpr_temporary_testfile.csv'
-    uncounted_fname = '__allfeature_temporary_testfile.csv'
+class TestCountFilterFromFolder:
+    def test_count_filter_from_folder(self):
+        counted_fname = '__allexpr_temporary_testfile.csv'
+        uncounted_fname = '__allfeature_temporary_testfile.csv'
 
-    truth_all_expr = io.load_table('tests/test_files/test_count_from_folder_all_expr.csv').sort(pl.first())
-    truth_all_feature = io.load_table('tests/test_files/test_count_from_folder_all_feature.csv').sort(pl.first())
-    counts = CountFilter.from_folder_htseqcount('tests/test_files/test_count_from_folder', norm_to_rpm=False,
-                                                save_csv=True,
-                                                counted_fname=counted_fname, uncounted_fname=uncounted_fname)
+        truth_all_expr = io.load_table('tests/test_files/test_count_from_folder_all_expr.csv').sort(pl.first())
+        truth_all_feature = io.load_table('tests/test_files/test_count_from_folder_all_feature.csv').sort(pl.first())
+        counts = CountFilter.from_folder_htseqcount('tests/test_files/test_count_from_folder', norm_to_rpm=False,
+                                                    save_csv=True,
+                                                    counted_fname=counted_fname, uncounted_fname=uncounted_fname)
 
-    try:
-        assert np.all(np.isclose(counts.df.sort(pl.first()), truth_all_expr, atol=0, rtol=0.0001))
+        try:
+            assert counts.df.sort(pl.first()).equals(truth_all_expr)
 
-        all_feature = io.load_table(f'tests/test_files/test_count_from_folder/{uncounted_fname}').sort(pl.first())
-        assert all_feature.equals(truth_all_feature)
+            all_feature = io.load_table(f'tests/test_files/test_count_from_folder/{uncounted_fname}').sort(pl.first())
+            assert all_feature.equals(truth_all_feature)
 
-    finally:
-        os.remove('tests/test_files/test_count_from_folder/__allexpr_temporary_testfile.csv')
-        os.remove('tests/test_files/test_count_from_folder/__allfeature_temporary_testfile.csv')
+        finally:
+            os.remove('tests/test_files/test_count_from_folder/__allexpr_temporary_testfile.csv')
+            os.remove('tests/test_files/test_count_from_folder/__allfeature_temporary_testfile.csv')
 
+    def test_count_filter_from_folder_save_without_suffix(self):
+        counted_fname = '__allexpr_temporary_testfile.csv'
+        uncounted_fname = '__allfeature_temporary_testfile.csv'
+        try:
+            _ = CountFilter.from_folder_htseqcount('tests/test_files/test_count_from_folder', norm_to_rpm=False,
+                                                   save_csv=True,
+                                                   counted_fname=counted_fname, uncounted_fname=uncounted_fname)
+        finally:
+            os.remove(f'tests/test_files/test_count_from_folder/{counted_fname}')
+            os.remove(f'tests/test_files/test_count_from_folder/{uncounted_fname}')
 
-def test_count_filter_from_folder_save_without_suffix():
-    counted_fname = '__allexpr_temporary_testfile.csv'
-    uncounted_fname = '__allfeature_temporary_testfile.csv'
-    try:
-        _ = CountFilter.from_folder_htseqcount('tests/test_files/test_count_from_folder', norm_to_rpm=False,
-                                               save_csv=True,
-                                               counted_fname=counted_fname, uncounted_fname=uncounted_fname)
-    finally:
-        os.remove(f'tests/test_files/test_count_from_folder/{counted_fname}')
-        os.remove(f'tests/test_files/test_count_from_folder/{uncounted_fname}')
-
-
-def test_count_filter_from_folder_norm():
-    truth_norm = io.load_table('tests/test_files/test_count_from_folder_norm.csv')
-    counts_norm = CountFilter.from_folder_htseqcount('tests/test_files/test_count_from_folder', norm_to_rpm=True,
-                                                     save_csv=False)
-    assert np.all(np.isclose(counts_norm.df, truth_norm, atol=0, rtol=0.0001))
+    def test_count_filter_from_folder_norm(self):
+        truth_norm = io.load_table('tests/test_files/test_count_from_folder_norm.csv').drop(cs.first())
+        counts_norm = CountFilter.from_folder_htseqcount('tests/test_files/test_count_from_folder',
+                                                         norm_to_rpm=True, save_csv=False)
+        assert np.all(np.isclose(counts_norm.df.drop(cs.first()), truth_norm, atol=0, rtol=0.0001))
 
 
 def test_biotypes_from_ref_table():
@@ -1207,32 +1211,30 @@ def test_biotypes_from_gtf_long_form():
     assert np.isclose(df, truth, equal_nan=True).all()
 
 
-def test_filter_by_row_sum():
+def test_filter_by_row_sum(basic_countfilter):
     truth = io.load_table('tests/test_files/test_filter_row_sum.csv').sort(pl.first())
-    h = CountFilter('tests/test_files/counted.csv')
-    h.filter_by_row_sum(29)
-    assert np.all(h.df.sort(pl.first()) == truth)
+    basic_countfilter.filter_by_row_sum(29)
+    assert np.all(basic_countfilter.df.sort(pl.first()) == truth)
 
 
-def test_sort_inplace():
-    c = CountFilter('tests/test_files/counted.csv')
-    c.sort(by='cond3', ascending=True, inplace=True)
-    assert c.df['cond3'].is_monotonic_increasing
+def test_sort_inplace(basic_countfilter):
+    truth = io.load_table('tests/test_files/counted_sorted.csv')
+    basic_countfilter.sort(by='cond3', ascending=True, inplace=True)
+    assert basic_countfilter.df.equals(truth)
 
 
-def test_sort_not_inplace():
-    c = CountFilter('tests/test_files/counted.csv')
+def test_sort_not_inplacebasic_countfilter(basic_countfilter):
+    truth = io.load_table('tests/test_files/counted_sorted.csv')
     c_copy = io.load_table('tests/test_files/counted.csv')
-    c_sorted = c.sort(by='cond3', ascending=True, inplace=False)
-    assert c_sorted.df['cond3'].is_monotonic_increasing
-    assert np.all(c.df == c_copy)
+    c_sorted = basic_countfilter.sort(by='cond3', ascending=True, inplace=False)
+    assert c_sorted.df.equals(truth)
+    assert basic_countfilter.df.equals(c_copy)
 
 
-def test_sort_by_multiple_columns():
+def test_sort_by_multiple_columns(basic_countfilter):
     truth = io.load_table('tests/test_files/counted_sorted_multiple_truth.csv')
-    c = CountFilter('tests/test_files/counted.csv')
-    c.sort(by=['cond3', 'cond4', 'cond1', 'cond2'], ascending=[True, False, True, False], inplace=True)
-    assert np.all(truth == c.df)
+    basic_countfilter.sort(by=['cond3', 'cond4', 'cond1', 'cond2'], ascending=[True, False, True, False], inplace=True)
+    assert np.all(truth == basic_countfilter.df)
 
 
 def test_sort_with_na_first():
@@ -1245,10 +1247,9 @@ def test_sort_with_na_first():
     assert truth_last.equals(c.df)
 
 
-def test_sort_descending():
-    c = CountFilter('tests/test_files/counted.csv')
-    c.sort(by='cond3', ascending=False, inplace=True)
-    assert c.df['cond3'].is_monotonic_decreasing
+def test_sort_descending(basic_countfilter):
+    basic_countfilter.sort(by='cond3', ascending=False, inplace=True)
+    assert basic_countfilter.df['cond3'].is_monotonic_decreasing
 
 
 def test_filter_missing_values():
@@ -1368,39 +1369,36 @@ def test_pipeline_remove_last_from_empty_pipeline():
         pl.remove_last_function()
 
 
-def test_pipeline_apply_empty_pipeline():
+def test_pipeline_apply_empty_pipeline(basic_deseqfilter):
     pl = Pipeline()
-    d = DESeqFilter('tests/test_files/test_deseq.csv')
     with pytest.raises(AssertionError):
-        pl.apply_to(d)
+        pl.apply_to(basic_deseqfilter)
 
 
-def test_pipeline_apply_to():
+def test_pipeline_apply_to(basic_countfilter, basic_deseqfilter):
     pl = Pipeline('deseqfilter')
     pl.add_function('filter_significant', 10 ** -70, opposite=True)
-    deseq = DESeqFilter('tests/test_files/test_deseq.csv')
-    deseq_truth = deseq.__copy__()
+    deseq_truth = basic_deseqfilter.__copy__()
     deseq_truth.filter_significant(10 ** -70, opposite=True)
-    deseq_pipelined = pl.apply_to(deseq, inplace=False)
-    pl.apply_to(deseq)
-    deseq.sort('log2FoldChange')
+    deseq_pipelined = pl.apply_to(basic_deseqfilter, inplace=False)
+    pl.apply_to(basic_deseqfilter)
+    basic_deseqfilter.sort('log2FoldChange')
     deseq_truth.sort('log2FoldChange')
     deseq_pipelined.sort('log2FoldChange')
-    assert np.all(deseq.df == deseq_truth.df)
+    assert np.all(basic_deseqfilter.df == deseq_truth.df)
     assert np.all(deseq_pipelined.df == deseq_truth.df)
 
     pl2 = Pipeline('countfilter')
     pl2.add_function(Filter.filter_biotype_from_ref_table, biotype='protein_coding',
                      ref=__biotype_ref__)
-    cnt = CountFilter('tests/test_files/counted.csv')
-    cnt_truth = cnt.__copy__()
+    cnt_truth = basic_countfilter.__copy__()
     cnt_truth.filter_biotype_from_ref_table('protein_coding', ref=__biotype_ref__)
-    cnt_pipelined = pl2.apply_to(cnt, inplace=False)
-    pl2.apply_to(cnt, inplace=True)
-    cnt.sort(cnt.columns[0])
-    cnt_truth.sort(cnt.columns[0])
-    cnt_pipelined.sort(cnt.columns[0])
-    assert np.all(cnt.df == cnt_truth.df)
+    cnt_pipelined = pl2.apply_to(basic_countfilter, inplace=False)
+    pl2.apply_to(basic_countfilter, inplace=True)
+    basic_countfilter.sort(basic_countfilter.columns[0])
+    cnt_truth.sort(basic_countfilter.columns[0])
+    cnt_pipelined.sort(basic_countfilter.columns[0])
+    assert np.all(basic_countfilter.df == cnt_truth.df)
     assert np.all(cnt_pipelined.df == cnt_truth.df)
 
 
@@ -1425,12 +1423,11 @@ def test_pipeline_apply_to_with_multiple_functions():
     assert d.df.equals(d_copy.df)
 
 
-def test_pipeline_apply_to_invalid_object():
+def test_pipeline_apply_to_invalid_object(basic_countfilter):
     pl = Pipeline('deseqfilter')
     pl.add_function(DESeqFilter.filter_significant, alpha=10 ** -70)
-    cnt = io.load_table('tests/test_files/counted.csv')
     with pytest.raises(AssertionError):
-        pl.apply_to(cnt)
+        pl.apply_to(basic_countfilter)
 
 
 def test_pipeline_init_invalid_filter_type():
@@ -1508,6 +1505,7 @@ def test_pipeline_apply_to_with_plot_not_inplace():
 
 
 def test_pipeline_apply_to_with_split_function():
+    # TODO: prettify me!
     pl_d = Pipeline('DESeqFilter')
     pl_d.add_function(DESeqFilter.filter_missing_values)
     pl_d.add_function(DESeqFilter.split_fold_change_direction)
@@ -1552,25 +1550,24 @@ def test_pipeline_apply_to_with_split_function():
         assert i == j
 
 
-def test_pipeline_apply_to_with_split_function_inplace_raise_error():
+def test_pipeline_apply_to_with_split_function_inplace_raise_error(basic_deseqfilter):
     pl = Pipeline('DESeqFilter')
     pl.add_function('filter_missing_values')
     pl.add_function(DESeqFilter.filter_significant, 0.05, opposite=True)
     pl.add_function(DESeqFilter.split_fold_change_direction)
     with pytest.raises(AssertionError):
-        pl.apply_to(DESeqFilter('tests/test_files/test_deseq.csv'), inplace=True)
+        pl.apply_to(basic_deseqfilter, inplace=True)
 
 
-def test_pipeline_apply_to_multiple_splits():
+def test_pipeline_apply_to_multiple_splits(basic_countfilter):
     pl_c = Pipeline('CountFilter')
     pl_c.add_function(CountFilter.filter_top_n, by='cond2', n=2, opposite=True)
     pl_c.add_function(CountFilter.split_hdbscan, min_cluster_size=3, return_probabilities=True)
     pl_c.add_function(CountFilter.split_kmedoids, n_clusters=2, random_seed=42)
     pl_c.add_function(CountFilter.split_by_reads, 15)
 
-    c = CountFilter('tests/test_files/counted.csv')
-    c_pipeline_res, c_pipeline_dict = pl_c.apply_to(c, inplace=False)
-    c_res = c.filter_top_n(by='cond2', n=2, opposite=True, inplace=False)
+    c_pipeline_res, c_pipeline_dict = pl_c.apply_to(basic_countfilter, inplace=False)
+    c_res = basic_countfilter.filter_top_n(by='cond2', n=2, opposite=True, inplace=False)
     c_res, prob = c_res.split_hdbscan(min_cluster_size=3, return_probabilities=True)
     c_res_cont = []
     for this_obj in c_res:
@@ -1749,25 +1746,34 @@ def test_fc_randomization():
 
 
 def test_filter_save_csv():
+    expected_path = Path('tests/test_files/test_deseq_with_nan_removemissingvals.csv')
     d = DESeqFilter('tests/test_files/test_deseq_with_nan.csv')
     d.filter_missing_values()
-    d.save_csv()
-    pth = Path('tests/test_files/test_deseq_with_nan_removemissingvals.csv')
-    assert pth.exists()
-    d_loaded = DESeqFilter(pth)
-    assert np.isclose(d_loaded.df, d.df).all()
-    pth.unlink()
+    try:
+        d.save_csv()
+        assert expected_path.exists()
+        d_loaded = DESeqFilter(expected_path)
+        assert d_loaded.df.equals(d.df)
+    finally:
+        expected_path.unlink(missing_ok=True)
+
+
+def test_filter_save_csv_after_operations():
+    expected_path = Path('tests/test_files/d_significant.csv')
+    expected_path_2 = Path('tests/test_files/d_significant_with_suffix.csv')
+    d = DESeqFilter('tests/test_files/test_deseq_with_nan.csv')
+    d.filter_missing_values()
     d_sig = d.filter_significant(inplace=False)
-    d_sig.save_csv(alt_filename='d_significant')
-    d_sig.save_csv(alt_filename='d_significant_with_suffix.csv')
-    pth_sig = Path('tests/test_files/d_significant.csv')
-    pth_sig_suffix = Path('tests/test_files/d_significant_with_suffix.csv')
-    assert pth_sig.exists()
-    assert pth_sig_suffix.exists()
-    assert np.isclose(DESeqFilter(pth_sig).df, d_sig.df).all()
-    assert np.isclose(DESeqFilter(pth_sig_suffix).df, d_sig.df).all()
-    pth_sig.unlink()
-    pth_sig_suffix.unlink()
+    try:
+        d_sig.save_csv(alt_filename='d_significant')
+        d_sig.save_csv(alt_filename='d_significant_with_suffix.csv')
+        assert expected_path.exists()
+        assert expected_path_2.exists()
+        assert DESeqFilter(expected_path).df.equals(d_sig.df)
+        assert DESeqFilter(expected_path_2).df.equals(d_sig.df)
+    finally:
+        expected_path.unlink(missing_ok=True)
+        expected_path_2.unlink(missing_ok=True)
 
 
 def test_assert_padj_col():
@@ -1797,9 +1803,9 @@ def test_return_type(input_set, return_type, expected_output):
     assert Filter._return_type(input_set, return_type) == expected_output
 
 
-def test_set_ops_wrong_type():
+def test_set_ops_wrong_type(basic_filter):
     with pytest.raises(TypeError):
-        Filter('tests/test_files/counted.csv')._set_ops([{1, 2, 3}, 'string'], 'set')
+        basic_filter._set_ops([{1, 2, 3}, 'string'], 'set')
 
 
 @pytest.mark.parametrize('sample_list,truth_path',
@@ -1807,14 +1813,13 @@ def test_set_ops_wrong_type():
                           ([['cond1'], ['cond2', 'cond3', 'cond4']], 'tests/test_files/counted_averaged_2.csv'),
                           (['cond1', ['cond2', 'cond3', 'cond4']], 'tests/test_files/counted_averaged_2.csv'),
                           (['cond1', 'cond2', 'cond3', 'cond4'], 'tests/test_files/counted.csv')])
-def test_avg_subsamples(sample_list, truth_path):
-    counts = CountFilter('tests/test_files/counted.csv')
-    truth = io.load_table(truth_path, 0)
-    res = counts._avg_subsamples(sample_list, new_column_names='auto')
+def test_avg_subsamples(sample_list, truth_path, basic_countfilter):
+    truth = io.load_table(truth_path)
+    res = basic_countfilter._avg_subsamples(sample_list, new_column_names='auto')
 
     assert np.all(res.columns == truth.columns)
     assert np.all(res.select(pl.first()).equals(truth.select(pl.first())))
-    assert np.isclose(res.drop(pl.selectors.first()), truth.drop(pl.selectors.first()), atol=0, rtol=0.001).all()
+    assert np.isclose(res.drop(cs.first()), truth.drop(cs.first()), atol=0, rtol=0.001).all()
 
 
 @pytest.mark.parametrize('input_file,expected_triplicates',
@@ -1908,11 +1913,10 @@ def test_export_pipeline():
 @pytest.mark.parametrize('components,gene_fraction,truth_paths', [
     (1, 0.32, ['tests/test_files/counted_pc1_0.32_top.csv', 'tests/test_files/counted_pc1_0.32_bottom.csv'])
 ])
-def test_split_by_principal_components(components, gene_fraction, truth_paths):
+def test_split_by_principal_components(components, gene_fraction, truth_paths, basic_countfilter):
     truth = [CountFilter(pth) for pth in truth_paths]
-    c = CountFilter('tests/test_files/counted.csv')
-    c.filter_low_reads(1)
-    res = c.split_by_principal_components(components, gene_fraction)
+    basic_countfilter.filter_low_reads(1)
+    res = basic_countfilter.split_by_principal_components(components, gene_fraction)
     assert len(res) == len(truth)
     for i in range(len(truth)):
         assert res[i].df.sort(pl.first()).equals(truth[i].df.sort(pl.first()))
@@ -1927,7 +1931,7 @@ def test_split_by_principal_components(components, gene_fraction, truth_paths):
     (['kegg_id1', 'kegg_id2', 'kegg_id3'], 'intersection', 'tests/test_files/counted_filter_by_kegg_truth_5.csv'),
 
 ])
-def test_filter_by_kegg_annotations(monkeypatch, ids, mode, truth_path):
+def test_filter_by_kegg_annotations(monkeypatch, ids, mode, truth_path, basic_filter):
     truth = io.load_table(truth_path, index_col=0)
 
     def annotation_iter(self):
@@ -1943,8 +1947,7 @@ def test_filter_by_kegg_annotations(monkeypatch, ids, mode, truth_path):
     monkeypatch.setattr(io.KEGGAnnotationIterator, 'get_pathway_annotations', annotation_iter)
     monkeypatch.setattr(io, 'get_taxon_and_id_type', lambda *args, **kwargs: ((6239, 'elegans'), 'KEGG'))
 
-    f = Filter('tests/test_files/counted.csv')
-    res = f.filter_by_kegg_annotations(ids, mode, gene_id_type='WormBase', inplace=False)
+    res = basic_filter.filter_by_kegg_annotations(ids, mode, gene_id_type='WormBase', inplace=False)
 
     try:
         assert res.df.sort(pl.first()).equals(truth.sort(pl.first()))
@@ -1961,7 +1964,7 @@ def test_filter_by_kegg_annotations(monkeypatch, ids, mode, truth_path):
     (['go_id1', 'go_id2', 'go_id3'], 'intersection', 'tests/test_files/counted_filter_by_kegg_truth_5.csv'),
 
 ])
-def test_filter_by_go_annotations(monkeypatch, ids, mode, truth_path):
+def test_filter_by_go_annotations(monkeypatch, ids, mode, truth_path, basic_filter):
     truth = io.load_table(truth_path, index_col=0)
 
     class MockGOTerm:
@@ -1999,8 +2002,7 @@ def test_filter_by_go_annotations(monkeypatch, ids, mode, truth_path):
     monkeypatch.setattr(io.GOlrAnnotationIterator, '_annotation_generator_func', annotation_iter)
     monkeypatch.setattr(ontology, 'fetch_go_basic', lambda: MockDAGTree())
 
-    f = Filter('tests/test_files/counted.csv')
-    res = f.filter_by_go_annotations(ids, mode, gene_id_type='WormBase', organism=6239, inplace=False)
+    res = basic_filter.filter_by_go_annotations(ids, mode, gene_id_type='WormBase', organism=6239, inplace=False)
     assert res.df.sort(pl.first()).equals(truth.sort(pl.first()))
 
 
@@ -2092,11 +2094,11 @@ def test_differential_expression_limma(monkeypatch, comparisons, expected_paths,
 ])
 def test_filter_duplicate_ids(keep, exp_path):
     f = Filter('tests/test_files/counted_duplicates.csv')
-    truth = io.load_table(exp_path, 0)
+    truth = io.load_table(exp_path).sort(pl.first())
     res = f.filter_duplicate_ids(keep, inplace=False)
-    assert res.df.equals(truth)
+    assert res.df.sort(pl.first()).equals(truth)
     f.filter_duplicate_ids(keep)
-    assert f.df.equals(truth)
+    assert f.df.sort(pl.first()).equals(truth)
 
 
 def test_filter_by_row_name():
@@ -2120,10 +2122,10 @@ class TestOrthologDictTableGenerator:
             ('gene1', 'ortholog1'),
             ('gene1', 'ortholog2'),
             ('gene2', 'ortholog3'),
-        ], columns=['gene', 'ortholog'])
+        ], schema=['gene', 'ortholog'])
 
         result_table = Filter._create_one2many_table(io.OrthologDict(mapping_dict))
-        pd.testing.assert_frame_equal(result_table, expected_table)
+        assert result_table.equals(expected_table)
 
     def test_create_one2many_table_paralog(self):
         # Test when the mode is 'paralog'
@@ -2135,25 +2137,25 @@ class TestOrthologDictTableGenerator:
             ('gene1', 'paralog1'),
             ('gene1', 'paralog2'),
             ('gene2', 'paralog3'),
-        ], columns=['gene', 'paralog'])
+        ], schema=['gene', 'paralog'])
 
         result_table = Filter._create_one2many_table(io.OrthologDict(mapping_dict), mode='paralog')
-        pd.testing.assert_frame_equal(result_table, expected_table)
+        assert result_table.equals(expected_table)
 
     def test_create_one2many_table_empty(self):
         # Test when the mapping_dict is empty
         mapping_dict = {}
-        expected_table = pl.DataFrame(columns=['gene', 'ortholog'])
+        expected_table = pl.DataFrame(schema=['gene', 'ortholog'])
 
         result_table = Filter._create_one2many_table(io.OrthologDict(mapping_dict))
-        pd.testing.assert_frame_equal(result_table, expected_table)
+        assert result_table.equals(expected_table)
 
     def test_create_one2many_table_no_mapping(self):
         # Test when no mapping_dict is provided (None)
-        expected_table = pl.DataFrame(columns=['gene', 'ortholog'])
+        expected_table = pl.DataFrame(schema=['gene', 'ortholog'])
 
         result_table = Filter._create_one2many_table(io.OrthologDict())
-        pd.testing.assert_frame_equal(result_table, expected_table)
+        assert result_table.equals(expected_table)
 
 
 @patch('rnalysis.utils.io.PantherOrthologMapper')
@@ -2349,10 +2351,9 @@ def test_sort_by_principal_component(component, ascending, power_transform):
     (False, 0.05, 'auto'),
     (True, 0.1, 'Custom Title')
 ])
-def test_pval_histogram(adjusted_pvals, bin_size, title, monkeypatch):
+def test_pval_histogram(basic_deseqfilter, adjusted_pvals, bin_size, title, monkeypatch):
     monkeypatch.setattr(plt, 'show', lambda: None)
-    d = DESeqFilter('tests/test_files/test_deseq.csv')
-    fig = d.pval_histogram(adjusted_pvals=adjusted_pvals, bin_size=bin_size, title=title)
+    fig = basic_deseqfilter.pval_histogram(adjusted_pvals=adjusted_pvals, bin_size=bin_size, title=title)
     assert isinstance(fig, plt.Figure)
     plt.close(fig)
 
@@ -2362,11 +2363,11 @@ def test_pval_histogram(adjusted_pvals, bin_size, title, monkeypatch):
     (['WBGene00007063', 'WBGene00007064'], [['cond1', 'cond2'], ['cond3', 'cond4']], 'median', 'std', 'TPM', True),
     ('WBGene00007066', ['cond1', 'cond2'], 'geometric_mean', 'range', 'RPKM', False)
 ])
-def test_plot_expression(features, samples, avg_function, spread_function, count_unit, split_plots, monkeypatch):
+def test_plot_expression(features, samples, avg_function, spread_function, count_unit, split_plots, monkeypatch,
+                         basic_countfilter):
     monkeypatch.setattr(plt, 'show', lambda: None)
-    c = CountFilter('tests/test_files/counted.csv')
-    figs = c.plot_expression(features, samples, avg_function, spread_function, count_unit=count_unit,
-                             split_plots=split_plots)
+    figs = basic_countfilter.plot_expression(features, samples, avg_function, spread_function, count_unit=count_unit,
+                                             split_plots=split_plots)
     assert isinstance(figs, list)
     assert all(isinstance(fig, plt.Figure) for fig in figs)
     for fig in figs:
@@ -2378,8 +2379,7 @@ def test_plot_expression(features, samples, avg_function, spread_function, count
 @pytest.mark.parametrize('column,bins,x_label', [
     ('baseMean', 100, 'auto'),
     ('padj', 16, 'adj. p-value')])
-def test_histogram(column, bins, x_label, x_logscale, y_logscale):
-    d = DESeqFilter('tests/test_files/test_deseq.csv')
-    fig = d.histogram(column, bins, x_label, x_logscale, y_logscale)
+def test_histogram(column, bins, x_label, x_logscale, y_logscale, basic_deseqfilter):
+    fig = basic_deseqfilter.histogram(column, bins, x_label, x_logscale, y_logscale)
     assert isinstance(fig, plt.Figure)
     plt.close(fig)

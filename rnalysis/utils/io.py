@@ -121,7 +121,7 @@ def clear_gui_cache():
 
 
 def load_cached_gui_file(filename: Union[str, Path], load_as_obj: bool = True) -> Union[
-    str, set, pd.DataFrame, bytes, None]:
+    str, set, pl.DataFrame, bytes, None]:
     """
     Load a cached file from the GUI cache directory.
 
@@ -195,7 +195,7 @@ class FileData(NamedTuple):
     item_type: str
     item_property: dict
     item_id: int = None
-    obj: Union[set, pd.DataFrame] = None
+    obj: Union[set, pl.DataFrame] = None
 
 
 class PipelineData(NamedTuple):
@@ -405,7 +405,7 @@ def save_table(df: pl.DataFrame, filename: Union[str, Path], postfix: str = None
         assert isinstance(postfix, str), "'postfix' must be either str or None!"
     new_fname = os.path.join(fname.parent.absolute(), f"{fname.stem}{postfix}{fname.suffix}")
     if fname.suffix.lower() == '.parquet':
-        if isinstance(df, pd.Series):
+        if isinstance(df, pl.Series):
             df = df.to_frame()
         df.write_parquet(new_fname)
     else:
@@ -1021,12 +1021,12 @@ def map_taxon_id(taxon_name: Union[str, int]) -> Tuple[int, str]:
     req = requests.get(url, params=params)
     if not req.ok:
         req.raise_for_status()
-    res = pd.read_csv(StringIO(req.text), separator='\t').sort_values(by='Taxon Id', ascending=True)
+    res = pl.read_csv(StringIO(req.text), separator='\t').sort(by='Taxon Id', descending=False)
     if res.shape[0] == 0:
         raise ValueError(f"No taxons match the search query '{taxon_name}'.")
 
-    taxon_id = int(res['Taxon Id'].iloc[0])
-    scientific_name = res['Scientific name'].iloc[0]
+    taxon_id = int(res.select(pl.col('Taxon Id')).row(0))
+    scientific_name = res.select(pl.col('Scientific name')).row(0)
 
     if res.shape[0] > 2 and not (taxon_name == taxon_id or taxon_name == scientific_name):
         warnings.warn(
@@ -1238,7 +1238,7 @@ class PhylomeDBOrthologMapper:
             if from_id_conv not in taxon_table.index:
                 continue
             to_id_conv = taxon_table.loc[from_id_conv, 'protid2']
-            if isinstance(to_id_conv, pd.Series):
+            if isinstance(to_id_conv, pl.Series):
                 for i, this_to_id_conv in enumerate(to_id_conv):
                     if this_to_id_conv not in map_rev.index:
                         continue
@@ -1313,21 +1313,21 @@ class PhylomeDBOrthologMapper:
             os.remove(local_zip_file)
 
             # Load into pandas dataframe
-            df = pd.read_csv(cache_file.with_suffix('.txt'), separator='\t', index_col=1, engine="pyarrow")
+            df = pl.read_csv(cache_file.with_suffix('.txt'), separator='\t', index_col=1, engine="pyarrow")
 
             # cache file locally
             save_table(df, cache_file)
         return df
 
     @staticmethod
-    def _get_id_conversion_maps() -> Tuple[pd.DataFrame, pd.DataFrame]:
+    def _get_id_conversion_maps() -> Tuple[pl.DataFrame, pl.DataFrame]:
         cache_dir = get_todays_cache_dir()
         cache_file = cache_dir.joinpath(f'phylomedb_id_conversion.parquet')
         file_path = "/metaphors/latest/id_conversion.txt.gz"
         local_zip_file = cache_dir.joinpath("id_conversion.txt.gz")
 
         if cache_file.exists():
-            df = pd.read_parquet(cache_file, engine='auto', dtype_backend='pyarrow')
+            df = pl.read_parquet(cache_file, engine='auto', dtype_backend='pyarrow')
         else:
             ftp = PhylomeDBOrthologMapper._connect()
             # Download the file
@@ -1344,7 +1344,7 @@ class PhylomeDBOrthologMapper:
             os.remove(local_zip_file)
 
             # Load into pandas dataframe
-            df = pd.read_csv(cache_file.with_suffix('.txt'), index_col=0, separator='\t', dtype_backend='pyarrow',
+            df = pl.read_csv(cache_file.with_suffix('.txt'), index_col=0, separator='\t', dtype_backend='pyarrow',
                              usecols=[0, 2], names=['#extid', 'protid'], header=None, skiprows=1)
             # cache file locally
             save_table(df, cache_file)
@@ -2000,7 +2000,7 @@ class GeneIDTranslator:
 
     @staticmethod
     def format_annotations(results):
-        df = pd.DataFrame([line.split('\t') for line in results[1:]], columns=results[0].split('\t'))
+        df = pl.DataFrame([line.split('\t') for line in results[1:]], columns=results[0].split('\t'))
         # sort annotations by decreasing annotation score, so that the most relevant annotations are at the top
         if 'Annotation' in df.columns:
             df.loc[df['Annotation'] == '', 'Annotation'] = '0'
@@ -2035,7 +2035,7 @@ class GeneIDTranslator:
 
                 rev_results = self.get_mapping_results(self.UNIPROTKB_TO, self.map_to, ids_to_rev_map, session)
                 # TODO: if job fails?
-                rev_df = pd.DataFrame([line.split('\t') for line in rev_results[1:]],
+                rev_df = pl.DataFrame([line.split('\t') for line in rev_results[1:]],
                                       columns=rev_results[0].split('\t'))
                 rev_df['Annotation'] = (rev_df['Annotation']).astype(float)
                 rev_df = rev_df.sort_values('Annotation', ascending=False)

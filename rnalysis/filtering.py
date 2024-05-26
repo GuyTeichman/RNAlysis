@@ -18,11 +18,11 @@ from typing import Any, Iterable, List, Tuple, Union, Callable, Sequence, Litera
 
 import matplotlib.pyplot as plt
 import numpy as np
-import pandas as pd
 import polars as pl
+import polars.selectors as cs
 import seaborn as sns
 from grid_strategy import strategies
-from scipy.stats import gstd, spearmanr
+from scipy.stats import gstd, spearmanr, sem
 from scipy.stats.mstats import gmean
 from sklearn.decomposition import PCA
 from sklearn.preprocessing import PowerTransformer, StandardScaler
@@ -132,7 +132,7 @@ class Filter:
         yield from self.df.select(pl.first())
 
     def __copy__(self):
-        return type(self).from_dataframe(self.df, self.fname)
+        return type(self).from_dataframe(self.df.clone(), self.fname)
 
     @property
     def columns(self) -> list:
@@ -358,9 +358,10 @@ class Filter:
     def concatenate(self, other: Sequence[str]) -> 'Filter':
         assert isinstance(other, Filter), f"Expected a Filter object, got {type(other)} instead."
         assert sorted(self.columns) == sorted(other.columns), "The two tables do not have the same columns!"
-        assert len(set(self.df[pl.first()]).intersection(other.df[pl.first()])) == 0, \
-            "The two tables have overlapping indices!"
-        new_df = pl.concat([self.df, other.df])
+        assert len({item[0] for item in self.df.select(pl.first()).iter_rows()}.intersection(
+            {item[0] for item in
+             other.df.select(pl.first()).iter_rows()})) == 0, "The two tables have overlapping indices!"
+        new_df = pl.concat([self.df, other.df], how='vertical')
         return self.from_dataframe(new_df, Path(self.fname.stem + '_' + other.fname.stem + '.csv'))
 
     @readable_name('Filter rows with duplicate names/IDs')
@@ -385,7 +386,7 @@ class Filter:
         suffix = f'_dropduplicateskeep{keep}'
         if keep == 'neither':
             keep = 'none'
-        new_df = self.df.unique(pl.selectors.first(), keep=keep)
+        new_df = self.df.unique(cs.first(), keep=keep)
         return self._inplace(new_df, opposite, inplace, suffix)
 
     @readable_name('Filter specific rows by name')
@@ -450,7 +451,7 @@ class Filter:
         for key, vals in one2many_dict.mapping_dict.items():
             for val in vals:
                 pairs.append((key, val))
-        one2many_table = pl.DataFrame(pairs, columns=['gene', mode])
+        one2many_table = pl.DataFrame(pairs, schema=['gene', mode])
         return one2many_table
 
     @readable_name('Find paralogs within species (using PantherDB)')
@@ -786,7 +787,8 @@ class Filter:
 
     @readable_name('Filter by percentile')
     def filter_percentile(self, percentile: param_typing.Fraction, column: param_typing.ColumnName,
-                          opposite: bool = False, inplace: bool = True):
+                          interpolate: param_typing.QUANTILE_INTERPOLATION_METHODS = 'linear', opposite: bool = False,
+                          inplace: bool = True):
 
         """
         Removes all entries above the specified percentile in the specified column. \
@@ -797,6 +799,8 @@ class Filter:
         :param percentile: The percentile that all features above it will be filtered out.
         :type column: str
         :param column: Name of the DataFrame column according to which the filtering will be performed.
+        :param interpolate: interpolation method to use when the desired quantile lies between two data points.
+        :type interpolate: 'nearest', 'higher', 'lower', 'midpoint' or 'linear' (default='linear')
         :type opposite: bool
         :param opposite: If True, the output of the filtering will be the OPPOSITE of the specified \
         (instead of filtering out X, the function will filter out anything BUT X). \
@@ -825,11 +829,12 @@ class Filter:
             "percentile must be a float between 0 and 1!"
         assert isinstance(column, str) and column in self.columns, "Invalid column name!"
         suffix = f'_below{percentile}percentile'
-        new_df = self.df.filter(pl.col(column) <= pl.quantile(column, percentile))
+        new_df = self.df.filter(pl.col(column) <= pl.quantile(column, percentile, interpolate))
         return self._inplace(new_df, opposite, inplace, suffix)
 
     @readable_name('Split by percentile')
-    def split_by_percentile(self, percentile: param_typing.Fraction, column: param_typing.ColumnName) -> tuple:
+    def split_by_percentile(self, percentile: param_typing.Fraction, column: param_typing.ColumnName,
+                            interpolate: param_typing.QUANTILE_INTERPOLATION_METHODS = 'linear') -> tuple:
 
         """
         Splits the features in the Filter object into two non-overlapping Filter objects: \
@@ -853,8 +858,8 @@ class Filter:
             Filtered 21 features, leaving 7 of the original 28 features. Filtering result saved to new object.
 
         """
-        return self.filter_percentile(percentile=percentile, column=column, opposite=False,
-                                      inplace=False), self.filter_percentile(percentile=percentile, column=column,
+        return self.filter_percentile(percentile, column, interpolate, opposite=False,
+                                      inplace=False), self.filter_percentile(percentile, column, interpolate,
                                                                              opposite=True, inplace=False)
 
     def _get_ref_srs_from_gtf(self, gtf_path: Union[str, Path],
@@ -1320,9 +1325,11 @@ class Filter:
         # load the Attribute Reference Table
         attr_ref_table = io.load_table(settings.get_attr_ref_path(ref))
         validation.validate_attr_table(attr_ref_table)
+        attr_ref_table.fill_nan(None)
         # generate list of the indices that are positive for each attribute
-        attr_indices_list = [parsing.data_to_set(attr_ref_table.filter(pl.col(attr).is_not_null()).select(pl.first()))
-                             for attr in attributes]
+        attr_indices_list = [
+            {i[0] for i in attr_ref_table.filter(pl.col(attr).is_not_null()).select(pl.first()).iter_rows()} for attr in
+            attributes]
         chosen_genes = set()
         # if in union mode, calculate union between the indices of all attributes
         if mode == 'union':
@@ -1380,7 +1387,7 @@ class Filter:
 
         """
         Generate descriptive statistics that summarize the central tendency, dispersion and shape \
-        of the dataset’s distribution, excluding NaN values. \
+        of the dataset's distribution, excluding NaN values. \
         For more information see the documentation of pandas.DataFrame.describe.
 
         :type percentiles: list-like of floats (default=(0.01, 0.25, 0.5, 0.75, 0.99))
@@ -1457,7 +1464,7 @@ class Filter:
             warnings.warn(" this filter object contains multiple rows with the same gene name/ID. When "
                           "returning a set or string of features from this table, each gene ID will "
                           "appear ONLY ONCE!")
-        return parsing.data_to_set(data)
+        return {item[0] for item in data.iter_rows()}
 
     @property
     def index_string(self) -> str:
@@ -1503,7 +1510,7 @@ class Filter:
             WBGene00044951
 
         """
-        return "\n".join((str(ind) for ind in self.df.select(pl.first())))
+        return "\n".join((str(ind) for ind in self.df.select(pl.first()).to_series().to_list()))
 
     def print_features(self):
 
@@ -1577,7 +1584,7 @@ class Filter:
         if len(not_in_ref) > 0:
             warnings.warn(
                 f'{len(not_in_ref)} of the features in the table do not appear in the Biotype Reference Table')
-            ref_df = pd.concat(
+            ref_df = pl.concat(
                 [ref_df, pl.DataFrame({feature_type: not_in_ref, 'biotype': '_missing_from_biotype_reference'})],
                 axis=0, join='outer')
         if long_format:
@@ -1641,7 +1648,7 @@ class Filter:
         if len(not_in_ref) > 0:
             warnings.warn(
                 f'{len(not_in_ref)} of the features in the table do not appear in the Biotype Reference Table')
-            ref_df = pd.concat(
+            ref_df = pl.concat(
                 [ref_df, pl.DataFrame({'gene': not_in_ref, 'biotype': '_missing_from_biotype_reference'})],
                 axis=0, join='outer')
         if long_format:
@@ -1770,13 +1777,13 @@ class Filter:
         suffix = f"_{column}{op}{value}"
         # perform operation according to operator
         if op == 'eq':
-            new_df = self.df.filter(pl.col(column) < value)
+            new_df = self.df.filter(pl.col(column) == value)
         elif op == 'ct':
             new_df = self.df.filter(pl.col(column).str.contains(value))
         elif op == 'ew':
-            new_df = self.df.filter(pl.col(column).str.endswith(value))
+            new_df = self.df.filter(pl.col(column).str.ends_with(value))
         elif op == 'sw':
-            new_df = self.df.filter(pl.col(column).str.startswith(value))
+            new_df = self.df.filter(pl.col(column).str.starts_with(value))
 
         # noinspection PyUnboundLocalVariable
         return self._inplace(new_df, opposite, inplace, suffix)
@@ -1965,7 +1972,7 @@ class Filter:
         return self.df.sort(by=by, descending=not ascending, nulls_last=na_position == 'last')
 
     @readable_name('Filter all but top N values')
-    def filter_top_n(self, by: param_typing.ColumnNames, n: NonNegativeInt = 100,
+    def filter_top_n(self, by: param_typing.ColumnNames, n: PositiveInt = 100,
                      ascending: Union[bool, List[bool]] = True, na_position: str = 'last', opposite: bool = False,
                      inplace: bool = True, ):
 
@@ -2014,13 +2021,11 @@ class Filter:
                 assert col in self.columns, f"{col} is not a column in the Filter object!"
         else:
             assert by in self.columns, f"{by} is not a column in the Filter object!"
-        # sort the DataFrame by the specified column/columns, in the specified order
-        new_df = self._sort(by=by, ascending=ascending, na_position=na_position)
-        # keep only the top n values in the DataFrame after the sort (or the top len(self) items, if n>len(self))
         if n > self.shape[0]:
             warnings.warn(f'Current number of rows {self.shape[0]} is smaller than the specified n={n}. '
                           f'Therefore output Filter object will only have {self.shape[0]} rows. ')
-        new_df = self.df[0:min(n, self.shape[0]), :]
+            n = self.shape[0]
+        new_df = self._sort(by=by, ascending=ascending, na_position=na_position)[0:n, :]
         return self._inplace(new_df, opposite, inplace, suffix)
 
     @staticmethod
@@ -2317,16 +2322,14 @@ class FoldChangeFilter(Filter):
         :type suppress_warnings: bool (default=False)
         """
         super().__init__(fname, suppress_warnings=True)
-        self.df = self.df.to_series()
         self.numerator = numerator_name
         self.denominator = denominator_name
-        self.df.rename('Fold Change')
-        # inf/0 can be problematic for functions down the line (like randomization test)
         if not suppress_warnings:
             self._init_warnings()
 
     def _init_warnings(self):
         super()._init_warnings()
+        # inf/0 can be problematic for functions down the line (like randomization test)
         if np.inf in self.df or 0 in self.df:
             warnings.warn(
                 " FoldChangeFilter does not support 'inf' or '0' values! "
@@ -2452,67 +2455,6 @@ class FoldChangeFilter(Filter):
         pval = (success + 1) / (reps + 1)
         return [[n, obs_fc, exp_fc, pval]]
 
-    @readable_name('Apply a transformation to the table')
-    def transform(self, function: Union[Literal['Box-Cox', 'log2', 'log10', 'ln', 'Standardize'], Callable],
-                  inplace: bool = True, **function_kwargs):
-        """
-        Transform the values in the Filter object with the specified function.
-
-        :param function: The function or function name to be applied.
-        :type function: Callable or str ('logx' for base-x log of the data + 1, \
-        'box-cox' for Box-Cox transform of the data + 1, 'standardize' for standardization)
-        :type inplace: bool (default=True)
-        :param inplace: If True (default), filtering will be applied to the current Filter object. If False, \
-        the function will return a new Filter instance and the current instance will not be affected.
-        :param function_kwargs: Any additional keyworded arguments taken by the supplied function.
-        :return: If 'inplace' is False, returns a new instance of the Filter object.
-        """
-        self.df = self.df.to_frame()
-        new_df = super().transform(function, inplace=inplace, **function_kwargs)
-        self.df = self.df.to_series()
-        return new_df
-
-    @readable_name('Filter by percentile')
-    def filter_percentile(self, percentile: param_typing.Fraction, opposite: bool = False, inplace: bool = True):
-
-        """
-           Removes all entries above the specified percentile. \
-           For example, if the percentile was 0.5, then all features whose value is above \
-           the median value will be filtered out.
-
-           :type percentile: float between 0 and 1
-           :param percentile: The percentile that all features above it will be filtered out.
-           :type opposite: bool
-           :param opposite: If True, the output of the filtering will be the OPPOSITE of the specified \
-           (instead of filtering out X, the function will filter out anything BUT X). \
-           If False (default), the function will filter as expected.
-           :type inplace: bool (default=True)
-           :param inplace: If True (default), filtering will be applied to the current Filter object. If False, \
-           the function will return a new CountFilter instance and the current instance will not be affected.
-           :return: If inplace is False, returns a new and filtered instance of the Filter object.
-           """
-        assert isinstance(percentile, (float, int)) and 0 <= percentile <= 1, \
-            "percentile must be a float between 0 and 1!"
-        suffix = f'_below{percentile}percentile'
-        new_df = self.df[self.df <= self.df.quantile(percentile)]
-        return self._inplace(new_df, opposite, inplace, suffix)
-
-    @readable_name('Split by percentile')
-    def split_by_percentile(self, percentile: param_typing.Fraction) -> tuple:
-        """
-        Splits the features in the table into two non-overlapping tables: \
-        one containing features below the specified percentile, \
-        and the other containing features about the specified percentile.
-
-        :type percentile: float between 0 and 1
-        :param percentile: The percentile that all features above it will be filtered out.
-        :rtype: Tuple[filtering.Filter, filtering.Filter]
-        :return: a tuple of two Filter objects: the first contains all the features below the specified percentile, \
-        and the second contains all the features above and equal to the specified percentile.
-       """
-        return self.filter_percentile(percentile=percentile, opposite=False, inplace=False), self.filter_percentile(
-            percentile=percentile, opposite=True, inplace=False)
-
     @readable_name('Remove rows with missing values')
     def filter_missing_values(self, opposite: bool = False, inplace: bool = True):
         """
@@ -2527,9 +2469,7 @@ class FoldChangeFilter(Filter):
         the function will return a new Filter instance and the current instance will not be affected.
         :return: If 'inplace' is False, returns a new instance of the Filter object.
         """
-        suffix = '_removemissingvals'
-        new_df = self.df.drop_nulls(axis=0, inplace=False)
-        return self._inplace(new_df, opposite, inplace, suffix)
+        return super().filter_missing_values(columns=self.columns[-1], opposite=opposite, inplace=inplace)
 
     @readable_name('Filter by absolute log2 fold-change magnitude')
     def filter_abs_log2_fold_change(self, abslog2fc: float = 1, opposite: bool = False, inplace: bool = True):
@@ -2560,7 +2500,7 @@ class FoldChangeFilter(Filter):
         assert isinstance(abslog2fc, (float, int)), "abslog2fc must be a number!"
         assert abslog2fc >= 0, "abslog2fc must be non-negative!"
         suffix = f"_{abslog2fc}abslog2foldchange"
-        new_df = self.df[np.abs(np.log2(self.df)) >= abslog2fc].drop_nulls()
+        new_df = self.df.filter(np.abs(np.log2(self.df.select(pl.nth(1)))) >= abslog2fc).drop_nulls()
         return self._inplace(new_df, opposite, inplace, suffix)
 
     @readable_name('Filter by fold-change direction')
@@ -3586,11 +3526,10 @@ class CountFilter(Filter):
         if log2:
             sample_df = np.log2(sample_df + 1)
 
-        with pd.option_context("mode.copy_on_write", False):
-            pairplt = sns.pairplot(sample_df, corner=True,
-                                   plot_kws=dict(alpha=0.25, edgecolors=(0.1, 0.5, 0.15),
-                                                 facecolors=(0.1, 0.5, 0.15), s=3.5),
-                                   diag_kws=dict(edgecolor=(0, 0, 0), facecolor=(0.1, 0.5, 0.15)))
+        pairplt = sns.pairplot(sample_df.to_pandas(), corner=True,
+                               plot_kws=dict(alpha=0.25, edgecolors=(0.1, 0.5, 0.15),
+                                             facecolors=(0.1, 0.5, 0.15), s=3.5),
+                               diag_kws=dict(edgecolor=(0, 0, 0), facecolor=(0.1, 0.5, 0.15)))
 
         if title == 'auto':
             title = 'Pairplot' + log2 * ' (logarithmic scale)'
@@ -3604,8 +3543,6 @@ class CountFilter(Filter):
 
                 if i == j:
                     continue
-                # ax.plot(range(int(ax.get_xlim()[1])), range(int(ax.get_xlim()[1])), linestyle='--', color='k',
-                #         zorder=100, linewidth=0.8)
                 if show_corr:
                     spearman_corr = spearmanr(sample_df.iloc[:, [i, j]])[0]
                     ax.text(0.05, 0.9, f"Spearman \u03C1={spearman_corr:.2f}", transform=ax.transAxes)
@@ -3728,7 +3665,15 @@ class CountFilter(Filter):
             assert scaling_factors.shape[0] >= self.shape[0] and scaling_factors.shape[1] == len(numeric_cols) + 1, \
                 f"Dimensions of scaling factors table ({scaling_factors.shape}) does not match the " \
                 f"dimensions of your data table ({(self.shape[0], len(numeric_cols))} - numeric columns only)!"
-            new_df[numeric_cols] = new_df[numeric_cols] / scaling_factors
+            for column in self.df.columns:
+                if column in numeric_cols:
+                    merged = self.df.select(cs.first() | cs.by_name(column)).join(
+                        scaling_factors.select(cs.first() | cs.by_name(column)), left_on=self.df.columns[0],
+                        right_on=scaling_factors.columns[0], how='left')
+                    merged_div = merged.with_columns((pl.nth(-2).truediv(pl.nth(-1))).alias('div'))
+                    new_df = new_df.with_columns((merged_div.select(pl.col('div').alias(column))))
+                else:
+                    new_df = new_df.with_columns(self.df[column].alias(column))
 
         return new_df
 
@@ -3764,16 +3709,17 @@ class CountFilter(Filter):
         scaling_factors = {}
 
         if isinstance(special_counter_fname, (str, Path)):
-            features = io.load_table(special_counter_fname, 0)
+            features = io.load_table(special_counter_fname)
         elif isinstance(special_counter_fname, pl.DataFrame):
             features = special_counter_fname
         else:
             raise TypeError("Invalid type for 'special_counter_fname'!")
-        numeric_cols = self._numeric_columns
+
         for column in self.df.columns:
-            if column in numeric_cols:
-                norm_factor = (self.df[column].sum() + features.loc[r'__ambiguous', column] + features.loc[
-                    r'__no_feature', column] + features.loc[r'__alignment_not_unique', column]) / (10 ** 6)
+            if column in self._numeric_columns:
+                norm_factor = (self.df.select(pl.col(column)).sum() + features.filter(
+                    pl.first().is_in(['__no_feature', '__alignment_not_unique', '__ambiguous'])).select(
+                    pl.col(column)).sum()) / (10 ** 6)
                 scaling_factors[column] = norm_factor
 
         scaling_factors = pl.DataFrame(scaling_factors)
@@ -3807,20 +3753,21 @@ class CountFilter(Filter):
         self._validate_is_normalized(expect_normalized=False)
 
         suffix = '_normtoRPM'
-        scaling_factors = {}
-
-        numeric_cols = self._numeric_columns
-        for column in self.df.columns:
-            if column in numeric_cols:
-                norm_factor = self.df[column].sum() / (10 ** 6)
-                scaling_factors[column] = norm_factor
-
-        scaling_factors = pl.DataFrame(scaling_factors)
+        scaling_factors = self.df.select(pl.col(self._numeric_columns)).sum() / (10 ** 6)
         new_df = self._norm_scaling_factors(scaling_factors)
 
         if return_scaling_factors:
             return [self._inplace(new_df, False, inplace, suffix, 'normalize', _is_normalized=True), scaling_factors]
         return self._inplace(new_df, False, inplace, suffix, 'normalize', _is_normalized=True)
+
+    @staticmethod
+    def _gene_len_kbp(gtf_file: Union[str, Path], feature_type: Literal['gene', 'transcript'],
+                      method: Literal[LEGAL_GENE_LENGTH_METHODS]):
+        gene_lengths_dict = {key: val / 1000 for key, val in
+                             genome_annotation.get_genomic_feature_lengths(gtf_file, feature_type, method).items()}
+        gene_lengths_kbp = pl.from_records([list(gene_lengths_dict.keys()), list(gene_lengths_dict.values())],
+                                           schema=['gene', 'length'])
+        return gene_lengths_kbp
 
     @readable_name('Normalize to reads-per-kilobase-million (RPKM)')
     def normalize_to_rpkm(self, gtf_file: Union[str, Path], feature_type: Literal['gene', 'transcript'] = 'gene',
@@ -3855,12 +3802,18 @@ class CountFilter(Filter):
         self._validate_is_normalized(expect_normalized=False)
 
         suffix = f"_normtoRPKM{method.replace('_', '')}"
-        gene_lengths_kbp = pl.Series(
-            genome_annotation.get_genomic_feature_lengths(gtf_file, feature_type, method)) / 1000
         numeric_cols = self._numeric_columns
-        scaling_factors = pd.concat([gene_lengths_kbp] * len(numeric_cols), axis=1)
-        scaling_factors.columns = numeric_cols
-        scaling_factors = scaling_factors.mul(self.df[numeric_cols].sum() / (10 ** 6), axis='columns')
+
+        lib_coefs = self.df.drop(cs.first()).sum() * (10 ** -6)
+        scaling_factors = self.df.select(pl.first()).with_columns(pl.concat([lib_coefs] * len(self)))
+
+        gene_lengths_kbp = self._gene_len_kbp(gtf_file, feature_type, method)
+        scaling_factors = scaling_factors.join(gene_lengths_kbp, left_on=self.df.columns[0], right_on='gene',
+                                               how='left')
+        for this_col in numeric_cols:
+            scaling_factors = scaling_factors.with_columns(
+                scaling_factors.select(pl.col(this_col).mul(pl.col('length')).alias(this_col)))
+        scaling_factors = scaling_factors.drop('length')
 
         new_df = self._norm_scaling_factors(scaling_factors)
         if return_scaling_factors:
@@ -3903,15 +3856,22 @@ class CountFilter(Filter):
         self._validate_is_normalized(expect_normalized=False)
 
         suffix = f"_normtoTPM{method.replace('_', '')}"
-        gene_lengths_kbp = pl.Series(
-            genome_annotation.get_genomic_feature_lengths(gtf_file, feature_type, method)) / 1000
-        tmp_df = self.df.copy()
+        gene_lengths_kbp = self._gene_len_kbp(gtf_file, feature_type, method)
         numeric_cols = self._numeric_columns
-        tmp_df[numeric_cols] = tmp_df[numeric_cols].div(gene_lengths_kbp, axis='rows')
 
-        scaling_factors = pd.concat([gene_lengths_kbp] * len(numeric_cols), axis=1)
-        scaling_factors.columns = numeric_cols
-        scaling_factors = scaling_factors.mul(tmp_df[numeric_cols].sum() / (10 ** 6), axis='columns')
+        tmp_df = self.df.join(gene_lengths_kbp, left_on=self.df.columns[0], right_on='gene', how='left')
+        for this_col in numeric_cols:
+            tmp_df = tmp_df.with_columns(
+                tmp_df.select(pl.col(this_col).truediv(pl.nth(-1)).alias(this_col)))
+        tmp_df = tmp_df.drop('length')
+
+        lib_coefs = tmp_df.drop(cs.first()).sum() / (10 ** 6)
+        scaling_factors = tmp_df.select(pl.first()).with_columns(
+            pl.DataFrame({key: gene_lengths_kbp.select(pl.nth(-1)) for key in numeric_cols}))
+
+        for this_col in numeric_cols:
+            scaling_factors = scaling_factors.with_columns(
+                scaling_factors.select(pl.col(this_col).mul(lib_coefs.select(pl.col(this_col))).alias(this_col)))
 
         new_df = self._norm_scaling_factors(scaling_factors)
         if return_scaling_factors:
@@ -3949,13 +3909,13 @@ class CountFilter(Filter):
         self._validate_is_normalized(expect_normalized=False)
 
         suffix = f'_normto{int(quantile * 100)}quantile'
-        data = self.df[self._numeric_columns]
-        expressed_genes = data[data.sum(axis=1) != 0]
-        quantiles = expressed_genes.quantile(quantile)
-        if quantiles.min() == 0:
+        data = self.df.select(pl.col(self._numeric_columns))
+        expressed_genes = data.filter(data.sum_horizontal() != 0)
+        quantiles = expressed_genes.quantile(quantile, interpolation='linear')
+        if (quantiles.min_horizontal() == 0).any():
             warnings.warn("One or more quantiles are zero")
 
-        scaling_factors = quantiles / quantiles.mean()
+        scaling_factors = quantiles / quantiles.mean_horizontal()
         new_df = self._norm_scaling_factors(scaling_factors)
 
         if return_scaling_factors:
@@ -4008,23 +3968,19 @@ class CountFilter(Filter):
            Normalized 22 features. Normalized inplace.
         """
         self._validate_is_normalized(expect_normalized=False)
-
         assert 0 <= log_ratio_trim < 0.5, "'log_ratio_trim' must be a value in the range 0 <= log_ratio_trim < 5"
         assert 0 <= sum_trim < 0.5, "'sum_trim' must be a value in the range 0 <= sum_trim < 5"
-
         suffix = '_normTMM'
 
-        if isinstance(ref_column, str) and ref_column.lower() == 'auto':
-            upper_quartiles = self.df[self._numeric_columns].quantile(0.75, axis=0)
-            ref_index = np.argmin(abs(upper_quartiles - upper_quartiles.mean()))
-            ref_column = self.columns[ref_index]
-
+        ref_column = self._get_ma_ref_column(ref_column)
         columns = self._numeric_columns
         m_data, a_data = self._calculate_ma(ref_column, columns)
         scaling_factors = {}
-        norm_data = self.df / self.df.sum(axis=0)
-        weights = (1 - norm_data).divide(self.df)
-        weights = 1 / (weights.add(weights[ref_column], axis=0))
+        data = self.df.select(pl.col(self._numeric_columns))
+        norm_data = data / data.sum(axis=0)
+        weights = ((norm_data * -1) + 1) / data
+        weights = (weights + (weights[ref_column]))
+        weights = weights / (weights * weights)
         for i, col in enumerate(columns):
             a_post_cutoff = a_data[i][a_data[i] > a_cutoff] if a_cutoff is not None else a_data[i]
             a_post_cutoff = a_post_cutoff.drop_nulls()
@@ -4042,7 +3998,7 @@ class CountFilter(Filter):
 
         scaling_factors = pl.DataFrame(scaling_factors)
         # adjust scaling factors to multiply, for symmetry, to 1
-        scaling_factors -= scaling_factors.mean()
+        scaling_factors -= scaling_factors.mean_horizontal()
         scaling_factors = 2 ** scaling_factors
         new_df = self._norm_scaling_factors(scaling_factors)
         if return_scaling_factors:
@@ -4078,10 +4034,12 @@ class CountFilter(Filter):
 
         suffix = '_normRLE'
         data = self.df.select(pl.col(self._numeric_columns)).drop_nulls()
-        with np.errstate(invalid='ignore', divide='ignore'):
-            pseudo_sample = pl.Series(gmean(data, axis=1))
-            ratios = (data / (pseudo_sample)).fill_nan(None)
-            scaling_factors = ratios.median()
+        pseudo_sample = pl.Series(gmean(data, axis=1))
+        ratios = (data / pseudo_sample).fill_nan(None).drop_nulls()
+        if ratios.shape[0] == 0:
+            raise ArithmeticError("Every gene in the count matrix contains at least one zero, "
+                                  "cannot calculate geometric means. ")
+        scaling_factors = ratios.median()
 
         # TODO: implement a 'control genes' parameter that calculates ratios only for the given control genes
 
@@ -4138,11 +4096,11 @@ class CountFilter(Filter):
                                                        f"is larger than the number of sample groups!"
 
         suffix = '_normMRN'
-        data = self.df[self._numeric_columns]
-        weighed_expression = data / data.sum(axis=0)
+        data = self.df.select(pl.col(self._numeric_columns))
+        weighed_expression = data / data.sum()
         weighted_means = []
         for grp in sample_grouping:
-            weighted_means.append(weighed_expression.loc[:, grp].mean(axis=1))
+            weighted_means.append(weighed_expression.select(pl.col(grp)).mean_horizontal())
         scaling_factors = {}
         for i, grp in enumerate(sample_grouping):
             ratios = weighted_means[i] / weighted_means[reference_group]
@@ -4153,7 +4111,7 @@ class CountFilter(Filter):
         scaling_factors = pl.DataFrame(scaling_factors)
 
         # adjust scaling factors to multiply, for symmetry, to 1
-        scaling_factors = scaling_factors / gmean(scaling_factors)
+        scaling_factors = scaling_factors / gmean(scaling_factors, axis=1)[0]
 
         new_df = self._norm_scaling_factors(scaling_factors)
         if return_scaling_factors:
@@ -4195,10 +4153,27 @@ class CountFilter(Filter):
         return self._inplace(new_df, opposite=False, inplace=inplace, suffix=suffix, printout_operation='normalize',
                              _is_normalized=True)
 
+    def _get_ma_ref_column(self, ref_column):
+        if isinstance(ref_column, int):
+            ref_column += 1
+            assert ref_column < len(self.columns), "the index of 'ref_column' is larger than the number of columns!"
+            ref_column = self.columns[ref_column]
+        elif isinstance(ref_column, str):
+            if ref_column.lower() == 'auto':
+                upper_quartiles = self.df.select(pl.col(self._numeric_columns)).quantile(0.75)
+                ref_index = np.argmin(abs((upper_quartiles - upper_quartiles.mean_horizontal()[0]).to_numpy()))
+                ref_column = self.columns[ref_index]
+            else:
+                assert ref_column in self._numeric_columns, "'ref_column' must be a name of a numeric column!"
+        else:
+            raise TypeError(f"Invalid type for 'ref_column': {type(ref_column)}")
+        return ref_column
+
     def _calculate_ma(self, ref_column: param_typing.ColumnName, columns: List[str]):
         m_data = []
         a_data = []
-        norm_data = self.df / self.df.sum(axis=0)
+        data = self.df.select(pl.col(self._numeric_columns))
+        norm_data = data / data.sum()
         for col in columns:
             this_m = np.log2(norm_data[col] / norm_data[ref_column])
             this_a = 0.5 * np.log2(norm_data[col] * norm_data[ref_column])
@@ -4235,18 +4210,7 @@ class CountFilter(Filter):
         :type tick_fontsize: float (default=10)
         :rtype: a list of matplotlib Figures.
         """
-        if isinstance(ref_column, int):
-            assert ref_column < len(self.columns), "the index of 'ref_column' is larger than the number of columns!"
-            ref_column = self.columns[ref_column]
-        elif isinstance(ref_column, str):
-            if ref_column.lower() == 'auto':
-                upper_quartiles = self.df.quantile(0.75, axis=0)
-                ref_index = np.argmin(abs(upper_quartiles - upper_quartiles.mean()))
-                ref_column = self.columns[ref_index]
-            else:
-                assert ref_column in self._numeric_columns, "'ref_column' must be a name of a numeric column!"
-        else:
-            raise TypeError(f"Invalid type for 'ref_column': {type(ref_column)}")
+        ref_column = self._get_ma_ref_column(ref_column)
         if isinstance(columns, str) and columns.lower() == 'all':
             columns = self._numeric_columns
         else:
@@ -4328,8 +4292,9 @@ class CountFilter(Filter):
         """
         validation.validate_threshold(threshold)
         self._validate_is_normalized()
-        new_df = self.df.filter(
-            (pl.col(self._numeric_columns) >= threshold).sum_horizontal().alias('mask_sum') >= n_samples)
+        mask = pl.when(pl.col(self._numeric_columns) >= threshold).then(True).otherwise(False).name.map(lambda x: x)
+        mask = self.df.select(pl.col(self._numeric_columns)).with_columns(mask).sum_horizontal() >= n_samples
+        new_df = self.df.filter(mask)
         suffix = f"_filt{threshold}reads{n_samples}samples"
         return self._inplace(new_df, opposite, inplace, suffix)
 
@@ -4397,7 +4362,7 @@ class CountFilter(Filter):
         validation.validate_threshold(threshold)
         self._validate_is_normalized()
 
-        new_df = self.df.filter(pl.col(self._numeric_columns).sum() >= threshold)
+        new_df = self.df.filter(self.df.select(pl.col(self._numeric_columns)).sum_horizontal() >= threshold)
         suffix = f"_filt{threshold}sum"
         return self._inplace(new_df, opposite, inplace, suffix)
 
@@ -4994,10 +4959,9 @@ class CountFilter(Filter):
         if sample_names == 'all':
             sample_names = list(self.columns)
         print('Calculating clustergram...')
-        with pd.option_context("mode.copy_on_write", False):
-            clustergram = sns.clustermap(np.log2(self.df[sample_names] + 1), method=linkage, metric=metric,
-                                         cmap=sns.color_palette(colormap, as_cmap=True), yticklabels=False,
-                                         cbar_kws=dict(label=colormap_label))
+        clustergram = sns.clustermap(np.log2(self.df[sample_names] + 1), method=linkage, metric=metric,
+                                     cmap=sns.color_palette(colormap, as_cmap=True), yticklabels=False,
+                                     cbar_kws=dict(label=colormap_label))
 
         # set colored borders for colorbar and heatmap
         cbar = clustergram.ax_cbar.get_children()[-1]
@@ -5073,8 +5037,7 @@ class CountFilter(Filter):
         features = parsing.data_to_list(features)
         assert validation.isinstanceiter(features, str), "'features' must be a string or list of strings!"
         for feature in features:
-            assert feature in self.df.select(
-                pl.first()), f"Supplied feature '{feature}' does not appear in this table. "
+            assert feature in self, f"Supplied feature '{feature}' does not appear in this table. "
         if isinstance(samples, str) and samples.lower() == 'all':
             samples = [[item] for item in self.columns]
         else:
@@ -5108,54 +5071,70 @@ class CountFilter(Filter):
             axes.append(ax)
 
             if avg_function == 'mean':
-                mean = [self.df.loc[feature].iloc[ind].mean() if validation.isinstanceiter(ind, int) else
-                        self.df.loc[feature, ind].mean() for ind in samples]
+                mean = [self.df.filter(pl.first() == feature)[ind].mean_horizontal() if validation.isinstanceiter(ind,
+                                                                                                                  int) else
+                        self.df.filter(pl.first() == feature).select(pl.col(ind)).mean_horizontal() for ind in samples]
             elif avg_function == 'median':
-                mean = [self.df.loc[feature].iloc[ind].median() if validation.isinstanceiter(ind, int) else
-                        self.df.loc[feature, ind].median() for ind in samples]
+                mean = [self.df.filter(pl.first() == feature)[ind].median() if validation.isinstanceiter(ind, int) else
+                        self.df.filter(pl.first() == feature).select(pl.col(ind)).median() for ind in samples]
             elif avg_function == 'geometric_mean':
-                mean = [np.exp(np.log(self.df.loc[feature].iloc[ind]).mean()) if validation.isinstanceiter(ind, int)
-                        else np.exp(np.log(self.df.loc[feature, ind]).mean()) for ind in samples]
+                mean = [
+                    np.exp(np.log(self.df.filter(pl.first() == feature)[ind]).mean()) if validation.isinstanceiter(ind,
+                                                                                                                   int)
+                    else np.exp(np.log(self.df.filter(pl.first() == feature).select(pl.col(ind))).mean_horizontal()) for
+                    ind in samples]
             else:
                 raise ValueError(f"Invalid average function {avg_function}.")
 
             if spread_function == 'sem':
-                spread = [self.df.loc[feature].iloc[ind].sem() if validation.isinstanceiter(ind, int) else
-                          self.df.loc[feature, ind].sem() for ind in samples]
+                spread = [
+                    sem(self.df.filter(pl.first() == feature)[ind], axis=1) if validation.isinstanceiter(ind, int) else
+                    sem(self.df.filter(pl.first() == feature).select(pl.col(ind)), axis=1) for ind in samples]
             elif spread_function == 'std':
-                spread = [self.df.loc[feature].iloc[ind].std() if validation.isinstanceiter(ind, int) else
-                          self.df.loc[feature, ind].std() for ind in samples]
+                spread = [self.df.filter(pl.first() == feature)[ind].std() if validation.isinstanceiter(ind, int) else
+                          self.df.filter(pl.first() == feature).select(pl.col(ind)).std() for ind in samples]
             elif spread_function == 'gstd':
                 spread = np.array([
-                    [m - m / gstd(self.df.loc[feature].iloc[ind]) if validation.isinstanceiter(ind, int)
-                     else m - m / gstd(self.df.loc[feature, ind]) for m, ind in zip(mean, samples)],
-                    [m * gstd(self.df.loc[feature].iloc[ind]) - m if validation.isinstanceiter(ind, int)
-                     else m * gstd(self.df.loc[feature, ind]) - m for m, ind in zip(mean, samples)]
+                    [m - m / gstd(self.df.filter(pl.first() == feature)[ind]) if validation.isinstanceiter(ind, int)
+                     else m - m / gstd(self.df.filter(pl.first() == feature).select(pl.col(ind))) for m, ind in
+                     zip(mean, samples)],
+                    [m * gstd(self.df.filter(pl.first() == feature)[ind]) - m if validation.isinstanceiter(ind, int)
+                     else m * gstd(self.df.filter(pl.first() == feature).select(pl.col(ind))) - m for m, ind in
+                     zip(mean, samples)]
                 ])
             elif spread_function == 'gsem':
                 spread = np.array([
-                    [m - m / np.exp(np.log(self.df.loc[feature].iloc[ind]).sem()) if validation.isinstanceiter(ind, int)
-                     else m - m / np.exp(np.log(self.df.loc[feature, ind]).sem()) for m, ind in zip(mean, samples)],
-                    [m * np.exp(np.log(self.df.loc[feature].iloc[ind]).sem()) - m if validation.isinstanceiter(ind, int)
-                     else m * np.exp(np.log(self.df.loc[feature, ind]).sem()) - m for m, ind in zip(mean, samples)]
+                    [m - m / np.exp(
+                        np.log(self.df.filter(pl.first() == feature)[ind]).sem()) if validation.isinstanceiter(ind, int)
+                     else m - m / np.exp(np.log(self.df.filter(pl.first() == feature).select(pl.col(ind))).sem()) for
+                     m, ind in zip(mean, samples)],
+                    [m * np.exp(
+                        np.log(self.df.filter(pl.first() == feature)[ind]).sem()) - m if validation.isinstanceiter(ind,
+                                                                                                                   int)
+                     else m * np.exp(np.log(self.df.filter(pl.first() == feature).select(pl.col(ind))).sem()) - m for
+                     m, ind in zip(mean, samples)]
                 ])
             elif spread_function == 'iqr':
                 spread = [
-                    np.percentile(self.df.loc[feature].iloc[ind], 75) - np.percentile(self.df.loc[feature].iloc[ind],
-                                                                                      25)
+                    np.percentile(self.df.filter(pl.first() == feature).iloc[ind], 75) - np.percentile(
+                        self.df.filter(pl.first() == feature).iloc[ind],
+                        25)
                     if validation.isinstanceiter(ind, int)
-                    else np.percentile(self.df.loc[feature, ind], 75) - np.percentile(self.df.loc[feature, ind], 25)
+                    else np.percentile(self.df.filter(pl.first() == feature).select(pl.col(ind)), 75) - np.percentile(
+                        self.df.filter(pl.first() == feature).select(pl.col(ind)), 25)
                     for ind in samples]
             elif spread_function == 'range':
-                spread = [self.df.loc[feature].iloc[ind].max() - self.df.loc[feature].iloc[ind].min()
-                          if validation.isinstanceiter(ind, int)
-                          else self.df.loc[feature, ind].max() - self.df.loc[feature, ind].min()
-                          for ind in samples]
+                spread = [
+                    self.df.filter(pl.first() == feature)[ind].max() - self.df.filter(pl.first() == feature)[ind].min()
+                    if validation.isinstanceiter(ind, int)
+                    else self.df.filter(pl.first() == feature).select(pl.col(ind)).max() - self.df.filter(
+                        pl.first() == feature).select(pl.col(ind)).min()
+                    for ind in samples]
             else:
                 raise ValueError(f"Invalid spread function {spread_function}.")
             points_y = parsing.flatten(
-                [[self.df.loc[feature].iloc[i] for i in ind] if validation.isinstanceiter(ind, int) else
-                 [self.df.loc[feature, i] for i in ind] for ind in samples])
+                [[self.df.filter(pl.first() == feature)[i] for i in ind] if validation.isinstanceiter(ind, int) else
+                 self.df.filter(pl.first() == feature).select(pl.col(ind)) for ind in samples])
             points_x = []
             for i, grouping in enumerate(samples):
                 this_group = generic.jitter(len(grouping), jitter) + i
@@ -5201,14 +5180,14 @@ class CountFilter(Filter):
             "'component' must be larger than 0 and equal or lower than the number of genes in the table!"
         self._validate_is_normalized()
         suffix = f'_sortbyPC{component}' + 'powertransform' * bool(power_transform)
-        data = self.df[self._numeric_columns].transpose()
+        data = self.df[self._numeric_columns].to_numpy().transpose()
         data_standardized = generic.standard_box_cox(data) if power_transform else generic.standardize(data)
         pca_obj = PCA(component)
         pca_obj.fit(data_standardized)
-        loadings = pl.DataFrame(pca_obj.components_.T, columns=[i + 1 for i in range(component)],
-                                index=self.df.select(pl.first()))
-        loading = loadings[component].sort_values(ascending=ascending)
-        new_df = self.df.reindex(loading.index)
+        loading = self.df.select(pl.first()).with_columns(
+            pl.DataFrame(pca_obj.components_.T[:, component - 1], schema=['sortOrder']))
+        new_df = self.df.join(loading, on=self.df.columns[0], how='left')
+        new_df = new_df.sort(pl.col('sortOrder'), descending=not ascending).drop(cs.by_name('sortOrder'))
         return self._inplace(new_df, False, inplace, suffix, 'sort')
 
     @readable_name('Split table by contribution to Principal Components (PCA)')
@@ -5328,9 +5307,8 @@ class CountFilter(Filter):
         pca_obj = PCA()
         pcomps = pca_obj.fit_transform(data_standardized)
         columns = [f'Principal component {i + 1}' for i in range(n_components)]
-        principal_df = pl.DataFrame(data=pcomps[:, 0:n_components], columns=columns)
-        final_df = principal_df
-        final_df['lib'] = pl.Series(parsing.flatten(samples))
+        principal_df = pl.DataFrame(data=pcomps[:, 0:n_components], schema=columns)
+        final_df = principal_df.with_columns(pl.Series(parsing.flatten(samples)).alias('lib'))
 
         if title == 'auto':
             title = f'PCA plot of {self.fname.stem}'
@@ -5413,13 +5391,13 @@ class CountFilter(Filter):
             item_inds = []
             for item in grp:
                 item_inds.append(sample_names.index(item))
-            ax.scatter(final_df.iloc[item_inds, 0], final_df.iloc[item_inds, 1], color=colors[i], label=label, s=75)
+            ax.scatter(final_df[item_inds, 0], final_df[item_inds, 1], color=colors[i], label=label, s=75)
 
         if legend is not None:
             ax.legend(title="Legend", draggable=True)
 
         if labels:
-            for i, (_, row) in enumerate(final_df.iterrows()):
+            for i, (row) in enumerate(final_df.iter_rows()):
                 ax.annotate(row[2], (row[0], row[1]), textcoords='offset pixels',
                             xytext=(label_fontsize, label_fontsize),
                             fontsize=label_fontsize, color=colors_per_row[i])
@@ -5496,8 +5474,8 @@ class CountFilter(Filter):
         self._validate_is_normalized()
         sample1, sample2 = parsing.data_to_list(sample1), parsing.data_to_list(sample2)
 
-        xvals = np.log10(self.df[sample1].mean(axis=1) + 1)
-        yvals = np.log10(self.df[sample2].mean(axis=1) + 1)
+        xvals = self.df.select(pl.first()).with_columns(np.log10(self.df.select(pl.col(sample1)).mean_horizontal() + 1))
+        yvals = self.df.select(pl.first()).with_columns(np.log10(self.df.select(pl.col(sample2)).mean_horizontal() + 1))
         if xlabel.lower() == 'auto':
             xlabel = r'$\log_{10}$(normalized reads + 1) from ' + f'{sample1}'
         if ylabel.lower() == 'auto':
@@ -5538,9 +5516,12 @@ class CountFilter(Filter):
             highlight_valid = []
 
         base_set = parsing.data_to_list(self.index_set.difference(highlight_valid))
-        ax.scatter(xvals.loc[base_set], yvals.loc[base_set], s=point_size, alpha=opacity, c=point_color, **kwargs)
-        ax.scatter(xvals.loc[highlight_valid], yvals.loc[highlight_valid], s=point_size, alpha=opacity,
-                   c=highlight_color, **kwargs)
+        xvals_base = xvals.filter(pl.first().is_in(base_set)).drop(cs.first())
+        yvals_base = yvals.filter(pl.first().is_in(base_set)).drop(cs.first())
+        xvals_highlight = xvals.filter(pl.first().is_in(highlight_valid)).drop(cs.first())
+        yvals_highlight = yvals.filter(pl.first().is_in(highlight_valid)).drop(cs.first())
+        ax.scatter(xvals_base, yvals_base, s=point_size, alpha=opacity, c=point_color, **kwargs)
+        ax.scatter(xvals_highlight, yvals_highlight, s=point_size, alpha=opacity, c=highlight_color, **kwargs)
         plt.plot([0, 5], [0, 5], c='green')
 
         xlim, ylim = ax.get_xlim(), ax.get_ylim()
@@ -5594,9 +5575,9 @@ class CountFilter(Filter):
         """
         self._validate_is_normalized()
         if samples == 'all':
-            samples_df = self.df
+            samples_df = self.df.select(pl.col(self._numeric_columns))
         else:
-            samples_df = self._avg_subsamples(samples)
+            samples_df = self._avg_subsamples(samples).drop(cs.first())
 
         samples_df = np.log10(samples_df + 1)
         _ = plt.figure(figsize=(8, 8))
@@ -5658,9 +5639,9 @@ class CountFilter(Filter):
         """
         self._validate_is_normalized()
         if samples == 'all':
-            samples_df = self.df.drop(pl.selectors.first())
+            samples_df = self.df.drop(cs.first())
         else:
-            samples_df = self._avg_subsamples(samples).drop(pl.selectors.first())
+            samples_df = self._avg_subsamples(samples).drop(cs.first())
 
         samples_df = np.log10(samples_df + 1)
         _ = plt.figure(figsize=(8, 8))
@@ -5719,9 +5700,9 @@ class CountFilter(Filter):
         """
         self._validate_is_normalized()
         if samples == 'all':
-            samples_df = self.df
+            samples_df = self.df.select(pl.col(self._numeric_columns))
         else:
-            samples_df = self._avg_subsamples(samples)
+            samples_df = self._avg_subsamples(samples).drop(cs.first())
 
         samples_df = np.log10(samples_df + 1)
         _ = plt.figure(figsize=(8, 8))
@@ -5826,6 +5807,7 @@ class CountFilter(Filter):
 
             """
         file_suffix = '.csv'
+        misc_names = ['__no_feature', '__ambiguous', '__alignment_not_unique', '__too_low_aQual', '__not_aligned']
         if save_csv:
             assert isinstance(counted_fname, str)
             assert isinstance(uncounted_fname, str)
@@ -5842,12 +5824,15 @@ class CountFilter(Filter):
         df = pl.DataFrame()
         for item in sorted(folder.iterdir()):
             if item.is_file() and item.suffix == input_format:
-                df = pd.concat([df, pd.read_csv(item, sep='\t', index_col=0, names=[item.stem])], axis=1)
-        assert not df.empty, f"Error: no valid files with the suffix '{input_format}' were found in '{folder_path}'."
+                this_df = pl.read_csv(item, separator='\t', has_header=False)
+                if len(df) == 0:
+                    df = this_df.rename({this_df.columns[1]: item.stem, this_df.columns[0]: ''})
+                    continue
+                df = df.with_columns(this_df.select(pl.nth(-1).alias(item.stem)))
+        assert df.shape[1] > 0, f"Error: no valid files with the suffix '{input_format}' were found in '{folder_path}'."
 
-        uncounted = df.loc[
-            ['__no_feature', '__ambiguous', '__alignment_not_unique', '__too_low_aQual', '__not_aligned']]
-        counts = df.drop(uncounted.index, inplace=False)
+        uncounted = df.filter(pl.first().is_in(misc_names))
+        counts = df.filter(~pl.first().is_in(misc_names))
 
         if save_csv:
             io.save_table(df=counts, filename=counted_fname)

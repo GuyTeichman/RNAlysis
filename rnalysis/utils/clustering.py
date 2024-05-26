@@ -8,7 +8,7 @@ import joblib
 import matplotlib.pyplot as plt
 import numpy as np
 import pairwisedist as pwdist
-import pandas as pd
+import polars as pl
 import sklearn.metrics.pairwise as sklearn_pairwise
 from grid_strategy import strategies
 from sklearn.cluster import AgglomerativeClustering, KMeans
@@ -401,7 +401,7 @@ class ClusteringRunner:
                            'ys1': pwdist.ys1_distance, 'yr1': pwdist.yr1_distance,
                            'jackknife': pwdist.jackknife_distance, 'sharpened_cosine': pwdist.sharpened_cosine_distance}
 
-    def __init__(self, data: pd.DataFrame, power_transform: bool, metric: str = None,
+    def __init__(self, data: pl.DataFrame, power_transform: bool, metric: str = None,
                  plot_style: str = 'none', split_plots: bool = False, parallel_backend='loky'):
         assert plot_style.lower() in {'all', 'std_bar', 'std_area', 'none'}, \
             f"Invalid value for 'plot_style': '{plot_style}'. " \
@@ -417,7 +417,7 @@ class ClusteringRunner:
         self.data_for_plot = None
         self.n_clusters_determine_plot = None
 
-        self.data: pd.DataFrame = data
+        self.data: pl.DataFrame = data
         self.power_transform: bool = power_transform
         transform = generic.standard_box_cox if power_transform else generic.standardize
         self.transform: Callable = transform
@@ -428,7 +428,7 @@ class ClusteringRunner:
                                                       metric_name)
             if metric_name in self.precomputed_metrics:
                 def precomputed_transform(x):
-                    if isinstance(x, pd.DataFrame):
+                    if isinstance(x, pl.DataFrame):
                         x = x.values
                     return self.precomputed_metrics[metric_name](transform(x))
 
@@ -462,16 +462,16 @@ class ClusteringRunner:
                 sorted_arr[new_ind] = orig_arr[orig_ind]
         return ArbitraryClusterer(updated_labels, n_clusters, **sorted_arrays)
 
-    def _pca_plot(self, n_clusters: int, data: pd.DataFrame, labels: np.ndarray, title: str) -> plt.Figure:
+    def _pca_plot(self, n_clusters: int, data: pl.DataFrame, labels: np.ndarray, title: str) -> plt.Figure:
         data_standardized = generic.standardize(data)
         n_components = 2
         pca_obj = PCA(n_components=n_components)
         pcomps = pca_obj.fit_transform(data_standardized)
 
         columns = [f'Principal component {i + 1}' for i in range(n_components)]
-        principal_df = pd.DataFrame(data=pcomps, columns=columns)
+        principal_df = pl.DataFrame(data=pcomps, columns=columns)
         final_df = principal_df
-        final_df['labels'] = pd.Series(labels)
+        final_df['labels'] = pl.Series(labels)
 
         pc_var = pca_obj.explained_variance_ratio_
         pc1_var = pc_var[0]
@@ -500,7 +500,7 @@ class ClusteringRunner:
         plt.show()
         return fig
 
-    def _generate_plots(self, n_clusters: int, data: pd.DataFrame, labels: np.ndarray, centers: np.ndarray,
+    def _generate_plots(self, n_clusters: int, data: pl.DataFrame, labels: np.ndarray, centers: np.ndarray,
                         title: str) -> Union[List[plt.Figure], plt.Figure, None]:
         if self.plot_style == 'none':
             return
@@ -595,7 +595,7 @@ class ClusteringRunnerWithNClusters(ClusteringRunner, ABC):
             'func': generic.bic_score,
             'maximize': False}}
 
-    def __init__(self, data: pd.DataFrame, power_transform: bool, n_clusters: Union[int, List[int], str],
+    def __init__(self, data: pl.DataFrame, power_transform: bool, n_clusters: Union[int, List[int], str],
                  max_n_clusters_estimate: Union[int, str] = 'auto', plot_style: str = 'none',
                  split_plots: bool = False, metric: str = None, parallel_backend='loky'):
         super().__init__(data, power_transform, metric, plot_style, split_plots, parallel_backend)
@@ -614,7 +614,7 @@ class ClusteringRunnerWithNClusters(ClusteringRunner, ABC):
         # make sure all values of n_clusters are in valid range
         n_clusters, n_clusters_copy = itertools.tee(n_clusters)
         n_clusters = parsing.data_to_list(n_clusters)
-        assert np.all([isinstance(item, int) and 2 <= item <= len(self.data.index) for item in n_clusters_copy]), \
+        assert np.all([isinstance(item, int) and 2 <= item <= self.data.shape[0] for item in n_clusters_copy]), \
             f"Invalid value for n_clusters: '{n_clusters}'. n_clusters must be 'gap', 'silhouette', " \
             f"or an integer/Iterable of integers in range 2 <= n_clusters <= n_features."
         return n_clusters
