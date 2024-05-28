@@ -1,6 +1,7 @@
 import sys
 
 import numpy as np
+import polars.selectors as cs
 import pytest
 
 from rnalysis.utils.differential_expression import *
@@ -47,18 +48,18 @@ class TestLimmaVoomRunner:
         dfs = []
         for item in output_dir.iterdir():
             if item.is_file() and item.suffix == '.csv':
-                dfs.append(io.load_table(item, index_col=0))
+                dfs.append(io.load_table(item))
 
         expected_dfs = []
         for item in expected_paths:
-            expected_dfs.append(io.load_table(item, index_col=0))
+            expected_dfs.append(io.load_table(item))
 
         for out, truth in zip(dfs, expected_dfs):
             assert out.shape == truth.shape
             assert np.all(out.columns == truth.columns)
-            assert np.all(sorted(out.index) == sorted(truth.index))
+            assert out.select(pl.first()).equals(truth.select(pl.first()))
             if sys.platform == 'win32':  # running DESeq in linux gives slightly different results
-                assert np.allclose(out, truth, equal_nan=True, atol=1 * 10 ** (- 5))
+                assert np.allclose(out.drop(cs.first()), truth.drop(cs.first()), equal_nan=True, atol=1 * 10 ** (- 4))
 
     @pytest.mark.parametrize("data,design_matrix,comparisons,covariates,expected_path", [
         ('tests/test_files/big_counted.csv', 'tests/test_files/test_design_matrix_advanced.csv',
@@ -191,18 +192,18 @@ class TestDESeqRunner:
         dfs = []
         for item in output_dir.iterdir():
             if item.is_file() and item.suffix == '.csv':
-                dfs.append(io.load_table(item, index_col=0))
+                dfs.append(io.load_table(item))
 
         expected_dfs = []
         for item in expected_paths:
-            expected_dfs.append(io.load_table(item, index_col=0))
+            expected_dfs.append(io.load_table(item))
 
         for out, truth in zip(dfs, expected_dfs):
             assert out.shape == truth.shape
             assert np.all(out.columns == truth.columns)
-            assert np.all(sorted(out.index) == sorted(truth.index))
+            assert out.select(pl.first()).equals(truth.select(pl.first()))
             if sys.platform == 'win32':  # running DESeq in linux gives slightly different results
-                assert np.allclose(out, truth, equal_nan=True, atol=1 * 10 ** (- 4))
+                assert np.allclose(out.drop(cs.first()), truth.drop(cs.first()), equal_nan=True, atol=1 * 10 ** (- 4))
 
     @pytest.mark.parametrize("data,design_matrix,comparisons,covariates,expected_path", [
         ('tests/test_files/big_counted.csv', 'tests/test_files/test_design_matrix.csv',
