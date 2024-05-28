@@ -26,4 +26,5 @@ aiolimiter>=1.0.0
 tenacity>=8.2.3
 mslex>=1.1.0
 nest-asyncio>=1.6.0
+fastcluster>=1.2.6
 polars[async,numpy,pyarrow,matplotlib]>=0.20.26
