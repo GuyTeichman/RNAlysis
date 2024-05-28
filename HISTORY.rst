@@ -5,6 +5,13 @@ History
 3.13.0 (2024-06-??)
 -------------------
 
+Added
+******
+* Added additional parameters to 'Hierarchical clustergram plot' (CountFilter.clustergram).
+
+Changed
+*******
+* The 'Hierarchical clustergram plot' function should now run faster on large datasets.
 
 Fixed
 ******

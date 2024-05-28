@@ -4963,10 +4963,26 @@ class CountFilter(Filter):
                     linkage: Literal['Single', 'Average', 'Complete', 'Ward', 'Weighted', 'Centroid', 'Median'
                     ] = 'Average', title: Union[str, Literal['auto']] = 'auto', title_fontsize: float = 20,
                     tick_fontsize: float = 12, colormap: ColorMap = 'inferno',
-                    colormap_label: str = r"$\log_2$(Normalized reads + 1)") -> plt.Figure:
+                    colormap_label: Union[Literal['auto'], str] = 'auto', cluster_columns: bool = True,
+                    log_transform:bool=True, z_score_rows: bool = False
+                    ) -> plt.Figure:
         """
         Performs hierarchical clustering and plots a clustergram on the base-2 log of a given set of samples.
 
+        :param z_score_rows: if True, the rows will be z-scored before clustering. \
+        This will normalize the rows to have a mean of 0 and a standard deviation of 1, such that \
+        genes will be clustered based on the similarity of their expression pattern instead of \
+        absolute expression levels.
+        :type z_score_rows: bool (default=False)
+        :param colormap_label: label for the colorbar
+        :type colormap_label: str or 'auto' (default='auto')
+        :param cluster_columns: if True, both rows and columns will be clustered. Otherwise, \
+        only the rows will be clustered, and columns will maintain their original order.
+        :type cluster_columns: bool (default=True)
+        :param colormap: the colormap to use in the clustergram.
+        :type colormap: str
+        :param log_transform: if True, will apply a log transform (log2) to the data before clustering.
+        :type log_transform: bool (default=True)
         :type sample_names: 'all' or list.
         :param sample_names: the names of the relevant samples in a list. \
         Example input: ["condition1_rep1", "condition1_rep2", "condition1_rep3", \
@@ -5006,11 +5022,19 @@ class CountFilter(Filter):
 
         if sample_names == 'all':
             sample_names = list(self.columns)
+        if colormap_label == 'auto':
+            colormap_label = r"$\log_2$(Normalized reads + 1)" if log_transform else "Normalized reads"
+            if z_score_rows:
+                colormap_label+="\nZ-score"
+
+        data = np.log2(self.df[sample_names] + 1) if log_transform else self.df[sample_names]
+
         print('Calculating clustergram...')
         with pd.option_context("mode.copy_on_write", False):
-            clustergram = sns.clustermap(np.log2(self.df[sample_names] + 1), method=linkage, metric=metric,
+            clustergram = sns.clustermap(data, method=linkage, metric=metric,
                                          cmap=sns.color_palette(colormap, as_cmap=True), yticklabels=False,
-                                         cbar_kws=dict(label=colormap_label))
+                                         cbar_kws=dict(label=colormap_label), col_cluster=cluster_columns,
+                                         z_score = 0 if z_score_rows else None)
 
         # set colored borders for colorbar and heatmap
         cbar = clustergram.ax_cbar.get_children()[-1]
