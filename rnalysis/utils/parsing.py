@@ -4,6 +4,7 @@ import platform
 import re
 import shlex
 import warnings
+import pandas as pd
 from collections import Counter
 from itertools import islice
 from pathlib import Path
@@ -11,7 +12,6 @@ from typing import Any, Dict, Union, List, Tuple, Iterable, Literal
 
 import mslex
 import numpy as np
-import pandas as pd
 import polars as pl
 import unicodedata
 from tqdm.auto import tqdm
@@ -172,7 +172,7 @@ def data_to_list(data: Any, sort: bool = False) -> list:
         lst = data
     elif isinstance(data, (set, tuple, np.ndarray)):
         lst = list(data)
-    elif isinstance(data, (dict, int, float, bool, str, pd.DataFrame, pd.Series)):
+    elif isinstance(data, (dict, int, float, bool, str, pl.DataFrame, pl.Series)):
         lst = [data]
     elif data is None:
         lst = [None]
@@ -195,7 +195,7 @@ def data_to_tuple(data: Any, sort: bool = False) -> tuple:
         tpl = data
     elif isinstance(data, (set, list, np.ndarray)):
         tpl = tuple(data)
-    elif isinstance(data, (int, float, bool, str, pd.DataFrame, pd.Series)):
+    elif isinstance(data, (int, float, bool, str, pl.DataFrame, pl.Series)):
         tpl = data,
     elif data is None:
         tpl = None,
@@ -216,7 +216,7 @@ def data_to_set(data: Any) -> set:
         return data
     elif isinstance(data, (list, tuple, np.ndarray)):
         return set(data)
-    elif isinstance(data, (int, float, bool, str, pd.DataFrame, pd.Series)):
+    elif isinstance(data, (int, float, bool, str, pl.DataFrame, pl.Series)):
         return {data}
     elif data is None:
         return {None}
@@ -227,21 +227,6 @@ def data_to_set(data: Any) -> set:
             return set(data)
         except TypeError:
             return {data}
-
-
-def sparse_dict_to_bool_df(sparse_dict: Dict[str, set], progress_bar_desc: str = '') -> pd.DataFrame:
-    fmt = '{desc}: {percentage:3.0f}%|{bar}| [{elapsed}<{remaining}]'
-
-    rows = list(sparse_dict.keys())
-    columns_set = set()
-
-    for val in sparse_dict.values():
-        columns_set.update(val)
-    columns = data_to_list(columns_set)
-    df = pd.DataFrame(np.zeros((len(rows), len(columns)), dtype=bool), columns=columns, index=rows)
-    for row, col in zip(tqdm(sparse_dict.keys(), desc=progress_bar_desc, bar_format=fmt), sparse_dict.values()):
-        df.loc[data_to_list(row), data_to_list(col)] = True
-    return df
 
 
 def partition_list(lst: Union[list, tuple], chunk_size: int) -> Union[List[tuple], List[list]]:
@@ -402,7 +387,7 @@ def items_to_html_table(items):
     return table
 
 
-def df_to_html(df: pl.DataFrame, max_rows: int = 5, max_cols: int = 4):
+def df_to_html(df: pl.DataFrame, max_rows: int = 5, max_cols: int = 5):
     """
     Convert a Polars DataFrame to an HTML table.
 
@@ -419,35 +404,17 @@ def df_to_html(df: pl.DataFrame, max_rows: int = 5, max_cols: int = 4):
         df = df.to_frame()
 
     # Limit the number of rows and columns
-    df_subset = df.head(max_rows).select(df.columns[:max_cols])
+    df_subset = df.head(max_rows).select(pl.col(df.columns[:max_cols])).to_pandas()
+    df_subset = df_subset.set_index(df_subset.columns[0])
 
-    # Create the HTML table
-    html = '<table style="border-collapse: collapse;">\n'
-    html += '<thead>\n'
-    html += '<tr>\n'
-    for column in df_subset.columns:
-        html += f'<th style="border: 1px solid grey; border-collapse: collapse;">{column}</th>\n'
-    html += '</tr>\n'
-    html += '</thead>\n'
-    html += '<tbody>\n'
-    for row in df_subset.iter_rows():
-        html += '<tr>\n'
-        for cell in row:
-            if isinstance(cell, (int, float)):
-                html += f'<td style="border: 1px solid grey; border-collapse: collapse;">{cell:.2f}</td>\n'
-            else:
-                html += f'<td style="border: 1px solid grey; border-collapse: collapse;">{cell}</td>\n'
-        html += '</tr>\n'
-    html += '</tbody>\n'
-    html += '</table>\n'
-
-    if df.shape[0] > max_rows:
-        html += '<tr><td colspan="100%">...</td></tr>\n'
-    if df.shape[1] > max_cols:
-        html += '<tr>'
-        html += f'<td colspan="{max_cols}">...</td>\n'
-        html += '</tr>\n'
-
+    styler = df_subset.style.format(precision=2)
+    styler.set_table_styles(
+        [{'selector': 'td', 'props': 'border: 1px solid grey; border-collapse: collapse;'},
+         {'selector': 'th', 'props': 'border: 1px solid grey; border-collapse: collapse;'}], )
+    html = styler.to_html(float_format=lambda x: f"{x:.2f}")
+    if df.shape[0] > max_rows and df.shape[1] > max_cols:
+        # remove a redundant '...' from the end of the table
+        html = replace_last_occurrence(r'<td class="data col[\d]+ row_trim" >...<\/td>', '', html)
     return html
 
 
