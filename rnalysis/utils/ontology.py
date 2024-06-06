@@ -639,8 +639,8 @@ class DAGTree:
             self._upper_induced_graphs[go_id] = processed_nodes
 
     def plot_ontology(self, namespace: Literal[param_typing.GO_ASPECTS], results_df: pl.DataFrame,
-                      en_score_col: str = 'log2_fold_enrichment',
-                      title: Union[str, Literal['auto']] = 'auto', ylabel: str = r"$\log_2$(Fold Enrichment)",
+                      en_score_col: str = 'log2_fold_enrichment', title: Union[str, Literal['auto']] = 'auto',
+                      ylabel: str = r"$\log_2$(Fold Enrichment)",
                       graph_format: Literal[param_typing.GRAPHVIZ_FORMATS] = 'none', dpi: int = 300
                       ) -> Union[plt.Figure, None]:
         # colormap
