@@ -216,8 +216,12 @@ def data_to_set(data: Any) -> set:
         return data
     elif isinstance(data, (list, tuple, np.ndarray)):
         return set(data)
-    elif isinstance(data, (int, float, bool, str, pl.DataFrame, pl.Series)):
+    elif isinstance(data, (int, float, bool, str)):
         return {data}
+    elif isinstance(data, pl.DataFrame):
+        return set(data.to_series().to_list())
+    elif isinstance(data,  pl.Series):
+        return set(data.to_list())
     elif data is None:
         return {None}
     elif callable(data):
