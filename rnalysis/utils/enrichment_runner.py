@@ -937,19 +937,13 @@ class KEGGEnrichmentRunner(EnrichmentRunner):
             # save query results to KEGG_DF_QUERIES
             self.KEGG_DF_QUERIES[query_key] = self.annotations, self.pathway_names_dict
 
-    def _generate_annotation_dict(self) -> Tuple[pl.DataFrame, Dict[str, str]]:
+    def _generate_annotation_dict(self) -> Tuple[Dict[str,Set[str]], Dict[str, str]]:
         # fetch and process KEGG annotations
-        sparse_annotation_dict, pathway_name_dict = self._process_annotations()
-        print(f"Found annotations for {len(sparse_annotation_dict)} genes.")
-
+        annotation_dict, pathway_name_dict = self._process_annotations()
+        print(f"Found annotations for {len(annotation_dict)} genes.")
         # translate gene IDs
-        translated_sparse_annotation_dict = self._translate_gene_ids(sparse_annotation_dict)
-
-        # get boolean DataFrame for enrichment
-        annotation_df = parsing.sparse_dict_to_bool_df(translated_sparse_annotation_dict,
-                                                       progress_bar_desc="Generating Gene Ontology Referene Table")
-        annotation_df[~annotation_df] = np.nan
-        return annotation_df, pathway_name_dict
+        translated_annotation_dict = self._translate_gene_ids(annotation_dict)
+        return translated_annotation_dict, pathway_name_dict
 
     def _process_annotations(self) -> Tuple[Dict[str, Set[str]], Dict[str, str]]:
         desc = f"Fetching KEGG annotations for organism '{self.organism}' (taxon ID:{self.taxon_id})"
@@ -1079,11 +1073,11 @@ class GOEnrichmentRunner(EnrichmentRunner):
 
     def _generate_annotation_dict(self) -> Dict[str, Set[str]]:
         # fetch and process GO annotations
-        sparse_annotation_dict, source_to_gene_id_dict = self._process_annotations()
-        print(f"Found annotations for {len(sparse_annotation_dict)} genes.")
+        annotation_dict, source_to_gene_id_dict = self._process_annotations()
+        print(f"Found annotations for {len(annotation_dict)} genes.")
         # translate gene IDs
-        translated_sparse_annotation_dict = self._translate_gene_ids(sparse_annotation_dict, source_to_gene_id_dict)
-        return translated_sparse_annotation_dict
+        translated_annotation_dict = self._translate_gene_ids(annotation_dict, source_to_gene_id_dict)
+        return translated_annotation_dict
 
     def _process_annotations(self) -> Tuple[Dict[str, Set[str]], Dict[str, Set[str]]]:
         if self.propagate_annotations != 'no':
