@@ -151,7 +151,6 @@ def validate_biotype_table(biotype_df: pd.DataFrame):
                1] == 2, f"Invalid number of columns in Biotype Reference Table: found {biotype_df.shape[1]} columns instead of 2!"
     assert biotype_df.shape[
                0] >= 2, f"Biotype Reference Table must have at least two rows, found only  {biotype_df.shape[0]}!"
-    biotype_df.rename(columns={biotype_df.columns[0]: 'gene', biotype_df.columns[1]: 'biotype'}, inplace=True)
 
 
 def validate_attr_table(attr_df: pd.DataFrame):

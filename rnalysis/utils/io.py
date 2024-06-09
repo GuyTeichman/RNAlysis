@@ -34,7 +34,6 @@ import appdirs
 import matplotlib.pyplot as plt
 import nest_asyncio
 import numpy as np
-import pandas as pd
 import polars as pl
 import requests
 import tenacity
@@ -136,7 +135,7 @@ def load_cached_gui_file(filename: Union[str, Path], load_as_obj: bool = True) -
     file_path = directory.joinpath(filename)
     if file_path.exists():
         if file_path.suffix in {'.csv', '.tsv', '.parquet'} and load_as_obj:
-            return load_table(file_path, index_col=0)
+            return load_table(file_path)
         elif file_path.suffix in {'.txt'} and load_as_obj:
             with open(file_path) as f:
                 return {item.strip() for item in f.readlines()}
@@ -362,8 +361,7 @@ def load_table(filename: Union[str, Path], drop_columns: Union[str, List[str]] =
             sep = ','
         elif filename.suffix.lower() == '.tsv':
             sep = '\t'
-        df = pl.read_csv(filename, separator=sep, has_header=True, encoding='ISO-8859-1',
-                         null_values=['nan', 'NaN', 'NA'], **kwargs)
+        df = pl.read_csv(filename, separator=sep, has_header=True, null_values=['nan', 'NaN', 'NA'], **kwargs)
         if squeeze and df.shape[1] == 1:
             df = df.to_series()
 
@@ -1025,8 +1023,8 @@ def map_taxon_id(taxon_name: Union[str, int]) -> Tuple[int, str]:
     if res.shape[0] == 0:
         raise ValueError(f"No taxons match the search query '{taxon_name}'.")
 
-    taxon_id = int(res.select(pl.col('Taxon Id')).row(0))
-    scientific_name = res.select(pl.col('Scientific name')).row(0)
+    taxon_id = int(res.select(pl.col('Taxon Id')).row(0)[0])
+    scientific_name = res.select(pl.col('Scientific name')).row(0)[0]
 
     if res.shape[0] > 2 and not (taxon_name == taxon_id or taxon_name == scientific_name):
         warnings.warn(
@@ -2000,17 +1998,16 @@ class GeneIDTranslator:
 
     @staticmethod
     def format_annotations(results):
-        df = pl.DataFrame([line.split('\t') for line in results[1:]], columns=results[0].split('\t'))
+        df = pl.DataFrame([line.split('\t') for line in results[1:]], schema=results[0].split('\t'))
         # sort annotations by decreasing annotation score, so that the most relevant annotations are at the top
         if 'Annotation' in df.columns:
-            df.loc[df['Annotation'] == '', 'Annotation'] = '0'
-            df['Annotation'] = (df['Annotation']).astype(float)
-            df = df.sort_values('Annotation', ascending=False)
+            df = df.with_columns(Annotation=pl.col('Annotation').replace('', '0', return_dtype=pl.datatypes.Int16))
+            df = df.sort('Annotation', descending=False)
         output_dict = {}
         duplicates = {}
 
         # sort duplicates from one-to-one mappings
-        for match in df.iterrows():
+        for match in df.iter_rows():  # TODO: performance profiling and potentially optimize
             match_from = match[1][0]
             match_to = match[1][1]
             if match_from in output_dict or match_from in duplicates:

@@ -297,7 +297,8 @@ class EnrichmentRunner:
                  'ranked_genes': 'the set of genes/genomic features whose enrichment to calculate, '
                                  'pre-sorted and ranked by the user',
                  'plot_style': 'plot style',
-                 'show_expected': 'show observed/expected values on plot'}
+                 'show_expected': 'show observed/expected values on plot',
+                 'annotated_genes':'set of annotated genes'}
     printout_params = "appear in the Attribute Reference Table"
 
     def __init__(self, genes: Union[set, np.ndarray], attributes: Union[Iterable, str, int],
@@ -332,6 +333,7 @@ class EnrichmentRunner:
         if self.stats_test is None:
             return
         self.exclude_unannotated_genes = exclude_unannotated_genes
+        self.annotated_genes = None
         self.single_set = single_set
         if self.single_set:
             assert background_set is None, "Enrichment in single_set mode does not accept a 'background_set' argument."
@@ -408,10 +410,14 @@ class EnrichmentRunner:
         self.background_set = parsing.data_to_set(self.background_set)
 
         orig_bg_size = len(self.background_set)
+
         if self.exclude_unannotated_genes:
-            annotated_genes = set()
-            for s in self.annotations.values():
-                annotated_genes.update(s)
+            if self.annotated_genes is None:
+                annotated_genes = set()
+                for s in self.annotations.values():
+                    annotated_genes.update(s)
+            else:
+                annotated_genes = self.annotated_genes
             self.background_set = self.background_set.intersection(annotated_genes)
 
         if orig_bg_size - len(self.background_set) > 0:
@@ -465,6 +471,7 @@ class EnrichmentRunner:
     def fetch_annotations(self):
         annotation_df = io.load_table(self.attr_ref_path)
         validation.validate_attr_table(annotation_df)
+        self.annotated_genes = parsing.data_to_set(annotation_df.select(pl.first()))
         self.annotations = {}
         for attr in annotation_df.columns[1:]:
             self.annotations[attr] = parsing.data_to_set(
@@ -496,8 +503,11 @@ class EnrichmentRunner:
         self.annotations = {attr: self.annotations[attr] for attr in self.attributes}
         if not self.single_set:
             for attr in self.annotations:
-                print(self.annotations[attr].intersection(self.background_set))
-                self.annotations[attr].intersection_update(self.background_set)
+                if isinstance(self.annotations[attr], set):
+                    self.annotations[attr].intersection_update(self.background_set)
+                else:
+                    self.annotations[attr] = {k: v for k, v in self.annotations[attr].items() if
+                                              k in self.background_set}
 
     def calculate_enrichment(self) -> list:
         if self.parallel_backend != 'sequential' and len(self.attributes) > 5:
@@ -790,7 +800,7 @@ class NonCategoricalEnrichmentRunner(EnrichmentRunner):
             self.annotations[attr] = {key: val[0] for key, val in
                                       annotation_df.select(cs.first() | cs.by_name(attr)).rows_by_key(
                                           annotation_df.columns[0]).items()}
-            for gene_id,val in self.annotations[attr].items():
+            for gene_id, val in self.annotations[attr].items():
                 if val is None:
                     self.annotations[attr][gene_id] = np.nan
 
@@ -809,8 +819,9 @@ class NonCategoricalEnrichmentRunner(EnrichmentRunner):
         if len(self.results) == 0:
             return []
         figs = []
-        for attribute, padj in zip(self.attributes, self.results['padj']):
-            if not np.isnan(padj):
+        for attribute in self.attributes:
+            padj = self.results.filter(pl.first() == attribute).select('padj').item()
+            if (padj is not None) and (not np.isnan(padj)):
                 fig = self.enrichment_histogram(attribute)
                 figs.append(fig)
         return figs
@@ -937,7 +948,7 @@ class KEGGEnrichmentRunner(EnrichmentRunner):
             # save query results to KEGG_DF_QUERIES
             self.KEGG_DF_QUERIES[query_key] = self.annotations, self.pathway_names_dict
 
-    def _generate_annotation_dict(self) -> Tuple[Dict[str,Set[str]], Dict[str, str]]:
+    def _generate_annotation_dict(self) -> Tuple[Dict[str, Set[str]], Dict[str, str]]:
         # fetch and process KEGG annotations
         annotation_dict, pathway_name_dict = self._process_annotations()
         print(f"Found annotations for {len(annotation_dict)} genes.")

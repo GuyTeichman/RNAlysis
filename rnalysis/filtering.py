@@ -567,16 +567,16 @@ class Filter:
         return self._inplace(new_df, False, inplace, suffix, 'translate'), one2many_table
 
     def _apply_dict_map(self, one2one_map: Union[io.OrthologDict, io.GeneIDDict], remove_unmapped: bool):
-        new_df = self.df.clone()
+        map_df = pl.DataFrame([list(one2one_map.mapping_dict.keys()), list(one2one_map.mapping_dict.values())],
+                              schema=[self.df.columns[0], 'mappedVals'])
+        new_df = self.df.join(map_df, on=self.df.columns[0], how='left')
 
-        new_df['orthologs'] = pl.Series(one2one_map.mapping_dict)
         if remove_unmapped:
-            new_df = new_df[new_df['orthologs'].is_not_null()]
+            new_df = new_df.filter(pl.col('mappedVals').is_not_null())
         else:
-            new_df[new_df['orthologs'].is_null(), 'orthologs'] = new_df['orthologs'][
-                new_df['orthologs'].isna()].index
+            new_df = new_df.with_columns(pl.col('mappedVals').fill_null(pl.col(self.df.columns[0])).alias('mappedVals'))
 
-        new_df = new_df.set_index('orthologs', drop=True)
+        new_df = new_df.with_columns(pl.col('mappedVals').alias(self.df.columns[0])).drop('mappedVals')
         return new_df
 
     @readable_name('Map genes to nearest orthologs (using Ensembl)')
@@ -772,15 +772,12 @@ class Filter:
         the function will return a new Filter instance and the current instance will not be affected.
         :return: If inplace is False, returns a new and translated instance of the Filter object.
         """
-        gene_ids = parsing.data_to_tuple(self.df[pl.first()])
-        new_df = self.df.clone()
+        gene_ids = parsing.data_to_tuple(self.df.select(pl.first()).to_series().to_list())
         if translate_from.lower() == 'auto':
             translator, translate_from, _ = io.find_best_gene_mapping(gene_ids, None, (translate_to,))
         else:
             translator = io.GeneIDTranslator(translate_from, translate_to).run(gene_ids)
-
         new_df = self._apply_dict_map(translator, remove_unmapped_genes)
-
         suffix = f'_translateFrom{translate_from.replace(" ", "").replace("/", "")}' \
                  f'to{translate_to.replace(" ", "").replace("/", "")}'
         return self._inplace(new_df, False, inplace, suffix, 'translate')
@@ -877,12 +874,14 @@ class Filter:
                         pbar.update(1)
                         if len(mapping) == 0:
                             continue
-                        ref_srs = pl.Series(mapping, name='biotype')
-                        if len(ref_srs.index.intersection(self.df.select(pl.first()))) == 0:
+                        ref_df = pl.DataFrame([list(mapping.keys()), list(mapping.values())],
+                                              schema=[feature_type, 'biotype'])
+                        if len(parsing.data_to_set(ref_df.select(pl.first())).intersection(
+                            parsing.data_to_set(self.df.select(pl.first())))) == 0:
                             continue
 
                         pbar.update(8)
-                        return ref_srs.drop_nulls(axis=0)
+                        return ref_df.drop_nulls()
             raise ValueError("Failed to map features to biotypes with the given GTF file and parameters. "
                              "Please try again with different parameters or a different GTF file. ")
 
@@ -1577,26 +1576,28 @@ class Filter:
         as well as additional descriptive statistics of format=='long'.
         """
         # load the Biotype Reference Table
-        ref_df = self._get_ref_srs_from_gtf(gtf_path, attribute_name, feature_type).to_frame('biotype').reset_index(
-            names=feature_type)
+        ref_df = self._get_ref_srs_from_gtf(gtf_path, attribute_name, feature_type)
         # find which genes from tne Filter object don't appear in the Biotype Reference Table
-        not_in_ref = self.df.select(pl.first()).difference(ref_df[feature_type])
+        not_in_ref = parsing.data_to_set(self.df.select(pl.first())).difference(
+            parsing.data_to_set(ref_df[feature_type]))
         if len(not_in_ref) > 0:
             warnings.warn(
                 f'{len(not_in_ref)} of the features in the table do not appear in the Biotype Reference Table')
-            ref_df = pl.concat(
-                [ref_df, pl.DataFrame({feature_type: not_in_ref, 'biotype': '_missing_from_biotype_reference'})],
-                axis=0, join='outer')
+            missing_df = pl.DataFrame(
+                [parsing.data_to_list(not_in_ref), ['_missing_from_biotype_reference'] * len(not_in_ref)],
+                schema=ref_df.columns)
+            ref_df = pl.concat([ref_df, missing_df])
+
         if long_format:
             # additionally return descriptive statistics for each biotype
             self_df = self.df.__deepcopy__()
             self_df['biotype'] = ref_df.set_index(feature_type).loc[self.df.select(pl.first())]
             res = self_df.groupby('biotype').describe()
-            res.columns = ['_'.join(col) for col in res.columns.values]
+            res.columns = ['_'.join(col) for col in res.columns]
             return res
         else:
             # return just the number of genes/indices belonging to each biotype
-            return ref_df.set_index(feature_type, drop=False).loc[self.df.select(pl.first())].groupby('biotype').count()
+            return ref_df.filter(pl.first().is_in(self.df.select(pl.first()))).groupby(pl.last()).count()
 
     @readable_name('Summarize feature biotypes (based on a reference table)')
     def biotypes_from_ref_table(self, long_format: bool = False,
@@ -1641,27 +1642,28 @@ class Filter:
         """
         # load the Biotype Reference Table
         ref = settings.get_biotype_ref_path(ref)
-        ref_df = io.load_table(ref).drop_nulls(axis=0)
+        ref_df = io.load_table(ref).drop_nulls()
         validation.validate_biotype_table(ref_df)
         # find which genes from tne Filter object don't appear in the Biotype Reference Table
-        not_in_ref = self.df.select(pl.first()).difference(ref_df['gene'])
+        not_in_ref = parsing.data_to_set(self.df.select(pl.first())).difference(parsing.data_to_set(ref_df['gene']))
         if len(not_in_ref) > 0:
             warnings.warn(
                 f'{len(not_in_ref)} of the features in the table do not appear in the Biotype Reference Table')
-            ref_df = pl.concat(
-                [ref_df, pl.DataFrame({'gene': not_in_ref, 'biotype': '_missing_from_biotype_reference'})],
-                axis=0, join='outer')
+            missing_df = pl.DataFrame(
+                [parsing.data_to_list(not_in_ref), ['_missing_from_biotype_reference'] * len(not_in_ref)],
+                schema=ref_df.columns)
+            ref_df = pl.concat([ref_df, missing_df])
         if long_format:
             # additionally return descriptive statistics for each biotype
             self_df = self.df.__deepcopy__()
             self_df['biotype'] = ref_df.set_index('gene').loc[self.df.select(pl.first())]
             res = self_df.groupby('biotype').describe()
-            res.columns = ['_'.join(col) for col in res.columns.values]
+            res.columns = ['_'.join(col) for col in res.columns]
             return res
 
         else:
             # return just the number of genes/indices belonging to each biotype
-            return ref_df.set_index('gene', drop=False).loc[self.df.select(pl.first())].groupby('biotype').count()
+            return ref_df.filter(pl.first().is_in(self.df.select(pl.first()))).groupby(pl.last()).count()
 
     @readable_name('Filter with a number filter')
     def number_filters(self, column: param_typing.ColumnName,
@@ -4916,7 +4918,7 @@ class CountFilter(Filter):
                     ] = 'Average', title: Union[str, Literal['auto']] = 'auto', title_fontsize: float = 20,
                     tick_fontsize: float = 12, colormap: ColorMap = 'inferno',
                     colormap_label: Union[Literal['auto'], str] = 'auto', cluster_columns: bool = True,
-                    log_transform:bool=True, z_score_rows: bool = False
+                    log_transform: bool = True, z_score_rows: bool = False
                     ) -> plt.Figure:
         """
         Performs hierarchical clustering and plots a clustergram on the base-2 log of a given set of samples.
@@ -4977,7 +4979,7 @@ class CountFilter(Filter):
         if colormap_label == 'auto':
             colormap_label = r"$\log_2$(Normalized reads + 1)" if log_transform else "Normalized reads"
             if z_score_rows:
-                colormap_label+="\nZ-score"
+                colormap_label += "\nZ-score"
 
         data = np.log2(self.df[sample_names] + 1) if log_transform else self.df[sample_names]
 
@@ -4985,7 +4987,7 @@ class CountFilter(Filter):
         clustergram = sns.clustermap(data, method=linkage, metric=metric,
                                      cmap=sns.color_palette(colormap, as_cmap=True), yticklabels=False,
                                      cbar_kws=dict(label=colormap_label), col_cluster=cluster_columns,
-                                         z_score = 0 if z_score_rows else None)
+                                     z_score=0 if z_score_rows else None)
 
         # set colored borders for colorbar and heatmap
         cbar = clustergram.ax_cbar.get_children()[-1]

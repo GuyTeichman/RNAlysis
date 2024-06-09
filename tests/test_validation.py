@@ -34,7 +34,7 @@ def test_isinstanceinh(obj, cls, expected):
 
 
 def test_is_df_dataframe():
-    my_df = pd.DataFrame()
+    my_df = pl.DataFrame()
     assert (check_is_df_like(my_df))
 
 
@@ -200,10 +200,9 @@ def test_validate_clustering_parameters(metric, linkage, expected_to_pass):
                           ('attr_ref_table_no_index_title.csv', True),
                           ('attr_ref_table_wrong_index_title.csv', True)])
 def test_validate_attr_table(table_path, expected_to_pass):
-    df = pd.read_csv('tests/test_files/' + table_path)
+    df = pl.read_csv('tests/test_files/' + table_path)
     if expected_to_pass:
         validate_attr_table(df)
-        assert df.columns[0] == 'gene'
     else:
         with pytest.raises(AssertionError):
             validate_attr_table(df)
@@ -217,7 +216,7 @@ def test_validate_attr_table(table_path, expected_to_pass):
                           ('biotype_ref_table_no_titles.csv', True),
                           ('biotype_ref_table_wrong_titles.csv', True)])
 def test_validate_biotype_table(table_path, expected_to_pass):
-    df = pd.read_csv('tests/test_files/' + table_path)
+    df = pl.read_csv('tests/test_files/' + table_path)
     if expected_to_pass:
         validate_biotype_table(df)
         assert df.columns[0] == 'gene'

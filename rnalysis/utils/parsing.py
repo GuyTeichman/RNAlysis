@@ -176,7 +176,10 @@ def data_to_list(data: Any, sort: bool = False) -> list:
         lst = [data]
     elif data is None:
         lst = [None]
-
+    elif isinstance(data, pl.DataFrame):
+        return data.to_series().to_list()
+    elif isinstance(data,  pl.Series):
+        return data.to_list()
     elif callable(data):
         lst = [data]
     else:
@@ -199,6 +202,10 @@ def data_to_tuple(data: Any, sort: bool = False) -> tuple:
         tpl = data,
     elif data is None:
         tpl = None,
+    elif isinstance(data, pl.DataFrame):
+        return tuple(data.to_series().to_list())
+    elif isinstance(data,  pl.Series):
+        return tuple(data.to_list())
     elif callable(data):
         tpl = data,
     else:

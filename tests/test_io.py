@@ -60,7 +60,7 @@ def test_load_csv_bad_input():
                                  "tests/test_files/test_load_csv_tabs.txt",
                                  "tests/test_files/test_load_csv_other_sep.txt"))
 def test_load_csv(pth):
-    truth = pd.DataFrame({'idxcol': ['one', 'two', 'three'], 'othercol': [4, 5, 6]})
+    truth = pl.DataFrame({'idxcol': ['one', 'two', 'three'], 'othercol': [4, 5, 6]})
     truth.set_index('idxcol', inplace=True)
     loaded = load_table(pth, 0)
     assert loaded.equals(truth)
@@ -80,14 +80,14 @@ def test_load_csv_drop_columns():
 
 def test_save_csv():
     try:
-        df = pd.read_csv('tests/test_files/enrichment_hypergeometric_res.csv', index_col=0)
+        df = pl.read_csv('tests/test_files/enrichment_hypergeometric_res.csv', index_col=0)
         save_table(df, 'tests/test_files/tmp_test_save_csv.csv')
-        df_loaded = pd.read_csv('tests/test_files/tmp_test_save_csv.csv', index_col=0)
+        df_loaded = pl.read_csv('tests/test_files/tmp_test_save_csv.csv', index_col=0)
         assert df.equals(df_loaded)
-        df = pd.read_csv('tests/test_files/enrichment_hypergeometric_res.csv')
+        df = pl.read_csv('tests/test_files/enrichment_hypergeometric_res.csv')
         save_table(df, 'tests/test_files/tmp_test_save_csv.csv', '_2', index=False)
-        df_loaded = pd.read_csv('tests/test_files/tmp_test_save_csv_2.csv', index_col=0)
-        df = pd.read_csv('tests/test_files/enrichment_hypergeometric_res.csv', index_col=0)
+        df_loaded = pl.read_csv('tests/test_files/tmp_test_save_csv_2.csv', index_col=0)
+        df = pl.read_csv('tests/test_files/enrichment_hypergeometric_res.csv', index_col=0)
         assert df.equals(df_loaded)
 
     except Exception as e:
@@ -865,7 +865,7 @@ def test_get_gunzip_size(path, expected):
 
 
 @pytest.mark.parametrize('item, filename', [
-    (pd.DataFrame({'A': [1, 2], 'B': [3, 4]}), 'test1.csv'),
+    (pl.DataFrame({'A': [1, 2], 'B': [3, 4]}), 'test1.csv'),
     ({'gene1', 'gene2', 'gene3'}, 'test2.txt'),
     ('this is a test', 'test3.txt'),
     (plt.figure(), 'test4.png')
@@ -882,12 +882,12 @@ def test_cache_gui_file(item, filename):
 
 
 @pytest.mark.parametrize("item, filename, load_as_obj, expected_output", [
-    (pd.DataFrame({"a": [1, 2, 3], "b": [4, 5, 6]}, index=['h', 'i', 'j']), "test.csv", True,
-     pd.DataFrame({"a": [1, 2, 3], "b": [4, 5, 6]}, index=['h', 'i', 'j'])),
+    (pl.DataFrame({"a": [1, 2, 3], "b": [4, 5, 6]}, index=['h', 'i', 'j']), "test.csv", True,
+     pl.DataFrame({"a": [1, 2, 3], "b": [4, 5, 6]}, index=['h', 'i', 'j'])),
     ({"apple", "banana", "cherry"}, "test.txt", True, {"apple", "banana", "cherry"}),
     ("test", "test.txt", True, {"test"}),
     ("test123", "test.txt", False, b"test123"),
-    (pd.DataFrame({"a": [1, 2, 3], "b": [4, 5, 6]}), "test.csv", False, b",a,b\n0,1,4\n1,2,5\n2,3,6\n"),
+    (pl.DataFrame({"a": [1, 2, 3], "b": [4, 5, 6]}), "test.csv", False, b",a,b\n0,1,4\n1,2,5\n2,3,6\n"),
     ({"apple", "banana", "cherry"}, "test.txt", False,
      bytes("\n".join({"apple", "banana", "cherry"}), encoding='utf-8')),
     ("test", "test.txt", False, b"test")
@@ -901,7 +901,7 @@ def test_load_cached_gui_file(item, filename, load_as_obj, expected_output):
     try:
         cache_gui_file(item, filename)
         res = load_cached_gui_file(filename, load_as_obj)
-        if isinstance(res, pd.DataFrame):
+        if isinstance(res, pl.DataFrame):
             assert res.equals(item)
         elif isinstance(res, bytes):
             assert res.replace(b'\r', b'') == expected_output
@@ -1201,7 +1201,7 @@ class TestPhylomeDBOrthologMapper:
         legal_species = PhylomeDBOrthologMapper.get_legal_species()
         taxon_id = legal_species.index[taxon_ind]
         df = ortholog_mapper._get_taxon_file(taxon_id)
-        assert isinstance(df, pd.DataFrame)
+        assert isinstance(df, pl.DataFrame)
         assert list(df.columns) == ['#taxid1', 'taxid2', 'protid2', 'CS', 'sources']
         assert (df['#taxid1'] == taxon_id).all()
 
