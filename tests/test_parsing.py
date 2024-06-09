@@ -152,8 +152,8 @@ def test_generate_upset_series():
     names = ('a', 'b', 'c')
     tuples = [(True, True, True), (True, False, True), (True, True, False), (True, False, False),
               (False, True, True), (False, True, False), (False, False, True)]
-    multi_index_truth = pl.MultiIndex.from_tuples(tuples, names=names).sort_values()
-    srs_truth = pl.Series(index=multi_index_truth, dtype='uint32').sort_index()
+    multi_index_truth = pd.MultiIndex.from_tuples(tuples, names=names).sort_values()
+    srs_truth = pd.Series(index=multi_index_truth, dtype='uint32').sort_index()
     srs_truth.loc[True, True, True] = 1
     srs_truth.loc[True, True, False] = 2
     srs_truth.loc[True, False, True] = 1
