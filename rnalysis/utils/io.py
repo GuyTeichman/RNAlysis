@@ -1,6 +1,7 @@
 import asyncio
 import concurrent.futures
 import contextlib
+import csv
 import ftplib
 import functools
 import gzip
@@ -356,11 +357,15 @@ def load_table(filename: Union[str, Path], drop_columns: Union[str, List[str]] =
     if filename.suffix.lower() == '.parquet':
         df = pl.read_parquet(filename)
     else:
-        sep = None
         if filename.suffix.lower() == '.csv':
             sep = ','
         elif filename.suffix.lower() == '.tsv':
             sep = '\t'
+        else:
+            with open(filename) as f:
+                sample = f.readline()
+                sep = csv.Sniffer().sniff(sample).delimiter
+                print(sep)
         df = pl.read_csv(filename, separator=sep, has_header=True, null_values=['nan', 'NaN', 'NA'], **kwargs)
         if squeeze and df.shape[1] == 1:
             df = df.to_series()
@@ -1019,16 +1024,17 @@ def map_taxon_id(taxon_name: Union[str, int]) -> Tuple[int, str]:
     req = requests.get(url, params=params)
     if not req.ok:
         req.raise_for_status()
-    res = pl.read_csv(StringIO(req.text), separator='\t').sort(by='Taxon Id', descending=False)
-    if res.shape[0] == 0:
+    try:
+        res = pl.read_csv(StringIO(req.text), separator='\t').sort(by='Taxon Id', descending=False)
+    except pl.NoDataError:
         raise ValueError(f"No taxons match the search query '{taxon_name}'.")
 
-    taxon_id = int(res.select(pl.col('Taxon Id')).row(0)[0])
-    scientific_name = res.select(pl.col('Scientific name')).row(0)[0]
+    taxon_id = res[0,'Taxon Id']
+    scientific_name = res[0,'Scientific name']
 
-    if res.shape[0] > 2 and not (taxon_name == taxon_id or taxon_name == scientific_name):
+    if res.shape[0] > 1 and not (taxon_name == taxon_id or taxon_name == scientific_name):
         warnings.warn(
-            f"Found {len(res) - 1} taxons matching the search query '{taxon_name}'. "
+            f"Found {len(res)} taxons matching the search query '{taxon_name}'. "
             f"Picking the match with the highest score: {scientific_name} (taxonID {taxon_id}).")
 
     return taxon_id, scientific_name
@@ -1201,8 +1207,10 @@ class PhylomeDBOrthologMapper:
 
     def __init__(self, map_to_organism, map_from_organism='auto', gene_id_type='auto'):
         legal_species = self.get_legal_species()
-        assert map_from_organism in legal_species.index, f"organism with taxon id {map_from_organism} is not supported by PhylomeDB. "
-        assert map_to_organism in legal_species.index, f"organism with taxon id {map_to_organism} is not supported by PhylomeDB. "
+        assert map_from_organism in legal_species[
+            legal_species.columns[0]], f"organism with taxon id {map_from_organism} is not supported by PhylomeDB. "
+        assert map_to_organism in legal_species[
+            legal_species.columns[0]], f"organism with taxon id {map_to_organism} is not supported by PhylomeDB. "
         self.gene_id_type = gene_id_type
         self.map_from_organism = map_from_organism
         self.map_to_organism = map_to_organism
@@ -1223,29 +1231,28 @@ class PhylomeDBOrthologMapper:
         mapping_one2one = {}
         mapping_one2many = {}
 
-        taxon_table = self._get_taxon_file(self.map_from_organism)
-        taxon_table = taxon_table[taxon_table['taxid2'] == self.map_to_organism]
+        taxon_map = self._get_taxon_map(self.map_from_organism, self.map_to_organism)
         map_fwd, map_rev = self._get_id_conversion_maps()
         ids, translated_ids = self.translate_ids(ids)
 
         n_mapped = 0
         for from_id in tqdm(translated_ids, 'Mapping orthologs', unit='genes'):
-            if from_id not in map_fwd.index:
+            if from_id not in map_fwd:
                 continue
-            from_id_conv = map_fwd.loc[from_id]
-            if from_id_conv not in taxon_table.index:
+            from_id_conv = map_fwd[from_id]
+            if from_id_conv not in taxon_map:
                 continue
-            to_id_conv = taxon_table.loc[from_id_conv, 'protid2']
+            to_id_conv = taxon_map[from_id_conv][0]
             if isinstance(to_id_conv, pl.Series):
                 for i, this_to_id_conv in enumerate(to_id_conv):
-                    if this_to_id_conv not in map_rev.index:
+                    if this_to_id_conv not in map_rev:
                         continue
 
                     if from_id not in mapping_one2many:
                         mapping_one2many[from_id] = []
 
-                    to_id = map_rev.loc[this_to_id_conv]
-                    score = taxon_table.loc[from_id_conv, 'CS'].values[0]
+                    to_id = map_rev[this_to_id_conv]
+                    score = taxon_map[from_id_conv][1]
                     # filter by consistency score
                     if score < consistency_score_threshold:
                         continue
@@ -1267,10 +1274,10 @@ class PhylomeDBOrthologMapper:
                         mapping_one2one[from_id] = random.choice(mapping_one2many[from_id])[0]
                 n_mapped += 1
             else:
-                if to_id_conv not in map_rev.index:
+                if to_id_conv not in map_rev:
                     continue
-                to_id = map_rev.loc[to_id_conv]
-                score = taxon_table.loc[from_id_conv, 'CS']
+                to_id = map_rev[to_id_conv]
+                score = taxon_map[from_id_conv][1]
                 # filter by consistency score
                 if score < consistency_score_threshold:
                     continue
@@ -1288,13 +1295,13 @@ class PhylomeDBOrthologMapper:
             {k: [this_v[0] for this_v in v] for k, v in mapping_one2many.items()})
 
     @staticmethod
-    def _get_taxon_file(taxon_id: int):
+    def _get_taxon_map(taxon_id: int, target_id: int):
         cache_dir = get_todays_cache_dir()
-        cache_file = cache_dir.joinpath(f'phylomedb_{taxon_id}.parquet')
+        cache_file = cache_dir.joinpath(f'phylomedb_{taxon_id}to{target_id}.parquet')
         file_path = f"/metaphors/latest/orthologs/{taxon_id}.txt.gz"
         local_zip_file = cache_dir.joinpath(f"{taxon_id}.txt.gz")
         if cache_file.exists():
-            df = load_table(cache_file, squeeze=True, index_col=0, engine="pyarrow")
+            df = load_table(cache_file, squeeze=True)
         else:
             ftp = PhylomeDBOrthologMapper._connect()
             # Download the file
@@ -1311,21 +1318,23 @@ class PhylomeDBOrthologMapper:
             os.remove(local_zip_file)
 
             # Load into pandas dataframe
-            df = pl.read_csv(cache_file.with_suffix('.txt'), separator='\t', index_col=1, engine="pyarrow")
+            df = pl.scan_csv(cache_file.with_suffix('.txt'), separator='\t').filter(
+                pl.col('taxid2') == target_id).select(
+                pl.col(['protid1', 'protid2', 'CS'])).collect()
 
             # cache file locally
             save_table(df, cache_file)
-        return df
+        return {a: (b, c) for (a, b, c) in df.select('protid1', 'protid2', 'CS').iter_rows()}
 
     @staticmethod
-    def _get_id_conversion_maps() -> Tuple[pl.DataFrame, pl.DataFrame]:
+    def _get_id_conversion_maps() -> Tuple[dict, dict]:
         cache_dir = get_todays_cache_dir()
         cache_file = cache_dir.joinpath(f'phylomedb_id_conversion.parquet')
         file_path = "/metaphors/latest/id_conversion.txt.gz"
         local_zip_file = cache_dir.joinpath("id_conversion.txt.gz")
 
         if cache_file.exists():
-            df = pl.read_parquet(cache_file, engine='auto', dtype_backend='pyarrow')
+            df = pl.read_parquet(cache_file)
         else:
             ftp = PhylomeDBOrthologMapper._connect()
             # Download the file
@@ -1342,13 +1351,13 @@ class PhylomeDBOrthologMapper:
             os.remove(local_zip_file)
 
             # Load into pandas dataframe
-            df = pl.read_csv(cache_file.with_suffix('.txt'), index_col=0, separator='\t', dtype_backend='pyarrow',
-                             usecols=[0, 2], names=['#extid', 'protid'], header=None, skiprows=1)
+            df = pl.read_csv(cache_file.with_suffix('.txt'), separator='\t',
+                             columns=[0, 2], new_columns=['#extid', 'protid'], has_header=False, skip_rows=1)
             # cache file locally
             save_table(df, cache_file)
-
-        df_inv = df.reset_index().set_index('protid')
-        return df.squeeze(), df_inv.squeeze()
+        map_fwd = dict(df.select('#extid', 'protid').iter_rows())
+        map_rev = {v: k for k, v in map_fwd.items()}
+        return map_fwd, map_rev
 
     @staticmethod
     def _connect():
@@ -1998,18 +2007,20 @@ class GeneIDTranslator:
 
     @staticmethod
     def format_annotations(results):
-        df = pl.DataFrame([line.split('\t') for line in results[1:]], schema=results[0].split('\t'))
+        df = pl.read_csv(StringIO('\n'.join(results)), separator='\t')
         # sort annotations by decreasing annotation score, so that the most relevant annotations are at the top
         if 'Annotation' in df.columns:
-            df = df.with_columns(Annotation=pl.col('Annotation').replace('', '0', return_dtype=pl.datatypes.Int16))
-            df = df.sort('Annotation', descending=False)
+            if df['Annotation'].dtype not in pl.FLOAT_DTYPES:
+                df = df.lazy().with_columns(
+                    Annotation=pl.col('Annotation').replace('', '0', return_dtype=pl.datatypes.Int16))
+            else:
+                df = df.lazy()
+            df = df.sort('Annotation', descending=True).drop('Annotation').collect()
         output_dict = {}
         duplicates = {}
 
         # sort duplicates from one-to-one mappings
-        for match in df.iter_rows():  # TODO: performance profiling and potentially optimize
-            match_from = match[1][0]
-            match_to = match[1][1]
+        for match_from, match_to in df.iter_rows():  # TODO: performance profiling and potentially optimize
             if match_from in output_dict or match_from in duplicates:
                 if match_from not in duplicates:
                     duplicates[match_from] = [output_dict.pop(match_from)]
@@ -2032,14 +2043,11 @@ class GeneIDTranslator:
 
                 rev_results = self.get_mapping_results(self.UNIPROTKB_TO, self.map_to, ids_to_rev_map, session)
                 # TODO: if job fails?
-                rev_df = pl.DataFrame([line.split('\t') for line in rev_results[1:]],
-                                      columns=rev_results[0].split('\t'))
-                rev_df['Annotation'] = (rev_df['Annotation']).astype(float)
-                rev_df = rev_df.sort_values('Annotation', ascending=False)
+                rev_df = pl.read_csv(StringIO('\n'.join(rev_results)), separator='\t').lazy().with_columns(
+                    pl.col('Annotation').cast(pl.Float64)).sort('Annotation', descending=True).drop(
+                    'Annotation').collect()
                 duplicates_chosen = {}
-                for match in rev_df.iterrows():
-                    match_from_rev = match[1][0]
-                    match_to_rev = match[1][1]
+                for match_from_rev, match_to_rev in rev_df.iter_rows():
                     if match_to_rev not in output_dict:
                         output_dict[match_to_rev] = match_from_rev
                         duplicates_chosen[match_to_rev] = match_from_rev
