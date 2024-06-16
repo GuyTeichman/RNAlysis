@@ -1026,7 +1026,9 @@ def map_taxon_id(taxon_name: Union[str, int]) -> Tuple[int, str]:
         req.raise_for_status()
     try:
         res = pl.read_csv(StringIO(req.text), separator='\t').sort(by='Taxon Id', descending=False)
-    except pl.NoDataError:
+        if len(res) == 0:
+            raise pl.exceptions.NoDataError
+    except pl.exceptions.NoDataError:
         raise ValueError(f"No taxons match the search query '{taxon_name}'.")
 
     taxon_id = res[0,'Taxon Id']
