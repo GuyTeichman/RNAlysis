@@ -365,8 +365,10 @@ def load_table(filename: Union[str, Path], drop_columns: Union[str, List[str]] =
             with open(filename) as f:
                 sample = f.readline()
                 sep = csv.Sniffer().sniff(sample).delimiter
-                print(sep)
-        df = pl.read_csv(filename, separator=sep, has_header=True, null_values=['nan', 'NaN', 'NA'], **kwargs)
+        try:
+            df = pl.read_csv(filename, separator=sep, has_header=True, null_values=['nan', 'NaN', 'NA'], **kwargs)
+        except pl.exceptions.NoDataError:
+            return pl.DataFrame()
         if squeeze and df.shape[1] == 1:
             df = df.to_series()
 
