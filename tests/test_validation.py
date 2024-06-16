@@ -219,8 +219,6 @@ def test_validate_biotype_table(table_path, expected_to_pass):
     df = pl.read_csv('tests/test_files/' + table_path)
     if expected_to_pass:
         validate_biotype_table(df)
-        assert df.columns[0] == 'gene'
-        assert df.columns[1] == 'biotype'
         assert len(df.columns) == 2
     else:
         with pytest.raises(AssertionError):

@@ -2,7 +2,7 @@ import types
 from pathlib import Path
 from typing import Union, Iterable, Tuple
 
-import pandas as pd
+import polars as pl
 import typing_extensions
 
 
@@ -25,7 +25,7 @@ def check_is_df_like(inp):
     :return: True if pandas DataFrame, False if a string/Path object that leads to a .csv file.\
     Raises ValueError otherwise.
     """
-    if isinstance(inp, pd.DataFrame):
+    if isinstance(inp, pl.DataFrame):
         return True
     elif isinstance(inp, str):
         if inp[-4::] == '.csv':
@@ -140,7 +140,7 @@ def isiterable(obj):
         return True
 
 
-def validate_biotype_table(biotype_df: pd.DataFrame):
+def validate_biotype_table(biotype_df: pl.DataFrame):
     """
     Assert legality of Biotype Reference Table, and rename column names to standard names ('gene' and 'biotype').
     :param biotype_df: the loaded Biotype Reference Table
@@ -153,7 +153,7 @@ def validate_biotype_table(biotype_df: pd.DataFrame):
                0] >= 2, f"Biotype Reference Table must have at least two rows, found only  {biotype_df.shape[0]}!"
 
 
-def validate_attr_table(attr_df: pd.DataFrame):
+def validate_attr_table(attr_df: pl.DataFrame):
     """
     Assert legality of Attribute Reference Table, and renames the first column to standard name ('gene').
     :param attr_df:
