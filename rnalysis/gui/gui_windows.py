@@ -239,7 +239,7 @@ class DataFrameModel(QtCore.QAbstractTableModel):
     def headerData(self, section: int, orientation: QtCore.Qt.Orientation, role: int = QtCore.Qt.DisplayRole):
         if role == QtCore.Qt.DisplayRole:
             if orientation == QtCore.Qt.Horizontal:
-                return self._dataframe.columns[section+1]
+                return self._dataframe.columns[section + 1]
             else:
                 return str(self._dataframe.row(section)[0])
         return QtCore.QVariant()
@@ -252,7 +252,7 @@ class DataFrameModel(QtCore.QAbstractTableModel):
     def columnCount(self, parent=QtCore.QModelIndex()):
         if parent.isValid():
             return 0
-        return self._dataframe.width - 1
+        return max(0, self._dataframe.width - 1)
 
     def data(self, index, role=QtCore.Qt.DisplayRole):
         if not index.isValid() or not (0 <= index.row() < self.rowCount()
@@ -291,14 +291,14 @@ class DataFramePreviewModel(DataFrameModel):
             shape = (shape[0], 1)
 
         n_rows = min(2, shape[0])
-        n_cols = min(3, shape[1]-1)
+        n_cols = min(3, shape[1] - 1)
         if isinstance(df, pl.DataFrame):
             df_preview = df.head(n_rows).select(df.columns[0:n_cols + 1])  # Exclude the first column
             df_preview = df_preview.cast(pl.String)  # Cast to string data type
             if n_rows < shape[0]:
                 dot_row = pl.DataFrame({col: ['...'] for col in df_preview.columns})
                 df_preview = pl.concat([df_preview, dot_row], how='vertical')
-            if n_cols < shape[1]:
+            if n_cols < shape[1]-1:
                 df_preview = df_preview.with_columns(pl.lit('...').alias('...'))
         elif isinstance(df, pl.Series):
             df_preview = df.head(n_rows)
@@ -368,7 +368,7 @@ class DataFrameView(DataView):
         shape = self.data.shape
         if len(shape) == 1:
             shape = (shape[0], 1)
-        self.label = QtWidgets.QLabel(f"Table '{name}': {shape[0]} rows, {shape[1]-1} columns")
+        self.label = QtWidgets.QLabel(f"Table '{name}': {shape[0]} rows, {shape[1] - 1} columns")
 
         self.data_view = gui_widgets.ReactiveTableView()
         self.save_button = QtWidgets.QPushButton('Save table', self)

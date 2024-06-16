@@ -95,22 +95,20 @@ def test_HowToCiteWindow(qtbot, monkeypatch):
 
 
 @pytest.mark.parametrize('df,shape_truth', [
-    (pd.DataFrame([[1, 2, 3], [4, 5, 6], [7, 8, 9]]), (3, 3)),
-    (pd.DataFrame([[1, 2, 3, 0], [4, 5, 6, 0]]), (2, 4)),
-    (pd.DataFrame([[1, 2, 3], [4, 5, 6], [7, 8, 9], [10, 11, 12], [13, 14, 15]]), (3, 3)),
-    (pd.Series([1, 2]), (2, 1)),
-    (pd.Series([1, 2, 3, 4, 5]), (3, 1)),
-    (pd.Series(), (0, 1)),
-    (pd.DataFrame(), (0, 0))
+    (pl.DataFrame([[1, 2, 3], [4, 5, 6], [7, 8, 9]]), (3, 3)),
+    (pl.DataFrame([[1, 2, 3, 0], [4, 5, 6, 0]]), (3, 2)),
+    (pl.DataFrame([[1, 2, 3], [4, 5, 6], [7, 8, 9], [10, 11, 12], [13, 14, 15]]), (3, 5)),
+    (pl.DataFrame([[1, 2, 3], [4, 5, 6], [7, 8, 9], [10, 11, 12], [13, 14, 15], [16, 17, 18]]), (3, 5)),
+    (pl.DataFrame(), (0, 0))
 ])
 def test_DataFramePreviewModel(qtbot, df, shape_truth):
     model = DataFramePreviewModel(df)
 
     assert model._dataframe.shape == shape_truth
     if shape_truth[0] > 2:
-        assert np.all(model._dataframe.iloc[-1, :] == "...")
+        assert np.all(model._dataframe[-1, :].to_pandas() == "...")
     if shape_truth[1] > 3:
-        assert np.all(model._dataframe.iloc[:, -1] == "...")
+        assert np.all(model._dataframe[:, -1].to_pandas() == "...")
 
 
 @pytest.mark.parametrize('gene_set', [{1, 2, 3}, {'a', 'b', 'c', 'd'}, set()])
@@ -145,13 +143,10 @@ def test_GeneSetView_save(qtbot, gene_set, truth, monkeypatch):
 
 
 @pytest.mark.parametrize('df,shape_truth', [
-    (pd.DataFrame([[1, 2, 3], [4, 5, 6], [7, 8, 9]]), (3, 3)),
-    (pd.DataFrame([[1, 2, 3, 0], [4, 5, 6, 0]]), (2, 4)),
-    (pd.DataFrame([[1, 2, 3], [4, 5, 6], [7, 8, 9], [10, 11, 12], [13, 14, 15]]), (5, 3)),
-    (pd.Series([1, 2]), (2, 1)),
-    (pd.Series([1, 2, 3, 4, 5]), (5, 1)),
-    (pd.Series(), (0, 1)),
-    (pd.DataFrame(), (0, 0))
+    (pl.DataFrame([[1, 2, 3], [4, 5, 6], [7, 8, 9]]), (3, 2)),
+    (pl.DataFrame([[1, 2, 3, 0], [4, 5, 6, 0]]), (4, 1)),
+    (pl.DataFrame([[1, 2, 3], [4, 5, 6], [7, 8, 9], [10, 11, 12], [13, 14, 15]]), (3, 4)),
+    (pl.DataFrame([[],[]]), (0, 0))
 ])
 def test_DataFrameView_init(qtbot, df, shape_truth):
     qtbot, dialog = widget_setup(qtbot, DataFrameView, df, 'my df name')
@@ -163,13 +158,10 @@ def test_DataFrameView_init(qtbot, df, shape_truth):
 
 
 @pytest.mark.parametrize('df,shape_truth', [
-    (pd.DataFrame([[1, 2, 3], [4, 5, 6], [7, 8, 9]], columns=['a', 'b', 'c']), (3, 3)),
-    (pd.DataFrame([[1, 2, 3, 0], [4, 5, 6, 0]], columns=['a', 'b', 'c', 'd']), (2, 4)),
-    (pd.DataFrame([[1, 2, 3], [4, 5, 6], [7, 8, 9], [10, 11, 12], [13, 14, 15]], columns=['a', 'b', 'c']), (5, 3)),
-    (pd.Series([1, 2], name='a'), (2, 1)),
-    (pd.Series([1, 2, 3, 4, 5], name='a'), (5, 1)),
-    (pd.Series(), (0, 1)),
-    (pd.DataFrame(), (0, 0))
+    (pl.DataFrame([[1, 2, 3], [4, 5, 6], [7, 8, 9]], schema=['a', 'b', 'c']), (3, 3)),
+    (pl.DataFrame([[1, 2, 3, 0], [4, 5, 6, 0]], schema=['a', 'b', 'c', 'd']), (2, 4)),
+    (pl.DataFrame([[1, 2, 3], [4, 5, 6], [7, 8, 9], [10, 11, 12], [13, 14, 15]], schema=['a', 'b', 'c']), (5, 3)),
+    (pl.DataFrame([]), (0, 0))
 ])
 def test_DataFrameView_save(qtbot, monkeypatch, df, shape_truth):
     pth = 'tests/test_files/my_dataframe_saved_file.csv'
@@ -182,13 +174,8 @@ def test_DataFrameView_save(qtbot, monkeypatch, df, shape_truth):
     try:
         qtbot.mouseClick(dialog.save_button, LEFT_CLICK)
         assert Path(pth).exists()
-        if isinstance(df, pd.DataFrame):
-            assert df.equals(pd.read_csv(pth, index_col=0))
-        else:
-            if len(df) == 0:
-                assert df.to_frame().shape == pd.read_csv(pth, index_col=0).shape
-            else:
-                assert df.to_frame().equals(pd.read_csv(pth, index_col=0))
+        assert df.equals(io.load_table(pth))
+
     finally:
         if Path(pth).exists():
             Path(pth).unlink()
@@ -378,13 +365,13 @@ def test_splash_screen(qtbot):
 
 @pytest.mark.parametrize('pth', ['tests/test_files/test_deseq.csv', 'tests/test_files/fc_1_nan.csv'])
 def test_dataframe_model(qtmodeltester, pth):
-    model = DataFrameModel(pd.read_csv(pth, index_col=0))
+    model = DataFrameModel(pl.read_csv(pth))
     qtmodeltester.check(model)
 
 
 @pytest.mark.parametrize('pth', ['tests/test_files/test_deseq.csv', 'tests/test_files/fc_1_nan.csv'])
 def test_dataframe_preview_model(qtmodeltester, pth):
-    model = DataFramePreviewModel(pd.read_csv(pth, index_col=0))
+    model = DataFramePreviewModel(pl.read_csv(pth))
     qtmodeltester.check(model)
 
 
