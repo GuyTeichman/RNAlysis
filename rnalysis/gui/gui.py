@@ -18,7 +18,7 @@ from typing import List, Tuple, Union, Callable, Type
 import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
-import pandas as pd
+import polars as pl
 import yaml
 from PyQt5 import QtCore, QtWidgets, QtGui
 from joblib import parallel_backend
@@ -404,7 +404,7 @@ class DiffExpWindow(gui_windows.FuncExternalWindow):
             self.init_lrt_ui()
 
     def init_design_mat(self):
-        design_mat = io.load_table(self.param_widgets['design_matrix'].text(), index_col=0)
+        design_mat = io.load_table(self.param_widgets['design_matrix'].text())
         for factor in design_mat.columns:
             assert parsing.slugify(factor) == factor, f"Invalid factor name '{factor}': contains invalid characters." \
                                                       f" \nSuggested alternative name: '{parsing.slugify(factor)}'. "
@@ -1183,7 +1183,7 @@ class SetOperationWindow(gui_widgets.MinMaxDialog):
 
             first_obj = self.available_objects[primary_set_name][0].obj()
             if isinstance(first_obj, set):
-                first_obj = filtering.Filter.from_dataframe(pd.DataFrame(index=list(first_obj)), 'placeholder')
+                first_obj = filtering.Filter.from_dataframe(pl.DataFrame([list(first_obj)]), 'placeholder')
             other_objs = []
             for name in set_names:
                 if name != primary_set_name:
@@ -1590,13 +1590,13 @@ class TabPage(QtWidgets.QWidget):
             new_id = JOB_COUNTER.get_id()
             self.itemSpawned.emit(f"'{source_name}'\noutput", new_id, job_id, outputs)
             self.featureSetCreated.emit(outputs, new_id)
-        elif isinstance(outputs, (pd.DataFrame, pd.Series)):
+        elif isinstance(outputs, (pl.DataFrame, pl.Series)):
             new_id = JOB_COUNTER.get_id()
             self.itemSpawned.emit(f"'{source_name}'\noutput", new_id, job_id, outputs)
             self.object_views.append(gui_windows.DataFrameView(outputs, source_name, self))
             self.object_views[-1].show()
         elif isinstance(outputs, np.ndarray):
-            df = pd.DataFrame(outputs)
+            df = pl.DataFrame(outputs)
             self.process_outputs(df, job_id, source_name)
         elif isinstance(outputs, plt.Figure):
             new_id = JOB_COUNTER.get_id()
@@ -2869,7 +2869,7 @@ class CloseTabCommand(QtWidgets.QUndoCommand):
 
     def undo(self):
         item = io.load_cached_gui_file(self.filename)
-        if isinstance(item, pd.DataFrame):
+        if isinstance(item, pl.DataFrame):
             item = self.obj_type.from_dataframe(item, self.tab_name, **self.kwargs)
 
         self.tab_container.new_tab_from_item(item, self.tab_name, self.tab_id)
@@ -2961,7 +2961,7 @@ class SetOpInplacCommand(InplaceCommand):
         is_filter_obj = validation.isinstanceinh(self.tab.obj(), filtering.Filter)
         first_obj = self.tab.obj()
         if not is_filter_obj:
-            first_obj = filtering.Filter.from_dataframe(pd.DataFrame(index=first_obj), 'placeholder')
+            first_obj = filtering.Filter.from_dataframe(pl.DataFrame(index=first_obj), 'placeholder')
         partial = functools.partial(getattr(first_obj, self.func_name), *self.args, **self.kwargs)
         worker = gui_widgets.Worker(partial, self.new_job_id, self.predecessors + [self.prev_job_id])
         worker.finished.connect(check_run_success)
@@ -3481,7 +3481,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def update_report_spawn(self, name: str, spawn_id: int, predecessor_id: int,
                             spawn: Union[filtering.Filter, enrichment.FeatureSet,
-                            pd.DataFrame, plt.Figure, generic.GenericPipeline]):
+                            pl.DataFrame, plt.Figure, generic.GenericPipeline]):
         if not self._generate_report:
             return
         if spawn is None:
@@ -3497,18 +3497,18 @@ class MainWindow(QtWidgets.QMainWindow):
     def is_valid_spawn(spawn: object):
         if validation.isinstanceinh(spawn, filtering.Filter) \
             or validation.isinstanceinh(spawn, enrichment.FeatureSet) \
-            or isinstance(spawn, (pd.Series, pd.DataFrame, plt.Figure, Path)) \
+            or isinstance(spawn, (pl.Series, pl.DataFrame, plt.Figure, Path)) \
             or validation.isinstanceinh(spawn, generic.GenericPipeline):
             return True
         return False
 
     @staticmethod
-    def _get_spawn_type(spawn: Union[filtering.Filter, enrichment.FeatureSet, pd.DataFrame, plt.Figure]):
+    def _get_spawn_type(spawn: Union[filtering.Filter, enrichment.FeatureSet, pl.DataFrame, plt.Figure]):
         if validation.isinstanceinh(spawn, filtering.Filter):
             spawn_type = FILTER_OBJ_TYPES_INV.get(type(spawn).__name__, 'Other table')
         elif validation.isinstanceinh(spawn, enrichment.FeatureSet):
             spawn_type = 'Gene set'
-        elif isinstance(spawn, (pd.Series, pd.DataFrame, plt.Figure, Path)):
+        elif isinstance(spawn, (pl.Series, pl.DataFrame, plt.Figure, Path)):
             spawn_type = 'Other output'
         elif validation.isinstanceinh(spawn, generic.GenericPipeline):
             spawn_type = 'Pipeline'
@@ -3517,14 +3517,14 @@ class MainWindow(QtWidgets.QMainWindow):
         return spawn_type
 
     @staticmethod
-    def _cache_spawn(spawn: Union[filtering.Filter, enrichment.FeatureSet, pd.DataFrame], suffix: str):
+    def _cache_spawn(spawn: Union[filtering.Filter, enrichment.FeatureSet, pl.DataFrame], suffix: str):
         obj = spawn
         if validation.isinstanceinh(spawn, filtering.Filter):
             obj = spawn.df
             filename = parsing.slugify(f'{suffix}_{spawn.fname.stem}') + '.parquet'
         elif validation.isinstanceinh(spawn, enrichment.FeatureSet):
             filename = parsing.slugify(f'{suffix}_{spawn.set_name}') + '.txt'
-        elif isinstance(spawn, (pd.Series, pd.DataFrame)):
+        elif isinstance(spawn, (pl.Series, pl.DataFrame)):
             filename = parsing.slugify(suffix) + '.parquet'
         elif isinstance(spawn, plt.Figure):
             filename = parsing.slugify(suffix) + '.svg'
@@ -3539,7 +3539,7 @@ class MainWindow(QtWidgets.QMainWindow):
         return filename
 
     @staticmethod
-    def _format_report_desc(obj: Union[filtering.Filter, enrichment.FeatureSet, pd.DataFrame], filename: str,
+    def _format_report_desc(obj: Union[filtering.Filter, enrichment.FeatureSet, pl.DataFrame], filename: str,
                             obj_type: str):
         href = Path('data').joinpath(filename).as_posix()
         if validation.isinstanceinh(obj, filtering.Filter):
@@ -3555,7 +3555,7 @@ class MainWindow(QtWidgets.QMainWindow):
             items.append('...')
             desc = f'{obj_type}:<br>"{obj.set_name}"<br>{parsing.items_to_html_table(items)}' \
                    f'{len(obj.gene_set)} features'
-        elif isinstance(obj, (pd.DataFrame, pd.Series)):
+        elif isinstance(obj, (pl.DataFrame, pl.Series)):
             desc = parsing.df_to_html(obj)
         elif isinstance(obj, plt.Figure):
             desc = f'<img src="data/{filename}" alt="Figure" height="400">'
@@ -3662,9 +3662,9 @@ class MainWindow(QtWidgets.QMainWindow):
     @staticmethod
     def _filename_to_gene_set(filename: str):
         if filename.endswith('.csv'):
-            gene_set = set(pd.read_csv(filename, index_col=0).index)
+            gene_set = parsing.data_to_set(pl.scan_csv(filename).select(pl.first()).collect())
         elif filename.endswith('.tsv'):
-            gene_set = set(pd.read_csv(filename, index_col=0, sep='\t').index)
+            gene_set =  parsing.data_to_set(pl.scan_csv(filename, separator='\t').select(pl.first()).collect())
         else:
             with open(filename) as f:
                 gene_set = {line.strip() for line in f.readlines()}
@@ -4074,7 +4074,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 self.tabs.setCurrentIndex(i)
                 return
 
-    def display_enrichment_results(self, result: pd.DataFrame, gene_set_name: str):
+    def display_enrichment_results(self, result: pl.DataFrame, gene_set_name: str):
         df_window = gui_windows.DataFrameView(result, f'Enrichment results for set "{gene_set_name}"', self)
         self.enrichment_results.append(df_window)
         df_window.show()
@@ -4460,7 +4460,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
                 if validation.isinstanceinh(output, filtering.Filter):
                     self.new_tab_from_filter_obj(output, output_id)
-                elif isinstance(output, pd.DataFrame):
+                elif isinstance(output, pl.DataFrame):
                     self.tabs.currentWidget().object_views.append(
                         gui_windows.DataFrameView(output, source_name, self.tabs.currentWidget()))
                     self.tabs.currentWidget().object_views[-1].show()

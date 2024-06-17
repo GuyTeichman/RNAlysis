@@ -3,6 +3,7 @@ import re
 from unittest.mock import patch, Mock
 
 import matplotlib
+import polars.selectors as cs
 import pytest
 
 import rnalysis.gui.gui_report
@@ -1643,9 +1644,7 @@ def test_FilterTabPage_apply_split_clustering_function(qtbot, monkeypatch, count
     window.startedClustering.connect(my_slot)
 
     orig = window.obj().__copy__()
-
     truth = orig.split_kmeans(n_clusters=3, random_seed=42)
-    truth = sorted(truth, key=lambda obj: sorted(obj.df.index)[0])
 
     window.stack_buttons[4].click()
     qtbot.keyClicks(window.stack.currentWidget().func_combo, filtering.CountFilter.split_kmeans.readable_name)
@@ -1655,11 +1654,9 @@ def test_FilterTabPage_apply_split_clustering_function(qtbot, monkeypatch, count
                            timeout=15000) as blocker:
         qtbot.mouseClick(window.apply_button, LEFT_CLICK)
 
-    res = sorted([sig.args[0] for sig in blocker.all_signals_and_args], key=lambda obj: sorted(obj.df.index)[0])
+    res = [sig.args[0] for sig in blocker.all_signals_and_args]
     for i in range(3):
-        res[i].df.sort_index(inplace=True)
-        truth[i].df.sort_index(inplace=True)
-        assert np.all(np.isclose(res[i].df, truth[i].df, equal_nan=True))
+        assert np.allclose(res[i].df.drop(cs.first()), truth[i].df.drop(cs.first()), equal_nan=True)
 
     assert window.obj() == orig
 
@@ -2611,7 +2608,7 @@ def test_MainWindow_apply_function(qtbot, main_window_with_tabs):
     with qtbot.waitSignal(tab.filterObjectCreated, timeout=10000) as blocker:
         qtbot.mouseClick(tab.apply_button, LEFT_CLICK)
     assert blocker.args[0] == truth
-    assert np.all(np.isclose(tab.obj().df, orig.df))
+    assert np.allclose(tab.obj().df.drop(cs.first()), orig.df.drop(cs.first()))
 
     assert main_window_with_tabs.tabs.count() == 6
 
@@ -2641,8 +2638,9 @@ def test_MainWindow_get_available_objects(use_temp_settings_file, main_window_wi
     for name in res.keys():
         assert isinstance(res[name][0], TabPage)
         assert (res[name][0].obj() == objs_truth[name]) or (
-            np.all(np.isclose(np.squeeze(res[name][0].obj().df), np.squeeze(objs_truth[name].df))) and (
-            res[name][0].obj().fname == objs_truth[name].fname))
+            np.allclose(np.squeeze(res[name][0].obj().df.drop(cs.first())),
+                        np.squeeze(objs_truth[name].df.drop(cs.first()))) and (
+                    res[name][0].obj().fname == objs_truth[name].fname))
 
         assert isinstance(res[name][1], QtGui.QIcon)
 
@@ -2802,12 +2800,9 @@ def test_MainWindow_load_session(use_temp_settings_file, main_window, monkeypatc
 
     for i in range(1, main_window.tabs.count()):
         obj = main_window.tabs.widget(i).obj()
-        if isinstance(obj,filtering.Filter):
-            print(obj.df)
-            print(objs_truth[i].df)
-            print(obj.df == objs_truth[i].df)
-            print(np.all(obj.df == objs_truth[i].df))
-        assert (obj == objs_truth[i]) or (obj.df.equals(objs_truth[i].df) and (obj.fname == objs_truth[i].fname))
+
+        assert (obj == objs_truth[i]) or (np.allclose(obj.df.drop(cs.first()), objs_truth[i].df.drop(cs.first())) and (
+            obj.fname == objs_truth[i].fname))
 
 
 def test_MainWindow_about(main_window, monkeypatch):
