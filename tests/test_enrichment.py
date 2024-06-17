@@ -43,7 +43,7 @@ def all_genes_set():
 @pytest.fixture(scope='module')
 def protein_coding_set():
     df = io.load_table('tests/test_files/biotype_ref_table_for_tests.csv')
-    return parsing.data_to_set(df.filter(pl.col('bioType') == 'protein_coding').select(pl.first()))
+    return parsing.data_to_set(df.filter(pl.col('biotype') == 'protein_coding').select(pl.first()))
 
 
 def test_featureset_api():

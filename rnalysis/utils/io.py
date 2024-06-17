@@ -356,6 +356,9 @@ def load_table(filename: Union[str, Path], drop_columns: Union[str, List[str]] =
         kwargs['comment_char'] = comment
     if filename.suffix.lower() == '.parquet':
         df = pl.read_parquet(filename)
+        # handle edge cases of parquet files that were exported from pandas DataFrames
+        if '__index_level_0__' in df.columns:
+            df = df.select(pl.col('__index_level_0__').alias('')).with_columns(df.select(pl.exclude('__index_level_0__')))
     else:
         if filename.suffix.lower() == '.csv':
             sep = ','

@@ -1389,7 +1389,7 @@ def test_FilterTabPage_init(qtbot):
     (tuple(), []),
     (filtering.CountFilter('tests/test_files/counted.csv'), ['itemSpawned', 'filterObjectCreated']),
     (enrichment.FeatureSet({'a', 'b', 'c'}, 'set name'), ['itemSpawned', 'featureSetCreated']),
-    (pd.DataFrame([1, 2, 3]), ['itemSpawned']),
+    (pl.DataFrame([1, 2, 3]), ['itemSpawned']),
     (plt.Figure(), ['itemSpawned']),
     ('filterlist', []),
     ('dict', []),
@@ -1420,7 +1420,7 @@ def test_FilterTabPage_process_outputs_signals(qtbot, outputs, exp_signals):
     (enrichment.FeatureSet({'a', 'b', 'c'}, 'set name'), [], [(enrichment.FeatureSet({'a', 'b', 'c'}, 'set name'), 42)],
      [("'source name'\noutput", 42, -1, enrichment.FeatureSet({'a', 'b', 'c'}, 'set name'))]),
 
-    (pd.DataFrame([1, 2, 3]), [], [], [("'source name'\noutput", 42, -1, pd.DataFrame([1, 2, 3]))]),
+    (pl.DataFrame([1, 2, 3]), [], [], [("'source name'\noutput", 42, -1, pl.DataFrame([1, 2, 3]))]),
 
     (plt.Figure(), [], [], [("'source name'\ngraph", 42, -1, plt.gcf())]),
 
@@ -1430,8 +1430,8 @@ def test_FilterTabPage_process_outputs_signals(qtbot, outputs, exp_signals):
      [("'source name'\noutput", 42, -1, filtering.Filter('tests/test_files/counted.csv')),
       ("'source name'\noutput", 42, -1, filtering.DESeqFilter('tests/test_files/test_deseq.csv'))]),
 
-    ({'out1': plt.Figure(), 'out2': pd.DataFrame(), 'other': 'some str'}, [], [],
-     [("'source name'\ngraph", 42, -1, plt.gcf()), ("'source name'\noutput", 42, -1, pd.DataFrame())]),
+    ({'out1': plt.Figure(), 'out2': pl.DataFrame(), 'other': 'some str'}, [], [],
+     [("'source name'\ngraph", 42, -1, plt.gcf()), ("'source name'\noutput", 42, -1, pl.DataFrame())]),
 
     ([], [], [], []),
 
@@ -1504,7 +1504,7 @@ def test_FilterTabPage_cache(qtbot, monkeypatch):
     cached = []
 
     def mock_cache(obj, filename):
-        assert isinstance(obj, pd.DataFrame)
+        assert isinstance(obj, pl.DataFrame)
         assert obj.equals(filt.df)
         cached.append(True)
 
@@ -2506,8 +2506,8 @@ def test_MainWindow_import_multiple_gene_sets(main_window_with_tabs, monkeypatch
             with open(filename) as f:
                 truth_set = set(f.read().split())
         else:
-            df = io.load_table(filename, index_col=0)
-            truth_set = set(df.index)
+            df = io.load_table(filename)
+            truth_set = parsing.data_to_set(df.select(pl.first()))
         truth_featureset = enrichment.FeatureSet(truth_set, Path(filename).stem)
         truth.append(truth_featureset)
 
@@ -2530,8 +2530,8 @@ def test_MainWindow_import_gene_set(main_window_with_tabs, monkeypatch, filename
         with open(filename) as f:
             truth_set = enrichment.FeatureSet(set(f.read().split()), Path(filename).stem)
     else:
-        df = io.load_table(filename, index_col=0)
-        truth_set = enrichment.FeatureSet(set(df.index), Path(filename).stem)
+        df = io.load_table(filename)
+        truth_set = enrichment.FeatureSet(parsing.data_to_set(df.select(pl.first())), Path(filename).stem)
 
     def mock_get_file(*args, **kwargs):
         return filename, '.csv'
@@ -2583,9 +2583,9 @@ def test_MainWindow_export_gene_set(use_temp_settings_file, main_window_with_tab
 def test_MainWindow_copy_gene_set(main_window_with_tabs, ind, gene_set):
     main_window_with_tabs.tabs.setCurrentIndex(1)
     main_window_with_tabs.copy_action.trigger()
-    txt = QtWidgets.QApplication.clipboard().text()
-    assert len(txt.split()) == len(gene_set)
-    assert sorted(gene_set) == sorted(txt.split())
+    gene_ids = QtWidgets.QApplication.clipboard().text().split()
+    assert len(gene_ids) == len(gene_set)
+    assert sorted(gene_set) == sorted(gene_ids)
 
 
 def test_MainWindow_add_pipeline(main_window, monkeypatch):
@@ -2801,9 +2801,13 @@ def test_MainWindow_load_session(use_temp_settings_file, main_window, monkeypatc
     assert {key: val[0] for key, val in main_window.pipelines.items()} == pipelines_truth
 
     for i in range(1, main_window.tabs.count()):
-        assert (main_window.tabs.widget(i).obj() == objs_truth[i]) or (
-            np.all(np.isclose(main_window.tabs.widget(i).obj().df, objs_truth[i].df)) and (
-            main_window.tabs.widget(i).obj().fname == objs_truth[i].fname))
+        obj = main_window.tabs.widget(i).obj()
+        if isinstance(obj,filtering.Filter):
+            print(obj.df)
+            print(objs_truth[i].df)
+            print(obj.df == objs_truth[i].df)
+            print(np.all(obj.df == objs_truth[i].df))
+        assert (obj == objs_truth[i]) or (obj.df.equals(objs_truth[i].df) and (obj.fname == objs_truth[i].fname))
 
 
 def test_MainWindow_about(main_window, monkeypatch):
@@ -3264,7 +3268,7 @@ class TestMainWindowJobRunning:
     def test_finish_enrichment(self, main_window, mocker, monkeypatch):
         worker_output = mocker.Mock(spec=gui_widgets.WorkerOutput)
         worker_output.raised_exception = None
-        worker_output.result = [mocker.Mock(spec=pd.DataFrame),
+        worker_output.result = [mocker.Mock(spec=pl.DataFrame),
                                 mocker.Mock(spec=enrichment.enrichment_runner.EnrichmentRunner)]
         worker_output.emit_args = ["set_name"]
         worker_output.job_id = 1
@@ -3368,7 +3372,7 @@ class TestMainWindowJobRunning:
     def test_finish_enrichment_report_enabled(self, main_window, mocker, monkeypatch):
         worker_output = mocker.Mock(spec=gui_widgets.WorkerOutput)
         worker_output.raised_exception = None
-        worker_output.result = [mocker.Mock(spec=pd.DataFrame),
+        worker_output.result = [mocker.Mock(spec=pl.DataFrame),
                                 mocker.Mock(spec=enrichment.enrichment_runner.EnrichmentRunner)]
         worker_output.emit_args = ["set_name"]
         worker_output.job_id = 1
@@ -3387,7 +3391,7 @@ class TestMainWindowJobRunning:
     def test_finish_enrichment_report_disabled(self, main_window, mocker, monkeypatch):
         worker_output = mocker.Mock(spec=gui_widgets.WorkerOutput)
         worker_output.raised_exception = None
-        worker_output.result = [mocker.Mock(spec=pd.DataFrame),
+        worker_output.result = [mocker.Mock(spec=pl.DataFrame),
                                 mocker.Mock(spec=enrichment.enrichment_runner.EnrichmentRunner)]
         worker_output.emit_args = ["set_name"]
         worker_output.job_id = 1

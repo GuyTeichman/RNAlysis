@@ -134,8 +134,8 @@ def test_describe(basic_countfilter, basic_deseqfilter):
     default_percentiles = (0.01, 0.25, 0.5, 0.75, 0.99)
     deciles = [i / 10 for i in range(1, 10)]
     for filter_obj, df in zip([basic_countfilter, basic_deseqfilter, fc], [count_df, deseq_df, fc_df]):
-        assert np.all(filter_obj.describe() == df.describe(percentiles=default_percentiles))
-        assert np.all(filter_obj.describe(deciles) == df.describe(percentiles=deciles))
+        assert filter_obj.describe().equals(df.describe(percentiles=default_percentiles))
+        assert filter_obj.describe(deciles).equals(df.describe(percentiles=deciles))
 
 
 def test_print_features_api(basic_countfilter):
@@ -164,7 +164,7 @@ def test_filter_translate_gene_ids(map_to, map_from, remove_unmapped_genes, expe
         return io.GeneIDDict({})
 
     monkeypatch.setattr(io.GeneIDTranslator, 'run', mock_map_gene_ids)
-    truth = io.load_table(expected, index_col=0)
+    truth = io.load_table(expected)
 
     res = basic_countfilter.translate_gene_ids(map_to, map_from, remove_unmapped_genes, inplace=False)
     assert res.df.sort(pl.first()).equals(truth.sort(pl.first()))
@@ -257,25 +257,29 @@ def test_countfilter_normalize_to_tpm(monkeypatch, gtf_path, feature_type, metho
 def test_countfilter_normalize_rle(basic_countfilter):
     truth = io.load_table(r"tests/test_files/test_norm_rle.csv")
     not_inplace, factors = basic_countfilter.normalize_rle(inplace=False, return_scaling_factors=True)
-    assert np.isclose(truth.drop(cs.first()), not_inplace.df.drop(cs.first())).all()
+    assert np.allclose(truth.drop(cs.first()), not_inplace.df.drop(cs.first()))
 
     norm_df = basic_countfilter._norm_scaling_factors(factors)
-    assert np.isclose(truth.drop(cs.first()), norm_df.drop(cs.first())).all()
+    assert np.allclose(truth.drop(cs.first()), norm_df.drop(cs.first()))
     basic_countfilter.normalize_rle()
-    assert np.isclose(truth.drop(cs.first()), basic_countfilter.df.drop(cs.first())).all()
+    assert np.allclose(truth.drop(cs.first()), basic_countfilter.df.drop(cs.first()))
 
 
 def test_countfilter_normalize_tmm(basic_countfilter):
     truth = io.load_table(r"tests/test_files/test_norm_tmm.csv")
     not_inplace, factors = basic_countfilter.normalize_tmm(ref_column='cond1', inplace=False,
                                                            return_scaling_factors=True)
-    assert np.isclose(truth.drop(cs.first()), not_inplace.df.drop(cs.first())).all()
+    print(basic_countfilter.df)
+    print(truth)
+    print(not_inplace.df)
+    print(factors)
+    assert np.allclose(truth.drop(cs.first()), not_inplace.df.drop(cs.first()))
 
     norm_df = basic_countfilter._norm_scaling_factors(factors)
-    assert np.isclose(truth.drop(cs.first()), norm_df.drop(cs.first())).all()
+    assert np.allclose(truth.drop(cs.first()), norm_df.drop(cs.first()))
 
     basic_countfilter.normalize_tmm(ref_column='cond1')
-    assert np.isclose(truth.drop(cs.first()), basic_countfilter.df.drop(cs.first())).all()
+    assert np.allclose(truth.drop(cs.first()), basic_countfilter.df.drop(cs.first()))
 
 
 def test_countfilter_normalize_median_of_ratios(basic_countfilter):
@@ -883,7 +887,7 @@ def test_countfilter_filter_biotype_from_ref_table_multiple():
     truth = io.load_table('tests/test_files/counted_biotype_piRNA_protein_coding.csv').sort(pl.first())
     h = CountFilter("tests/test_files/counted_biotype.csv")
     both = h.filter_biotype_from_ref_table(['protein_coding', 'piRNA'], ref=__biotype_ref__, inplace=False)
-    assert np.all(truth == both.df.sort(pl.first()))
+    assert both.df.sort(pl.first()).equals(truth)
 
 
 def test_countfilter_filter_biotype_from_ref_table_multiple_opposite():
@@ -1187,6 +1191,8 @@ def test_biotypes_from_ref_table():
     truth = io.load_table('tests/test_files/biotypes_truth.csv').sort(pl.first())
     c = CountFilter('tests/test_files/counted_biotype.csv')
     df = c.biotypes_from_ref_table(ref=__biotype_ref__).sort(pl.first())
+    print(truth)
+    print(df)
     assert df.equals(truth)
 
 
@@ -1249,7 +1255,7 @@ def test_sort_with_na_first():
 
 def test_sort_descending(basic_countfilter):
     basic_countfilter.sort(by='cond3', ascending=False, inplace=True)
-    assert basic_countfilter.df['cond3'].is_monotonic_decreasing
+    assert basic_countfilter.df['cond3'].to_pandas().is_monotonic_decreasing
 
 
 def test_filter_missing_values():
@@ -1862,10 +1868,7 @@ def test_transform(filter_obj, columns, function, kwargs, matching_function):
     if columns == 'all':
         truth.df = matching_function(truth.df)
     else:
-        if len(truth.df[columns].shape) == 1:
-            truth.df[columns] = matching_function(truth.df[columns].to_frame())
-        else:
-            truth.df[columns] = matching_function(truth.df[columns])
+        truth.df = truth.df.with_columns(matching_function(truth.df.select(pl.col(columns))))
     cp = filter_obj.__copy__()
     cp.transform(function, columns, **kwargs)
 
@@ -1932,7 +1935,7 @@ def test_split_by_principal_components(components, gene_fraction, truth_paths, b
 
 ])
 def test_filter_by_kegg_annotations(monkeypatch, ids, mode, truth_path, basic_filter):
-    truth = io.load_table(truth_path, index_col=0)
+    truth = io.load_table(truth_path)
 
     def annotation_iter(self):
         annotations = [
@@ -1965,7 +1968,7 @@ def test_filter_by_kegg_annotations(monkeypatch, ids, mode, truth_path, basic_fi
 
 ])
 def test_filter_by_go_annotations(monkeypatch, ids, mode, truth_path, basic_filter):
-    truth = io.load_table(truth_path, index_col=0)
+    truth = io.load_table(truth_path)
 
     class MockGOTerm:
         def __init__(self, go_id: str):
@@ -2035,7 +2038,7 @@ def test_differential_expression_deseq2(monkeypatch, comparisons, expected_paths
         assert self.r_installation_folder == 'auto'
         assert self.comparisons == comparisons
         assert CountFilter(self.data_path) == c
-        assert io.load_table(self.design_mat_path, 0).equals(io.load_table(sample_table_path, 0))
+        assert io.load_table(self.design_mat_path).equals(io.load_table(sample_table_path))
 
         return Path(script_path).parent
 
@@ -2070,7 +2073,7 @@ def test_differential_expression_limma(monkeypatch, comparisons, expected_paths,
         assert self.r_installation_folder == 'auto'
         assert self.comparisons == comparisons
         assert CountFilter(self.data_path) == c
-        assert io.load_table(self.design_mat_path, 0).equals(io.load_table(sample_table_path, 0))
+        assert io.load_table(self.design_mat_path).equals(io.load_table(sample_table_path))
         assert self.random_effect == random_effect
 
         return Path(script_path).parent
