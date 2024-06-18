@@ -15,7 +15,8 @@ import warnings
 from pathlib import Path
 from typing import Union, List, Tuple, Literal
 
-import pandas as pd
+import polars as pl
+import polars.selectors as cs
 from tqdm.auto import tqdm
 
 from rnalysis import filtering
@@ -803,7 +804,7 @@ def featurecounts_single_end(input_folder: Union[str, Path], output_folder: Unio
                              ignore_secondary: bool = True,
                              count_fractionally: bool = False, is_long_read: bool = False,
                              report_read_assignment: Union[Literal['bam', 'sam', 'core'], None] = None,
-                             threads: PositiveInt = 1) -> Tuple[filtering.CountFilter, pd.DataFrame, pd.DataFrame]:
+                             threads: PositiveInt = 1) -> Tuple[filtering.CountFilter, pl.DataFrame, pl.DataFrame]:
     """
     Assign mapped single-end sequencing reads to specified genomic features using \
     `RSubread featureCounts <https://doi.org/10.1093/bioinformatics/btt656>`_.
@@ -861,7 +862,7 @@ def featurecounts_single_end(input_folder: Union[str, Path], output_folder: Unio
     :type threads: int > 0 (default=1)
     :return: a count matrix (CountFilter) containing feature counts for all input files, \
     a DataFrame summarizing the features reads were aligned to, and a DataFrame summarizing the alignment statistics.
-    :rtype: (filtering.CountFilter, pd.DataFrame, pd.DataFrame)
+    :rtype: (filtering.CountFilter, pl.DataFrame, pl.DataFrame)
     """
     output_folder = Path(output_folder)
     assert output_folder.exists(), 'Output folder does not exist!'
@@ -890,7 +891,7 @@ def featurecounts_paired_end(input_folder: Union[str, Path], output_folder: Unio
                              count_chimeric_fragments: bool = False, min_fragment_length: NonNegativeInt = 50,
                              max_fragment_length: Union[PositiveInt, None] = 600,
                              report_read_assignment: Union[Literal['bam', 'sam', 'core'], None] = None,
-                             threads: PositiveInt = 1) -> Tuple[filtering.CountFilter, pd.DataFrame, pd.DataFrame]:
+                             threads: PositiveInt = 1) -> Tuple[filtering.CountFilter, pl.DataFrame, pl.DataFrame]:
     """
     Assign mapped paired-end sequencing reads to specified genomic features using \
     `RSubread featureCounts <https://doi.org/10.1093/bioinformatics/btt656>`_. \
@@ -962,7 +963,7 @@ def featurecounts_paired_end(input_folder: Union[str, Path], output_folder: Unio
     :type threads: int > 0 (default=1)
     :return: a count matrix (CountFilter) containing feature counts for all input files, \
     a DataFrame summarizing the features reads were aligned to, and a DataFrame summarizing the alignment statistics.
-    :rtype: (filtering.CountFilter, pd.DataFrame, pd.DataFrame)
+    :rtype: (filtering.CountFilter, pl.DataFrame, pl.DataFrame)
     """
     output_folder = Path(output_folder)
     assert output_folder.exists(), 'Output folder does not exist!'
@@ -1035,14 +1036,15 @@ def _process_featurecounts_output(output_folder, new_sample_names):
     stats_path = Path(output_folder).joinpath('featureCounts_stats.csv')
 
     counts = filtering.CountFilter(counts_path)
-    counts.df.columns = new_sample_names
+    counts.df = counts.df.rename(
+        {oldname: newname for oldname, newname in zip(counts.df.columns[1:], new_sample_names)})
     io.save_table(counts.df, counts_path)  # re-save to reflect changes in column names
 
-    annotation = io.load_table(annotation_path, 0)
+    annotation = io.load_table(annotation_path).drop(cs.first())
     io.save_table(annotation, annotation_path)  # re-save to reflect changes in column names
 
-    stats = io.load_table(stats_path, 0)
-    stats.columns = ['Status'] + new_sample_names
+    stats = io.load_table(stats_path).drop(cs.first())
+    stats = stats.rename({oldname: newname for oldname, newname in zip(stats.columns[1:], new_sample_names)})
     io.save_table(stats, stats_path)  # re-save to reflect changes in column names
 
     return counts, annotation, stats
@@ -1966,50 +1968,58 @@ def _merge_kallisto_outputs(output_folder: Union[str, Path], new_sample_names: L
     """
     output a merged csv file of transcript estimated counts, and a merged csv file of transcript estimated TPMs.
     """
-    counts = pd.DataFrame()
-    tpm = pd.DataFrame()
+    counts = pl.DataFrame().lazy()
+    tpm = pl.DataFrame().lazy()
     for name in new_sample_names:
         abundance_path = Path(output_folder).joinpath(name, 'abundance.tsv')
         if abundance_path.exists():
-            this_df = io.load_table(abundance_path, index_col=0)
-            counts[name] = this_df['est_counts']
-            tpm[name] = this_df['tpm']
+            this_df = pl.scan_csv(abundance_path, separator='\t')
+            # add transcript IDs to the dataframe
+            if len(counts.columns) == 0:
+                counts = this_df.select(pl.first().alias(''))
+                tpm = this_df.select(pl.first().alias(''))
+
+            counts = counts.with_columns(this_df.select(pl.col('est_counts').alias(name)).collect())
+            tpm = tpm.with_columns((this_df.select(pl.col('tpm').alias(name)).collect()))
         else:
             raise FileNotFoundError(f"Could not find the kallisto output for sample '{name}' at {abundance_path}")
-    return counts, tpm
+    return counts.collect(), tpm.collect()
 
 
-def _sum_transcripts_to_genes(tpm: pd.DataFrame, counts: pd.DataFrame, gtf_path: Union[str, Path],
+def _sum_transcripts_to_genes(tpm: pl.DataFrame, counts: pl.DataFrame, gtf_path: Union[str, Path],
                               summation_method: Literal[SUMMATION_METHODS]):
     with tqdm(desc='Parsing GTF file', total=8) as pbar:
         for use_name in [False, True]:
             for use_version in [True, False]:
                 for split_ids in [True, False]:
-                    transcript_to_gene_map = genome_annotation.map_transcripts_to_genes(gtf_path, use_name, use_version,
-                                                                                        split_ids)
+                    transcript_to_gene_dict = genome_annotation.map_transcripts_to_genes(gtf_path, use_name,
+                                                                                         use_version, split_ids)
                     pbar.update(1)
-                    if len(transcript_to_gene_map) == 0:
+                    if len(transcript_to_gene_dict) == 0:
                         continue
 
+                    transcript2gene = pl.DataFrame({'Transcript ID': transcript_to_gene_dict.keys(),
+                                                    'Gene ID': transcript_to_gene_dict.values()}).lazy()
+
                     if summation_method == 'scaled_tpm':
-                        library_sizes = counts.sum(axis=0) / (10 ** 6)
-                        tpm_cpy = tpm.copy()
-                        tpm_cpy['Gene ID'] = pd.Series(transcript_to_gene_map)
-                        tpm_by_gene = tpm_cpy.groupby('Gene ID').sum()
-                        count_per_gene = tpm_by_gene.multiply(library_sizes, axis=1)
+                        library_sizes = counts.lazy().select(
+                            pl.exclude(counts.columns[0]).sum().truediv(10 ** 6)).collect()
+                        tpm_cpy = tpm.lazy().join(transcript2gene, left_on=tpm.columns[0], right_on='Transcript ID',
+                                                  how='left')
+                        tpm_by_gene = tpm_cpy.drop(cs.first()).groupby('Gene ID').sum()
+                        count_per_gene = tpm_by_gene.with_columns(
+                            [(pl.col(col) * library_sizes[col][0]).alias(col) for col in tpm.columns[1:]]).collect()
                     elif summation_method == 'raw':
-                        count_cpy = counts.copy()
-                        count_cpy['Gene ID'] = pd.Series(transcript_to_gene_map)
-                        count_per_gene = count_cpy.groupby('Gene ID').sum()
+                        count_cpy = counts.lazy().join(transcript2gene, left_on=tpm.columns[0],
+                                                       right_on='Transcript ID', how='left')
+                        count_per_gene = count_cpy.drop(cs.first()).groupby('Gene ID').sum().collect()
                     else:
                         raise ValueError(f"Invalid value for 'summation_method': '{summation_method}'.")
 
-                    if count_per_gene.shape[0] == 0:
+                    if len(count_per_gene) == 0:
                         continue
                     pbar.update(8)
-                    if isinstance(count_per_gene, pd.Series):
-                        count_per_gene = count_per_gene.to_frame()
-                    return count_per_gene
+                    return count_per_gene.sort(pl.first())
 
     raise ValueError("Failed to map transcripts to genes with the given GTF file!")
 

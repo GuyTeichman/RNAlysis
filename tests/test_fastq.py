@@ -670,8 +670,6 @@ def test_featurecounts_paired_end():
     try:
         counts, annotations, stats = featurecounts_paired_end('tests/test_files/featurecounts_tests/paired', outdir,
                                                               'tests/test_files/featurecounts_tests/test-minimum.gtf')
-        print(counts.df)
-        print(counts_truth.df)
         assert counts.df.equals(counts_truth.df)
         assert annotations.equals(annotations_truth)
         assert stats.equals(stats_truth)
