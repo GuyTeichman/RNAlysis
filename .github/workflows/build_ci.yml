@@ -78,16 +78,16 @@ jobs:
             -   name: Install kallisto
                 run: |
                     if [ "$RUNNER_OS" == "Linux" ]; then
-                         wget  https://github.com/pachterlab/kallisto/releases/download/v0.50.0/kallisto_linux-v0.50.1.tar.gz
+                         wget  https://github.com/pachterlab/kallisto/releases/download/v0.50.1/kallisto_linux-v0.50.1.tar.gz
                          tar -xvzf kallisto*.gz
                          echo "${GITHUB_WORKSPACE}/kallisto" >> $GITHUB_PATH
                     elif [ "$RUNNER_OS" == "macOS" ]; then
-                         wget  https://github.com/pachterlab/kallisto/releases/download/v0.50.0/kallisto_mac-v0.50.1.tar.gz
+                         wget  https://github.com/pachterlab/kallisto/releases/download/v0.50.1/kallisto_mac-v0.50.1.tar.gz
                          tar -xvzf kallisto*.gz
                          echo "${GITHUB_WORKSPACE}/kallisto" >> $GITHUB_PATH
                     elif [ "$RUNNER_OS" == "Windows" ]; then
                          choco install wget -y
-                         wget  https://github.com/pachterlab/kallisto/releases/download/v0.50.0/kallisto_windows-v0.50.1.zip
+                         wget  https://github.com/pachterlab/kallisto/releases/download/v0.50.1/kallisto_windows-v0.50.1.zip
                          7z x kallisto*.zip
                          echo "${GITHUB_WORKSPACE}/kallisto" >> $GITHUB_PATH
                     else
