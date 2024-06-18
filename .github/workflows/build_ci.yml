@@ -82,7 +82,7 @@ jobs:
                          tar -xvzf kallisto*.gz
                          echo "${GITHUB_WORKSPACE}/kallisto" >> $GITHUB_PATH
                     elif [ "$RUNNER_OS" == "macOS" ]; then
-                         wget  https://github.com/pachterlab/kallisto/releases/download/v0.50.1/kallisto_mac-v0.50.1.tar.gz
+                         wget  https://github.com/pachterlab/kallisto/releases/download/v0.50.1/kallisto_mac_m1-v0.50.1.tar.gz
                          tar -xvzf kallisto*.gz
                          echo "${GITHUB_WORKSPACE}/kallisto" >> $GITHUB_PATH
                     elif [ "$RUNNER_OS" == "Windows" ]; then
