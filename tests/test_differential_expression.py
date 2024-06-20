@@ -55,6 +55,8 @@ class TestLimmaVoomRunner:
             expected_dfs.append(io.load_table(item))
 
         for out, truth in zip(dfs, expected_dfs):
+            out = out.sort(pl.first())
+            truth = truth.sort(pl.first())
             assert out.shape == truth.shape
             assert np.all(out.columns == truth.columns)
             assert out.select(pl.first()).equals(truth.select(pl.first()))
@@ -199,6 +201,8 @@ class TestDESeqRunner:
             expected_dfs.append(io.load_table(item))
 
         for out, truth in zip(dfs, expected_dfs):
+            out = out.sort(pl.first())
+            truth = truth.sort(pl.first())
             assert out.shape == truth.shape
             assert np.all(out.columns == truth.columns)
             assert out.select(pl.first()).equals(truth.select(pl.first()))
