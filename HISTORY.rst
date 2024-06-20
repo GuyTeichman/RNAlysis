@@ -2,7 +2,7 @@
 History
 =======
 
-3.13.0 (2024-06-??)
+4.0.0 (2024-06-??)
 -------------------
 
 Added
@@ -11,6 +11,7 @@ Added
 
 Changed
 *******
+* RNAlysis now uses Polars instead of Pandas. This change should improve the performance of RNAlysis by multiple orders of magnitude, especially when generating automatic analysis reports.
 * The 'Hierarchical clustergram plot' function should now run faster on large datasets.
 
 Fixed
