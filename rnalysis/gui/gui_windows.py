@@ -298,7 +298,7 @@ class DataFramePreviewModel(DataFrameModel):
             if n_rows < shape[0]:
                 dot_row = pl.DataFrame({col: ['...'] for col in df_preview.columns})
                 df_preview = pl.concat([df_preview, dot_row], how='vertical')
-            if n_cols < shape[1]-1:
+            if n_cols < shape[1] - 1:
                 df_preview = df_preview.with_columns(pl.lit('...').alias('...'))
         elif isinstance(df, pl.Series):
             df_preview = df.head(n_rows)
@@ -445,6 +445,32 @@ class ErrorMessage(QtWidgets.QDialog):
         cb.clear(mode=cb.Clipboard)
         cb.setText("".join(traceback.format_exception(*self.exception)), mode=cb.Clipboard)
         self.widgets['copied_label'].setText('Copied to clipboard')
+
+
+class WhatsNewWindow(QtWidgets.QMessageBox):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        txt_path = str(Path(__file__).parent.parent.parent.joinpath('latest_changelog.md'))
+        with open(txt_path) as f:
+            text = f.read()
+
+        self.scroll = QtWidgets.QScrollArea(self)
+        self.scroll.setWidgetResizable(True)
+        self.scroll.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarPolicy.ScrollBarAlwaysOn)
+        self.content = QtWidgets.QWidget()
+        self.scroll.setWidget(self.content)
+        self.scroll_layout = QtWidgets.QVBoxLayout(self.content)
+        self.text = QtWidgets.QLabel(self.content)
+        self.text.setTextFormat(QtCore.Qt.TextFormat.MarkdownText)
+        self.text.setText(text)
+        self.text.setWordWrap(True)
+        self.scroll_layout.addWidget( self.text)
+        self.layout().addWidget(self.scroll, 0, 0, 1, self.layout().columnCount())
+        self.setWindowTitle(f"What's new in version {__version__}")
+        self.setStyleSheet("QScrollArea{min-width:900 px; min-height: 600px}"
+                           "QScrollBar:vertical {width: 40;}")
+        self.setStandardButtons(QtWidgets.QMessageBox.Ok)
+        self.buttonClicked.connect(self.close)
 
 
 class AboutWindow(QtWidgets.QMessageBox):

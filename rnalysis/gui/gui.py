@@ -3046,6 +3046,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.pipelines: typing.OrderedDict[str, (generic.GenericPipeline, int)] = OrderedDict()
         self.pipeline_window = None
 
+        self.whatsnew_window = gui_windows.WhatsNewWindow(self)
         self.about_window = gui_windows.AboutWindow(self)
         self.settings_window = gui_windows.SettingsWindow(self)
         self.settings_window.styleSheetUpdated.connect(self.update_style_sheet)
@@ -3094,6 +3095,9 @@ class MainWindow(QtWidgets.QMainWindow):
     def show_tutorial(self):
         if settings.get_show_tutorial_settings():
             self.quickstart_window.show()
+
+    def whats_new(self):
+        self.whatsnew_window.exec()
 
     def _reset_reporting(self):
         JOB_COUNTER.set_total(0)
@@ -3664,7 +3668,7 @@ class MainWindow(QtWidgets.QMainWindow):
         if filename.endswith('.csv'):
             gene_set = parsing.data_to_set(pl.scan_csv(filename).select(pl.first()).collect())
         elif filename.endswith('.tsv'):
-            gene_set =  parsing.data_to_set(pl.scan_csv(filename, separator='\t').select(pl.first()).collect())
+            gene_set = parsing.data_to_set(pl.scan_csv(filename, separator='\t').select(pl.first()).collect())
         else:
             with open(filename) as f:
                 gene_set = {line.strip() for line in f.readlines()}
@@ -3912,6 +3916,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.ask_question_action = self.create_action("Ask a &question",
                                                       functools.partial(self.open_link, self.QUESTION_URL))
         self.check_update_action = self.create_action("Check for &updates...", self.check_for_updates)
+        self.whatsnew_action = self.create_action("&What's new in RNAlysis", self.whats_new)
         self.about_action = self.create_action("&About", self.about)
         self.cite_action = self.create_action("How to &cite RNAlysis", self.cite)
 
@@ -4177,7 +4182,7 @@ class MainWindow(QtWidgets.QMainWindow):
         help_menu.addActions(
             [self.quick_start_action, self.tutorial_action, self.user_guide_action, self.faq_action,
              self.bug_report_action, self.request_feature_action, self.ask_question_action,
-             self.check_update_action, self.about_action, self.cite_action])
+             self.check_update_action, self.whatsnew_action, self.about_action, self.cite_action])
 
     def _populate_pipelines(self, menu: QtWidgets.QMenu, func: Callable, pipeline_arg: bool = True,
                             name_arg: bool = True):
@@ -4711,6 +4716,8 @@ async def run():  # pragma: no cover
         window.show()
         window.check_for_updates(False)
         window.show_tutorial()
+        if io.check_changed_version():
+            window.whats_new()
         window.prompt_auto_report_gen()
         splash.finish(window)
     sys.exit(app.exec())

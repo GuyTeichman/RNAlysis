@@ -30,8 +30,14 @@ jobs:
                     commit_message: Calculate quick-start video checksums
                     file_pattern: 'rnalysis/gui/videos/checksums/*.txt'
                     branch: master
-            -   name: Get latest changelog
-                run: python packaging/parse_changelog.py
+            -   name: Generate Changelog
+                run: python packaging/generate_changelog.py
+            -   uses: stefanzweifel/git-auto-commit-action@v4
+                with:
+                    # Commit message for the created commit.
+                    commit_message: Generate changelog
+                    file_pattern: 'latest_changelog.md'
+                    branch: master
             -   name: Create Release
                 id: create_release
                 uses: actions/create-release@v1
