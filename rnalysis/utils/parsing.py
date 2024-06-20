@@ -172,7 +172,7 @@ def data_to_list(data: Any, sort: bool = False) -> list:
         lst = data
     elif isinstance(data, (set, tuple, np.ndarray)):
         lst = list(data)
-    elif isinstance(data, (dict, int, float, bool, str, pl.DataFrame, pl.Series)):
+    elif isinstance(data, (dict, int, float, bool, str)):
         lst = [data]
     elif data is None:
         lst = [None]
