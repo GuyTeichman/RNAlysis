@@ -736,7 +736,7 @@ def test_noncategorical_enrichment_runner_plot_results(monkeypatch):
     monkeypatch.setattr(NonCategoricalEnrichmentRunner, 'enrichment_histogram', proccess_attr)
     runner = NonCategoricalEnrichmentRunner.__new__(NonCategoricalEnrichmentRunner)
     runner.attributes = ['attr1', 'attr2', 'attr3', 'attr4']
-    runner.results = {'padj': [0.05, 0.3, np.nan, 1]}
+    runner.results = pl.DataFrame({'attributes':runner.attributes,'padj': [0.05, 0.3, np.nan, 1]})
 
     res = runner.plot_results()
     assert attrs_without_nan == attrs_without_nan_truth
