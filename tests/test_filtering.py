@@ -266,13 +266,12 @@ def test_countfilter_normalize_rle(basic_countfilter):
 
 
 def test_countfilter_normalize_tmm(basic_countfilter):
-    truth = io.load_table(r"tests/test_files/test_norm_tmm.csv")
+    truth = io.load_table(r"tests/test_files/test_norm_tmm_truth.csv")
     not_inplace, factors = basic_countfilter.normalize_tmm(ref_column='cond1', inplace=False,
                                                            return_scaling_factors=True)
-    print(basic_countfilter.df)
+
     print(truth)
     print(not_inplace.df)
-    print(factors)
     assert np.allclose(truth.drop(cs.first()), not_inplace.df.drop(cs.first()))
 
     norm_df = basic_countfilter._norm_scaling_factors(factors)
@@ -848,8 +847,8 @@ def test_countfilter_split_by_reads(basic_countfilter):
     high_truth = io.load_table(r"tests/test_files/counted_above60_rpm.csv")
     low_truth = io.load_table(r"tests/test_files/counted_below60_rpm.csv")
     high, low = basic_countfilter.split_by_reads(threshold=60)
-    assert np.all(high.df.sort(pl.first()) == high_truth.sort(pl.first()))
-    assert np.all(low.df.sort(pl.first()) == low_truth.sort(pl.first()))
+    assert high.df.sort(pl.first()).equals(high_truth.sort(pl.first()))
+    assert low.df.sort(pl.first()).equals(low_truth.sort(pl.first()))
 
 
 def test_filter_percentile():
@@ -1009,7 +1008,8 @@ def test_countfilter_fold_change():
     fc = h.fold_change(['cond1_rep1', 'cond1_rep2'], ['cond2_rep1', 'cond2_rep2'])
     assert truth_num_name == fc.numerator
     assert truth_denom_name == fc.denominator
-    assert np.all(np.isclose(fc.df, truth))
+    print(fc.df == truth)
+    assert np.allclose(fc.df.select(pl.last()), truth.select(pl.last()))
 
 
 def test_fcfilter_filter_abs_fc():
@@ -1200,7 +1200,9 @@ def test_biotypes_from_ref_table_long_form():
     truth = pl.read_csv('tests/test_files/biotypes_long_format_truth.csv').sort(pl.first())
     c = CountFilter('tests/test_files/counted_biotype.csv')
     df = c.biotypes_from_ref_table(long_format=True, ref=__biotype_ref__).sort(pl.first())
-    assert np.isclose(df, truth, equal_nan=True).all()
+    print(df)
+    print(truth)
+    assert np.allclose(df.drop(cs.first()), truth.drop(cs.first()), equal_nan=True)
 
 
 def test_biotypes_from_gtf():
@@ -1214,7 +1216,7 @@ def test_biotypes_from_gtf_long_form():
     truth = pl.read_csv('tests/test_files/biotypes_long_format_truth.csv').sort(pl.first())
     c = CountFilter('tests/test_files/counted_biotype.csv')
     df = c.biotypes_from_gtf('tests/test_files/test_gtf_for_biotypes.gtf', long_format=True).sort(pl.first())
-    assert np.isclose(df, truth, equal_nan=True).all()
+    assert np.allclose(df.drop(cs.first()), truth.drop(cs.first()), equal_nan=True)
 
 
 def test_filter_by_row_sum(basic_countfilter):
@@ -1747,8 +1749,8 @@ def test_fc_randomization():
     fc1 = FoldChangeFilter("tests/test_files/fc_1.csv", 'a', 'b')
     fc2 = FoldChangeFilter("tests/test_files/fc_2.csv", "c", "d")
     res = fc1.randomization_test(fc2, random_seed=0)
-    assert np.all(truth['significant'] == res['significant'])
-    assert np.isclose(truth.iloc[:, :-1], res.iloc[:, :-1]).all()
+    assert truth['significant'].equals(res['significant'])
+    assert np.allclose(truth.drop(cs.first()), res.drop(cs.first()))
 
 
 def test_filter_save_csv():
@@ -1853,26 +1855,28 @@ def _multiply_by_3_reduce_2(df: pl.DataFrame):
     return (df * 3) - 2
 
 
-@pytest.mark.parametrize('filter_obj,columns',
-                         [(Filter('tests/test_files/counted_6cols.csv'), 'all'),
-                          (DESeqFilter('tests/test_files/test_deseq.csv'), 'baseMean'),
-                          (CountFilter('tests/test_files/counted.csv'), ['cond1', 'cond4'])])
-@pytest.mark.parametrize('function,kwargs,matching_function',
-                         [('log2', {}, _log2_plus1),
-                          ('log10', {}, _log10_plus1),
-                          (_log2_plus1, {}, _log2_plus1),
-                          ('box-cox', {}, _box_cox_plus1),
-                          (lambda x, mult, red: (x * mult) - red, {'mult': 3, 'red': 2}, _multiply_by_3_reduce_2)])
-def test_transform(filter_obj, columns, function, kwargs, matching_function):
-    truth = filter_obj.__copy__()
-    if columns == 'all':
-        truth.df = matching_function(truth.df)
-    else:
-        truth.df = truth.df.with_columns(matching_function(truth.df.select(pl.col(columns))))
-    cp = filter_obj.__copy__()
-    cp.transform(function, columns, **kwargs)
-
-    cp.df.equals(truth.df)
+@pytest.mark.parametrize('filter_obj,columns,function,kwargs,truth_path', [
+    (Filter('tests/test_files/counted_6cols.csv'), 'all', 'log2', {}, 'counted_6cols_log2.csv'),
+    (DESeqFilter('tests/test_files/test_deseq.csv'), 'baseMean', 'log2', {}, 'test_deseq_log2.csv'),
+    (CountFilter('tests/test_files/counted.csv'), ['cond1', 'cond4'], 'log2', {}, 'counted_log2.csv'),
+    (Filter('tests/test_files/counted_6cols.csv'), 'all', 'log10', {}, 'counted_6cols_log10.csv'),
+    (DESeqFilter('tests/test_files/test_deseq.csv'), 'baseMean', 'log10', {}, 'test_deseq_log10.csv'),
+    (CountFilter('tests/test_files/counted.csv'), ['cond1', 'cond4'], 'log10', {}, 'counted_log10.csv'),
+    (Filter('tests/test_files/counted_6cols.csv'), 'all', 'box-cox', {}, 'counted_6cols_boxcox.csv'),
+    (DESeqFilter('tests/test_files/test_deseq.csv'), 'baseMean', 'box-cox', {}, 'test_deseq_boxcox.csv'),
+    (CountFilter('tests/test_files/counted.csv'), ['cond1', 'cond4'], 'box-cox', {}, 'counted_boxcox.csv'),
+    (Filter('tests/test_files/counted_6cols.csv'), 'all',
+     lambda x, mult, red: (x * mult) - red, {'mult': 3, 'red': 2}, 'counted_6cols_multiply3_reduce2.csv'),
+    (DESeqFilter('tests/test_files/test_deseq.csv'), 'baseMean',
+     lambda x, mult, red: (x * mult) - red, {'mult': 3, 'red': 2}, 'test_deseq_multiply3_reduce2.csv'),
+    (CountFilter('tests/test_files/counted.csv'), ['cond1', 'cond4'],
+     lambda x, mult, red: (x * mult) - red, {'mult': 3, 'red': 2}, 'counted_multiply3_reduce2.csv')])
+def test_transform(filter_obj, columns, function, kwargs, truth_path):
+    truth = io.load_table(Path('tests/test_files/').joinpath(truth_path))
+    filter_obj.transform(function, columns, **kwargs)
+    print(filter_obj.df)
+    print(truth)
+    assert np.allclose(filter_obj.df.drop(cs.first()), truth.drop(cs.first()))
 
 
 def test_import_pipeline():
@@ -2037,7 +2041,7 @@ def test_differential_expression_deseq2(monkeypatch, comparisons, expected_paths
     def mock_run_analysis(self):
         assert self.r_installation_folder == 'auto'
         assert self.comparisons == comparisons
-        assert CountFilter(self.data_path) == c
+        assert CountFilter(self.data_path).df.equals(c.df.drop(cs.first()))
         assert io.load_table(self.design_mat_path).equals(io.load_table(sample_table_path))
 
         return Path(script_path).parent
@@ -2072,7 +2076,7 @@ def test_differential_expression_limma(monkeypatch, comparisons, expected_paths,
     def mock_run_analysis(self):
         assert self.r_installation_folder == 'auto'
         assert self.comparisons == comparisons
-        assert CountFilter(self.data_path) == c
+        assert CountFilter(self.data_path).df.equals(c.df.drop(cs.first()))
         assert io.load_table(self.design_mat_path).equals(io.load_table(sample_table_path))
         assert self.random_effect == random_effect
 
