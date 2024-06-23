@@ -17,6 +17,7 @@ Changed
 Fixed
 ******
 * Fixed bug where the visualization functions 'Plot histogram of p-values' and 'Histogram of a column' would not display a graph immediately when using the stand-alone app.
+* Fixed bug re-loading a saved session report would sometimes lead to missing connections in the analysis flow graph
 
 3.12.0 (2024-05-14)
 -------------------

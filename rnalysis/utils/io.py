@@ -236,7 +236,8 @@ class GUISessionManager:
     def _create_session_data(self, file_data: List[FileData], pipeline_data: List[PipelineData], report: dict,
                              report_item_paths: dict) -> dict:
         return {
-            'files': {file.filename: (file.item_name, file.item_type, file.item_property) for file in file_data},
+            'files': {file.filename:
+                          (file.item_name, file.item_type, file.item_property, file.item_id) for file in file_data},
             'pipelines': {},
             'metadata': self._create_metadata(len(file_data), len(pipeline_data),
                                               [file.filename for file in file_data]),
@@ -358,7 +359,8 @@ def load_table(filename: Union[str, Path], drop_columns: Union[str, List[str]] =
         df = pl.read_parquet(filename)
         # handle edge cases of parquet files that were exported from pandas DataFrames
         if '__index_level_0__' in df.columns:
-            df = df.select(pl.col('__index_level_0__').alias('')).with_columns(df.select(pl.exclude('__index_level_0__')))
+            df = df.select(pl.col('__index_level_0__').alias('')).with_columns(
+                df.select(pl.exclude('__index_level_0__')))
     else:
         if filename.suffix.lower() == '.csv':
             sep = ','
@@ -1036,8 +1038,8 @@ def map_taxon_id(taxon_name: Union[str, int]) -> Tuple[int, str]:
     except pl.exceptions.NoDataError:
         raise ValueError(f"No taxons match the search query '{taxon_name}'.")
 
-    taxon_id = res[0,'Taxon Id']
-    scientific_name = res[0,'Scientific name']
+    taxon_id = res[0, 'Taxon Id']
+    scientific_name = res[0, 'Scientific name']
 
     if res.shape[0] > 1 and not (taxon_name == taxon_id or taxon_name == scientific_name):
         warnings.warn(
