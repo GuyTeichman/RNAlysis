@@ -1,7 +1,7 @@
+import abc
 import functools
 import itertools
 import warnings
-from abc import ABC
 from typing import List, Set, Tuple, Union, Callable
 
 import joblib
@@ -108,7 +108,7 @@ class BinaryFormatClusters:
                 yield solution[i, :]
 
 
-class ArbitraryClusterer:
+class ArbitraryClusterer(abc.ABC):
     def __init__(self, labels, n_clusters, **kwargs):
         self.n_clusters_ = n_clusters
         self.labels_ = labels
@@ -397,7 +397,7 @@ class KMedoidsIter:
         return self.predict(x)
 
 
-class ClusteringRunner:
+class ClusteringRunner(abc.ABC):
     precomputed_metrics = {'spearman': pwdist.spearman_distance, 'pearson': pwdist.pearson_distance,
                            'ys1': pwdist.ys1_distance, 'yr1': pwdist.yr1_distance,
                            'jackknife': pwdist.jackknife_distance, 'sharpened_cosine': pwdist.sharpened_cosine_distance}
@@ -415,15 +415,14 @@ class ClusteringRunner:
         self.titles: list = []
         self.centers: list = []
 
-        self.data_for_plot = None
-        self.n_clusters_determine_plot = None
-
         self.data: pl.DataFrame = data
         self.power_transform: bool = power_transform
         transform = generic.standard_box_cox if power_transform else generic.standardize
         self.transform: Callable = transform
 
-        if metric is not None:
+        if metric is None:
+            self.metric = None
+        else:
             metric_name = metric.lower()
             validation.validate_clustering_parameters(self.legal_metrics.union(self.precomputed_metrics),
                                                       metric_name)
@@ -436,7 +435,7 @@ class ClusteringRunner:
                 self.transform = precomputed_transform
                 self.metric = 'precomputed'
             else:
-                self.metric = metric_name.lower()
+                self.metric = metric_name
             self.clusterer_kwargs['metric'] = self.metric
             self.metric_name = metric_name
 
@@ -444,12 +443,28 @@ class ClusteringRunner:
         self.split_plots: bool = split_plots
         self.parallel_backend = parallel_backend
 
+        self.transformed_data = None
+        self.data_for_plot = None
+        self.n_clusters_determine_plot = None
+
     def run(self, plot: bool = True):
         with sklearn_parallel_backend(self.parallel_backend):
             return self._run(plot)
 
+    def _transform_data(self):
+        if self.transformed_data is None:
+            self.transformed_data = self.transform(self.data)
+
+        if self.data_for_plot is None:
+            if self.metric == 'precomputed':
+                self.data_for_plot = generic.standard_box_cox(
+                    self.data) if self.power_transform else generic.standardize(self.data)
+            else:
+                self.data_for_plot = self.transformed_data
+
+    @abc.abstractmethod
     def _run(self, plot: bool = True):
-        raise NotImplementedError
+        self._transform_data()
 
     @staticmethod
     def sort_clusters(clusterer, n_clusters: int, **arrays_to_sort: np.ndarray):
@@ -575,7 +590,7 @@ class ClusteringRunner:
         pass
 
 
-class ClusteringRunnerWithNClusters(ClusteringRunner, ABC):
+class ClusteringRunnerWithNClusters(ClusteringRunner):
     N_CLUSTERS_METHODS = {
         'silhouette': {
             'name': 'Silhouette',
@@ -605,6 +620,7 @@ class ClusteringRunnerWithNClusters(ClusteringRunner, ABC):
 
     def parse_n_clusters(self, n_clusters) -> List[int]:
         # get best n_clusters value using gap statistic/silhouette method, if requested by the user
+        self._transform_data()
         if isinstance(n_clusters, str) and n_clusters.lower() in self.N_CLUSTERS_METHODS:
             n_clusters = self.run_k_criterion(n_clusters.lower())
         elif isinstance(n_clusters, str) and n_clusters.lower() in {'gap', 'gap statistic', 'gap_statistic'}:
@@ -807,13 +823,11 @@ class KMeansRunner(ClusteringRunnerWithNClusters):
                                            split_plots, parallel_backend=parallel_backend)
 
     def _run(self, plot: bool = True) -> List[ArbitraryClusterer]:
+        super()._run(plot)
         self.clusterers = []
         # generate standardized data for plots
-        data_for_plot = generic.standard_box_cox(self.data) if self.power_transform else generic.standardize(
-            self.data)
-        self.data_for_plot = data_for_plot
         # iterate over all K values, generating clustering results and plotting them
-        data_for_algo = self.transform(self.data)
+        data_for_algo = self.transformed_data
         for this_n_clusters in self.n_clusters:
             this_n_clusters = int(this_n_clusters)
             clusterer = self.clusterer_class(n_clusters=this_n_clusters, **self.clusterer_kwargs).fit(data_for_algo)
@@ -851,18 +865,16 @@ class KMedoidsRunner(ClusteringRunnerWithNClusters):
                                              split_plots, metric, parallel_backend)
 
     def _run(self, plot: bool = True) -> List[ArbitraryClusterer]:
+        super()._run(plot)
         self.clusterers = []
-        # generate standardized data for plots
-        data_for_plot = generic.standard_box_cox(self.data) if self.power_transform else generic.standardize(self.data)
-        self.data_for_plot = data_for_plot
         # iterate over all K values, generating clustering results and plotting them
-        data_for_algo = self.transform(self.data)
+        data_for_algo = self.transformed_data
         for this_n_clusters in self.n_clusters:
             this_n_clusters = int(this_n_clusters)
             clusterer = self.clusterer_class(n_clusters=this_n_clusters, **self.clusterer_kwargs).fit(data_for_algo)
             clusterer = self.sort_clusters(clusterer, this_n_clusters, medoid_indices_=clusterer.medoid_indices_)
             # get cluster centers
-            centers = data_for_plot.with_row_index().filter(
+            centers = self.data_for_plot.with_row_index().filter(
                 pl.first().is_in(clusterer.medoid_indices_)).drop(cs.first()).to_numpy().squeeze()
             # plot results
             title = f"Results of K-Medoids Clustering for n_clusters={this_n_clusters}, " \
@@ -908,11 +920,10 @@ class HierarchicalRunner(ClusteringRunnerWithNClusters):
                              metric)
 
     def _run(self, plot: bool = True) -> List[ArbitraryClusterer]:
+        super()._run(plot)
         self.clusterers = []
-        # generate standardized data for plots
-        data_for_plot = generic.standard_box_cox(self.data) if self.power_transform else generic.standardize(self.data)
-        self.data_for_plot = data_for_plot
-        data_for_algo = self.transform(self.data)
+
+        data_for_algo = self.transformed_data
         if self.distance_threshold is None:
             # iterate over all K values, generating clustering results and plotting them
             for this_n_clusters in self.n_clusters:
@@ -921,7 +932,7 @@ class HierarchicalRunner(ClusteringRunnerWithNClusters):
                 clusterer = self.sort_clusters(clusterer, this_n_clusters)
                 # get cluster centers
                 centers = np.array(
-                    [data_for_plot.to_numpy()[clusterer.labels_ == i, :].T.mean(axis=1) for i in
+                    [self.data_for_plot.to_numpy()[clusterer.labels_ == i, :].T.mean(axis=1) for i in
                      range(this_n_clusters)])
                 # plot results
                 title = f"Results of Hierarchical Clustering for n_clusters={this_n_clusters}, " \
@@ -935,7 +946,7 @@ class HierarchicalRunner(ClusteringRunnerWithNClusters):
             clusterer = self.clusterer_class(**self.clusterer_kwargs).fit(self.transform(self.data))
             clusterer = self.sort_clusters(clusterer, len(np.unique(clusterer.labels_)))
             # get cluster centers
-            data_np = data_for_plot.to_numpy()
+            data_np = self.data_for_plot.to_numpy()
             centers = np.array(
                 [data_np[clusterer.labels_ == i, :].T.mean(axis=1) for i in range(clusterer.n_clusters_)])
             self.clusterers.append(clusterer)
@@ -989,11 +1000,12 @@ class HDBSCANRunner(ClusteringRunner):
             if self.return_probabilities:
                 return [None], np.array([])
             return [None]
+        super()._run(plot)
         self.clusterers = []
 
         # calculate clustering result
         clusterer = self.clusterer_class(**self.clusterer_kwargs)
-        clusterer.fit(self.transform(self.data))
+        clusterer.fit(self.transformed_data)
         clusterer = self.sort_clusters(clusterer, clusterer.labels_.max() + 1, probabilities_=clusterer.probabilities_)
         self.clusterers.append(clusterer)
         # extract clustering result
@@ -1001,12 +1013,8 @@ class HDBSCANRunner(ClusteringRunner):
         probabilities = clusterer.probabilities_
 
         if n_clusters != 0:
-            # generate standardized data for plots
-            data_for_plot = generic.standard_box_cox(
-                self.data) if self.power_transform else generic.standardize(self.data)
-            self.data_for_plot = data_for_plot
             # get cluster centers
-            data_np = data_for_plot.to_numpy()
+            data_np = self.data_for_plot.to_numpy()  # TODO: can be optimized?
             centers = np.array([data_np[clusterer.labels_ == i, :].T.mean(axis=1) for i in range(n_clusters)])
             # plot results
             title = f"Results of HDBSCAN Clustering for min_cluster_size={self.min_cluster_size}, " \
@@ -1074,9 +1082,9 @@ class CLICOMRunner(ClusteringRunner):
         if n_clusters != 0:
             # get cluster centers
             # generate standardized data for plots
-            data_for_plot = generic.standard_box_cox(self.data)
-            self.data_for_plot = data_for_plot
-            data_np = data_for_plot.to_numpy()
+            self.data_for_plot = generic.standard_box_cox(self.data) if True in parsing.data_to_set(
+                self.transform) else generic.standardize(self.data)
+            data_np = self.data_for_plot.to_numpy()
             centers = np.array([data_np[clusterer.labels_ == i, :].T.mean(axis=1) for i in range(n_clusters)])
             # plot results
             title = f"Results of Emsemble Clustering for {n_setups} clustering solutions, " \
