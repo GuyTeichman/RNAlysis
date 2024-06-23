@@ -590,7 +590,7 @@ class ClusteringRunner(abc.ABC):
         pass
 
 
-class ClusteringRunnerWithNClusters(ClusteringRunner):
+class ClusteringRunnerWithNClusters(ClusteringRunner, abc.ABC):
     N_CLUSTERS_METHODS = {
         'silhouette': {
             'name': 'Silhouette',
@@ -617,6 +617,9 @@ class ClusteringRunnerWithNClusters(ClusteringRunner):
         self.max_n_clusters_estimate = min(20, data.shape[
             0] // 4) if max_n_clusters_estimate == 'auto' else max_n_clusters_estimate
         self.n_clusters: list = self.parse_n_clusters(n_clusters)
+
+    def _run(self, plot: bool = True):
+        super()._run(plot)
 
     def parse_n_clusters(self, n_clusters) -> List[int]:
         # get best n_clusters value using gap statistic/silhouette method, if requested by the user
