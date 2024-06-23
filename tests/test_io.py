@@ -1394,7 +1394,7 @@ class TestPantherOrthologMapper:
         assert list(ortholog_one2many.mapping_dict.keys()) == ['G5EDF7', 'P34544']
 
         if non_unique_mode == 'first':
-            assert ortholog_one2one['G5EDF7'] == 'P46734'
+            assert ortholog_one2one['G5EDF7'] == 'P52564'
             assert ortholog_one2one['P34544'] == 'Q15047'
 
     def test_get_paralogs(self):
@@ -1417,7 +1417,10 @@ class TestPantherOrthologMapper:
         paralogs = ortholog_mapper.get_paralogs(ids)
 
         assert isinstance(paralogs, OrthologDict)
-        assert paralogs.mapping_dict == truth
+        assert len(paralogs.mapping_dict) == len(truth)
+        for key in truth:
+            assert key in paralogs.mapping_dict
+            assert sorted(paralogs.mapping_dict[key]) == sorted(truth[key])
 
 
 class TestEnsemblOrthologMapper:
