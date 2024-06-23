@@ -43,6 +43,26 @@ def basic_deseqfilter(_basic_deseqfilter):
     return _basic_deseqfilter.__copy__()
 
 
+@pytest.fixture(scope='session')
+def _big_countfilter():
+    return CountFilter('tests/test_files/big_counted.csv')
+
+
+@pytest.fixture
+def big_countfilter(_big_countfilter):
+    return _big_countfilter.__copy__()
+
+
+@pytest.fixture(scope='session')
+def _clustering_countfilter(_big_countfilter):
+    return _big_countfilter.normalize_to_rpm(inplace=False).filter_low_reads(105,3,inplace=False)
+
+
+@pytest.fixture
+def clustering_countfilter(_clustering_countfilter):
+    return _clustering_countfilter.__copy__()
+
+
 def unlink_tree(dir):
     for item in Path(dir).iterdir():
         if 'gitignore' in item.name:
@@ -1591,7 +1611,7 @@ def test_pipeline_apply_to_multiple_splits(basic_countfilter):
     assert np.all(c_pipeline_dict['split_hdbscan_1'] == prob)
 
 
-def test_pipeline_apply_to_filter_normalize_split_plot():
+def test_pipeline_apply_to_filter_normalize_split_plot(big_countfilter):
     scaling_factor_path = 'tests/test_files/big_scaling_factors.csv'
     pl_c = Pipeline('CountFilter')
     pl_c.add_function(CountFilter.normalize_with_scaling_factors, scaling_factor_path)
@@ -1604,7 +1624,7 @@ def test_pipeline_apply_to_filter_normalize_split_plot():
     pl_c.add_function(CountFilter.sort, by='cond2rep3')
     pl_c.add_function(CountFilter.biotypes_from_ref_table, 'long', __biotype_ref__)
 
-    c = CountFilter('tests/test_files/big_counted.csv')
+    c = big_countfilter
     c_pipeline_res, c_pipeline_dict = pl_c.apply_to(c, inplace=False)
     c_dict = dict()
     c.normalize_with_scaling_factors(scaling_factor_path)
@@ -1646,20 +1666,18 @@ def test_pipeline_apply_to_filter_normalize_split_plot():
         assert i.equals(j)
 
 
-def test_gap_statistic_api():
-    c = CountFilter('tests/test_files/big_counted.csv')
-    res = c.split_kmeans(n_clusters='gap')
+def test_gap_statistic_api(clustering_countfilter):
+    res = clustering_countfilter.split_kmeans(n_clusters='gap')
     assert isinstance(res, tuple)
 
 
-def test_silhouette_api():
-    c = CountFilter('tests/test_files/big_counted.csv')
-    res = c.split_kmeans(n_clusters='silhouette')
+def test_silhouette_api(clustering_countfilter):
+    res = clustering_countfilter.split_kmeans(n_clusters='silhouette')
     assert isinstance(res, tuple)
 
 
-def test_split_kmeans_api():
-    c = CountFilter('tests/test_files/big_counted.csv')
+def test_split_kmeans_api(clustering_countfilter):
+    c = clustering_countfilter
     res = c.split_kmeans(n_clusters=4, n_init=2, max_iter=50)
     assert isinstance(res, tuple)
     assert len(res) == 4
@@ -1670,9 +1688,8 @@ def test_split_kmeans_api():
     [_test_correct_clustering_split(c, i) for i in res2]
 
 
-def test_split_hierarchical_api():
-    c = CountFilter('tests/test_files/big_counted.csv')
-    c.filter_top_n(by='cond1rep1', n=2000)
+def test_split_hierarchical_api(clustering_countfilter):
+    c = clustering_countfilter
     res = c.split_hierarchical(4)
     assert isinstance(res, tuple)
     assert len(res) == 4
@@ -1692,8 +1709,8 @@ def test_split_hierarchical_api():
         c.split_hierarchical(4, linkage='badinput')
 
 
-def test_split_hdbscan_api():
-    c = CountFilter('tests/test_files/big_counted.csv').filter_top_n('cond1rep1', n=2000, inplace=False)
+def test_split_hdbscan_api(clustering_countfilter):
+    c = clustering_countfilter
     res = c.split_hdbscan(100)
     _test_correct_clustering_split(c, res, True)
     res2 = c.split_hdbscan(4, 5, 'manhattan', 0.2, 'leaf', plot_style='std_area', return_probabilities=True)
@@ -1706,20 +1723,18 @@ def test_split_hdbscan_api():
         c.split_hdbscan(c.shape[0] + 1)
 
 
-def test_split_clicom_api():
-    c = CountFilter('tests/test_files/big_counted.csv')
-    c.filter_top_n(by='cond1rep1', n=300)
-    res = c.split_clicom({'method': 'hdbscan', 'min_cluster_size': [20, 75, 40], 'metric': ['ys1', 'yr1', 'spearman']},
-                         {'method': 'hierarchical', 'n_clusters': [7, 12], 'metric': ['euclidean', 'jackknife', 'yr1'],
+def test_split_clicom_api(clustering_countfilter):
+    c = clustering_countfilter
+    res = c.split_clicom({'method': 'hdbscan', 'min_cluster_size': [75, 40], 'metric': ['ys1', 'spearman']},
+                         {'method': 'hierarchical', 'n_clusters': [7], 'metric': ['euclidean', 'jackknife'],
                           'linkage': ['average', 'ward']},
                          {'method': 'kmedoids', 'n_clusters': [7, 16], 'metric': 'spearman'},
                          power_transform=(False, True), evidence_threshold=0.5, min_cluster_size=5)
     _test_correct_clustering_split(c, res, True)
 
 
-def test_split_kmedoids_api():
-    c = CountFilter('tests/test_files/big_counted.csv')
-    c.filter_top_n(by='cond1rep1', n=2000)
+def test_split_kmedoids_api(clustering_countfilter):
+    c = clustering_countfilter
     res = c.split_kmedoids(n_clusters=4, n_init=3)
     assert isinstance(res, tuple)
     assert len(res) == 4
@@ -2032,16 +2047,16 @@ def test_drop_columns(pth, cols, truth_pth):
       'tests/test_files/deseq2_tests/case2/DESeq2_condition_cond3_vs_cond2_truth.csv'],
      'tests/test_files/deseq2_tests/case2/expected_deseq_script_2.R')
 ])
-def test_differential_expression_deseq2(monkeypatch, comparisons, expected_paths, script_path):
+def test_differential_expression_deseq2(big_countfilter, monkeypatch, comparisons, expected_paths, script_path):
     outdir = 'tests/test_files/deseq2_tests/outdir'
     sample_table_path = 'tests/test_files/test_design_matrix.csv'
     truth = parsing.data_to_tuple([DESeqFilter(file) for file in expected_paths])
-    c = CountFilter('tests/test_files/big_counted.csv')
+    c = big_countfilter
 
     def mock_run_analysis(self):
         assert self.r_installation_folder == 'auto'
         assert self.comparisons == comparisons
-        assert CountFilter(self.data_path).df.equals(c.df.drop(cs.first()))
+        assert CountFilter(self.data_path).df.equals(c.df)
         assert io.load_table(self.design_mat_path).equals(io.load_table(sample_table_path))
 
         return Path(script_path).parent
@@ -2066,17 +2081,18 @@ def test_differential_expression_deseq2(monkeypatch, comparisons, expected_paths
       'tests/test_files/limma_tests/case2/LimmaVoom_condition_cond3_vs_cond2_truth.csv'],
      'tests/test_files/limma_tests/case2/expected_limma_script_2.R')
 ])
-def test_differential_expression_limma(monkeypatch, comparisons, expected_paths, script_path, random_effect):
+def test_differential_expression_limma(big_countfilter, monkeypatch, comparisons, expected_paths, script_path,
+                                       random_effect):
     outdir = 'tests/test_files/limma_tests/outdir'
     sample_table_path = 'tests/test_files/test_design_matrix.csv'
     truth = parsing.data_to_tuple(
         [DESeqFilter(file, log2fc_col='logFC', padj_col='adj.P.Val') for file in expected_paths])
-    c = CountFilter('tests/test_files/big_counted.csv')
+    c = big_countfilter
 
     def mock_run_analysis(self):
         assert self.r_installation_folder == 'auto'
         assert self.comparisons == comparisons
-        assert CountFilter(self.data_path).df.equals(c.df.drop(cs.first()))
+        assert CountFilter(self.data_path).df.equals(c.df)
         assert io.load_table(self.design_mat_path).equals(io.load_table(sample_table_path))
         assert self.random_effect == random_effect
 
@@ -2338,8 +2354,8 @@ def test_map_orthologs_orthoinspector(mock_mapper, non_unique_mode, remove_unmap
     (2, False, False),
     (3, True, True)
 ])
-def test_sort_by_principal_component(component, ascending, power_transform):
-    c = CountFilter('tests/test_files/big_counted.csv').filter_low_reads(100, 2, inplace=False)
+def test_sort_by_principal_component(clustering_countfilter, component, ascending, power_transform):
+    c = clustering_countfilter
     c_sorted = c.sort_by_principal_component(component, ascending=ascending, power_transform=power_transform,
                                              inplace=False)
     assert isinstance(c_sorted, CountFilter)

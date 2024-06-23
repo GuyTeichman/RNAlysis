@@ -3110,8 +3110,9 @@ class CountFilter(Filter):
             design_mat_path = io.get_todays_cache_dir().joinpath(f'design_mat_{i}.csv')
             i += 1
 
-        io.save_table(self.df.select(pl.col(self._numeric_columns)).with_columns(cs.float().round()), data_path)
-        # use Pandas to automatically detect file delimiter type, then export it as a CSV file.
+        io.save_table(self.df.select(pl.first()).with_columns(
+            self.df.select(pl.col(self._numeric_columns)).with_columns(cs.float().round())), data_path)
+        # use RNAlysis to automatically detect file delimiter type, then export it as a CSV file.
         design_mat_df = io.load_table(design_matrix)
         self._diff_exp_assertions(design_mat_df)
         samples = design_mat_df.select(pl.first()).to_series().to_list()
@@ -3266,15 +3267,16 @@ class CountFilter(Filter):
             assert output_folder.exists(), 'Output folder does not exist!'
 
         self._validate_is_normalized(expect_normalized=False)
-        data_path = io.get_todays_cache_dir().joinpath(f'{self.fname.name}.csv')
+        data_path = io.get_todays_cache_dir().joinpath(f'{self.fname.stem}.csv')
         design_mat_path = None
         i = 0
         while design_mat_path is None or design_mat_path.exists():
             design_mat_path = io.get_todays_cache_dir().joinpath(f'design_mat_{i}.csv')
             i += 1
 
-        io.save_table(self.df.select(pl.col(self._numeric_columns)).with_columns(cs.float().round()), data_path)
-        # use Pandas to automatically detect file delimiter type, then export it as a CSV file.
+        io.save_table(self.df.select(pl.first()).with_columns(
+            self.df.select(pl.col(self._numeric_columns)).with_columns(cs.float().round())), data_path)
+        # use RNAlysis to automatically detect file delimiter type, then export it as a CSV file.
         design_mat_df = io.load_table(design_matrix)
         self._diff_exp_assertions(design_mat_df)
         samples = design_mat_df.select(pl.first()).to_series().to_list()
