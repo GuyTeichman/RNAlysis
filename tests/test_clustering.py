@@ -30,7 +30,7 @@ def invalid_clustering_solutions():
 def test_kmedoidsiter_api():
     truth = KMedoids(3, max_iter=300, init='k-medoids++', random_state=42)
     kmeds = KMedoidsIter(3, init='k-medoids++', max_iter=300, n_init=1, random_state=42)
-    df = load_table('tests/test_files/counted.csv', 0)
+    df = load_table('tests/test_files/counted.csv').drop(cs.first())
     truth.fit(df)
     kmeds.fit(df)
     assert np.all(truth.cluster_centers_ == kmeds.cluster_centers_)
@@ -50,7 +50,7 @@ def test_kmedoidsiter_api():
 
 def test_kmedoidsiter_iter():
     kmeds = KMedoidsIter(3, init='k-medoids++', max_iter=300, n_init=5, random_state=0)
-    df = load_table('tests/test_files/counted.csv', 0)
+    df = load_table('tests/test_files/counted.csv').drop(cs.first())
     kmeds.fit(df)
 
     inertias = []
@@ -73,7 +73,7 @@ def test_kmedoidsiter_iter():
     ((False, range(2, 9), 20), [2, 3, 4, 5, 6, 7, 8])
 ])
 def test_parse_n_clusters(monkeypatch, args, expected):
-    data = pd.read_csv('tests/test_files/counted.csv', index_col=0)
+    data = pl.read_csv('tests/test_files/counted.csv')
     monkeypatch.setattr(ClusteringRunnerWithNClusters, "run_k_criterion", lambda self, *args: 6)
     monkeypatch.setattr(ClusteringRunnerWithNClusters, "gap_statistic", lambda self: 7)
 
@@ -89,7 +89,7 @@ def test_parse_n_clusters(monkeypatch, args, expected):
     (False, [3, 5, 1], 20)
 ])
 def test_parse_n_clusters_invalid_values(args: tuple):
-    data = pd.read_csv('tests/test_files/counted.csv', index_col=0)
+    data = pl.read_csv('tests/test_files/counted.csv')
     with pytest.raises(AssertionError):
         _ = ClusteringRunnerWithNClusters(data, *args)
 
@@ -97,7 +97,7 @@ def test_parse_n_clusters_invalid_values(args: tuple):
 def test_compute_dispersion():
     clust_with_inertia = namedtuple('Clusterer', ['inertia_'])
     clust_without_inertia = namedtuple('Clusterer', ['labels_'])
-    data = pd.read_csv('tests/test_files/counted.csv', index_col=0).values
+    data = pl.read_csv('tests/test_files/counted.csv').drop(cs.first())
     for k in [1, 3, data.shape[0]]:
         kmeans = KMeans(k, random_state=42).fit(data)
         assert ClusteringRunnerWithNClusters._compute_dispersion(clust_with_inertia(kmeans.inertia_), data,
@@ -119,7 +119,7 @@ def _compare_setups(setups, truth):
 
 
 def test_clicomrunner_find_valid_clustering_setups():
-    df = pd.DataFrame(np.zeros((10, 10)))
+    df = pl.DataFrame(np.zeros((10, 10)))
     truth = [(KMeansRunner, (df,), dict(power_transform=True, n_clusters=2, n_init=5)),
              (KMeansRunner, (df,), dict(power_transform=True, n_clusters=3, n_init=5)),
              (KMeansRunner, (df,), dict(power_transform=True, n_clusters=5, n_init=5)),
@@ -168,7 +168,7 @@ def test_clicomrunner_find_valid_clustering_setups():
              (HierarchicalRunner, (df,),
               dict(power_transform=False, n_clusters=None, metric='euclidean', distance_threshold=1))]
 
-    runner = CLICOMRunner(pd.DataFrame(np.zeros((10, 10))), [list(range(10))], [True, False], 0.5,
+    runner = CLICOMRunner(pl.DataFrame(np.zeros((10, 10))), [list(range(10))], [True, False], 0.5,
                           False, 1,
                           dict(method='kmeans', n_clusters=[2, 3, 5], n_init=5),
                           dict(method='hierarchical', n_clusters=[5, 7, 10], metric=['euclidean', 'jackknife'],
@@ -200,7 +200,7 @@ def test_clicomrunner_find_valid_clustering_setups():
              (HierarchicalRunner, (df,),
               dict(power_transform=True, n_clusters=None, metric='euclidean', distance_threshold=1))]
 
-    runner = CLICOMRunner(pd.DataFrame(np.zeros((10, 10))), [list(range(10))], True, 0.5, False, 15,
+    runner = CLICOMRunner(pl.DataFrame(np.zeros((10, 10))), [list(range(10))], True, 0.5, False, 15,
                           dict(method='kmeans', n_clusters=[2, 3, 5], n_init=5),
                           dict(method='hierarchical', n_clusters=[5, 7, 10], metric=['euclidean', 'jackknife'],
                                linkage=['ward', 'average', 'doesnt exist']),
@@ -208,11 +208,17 @@ def test_clicomrunner_find_valid_clustering_setups():
     setups = runner.find_valid_clustering_setups()
     _compare_setups(setups, truth)
 
-    truth = [(KMeansRunner, (df[[0, 1, 2, 3, 4]],), dict(power_transform=True, n_clusters=6, n_init=5)),
-             (KMeansRunner, (df[[5, 6, 7, 8, 9]],), dict(power_transform=True, n_clusters=6, n_init=5)),
-             (KMedoidsRunner, (df[[0, 1, 2, 3, 4]],), dict(power_transform=True, n_clusters=7, n_init=5)),
-             (KMedoidsRunner, (df[[5, 6, 7, 8, 9]],), dict(power_transform=True, n_clusters=7, n_init=5))]
-    runner = CLICOMRunner(pd.DataFrame(np.zeros((10, 10))), [[0, 1, 2, 3, 4], [5, 6, 7, 8, 9]], True, 0.5, False, 15,
+    truth = [(KMeansRunner, (df.select(pl.col([f'column_{i}' for i in range(5)])),),
+              dict(power_transform=True, n_clusters=6, n_init=5)),
+             (KMeansRunner, (df.select(pl.col([f'column_{i + 5}' for i in range(5)])),),
+              dict(power_transform=True, n_clusters=6, n_init=5)),
+             (KMedoidsRunner, (df.select(pl.col([f'column_{i}' for i in range(5)])),),
+              dict(power_transform=True, n_clusters=7, n_init=5)),
+             (KMedoidsRunner, (df.select(pl.col([f'column_{i + 5}' for i in range(5)])),),
+              dict(power_transform=True, n_clusters=7, n_init=5))]
+    runner = CLICOMRunner(pl.DataFrame(np.zeros((10, 10))),
+                          [['column_0', 'column_1', 'column_2', 'column_3', 'column_4'],
+                           ['column_5', 'column_6', 'column_7', 'column_8', 'column_9']], True, 0.5, False, 15,
                           dict(method='kmeans', n_clusters=6, n_init=5),
                           dict(method='kmedoids', n_clusters=7, n_init=5))
     setups = runner.find_valid_clustering_setups()
@@ -221,7 +227,7 @@ def test_clicomrunner_find_valid_clustering_setups():
 
 def test_find_cliques(monkeypatch):
     truth = {frozenset({2, 4, 7, 8}), frozenset({1, 7}), frozenset({1, 3, 6}), frozenset({0, 3, 5, 6})}
-    binary_adj_mat = pd.read_csv('tests/test_files/clicom_binary_adj_matrix.csv', index_col=0).values
+    binary_adj_mat = pl.read_csv('tests/test_files/clicom_binary_adj_matrix.csv').drop(cs.first())
     monkeypatch.setattr(CLICOM, "get_cluster_similarity_matrix", lambda self: binary_adj_mat)
     clicom = CLICOM(BinaryFormatClusters([np.array([[0, 1]])]), 1)
     clicom.find_cliques()

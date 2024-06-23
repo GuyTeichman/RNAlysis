@@ -8,7 +8,7 @@ from pathlib import Path
 from queue import Queue
 from typing import Callable, Union, Tuple
 
-import pandas as pd
+import polars as pl
 import yaml
 from PyQt5 import QtCore, QtWidgets, QtGui
 
@@ -213,57 +213,58 @@ class MultiFileSelectionDialog(gui_widgets.MinMaxDialog):
 
 class DataFrameModel(QtCore.QAbstractTableModel):
     """
-    Basde upon:
+    Based upon:
     https://stackoverflow.com/a/44605011
     """
     DtypeRole = QtCore.Qt.UserRole + 1000
     ValueRole = QtCore.Qt.UserRole + 1001
 
-    def __init__(self, df=pd.DataFrame(), parent=None):
+    def __init__(self, df=pl.DataFrame(), parent=None):
         super().__init__(parent)
-        if isinstance(df, pd.Series):
+        if isinstance(df, pl.Series):
             df = df.to_frame()
-        self._dataframe = df
+        self._dataframe = df.clone()
 
     def setDataFrame(self, dataframe):
         self.beginResetModel()
-        self._dataframe = dataframe.copy()
+        self._dataframe = dataframe.clone()
         self.endResetModel()
 
     def dataFrame(self):
         return self._dataframe
 
-    dataFrame = QtCore.pyqtProperty(pd.DataFrame, fget=dataFrame, fset=setDataFrame)
+    dataFrame = QtCore.pyqtProperty(pl.DataFrame, fget=dataFrame, fset=setDataFrame)
 
     @QtCore.pyqtSlot(int, QtCore.Qt.Orientation, result=str)
     def headerData(self, section: int, orientation: QtCore.Qt.Orientation, role: int = QtCore.Qt.DisplayRole):
         if role == QtCore.Qt.DisplayRole:
             if orientation == QtCore.Qt.Horizontal:
-                return self._dataframe.columns[section]
+                return self._dataframe.columns[section + 1]
             else:
-                return str(self._dataframe.index[section])
+                return str(self._dataframe.row(section)[0])
         return QtCore.QVariant()
 
     def rowCount(self, parent=QtCore.QModelIndex()):
         if parent.isValid():
             return 0
-        return len(self._dataframe.index)
+        return self._dataframe.height
 
     def columnCount(self, parent=QtCore.QModelIndex()):
         if parent.isValid():
             return 0
-        return self._dataframe.columns.size
+        return max(0, self._dataframe.width - 1)
 
     def data(self, index, role=QtCore.Qt.DisplayRole):
         if not index.isValid() or not (0 <= index.row() < self.rowCount()
                                        and 0 <= index.column() < self.columnCount()):
             return QtCore.QVariant()
-        row = self._dataframe.index[index.row()]
-        col = self._dataframe.columns[index.column()]
-        dt = self._dataframe[col].dtype
+        row = index.row()
+        col = index.column() + 1
+        col_name = self._dataframe.columns[col]
+        dt = self._dataframe[col_name].dtype
 
         try:
-            val = self._dataframe.loc[row, col]
+            val = self._dataframe[row, col]
         except IndexError:
             print(row, col, self._dataframe.shape)
         if role == QtCore.Qt.DisplayRole:
@@ -284,27 +285,29 @@ class DataFrameModel(QtCore.QAbstractTableModel):
 
 
 class DataFramePreviewModel(DataFrameModel):
-    def __init__(self, df=pd.DataFrame(), parent=None):
+    def __init__(self, df=pl.DataFrame(), parent=None):
         shape = df.shape
         if len(shape) == 1:
             shape = (shape[0], 1)
 
         n_rows = min(2, shape[0])
-        n_cols = min(3, shape[1])
-        if isinstance(df, pd.DataFrame):
-            df = df.iloc[:n_rows, :n_cols]
-        elif isinstance(df, pd.Series):
-            df = df.iloc[:n_rows]
-
-        if n_rows < shape[0]:
-            df = df.astype(object)
-            if isinstance(df, pd.DataFrame):
-                df.loc['...', :] = '...'
-            elif isinstance(df, pd.Series):
-                df.loc['...'] = '...'
-        if n_cols < shape[1]:
-            df['...'] = '...'
-        super().__init__(df, parent)
+        n_cols = min(3, shape[1] - 1)
+        if isinstance(df, pl.DataFrame):
+            df_preview = df.head(n_rows).select(df.columns[0:n_cols + 1])  # Exclude the first column
+            df_preview = df_preview.cast(pl.String)  # Cast to string data type
+            if n_rows < shape[0]:
+                dot_row = pl.DataFrame({col: ['...'] for col in df_preview.columns})
+                df_preview = pl.concat([df_preview, dot_row], how='vertical')
+            if n_cols < shape[1] - 1:
+                df_preview = df_preview.with_columns(pl.lit('...').alias('...'))
+        elif isinstance(df, pl.Series):
+            df_preview = df.head(n_rows)
+            df_preview = df_preview.cast(pl.String).to_frame()  # Cast to string data type
+            if n_rows < shape[0]:
+                df_preview = pl.concat([df_preview, pl.Series(['...'])], how='vertical')
+        else:
+            raise TypeError(f"Expected DataFrame or Series, got {type(df)}")
+        super().__init__(df_preview, parent)
 
 
 class DataView(gui_widgets.MinMaxDialog):
@@ -360,12 +363,12 @@ class GeneSetView(DataView):
 
 
 class DataFrameView(DataView):
-    def __init__(self, data: pd.DataFrame, name: str, parent=None):
+    def __init__(self, data: pl.DataFrame, name: str, parent=None):
         super().__init__(data, name, parent)
         shape = self.data.shape
         if len(shape) == 1:
             shape = (shape[0], 1)
-        self.label = QtWidgets.QLabel(f"Table '{name}': {shape[0]} rows, {shape[1]} columns")
+        self.label = QtWidgets.QLabel(f"Table '{name}': {shape[0]} rows, {shape[1] - 1} columns")
 
         self.data_view = gui_widgets.ReactiveTableView()
         self.save_button = QtWidgets.QPushButton('Save table', self)
@@ -382,9 +385,17 @@ class DataFrameView(DataView):
                                                             str(Path.home().joinpath(default_name)),
                                                             "Comma-Separated Values (*.csv);;"
                                                             "Tab-Separated Values (*.tsv);;"
+                                                            "Parquet (*.parquet);;"
                                                             "All Files (*)")
         if filename:
-            io.save_table(self.data, filename)
+            if filename.endswith('.csv'):
+                self.data.write_csv(filename)
+            elif filename.endswith('.tsv'):
+                self.data.write_csv(filename, sep='\t')
+            elif filename.endswith('.parquet'):
+                self.data.write_parquet(filename)
+            else:
+                self.data.write_csv(filename)
             print(f"Successfully saved at {io.get_datetime()} under {filename}")
 
 
@@ -434,6 +445,32 @@ class ErrorMessage(QtWidgets.QDialog):
         cb.clear(mode=cb.Clipboard)
         cb.setText("".join(traceback.format_exception(*self.exception)), mode=cb.Clipboard)
         self.widgets['copied_label'].setText('Copied to clipboard')
+
+
+class WhatsNewWindow(QtWidgets.QMessageBox):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        txt_path = str(Path(__file__).parent.parent.parent.joinpath('latest_changelog.md'))
+        with open(txt_path) as f:
+            text = f.read()
+
+        self.scroll = QtWidgets.QScrollArea(self)
+        self.scroll.setWidgetResizable(True)
+        self.scroll.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarPolicy.ScrollBarAlwaysOn)
+        self.content = QtWidgets.QWidget()
+        self.scroll.setWidget(self.content)
+        self.scroll_layout = QtWidgets.QVBoxLayout(self.content)
+        self.text = QtWidgets.QLabel(self.content)
+        self.text.setTextFormat(QtCore.Qt.TextFormat.MarkdownText)
+        self.text.setText(text)
+        self.text.setWordWrap(True)
+        self.scroll_layout.addWidget( self.text)
+        self.layout().addWidget(self.scroll, 0, 0, 1, self.layout().columnCount())
+        self.setWindowTitle(f"What's new in version {__version__}")
+        self.setStyleSheet("QScrollArea{min-width:900 px; min-height: 600px}"
+                           "QScrollBar:vertical {width: 40;}")
+        self.setStandardButtons(QtWidgets.QMessageBox.Ok)
+        self.buttonClicked.connect(self.close)
 
 
 class AboutWindow(QtWidgets.QMessageBox):

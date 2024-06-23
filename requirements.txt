@@ -1,7 +1,6 @@
 numpy>=1.24.0
-pandas[performance,clipboard,parquet]>=2.0.0
 matplotlib>=3.7.0,<3.8.0
-seaborn>=0.13.0
+seaborn>=0.13.2
 statsmodels>=0.12.0
 scikit-learn>=1.3.0
 grid_strategy>=0.0.1
@@ -28,3 +27,4 @@ tenacity>=8.2.3
 mslex>=1.1.0
 nest-asyncio>=1.6.0
 fastcluster>=1.2.6
+polars[async,numpy,pyarrow,matplotlib,pandas]>=0.20.31

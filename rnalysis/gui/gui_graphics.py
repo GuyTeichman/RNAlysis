@@ -125,7 +125,7 @@ class VennInteractiveCanvas(BaseInteractiveCanvas):
             funcs = matplotlib_venn.venn3, matplotlib_venn.venn3_circles
             colors = (self.SELECTED_COLOR, self.SELECTED_COLOR, self.SELECTED_COLOR)
         else:
-            raise ValueError("Cannot proccess more than 3 sets!")
+            raise ValueError("Cannot process more than 3 sets!")
 
         self.venn = funcs[0](gene_sets.values(), gene_sets.keys(), set_colors=colors, ax=self.ax, alpha=1)
         self.venn_circles = funcs[1](gene_sets.values(), linestyle='solid', linewidth=2.0, ax=self.ax)

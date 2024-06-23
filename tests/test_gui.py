@@ -3,6 +3,7 @@ import re
 from unittest.mock import patch, Mock
 
 import matplotlib
+import polars.selectors as cs
 import pytest
 
 import rnalysis.gui.gui_report
@@ -1389,7 +1390,7 @@ def test_FilterTabPage_init(qtbot):
     (tuple(), []),
     (filtering.CountFilter('tests/test_files/counted.csv'), ['itemSpawned', 'filterObjectCreated']),
     (enrichment.FeatureSet({'a', 'b', 'c'}, 'set name'), ['itemSpawned', 'featureSetCreated']),
-    (pd.DataFrame([1, 2, 3]), ['itemSpawned']),
+    (pl.DataFrame([1, 2, 3]), ['itemSpawned']),
     (plt.Figure(), ['itemSpawned']),
     ('filterlist', []),
     ('dict', []),
@@ -1420,7 +1421,7 @@ def test_FilterTabPage_process_outputs_signals(qtbot, outputs, exp_signals):
     (enrichment.FeatureSet({'a', 'b', 'c'}, 'set name'), [], [(enrichment.FeatureSet({'a', 'b', 'c'}, 'set name'), 42)],
      [("'source name'\noutput", 42, -1, enrichment.FeatureSet({'a', 'b', 'c'}, 'set name'))]),
 
-    (pd.DataFrame([1, 2, 3]), [], [], [("'source name'\noutput", 42, -1, pd.DataFrame([1, 2, 3]))]),
+    (pl.DataFrame([1, 2, 3]), [], [], [("'source name'\noutput", 42, -1, pl.DataFrame([1, 2, 3]))]),
 
     (plt.Figure(), [], [], [("'source name'\ngraph", 42, -1, plt.gcf())]),
 
@@ -1430,8 +1431,8 @@ def test_FilterTabPage_process_outputs_signals(qtbot, outputs, exp_signals):
      [("'source name'\noutput", 42, -1, filtering.Filter('tests/test_files/counted.csv')),
       ("'source name'\noutput", 42, -1, filtering.DESeqFilter('tests/test_files/test_deseq.csv'))]),
 
-    ({'out1': plt.Figure(), 'out2': pd.DataFrame(), 'other': 'some str'}, [], [],
-     [("'source name'\ngraph", 42, -1, plt.gcf()), ("'source name'\noutput", 42, -1, pd.DataFrame())]),
+    ({'out1': plt.Figure(), 'out2': pl.DataFrame(), 'other': 'some str'}, [], [],
+     [("'source name'\ngraph", 42, -1, plt.gcf()), ("'source name'\noutput", 42, -1, pl.DataFrame())]),
 
     ([], [], [], []),
 
@@ -1504,7 +1505,7 @@ def test_FilterTabPage_cache(qtbot, monkeypatch):
     cached = []
 
     def mock_cache(obj, filename):
-        assert isinstance(obj, pd.DataFrame)
+        assert isinstance(obj, pl.DataFrame)
         assert obj.equals(filt.df)
         cached.append(True)
 
@@ -1643,9 +1644,7 @@ def test_FilterTabPage_apply_split_clustering_function(qtbot, monkeypatch, count
     window.startedClustering.connect(my_slot)
 
     orig = window.obj().__copy__()
-
     truth = orig.split_kmeans(n_clusters=3, random_seed=42)
-    truth = sorted(truth, key=lambda obj: sorted(obj.df.index)[0])
 
     window.stack_buttons[4].click()
     qtbot.keyClicks(window.stack.currentWidget().func_combo, filtering.CountFilter.split_kmeans.readable_name)
@@ -1655,11 +1654,9 @@ def test_FilterTabPage_apply_split_clustering_function(qtbot, monkeypatch, count
                            timeout=15000) as blocker:
         qtbot.mouseClick(window.apply_button, LEFT_CLICK)
 
-    res = sorted([sig.args[0] for sig in blocker.all_signals_and_args], key=lambda obj: sorted(obj.df.index)[0])
+    res = [sig.args[0] for sig in blocker.all_signals_and_args]
     for i in range(3):
-        res[i].df.sort_index(inplace=True)
-        truth[i].df.sort_index(inplace=True)
-        assert np.all(np.isclose(res[i].df, truth[i].df, equal_nan=True))
+        assert np.allclose(res[i].df.drop(cs.first()), truth[i].df.drop(cs.first()), equal_nan=True)
 
     assert window.obj() == orig
 
@@ -2506,8 +2503,8 @@ def test_MainWindow_import_multiple_gene_sets(main_window_with_tabs, monkeypatch
             with open(filename) as f:
                 truth_set = set(f.read().split())
         else:
-            df = io.load_table(filename, index_col=0)
-            truth_set = set(df.index)
+            df = io.load_table(filename)
+            truth_set = parsing.data_to_set(df.select(pl.first()))
         truth_featureset = enrichment.FeatureSet(truth_set, Path(filename).stem)
         truth.append(truth_featureset)
 
@@ -2530,8 +2527,8 @@ def test_MainWindow_import_gene_set(main_window_with_tabs, monkeypatch, filename
         with open(filename) as f:
             truth_set = enrichment.FeatureSet(set(f.read().split()), Path(filename).stem)
     else:
-        df = io.load_table(filename, index_col=0)
-        truth_set = enrichment.FeatureSet(set(df.index), Path(filename).stem)
+        df = io.load_table(filename)
+        truth_set = enrichment.FeatureSet(parsing.data_to_set(df.select(pl.first())), Path(filename).stem)
 
     def mock_get_file(*args, **kwargs):
         return filename, '.csv'
@@ -2583,9 +2580,9 @@ def test_MainWindow_export_gene_set(use_temp_settings_file, main_window_with_tab
 def test_MainWindow_copy_gene_set(main_window_with_tabs, ind, gene_set):
     main_window_with_tabs.tabs.setCurrentIndex(1)
     main_window_with_tabs.copy_action.trigger()
-    txt = QtWidgets.QApplication.clipboard().text()
-    assert len(txt.split()) == len(gene_set)
-    assert sorted(gene_set) == sorted(txt.split())
+    gene_ids = QtWidgets.QApplication.clipboard().text().split()
+    assert len(gene_ids) == len(gene_set)
+    assert sorted(gene_set) == sorted(gene_ids)
 
 
 def test_MainWindow_add_pipeline(main_window, monkeypatch):
@@ -2611,7 +2608,7 @@ def test_MainWindow_apply_function(qtbot, main_window_with_tabs):
     with qtbot.waitSignal(tab.filterObjectCreated, timeout=10000) as blocker:
         qtbot.mouseClick(tab.apply_button, LEFT_CLICK)
     assert blocker.args[0] == truth
-    assert np.all(np.isclose(tab.obj().df, orig.df))
+    assert np.allclose(tab.obj().df.drop(cs.first()), orig.df.drop(cs.first()))
 
     assert main_window_with_tabs.tabs.count() == 6
 
@@ -2641,8 +2638,9 @@ def test_MainWindow_get_available_objects(use_temp_settings_file, main_window_wi
     for name in res.keys():
         assert isinstance(res[name][0], TabPage)
         assert (res[name][0].obj() == objs_truth[name]) or (
-            np.all(np.isclose(np.squeeze(res[name][0].obj().df), np.squeeze(objs_truth[name].df))) and (
-            res[name][0].obj().fname == objs_truth[name].fname))
+            np.allclose(np.squeeze(res[name][0].obj().df.drop(cs.first())),
+                        np.squeeze(objs_truth[name].df.drop(cs.first()))) and (
+                    res[name][0].obj().fname == objs_truth[name].fname))
 
         assert isinstance(res[name][1], QtGui.QIcon)
 
@@ -2801,9 +2799,10 @@ def test_MainWindow_load_session(use_temp_settings_file, main_window, monkeypatc
     assert {key: val[0] for key, val in main_window.pipelines.items()} == pipelines_truth
 
     for i in range(1, main_window.tabs.count()):
-        assert (main_window.tabs.widget(i).obj() == objs_truth[i]) or (
-            np.all(np.isclose(main_window.tabs.widget(i).obj().df, objs_truth[i].df)) and (
-            main_window.tabs.widget(i).obj().fname == objs_truth[i].fname))
+        obj = main_window.tabs.widget(i).obj()
+
+        assert (obj == objs_truth[i]) or (np.allclose(obj.df.drop(cs.first()), objs_truth[i].df.drop(cs.first())) and (
+            obj.fname == objs_truth[i].fname))
 
 
 def test_MainWindow_about(main_window, monkeypatch):
@@ -3264,7 +3263,7 @@ class TestMainWindowJobRunning:
     def test_finish_enrichment(self, main_window, mocker, monkeypatch):
         worker_output = mocker.Mock(spec=gui_widgets.WorkerOutput)
         worker_output.raised_exception = None
-        worker_output.result = [mocker.Mock(spec=pd.DataFrame),
+        worker_output.result = [mocker.Mock(spec=pl.DataFrame),
                                 mocker.Mock(spec=enrichment.enrichment_runner.EnrichmentRunner)]
         worker_output.emit_args = ["set_name"]
         worker_output.job_id = 1
@@ -3368,7 +3367,7 @@ class TestMainWindowJobRunning:
     def test_finish_enrichment_report_enabled(self, main_window, mocker, monkeypatch):
         worker_output = mocker.Mock(spec=gui_widgets.WorkerOutput)
         worker_output.raised_exception = None
-        worker_output.result = [mocker.Mock(spec=pd.DataFrame),
+        worker_output.result = [mocker.Mock(spec=pl.DataFrame),
                                 mocker.Mock(spec=enrichment.enrichment_runner.EnrichmentRunner)]
         worker_output.emit_args = ["set_name"]
         worker_output.job_id = 1
@@ -3387,7 +3386,7 @@ class TestMainWindowJobRunning:
     def test_finish_enrichment_report_disabled(self, main_window, mocker, monkeypatch):
         worker_output = mocker.Mock(spec=gui_widgets.WorkerOutput)
         worker_output.raised_exception = None
-        worker_output.result = [mocker.Mock(spec=pd.DataFrame),
+        worker_output.result = [mocker.Mock(spec=pl.DataFrame),
                                 mocker.Mock(spec=enrichment.enrichment_runner.EnrichmentRunner)]
         worker_output.emit_args = ["set_name"]
         worker_output.job_id = 1

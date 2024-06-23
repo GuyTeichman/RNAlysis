@@ -14,6 +14,7 @@ import matplotlib.pyplot as plt
 import matplotlib_venn as vn
 import numpy as np
 import pandas as pd
+import polars as pl
 import upsetplot
 
 from rnalysis.filtering import Filter, readable_name
@@ -116,7 +117,20 @@ class FeatureSet(set):
             return new_obj if return_vals is None else (new_obj, *return_vals)
 
     def _convert_to_filter_obj(self) -> Filter:
-        return Filter.from_dataframe(pd.DataFrame(index=parsing.data_to_list(self.gene_set)), self.set_name)
+        return Filter.from_dataframe(pl.DataFrame(parsing.data_to_list(self.gene_set)), self.set_name)
+
+    @staticmethod
+    def _get_stats_test(statistical_test: str, randomization_reps: int, random_seed: Union[int, None]):
+        if statistical_test.lower() == 'randomization':
+            stats_test = enrichment_runner.PermutationTest(randomization_reps, random_seed)
+        elif statistical_test.lower() == 'fisher':
+            stats_test = enrichment_runner.FishersExactTest()
+        elif statistical_test.lower() == 'hypergeometric':
+            stats_test = enrichment_runner.HypergeometricTest()
+        else:
+            raise ValueError(f"statistical_test must be one of 'fisher', 'hypergeometric', or 'randomization'. "
+                             f"Got: {statistical_test}")
+        return stats_test
 
     @readable_name('Translate gene IDs')
     def translate_gene_ids(self, translate_to: Union[str, Literal[get_gene_id_types()]],
@@ -272,7 +286,7 @@ class FeatureSet(set):
         return self._inplace(Filter.filter_by_go_annotations, kwargs, inplace)
 
     @readable_name('Filter by user-defined attribute')
-    def filter_by_attribute(self, attributes: Union[str, List[str]] = None,
+    def filter_by_attribute(self, attributes: Union[str, List[str]],
                             mode: Literal['union', 'intersection'] = 'union',
                             ref: Union[str, Path, Literal['predefined']] = 'predefined',
                             opposite: bool = False, inplace: bool = True):
@@ -749,20 +763,17 @@ class FeatureSet(set):
         return FeatureSet(self._set_ops((other,), set.symmetric_difference))
 
     @readable_name("GO Enrichment")
-    def go_enrichment(self, organism: Union[str, int, Literal['auto'], Literal[DEFAULT_ORGANISMS]] = 'auto',
+    def go_enrichment(self, background_genes: Union[Set[str], Filter, 'FeatureSet'],
+                      organism: Union[str, int, Literal['auto'], Literal[DEFAULT_ORGANISMS]] = 'auto',
                       gene_id_type: Union[str, Literal['auto'], Literal[get_gene_id_types()]] = 'auto',
                       alpha: param_typing.Fraction = 0.05,
                       statistical_test: Literal['fisher', 'hypergeometric', 'randomization'] = 'fisher',
-                      biotype: Union[str, List[str], Literal['all']] = 'all',
-                      background_genes: Union[Set[str], Filter, 'FeatureSet'] = None,
-                      biotype_ref_path: Union[str, Path, Literal['predefined']] = 'predefined',
                       propagate_annotations: Literal['classic', 'elim', 'weight', 'all.m', 'no'] = 'elim',
                       aspects: Union[Literal[('any',) + GO_ASPECTS], Iterable[Literal[GO_ASPECTS]]] = 'any',
                       evidence_types: Union[
                           Literal[('any',) + GO_EVIDENCE_TYPES], Iterable[Literal[GO_EVIDENCE_TYPES]]] = 'any',
                       excluded_evidence_types: Union[Literal[GO_EVIDENCE_TYPES], Iterable[Literal[
-                          GO_EVIDENCE_TYPES]]] = (),
-                      databases: Union[str, Iterable[str], Literal['any']] = 'any',
+                          GO_EVIDENCE_TYPES]]] = (), databases: Union[str, Iterable[str], Literal['any']] = 'any',
                       excluded_databases: Union[str, Iterable[str]] = (),
                       qualifiers: Union[Literal[('any',) + GO_QUALIFIERS], Iterable[Literal[GO_QUALIFIERS]]] = 'any',
                       excluded_qualifiers: Union[Literal[GO_QUALIFIERS], Iterable[Literal[GO_QUALIFIERS]]] = 'not',
@@ -772,8 +783,8 @@ class FeatureSet(set):
                       plot_ontology_graph: bool = True,
                       ontology_graph_format: Literal[param_typing.GRAPHVIZ_FORMATS] = 'none',
                       randomization_reps: PositiveInt = 10000, random_seed: Union[int, None] = None,
-                      parallel_backend: Literal[PARALLEL_BACKENDS] = 'loky',
-                      gui_mode: bool = False) -> Union[pd.DataFrame, Tuple[pd.DataFrame, plt.Figure]]:
+                      parallel_backend: Literal[PARALLEL_BACKENDS] = 'loky', gui_mode: bool = False) -> Union[
+        pl.DataFrame, Tuple[pl.DataFrame, plt.Figure]]:
         """
         Calculates enrichment and depletion of the FeatureSet for Gene Ontology (GO) terms against a background set. \
         The GO terms and annotations are drawn via the GO Solr search engine GOlr, \
@@ -805,8 +816,7 @@ class FeatureSet(set):
         'protein_coding' will include only protein-coding genes from the reference table, etc. \
         Cannot be specified together with 'background_genes'.
         :type background_genes: set of feature indices, filtering.Filter object, or enrichment.FeatureSet object
-        :param background_genes: a set of specific feature indices to be used as background genes. \
-        Cannot be specified together with 'biotype'.
+        :param background_genes: a set of specific feature indices to be used as background genes.
         :type biotype_ref_path: str or pathlib.Path (default='predefined')
         :param biotype_ref_path: the path of the Biotype Reference Table. \
         Will be used to generate background set if 'biotype' is specified.
@@ -887,7 +897,7 @@ class FeatureSet(set):
         if parallel_backend not 'sequential', will calculate the statistical tests using parallel processing. \
         In most cases parallel processing will lead to shorter computation time, but does not affect the results of \
         the analysis otherwise.
-        :rtype: pd.DataFrame (default) or Tuple[pd.DataFrame, matplotlib.figure.Figure]
+        :rtype: pl.DataFrame (default) or Tuple[pl.DataFrame, matplotlib.figure.Figure]
         :return: a pandas DataFrame with GO terms as rows/index; \
         and a matplotlib Figure, if 'return_figure' is set to True.
 
@@ -916,41 +926,36 @@ class FeatureSet(set):
             background_genes = background_genes.gene_set
         except AttributeError:
             pass
-        if statistical_test.lower() == 'randomization':
-            kwargs = dict(reps=randomization_reps, random_seed=random_seed)
-        else:
-            kwargs = {}
+        stats_test = self._get_stats_test(statistical_test, randomization_reps, random_seed)
+
         runner = enrichment_runner.GOEnrichmentRunner(self.gene_set, organism, gene_id_type, alpha,
                                                       propagate_annotations, aspects, evidence_types,
                                                       excluded_evidence_types, databases, excluded_databases,
                                                       qualifiers, excluded_qualifiers, return_nonsignificant, save_csv,
                                                       fname, return_fig, plot_horizontal, plot_ontology_graph,
-                                                      self.set_name, parallel_backend, statistical_test, biotype,
-                                                      background_genes, biotype_ref_path, exclude_unannotated_genes,
+                                                      self.set_name, parallel_backend, stats_test,
+                                                      background_genes, exclude_unannotated_genes,
                                                       ontology_graph_format=ontology_graph_format,
-                                                      plot_style=plot_style, show_expected=show_expected, **kwargs)
+                                                      plot_style=plot_style, show_expected=show_expected)
 
         if gui_mode:
             return runner.run(plot=False), runner
         return runner.run()
 
     @readable_name("Enrichment for KEGG Pathways")
-    def kegg_enrichment(self, organism: Union[str, int, Literal['auto'], Literal[DEFAULT_ORGANISMS]] = 'auto',
+    def kegg_enrichment(self, background_genes: Union[Set[str], Filter, 'FeatureSet'],
+                        organism: Union[str, int, Literal['auto'], Literal[DEFAULT_ORGANISMS]] = 'auto',
                         gene_id_type: Union[str, Literal['auto'], Literal[get_gene_id_types()]] = 'auto',
                         alpha: param_typing.Fraction = 0.05,
                         statistical_test: Literal['fisher', 'hypergeometric', 'randomization'] = 'fisher',
-                        biotype: Union[str, List[str], Literal['all']] = 'all',
-                        background_genes: Union[Set[str], Filter, 'FeatureSet'] = None,
-                        biotype_ref_path: Union[str, Path, Literal['predefined']] = 'predefined',
                         exclude_unannotated_genes: bool = True, return_nonsignificant: bool = False,
                         save_csv: bool = False, fname=None, return_fig: bool = False, plot_horizontal: bool = True,
                         show_expected: bool = False, plot_style: Literal['bar', 'lollipop'] = 'bar',
                         plot_pathway_graphs: bool = True,
                         pathway_graphs_format: Literal[param_typing.GRAPHVIZ_FORMATS] = 'none',
                         randomization_reps: PositiveInt = 10000, random_seed: Union[int, None] = None,
-                        parallel_backend: Literal[PARALLEL_BACKENDS] = 'loky',
-                        gui_mode: bool = False
-                        ) -> Union[pd.DataFrame, Tuple[pd.DataFrame, plt.Figure]]:
+                        parallel_backend: Literal[PARALLEL_BACKENDS] = 'loky', gui_mode: bool = False) -> Union[
+        pl.DataFrame, Tuple[pl.DataFrame, plt.Figure]]:
         """
         Calculates enrichment and depletion of the FeatureSet for Kyoto Encyclopedia of Genes and Genomes (KEGG) \
         curated pathways against a background set. \
@@ -974,18 +979,8 @@ class FeatureSet(set):
         :param statistical_test: determines the statistical test to be used for enrichment analysis. \
         Note that some propagation methods support only some of the available statistical tests.
         :type statistical_test: 'fisher', 'hypergeometric' or 'randomization' (default='fisher')
-        :type biotype: str specifying a specific biotype, list/set of strings each specifying a biotype, or 'all'. \
-        Default 'protein_coding'.
-        :param biotype: determines the background genes by their biotype. Requires specifying a Biotype Reference Table. \
-        'all' will include all genomic features in the reference table, \
-        'protein_coding' will include only protein-coding genes from the reference table, etc. \
-        Cannot be specified together with 'background_genes'.
         :type background_genes: set of feature indices, filtering.Filter object, or enrichment.FeatureSet object
-        :param background_genes: a set of specific feature indices to be used as background genes. \
-        Cannot be specified together with 'biotype'.
-        :type biotype_ref_path: str or pathlib.Path (default='predefined')
-        :param biotype_ref_path: the path of the Biotype Reference Table. \
-        Will be used to generate background set if 'biotype' is specified.
+        :param background_genes: a set of specific feature indices to be used as background genes.
         :param exclude_unannotated_genes: if True, genes that have no annotation associated with them will be \
         excluded from the enrichment analysis. This is the recommended practice for enrichment analysis, since \
         keeping unannotated genes in the analysis increases the chance of discovering spurious enrichment results.
@@ -1026,7 +1021,7 @@ class FeatureSet(set):
         if parallel_backend not 'sequential', will calculate the statistical tests using parallel processing. \
         In most cases parallel processing will lead to shorter computation time, but does not affect the results of \
         the analysis otherwise.
-        :rtype: pd.DataFrame (default) or Tuple[pd.DataFrame, matplotlib.figure.Figure]
+        :rtype: pl.DataFrame (default) or Tuple[pl.DataFrame, matplotlib.figure.Figure]
         :return: a pandas DataFrame with the indicated pathway names as rows/index; \
         and a matplotlib Figure, if 'return_figure' is set to True.
 
@@ -1048,38 +1043,32 @@ class FeatureSet(set):
             background_genes = background_genes.gene_set
         except AttributeError:
             pass
-        if statistical_test.lower() == 'randomization':
-            kwargs = dict(reps=randomization_reps, random_seed=random_seed)
-        else:
-            kwargs = {}
+        stats_test = self._get_stats_test(statistical_test, randomization_reps, random_seed)
         runner = enrichment_runner.KEGGEnrichmentRunner(self.gene_set, organism, gene_id_type, alpha,
                                                         return_nonsignificant, save_csv, fname, return_fig,
                                                         plot_horizontal, plot_pathway_graphs, self.set_name,
-                                                        parallel_backend, statistical_test, biotype, background_genes,
-                                                        biotype_ref_path, exclude_unannotated_genes,
+                                                        parallel_backend, stats_test, background_genes,
+                                                        exclude_unannotated_genes,
                                                         pathway_graphs_format=pathway_graphs_format,
-                                                        plot_style=plot_style, show_expected=show_expected, **kwargs)
+                                                        plot_style=plot_style, show_expected=show_expected)
 
         if gui_mode:
             return runner.run(plot=False), runner
         return runner.run()
 
     @readable_name("Enrichment for user-defined attributes")
-    def user_defined_enrichment(self, attributes: Union[List[str], str, List[int], int, Literal['all']],
+    def user_defined_enrichment(self, background_genes: Union[Set[str], Filter, 'FeatureSet'],
+                                attributes: Union[List[str], str, List[int], int, Literal['all']],
                                 statistical_test: Literal['fisher', 'hypergeometric', 'randomization'] = 'fisher',
                                 alpha: param_typing.Fraction = 0.05,
-                                biotype: Union[str, List[str], Literal['all']] = 'all',
-                                background_genes: Union[Set[str], Filter, 'FeatureSet'] = None,
                                 attr_ref_path: Union[str, Path, Literal['predefined']] = 'predefined',
-                                biotype_ref_path: Union[str, Path, Literal['predefined']] = 'predefined',
                                 exclude_unannotated_genes: bool = True, return_nonsignificant: bool = True,
                                 save_csv: bool = False, fname=None, return_fig: bool = False,
-                                plot_horizontal: bool = True,
-                                show_expected: bool = False, plot_style: Literal['bar', 'lollipop'] = 'bar',
-                                randomization_reps: PositiveInt = 10000,
+                                plot_horizontal: bool = True, show_expected: bool = False,
+                                plot_style: Literal['bar', 'lollipop'] = 'bar', randomization_reps: PositiveInt = 10000,
                                 random_seed: Union[int, None] = None,
-                                parallel_backend: Literal[PARALLEL_BACKENDS] = 'loky',
-                                gui_mode: bool = False) -> Union[pd.DataFrame, Tuple[pd.DataFrame, plt.Figure]]:
+                                parallel_backend: Literal[PARALLEL_BACKENDS] = 'loky', gui_mode: bool = False
+                                ) -> Union[pl.DataFrame, Tuple[pl.DataFrame, plt.Figure]]:
         """
         Calculates enrichment and depletion of the FeatureSet for user-defined attributes against a background set.\
         The attributes are drawn from an Attribute Reference Table. \
@@ -1110,10 +1099,8 @@ class FeatureSet(set):
         'all' will include all genomic features in the reference table, \
         'protein_coding' will include only protein-coding genes from the reference table, etc. \
         Cannot be specified together with 'background_genes'.
-        :type background_genes: set of feature indices, filtering.Filter object, or enrichment.FeatureSet object \
-        (default=None)
-        :param background_genes: a set of specific feature indices to be used as background genes. \
-        Cannot be specified together with 'biotype'.
+        :type background_genes: set of feature indices, filtering.Filter object, or enrichment.FeatureSet object
+        :param background_genes: a set of specific feature indices to be used as background genes.
         :param exclude_unannotated_genes: if True, genes that have no annotation associated with them will be \
         excluded from the enrichment analysis. This is the recommended practice for enrichment analysis, since \
         keeping unannotated genes in the analysis increases the chance of discovering spurious enrichment results.
@@ -1149,7 +1136,7 @@ class FeatureSet(set):
         if parallel_backend not 'sequential', will calculate the statistical tests using parallel processing. \
         In most cases parallel processing will lead to shorter computation time, but does not affect the results of \
         the analysis otherwise.
-        :rtype: pd.DataFrame (default) or Tuple[pd.DataFrame, matplotlib.figure.Figure]
+        :rtype: pl.DataFrame (default) or Tuple[pl.DataFrame, matplotlib.figure.Figure]
         :return: a pandas DataFrame with the indicated attribute names as rows/index; \
         and a matplotlib Figure, if 'return_figure' is set to True.
 
@@ -1172,31 +1159,27 @@ class FeatureSet(set):
         except AttributeError:
             pass
 
-        if statistical_test == 'randomization':
-            kwargs = dict(reps=randomization_reps)
-        else:
-            kwargs = dict()
+        stats_test = self._get_stats_test(statistical_test, randomization_reps, random_seed)
         runner = enrichment_runner.EnrichmentRunner(self.gene_set, attributes, alpha, attr_ref_path,
                                                     return_nonsignificant, save_csv, fname, return_fig, plot_horizontal,
-                                                    self.set_name, parallel_backend, statistical_test, biotype,
-                                                    background_genes, biotype_ref_path, exclude_unannotated_genes,
-                                                    single_set=False, random_seed=random_seed, plot_style=plot_style,
-                                                    show_expected=show_expected, **kwargs)
+                                                    self.set_name, parallel_backend, stats_test,
+                                                    background_genes, exclude_unannotated_genes,
+                                                    single_set=False, plot_style=plot_style,
+                                                    show_expected=show_expected)
         if gui_mode:
             return runner.run(plot=False), runner
         return runner.run()
 
     @readable_name("Enrichment for user-defined non-categorical attributes")
-    def non_categorical_enrichment(self, attributes: Union[List[str], str, List[int], int, Literal['all']] = None,
+    def non_categorical_enrichment(self, background_genes: Union[Set[str], Filter, 'FeatureSet'],
+                                   attributes: Union[List[str], str, List[int], int, Literal['all']],
                                    alpha: param_typing.Fraction = 0.05, parametric_test: bool = False,
-                                   biotype: Union[str, List[str], Literal['all']] = 'all',
-                                   background_genes: Union[Set[str], Filter, 'FeatureSet'] = None,
                                    attr_ref_path: Union[str, Path, Literal['predefined']] = 'predefined',
-                                   biotype_ref_path: Union[str, Path, Literal['predefined']] = 'predefined',
                                    plot_log_scale: bool = True,
                                    plot_style: Literal['interleaved', 'overlap'] = 'overlap', n_bins: PositiveInt = 50,
-                                   save_csv: bool = False, fname=None, return_fig: bool = False, gui_mode: bool = False
-                                   ) -> Union[pd.DataFrame, Tuple[pd.DataFrame, List[plt.Figure]]]:
+                                   save_csv: bool = False, fname=None, return_fig: bool = False,
+                                   gui_mode: bool = False) -> Union[
+        pl.DataFrame, Tuple[pl.DataFrame, List[plt.Figure]]]:
         """
         Calculates enrichment and depletion of the FeatureSet for user-defined non-categorical attributes \
         against a background set using either a one-sample T-test or Sign test. \
@@ -1216,21 +1199,10 @@ class FeatureSet(set):
         :param parametric_test: if True, performs a parametric statistical test (one-sample t-test). \
         If False (default), performs a non-parametric statistical test (sign test).
         :type parametric_test: bool (default=False)
-        :type biotype: str specifying a specific biotype, list/set of strings each specifying a biotype, or 'all' \
-        (default='protein_coding')
-        :param biotype: determines the background genes by their biotype. Requires specifying a Biotype Reference Table. \
-        'all' will include all genomic features in the reference table, \
-        'protein_coding' will include only protein-coding genes from the reference table, etc. \
-        Cannot be specified together with 'background_genes'.
-        :type background_genes: set of feature indices, filtering.Filter object, or enrichment.FeatureSet object \
-        (default=None)
-        :param background_genes: a set of specific feature indices to be used as background genes. \
-        Cannot be specified together with 'biotype'.
+        :type background_genes: set of feature indices, filtering.Filter object, or enrichment.FeatureSet object
+        :param background_genes: a set of specific feature indices to be used as background genes.
         :type attr_ref_path: str or pathlib.Path (default='predefined')
         :param attr_ref_path: the path of the Attribute Reference Table from which user-defined attributes will be drawn.
-        :type biotype_ref_path: str or pathlib.Path (default='predefined')
-        :param biotype_ref_path: the path of the Biotype Reference Table. \
-        Will be used to generate background set if 'biotype' is specified.
         :param plot_log_scale: if True (default), the Y-axis of the enrichment plot will be logarithmic. \
         Otherwise, the Y-axis of the enrichment plot will be linear.
         :type plot_log_scale: bool (default=True)
@@ -1246,7 +1218,7 @@ class FeatureSet(set):
         'C:/dir/file'. No '.csv' suffix is required. If None (default), fname will be requested in a manual prompt.
         :type return_fig: bool (default=False)
         :param return_fig: if True, returns a matplotlib Figure object in addition to the results DataFrame.
-        :rtype: pd.DataFrame (default) or Tuple[pd.DataFrame, matplotlib.figure.Figure]
+        :rtype: pl.DataFrame (default) or Tuple[pl.DataFrame, matplotlib.figure.Figure]
         :return: a pandas DataFrame with the indicated attribute names as rows/index; \
         and a matplotlib Figure, if 'return_figure' is set to True.
 
@@ -1268,9 +1240,8 @@ class FeatureSet(set):
             background_genes = background_genes.gene_set
         except AttributeError:
             pass
-        runner = enrichment_runner.NonCategoricalEnrichmentRunner(self.gene_set, attributes, alpha, biotype,
-                                                                  background_genes, attr_ref_path,
-                                                                  biotype_ref_path, save_csv, fname,
+        runner = enrichment_runner.NonCategoricalEnrichmentRunner(self.gene_set, attributes, alpha,
+                                                                  background_genes, attr_ref_path, save_csv, fname,
                                                                   return_fig, plot_log_scale, plot_style,
                                                                   n_bins, self.set_name, parallel_backend='sequential',
                                                                   parametric_test=parametric_test)
@@ -1306,7 +1277,7 @@ class FeatureSet(set):
     @readable_name('Summarize feature biotypes (based on a GTF file)')
     def biotypes_from_gtf(self, gtf_path: Union[str, Path],
                           attribute_name: Union[Literal[BIOTYPE_ATTRIBUTE_NAMES], str] = 'gene_biotype',
-                          feature_type: Literal['gene', 'transcript'] = 'gene') -> pd.DataFrame:
+                          feature_type: Literal['gene', 'transcript'] = 'gene') -> pl.DataFrame:
 
         """
         Returns a DataFrame describing the biotypes in the table and their count. \
@@ -1343,7 +1314,7 @@ class RankedSet(FeatureSet):
     def __init__(self, ranked_genes: Union[Filter, List[str], Tuple[str], np.ndarray], set_name: str = ''):
 
         if validation.isinstanceinh(ranked_genes, Filter):
-            self.ranked_genes = ranked_genes.df.index.values.astype('str', copy=True)
+            self.ranked_genes = ranked_genes.df[ranked_genes.df.columns[0]].to_numpy().astype('str', copy=True)
         elif isinstance(ranked_genes, (list, tuple)):
             self.ranked_genes = np.array(ranked_genes, dtype='str')
         elif isinstance(ranked_genes, np.ndarray):
@@ -1380,7 +1351,7 @@ class RankedSet(FeatureSet):
         return True
 
     def _convert_to_filter_obj(self) -> Filter:
-        return Filter.from_dataframe(pd.DataFrame(index=self.ranked_genes), self.set_name)
+        return Filter.from_dataframe(pl.DataFrame(self.ranked_genes), self.set_name)
 
     def _inplace(self, func, func_kwargs, inplace: bool, **update_kwargs):
         """
@@ -1403,13 +1374,12 @@ class RankedSet(FeatureSet):
         new_name = self.set_name + suffix
         new_ranked = []
         if len(new_set.difference(self.ranked_genes)) > 0:
-            new_ranked = applied.df.index
+            new_ranked = applied.df.select(pl.first()).to_series().to_numpy()
         else:
             for item in self.ranked_genes:
                 if item in new_set:
                     new_ranked.append(item)
-
-        new_ranked = np.array(new_ranked, dtype='str')
+            new_ranked = np.array(new_ranked, dtype='str')
         # if inplace, modify self, name and other properties of self
         if inplace:
             self.intersection_update(new_set)
@@ -1453,7 +1423,7 @@ class RankedSet(FeatureSet):
                                  ontology_graph_format: Literal[param_typing.GRAPHVIZ_FORMATS] = 'none',
                                  parallel_backend: Literal[PARALLEL_BACKENDS] = 'loky',
                                  gui_mode: bool = False
-                                 ) -> Union[pd.DataFrame, Tuple[pd.DataFrame, plt.Figure]]:
+                                 ) -> Union[pl.DataFrame, Tuple[pl.DataFrame, plt.Figure]]:
         """
         Calculates enrichment and depletion of the sorted RankedSet for Gene Ontology (GO) terms \
         WITHOUT a background set, using the generalized Minimum Hypergeometric Test (XL-mHG, developed by  \
@@ -1563,7 +1533,7 @@ class RankedSet(FeatureSet):
         if parallel_backend not 'sequential', will calculate the statistical tests using parallel processing. \
         In most cases parallel processing will lead to shorter computation time, but does not affect the results of \
         the analysis otherwise.
-        :rtype: pd.DataFrame (default) or Tuple[pd.DataFrame, matplotlib.figure.Figure]
+        :rtype: pl.DataFrame (default) or Tuple[pl.DataFrame, matplotlib.figure.Figure]
         :return: a pandas DataFrame with the indicated attribute names as rows/index; \
         and a matplotlib Figure, if 'return_figure' is set to True.
 
@@ -1587,17 +1557,17 @@ class RankedSet(FeatureSet):
 
            Example plot of single_set_go_enrichment(plot_horizontal = False)
         """
+        stats_test = enrichment_runner.XlmhgTest(min_positive_genes, lowest_cutoff)
         runner = enrichment_runner.GOEnrichmentRunner(self.ranked_genes, organism, gene_id_type, alpha,
                                                       propagate_annotations, aspects, evidence_types,
                                                       excluded_evidence_types, databases, excluded_databases,
                                                       qualifiers, excluded_qualifiers, return_nonsignificant, save_csv,
                                                       fname, return_fig, plot_horizontal, plot_ontology_graph,
-                                                      self.set_name,
-                                                      parallel_backend=parallel_backend, enrichment_func_name='xlmhg',
+                                                      self.set_name, parallel_backend=parallel_backend,
+                                                      stats_test=stats_test,
                                                       exclude_unannotated_genes=exclude_unannotated_genes,
                                                       single_set=True, ontology_graph_format=ontology_graph_format,
-                                                      plot_style=plot_style, show_expected=show_expected,
-                                                      x=min_positive_genes, l_fraction=lowest_cutoff)
+                                                      plot_style=plot_style, show_expected=show_expected)
 
         if gui_mode:
             return runner.run(plot=False), runner
@@ -1616,7 +1586,7 @@ class RankedSet(FeatureSet):
                                    plot_pathway_graphs: bool = True,
                                    pathway_graphs_format: Literal[param_typing.GRAPHVIZ_FORMATS] = 'none',
                                    parallel_backend: Literal[PARALLEL_BACKENDS] = 'loky', gui_mode: bool = False
-                                   ) -> Union[pd.DataFrame, Tuple[pd.DataFrame, plt.Figure]]:
+                                   ) -> Union[pl.DataFrame, Tuple[pl.DataFrame, plt.Figure]]:
         """
         Calculates enrichment and depletion of the sorted RankedSet for Kyoto Encyclopedia of Genes and Genomes (KEGG) \
         curated pathways WITHOUT a background set, using the generalized Minimum Hypergeometric Test \
@@ -1695,7 +1665,7 @@ class RankedSet(FeatureSet):
         if parallel_backend not 'sequential', will calculate the statistical tests using parallel processing. \
         In most cases parallel processing will lead to shorter computation time, but does not affect the results of \
         the analysis otherwise.
-        :rtype: pd.DataFrame (default) or Tuple[pd.DataFrame, matplotlib.figure.Figure]
+        :rtype: pl.DataFrame (default) or Tuple[pl.DataFrame, matplotlib.figure.Figure]
         :return: a pandas DataFrame with the indicated attribute names as rows/index; \
         and a matplotlib Figure, if 'return_figure' is set to True.
 
@@ -1719,14 +1689,14 @@ class RankedSet(FeatureSet):
 
            Example plot of single_set_kegg_enrichment(plot_horizontal = False)
         """
+        stats_test = enrichment_runner.XlmhgTest(min_positive_genes, lowest_cutoff)
         runner = enrichment_runner.KEGGEnrichmentRunner(self.ranked_genes, organism, gene_id_type, alpha,
                                                         return_nonsignificant, save_csv, fname, return_fig,
                                                         plot_horizontal, plot_pathway_graphs, self.set_name,
-                                                        parallel_backend=parallel_backend, enrichment_func_name='xlmhg',
+                                                        parallel_backend=parallel_backend, stats_test=stats_test,
                                                         exclude_unannotated_genes=exclude_unannotated_genes,
                                                         single_set=True, pathway_graphs_format=pathway_graphs_format,
-                                                        plot_style=plot_style, show_expected=show_expected,
-                                                        x=min_positive_genes, l_fraction=lowest_cutoff)
+                                                        plot_style=plot_style, show_expected=show_expected)
 
         if gui_mode:
             return runner.run(plot=False), runner
@@ -1771,6 +1741,17 @@ class RankedSet(FeatureSet):
         :param return_nonsignificant: if True (default), the results DataFrame will include all tested attributes - \
         both significant and non-significant ones. If False, only significant attributes will be returned.
         :type return_nonsignificant: bool (default=True)
+        :param min_positive_genes: the minimum number of 'positive' genes (genes that match the given attribute) \
+        for the enrichment to be considered a valid enrichment. All hypergeometric cutoffs with a smaller number of \
+        'positive' genes will not be tested. This is the 'X' parameter of the XL-mHG nonparametric test. \
+        For example: a value of 10 means that a valid enrichment must have at least 10 'positive' genes \
+        to be considered real enrichment.
+        :type min_positive_genes: a positive int (default=10)
+        :param lowest_cutoff: the lowest cutoff of the hypergeometric that will be tested. \
+        This determines the 'L' parameter of the XL-mHG nonparametric test. For example: \
+        a value of 1 means that every cutoff will be tested. A value of 0.25 means that every cutoff that compares \
+        the top 25% or smaller of the list to the rest of the list will be tested.
+        :type lowest_cutoff: float between 0 and 1 (default=0.25)
         :type save_csv: bool, default False
         :param save_csv: If True, will save the results to a .csv file, under the name specified in 'fname'.
         :type fname: str or pathlib.Path
@@ -1791,7 +1772,7 @@ class RankedSet(FeatureSet):
         if parallel_backend not 'sequential', will calculate the statistical tests using parallel processing. \
         In most cases parallel processing will lead to shorter computation time, but does not affect the results of \
         the analysis otherwise.
-        :rtype: pd.DataFrame (default) or Tuple[pd.DataFrame, matplotlib.figure.Figure]
+        :rtype: pl.DataFrame (default) or Tuple[pl.DataFrame, matplotlib.figure.Figure]
         :return: a pandas DataFrame with the indicated attribute names as rows/index; \
         and a matplotlib Figure, if 'return_figure' is set to True.
 
@@ -1809,13 +1790,13 @@ class RankedSet(FeatureSet):
            Example plot of single_set_enrichment(plot_horizontal = False)
 
         """
+        stats_test = enrichment_runner.XlmhgTest(min_positive_genes, lowest_cutoff)
         runner = enrichment_runner.EnrichmentRunner(self.ranked_genes, attributes, alpha, attr_ref_path,
                                                     return_nonsignificant, save_csv, fname, return_fig, plot_horizontal,
                                                     self.set_name, parallel_backend=parallel_backend,
-                                                    enrichment_func_name='xlmhg',
+                                                    stats_test=stats_test,
                                                     exclude_unannotated_genes=exclude_unannotated_genes,
-                                                    single_set=True, plot_style=plot_style, show_expected=show_expected,
-                                                    x=min_positive_genes, l_fraction=lowest_cutoff)
+                                                    single_set=True, plot_style=plot_style, show_expected=show_expected)
         if gui_mode:
             return runner.run(plot=False), runner
         return runner.run()
@@ -1872,9 +1853,10 @@ def enrichment_bar_plot(results_table_path: Union[str, Path], alpha: param_typin
     :return: Figure object containing the bar plot
     :rtype: matplotlib.figure.Figure instance
     """
-    results_table = io.load_table(results_table_path, 0)
-    runner = enrichment_runner.EnrichmentRunner(set(), results_table.index, alpha, '', True, False, '', True,
-                                                plot_horizontal, '', False, 'hypergeometric', 'all',
+    results_table = io.load_table(results_table_path)
+    runner = enrichment_runner.EnrichmentRunner(set(), results_table[results_table.columns[0]].to_list(), alpha, '',
+                                                True, False, '', True,
+                                                plot_horizontal, '', False, enrichment_runner.FishersExactTest(), set(),
                                                 plot_style=plot_style, show_expected=show_expected)
     runner.en_score_col = enrichment_score_column
     runner.results = results_table
@@ -1901,7 +1883,6 @@ def _fetch_sets(objs: dict, ref: Union[str, Path, Literal['predefined']] = 'pred
     if validation.isinstanceiter_any(objs.values(), str):
         attr_ref_table = io.load_table(settings.get_attr_ref_path(ref))
         validation.validate_attr_table(attr_ref_table)
-        attr_ref_table.set_index('gene', inplace=True)
 
     for set_name, set_obj in zip(objs.keys(), objs.values()):
         if validation.isinstanceinh(set_obj, FeatureSet):
@@ -1911,7 +1892,8 @@ def _fetch_sets(objs: dict, ref: Union[str, Path, Literal['predefined']] = 'pred
         elif validation.isinstanceinh(set_obj, Filter):
             fetched_sets[set_name] = set_obj.index_set
         elif isinstance(set_obj, str):
-            fetched_sets[set_name] = set(attr_ref_table[set_obj].loc[attr_ref_table[set_obj].notna()].index)
+            fetched_sets[set_name] = parsing.data_to_set(
+                attr_ref_table.filter(pl.col(set_obj).is_not_null()).select(pl.first()))
         else:
             raise TypeError(f"Invalid type for the set '{set_name}': {set_obj}.")
 
@@ -2141,7 +2123,7 @@ def gene_ontology_graph(aspect: Literal[param_typing.GO_ASPECTS], results_table_
     :param dpi: resolution of the ontology graph in DPI (dots per inch).
     :type dpi: int (default=300)
     """
-    results_df = io.load_table(results_table_path, index_col=0)
+    results_df = io.load_table(results_table_path)
     assert enrichment_score_column in results_df, f"Invalid enrichment_score_col '{enrichment_score_column}'"
     dag_tree = ontology.fetch_go_basic()
     return dag_tree.plot_ontology(aspect, results_df, enrichment_score_column, title, ylabel, graph_format, dpi)

@@ -1,7 +1,9 @@
+import abc
 import collections
 import itertools
 import logging
 import warnings
+from copy import deepcopy
 from functools import lru_cache
 from pathlib import Path
 from typing import Iterable, List, Tuple, Union, Collection, Set, Dict, Literal
@@ -10,7 +12,8 @@ import joblib
 import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
 import numpy as np
-import pandas as pd
+import polars as pl
+import polars.selectors as cs
 import statsmodels.stats.multitest as multitest
 from matplotlib.cm import ScalarMappable
 from mpl_toolkits.axes_grid1 import make_axes_locatable
@@ -44,11 +47,11 @@ class Size:
         self.size = size
 
 
-def dot_scaling_func(values: Union[float, np.ndarray, pd.Series]):
+def dot_scaling_func(values: Union[float, np.ndarray, pl.Series]):
     return 8 * np.array(values) ** 0.75
 
 
-class sizeHandler:
+class SizeHandler:
     def __init__(self, size: int):
         self.size = size
 
@@ -62,12 +65,217 @@ class sizeHandler:
         return patch
 
 
+class StatsTest(abc.ABC):
+    @abc.abstractmethod
+    def run(self, attribute_name: str, annotation_set: Set[str], gene_set: Set[str], background_set: Set[str],
+            annotation_set_unfiltered: Union[Set[str], None] = None) -> list:
+        raise NotImplementedError
+
+    @staticmethod
+    def get_hypergeometric_params(annotation_set: Set[str], gene_set: Set[str], background_set: Set[str]
+                                  ) -> Tuple[int, int, int, int, int, float, float]:
+        bg_size = len(background_set)
+        en_size = len(gene_set)
+        attr_size = len(annotation_set)
+        en_attr_size = len(gene_set.intersection(annotation_set))
+        expected_fraction = attr_size / bg_size
+        observed_fraction = en_attr_size / en_size
+        log2_fold_enrichment = np.log2(observed_fraction / expected_fraction) if observed_fraction > 0 else -np.inf
+        obs, exp = int(en_size * observed_fraction), en_size * expected_fraction
+
+        return bg_size, en_size, attr_size, en_attr_size, obs, exp, log2_fold_enrichment
+
+
+class TTest(StatsTest):
+    def run(self, attribute_name: str, annotation_dict: Dict[str, float], gene_set: Set[str], background_set: Set[str],
+            annotation_set_unfiltered=None):
+        assert annotation_set_unfiltered is None
+        obs_values = [annotation_dict[gene] for gene in gene_set]
+        exp = np.nanmean([annotation_dict[gene] for gene in background_set])
+        obs = np.mean(obs_values)
+        if np.isnan(obs):
+            pval = np.nan
+        else:
+            _, pval = ttest_1samp(obs_values, popmean=exp)
+        return [attribute_name, len(gene_set), obs, exp, pval]
+
+
+class SignTest(StatsTest):
+    def run(self, attribute_name: str, annotation_dict: Dict[str, float], gene_set: Set[str], background_set: Set[str],
+            annotation_set_unfiltered=None):
+        assert annotation_set_unfiltered is None
+        obs_values = [annotation_dict[gene] for gene in gene_set]
+        exp = np.nanmedian([annotation_dict[gene] for gene in background_set])
+        obs = np.median(obs_values)
+        if np.isnan(obs):
+            pval = np.nan
+        else:
+            _, pval = sign_test(obs_values, exp)
+        return [attribute_name, len(gene_set), obs, exp, pval]
+
+
+class PermutationTest(StatsTest):
+    def __init__(self, n_permutations: int, random_seed: int = None):
+        self.n_permutations = n_permutations
+        self.random_seed = random_seed
+
+    def run(self, attribute_name: str, annotation_set: Set[str], gene_set: Set[str], background_set: Set[str],
+            annotation_set_unfiltered: Union[Set[str], None] = None):
+        np.random.seed(self.random_seed)
+        bg_size, en_size, attr_size, en_attr_size, obs, exp, log2fc = self.get_hypergeometric_params(
+            annotation_set, gene_set, background_set)
+        pval = self._calc_permutation_pval(log2fc, self.n_permutations, obs / en_size, bg_size, en_size, attr_size)
+        if annotation_set_unfiltered is not None:
+            _, _, _, _, obs, exp, log2fc = self.get_hypergeometric_params(annotation_set_unfiltered, gene_set,
+                                                                          background_set)
+        return [attribute_name, en_size, obs, exp, log2fc, pval]
+
+    @staticmethod
+    @generic.numba.jit(nopython=True)
+    def _calc_permutation_pval(log2fc: float, reps: int, obs_frac: float, bg_size: int, en_size: int, attr_size: int
+                               ) -> float:  # pragma: no cover
+        bg_array = np.empty(bg_size, dtype=generic.numba.bool_)
+        bg_array[0:attr_size] = True
+        bg_array[attr_size:] = False
+        ind_range = np.arange(bg_array.shape[0])
+        success = 0
+        if log2fc >= 0:
+            for _ in range(reps):
+                success += np.sum(bg_array[np.random.choice(ind_range, en_size, replace=False)]) / en_size >= obs_frac
+
+        else:
+            for _ in range(reps):
+                success += np.sum(bg_array[np.random.choice(ind_range, en_size, replace=False)]) / en_size <= obs_frac
+        pval = (success + 1) / (reps + 1)
+        return pval
+
+
+class FishersExactTest(StatsTest):
+    def run(self, attribute_name: str, annotation_set: Set[str], gene_set: Set[str], background_set: Set[str],
+            annotation_set_unfiltered: Union[Set[str], None] = None):
+        bg_size, en_size, attr_size, en_attr_size, obs, exp, log2fc = self.get_hypergeometric_params(annotation_set,
+                                                                                                     gene_set,
+                                                                                                     background_set)
+        pval = self._calc_fisher_pval(bg_size, en_size, attr_size, en_attr_size)
+        if annotation_set_unfiltered is not None:
+            _, _, _, _, obs, exp, log2fc = self.get_hypergeometric_params(annotation_set_unfiltered, gene_set,
+                                                                          background_set)
+        return [attribute_name, en_size, obs, exp, log2fc, pval]
+
+    def run_weight(self, attribute_name: str, annotation_dict: Dict[str, float], gene_set: Set[str],
+                   background_set: Set[str]):
+        bg_size = len(background_set)
+        en_size = len(gene_set)
+        attr_size = sum(annotation_dict.values())
+        en_attr_size = sum(val for key, val in annotation_dict.items() if key in gene_set)
+        pval = self._calc_fisher_pval(bg_size, en_size, attr_size, en_attr_size)
+        bg_size, en_size, attr_size, en_attr_size, obs, exp, log2fc = self.get_hypergeometric_params(annotation_dict,
+                                                                                                     gene_set,
+                                                                                                     background_set)
+
+        return [attribute_name, en_size, obs, exp, log2fc, pval]
+
+    @staticmethod
+    @lru_cache(maxsize=256, typed=False)
+    def _calc_fisher_pval(bg_size: int, en_size: int, attr_size: int, en_attr_size: int):
+        contingency_table = [[en_attr_size, attr_size - en_attr_size],
+                             [en_size - en_attr_size, bg_size - attr_size - en_size + en_attr_size]]
+        _, pval = fisher_exact(contingency_table)
+        return pval
+
+
+class HypergeometricTest(StatsTest):
+    def run(self, attribute_name: str, annotation_set: Set[str], gene_set: Set[str], background_set: Set[str],
+            annotation_set_unfiltered: Union[Set[str], None] = None):
+        bg_size, en_size, attr_size, en_attr_size, obs, exp, log2fc = self.get_hypergeometric_params(annotation_set,
+                                                                                                     gene_set,
+                                                                                                     background_set)
+
+        pval = self._calc_hg_pval(bg_size, en_size, attr_size, en_attr_size)
+        if annotation_set_unfiltered is not None:
+            _, _, _, _, obs, exp, log2fc = self.get_hypergeometric_params(annotation_set_unfiltered, gene_set,
+                                                                          background_set)
+        return [attribute_name, en_size, obs, exp, log2fc, pval]
+
+    @staticmethod
+    def _calc_hg_pval(bg_size: int, en_size: int, attr_size: int, en_attr_size: int):
+        try:
+            if en_attr_size / en_size < attr_size / bg_size:
+                return hypergeom.cdf(en_attr_size, bg_size, attr_size, en_size)
+            return hypergeom.sf(en_attr_size - 1, bg_size, attr_size, en_size)
+        except ZeroDivisionError:
+            return hypergeom.cdf(en_attr_size, bg_size, attr_size, en_size)
+
+
+class XlmhgTest(StatsTest):
+    def __init__(self, min_positive_genes: int = 10, lowest_cutoff: float = 0.25):
+        self.min_positive_genes = min_positive_genes
+        self.lowest_cutoff = lowest_cutoff
+
+    def run(self, attribute_name: str, annotation_set: Set[str], gene_set: List[str], background_set: Set[str] = None,
+            annotation_set_unfiltered: Union[Set[str], None] = None):
+        assert background_set is None
+        if not HAS_XLMHG:
+            warnings.warn("Package 'xlmhglite' is not installed. \n"
+                          "If you want to run single-set enrichment analysis, "
+                          "please install package 'xlmhglite' and try again. ")
+            return [attribute_name, np.nan, np.nan, np.nan, np.nan, np.nan]
+
+        index_vec, rev_index_vec = self._generate_xlmhg_index_vectors(gene_set, annotation_set)
+        n, X, L, table = self._get_xlmhg_parameters(index_vec, gene_set)
+
+        res_obj_fwd = xlmhglite.get_xlmhg_test_result(N=n, indices=index_vec, X=X, L=L, table=table)
+        res_obj_rev = xlmhglite.get_xlmhg_test_result(N=n, indices=rev_index_vec, X=X, L=L, table=table)
+
+        obs, exp, en_score, pval = self._extract_xlmhg_results(res_obj_fwd, res_obj_rev)
+        return [attribute_name, n, obs, exp, en_score, pval]
+
+    def _get_xlmhg_parameters(self, index_vec, ranked_genes):
+        n = len(ranked_genes)
+        # X = the minimal amount of 'positive' elements above the hypergeometric cutoffs out of all the positive
+        # elements in the ranked set.
+        X = min(self.min_positive_genes, n)
+        # L = the lowest possible cutoff (n) to be tested out of the entire list.
+        # Determined to be floor(lowest_cutoff * N), where 'N' is total number of elements in the ranked set (n).
+        L = int(np.floor(self.lowest_cutoff * n))
+        L = min(L, n)
+        # pre-allocate empty array to speed up computation
+        table = np.empty((len(index_vec) + 1, n - len(index_vec) + 1), dtype=np.longdouble)
+        return n, X, L, table
+
+    @staticmethod
+    def _extract_xlmhg_results(result_obj_fwd: xlmhglite.mHGResult, result_obj_rev: xlmhglite.mHGResult
+                               ) -> Tuple[int, float, float, float]:
+        if result_obj_fwd.pval <= result_obj_rev.pval:
+            obs = result_obj_fwd.k
+            exp = result_obj_fwd.K * (result_obj_fwd.cutoff / float(result_obj_fwd.N))
+            pval = result_obj_fwd.pval
+            en_score = result_obj_fwd.escore if not np.isnan(result_obj_fwd.escore) else 1
+        else:
+            obs = result_obj_rev.k
+            exp = result_obj_rev.K * (result_obj_rev.cutoff / float(result_obj_rev.N))
+            pval = result_obj_rev.pval
+            en_score = 1 / result_obj_rev.escore if not np.isnan(result_obj_rev.escore) else 1
+        pval = pval if not np.isnan(pval) else 1
+        en_score = en_score if not np.isnan(en_score) else 1
+        log2_en_score = np.log2(en_score) if en_score > 0 else -np.inf
+
+        return obs, exp, log2_en_score, pval
+
+    @staticmethod
+    def _generate_xlmhg_index_vectors(ranked_genes, annotation_set) -> Tuple[np.ndarray, np.ndarray]:
+        n = len(ranked_genes)
+        index_vec = np.uint16([i for i in range(n) if ranked_genes[i] in annotation_set])
+        rev_index_vec = np.uint16([n - 1 - index_vec[i - 1] for i in range(len(index_vec), 0, -1)])
+        return index_vec, rev_index_vec
+
+
 class EnrichmentRunner:
     ENRICHMENT_SCORE_YLABEL = r"$\log_2$(Fold Enrichment)"
     SINGLE_SET_ENRICHMENT_SCORE_YLABEL = r"$\log_2$(XL-mHG enrichment score)"
 
     __slots__ = {'results': 'DataFrame containing enrichment analysis results',
-                 'annotation_df': 'DataFrame containing all annotation data per gene',
+                 'annotations': 'dict containing all annotation data',
                  'gene_set': 'the set of genes/genomic features whose enrichment to calculate',
                  'attributes': 'the list of attributes/terms to calculate enrichment for',
                  'alpha': 'the statistical signifiacnce threshold',
@@ -81,30 +289,27 @@ class EnrichmentRunner:
                  'set_name': 'name of the set of genes/genomic features whose enrichment is calculated',
                  'parallel_backend': 'indicates whether to use parallel processing, and with which backend',
                  'exclude_unannotated_genes': 'indicates whether to discard unannotated genes from the background and enrichment sets',
-                 'enrichment_func': 'the function to be used to calculate enrichment p-values',
-                 'pvalue_kwargs': 'key-worded arguments for the function which calculates enrichment p-values',
+                 'stats_test': 'the function to be used to calculate enrichment p-values',
                  'single_set': 'indicates whether enrichment is calculated on a single set of genes '
                                '(without background) or on a set of target genes and a set of background genes',
-                 'biotypes': 'the requested biotype of the background gene set',
                  'background_set': 'the background set of genes for enrichment analysis',
-                 'biotype_ref_path': 'path of the Biotype Reference Table to load, if such table exists',
-                 'random_seed': 'random seed to be used when non-deterministic functions are used',
                  'en_score_col': 'name of the enrichment score column in the results DataFrame',
                  'ranked_genes': 'the set of genes/genomic features whose enrichment to calculate, '
                                  'pre-sorted and ranked by the user',
                  'plot_style': 'plot style',
-                 'show_expected': 'show observed/expected values on plot'}
+                 'show_expected': 'show observed/expected values on plot',
+                 'annotated_genes':'set of annotated genes'}
     printout_params = "appear in the Attribute Reference Table"
 
     def __init__(self, genes: Union[set, np.ndarray], attributes: Union[Iterable, str, int],
                  alpha: param_typing.Fraction, attr_ref_path: str, return_nonsignificant: bool, save_csv: bool,
                  fname: str, return_fig: bool, plot_horizontal: bool, set_name: str,
-                 parallel_backend: Literal[PARALLEL_BACKENDS], enrichment_func_name: str, biotypes=None,
-                 background_set: set = None, biotype_ref_path: str = None, exclude_unannotated_genes: bool = True,
-                 single_set: bool = False, random_seed: int = None, plot_style: Literal['bar', 'lollipop'] = 'bar',
-                 show_expected: bool = False, **pvalue_kwargs):
-        self.results: pd.DataFrame = pd.DataFrame()
-        self.annotation_df: pd.DataFrame = pd.DataFrame()
+                 parallel_backend: Literal[PARALLEL_BACKENDS], stats_test: StatsTest,
+                 background_set: set = None, exclude_unannotated_genes: bool = True,
+                 single_set: bool = False, plot_style: Literal['bar', 'lollipop'] = 'bar',
+                 show_expected: bool = False):
+        self.results: pl.DataFrame = pl.DataFrame()
+        self.annotations: dict = dict()
         self.gene_set = parsing.data_to_set(genes)
         self.attributes = attributes
         self.alpha = alpha
@@ -124,40 +329,31 @@ class EnrichmentRunner:
         self.show_expected = show_expected
         self.set_name = set_name
         self.parallel_backend = parallel_backend
-        self.enrichment_func = self._get_enrichment_func(enrichment_func_name)
-        if not self.enrichment_func:
+        self.stats_test = stats_test
+        if self.stats_test is None:
             return
-        self.pvalue_kwargs = pvalue_kwargs
         self.exclude_unannotated_genes = exclude_unannotated_genes
+        self.annotated_genes = None
         self.single_set = single_set
         if self.single_set:
-            assert biotypes is None, "Enrichment in single_set mode does not accept a 'biotypes' argument."
             assert background_set is None, "Enrichment in single_set mode does not accept a 'background_set' argument."
-            assert biotype_ref_path is None, \
-                "Enrichment in single_set mode does not accept a 'biotype_ref_path' argument."
-            assert random_seed is None, "Enrichment in single_set mode does not accept a 'random_seed' argument."
             assert isinstance(genes, np.ndarray), f"Invalid type for argument 'genes' in single_set mode: " \
                                                   f"expected np.ndarray, instead got '{type(genes)}'."
 
-            legal_enrichment_funcs = {'xlmhg'}
-            assert enrichment_func_name.lower() in legal_enrichment_funcs, \
-                f"Invalid enrichment_func_name for single_set mode: '{enrichment_func_name}'."
+            assert isinstance(stats_test, XlmhgTest), \
+                f"Invalid enrichment function for single_set mode: '{stats_test}'."
 
-            self.biotypes, self.background_set, self.biotype_ref_path, self.random_seed = None, None, None, None
+            self.background_set = None
             self.en_score_col = 'log2_enrichment_score'
             self.ranked_genes = genes
             self._update_ranked_genes()
         else:
-            assert (isinstance(biotypes, (str, list, set, tuple)))
-            self.random_seed = random_seed
-            self.biotypes = biotypes
             self.background_set = background_set
-            self.biotype_ref_path = settings.get_biotype_ref_path(biotype_ref_path) if biotypes != 'all' else None
             self.en_score_col = 'log2_fold_enrichment'
             self.ranked_genes = None
 
     @classmethod
-    def from_results_df(cls, results: pd.DataFrame, alpha: float, plot_horizontal: bool, set_name: str):
+    def from_results_df(cls, results: pl.DataFrame, alpha: float, plot_horizontal: bool, set_name: str):
         runner = cls.__new__(cls)
         runner.results = results
         runner.alpha = alpha
@@ -165,11 +361,11 @@ class EnrichmentRunner:
         runner.set_name = set_name
         return runner
 
-    def run(self, plot: bool = True) -> Union[pd.DataFrame, Tuple[pd.DataFrame, plt.Figure]]:
-        if not self.enrichment_func:
-            return pd.DataFrame()
+    def run(self, plot: bool = True) -> Union[pl.DataFrame, Tuple[pl.DataFrame, plt.Figure]]:
+        if self.stats_test is None or not self.validate_statistical_test():
+            return pl.DataFrame()
         self.fetch_annotations()
-        self.fetch_attributes()
+        self.get_attribute_names()
         if not self.single_set:
             self.get_background_set()
         self.update_gene_set()
@@ -177,7 +373,7 @@ class EnrichmentRunner:
             warnings.warn('After removing unannotated genes and/or genes not in the background set, '
                           'the enrichment set is empty. '
                           'Therefore, RNAlysis will not proceed with enrichment analysis. ')
-            return pd.DataFrame()
+            return pl.DataFrame()
         self.filter_annotations()
         unformatted_results = self.calculate_enrichment()
         self.format_results(unformatted_results)
@@ -211,18 +407,18 @@ class EnrichmentRunner:
         io.save_table(self.results, filename=self.fname if self.fname.endswith('.csv') else self.fname + '.csv')
 
     def get_background_set(self):
-        if self.background_set is None:
-            self._get_background_set_from_biotype()
-        else:
-            self._get_background_set_from_set()
+        self.background_set = parsing.data_to_set(self.background_set)
 
         orig_bg_size = len(self.background_set)
+
         if self.exclude_unannotated_genes:
-            self.background_set = self.background_set.intersection(parsing.data_to_set(self.annotation_df.index))
-        else:
-            ann_missing = self.background_set.difference(parsing.data_to_set(self.annotation_df.index))
-            ann_missing_df = pd.DataFrame(index=parsing.data_to_list(ann_missing), columns=self.annotation_df.columns)
-            self.annotation_df = pd.concat([self.annotation_df, ann_missing_df])
+            if self.annotated_genes is None:
+                annotated_genes = set()
+                for s in self.annotations.values():
+                    annotated_genes.update(s)
+            else:
+                annotated_genes = self.annotated_genes
+            self.background_set = self.background_set.intersection(annotated_genes)
 
         if orig_bg_size - len(self.background_set) > 0:
             warning = f"{orig_bg_size - len(self.background_set)} genes out of the requested {orig_bg_size} " \
@@ -237,199 +433,23 @@ class EnrichmentRunner:
 
         print(f"{len(self.background_set)} background genes are used.")
 
-    def _get_enrichment_func(self, pval_func_name: str):
-        assert isinstance(pval_func_name, str), f"Invalid type for 'pval_func_name': {type(pval_func_name)}."
-        pval_func_name = pval_func_name.lower()
-        if pval_func_name == 'fisher':
-            return self._fisher_enrichment
-        if pval_func_name == 'randomization':
-            return self._randomization_enrichment
-        elif pval_func_name == 'hypergeometric':
-            return self._hypergeometric_enrichment
-        elif pval_func_name == 'xlmhg':
-            if HAS_XLMHG:
-                return self._xlmhg_enrichment
-            else:
-                if not HAS_XLMHG:
-                    warnings.warn("Package 'xlmhg' is not installed. \n"
-                                  "If you want to run single-set enrichment analysis, "
-                                  "please install package 'xlmhg' and try again. ")
-
-                return False
-        else:
-            raise ValueError(f"Unknown enrichment function '{pval_func_name}'.")
-
-    def _get_hypergeometric_parameters(self, attribute: str) -> Tuple[int, int, int, int]:
-        bg_size = self.annotation_df.shape[0]
-        de_size = len(self.gene_set)
-        go_size = self.annotation_df[attribute].notna().sum()
-        go_de_size = self.annotation_df.loc[list(self.gene_set), attribute].notna().sum()
-        return bg_size, de_size, go_size, go_de_size
-
-    def _get_xlmhg_parameters(self, index_vec):
-        n = len(self.ranked_genes)
-        # X = the minimal amount of 'positive' elements above the hypergeometric cutoffs out of all the positive
-        # elements in the ranked set.
-        X = 10 if 'x' not in self.pvalue_kwargs else self.pvalue_kwargs['x']
-        X = min(X, n)
-        # L = the lowest possible cutoff (n) to be tested out of the entire list.
-        # Determined to be floor(l_fraction * N), where 'N' is total number of elements in the ranked set (n).
-        if 'l_fraction' in self.pvalue_kwargs and self.pvalue_kwargs['l_fraction'] is not None:
-            l_fraction = self.pvalue_kwargs['l_fraction']
-        else:
-            l_fraction = 0.1
-        L = int(np.floor(l_fraction * n))
-        L = min(L, n)
-        # pre-allocate empty array to speed up computation
-        table = np.empty((len(index_vec) + 1, n - len(index_vec) + 1), dtype=np.longdouble)
-        return n, X, L, table
-
-    def _xlmhg_enrichment(self, attribute: str, **_) -> list:
-        index_vec, rev_index_vec = self._generate_xlmhg_index_vectors(attribute)
-        n, X, L, table = self._get_xlmhg_parameters(index_vec)
-
-        res_obj_fwd = xlmhglite.get_xlmhg_test_result(N=n, indices=index_vec, X=X, L=L, table=table)
-        res_obj_rev = xlmhglite.get_xlmhg_test_result(N=n, indices=rev_index_vec, X=X, L=L, table=table)
-
-        obs, exp, en_score, pval = self._extract_xlmhg_results(res_obj_fwd, res_obj_rev)
-        return [attribute, n, obs, exp, en_score, pval]
-
-    @staticmethod
-    def _extract_xlmhg_results(result_obj_fwd: xlmhglite.mHGResult, result_obj_rev: xlmhglite.mHGResult
-                               ) -> Tuple[int, float, float, float]:
-        if result_obj_fwd.pval <= result_obj_rev.pval:
-            obs = result_obj_fwd.k
-            exp = result_obj_fwd.K * (result_obj_fwd.cutoff / float(result_obj_fwd.N))
-            pval = result_obj_fwd.pval
-            en_score = result_obj_fwd.escore if not np.isnan(result_obj_fwd.escore) else 1
-        else:
-            obs = result_obj_rev.k
-            exp = result_obj_rev.K * (result_obj_rev.cutoff / float(result_obj_rev.N))
-            pval = result_obj_rev.pval
-            en_score = 1 / result_obj_rev.escore if not np.isnan(result_obj_rev.escore) else 1
-        pval = pval if not np.isnan(pval) else 1
-        en_score = en_score if not np.isnan(en_score) else 1
-        log2_en_score = np.log2(en_score) if en_score > 0 else -np.inf
-
-        return obs, exp, log2_en_score, pval
-
-    def _generate_xlmhg_index_vectors(self, attribute) -> Tuple[np.ndarray, np.ndarray]:
-        n = len(self.ranked_genes)
-        ranked_srs = self.annotation_df.loc[self.ranked_genes, attribute]
-        assert ranked_srs.shape[0] == n
-        index_vec = np.uint16(np.nonzero(ranked_srs.notna().values)[0])
-        rev_index_vec = np.uint16([n - 1 - index_vec[i - 1] for i in range(len(index_vec), 0, -1)])
-        return index_vec, rev_index_vec
-
-    def _fisher_enrichment(self, attribute: str) -> list:
-        bg_size, de_size, go_size, go_de_size = self._get_hypergeometric_parameters(attribute)
-
-        expected_fraction = go_size / bg_size
-        observed_fraction = go_de_size / de_size
-        log2_fold_enrichment = np.log2(observed_fraction / expected_fraction) if observed_fraction > 0 else -np.inf
-        pval = self._calc_fisher_pval(bg_size=bg_size, de_size=de_size, go_size=go_size, go_de_size=go_de_size)
-        obs, exp = int(de_size * observed_fraction), de_size * expected_fraction
-        return [attribute, de_size, obs, exp, log2_fold_enrichment, pval]
-
-    def _randomization_enrichment(self, attribute: str, reps: int) -> list:
-        bg_array = self.annotation_df[attribute].notna().values
-        obs_array = self.annotation_df.loc[list(self.gene_set), attribute].notna().values
-        n = len(self.gene_set)
-        expected_fraction = np.sum(bg_array) / bg_array.shape[0]
-        observed_fraction = np.sum(obs_array) / n
-        log2_fold_enrichment = np.log2(observed_fraction / expected_fraction) if observed_fraction > 0 else -np.inf
-        pval = self._calc_randomization_pval(n, log2_fold_enrichment, bg_array, reps, observed_fraction)
-
-        return [attribute, n, int(n * observed_fraction), n * expected_fraction, log2_fold_enrichment, pval]
-
-    def _hypergeometric_enrichment(self, attribute: str):
-        bg_size, de_size, go_size, go_de_size = self._get_hypergeometric_parameters(attribute)
-
-        expected_fraction = go_size / bg_size
-        observed_fraction = go_de_size / de_size
-        log2_fold_enrichment = np.log2(observed_fraction / expected_fraction) if observed_fraction > 0 else -np.inf
-        pval = self._calc_hypergeometric_pval(bg_size=bg_size, de_size=de_size, go_size=go_size, go_de_size=go_de_size)
-        obs, exp = int(de_size * observed_fraction), de_size * expected_fraction
-
-        return [attribute, de_size, obs, exp, log2_fold_enrichment, pval]
-
-    @staticmethod
-    @generic.numba.jit(nopython=True)
-    def _calc_randomization_pval(n: int, log2fc: float, bg_array: np.ndarray, reps: int, obs_frac: float
-                                 ) -> float:  # pragma: no cover
-        ind_range = np.arange(bg_array.shape[0])
-        success = 0
-        if log2fc >= 0:
-            for _ in range(reps):
-                success += np.sum(bg_array[np.random.choice(ind_range, n, replace=False)]) / n >= obs_frac
-
-        else:
-            for _ in range(reps):
-                success += np.sum(bg_array[np.random.choice(ind_range, n, replace=False)]) / n <= obs_frac
-        pval = (success + 1) / (reps + 1)
-        return pval
-
-    @staticmethod
-    @lru_cache(maxsize=256, typed=False)
-    def _calc_fisher_pval(bg_size: int, de_size: int, go_size: int, go_de_size: int) -> float:
-        contingency_table = [[go_de_size, go_size - go_de_size],
-                             [de_size - go_de_size, bg_size - go_size - de_size + go_de_size]]
-        _, pval = fisher_exact(contingency_table)
-        return pval
-
-    @staticmethod
-    def _calc_hypergeometric_pval(bg_size: int, de_size: int, go_size: int, go_de_size: int) -> float:
-        """
-        Performs a hypergeometric test on the given enrichment set. \
-        Given M genes in the background set, n genes in the test set, \
-        with N genes from the background set belonging to a specific attribute (or 'success') \
-        and X genes from the test set belonging to that attribute. \
-        If we were to randomly draw n genes from the background set (without replacement), \
-        what is the probability of drawing X or more (in case of enrichment)/X or less (in case of depletion) \
-        genes belonging to the given attribute?
-
-        :param bg_size: size of the background set. Usually denoted as 'M'.
-        :type bg_size: positive int
-        :param go_size: number of features in the background set corresponding to the attribute, \
-        or number of successes in the population. Usually denoted as 'n'.
-        :type go_size: positive int
-        :param de_size: size of the differentially-expressed set, or size of test set. usually denoted as 'N'.
-        :type de_size: positive int
-        :param go_de_size: or number of successes in the differentially-expressed set. Usually denoted as 'x' or 'k'.
-        :type go_de_size: non-negative int
-        :return: p-value of the hypergeometric test.
-        :rtype: float between 0 and 1
-
-        """
-        try:
-            if go_de_size / de_size < go_size / bg_size:
-                return hypergeom.cdf(go_de_size, bg_size, go_size, de_size)
-            return hypergeom.sf(go_de_size - 1, bg_size, go_size, de_size)
-        except ZeroDivisionError:
-            return hypergeom.cdf(go_de_size, bg_size, go_size, de_size)
-
-    def _get_background_set_from_biotype(self):
-        if self.biotypes == 'all':
-            self.background_set = parsing.data_to_set(self.annotation_df.index)
-        else:
-            biotype_ref_df = io.load_table(self.biotype_ref_path)
-            validation.validate_biotype_table(biotype_ref_df)
-            biotype_ref_df.set_index('gene', inplace=True)
-            self.biotypes = parsing.data_to_list(self.biotypes)
-            mask = pd.Series(np.zeros_like(biotype_ref_df['biotype'].values, dtype=bool),
-                             biotype_ref_df['biotype'].index, name='biotype')
-            for biotype in self.biotypes:
-                mask = mask | (biotype_ref_df['biotype'] == biotype)
-            self.background_set = parsing.data_to_set(biotype_ref_df[mask].index)
+    def validate_statistical_test(self):
+        if not isinstance(self.stats_test, StatsTest):
+            warnings.warn(f"Invalid statistical test: {self.stats_test}.")
+            return False
+        if isinstance(self.stats_test, XlmhgTest) and not HAS_XLMHG:
+            warnings.warn("Package 'xlmhglite' is not installed. \n"
+                          "If you want to run single-set enrichment analysis, "
+                          "please install package 'xlmhglite' and try again. ")
+            return False
+        return True
 
     def _get_background_set_from_set(self):
         self.background_set = parsing.data_to_set(self.background_set)
-        if self.biotypes != 'all':
-            warnings.warn("both 'biotype' and 'background_genes' were specified. Therefore 'biotype' is ignored.")
 
     def update_gene_set(self):
         if self.single_set:
-            updated_gene_set = self.gene_set.intersection(parsing.data_to_set(self.annotation_df.index))
+            updated_gene_set = self.gene_set.intersection(set.union(*[i for i in self.annotations.values()]))
             not_annotated = len(self.gene_set) - len(updated_gene_set)
             self.gene_set = updated_gene_set
             self._update_ranked_genes()
@@ -449,21 +469,20 @@ class EnrichmentRunner:
                 warnings.warn(warning)
 
     def fetch_annotations(self):
-        self.annotation_df = io.load_table(self.attr_ref_path)
-        validation.validate_attr_table(self.annotation_df)
-        self.annotation_df.set_index('gene', inplace=True)
+        annotation_df = io.load_table(self.attr_ref_path)
+        validation.validate_attr_table(annotation_df)
+        self.annotated_genes = parsing.data_to_set(annotation_df.select(pl.first()))
+        self.annotations = {}
+        for attr in annotation_df.columns[1:]:
+            self.annotations[attr] = parsing.data_to_set(
+                annotation_df.filter(pl.col(attr).is_not_null()).select(pl.first()))
 
-    def fetch_attributes(self):
-        all_attrs = self.annotation_df.columns
+    def get_attribute_names(self):
+        all_attrs = parsing.data_to_list(self.annotations.keys())
         if self.attributes == 'all':
-            self.attributes = parsing.data_to_list(all_attrs)
+            self.attributes = all_attrs
         else:
-            if self.attributes is None:
-                attribute_list = parsing.from_string(
-                    "Please insert attributes separated by newline "
-                    "(for example: \n'epigenetic_related_genes\nnrde-3 targets\nALG-3/4 class small RNAs')")
-            else:
-                attribute_list = parsing.data_to_list(self.attributes)
+            attribute_list = parsing.data_to_list(self.attributes)
             self._validate_attributes(attribute_list, all_attrs)
             self.attributes = [all_attrs[ind] for ind in attribute_list] if \
                 validation.isinstanceiter(attribute_list, int) else attribute_list
@@ -481,52 +500,53 @@ class EnrichmentRunner:
                 assert attr in all_attrs, f"Attribute {attr} does not appear in the Attribute Refernce Table."
 
     def filter_annotations(self):
-        if self.single_set:
-            self.annotation_df = self.annotation_df.loc[:, self.attributes].sort_index()
-        else:
-            self.annotation_df = self.annotation_df.loc[list(self.background_set), self.attributes].sort_index()
+        self.annotations = {attr: self.annotations[attr] for attr in self.attributes}
+        if not self.single_set:
+            for attr in self.annotations:
+                if isinstance(self.annotations[attr], set):
+                    self.annotations[attr].intersection_update(self.background_set)
+                else:
+                    self.annotations[attr] = {k: v for k, v in self.annotations[attr].items() if
+                                              k in self.background_set}
 
     def calculate_enrichment(self) -> list:
-        self.set_random_seed()
         if self.parallel_backend != 'sequential' and len(self.attributes) > 5:
             return self._calculate_enrichment_parallel()
         return self._calculate_enrichment_serial()
 
-    def set_random_seed(self):
-        if self.random_seed is not None:
-            assert isinstance(self.random_seed, int) and self.random_seed >= 0, \
-                f"random_seed must be a non-negative integer. Value '{self.random_seed}' is invalid."
-            np.random.seed(self.random_seed)
-
     def _calculate_enrichment_serial(self) -> list:
+        gene_set = self.ranked_genes if self.single_set else self.gene_set
         result = []
         for attribute in tqdm(self.attributes, desc="Calculating enrichment", unit='attributes'):
             assert isinstance(attribute, str), f"Error in attribute {attribute}: attributes must be strings!"
-            result.append(self.enrichment_func(attribute, **self.pvalue_kwargs))
-            # print(f"Finished {n_attrs + 1} attributes out of {len(self.attributes)}", end='\r')
+            this_res = self.stats_test.run(attribute, self.annotations[attribute], gene_set, self.background_set)
+            result.append(this_res)
         return result
 
     def _calculate_enrichment_parallel(self) -> list:
+        gene_set = self.ranked_genes if self.single_set else self.gene_set
         result = generic.ProgressParallel(desc="Calculating enrichment", unit='attribute', n_jobs=-1,
                                           backend=self.parallel_backend)(
-            joblib.delayed(self.enrichment_func)(attribute, **self.pvalue_kwargs) for attribute in self.attributes)
+            joblib.delayed(self.stats_test.run)(attribute, self.annotations[attribute], gene_set,
+                                                self.background_set) for attribute in self.attributes)
         return result
 
     def format_results(self, unformatted_results_list: list):
         columns = ['name', 'samples', 'obs', 'exp', self.en_score_col, 'pval']
-        self.results = pd.DataFrame(unformatted_results_list, columns=columns).set_index('name')
+        self.results = pl.DataFrame(unformatted_results_list, schema=columns)
         self._correct_multiple_comparisons()
 
         # filter non-significant results
         if not self.return_nonsignificant:
-            self.results = self.results[self.results['significant']]
+            self.results = self.results.filter(pl.col('significant') == True)
 
     def _correct_multiple_comparisons(self):
-        significant, padj = multitest.fdrcorrection(self.results.loc[self.results['pval'].notna(), 'pval'].values,
-                                                    alpha=self.alpha)
-        self.results.loc[self.results['pval'].notna(), 'padj'] = padj
-        self.results['significant'] = False  # set default value as False
-        self.results.loc[self.results['padj'].notna(), 'significant'] = significant
+        results_nulls = self.results.filter(pl.col('pval').is_nan())
+        self.results = self.results.filter(pl.col('pval').is_not_nan())
+
+        significant, padj = multitest.fdrcorrection(self.results['pval'].to_list(), alpha=self.alpha)
+        self.results = pl.concat([self.results.with_columns(padj=padj, significant=significant), results_nulls],
+                                 how='align')
 
     def plot_results(self) -> plt.Figure:
         if len(self.results) == 0:
@@ -571,22 +591,22 @@ class EnrichmentRunner:
         """
         assert self.plot_style in ['bar', 'lollipop'], \
             f"'plot_style' must be 'bar' or 'lollipop', instead got '{self.plot_style}'."
-        assert not self.results.empty, "No enrichment results to plot."
+        assert len(self.results) > 0, "No enrichment results to plot."
         # determine number of entries/bars to plot
         if n_bars != 'all':
             assert isinstance(n_bars, int) and n_bars >= 0, f"Invalid value for 'n_bars': {n_bars}."
-            results = self.results.iloc[:n_bars]
+            results = self.results.head(n_bars)
         else:
             results = self.results
         # pull names/scores/pvals out to avoid accidentally changing the results DataFrame in-place
         if 'name' in results.columns:
-            enrichment_names = results['name'].values.tolist()
+            enrichment_names = results['name'].to_list()
         else:
-            enrichment_names = results.index.values.tolist()
-        enrichment_scores = results[self.en_score_col].values.tolist()
-        enrichment_pvalue = results['padj'].values.tolist()
-        enrichment_obs = results['obs'].values.tolist()
-        enrichment_exp = results['exp'].values.tolist()
+            enrichment_names = results.select(pl.first()).to_series().to_list()
+        enrichment_scores = results[self.en_score_col].to_list()
+        enrichment_pvalue = results['padj'].to_list()
+        enrichment_obs = results['obs'].to_list()
+        enrichment_exp = results['exp'].to_list()
 
         # choose functions and parameters according to the graph's orientation (horizontal vs vertical)
         if self.plot_horizontal:
@@ -656,7 +676,7 @@ class EnrichmentRunner:
             legend_sizes = [Size(i) for i in [10, 50, 250, 500]]
             ax.legend(legend_sizes, [f"observed={i.size}" for i in legend_sizes],
                       labelspacing=3.2, borderpad=2.5, draggable=True,
-                      handler_map={size: sizeHandler(size.size) for size in legend_sizes}, loc='lower right')
+                      handler_map={size: SizeHandler(size.size) for size in legend_sizes}, loc='lower right')
 
         # determine bounds, and enlarge the bound by a small margin (0.5%) so nothing gets cut out of the figure
         if ylim == 'auto':
@@ -754,8 +774,8 @@ class NonCategoricalEnrichmentRunner(EnrichmentRunner):
         'plot_style': 'indicates the style of histogram to plot the results in',
         'n_bins': 'number of bins in histogram plot of results'}
 
-    def __init__(self, genes: set, attributes: Union[Iterable, str, int], alpha: param_typing.Fraction, biotypes,
-                 background_set: set, attr_ref_path: str, biotype_ref_path: str, save_csv: bool, fname: str,
+    def __init__(self, genes: set, attributes: Union[Iterable, str, int], alpha: param_typing.Fraction,
+                 background_set: set, attr_ref_path: str, save_csv: bool, fname: str,
                  return_fig: bool, plot_log_scale: bool, plot_style: Literal['interleaved', 'overlap'],
                  n_bins: int, set_name: str, parallel_backend: Literal[PARALLEL_BACKENDS], parametric_test: bool):
 
@@ -764,66 +784,52 @@ class NonCategoricalEnrichmentRunner(EnrichmentRunner):
         assert isinstance(n_bins,
                           int) and n_bins > 0, f"'n_bins' must be a positive integer. Instead got {type(n_bins)}."
 
-        enrichment_func_name = 't_test' if parametric_test else 'sign_test'
+        stats_test = TTest() if parametric_test else SignTest()
         super().__init__(genes, attributes, alpha, attr_ref_path, True, save_csv, fname, return_fig, True, set_name,
-                         parallel_backend, enrichment_func_name, biotypes, background_set, biotype_ref_path,
-                         exclude_unannotated_genes=True, single_set=False)
+                         parallel_backend, stats_test, background_set, exclude_unannotated_genes=True, single_set=False)
         self.parametric_test = parametric_test
         self.plot_log_scale = plot_log_scale
         self.plot_style = plot_style
         self.n_bins = n_bins
 
-    def _get_enrichment_func(self, pval_func_name: str):
-        assert isinstance(pval_func_name, str), f"Invalid type for 'pval_func_name': {type(pval_func_name)}."
-        pval_func_name = pval_func_name.lower()
-        if pval_func_name == 't_test':
-            return self._one_sample_t_test_enrichment
-        elif pval_func_name == 'sign_test':
-            return self._sign_test_enrichment
-        else:
-            raise ValueError(f"Unknown enrichment function '{pval_func_name}'.")
-
-    def _sign_test_enrichment(self, attribute: str) -> list:
-        exp = self.annotation_df[attribute].median(skipna=True)
-        obs = self.annotation_df.loc[list(self.gene_set), attribute].median(skipna=False)
-        if np.isnan(obs):
-            pval = np.nan
-        else:
-            _, pval = sign_test(self.annotation_df.loc[list(self.gene_set), attribute].values, exp)
-        return [attribute, len(self.gene_set), obs, exp, pval]
-
-    def _one_sample_t_test_enrichment(self, attribute: str) -> list:
-        exp = self.annotation_df[attribute].mean(skipna=True)
-        obs = self.annotation_df.loc[list(self.gene_set), attribute].mean(skipna=False)
-        if np.isnan(obs):
-            pval = np.nan
-        else:
-            _, pval = ttest_1samp(self.annotation_df.loc[list(self.gene_set), attribute], popmean=exp)
-        return [attribute, len(self.gene_set), obs, exp, pval]
+    def fetch_annotations(self):
+        annotation_df = io.load_table(self.attr_ref_path)
+        validation.validate_attr_table(annotation_df)
+        self.annotations = {}
+        for attr in annotation_df.columns[1:]:
+            self.annotations[attr] = {key: val[0] for key, val in
+                                      annotation_df.select(cs.first() | cs.by_name(attr)).rows_by_key(
+                                          annotation_df.columns[0]).items()}
+            for gene_id, val in self.annotations[attr].items():
+                if val is None:
+                    self.annotations[attr][gene_id] = np.nan
 
     def format_results(self, unformatted_results_list: list):
         columns = ['name', 'samples', 'obs', 'exp', 'pval']
-        self.results = pd.DataFrame(unformatted_results_list, columns=columns).set_index('name')
+        self.results = pl.DataFrame(unformatted_results_list, schema=columns)
         self._correct_multiple_comparisons()
-        if self.results['pval'].isna().any():
+        if self.results['pval'].is_nan().any():
             warnings.warn(f"One or more of the genes in the background set contained NaN values in "
-                          f"{len(self.results['pval'].isna())} of the attributes. "
+                          f"{len(self.results['pval'].is_nan())} of the attributes. "
                           f"P-values and plots will not be generated for those attributes. ")
+        if not self.return_nonsignificant:
+            self.results = self.results.filter(pl.col('significant') == True)
 
     def plot_results(self) -> List[plt.Figure]:
         if len(self.results) == 0:
             return []
         figs = []
-        for attribute, padj in zip(self.attributes, self.results['padj']):
-            if not np.isnan(padj):
+        for attribute in self.attributes:
+            padj = self.results.filter(pl.first() == attribute).select('padj').item()
+            if (padj is not None) and (not np.isnan(padj)):
                 fig = self.enrichment_histogram(attribute)
                 figs.append(fig)
         return figs
 
     def enrichment_histogram(self, attribute):
         # generate observed and expected Series, either linear or in log10 scale
-        exp = self.annotation_df[attribute]
-        obs = exp.loc[list(self.gene_set)]
+        exp = [self.annotations[attribute][gene] for gene in self.background_set]
+        obs = [self.annotations[attribute][gene] for gene in self.gene_set]
         if self.plot_log_scale:
             xlabel = r"$\log_{10}$" + f"({attribute})"
             exp = np.log10(exp)
@@ -840,21 +846,21 @@ class NonCategoricalEnrichmentRunner(EnrichmentRunner):
         kwargs = dict(bins=bins, density=True, alpha=0.5, edgecolor='black', linewidth=1)
         colors = ['C0', 'C1']
         if self.plot_style.lower() == 'interleaved':
-            y, x, _ = ax.hist([exp.values, obs.values], **kwargs, color=colors, label=['Expected', 'Observed'])
+            y, x, _ = ax.hist([exp, obs], **kwargs, color=colors, label=['Expected', 'Observed'])
             max_y_val = np.max(y)
         elif self.plot_style.lower() == 'overlap':
-            y, _, _ = ax.hist(exp.values, **kwargs, color=colors[0], label='Expected')
-            y2, _, _ = ax.hist(obs.values, **kwargs, color=colors[1], label='Observed')
+            y, _, _ = ax.hist(exp, **kwargs, color=colors[0], label='Expected')
+            y2, _, _ = ax.hist(obs, **kwargs, color=colors[1], label='Observed')
             max_y_val = np.max([np.max(y), np.max(y2)])
         else:
             raise NotImplementedError(f"Plot style '{self.plot_style}' not implemented.")
 
         # set either mean or median as the measure of centrality
         if self.parametric_test:
-            x_exp, x_obs = exp.mean(), obs.mean()
+            x_exp, x_obs = np.nanmean(exp), np.mean(obs)
             label_exp, label_obs = 'Expected mean', 'Observed mean'
         else:
-            x_exp, x_obs = exp.median(), obs.median()
+            x_exp, x_obs = np.nanmedian(exp), np.median(obs)
             label_exp, label_obs = 'Expected median', 'Observed median'
 
         # add lines for mean/median of observed and expected distributions
@@ -864,7 +870,8 @@ class NonCategoricalEnrichmentRunner(EnrichmentRunner):
                   label=label_obs)
 
         # add significance notation
-        asterisks, fontweight = self._get_pval_asterisk(self.results.at[attribute, 'padj'], self.alpha)
+        asterisks, fontweight = self._get_pval_asterisk(
+            self.results.filter(pl.first() == attribute).select('padj').item(), self.alpha)
         ax.vlines([x_exp, x_obs], ymin=max_y_val * 1.12, ymax=max_y_val * 1.16, color='k', linewidth=1)
         ax.hlines(max_y_val * 1.16, xmin=min(x_exp, x_obs), xmax=max(x_exp, x_obs), color='k', linewidth=1)
         ax.text(np.mean([x_exp, x_obs]), max_y_val * 1.17, asterisks, horizontalalignment='center',
@@ -898,16 +905,14 @@ class KEGGEnrichmentRunner(EnrichmentRunner):
 
     def __init__(self, genes: Union[set, np.ndarray], organism: Union[str, int], gene_id_type: str, alpha: float,
                  return_nonsignificant: bool, save_csv: bool, fname: str, return_fig: bool, plot_horizontal: bool,
-                 plot_pathway_graphs: bool, set_name: str,
-                 parallel_backend: Literal[PARALLEL_BACKENDS], enrichment_func_name: str,
-                 biotypes=None, background_set: set = None, biotype_ref_path: str = None,
-                 exclude_unannotated_genes: bool = True, single_set: bool = False, random_seed: int = None,
-                 pathway_graphs_format: Literal[GRAPHVIZ_FORMATS] = 'none',
-                 plot_style: Literal['bar', 'lollipop'] = 'bar', show_expected: bool = False, **pvalue_kwargs):
+                 plot_pathway_graphs: bool, set_name: str, parallel_backend: Literal[PARALLEL_BACKENDS],
+                 stats_test: StatsTest, background_set: set = None, exclude_unannotated_genes: bool = True,
+                 single_set: bool = False, pathway_graphs_format: Literal[GRAPHVIZ_FORMATS] = 'none',
+                 plot_style: Literal['bar', 'lollipop'] = 'bar', show_expected: bool = False):
         super().__init__(genes, [], alpha, '', return_nonsignificant, save_csv, fname, return_fig, plot_horizontal,
-                         set_name, parallel_backend, enrichment_func_name, biotypes, background_set, biotype_ref_path,
-                         exclude_unannotated_genes, single_set, random_seed, plot_style, show_expected, **pvalue_kwargs)
-        if not self.enrichment_func:
+                         set_name, parallel_backend, stats_test, background_set, exclude_unannotated_genes, single_set,
+                         plot_style, show_expected)
+        if not self.stats_test:
             return
         (self.taxon_id, self.organism), self.gene_id_type = io.get_taxon_and_id_type(organism, gene_id_type,
                                                                                      self.gene_set, 'KEGG')
@@ -920,92 +925,82 @@ class KEGGEnrichmentRunner(EnrichmentRunner):
         return io.KEGGAnnotationIterator(self.taxon_id)
 
     def format_results(self, unformatted_results_list: list):
-        columns = ['KEGG ID', 'name', 'samples', 'obs', 'exp', self.en_score_col, 'pval']
-        named_results_list = [[entry[0], self.pathway_names_dict[entry[0]]] + entry[1:] for entry in
-                              unformatted_results_list]
-        self.results = pd.DataFrame(named_results_list, columns=columns).set_index('KEGG ID')
-        self._correct_multiple_comparisons()
-        # filter non-significant results
-        if not self.return_nonsignificant:
-            self.results = self.results[self.results['significant']]
+        super().format_results(unformatted_results_list)
+        self.results = self.results.rename({'name': 'KEGG ID'})
+        self.results.insert_column(1, pl.Series(
+            [self.pathway_names_dict[kegg_id] for kegg_id in self.results['KEGG ID']]).alias('name'))
 
     def _correct_multiple_comparisons(self):
-        significant, padj = multitest.fdrcorrection(self.results.loc[self.results['pval'].notna(), 'pval'].values,
-                                                    alpha=self.alpha, method='negcorr')
-        self.results.loc[self.results['pval'].notna(), 'padj'] = padj
-        self.results.loc[self.results['padj'].notna(), 'significant'] = significant
+        results_nulls = self.results.filter(pl.col('pval').is_nan())
+        self.results = self.results.filter(pl.col('pval').is_not_nan())
+        significant, padj = multitest.fdrcorrection(self.results['pval'].to_list(), alpha=self.alpha, method='negcorr')
+        self.results = pl.concat([self.results.with_columns(padj=padj, significant=significant), results_nulls],
+                                 how='align')
 
     def fetch_annotations(self):
         # check if annotations for the requested query were previously fetched and cached
         query_key = self._get_query_key()
         if query_key in self.KEGG_DF_QUERIES:
-            self.annotation_df, self.pathway_names_dict = self.KEGG_DF_QUERIES[query_key]
+            self.annotations, self.pathway_names_dict = self.KEGG_DF_QUERIES[query_key]
             return
         else:
-            self.annotation_df, self.pathway_names_dict = self._generate_annotation_df()
+            self.annotations, self.pathway_names_dict = self._generate_annotation_dict()
             # save query results to KEGG_DF_QUERIES
-            self.KEGG_DF_QUERIES[query_key] = self.annotation_df, self.pathway_names_dict
+            self.KEGG_DF_QUERIES[query_key] = self.annotations, self.pathway_names_dict
 
-    def _generate_annotation_df(self) -> Tuple[pd.DataFrame, Dict[str, str]]:
+    def _generate_annotation_dict(self) -> Tuple[Dict[str, Set[str]], Dict[str, str]]:
         # fetch and process KEGG annotations
-        sparse_annotation_dict, pathway_name_dict = self._process_annotations()
-        print(f"Found annotations for {len(sparse_annotation_dict)} genes.")
-
+        annotation_dict, pathway_name_dict = self._process_annotations()
+        print(f"Found annotations for {len(annotation_dict)} genes.")
         # translate gene IDs
-        translated_sparse_annotation_dict = self._translate_gene_ids(sparse_annotation_dict)
-
-        # get boolean DataFrame for enrichment
-        annotation_df = parsing.sparse_dict_to_bool_df(translated_sparse_annotation_dict,
-                                                       progress_bar_desc="Generating Gene Ontology Referene Table")
-        annotation_df[~annotation_df] = np.nan
-        return annotation_df, pathway_name_dict
+        translated_annotation_dict = self._translate_gene_ids(annotation_dict)
+        return translated_annotation_dict, pathway_name_dict
 
     def _process_annotations(self) -> Tuple[Dict[str, Set[str]], Dict[str, str]]:
         desc = f"Fetching KEGG annotations for organism '{self.organism}' (taxon ID:{self.taxon_id})"
 
-        sparse_annotation_dict = {}
+        annotation_dict = {}
         pathway_name_dict = {}
         annotation_iter = self._get_annotation_iterator()
         assert annotation_iter.n_annotations > 0, "No KEGG annotations were found for the given parameters. " \
                                                   "Please try again with a different set of parameters. "
         for pathway_id, pathway_name, annotations in tqdm(annotation_iter, desc=desc,
                                                           total=annotation_iter.n_annotations, unit=' annotations'):
-
             pathway_name_dict[pathway_id] = pathway_name
             # add annotation to annotation dictionary
-            for gene_id in annotations:
-                if gene_id not in sparse_annotation_dict:
-                    sparse_annotation_dict[gene_id] = (set())
-                sparse_annotation_dict[gene_id].add(pathway_id)
+            if pathway_id not in annotation_dict:
+                annotation_dict[pathway_id] = set()
+            annotation_dict[pathway_id].update(annotations)
+        return annotation_dict, pathway_name_dict
 
-        return sparse_annotation_dict, pathway_name_dict
-
-    def _translate_gene_ids(self, sparse_annotation_dict: dict):
+    def _translate_gene_ids(self, annotation_dict: dict):
+        translated_dict = {}
         source = 'KEGG'
-        translated_sparse_annotation_dict = {}
-        sparse_dict_cp = sparse_annotation_dict.copy()
+
         translator = io.GeneIDTranslator(source, self.gene_id_type).run(
-            parsing.data_to_tuple(sparse_annotation_dict.keys()))
+            set.union(*annotation_dict.values()))
         self.gene_id_translator = translator
-        for gene_id in sparse_annotation_dict:
-            if gene_id in translator:
-                translated_sparse_annotation_dict[translator[gene_id]] = sparse_dict_cp.pop(gene_id)
-        return translated_sparse_annotation_dict
+        for kegg_id in annotation_dict:
+            translated_dict[kegg_id] = set()
+            for gene_id in annotation_dict[kegg_id]:
+                if gene_id in translator:
+                    translated_dict[kegg_id].add(translator[gene_id])
+        return translated_dict
 
     def _get_query_key(self):
         return self.taxon_id, self.gene_id_type
 
-    def fetch_attributes(self):
-        self.attributes = parsing.data_to_list(self.annotation_df.columns)
+    def get_attribute_names(self):
+        self.attributes = parsing.data_to_list(self.annotations.keys())
         self.attributes_set = parsing.data_to_set(self.attributes)
 
     def plot_results(self) -> List[plt.Figure]:
-        if self.results.empty:
+        if len(self.results) == 0:
             return []
         figs = [super().plot_results()]
         if self.plot_pathway_graphs:
             for pathway in self.pathway_names_dict:
-                if pathway in self.results.index and self.results.loc[pathway, 'significant']:
+                if pathway in self.results.select(pl.first()) and self.results[pathway, 'significant']:
                     fig = self.pathway_plot(pathway)
                     if fig is None:
                         break
@@ -1025,8 +1020,8 @@ class KEGGEnrichmentRunner(EnrichmentRunner):
 
 class GOEnrichmentRunner(EnrichmentRunner):
     __slots__ = {'dag_tree': 'DAG tree containing the hierarchical structure of all GO Terms',
-                 'mod_annotation_dfs': "Additional copies of 'annotation_df' which are "
-                                       "actively modified by propagation algorithms",
+                 'mutable_annotations': "Additional copies of 'annotations' which are "
+                                        "actively mutated by p-value propagation algorithms",
                  'organism': 'the organism name for which to fetch GO Annotations',
                  'taxon_id': 'NCBI Taxon ID for which to fetch GO Annotations',
                  'gene_id_type': 'the type of gene ID index that is used',
@@ -1038,8 +1033,6 @@ class GOEnrichmentRunner(EnrichmentRunner):
                  'excluded_databases': 'the ontology databases from which GO Annotations should NOT be fetched',
                  'qualifiers': 'the evidence types for which GO Annotations should be fetched',
                  'excluded_qualifiers': 'the evidence types for which GO Annotations should NOT be fetched',
-                 'return_nonsignificant': 'indicates whether to return results which were not found to be '
-                                          'statistically significant after enrichment analysis',
                  'plot_ontology_graph': 'indicates whether to plot ontology graph of the statistically significant GO Terms',
                  'ontology_graph_format': 'file format for the generated ontology graph',
                  'attributes_set': 'set of the attributes/GO Terms for which enrichment should be calculated'}
@@ -1053,20 +1046,18 @@ class GOEnrichmentRunner(EnrichmentRunner):
                  qualifiers: Union[str, Iterable[str]], excluded_qualifiers: Union[str, Iterable[str]],
                  return_nonsignificant: bool, save_csv: bool, fname: str, return_fig: bool, plot_horizontal: bool,
                  plot_ontology_graph: bool, set_name: str, parallel_backend: Literal[PARALLEL_BACKENDS],
-                 enrichment_func_name: str, biotypes=None, background_set: set = None, biotype_ref_path: str = None,
-                 exclude_unannotated_genes: bool = True, single_set: bool = False, random_seed: int = None,
-                 ontology_graph_format: Literal[GRAPHVIZ_FORMATS] = 'none',
-                 plot_style: Literal['bar', 'lollipop'] = 'bar',
-                 show_expected: bool = False, **pvalue_kwargs):
+                 stats_test: StatsTest, background_set: set = None, exclude_unannotated_genes: bool = True,
+                 single_set: bool = False, ontology_graph_format: Literal[GRAPHVIZ_FORMATS] = 'none',
+                 plot_style: Literal['bar', 'lollipop'] = 'bar', show_expected: bool = False):
 
         self.propagate_annotations = propagate_annotations.lower()
         super().__init__(genes, [], alpha, '', return_nonsignificant, save_csv, fname, return_fig, plot_horizontal,
-                         set_name, parallel_backend, enrichment_func_name, biotypes, background_set, biotype_ref_path,
-                         exclude_unannotated_genes, single_set, random_seed, plot_style, show_expected, **pvalue_kwargs)
-        if not self.enrichment_func:
+                         set_name, parallel_backend, stats_test, background_set,
+                         exclude_unannotated_genes, single_set, plot_style, show_expected)
+        if not self.stats_test:
             return
         self.dag_tree: ontology.DAGTree = ontology.fetch_go_basic()
-        self.mod_annotation_dfs: Tuple[pd.DataFrame, ...] = tuple()
+        self.mutable_annotations: Tuple[dict, ...] = tuple()
         (self.taxon_id, self.organism), self.gene_id_type = io.get_taxon_and_id_type(organism, gene_id_type,
                                                                                      self.gene_set, 'UniProtKB')
         self.aspects = aspects
@@ -1080,39 +1071,24 @@ class GOEnrichmentRunner(EnrichmentRunner):
         self.ontology_graph_format = ontology_graph_format
         self.attributes_set: set = set()
 
-    def _get_enrichment_func(self, pval_func_name: str):
-        enrichment_func = super()._get_enrichment_func(pval_func_name)
-        if self.propagate_annotations in {'weight'} and pval_func_name.lower() != 'fisher':
-            raise NotImplementedError("The 'weight' propagation algorithm is only compatible with Fisher's Exact test.")
-        elif self.propagate_annotations in {'allm'} and pval_func_name.lower() != 'fisher':
-            warnings.warn(f"The 'weight' propagation algorithm is only compatible with Fisher's Exact test. "
-                          f"Therefore, when calculating 'allm' p-values, the 'weight' method will use "
-                          f"Fisher's Exact test, while the rest of the methods will use the '{pval_func_name}' method.")
-        return enrichment_func
-
     def fetch_annotations(self):
         # check if annotations for the requested query were previously fetched and cached
         query_key = self._get_query_key()
         if query_key in self.GOA_DF_QUERIES:
-            self.annotation_df = self.GOA_DF_QUERIES[query_key]
+            self.annotations = self.GOA_DF_QUERIES[query_key]
             return
         else:
-            self.annotation_df = self._generate_annotation_df()
+            self.annotations = self._generate_annotation_dict()
             # save query results to GOA_DF_QUERIES
-            self.GOA_DF_QUERIES[query_key] = self.annotation_df
+            self.GOA_DF_QUERIES[query_key] = self.annotations
 
-    def _generate_annotation_df(self) -> pd.DataFrame:
+    def _generate_annotation_dict(self) -> Dict[str, Set[str]]:
         # fetch and process GO annotations
-        sparse_annotation_dict, source_to_gene_id_dict = self._process_annotations()
-        print(f"Found annotations for {len(sparse_annotation_dict)} genes.")
-
+        annotation_dict, source_to_gene_id_dict = self._process_annotations()
+        print(f"Found annotations for {len(annotation_dict)} genes.")
         # translate gene IDs
-        translated_sparse_annotation_dict = self._translate_gene_ids(sparse_annotation_dict, source_to_gene_id_dict)
-
-        # get boolean DataFrame for enrichment
-        annotation_df = parsing.sparse_dict_to_bool_df(translated_sparse_annotation_dict,
-                                                       progress_bar_desc="Generating Gene Ontology Referene Table")
-        return annotation_df
+        translated_annotation_dict = self._translate_gene_ids(annotation_dict, source_to_gene_id_dict)
+        return translated_annotation_dict
 
     def _process_annotations(self) -> Tuple[Dict[str, Set[str]], Dict[str, Set[str]]]:
         if self.propagate_annotations != 'no':
@@ -1120,7 +1096,7 @@ class GOEnrichmentRunner(EnrichmentRunner):
         else:
             desc = f"Fetching GO annotations for organism '{self.organism}' (taxon ID:{self.taxon_id})"
 
-        sparse_annotation_dict = {}
+        annotation_dict = {}
         source_to_gene_id_dict = {}
         annotation_iter = self._get_annotation_iterator()
         assert annotation_iter.n_annotations > 0, "No GO annotations were found for the given parameters. " \
@@ -1135,17 +1111,17 @@ class GOEnrichmentRunner(EnrichmentRunner):
             source: str = annotation['source']
 
             # add annotation to annotation dictionary
-            if gene_id not in sparse_annotation_dict:
-                sparse_annotation_dict[gene_id] = (set())
-            sparse_annotation_dict[gene_id].add(go_id)
+            if go_id not in annotation_dict:
+                annotation_dict[go_id] = (set())
+            annotation_dict[go_id].add(gene_id)
 
             # add gene id and source to source dict
             if source not in source_to_gene_id_dict:
                 source_to_gene_id_dict[source] = set()
             source_to_gene_id_dict[source].add(gene_id)
             # propagate annotations
-            self._propagate_annotation(gene_id, go_id, sparse_annotation_dict)
-        return sparse_annotation_dict, source_to_gene_id_dict
+            self._propagate_annotation(gene_id, go_id, annotation_dict)
+        return annotation_dict, source_to_gene_id_dict
 
     def _get_annotation_iterator(self):
         return io.GOlrAnnotationIterator(self.taxon_id, self.aspects,
@@ -1153,28 +1129,36 @@ class GOEnrichmentRunner(EnrichmentRunner):
                                          self.databases, self.excluded_databases,
                                          self.qualifiers, self.excluded_qualifiers)
 
-    def _propagate_annotation(self, gene_id: str, go_id: str, sparse_annotation_dict: dict):
+    def _propagate_annotation(self, gene_id: str, go_id: str, annotation_dict: dict):
         if self.propagate_annotations != 'no':
             parents = set(self.dag_tree.upper_induced_graph_iter(go_id))
-            sparse_annotation_dict[gene_id].update(parents)
+            for parent in parents:
+                if parent not in annotation_dict:
+                    annotation_dict[parent] = set()
+                annotation_dict[parent].add(gene_id)
 
-    def _translate_gene_ids(self, sparse_annotation_dict: dict, source_to_gene_id_dict: dict):
-        translated_sparse_annotation_dict = {}
-        sparse_dict_cp = sparse_annotation_dict.copy()
+    def _translate_gene_ids(self, annotation_dict: dict, source_to_gene_id_dict: dict):
+        # TODO: profile performance and maybe optimize this
+        translated_dict = {}
+        translators = []
         for source in source_to_gene_id_dict:
             try:
                 translator = io.GeneIDTranslator(source, self.gene_id_type).run(source_to_gene_id_dict[source])
-                for gene_id in sparse_dict_cp.copy():
-                    if gene_id in translator:
-                        translated_sparse_annotation_dict[translator[gene_id]] = sparse_dict_cp.pop(gene_id)
-
+                translators.append(translator)
             except AssertionError as e:
                 if 'not a valid Uniprot Dataset' in "".join(e.args):
                     warnings.warn(f"Failed to map gene IDs for {len(source_to_gene_id_dict[source])} annotations "
                                   f"from dataset '{source}'.")
                 else:
                     raise e
-        return translated_sparse_annotation_dict
+        for go_id in annotation_dict:
+            translated_dict[go_id] = set()
+            for gene_id in annotation_dict[go_id]:
+                for translator in translators:
+                    if gene_id in translator:
+                        translated_dict[go_id].add(translator[gene_id])
+                        break
+        return translated_dict
 
     def _get_query_key(self):
         return (self.taxon_id, self.gene_id_type, parsing.data_to_tuple(self.aspects, sort=True),
@@ -1186,15 +1170,26 @@ class GOEnrichmentRunner(EnrichmentRunner):
                 parsing.data_to_tuple(self.excluded_qualifiers, sort=True),
                 self.propagate_annotations != 'no')
 
-    def fetch_attributes(self):
-        self.attributes = parsing.data_to_list(self.annotation_df.columns)
+    def validate_statistical_test(self):
+        super().validate_statistical_test()
+        if self.propagate_annotations in {'weight'} and not isinstance(self.stats_test, FishersExactTest):
+            warnings.warn("The 'weight' propagation algorithm is only compatible with Fisher's Exact test.")
+            return False
+        if self.propagate_annotations in {'allm'} and not isinstance(self.stats_test, FishersExactTest):
+            warnings.warn(f"The 'weight' propagation algorithm is only compatible with Fisher's Exact test. ")
+            return False
+        return True
+
+    def get_attribute_names(self):
+        self.attributes = parsing.data_to_list(self.annotations.keys())
         self.attributes_set = parsing.data_to_set(self.attributes)
 
     def _correct_multiple_comparisons(self):
-        significant, padj = multitest.fdrcorrection(self.results.loc[self.results['pval'].notna(), 'pval'].values,
-                                                    alpha=self.alpha, method='negcorr')
-        self.results.loc[self.results['pval'].notna(), 'padj'] = padj
-        self.results.loc[self.results['padj'].notna(), 'significant'] = significant
+        results_nulls = self.results.filter(pl.col('pval').is_nan())
+        self.results = self.results.filter(pl.col('pval').is_not_nan())
+        significant, padj = multitest.fdrcorrection(self.results['pval'].to_list(), alpha=self.alpha, method='negcorr')
+        self.results = pl.concat([self.results.with_columns(padj=padj, significant=significant), results_nulls],
+                                 how='align')
 
     def plot_results(self) -> List[plt.Figure]:
         if len(self.results) == 0:
@@ -1233,28 +1228,27 @@ class GOEnrichmentRunner(EnrichmentRunner):
         return figs
 
     def format_results(self, unformatted_results_dict: dict):
-        columns = ['name', 'samples', 'obs', 'exp', self.en_score_col, 'pval']
-        self.results = pd.DataFrame.from_dict(unformatted_results_dict, orient='index', columns=columns)
-        self._correct_multiple_comparisons()
-        # filter non-significant results
-        if not self.return_nonsignificant:
-            self.results = self.results[self.results['significant']]
+        super().format_results(parsing.data_to_list(unformatted_results_dict.values()))
+        self.results = self.results.rename({'name': 'GO ID'})
+        self.results.insert_column(1, pl.Series([self.dag_tree[go_id].name for go_id in self.results['GO ID']]).alias(
+            'name'))
         # sort results by specificity (level in DAG tree)
-        self.results['dag_level'] = [self.dag_tree[ind].level for ind in self.results.index]
-        self.results = self.results.sort_values('dag_level', ascending=False).drop('dag_level', axis=1).rename_axis(
-            'go_id')
+        self.results = self.results.with_columns(pl.Series(
+            [self.dag_tree[ind].level for ind in self.results.select(pl.first()).to_series().to_list()]).alias(
+            'dag_level'))
+        self.results = self.results.sort(pl.col('dag_level'), descending=True).drop('dag_level')
 
     def _calculate_enrichment_serial(self) -> dict:
         desc = f"Calculating enrichment for {len(self.attributes)} GO terms " \
                f"using the '{self.propagate_annotations}' method"
         if self.propagate_annotations == 'classic' or self.propagate_annotations == 'no':
-            self.mod_annotation_dfs = (self.annotation_df,)
+            self.mutable_annotations = (self.annotations,)
             result = self._go_classic_pvalues_serial(desc)
         elif self.propagate_annotations == 'elim':
-            self.mod_annotation_dfs = (self.annotation_df.copy(deep=True),)
+            self.mutable_annotations = (deepcopy(self.annotations),)
             result = self._go_elim_pvalues_serial(desc)
         elif self.propagate_annotations == 'weight':
-            self.mod_annotation_dfs = (self.annotation_df.astype("float64", copy=True),)
+            self.mutable_annotations = ({attr: {v: 1.0 for v in val} for attr, val in self.annotations.items()},)
             result = self._go_weight_pvalues_serial(desc)
         elif self.propagate_annotations == 'all.m':
             result = self._go_allm_pvalues_serial()
@@ -1266,17 +1260,18 @@ class GOEnrichmentRunner(EnrichmentRunner):
         desc = f"Calculating enrichment for {len(self.attributes)} GO terms " \
                f"using the '{self.propagate_annotations}' method"
         if self.propagate_annotations == 'classic' or self.propagate_annotations == 'no':
-            self.mod_annotation_dfs = (self.annotation_df,)
+            self.mutable_annotations = (self.annotations,)
             result = self._go_classic_pvalues_parallel(desc)
         elif self.propagate_annotations == 'elim':
-            self.mod_annotation_dfs = tuple(
-                self.annotation_df.loc[:, self._go_level_iterator(namespace)].copy(deep=True) for namespace in
+            self.mutable_annotations = tuple(
+                {attr: deepcopy(self.annotations[attr]) for attr in self._go_level_iterator(namespace) if
+                 attr in self.annotations} for namespace in
                 self.dag_tree.namespaces)
             result = self._go_elim_pvalues_parallel(desc)
         elif self.propagate_annotations == 'weight':
-            self.mod_annotation_dfs = tuple(
-                self.annotation_df.loc[:, self._go_level_iterator(namespace)].astype("float64", copy=True) for namespace
-                in self.dag_tree.namespaces)
+            self.mutable_annotations = tuple({attr: {v: 1.0 for v in val} for attr, val in self.annotations.items() if
+                                              attr in set(self._go_level_iterator(namespace))} for namespace in
+                                             self.dag_tree.namespaces)
             result = self._go_weight_pvalues_parallel(desc)
         elif self.propagate_annotations == 'all.m':
             result = self._go_allm_pvalues_parallel()
@@ -1294,30 +1289,32 @@ class GOEnrichmentRunner(EnrichmentRunner):
         return self._parallel_over_grouping(self._go_classic_on_batch, partitioned,
                                             (0 for _ in range(len(partitioned))), progress_bar_desc=progress_bar_desc)
 
-    def _go_classic_on_batch(self, go_term_batch: Iterable[str], mod_df_index: int = 0):
+    def _go_classic_on_batch(self, go_term_batch: Iterable[str], annotation_idx: int = 0):
         """
         calculate stats and p-values with the 'classic' propagation algorithm for an iterable batch of GO terms.
 
         :param go_term_batch: batch of GO terms to calculate enrichment for
         :type go_term_batch: an iterable of str (GO IDs)
-        :param mod_df_index:
-        :type mod_df_index: int between 0 and 2 (default 0)
+        :param annotation_idx:
+        :type annotation_idx: int between 0 and 2 (default 0)
         :return:
         :rtype:
         """
-        return {go_id: self.enrichment_func(go_id, mod_df_ind=mod_df_index, **self.pvalue_kwargs) for go_id in
+        gene_set = self.ranked_genes if self.single_set else self.gene_set
+        annotations = self.mutable_annotations[annotation_idx]
+        return {go_id: self.stats_test.run(go_id, annotations[go_id], gene_set, self.background_set) for go_id in
                 go_term_batch}
 
     def _go_elim_pvalues_serial(self, progress_bar_desc: str = '') -> dict:
         result = self._go_elim_on_aspect('all', progress_bar_desc=progress_bar_desc)
         return result
 
-    def _parallel_over_grouping(self, func, grouping: Iterable, mod_df_inds: Iterable[int],
+    def _parallel_over_grouping(self, func, grouping: Iterable, annotation_indices: Iterable[int],
                                 max_nbytes: Union[str, None] = '1M', progress_bar_desc: str = '') -> dict:
         assert validation.is_method_of_class(func, type(self))
         result_dicts = generic.ProgressParallel(desc=progress_bar_desc, n_jobs=-1, max_nbytes=max_nbytes,
                                                 backend=self.parallel_backend)(
-            joblib.delayed(func)(group, ind) for group, ind in zip(grouping, mod_df_inds))
+            joblib.delayed(func)(group, ind) for group, ind in zip(grouping, annotation_indices))
         result = {}
         for d in result_dicts:
             result.update(d)
@@ -1331,20 +1328,22 @@ class GOEnrichmentRunner(EnrichmentRunner):
         return self._parallel_over_grouping(self._go_elim_on_aspect, go_aspects, range(len(go_aspects)),
                                             max_nbytes=None, progress_bar_desc=progress_bar_desc)
 
-    def _go_elim_on_aspect(self, go_aspect: str, mod_df_ind: int = 0, progress_bar_desc: str = None) -> dict:
+    def _go_elim_on_aspect(self, go_aspect: str, annotation_idx: int = 0, progress_bar_desc: str = None) -> dict:
         result_dict = {}
         marked_nodes = {}
+        annotations = self.mutable_annotations[annotation_idx]
+        gene_set = self.ranked_genes if self.single_set else self.gene_set
         go_id_iter = self._go_level_iterator(go_aspect) if progress_bar_desc is None \
             else tqdm(self._go_level_iterator(go_aspect), unit=' GO terms', desc=progress_bar_desc,
                       total=len(self.attributes))
         for go_id in go_id_iter:
             if go_id in marked_nodes:  # if this node was marked, remove from it all marked genes
-                self.mod_annotation_dfs[mod_df_ind].loc[list(marked_nodes[go_id]), go_id] = False
-            result_dict[go_id] = self.enrichment_func(go_id, mod_df_ind=mod_df_ind, **self.pvalue_kwargs)
+                annotations[go_id].difference_update(marked_nodes[go_id])
+            result_dict[go_id] = self.stats_test.run(go_id, annotations[go_id], gene_set, self.background_set,
+                                                     self.annotations[go_id])
             # if current GO ID is significantly ENRICHED, mark its ancestors
             if result_dict[go_id][-1] <= self.alpha and result_dict[go_id][-2] > 0:
-                new_marked_genes = set(
-                    self.mod_annotation_dfs[mod_df_ind][go_id][self.mod_annotation_dfs[mod_df_ind][go_id]].index)
+                new_marked_genes = annotations[go_id].intersection(annotations[go_id])
                 for ancestor in self.dag_tree.upper_induced_graph_iter(go_id):
                     if ancestor not in marked_nodes:
                         marked_nodes[ancestor] = set()
@@ -1362,15 +1361,17 @@ class GOEnrichmentRunner(EnrichmentRunner):
         return self._parallel_over_grouping(self._go_weight_on_aspect, go_aspects, range(len(go_aspects)),
                                             max_nbytes=None, progress_bar_desc=progress_bar_desc)
 
-    def _go_weight_on_aspect(self, go_aspect: str, mod_df_ind: int = 0, progress_bar_desc: str = None) -> dict:
+    def _go_weight_on_aspect(self, go_aspect: str, annotation_idx: int = 0, progress_bar_desc: str = None) -> dict:
         result_dict = {}
+        mut_annotation = self.mutable_annotations[annotation_idx]
         weights = collections.defaultdict(lambda: 1)  # default weight for all nodes is 1
         go_id_iter = self._go_level_iterator(go_aspect) if progress_bar_desc is None \
             else tqdm(self._go_level_iterator(go_aspect), unit=' GO terms', desc=progress_bar_desc,
                       total=len(self.attributes))
         for go_id in go_id_iter:
             children = {child for child in self.dag_tree[go_id].get_children() if child in self.attributes_set}
-            self._compute_term_sig(mod_df_ind, go_id, children, weights, result_dict)
+            self._compute_term_sig(mut_annotation, self.gene_set, self.background_set, self.dag_tree,
+                                   self.attributes_set, go_id, children, weights, result_dict)
         return result_dict
 
     def _go_allm_pvalues_serial(self):
@@ -1419,15 +1420,17 @@ class GOEnrichmentRunner(EnrichmentRunner):
             if go_id in self.attributes_set:  # skip GO IDs that have no annotations whatsoever (direct or inherited)
                 yield go_id
 
-    def _compute_term_sig(self, mod_df_ind: int, go_id: str, children: set, weights: dict, result: dict,
-                          tolerance: float = 10 ** -50):
+    @staticmethod
+    def _compute_term_sig(mut_annotation: Dict[str, Dict[str, int]], gene_set: Set[str], background_set: Set[str],
+                          dag_tree: ontology.DAGTree, attributes_set: Set[str],
+                          go_id: str, children: set, weights: dict, result: dict, tolerance: float = 10 ** -50):
         """
         Implementation of the computeTermSig(u, children) function from Alexa et al 2006: \
         https://doi.org/10.1093/bioinformatics/btl140
 
-        :param mod_df_ind: index of the annotation dataframe to be used for the algorithm \
+        :param annotation_idx: index of the annotation dataframe to be used for the algorithm \
         (in case the algorithm runs in parallel and multiple dataframes are used)
-        :type mod_df_ind: int
+        :type annotation_idx: int
         :param go_id: the current GO ID (node/'u') on which the function is calculated
         :type go_id: str
         :param children: a set of the children of go_id
@@ -1441,11 +1444,12 @@ class GOEnrichmentRunner(EnrichmentRunner):
 
         """
         # calculate stats OR update p-value for go_id
+        test = FishersExactTest()
+        this_res = test.run_weight(go_id, mut_annotation[go_id], gene_set, background_set)
         if go_id in result:
-            result[go_id][-1] = self._calc_fisher_pval(
-                *self._get_hypergeometric_parameters(go_id, mod_df_ind=mod_df_ind))
+            result[go_id][-1] = this_res[-1]
         else:
-            result[go_id] = self._fisher_enrichment(go_id, mod_df_ind=mod_df_ind)
+            result[go_id] = this_res
         # if go_id has no children left to compare to, stop the calculation here
         if len(children) == 0:
             return
@@ -1468,79 +1472,20 @@ class GOEnrichmentRunner(EnrichmentRunner):
         # CASE 1: if go_id is more significant than all children, re-weigh the children and recompute their stats
         if len(sig_children) == 0:
             for child in children:
-                self.mod_annotation_dfs[mod_df_ind].loc[self.annotation_df[go_id], child] *= weights[child]
-                result[child][-1] = self._calc_fisher_pval(
-                    *self._get_hypergeometric_parameters(child, mod_df_ind=mod_df_ind))
+                for gene_id in mut_annotation[child]:
+                    mut_annotation[child][gene_id] *= weights[child]
+                result[child][-1] = test.run_weight(child, mut_annotation[child], gene_set, background_set)[-1]
             return
 
         # CASE 2: if some children are more significant than parent, re-weigh ancesctors (including 'go_id'),
         # and then recompute stats for go_id
         inclusive_ancestors = {ancestor for ancestor in
-                               itertools.chain([go_id], self.dag_tree.upper_induced_graph_iter(go_id)) if
-                               ancestor in self.attributes_set}
+                               itertools.chain([go_id], dag_tree.upper_induced_graph_iter(go_id)) if
+                               ancestor in attributes_set}
         for sig_child in sig_children:
             for inclusive_ancestor in inclusive_ancestors:
-                self.mod_annotation_dfs[mod_df_ind].loc[self.annotation_df[sig_child], inclusive_ancestor] *= (
-                    1 / weights[sig_child])
+                for gene_id in mut_annotation[inclusive_ancestor]:
+                    mut_annotation[inclusive_ancestor][gene_id] *= (1 / weights[sig_child])
         # re-run compute_term_sig, only with the children which were not more significant than their parents
-        self._compute_term_sig(mod_df_ind, go_id, children.difference(sig_children), weights, result, tolerance)
-
-    def _randomization_enrichment(self, go_id: str, reps: int, mod_df_ind: int = None) -> list:
-        mod_df_ind = 0 if mod_df_ind is None else mod_df_ind
-        go_name = self.dag_tree[go_id].name
-        bg_df = self.mod_annotation_dfs[mod_df_ind][go_id]
-        bg_size = self.annotation_df.shape[0]
-        n = len(self.gene_set)
-        expected_fraction = self.annotation_df[go_id].sum() / bg_size
-        observed_fraction = self.annotation_df.loc[list(self.gene_set), go_id].sum() / n
-        mod_observed_fraction = bg_df.loc[list(self.gene_set)].sum() / n
-        log2_fold_enrichment = np.log2(observed_fraction / expected_fraction) if observed_fraction > 0 else -np.inf
-        pval = self._calc_randomization_pval(n, log2_fold_enrichment, bg_df.values, reps, mod_observed_fraction)
-        return [go_name, n, int(n * observed_fraction), n * expected_fraction, log2_fold_enrichment, pval]
-
-    def _xlmhg_enrichment(self, go_id: str, mod_df_ind: int = None, **_) -> list:
-        go_name = self.dag_tree[go_id].name
-        index_vec, rev_index_vec = self._generate_xlmhg_index_vectors(go_id, mod_df_ind)
-        n, X, L, table = self._get_xlmhg_parameters(index_vec)
-
-        res_obj_fwd = xlmhglite.get_xlmhg_test_result(N=n, indices=index_vec, X=X, L=L, table=table)
-        res_obj_rev = xlmhglite.get_xlmhg_test_result(N=n, indices=rev_index_vec, X=X, L=L, table=table)
-
-        obs, exp, en_score, pval = self._extract_xlmhg_results(res_obj_fwd, res_obj_rev)
-        return [go_name, n, obs, exp, en_score, pval]
-
-    def _generate_xlmhg_index_vectors(self, attribute: str, mod_df_ind: int = None) -> Tuple[np.ndarray, np.ndarray]:
-        n = len(self.ranked_genes)
-        ranked_srs = self.mod_annotation_dfs[mod_df_ind].loc[self.ranked_genes, attribute]
-        assert ranked_srs.shape[0] == len(self.ranked_genes)
-        index_vec = np.uint16(np.nonzero(ranked_srs.values)[0])
-        rev_index_vec = np.uint16([n - 1 - index_vec[i - 1] for i in range(len(index_vec), 0, -1)])
-        return index_vec, rev_index_vec
-
-    def _hypergeometric_enrichment(self, go_id: str, mod_df_ind: int = None) -> list:
-        bg_size, de_size, go_size, go_de_size = self._get_hypergeometric_parameters(go_id, mod_df_ind=mod_df_ind)
-
-        go_name = self.dag_tree[go_id].name
-        expected_fraction = self.annotation_df[go_id].sum() / bg_size
-        observed_fraction = self.annotation_df.loc[list(self.gene_set), go_id].sum() / de_size
-        log2_fold_enrichment = np.log2(observed_fraction / expected_fraction) if observed_fraction > 0 else -np.inf
-        pval = self._calc_hypergeometric_pval(bg_size=bg_size, de_size=de_size, go_size=go_size, go_de_size=go_de_size)
-        obs, exp = int(de_size * observed_fraction), de_size * expected_fraction
-        return [go_name, de_size, obs, exp, log2_fold_enrichment, pval]
-
-    def _fisher_enrichment(self, go_id: str, mod_df_ind: int = None) -> list:
-        bg_size, de_size, go_size, go_de_size = self._get_hypergeometric_parameters(go_id, mod_df_ind)
-
-        expected_fraction = self.annotation_df[go_id].sum() / bg_size
-        observed_fraction = self.annotation_df.loc[list(self.gene_set), go_id].sum() / de_size
-        log2_fold_enrichment = np.log2(observed_fraction / expected_fraction) if observed_fraction > 0 else -np.inf
-        pval = self._calc_fisher_pval(bg_size=bg_size, de_size=de_size, go_size=go_size, go_de_size=go_de_size)
-        obs, exp = int(de_size * observed_fraction), de_size * expected_fraction
-        return [self.dag_tree[go_id].name, de_size, obs, exp, log2_fold_enrichment, pval]
-
-    def _get_hypergeometric_parameters(self, go_id: str, mod_df_ind: int = None) -> Tuple[int, int, int, int]:
-        bg_size = self.mod_annotation_dfs[mod_df_ind].shape[0]
-        de_size = len(self.gene_set)
-        go_size = int(np.ceil(self.mod_annotation_dfs[mod_df_ind][go_id].sum()))
-        go_de_size = int(np.ceil(self.mod_annotation_dfs[mod_df_ind].loc[list(self.gene_set), go_id].sum()))
-        return bg_size, de_size, go_size, go_de_size
+        GOEnrichmentRunner._compute_term_sig(mut_annotation, gene_set, background_set, dag_tree, attributes_set, go_id,
+                                             children.difference(sig_children), weights, result, tolerance)

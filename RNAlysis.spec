@@ -17,6 +17,7 @@ for item in tmp_collection:
     datas.append(item)
 
 datas += collect_data_files('pyvis')
+datas += 'latest_changelog.md'
 
 hiddenimports += collect_submodules('sklearn')
 hiddenimports += collect_submodules('cutadapt')

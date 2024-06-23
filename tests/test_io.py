@@ -60,34 +60,35 @@ def test_load_csv_bad_input():
                                  "tests/test_files/test_load_csv_tabs.txt",
                                  "tests/test_files/test_load_csv_other_sep.txt"))
 def test_load_csv(pth):
-    truth = pd.DataFrame({'idxcol': ['one', 'two', 'three'], 'othercol': [4, 5, 6]})
-    truth.set_index('idxcol', inplace=True)
-    loaded = load_table(pth, 0)
+    truth = pl.DataFrame({'idxcol': ['one', 'two', 'three'], 'othercol': [4, 5, 6]})
+    loaded = load_table(pth)
+    print(truth)
+    print(loaded)
     assert loaded.equals(truth)
 
 
 def test_load_csv_drop_columns():
-    loaded = load_table('tests/test_files/counted.csv', 0, drop_columns='cond1')
+    loaded = load_table('tests/test_files/counted.csv', drop_columns='cond1')
     print(loaded)
-    assert list(loaded.columns) == ['cond2', 'cond3', 'cond4']
+    assert list(loaded.columns) == ['', 'cond2', 'cond3', 'cond4']
 
-    loaded = load_table('tests/test_files/counted.csv', 0, drop_columns=['cond2', 'cond4'])
-    assert list(loaded.columns) == ['cond1', 'cond3']
+    loaded = load_table('tests/test_files/counted.csv', drop_columns=['cond2', 'cond4'])
+    assert list(loaded.columns) == ['', 'cond1', 'cond3']
 
     with pytest.raises(IndexError):
-        load_table('tests/test_files/counted.csv', 0, drop_columns=['cond1', 'cond6'])
+        load_table('tests/test_files/counted.csv', drop_columns=['cond1', 'cond6'])
 
 
 def test_save_csv():
     try:
-        df = pd.read_csv('tests/test_files/enrichment_hypergeometric_res.csv', index_col=0)
+        df = pl.read_csv('tests/test_files/enrichment_hypergeometric_res.csv')
         save_table(df, 'tests/test_files/tmp_test_save_csv.csv')
-        df_loaded = pd.read_csv('tests/test_files/tmp_test_save_csv.csv', index_col=0)
+        df_loaded = pl.read_csv('tests/test_files/tmp_test_save_csv.csv')
         assert df.equals(df_loaded)
-        df = pd.read_csv('tests/test_files/enrichment_hypergeometric_res.csv')
-        save_table(df, 'tests/test_files/tmp_test_save_csv.csv', '_2', index=False)
-        df_loaded = pd.read_csv('tests/test_files/tmp_test_save_csv_2.csv', index_col=0)
-        df = pd.read_csv('tests/test_files/enrichment_hypergeometric_res.csv', index_col=0)
+        df = pl.read_csv('tests/test_files/enrichment_hypergeometric_res.csv')
+        save_table(df, 'tests/test_files/tmp_test_save_csv.csv', '_2')
+        df_loaded = pl.read_csv('tests/test_files/tmp_test_save_csv_2.csv')
+        df = pl.read_csv('tests/test_files/enrichment_hypergeometric_res.csv')
         assert df.equals(df_loaded)
 
     except Exception as e:
@@ -865,7 +866,7 @@ def test_get_gunzip_size(path, expected):
 
 
 @pytest.mark.parametrize('item, filename', [
-    (pd.DataFrame({'A': [1, 2], 'B': [3, 4]}), 'test1.csv'),
+    (pl.DataFrame({'A': [1, 2], 'B': [3, 4]}), 'test1.csv'),
     ({'gene1', 'gene2', 'gene3'}, 'test2.txt'),
     ('this is a test', 'test3.txt'),
     (plt.figure(), 'test4.png')
@@ -882,12 +883,12 @@ def test_cache_gui_file(item, filename):
 
 
 @pytest.mark.parametrize("item, filename, load_as_obj, expected_output", [
-    (pd.DataFrame({"a": [1, 2, 3], "b": [4, 5, 6]}, index=['h', 'i', 'j']), "test.csv", True,
-     pd.DataFrame({"a": [1, 2, 3], "b": [4, 5, 6]}, index=['h', 'i', 'j'])),
+    (pl.DataFrame({"": ['h', 'i', 'j'], "a": [1, 2, 3], "b": [4, 5, 6]}), "test.csv", True,
+     pl.DataFrame({"": ['h', 'i', 'j'], "a": [1, 2, 3], "b": [4, 5, 6]})),
     ({"apple", "banana", "cherry"}, "test.txt", True, {"apple", "banana", "cherry"}),
     ("test", "test.txt", True, {"test"}),
     ("test123", "test.txt", False, b"test123"),
-    (pd.DataFrame({"a": [1, 2, 3], "b": [4, 5, 6]}), "test.csv", False, b",a,b\n0,1,4\n1,2,5\n2,3,6\n"),
+    (pl.DataFrame({"a": [1, 2, 3], "b": [4, 5, 6]}), "test.csv", False, b"a,b\n1,4\n2,5\n3,6\n"),
     ({"apple", "banana", "cherry"}, "test.txt", False,
      bytes("\n".join({"apple", "banana", "cherry"}), encoding='utf-8')),
     ("test", "test.txt", False, b"test")
@@ -901,7 +902,7 @@ def test_load_cached_gui_file(item, filename, load_as_obj, expected_output):
     try:
         cache_gui_file(item, filename)
         res = load_cached_gui_file(filename, load_as_obj)
-        if isinstance(res, pd.DataFrame):
+        if isinstance(res, pl.DataFrame):
             assert res.equals(item)
         elif isinstance(res, bytes):
             assert res.replace(b'\r', b'') == expected_output
@@ -1153,8 +1154,8 @@ class TestPhylomeDBOrthologMapper:
     def ortholog_mapper(self):
         # Supply legal species
         legal_species = PhylomeDBOrthologMapper.get_legal_species()
-        map_to_organism = legal_species.index[0]  # Use the first legal species
-        map_from_organism = legal_species.index[1]  # Use the second legal species
+        map_to_organism = legal_species[0, 0]  # Use the first legal species
+        map_from_organism = legal_species[1, 0]  # Use the second legal species
         return PhylomeDBOrthologMapper(map_to_organism=map_to_organism, map_from_organism=map_from_organism,
                                        gene_id_type='gene_type')
 
@@ -1164,8 +1165,8 @@ class TestPhylomeDBOrthologMapper:
 
     # Test the constructor of PhylomeDBOrthologMapper
     def test_constructor(self, ortholog_mapper):
-        assert ortholog_mapper.map_to_organism in PhylomeDBOrthologMapper.get_legal_species()
-        assert ortholog_mapper.map_from_organism in PhylomeDBOrthologMapper.get_legal_species()
+        assert ortholog_mapper.map_to_organism in PhylomeDBOrthologMapper.get_legal_species()['taxid']
+        assert ortholog_mapper.map_from_organism in PhylomeDBOrthologMapper.get_legal_species()['taxid']
         assert ortholog_mapper.gene_id_type == 'gene_type'
 
     # Test the _connect method
@@ -1195,24 +1196,30 @@ class TestPhylomeDBOrthologMapper:
         assert isinstance(translated_ids[1], list)
         assert translated_ids == (['gene1', 'gene2'], ['trans_gene1', 'trans_gene2'])
 
-    # Test the _get_taxon_file method
+    # Test the _get_taxon_map method
     @pytest.mark.parametrize('taxon_ind', [0, -1])
     def test_get_taxon_file(self, ortholog_mapper, taxon_ind):
         legal_species = PhylomeDBOrthologMapper.get_legal_species()
-        taxon_id = legal_species.index[taxon_ind]
-        df = ortholog_mapper._get_taxon_file(taxon_id)
-        assert isinstance(df, pd.DataFrame)
-        assert list(df.columns) == ['#taxid1', 'taxid2', 'protid2', 'CS', 'sources']
-        assert (df['#taxid1'] == taxon_id).all()
+        taxon_id = legal_species[taxon_ind, 0]
+        target_id = legal_species[taxon_ind + 1, 0]
+        taxon_map = ortholog_mapper._get_taxon_map(taxon_id, target_id)
+        cached_df = ortholog_mapper._get_taxon_map(taxon_id, target_id)
+        assert taxon_map == cached_df
 
-        cached_df = ortholog_mapper._get_taxon_file(taxon_id)
-        assert df.equals(cached_df)
+        assert isinstance(taxon_map, dict) and len(taxon_map) > 0
+        sample = taxon_map.popitem()
+        assert isinstance(sample, tuple)
+        assert isinstance(sample[0], str)
+        assert isinstance(sample[1], tuple)
+        assert isinstance(sample[1][0], str)
+        assert isinstance(sample[1][1], float)
+
 
     # Test the get_legal_species method
     def test_get_legal_species(self, ortholog_mapper):
         species = ortholog_mapper.get_legal_species()
-        assert species.index.dtype == int
-        assert 6239 in species.index
+        assert species[species.columns[0]].dtype == pl.UInt32
+        assert 6239 in species[species.columns[0]]
 
         species_cached = ortholog_mapper.get_legal_species()
         assert species.equals(species_cached)
@@ -1220,11 +1227,12 @@ class TestPhylomeDBOrthologMapper:
     # Test the _get_id_conversion_maps method
     def test_get_id_conversion_map(self, ortholog_mapper):
         map_fwd, map_rev = ortholog_mapper._get_id_conversion_maps()
-        assert map_fwd.shape == map_rev.shape
+        assert isinstance(map_fwd, dict) and isinstance(map_rev, dict)
+        assert len(map_fwd) == len(map_rev)
 
         map_fwd_cache, map_rev_cache = ortholog_mapper._get_id_conversion_maps()
-        assert map_fwd_cache.shape == map_rev_cache.shape
-        assert map_fwd.shape == map_fwd_cache.shape
+        assert len(map_fwd_cache) == len(map_rev_cache)
+        assert len(map_fwd) == len(map_fwd_cache)
 
     @pytest.mark.parametrize('filter_consistency_score,non_unique_mode', [
         (False, 'first'),

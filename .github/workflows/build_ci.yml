@@ -10,10 +10,8 @@ jobs:
             fail-fast: false
             matrix:
                 os: [ ubuntu-latest, windows-latest, macos-latest ]
-                python-version: [ 3.8, 3.9, '3.10', '3.11' ]
+                python-version: [3.9, '3.10', '3.11', '3.12' ]
                 exclude:
-                    -   os: macos-latest
-                        python-version: 3.8
                     -   os: macos-latest
                         python-version: 3.9
                     -   os: macos-latest
@@ -80,16 +78,17 @@ jobs:
             -   name: Install kallisto
                 run: |
                     if [ "$RUNNER_OS" == "Linux" ]; then
-                         wget  https://github.com/pachterlab/kallisto/releases/download/v0.50.0/kallisto_linux-v0.50.0.tar.gz
+                         wget  https://github.com/pachterlab/kallisto/releases/download/v0.50.1/kallisto_linux-v0.50.1.tar.gz
                          tar -xvzf kallisto*.gz
                          echo "${GITHUB_WORKSPACE}/kallisto" >> $GITHUB_PATH
                     elif [ "$RUNNER_OS" == "macOS" ]; then
-                         wget  https://github.com/pachterlab/kallisto/releases/download/v0.50.0/kallisto_mac-v0.50.0.tar.gz
+                         brew install hdf5
+                         wget  https://github.com/pachterlab/kallisto/releases/download/v0.50.1/kallisto_mac_m1-v0.50.1.tar.gz
                          tar -xvzf kallisto*.gz
                          echo "${GITHUB_WORKSPACE}/kallisto" >> $GITHUB_PATH
                     elif [ "$RUNNER_OS" == "Windows" ]; then
                          choco install wget -y
-                         wget  https://github.com/pachterlab/kallisto/releases/download/v0.50.0/kallisto_windows-v0.50.0.zip
+                         wget  https://github.com/pachterlab/kallisto/releases/download/v0.50.1/kallisto_windows-v0.50.1.zip
                          7z x kallisto*.zip
                          echo "${GITHUB_WORKSPACE}/kallisto" >> $GITHUB_PATH
                     else

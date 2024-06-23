@@ -11,7 +11,7 @@ import graphviz
 import matplotlib.image as mpimg
 import matplotlib.pyplot as plt
 import numpy as np
-import pandas as pd
+import polars as pl
 from defusedxml import ElementTree
 from matplotlib.cm import ScalarMappable
 
@@ -638,13 +638,13 @@ class DAGTree:
             # memoize the function's output for go_id
             self._upper_induced_graphs[go_id] = processed_nodes
 
-    def plot_ontology(self, namespace: Literal[param_typing.GO_ASPECTS], results_df: pd.DataFrame,
-                      en_score_col: str = 'log2_fold_enrichment',
-                      title: Union[str, Literal['auto']] = 'auto', ylabel: str = r"$\log_2$(Fold Enrichment)",
-                      graph_format: Literal[param_typing.GRAPHVIZ_FORMATS] = 'none', dpi: int = 300) -> Union[
-        plt.Figure, None]:
+    def plot_ontology(self, namespace: Literal[param_typing.GO_ASPECTS], results_df: pl.DataFrame,
+                      en_score_col: str = 'log2_fold_enrichment', title: Union[str, Literal['auto']] = 'auto',
+                      ylabel: str = r"$\log_2$(Fold Enrichment)",
+                      graph_format: Literal[param_typing.GRAPHVIZ_FORMATS] = 'none', dpi: int = 300
+                      ) -> Union[plt.Figure, None]:
         # colormap
-        scores_no_inf = [i for i in results_df[en_score_col] if i != np.inf and i != -np.inf and i < 0]
+        scores_no_inf = [i for i in results_df[en_score_col].to_list() if i != np.inf and i != -np.inf and i < 0]
         if len(scores_no_inf) == 0:
             scores_no_inf.append(-1)
         max_score = max(np.max(scores_no_inf), 2)
@@ -655,7 +655,7 @@ class DAGTree:
         graph.attr(dpi=str(dpi))
         node_queue = queue.SimpleQueue()
         processed = set()
-        significant = set(results_df[results_df['significant']].index)
+        significant = set(results_df.filter(pl.col('significant')).select(pl.first()).to_series().to_list())
         for sig_node in significant:
             node_queue.put(sig_node)
 
@@ -669,7 +669,7 @@ class DAGTree:
                 continue
             # color significant nodes according to their enrichment score
             if this_node in significant:
-                this_score = results_df[en_score_col].loc[this_node]
+                this_score = results_df.filter(pl.first() == this_node).select(pl.col(en_score_col)).item()
                 color_norm = 0.5 * (1 + this_score / (np.floor(max_score) + 1)) * 255
                 color_norm_8bit = int(color_norm) if color_norm != np.inf and color_norm != -np.inf else np.sign(
                     color_norm) * max(np.abs(scores_no_inf))

@@ -6,7 +6,7 @@ import time
 from pathlib import Path
 from typing import Union, Iterable, Tuple, Literal, List, Set, Dict
 
-import pandas as pd
+import polars as pl
 
 from rnalysis.utils import io, generic, installs, validation, parsing
 
@@ -32,10 +32,10 @@ class DiffExpRunner(abc.ABC):
         self.lrt_factors = lrt_factors
         self.r_installation_folder = r_installation_folder
 
-        self.design_mat = io.load_table(self.design_mat_path, index_col=0)
+        self.design_mat: pl.DataFrame = io.load_table(self.design_mat_path)
         if model_factors == 'auto':
             self.model_factors = []
-            for factor in itertools.chain(self.design_mat.columns, self.covariates):
+            for factor in itertools.chain(self.design_mat.columns[1:], self.covariates):
                 present = factor in self.model_factors
                 for lrt in self.lrt_factors:
                     if lrt.startswith(f'poly({factor}'):
@@ -93,6 +93,7 @@ class DESeqRunner(DiffExpRunner):
         self.cooks_cutoff = cooks_cutoff
         assert scale_factors_ndims in [1, 2], "scale_factors_ndims must be 1 or 2!"
         self.scaling_factors_ndims = scale_factors_ndims
+
     def install_required_packages(self):
         installs.install_deseq2(self.r_installation_folder)
 
@@ -182,7 +183,7 @@ class LimmaVoomRunner(DiffExpRunner):
         variables = interaction.split(':')
 
         # Check if each variable is numeric or factor (non-numeric) and store this information
-        is_numeric = {var: pd.api.types.is_numeric_dtype(self.design_mat[var]) for var in variables}
+        is_numeric = {var: self.design_mat[var].dtype.is_numeric() for var in variables}
 
         # Initialize a list to hold the names of the interaction terms
         interaction_terms = []
@@ -216,7 +217,7 @@ class LimmaVoomRunner(DiffExpRunner):
                 degree = int(match.group(2))
                 for i in range(degree):
                     coefs[factor].add(f"poly({base_factor}, degree = {degree}){i + 1}")
-            elif factor in self.design_mat and pd.api.types.is_numeric_dtype(self.design_mat[factor]):
+            elif factor in self.design_mat and self.design_mat[factor].dtype.is_numeric():
                 coefs[factor].add(factor)
             elif ':' in factor:
                 coefs[factor] = self._generate_interaction_terms(factor)
@@ -267,7 +268,7 @@ class LimmaVoomRunner(DiffExpRunner):
             random_effect = None
             factor_names = {}
             factors_str = ''
-            for factor in self.design_mat.columns:
+            for factor in self.design_mat.columns[1:]:
                 factor_name = generic.sanitize_variable_name(factor)
 
                 if factor == self.random_effect or factor_name == self.random_effect:
@@ -275,7 +276,7 @@ class LimmaVoomRunner(DiffExpRunner):
                 else:
                     factor_names[factor] = factor_name
 
-                if pd.api.types.is_numeric_dtype(self.design_mat[factor]):
+                if self.design_mat[factor].dtype.is_numeric():
                     factors_str += f'design_matrix${factor_name} <- as.numeric(design_matrix${factor})\n'
                     baselines[factor] = 0
                 else:

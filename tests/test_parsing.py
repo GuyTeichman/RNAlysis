@@ -116,14 +116,6 @@ def test_uniprot_tab_with_score_to_dict():
     assert truth_rev == uniprot_tab_with_score_to_dict(tab, True)
 
 
-def test_sparse_dict_to_bool_df():
-    truth = pd.read_csv('tests/test_files/sparse_dict_to_df_truth.csv', index_col=0).sort_index(axis=1)
-    sparse_dict = {'gene1': {'a', 'c'}, 'gene2': {'b'}, 'gene3': {'b', 'g', 'h'}, 'gene4': {'e', 'd', 'a', 'c', 'f'},
-                   'gene5': set()}
-    res = sparse_dict_to_bool_df(sparse_dict).sort_index(axis=1)
-    assert res.equals(truth)
-
-
 @pytest.mark.parametrize("lst,chunk_size,truth", [([1, 2, 3, 4, 5], 1, [[1], [2], [3], [4], [5]]),
                                                   ([1, 2, 3, 4], 2, [[1, 2], [3, 4]]),
                                                   ([1, 2, 3, 4, 5], 2, [[1, 2], [3, 4], [5]]),
@@ -266,7 +258,7 @@ def test_replace_last_occurrence(regex, repl, item, expected):
 
 @pytest.fixture
 def sample_df():
-    return pd.DataFrame({
+    return pl.DataFrame({
         "A": [1.0, 2, 3, 4, 5],
         "B": [6.00111, 7, 8, 9, 10],
         "C": [11, 12, 13, 14, 15],
@@ -283,6 +275,7 @@ def test_df_to_html_returns_string(sample_df):
 @pytest.mark.parametrize('n_rows', [2, 3, 4])
 def test_df_to_html_limits_number_of_rows(sample_df, n_rows):
     html = df_to_html(sample_df, max_rows=n_rows)
+    print(html)
     assert html.count("<tr>") == n_rows + 2  # includes header row and '...'
 
 
@@ -294,7 +287,7 @@ def test_df_to_html_formats_floats_with_two_decimals(sample_df):
 
 def test_df_to_html_does_not_truncate_values(sample_df):
     long_string = "a" * 100
-    df = pd.DataFrame({
+    df = pl.DataFrame({
         "A": [1, 2, 3],
         "B": [long_string, long_string, long_string],
     })
@@ -303,7 +296,7 @@ def test_df_to_html_does_not_truncate_values(sample_df):
 
 
 def test_df_to_html_removes_redundant_dots(sample_df):
-    df = pd.DataFrame({
+    df = pl.DataFrame({
         "A": ["A", "B", "C"],
         "B": ["...", "...", "..."],
     })
