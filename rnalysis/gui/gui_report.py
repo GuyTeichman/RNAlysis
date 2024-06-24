@@ -119,7 +119,8 @@ class ReportGenerator:
         self.nodes: typing.Dict[int, Node] = {}
         self.create_legend()
         href = Path('data').joinpath(self.ROOT_FNAME).as_posix()
-        root_desc = f'<a href="{href}" target="_blank" rel="noopener noreferrer">Open RNAlysis session</a>'
+        root_desc = (f'<i>RNAlysis</i> version {__version__}<br>'
+                     f'<a href="{href}" target="_blank" rel="noopener noreferrer">Open RNAlysis session</a>')
         self.add_node('Started RNAlysis session', 0, [], root_desc, node_type='root', filename=self.ROOT_FNAME)
 
     def create_legend(self):
