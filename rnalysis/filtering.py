@@ -2630,7 +2630,8 @@ class DESeqFilter(Filter):
         return obj
 
     def __copy__(self):
-        return type(self).from_dataframe(self.df, self.fname, self.log2fc_col, self.padj_col, suppress_warnings=True)
+        return type(self).from_dataframe(self.df, self.fname, self.log2fc_col, self.padj_col, self.pval_col,
+                                         suppress_warnings=True)
 
     def _assert_padj_col(self):
         if self.padj_col not in self.columns:

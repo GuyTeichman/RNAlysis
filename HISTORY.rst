@@ -19,7 +19,8 @@ Changed
 Fixed
 ******
 * Fixed bug where the visualization functions 'Plot histogram of p-values' and 'Histogram of a column' would not display a graph immediately when using the stand-alone app.
-* Fixed bug re-loading a saved session report would sometimes lead to missing connections in the analysis flow graph
+* Fixed bug re-loading a saved session report would sometimes lead to missing connections in the analysis flow graph.
+* Fixed bug where applying not-inplace operations to differential expression tables would change the expected name of the p-value column.
 
 3.12.0 (2024-05-14)
 -------------------
