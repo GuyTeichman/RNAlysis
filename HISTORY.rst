@@ -12,6 +12,8 @@ Added
 Changed
 *******
 * RNAlysis now uses Polars instead of Pandas. This change should improve the performance of RNAlysis by multiple orders of magnitude, especially when generating automatic analysis reports.
+* Automatic analysis reports are now laid out in a hierarchical structure, making it easier to navigate through the report.
+* When clicking on a node in an automatic analysis report, the analysis path leading to that node will be highlighted.
 * The 'Hierarchical clustergram plot' function should now run faster on large datasets.
 
 Fixed

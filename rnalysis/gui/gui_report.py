@@ -186,16 +186,26 @@ class ReportGenerator:
         # remove comments from file
         comment_regex = r"<!--[\s\S]*?-->"
         html = re.sub(comment_regex, "", html)
-
+        # set CSS templates to the correct paths (local version under "assets")
         for css_pth in self.CSS_TEMPLATE_PATHS:
             css_line = f'<link rel="stylesheet" href="assets/{css_pth.name}"/>'
             html = re.sub(r'<link(?:\s+[\w-]+="[^"]*")*\s+href="[^"]+"\s+(?:[\w-]+="[^"]*"\s+)*?\/>', css_line, html, 1,
                           re.DOTALL)
-
+        # set JavaScript templates to the correct paths (local version under "assets")
         for js_pth in self.JS_TEMPLATE_PATHS:
             js_line = f'<script src="assets/{js_pth.name}"></script>'
             html = re.sub(r'<script\s+src\s*=\s*"(https?:\/\/[^"]+\.js)"[^>]*><\/script>', js_line, html, 1, re.DOTALL)
 
+        # add path highlighting script to the HTML file
+        with open(Path(__file__).parent.parent.joinpath('data_files/report_misc/globalVars.js')) as f:
+            global_vars = f.read()
+            html = re.sub(r'(var\s+[^;]+;\s*)+', r'\g<0>' + global_vars, html, count=1)
+        with open(Path(__file__).parent.parent.joinpath('data_files/report_misc/listeners.js')) as f:
+            listeners = f.read()
+        with open(Path(__file__).parent.parent.joinpath('data_files/report_misc/drawPath.js')) as f:
+            draw_path_func = f.read()
+        merged_code = listeners + '\n' + draw_path_func
+        html = re.sub(r'(network\s*=\s*new\s+vis\.Network\([^;]+;\s*)', r'\g<0>' + merged_code, html, count=1)
         return html
 
     def _report_from_nx(self, show_buttons: bool) -> Network:
@@ -203,28 +213,10 @@ class ReportGenerator:
         vis_report.from_nx(self.graph)
         enabled_str = 'true' if show_buttons else 'false'
 
-        vis_report.set_options("""const options = {
-            "configure": {"""
-                               f'"enabled": {enabled_str}'
-                               """
-            },
-            "layout": {
-                "hierarchical": {
-                    "enabled": false,
-                    "levelSeparation": 250,
-                    "nodeSpacing": 250,
-                    "treeSpacing": 250,
-                    "direction": "LR",
-                    "sortMethod": "directed"
-                }
-            },
-            "physics": {
-                "solver": "repulsion"
-            },
-            "interaction": {
-            "navigationButtons": true
-            }
-        }""")
+        with open(Path(__file__).parent.parent.joinpath('data_files/report_misc/options.json')) as f:
+            options = json.load(f)
+            options['configure']['enabled'] = show_buttons
+            vis_report.set_options(json.dumps(options))
         return vis_report
 
     def generate_report(self, save_path: Path, show_buttons: bool = True):

@@ -1,0 +1,1 @@
+var highlightActive = false;

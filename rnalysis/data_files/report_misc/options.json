@@ -1,0 +1,42 @@
+{
+    "configure": {
+        "enabled": true
+
+    },
+    "nodes": {
+        "font": {
+            "strokeWidth": 3
+        }
+    },
+    "edges": {
+        "color": {
+            "inherit": false
+        },
+        "smooth": {
+            "type": "cubicBezier",
+            "roundness": 0.4
+        },
+        "width": 2,
+        "selectionWidth": 3
+    },
+    "layout": {
+        "hierarchical": {
+            "enabled": true,
+            "levelSeparation": 200,
+            "nodeSpacing": 22,
+            "treeSpacing": 65,
+            "direction": "LR",
+            "sortMethod": "directed",
+            "shakeTowards": "roots"
+        }
+    },
+    "physics": {
+        "solver": "repulsion",
+        "stabilization": {
+            "fit": true
+        }
+    },
+    "interaction": {
+        "navigationButtons": true
+    }
+}
