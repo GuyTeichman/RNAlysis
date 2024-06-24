@@ -4339,7 +4339,7 @@ class MainWindow(QtWidgets.QMainWindow):
             tab = self.tabs.widget(ind)
             if not tab.is_empty():
                 filename = tab.cache()
-                item_name = self.tabs.tabText(ind).rstrip('*')
+                item_name = tab.get_tab_name()
                 item_type = set if isinstance(tab, SetTabPage) else tab.obj_type()
                 item_property = tab.obj_properties()
                 item_id = tab.tab_id
