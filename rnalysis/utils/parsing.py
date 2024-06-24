@@ -417,6 +417,7 @@ def df_to_html(df: pl.DataFrame, max_rows: int = 5, max_cols: int = 5):
     # Limit the number of rows and columns
     df_subset = df.head(max_rows).select(pl.col(df.columns[:max_cols])).to_pandas()
     df_subset = df_subset.set_index(df_subset.columns[0])
+    df_subset.index.names = [None]
 
     styler = df_subset.style.format(precision=2)
     styler.set_table_styles(

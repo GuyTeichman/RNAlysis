@@ -275,8 +275,7 @@ def test_df_to_html_returns_string(sample_df):
 @pytest.mark.parametrize('n_rows', [2, 3, 4])
 def test_df_to_html_limits_number_of_rows(sample_df, n_rows):
     html = df_to_html(sample_df, max_rows=n_rows)
-    print(html)
-    assert html.count("<tr>") == n_rows + 2  # includes header row and '...'
+    assert html.count("<tr>") == n_rows + 1  # includes header row and '...'
 
 
 def test_df_to_html_formats_floats_with_two_decimals(sample_df):
