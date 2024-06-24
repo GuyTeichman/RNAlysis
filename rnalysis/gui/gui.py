@@ -4101,13 +4101,20 @@ class MainWindow(QtWidgets.QMainWindow):
                                           'Cannot generate a report since report generation was not enabled. '
                                           'You can enable it from the Settings menu.')
             return
-        outdir = QtWidgets.QFileDialog.getExistingDirectory(self, "Save report")
-        if outdir:
-            outdir = Path(outdir).joinpath('RNAlysis_report')
-            if not outdir.exists():
-                outdir.mkdir()
-            self.report.generate_report(outdir)
+        dialog = self.report.generate_report_dialog(self)
+        def accept(args, kwargs, _):
+            outdir = kwargs.get('output_folder')
+            if outdir:
+                outdir = Path(outdir).joinpath('RNAlysis_report')
+                if not outdir.exists():
+                    outdir.mkdir()
+            kwargs['output_folder'] = outdir
+            self.report.generate_report(*args, **kwargs)
             self._save_session_to(outdir.joinpath('data', self.report.ROOT_FNAME))
+
+        dialog.paramsAccepted.connect(accept)
+        dialog.exec()
+
 
     def init_menus(self):
         self.setMenuBar(self.menu_bar)

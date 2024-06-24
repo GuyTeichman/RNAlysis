@@ -5,12 +5,13 @@ import shutil
 import typing
 import webbrowser
 from pathlib import Path
-from typing import Literal
+from typing import Literal, Union
 
 import networkx
 from pyvis.network import Network
 
 from rnalysis import __version__
+from rnalysis.gui import gui_windows
 from rnalysis.utils import parsing, io
 
 
@@ -180,9 +181,14 @@ class ReportGenerator:
                 if self.nodes[pred].node_type == 'Function':
                     self.trim_node(pred)
 
-    def _modify_html(self, html: str) -> str:
-        if html.count(self.TITLE) > 1:
+    def _modify_html(self, html: str, title: str, title_fontsize: int) -> str:
+        # remove duplicate title
+        title = self.TITLE if title == 'auto' else title
+        if html.count(title) > 1:
             html = re.sub(r'<center>.+?<\/h1>\s+<\/center>', '', html, 1, re.DOTALL)
+        # set title font size
+        fontsize_em = title_fontsize / 16
+        html = html.replace('<h1>', f'<h1 style="font-size:{fontsize_em}em;">')
         # remove comments from file
         comment_regex = r"<!--[\s\S]*?-->"
         html = re.sub(comment_regex, "", html)
@@ -208,27 +214,35 @@ class ReportGenerator:
         html = re.sub(r'(network\s*=\s*new\s+vis\.Network\([^;]+;\s*)', r'\g<0>' + merged_code, html, count=1)
         return html
 
-    def _report_from_nx(self, show_buttons: bool) -> Network:
-        vis_report = Network(directed=True, layout=False, heading=self.TITLE)
+    def _report_from_nx(self, show_settings: bool, title: Union[str, Literal['auto']],
+                        hierarchical_layout: bool) -> Network:
+        vis_report = Network(directed=True, layout=False, heading=self.TITLE if title == 'auto' else title)
         vis_report.from_nx(self.graph)
-        enabled_str = 'true' if show_buttons else 'false'
 
         with open(Path(__file__).parent.parent.joinpath('data_files/report_misc/options.json')) as f:
             options = json.load(f)
-            options['configure']['enabled'] = show_buttons
+            options['configure']['enabled'] = show_settings
+            options['layout']['hierarchical']['enabled'] = hierarchical_layout
             vis_report.set_options(json.dumps(options))
         return vis_report
 
-    def generate_report(self, save_path: Path, show_buttons: bool = True):
-        assert save_path.exists() and save_path.is_dir()
-        save_file = save_path.joinpath('report.html').as_posix()
-        vis_report = self._report_from_nx(show_buttons)
-        html = self._modify_html(vis_report.generate_html(save_file))
+    @staticmethod
+    def generate_report_dialog(parent=None):
+        dialog = ConfigureReportWindow(parent)
+        return dialog
+
+    def generate_report(self, output_folder: Path, title: Union[str, Literal['auto']] = 'auto',
+                        title_fontsize: int = 24, show_settings_menu: bool = False,hierarchical_layout: bool = True):
+        output_folder = Path(output_folder)
+        assert output_folder.exists() and output_folder.is_dir()
+        save_file = output_folder.joinpath('report.html').as_posix()
+        vis_report = self._report_from_nx(show_settings_menu, title, hierarchical_layout)
+        html = self._modify_html(vis_report.generate_html(save_file), title, title_fontsize)
 
         with open(save_file, 'w') as f:
             f.write(html)
 
-        assets_path = save_path.joinpath('assets')
+        assets_path = output_folder.joinpath('assets')
         if assets_path.exists():
             shutil.rmtree(assets_path)
         assets_path.mkdir()
@@ -238,7 +252,7 @@ class ReportGenerator:
             with open(assets_path.joinpath(item.name), 'w', encoding="utf-8") as outfile:
                 outfile.write(content)
 
-        data_path = save_path.joinpath('data')
+        data_path = output_folder.joinpath('data')
         if data_path.exists():
             shutil.rmtree(data_path)
         data_path.mkdir()
@@ -275,3 +289,15 @@ class ReportGenerator:
         obj.graph = networkx.node_link_graph(data['graph'])
         obj.nodes = {ind: Node.from_json(node_json) for ind, node_json in data['nodes'].items()}
         return obj
+
+
+class ConfigureReportWindow(gui_windows.FuncExternalWindow):
+    __slots__ = {}
+    EXCLUDED_PARAMS = {'self'}
+
+    def __init__(self, parent=None):
+        func = ReportGenerator.generate_report
+        super().__init__('Generate analysis report', func, None, self.EXCLUDED_PARAMS, threaded=True,
+                         parent=parent)
+        self.init_ui()
+        self.setWindowTitle('Generate analysis report')

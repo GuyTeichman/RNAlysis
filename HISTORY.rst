@@ -7,6 +7,7 @@ History
 
 Added
 ******
+* Added additional optional parameters to automatic report generation.
 * Added additional parameters to 'Hierarchical clustergram plot' (CountFilter.clustergram).
 
 Changed
