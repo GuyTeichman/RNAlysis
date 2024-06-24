@@ -101,15 +101,15 @@ class ReportGenerator:
                           Path(__file__).parent.parent.joinpath('data_files/report_templates/bootstrap.min.css')]
     JS_TEMPLATE_PATHS = [Path(__file__).parent.parent.joinpath('data_files/report_templates/vis-network.min.js'),
                          Path(__file__).parent.parent.joinpath('data_files/report_templates/bootstrap.bundle.min.js')]
-    NODE_STYLES = {'root': dict(shape='box', color='#00D4D8'),
-                   'Count matrix': dict(color='#0D47A1'),
-                   'Differential expression': dict(color='#BF360C'),
-                   'Fold change': dict(color='#00838F'),
-                   'Other table': dict(color='#F7B30A'),
-                   'Gene set': dict(color='#BA68C8'),
-                   'Function': dict(shape='triangleDown', color='#00D4D8'),
-                   'Other output': dict(shape='square', color='#228B22'),
-                   'Pipeline': dict(shape='diamond', color='#FF66B8')}
+    NODE_GROUPS = {'root': 'root',
+                   'Count matrix': 'count',
+                   'Differential expression': 'diffexp',
+                   'Fold change': 'foldchange',
+                   'Other table': 'table',
+                   'Gene set': 'geneset',
+                   'Function': 'function',
+                   'Other output': 'other',
+                   'Pipeline': 'pipeline'}
     ROOT_FNAME = 'session.rnal'
     TITLE = f"Data analysis report (<i>RNAlysis</i> version {__version__})"
 
@@ -125,15 +125,15 @@ class ReportGenerator:
         x = -750
         y = -350
         step = 75
-        for node_type, kwargs in self.NODE_STYLES.items():
+        for node_type, group_id in self.NODE_GROUPS.items():
             if node_type in {'root'}:
                 continue
-            self.graph.add_node(node_type, label=node_type.capitalize(), fixed=True, physics=False, x=x, y=y,
-                                font={'size': 16}, widthConstraint=100, **kwargs)
+            self.graph.add_node(node_type, group=group_id, is_legend=True, label=node_type.capitalize(), fixed=True,
+                                physics=False, x=x, y=y, font={'size': 16}, widthConstraint=100, shape=None)
             y += step
 
     def add_node(self, name: str, node_id: int, predecessors: typing.List[int] = tuple(), popup_element: str = '',
-                 node_type: Literal[tuple(NODE_STYLES)] = 'Other table', filename: str = None):
+                 node_type: Literal[tuple(NODE_GROUPS)] = 'Other table', filename: str = None):
         # parentless nodes should be attached to the root node
         if len(predecessors) == 0 and node_id > 0:
             predecessors = [0]
@@ -150,8 +150,8 @@ class ReportGenerator:
         else:
             node = Node(node_id, name, predecessors, popup_element, node_type, filename)
             self.nodes[node_id] = node
-        kwargs = self.NODE_STYLES[node.node_type]
-        self.graph.add_node(node.node_id, label=node.node_name, title=node.popup_element, **kwargs)
+        group_id = self.NODE_GROUPS[node.node_type]
+        self.graph.add_node(node.node_id, label=node.node_name, title=node.popup_element, group=group_id, shape=None)
         for pred in predecessors:
             self.graph.add_edge(pred, node_id)
 

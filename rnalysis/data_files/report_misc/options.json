@@ -1,11 +1,48 @@
 {
     "configure": {
         "enabled": true
-
     },
     "nodes": {
         "font": {
             "strokeWidth": 3
+        }
+    },
+    "groups": {
+        "count": {
+            "color": "#0D47A1",
+            "shape": "dot"
+        },
+        "diffexp": {
+            "color": "#BF360C",
+            "shape": "dot"
+        },
+        "foldchange": {
+            "color": "#00838F",
+            "shape": "dot"
+        },
+        "table": {
+            "color": "#F7B30A",
+            "shape": "dot"
+        },
+        "geneset": {
+            "color": "#BA68C8",
+            "shape": "dot"
+        },
+        "function": {
+            "color": "#00D4D8",
+            "shape": "triangleDown"
+        },
+        "other": {
+            "color": "#228B22",
+            "shape": "square"
+        },
+        "pipeline": {
+            "color": "#FF66B8",
+            "shape": "diamond"
+        },
+        "root": {
+            "color": "#00D4D8",
+            "shape": "box"
         }
     },
     "edges": {
