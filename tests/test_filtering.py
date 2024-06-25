@@ -55,7 +55,7 @@ def big_countfilter(_big_countfilter):
 
 @pytest.fixture(scope='session')
 def _clustering_countfilter(_big_countfilter):
-    return _big_countfilter.normalize_to_rpm(inplace=False).filter_low_reads(105,3,inplace=False)
+    return _big_countfilter.normalize_to_rpm(inplace=False).filter_low_reads(105, 3, inplace=False)
 
 
 @pytest.fixture
@@ -450,17 +450,6 @@ def test_countfilter_clustergram_api(basic_countfilter, args, kwargs, xfail):
 def test_countfilter_box_plot_api(basic_countfilter):
     basic_countfilter.enhanced_box_plot(ylabel='A different label')
     basic_countfilter.enhanced_box_plot(samples=['cond1', 'cond3'], scatter=True)
-    plt.close('all')
-
-
-@pytest.mark.parametrize('args', [
-    (['WBGene00007063'], 'all'),
-    ('WBGene00007063', [[0, 1], ['cond3', 'cond4']]),
-    (['WBGene00007064', 'WBGene00044951', 'WBGene00043988', 'WBGene00007066'], ['cond1']),
-    (['WBGene00007064', 'WBGene00044951'], [['cond1'], [1]])
-])
-def test_countfilter_plot_expression_api(basic_countfilter, args):
-    basic_countfilter.plot_expression(*args)
     plt.close('all')
 
 
@@ -2381,11 +2370,17 @@ def test_pval_histogram(basic_deseqfilter, adjusted_pvals, bin_size, title, monk
     plt.close(fig)
 
 
-@pytest.mark.parametrize('features,samples,avg_function,spread_function,count_unit,split_plots', [
-    ('WBGene00007063', 'all', 'mean', 'sem', 'Normalized reads', False),
-    (['WBGene00007063', 'WBGene00007064'], [['cond1', 'cond2'], ['cond3', 'cond4']], 'median', 'std', 'TPM', True),
-    ('WBGene00007066', ['cond1', 'cond2'], 'geometric_mean', 'range', 'RPKM', False)
-])
+@pytest.mark.parametrize('features,split_plots',
+                         [('WBGene00007063', False), (['WBGene00007063', 'WBGene00007064'], True),
+                          (['WBGene00007063', 'WBGene00007064'], False)])
+@pytest.mark.parametrize('samples', [[['cond1', 'cond2', 'cond4'], ['cond3']], [['cond1', 'cond2']], 'all'])
+@pytest.mark.parametrize('avg_function,spread_function,count_unit', [
+    ('mean', 'sem', 'Normalized reads'),
+    ('median', 'std', 'TPM'),
+    ('geometric_mean', 'range', 'RPKM'),
+    ('geometric_mean', 'gstd', 'RPKM'),
+    ('geometric_mean', 'gsem', 'RPKM'),
+    ('median', 'iqr', 'RPKM')])
 def test_plot_expression(features, samples, avg_function, spread_function, count_unit, split_plots, monkeypatch,
                          basic_countfilter):
     monkeypatch.setattr(plt, 'show', lambda: None)

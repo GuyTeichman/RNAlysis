@@ -5097,44 +5097,40 @@ class CountFilter(Filter):
 
             if spread_function == 'sem':
                 spread = [
-                    0 if len(grp) == 1 else sem(feature_df.filter(pl.first().is_in(grp)).drop(cs.first()).to_numpy())
+                    0 if len(grp) == 1 else sem(feature_df.filter(pl.first().is_in(grp)).drop(cs.first()).to_numpy())[0]
                     for grp in samples]
             elif spread_function == 'std':
                 spread = [0 if len(grp) == 1 else feature_df.filter(pl.first().is_in(grp)).drop(cs.first()).std().item()
                           for grp in samples]
             elif spread_function == 'gstd':
-                spread = np.array([
-                    [0 if len(grp) == 1 else m - m / gstd(
-                        feature_df.filter(pl.first().is_in(grp)).drop(cs.first()).to_numpy()) for m, grp in
-                     zip(mean, samples)],
-                    [0 if len(grp) == 1 else m * gstd(
-                        feature_df.filter(pl.first().is_in(grp)).drop(cs.first()).to_numpy()) for m, grp in
-                     zip(mean, samples)]
-                ])
+                factors = [
+                    1 if len(grp) == 1 else gstd(feature_df.filter(pl.first().is_in(grp)).drop(cs.first()).to_numpy())[
+                        0] for grp in samples]
+                spread = [[0 if len(grp) == 1 else m - (m / f) for m, f, grp in zip(mean, factors, samples)],
+                          [0 if len(grp) == 1 else (m * f) - m for m, f, grp in zip(mean, factors, samples)]]
             elif spread_function == 'gsem':
-                spread = np.array([
-                    [0 if len(grp) == 1 else m - m / np.exp(
-                        sem(np.log(feature_df.filter(pl.first().is_in(grp)).drop(cs.first()).to_numpy()))) for m, grp in
-                     zip(mean, samples)],
-                    [0 if len(grp) == 1 else m * np.exp(
-                        sem(np.log(feature_df.filter(pl.first().is_in(grp)).drop(cs.first()).to_numpy()))) for m, grp in
-                     zip(mean, samples)]
-                ])
+                factors = [1 if len(grp) == 1 else
+                           (np.exp(sem(np.log(feature_df.filter(pl.first().is_in(grp)).drop(cs.first()).to_numpy()))))[
+                               0] for grp in samples]
+                spread = [[0 if len(grp) == 1 else m - (m / f) for m, f, grp in zip(mean, factors, samples)],
+                          [0 if len(grp) == 1 else (m * f) - m for m, f, grp in zip(mean, factors, samples)]]
             elif spread_function == 'iqr':
-                spread = [feature_df.filter(pl.first().is_in(grp)).drop(cs.first()).with_columns(
-                    pl.all().quantile(0.75) - pl.all().quantile(0.25)).item() for grp in samples]
+                spread = [feature_df.filter(pl.first().is_in(grp)).drop(cs.first()).quantile(
+                    0.75).item() - feature_df.filter(pl.first().is_in(grp)).drop(cs.first()).quantile(0.25).item() for
+                          grp in samples]
             elif spread_function == 'range':
-                spread = [feature_df.filter(pl.first().is_in(grp)).drop(cs.first()).with_columns(
-                    pl.all().max() - pl.all().min()).item() for grp in samples]
-
+                spread = [
+                    [0 if len(grp) == 1 else m - feature_df.filter(pl.first().is_in(grp)).drop(cs.first()).min().item()
+                     for m, grp in zip(mean, samples)],
+                    [0 if len(grp) == 1 else feature_df.filter(pl.first().is_in(grp)).drop(cs.first()).max().item() - m
+                     for m, grp in zip(mean, samples)]]
             else:
                 raise ValueError(f"Invalid spread function {spread_function}.")
             points_y = parsing.flatten(
-                [[self.df.filter(pl.first() == feature)[i] for i in ind] if validation.isinstanceiter(ind, int) else
-                 self.df.filter(pl.first() == feature).select(pl.col(ind)) for ind in samples])
+                [parsing.data_to_list(feature_df.filter(pl.first().is_in(grp)).drop(cs.first())) for grp in samples])
             points_x = []
-            for i, grouping in enumerate(samples):
-                this_group = generic.jitter(len(grouping), jitter) + i
+            for j, grouping in enumerate(samples):
+                this_group = generic.jitter(len(grouping), jitter) + j
                 points_x.extend(parsing.data_to_list(this_group))
 
             ax.bar(np.arange(len(samples)), mean, yerr=spread, edgecolor=edge_color, width=0.5,
