@@ -183,6 +183,14 @@ class ReportGenerator:
                 if self.nodes[pred].node_type == 'Function':
                     self.trim_node(pred)
 
+    def trim_function_nodes(self):
+        """
+        Trims all nodes of type 'Function' that are now leaf nodes from the report graph.
+        """
+        for node in self.nodes:
+            if self.nodes[node].node_type == 'Function' and node in self.graph and self.graph.out_degree(node) == 0:
+                self.trim_node(node)
+
     def _modify_html(self, html: str, title: str, title_fontsize: int) -> str:
         # remove duplicate title
         title = self.TITLE if title == 'auto' else title
@@ -220,6 +228,8 @@ class ReportGenerator:
             draw_path_func = f.read()
         merged_code = listeners + '\n' + draw_path_func
         html = re.sub(r'(network\s*=\s*new\s+vis\.Network\([^;]+;\s*)', r'\g<0>' + merged_code, html, count=1)
+        # point all table links to their .csv version instead of the .parquet version
+        html = html.replace('.parquet', '.csv')
         return html
 
     def _report_from_nx(self, show_settings: bool, title: Union[str, Literal['auto']],
@@ -244,6 +254,7 @@ class ReportGenerator:
         output_folder = Path(output_folder)
         assert output_folder.exists() and output_folder.is_dir()
         save_file = output_folder.joinpath('report.html').as_posix()
+        self.trim_function_nodes()
         vis_report = self._report_from_nx(show_settings_menu, title, hierarchical_layout)
         html = self._modify_html(vis_report.generate_html(save_file), title, title_fontsize)
 
@@ -286,9 +297,9 @@ class ReportGenerator:
         webbrowser.open(save_file)
 
     def serialize(self):
-        data = {}
-        data['graph'] = networkx.node_link_data(self.graph)
-        data['nodes'] = {ind: node.to_json() for ind, node in self.nodes.items()}
+        self.trim_function_nodes()
+        data = {'graph': networkx.node_link_data(self.graph),
+                'nodes': {ind: node.to_json() for ind, node in self.nodes.items()}}
         current_file_paths = {ind: node.filename for ind, node in self.nodes.items() if node.filename is not None}
         current_file_paths.pop(0)  # do not reference session file to avoid infinite recursion
         return data, current_file_paths
