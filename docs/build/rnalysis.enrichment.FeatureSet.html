@@ -49,10 +49,11 @@
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <p class="caption" role="heading"><span class="caption-text">About RNAlysis:</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="readme.html">What is <em>RNAlysis?</em></a></li>
-<li class="toctree-l1"><a class="reference internal" href="readme.html#what-can-i-do-with-rnalysis">What can I do with <em>RNAlysis</em>?</a></li>
-<li class="toctree-l1"><a class="reference internal" href="readme.html#how-do-i-install-it">How do I install it?</a></li>
-<li class="toctree-l1"><a class="reference internal" href="readme.html#how-do-i-use-it">How do I use it?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="readme.html">🧬 What is <em>RNAlysis</em>?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="readme.html#see-rnalysis-in-action">🎥 See <em>RNAlysis</em> in Action</a></li>
+<li class="toctree-l1"><a class="reference internal" href="readme.html#key-features">🚀 Key Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="readme.html#how-do-i-install-it">🛠️ How do I install it?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="readme.html#how-do-i-use-it">📊 How do I use it?</a></li>
 <li class="toctree-l1"><a class="reference internal" href="readme.html#dependencies">Dependencies</a></li>
 <li class="toctree-l1"><a class="reference internal" href="readme.html#credits">Credits</a></li>
 <li class="toctree-l1"><a class="reference external" href="https://github.com/GuyTeichman/RNAlysis">GitHub page</a></li>
@@ -63,6 +64,7 @@
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="quick_start.html"><em>RNAlysis</em> quick-start video guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="tutorial.html">A-to-Z tutorial - example analysis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="analysis_report.html">How to use the <em>RNAlysis</em> analysis reports</a></li>
 <li class="toctree-l1"><a class="reference internal" href="faq.html">Frequently asked questions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="user_guide_gui.html">User guide - graphical interface</a></li>
 <li class="toctree-l1"><a class="reference internal" href="user_guide.html">User guide - programmatic interface</a></li>
@@ -224,7 +226,7 @@
 <tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.enrichment.FeatureSet.filter_biotype_from_ref_table.html#rnalysis.enrichment.FeatureSet.filter_biotype_from_ref_table" title="rnalysis.enrichment.FeatureSet.filter_biotype_from_ref_table"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FeatureSet.filter_biotype_from_ref_table</span></code></a>([...])</p></td>
 <td><p>Filters out all features that do not match the indicated biotype/biotypes         (for example: 'protein_coding', 'ncRNA', etc).</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.enrichment.FeatureSet.filter_by_attribute.html#rnalysis.enrichment.FeatureSet.filter_by_attribute" title="rnalysis.enrichment.FeatureSet.filter_by_attribute"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FeatureSet.filter_by_attribute</span></code></a>([attributes, ...])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.enrichment.FeatureSet.filter_by_attribute.html#rnalysis.enrichment.FeatureSet.filter_by_attribute" title="rnalysis.enrichment.FeatureSet.filter_by_attribute"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FeatureSet.filter_by_attribute</span></code></a>(attributes[, ...])</p></td>
 <td><p>Filters features according to user-defined attributes from an Attribute Reference Table.</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.enrichment.FeatureSet.filter_by_go_annotations.html#rnalysis.enrichment.FeatureSet.filter_by_go_annotations" title="rnalysis.enrichment.FeatureSet.filter_by_go_annotations"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FeatureSet.filter_by_go_annotations</span></code></a>(go_ids)</p></td>
@@ -239,7 +241,7 @@
 <tr class="row-even"><td><p><a class="reference internal" href="rnalysis.enrichment.FeatureSet.find_paralogs_panther.html#rnalysis.enrichment.FeatureSet.find_paralogs_panther" title="rnalysis.enrichment.FeatureSet.find_paralogs_panther"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FeatureSet.find_paralogs_panther</span></code></a>([organism, ...])</p></td>
 <td><p>Find paralogs within the same species using the PantherDB database.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.enrichment.FeatureSet.go_enrichment.html#rnalysis.enrichment.FeatureSet.go_enrichment" title="rnalysis.enrichment.FeatureSet.go_enrichment"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FeatureSet.go_enrichment</span></code></a>([organism, ...])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.enrichment.FeatureSet.go_enrichment.html#rnalysis.enrichment.FeatureSet.go_enrichment" title="rnalysis.enrichment.FeatureSet.go_enrichment"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FeatureSet.go_enrichment</span></code></a>(background_genes[, ...])</p></td>
 <td><p>Calculates enrichment and depletion of the FeatureSet for Gene Ontology (GO) terms against a background set.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="rnalysis.enrichment.FeatureSet.intersection.html#rnalysis.enrichment.FeatureSet.intersection" title="rnalysis.enrichment.FeatureSet.intersection"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FeatureSet.intersection</span></code></a>(*others)</p></td>
@@ -257,7 +259,7 @@
 <tr class="row-even"><td><p><a class="reference internal" href="rnalysis.enrichment.FeatureSet.issuperset.html#rnalysis.enrichment.FeatureSet.issuperset" title="rnalysis.enrichment.FeatureSet.issuperset"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FeatureSet.issuperset</span></code></a></p></td>
 <td><p>Report whether this set contains another set.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.enrichment.FeatureSet.kegg_enrichment.html#rnalysis.enrichment.FeatureSet.kegg_enrichment" title="rnalysis.enrichment.FeatureSet.kegg_enrichment"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FeatureSet.kegg_enrichment</span></code></a>([organism, ...])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.enrichment.FeatureSet.kegg_enrichment.html#rnalysis.enrichment.FeatureSet.kegg_enrichment" title="rnalysis.enrichment.FeatureSet.kegg_enrichment"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FeatureSet.kegg_enrichment</span></code></a>(background_genes)</p></td>
 <td><p>Calculates enrichment and depletion of the FeatureSet for Kyoto Encyclopedia of Genes and Genomes (KEGG)         curated pathways against a background set.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="rnalysis.enrichment.FeatureSet.map_orthologs_ensembl.html#rnalysis.enrichment.FeatureSet.map_orthologs_ensembl" title="rnalysis.enrichment.FeatureSet.map_orthologs_ensembl"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FeatureSet.map_orthologs_ensembl</span></code></a>(map_to_organism)</p></td>
@@ -272,7 +274,7 @@
 <tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.enrichment.FeatureSet.map_orthologs_phylomedb.html#rnalysis.enrichment.FeatureSet.map_orthologs_phylomedb" title="rnalysis.enrichment.FeatureSet.map_orthologs_phylomedb"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FeatureSet.map_orthologs_phylomedb</span></code></a>(...[, ...])</p></td>
 <td><p>Map genes to their nearest orthologs in a different species using the PhylomeDB database.         This function generates a table describing all matching discovered ortholog pairs (both unique and non-unique)         and returns it, and can also translate the genes in this data table into their nearest ortholog,         as well as remove unmapped genes.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.enrichment.FeatureSet.non_categorical_enrichment.html#rnalysis.enrichment.FeatureSet.non_categorical_enrichment" title="rnalysis.enrichment.FeatureSet.non_categorical_enrichment"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FeatureSet.non_categorical_enrichment</span></code></a>([...])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.enrichment.FeatureSet.non_categorical_enrichment.html#rnalysis.enrichment.FeatureSet.non_categorical_enrichment" title="rnalysis.enrichment.FeatureSet.non_categorical_enrichment"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FeatureSet.non_categorical_enrichment</span></code></a>(...[, ...])</p></td>
 <td><p>Calculates enrichment and depletion of the FeatureSet for user-defined non-categorical attributes         against a background set using either a one-sample T-test or Sign test.</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.enrichment.FeatureSet.pop.html#rnalysis.enrichment.FeatureSet.pop" title="rnalysis.enrichment.FeatureSet.pop"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FeatureSet.pop</span></code></a></p></td>
@@ -299,7 +301,7 @@
 <tr class="row-even"><td><p><a class="reference internal" href="rnalysis.enrichment.FeatureSet.update.html#rnalysis.enrichment.FeatureSet.update" title="rnalysis.enrichment.FeatureSet.update"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FeatureSet.update</span></code></a></p></td>
 <td><p>Update a set with the union of itself and others.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.enrichment.FeatureSet.user_defined_enrichment.html#rnalysis.enrichment.FeatureSet.user_defined_enrichment" title="rnalysis.enrichment.FeatureSet.user_defined_enrichment"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FeatureSet.user_defined_enrichment</span></code></a>(attributes)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.enrichment.FeatureSet.user_defined_enrichment.html#rnalysis.enrichment.FeatureSet.user_defined_enrichment" title="rnalysis.enrichment.FeatureSet.user_defined_enrichment"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FeatureSet.user_defined_enrichment</span></code></a>(...[, ...])</p></td>
 <td><p>Calculates enrichment and depletion of the FeatureSet for user-defined attributes against a background set.</p></td>
 </tr>
 </tbody>

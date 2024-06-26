@@ -34,6 +34,7 @@ RNAlysis |release| documentation
    installation
    quick_start
    tutorial
+   analysis_report
    faq
    user_guide_gui
    user_guide
