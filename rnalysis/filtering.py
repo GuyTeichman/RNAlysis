@@ -3112,7 +3112,7 @@ class CountFilter(Filter):
             i += 1
 
         io.save_table(self.df.select(pl.first()).with_columns(
-            self.df.select(pl.col(self._numeric_columns)).with_columns(cs.float().round())), data_path)
+            self.df.select(pl.col(self._numeric_columns))), data_path)
         # use RNAlysis to automatically detect file delimiter type, then export it as a CSV file.
         design_mat_df = io.load_table(design_matrix)
         self._diff_exp_assertions(design_mat_df)
