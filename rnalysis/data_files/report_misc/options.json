@@ -51,7 +51,8 @@
         },
         "smooth": {
             "type": "cubicBezier",
-            "roundness": 0.4
+            "roundness": 0.4,
+            "forceDirection": "horizontal"
         },
         "width": 2,
         "selectionWidth": 3
