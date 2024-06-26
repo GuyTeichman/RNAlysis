@@ -49,10 +49,11 @@
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <p class="caption" role="heading"><span class="caption-text">About RNAlysis:</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="readme.html">What is <em>RNAlysis?</em></a></li>
-<li class="toctree-l1"><a class="reference internal" href="readme.html#what-can-i-do-with-rnalysis">What can I do with <em>RNAlysis</em>?</a></li>
-<li class="toctree-l1"><a class="reference internal" href="readme.html#how-do-i-install-it">How do I install it?</a></li>
-<li class="toctree-l1"><a class="reference internal" href="readme.html#how-do-i-use-it">How do I use it?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="readme.html">🧬 What is <em>RNAlysis</em>?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="readme.html#see-rnalysis-in-action">🎥 See <em>RNAlysis</em> in Action</a></li>
+<li class="toctree-l1"><a class="reference internal" href="readme.html#key-features">🚀 Key Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="readme.html#how-do-i-install-it">🛠️ How do I install it?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="readme.html#how-do-i-use-it">📊 How do I use it?</a></li>
 <li class="toctree-l1"><a class="reference internal" href="readme.html#dependencies">Dependencies</a></li>
 <li class="toctree-l1"><a class="reference internal" href="readme.html#credits">Credits</a></li>
 <li class="toctree-l1"><a class="reference external" href="https://github.com/GuyTeichman/RNAlysis">GitHub page</a></li>
@@ -63,6 +64,7 @@
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="quick_start.html"><em>RNAlysis</em> quick-start video guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="tutorial.html">A-to-Z tutorial - example analysis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="analysis_report.html">How to use the <em>RNAlysis</em> analysis reports</a></li>
 <li class="toctree-l1"><a class="reference internal" href="faq.html">Frequently asked questions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="user_guide_gui.html">User guide - graphical interface</a></li>
 <li class="toctree-l1"><a class="reference internal" href="user_guide.html">User guide - programmatic interface</a></li>
@@ -176,6 +178,8 @@
 <li><p><strong>attr_ref_path</strong> (<em>str</em><em> or </em><em>pathlib.Path</em><em> (</em><em>default='predefined'</em><em>)</em>) – path of the Attribute Reference Table from which user-defined attributes will be drawn.</p></li>
 <li><p><strong>exclude_unannotated_genes</strong> (<em>bool</em><em> (</em><em>default=True</em><em>)</em>) – if True, genes that have no annotation associated with them will be         excluded from the enrichment analysis. This is the recommended practice for enrichment analysis, since         keeping unannotated genes in the analysis increases the chance of discovering spurious enrichment results.</p></li>
 <li><p><strong>return_nonsignificant</strong> (<em>bool</em><em> (</em><em>default=True</em><em>)</em>) – if True (default), the results DataFrame will include all tested attributes -         both significant and non-significant ones. If False, only significant attributes will be returned.</p></li>
+<li><p><strong>min_positive_genes</strong> (<em>a positive int</em><em> (</em><em>default=10</em><em>)</em>) – the minimum number of ‘positive’ genes (genes that match the given attribute)         for the enrichment to be considered a valid enrichment. All hypergeometric cutoffs with a smaller number of         ‘positive’ genes will not be tested. This is the ‘X’ parameter of the XL-mHG nonparametric test.         For example: a value of 10 means that a valid enrichment must have at least 10 ‘positive’ genes         to be considered real enrichment.</p></li>
+<li><p><strong>lowest_cutoff</strong> (<em>float between 0 and 1</em><em> (</em><em>default=0.25</em><em>)</em>) – the lowest cutoff of the hypergeometric that will be tested.         This determines the ‘L’ parameter of the XL-mHG nonparametric test. For example:         a value of 1 means that every cutoff will be tested. A value of 0.25 means that every cutoff that compares         the top 25% or smaller of the list to the rest of the list will be tested.</p></li>
 <li><p><strong>save_csv</strong> (<em>bool</em><em>, </em><em>default False</em>) – If True, will save the results to a .csv file, under the name specified in ‘fname’.</p></li>
 <li><p><strong>fname</strong> (<em>str</em><em> or </em><em>pathlib.Path</em>) – The full path and name of the file to which to save the results. For example:         ‘C:/dir/file’. No ‘.csv’ suffix is required. If None (default), fname will be requested in a manual prompt.</p></li>
 <li><p><strong>return_fig</strong> (<em>bool</em><em> (</em><em>default=False</em><em>)</em>) – if True, returns a matplotlib Figure object in addition to the results DataFrame.</p></li>
@@ -186,7 +190,7 @@
 </ul>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>pd.DataFrame (default) or Tuple[pd.DataFrame, matplotlib.figure.Figure]</p>
+<dd class="field-even"><p>pl.DataFrame (default) or Tuple[pl.DataFrame, matplotlib.figure.Figure]</p>
 </dd>
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><p>a pandas DataFrame with the indicated attribute names as rows/index;         and a matplotlib Figure, if ‘return_figure’ is set to True.</p>

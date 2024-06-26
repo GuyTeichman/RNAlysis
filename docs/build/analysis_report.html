@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en">
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>How to use the RNAlysis analysis reports &mdash; RNAlysis 3.12.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css" />
+
+  
+    <link rel="shortcut icon" href="_static/favicon.ico"/>
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/copybutton.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Frequently asked questions" href="faq.html" />
+    <link rel="prev" title="A-to-Z tutorial - example analysis" href="tutorial.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html">
+            
+              <img src="_static/logo.png" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">About RNAlysis:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="readme.html">🧬 What is <em>RNAlysis</em>?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="readme.html#see-rnalysis-in-action">🎥 See <em>RNAlysis</em> in Action</a></li>
+<li class="toctree-l1"><a class="reference internal" href="readme.html#key-features">🚀 Key Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="readme.html#how-do-i-install-it">🛠️ How do I install it?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="readme.html#how-do-i-use-it">📊 How do I use it?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="readme.html#dependencies">Dependencies</a></li>
+<li class="toctree-l1"><a class="reference internal" href="readme.html#credits">Credits</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/GuyTeichman/RNAlysis">GitHub page</a></li>
+<li class="toctree-l1"><a class="reference internal" href="contributing.html">How can I contribute to <em>RNAlysis</em>?</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Starting with RNAlysis:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="quick_start.html"><em>RNAlysis</em> quick-start video guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tutorial.html">A-to-Z tutorial - example analysis</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">How to use the <em>RNAlysis</em> analysis reports</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#understanding-the-graph">Understanding the Graph</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#node-details-at-a-glance">Node Details at a Glance</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#accessing-associated-files">Accessing Associated Files</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#navigating-the-graph-panning">Navigating the Graph: Panning</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#navigating-the-graph-zooming">Navigating the Graph: Zooming</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#fitting-the-graph-to-view">Fitting the Graph to View</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#tracing-analysis-paths">Tracing Analysis Paths</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#filtering-by-node-type">Filtering by Node Type</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="faq.html">Frequently asked questions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="user_guide_gui.html">User guide - graphical interface</a></li>
+<li class="toctree-l1"><a class="reference internal" href="user_guide.html">User guide - programmatic interface</a></li>
+<li class="toctree-l1"><a class="reference internal" href="glossary.html">Glossary - programmatic interface</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Change history:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="history.html">History</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Modules:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="rnalysis.fastq.html">rnalysis.fastq</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rnalysis.filtering.html">rnalysis.filtering</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rnalysis.enrichment.html">rnalysis.enrichment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rnalysis.general.html">rnalysis.general</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Indices and tables:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="genindex.html">Index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api_reference.html">API Reference</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">RNAlysis</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">How to use the <em>RNAlysis</em> analysis reports</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/analysis_report.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="how-to-use-the-rnalysis-analysis-reports">
+<h1>How to use the <em>RNAlysis</em> analysis reports<a class="headerlink" href="#how-to-use-the-rnalysis-analysis-reports" title="Permalink to this heading"></a></h1>
+<section id="understanding-the-graph">
+<h2>Understanding the Graph<a class="headerlink" href="#understanding-the-graph" title="Permalink to this heading"></a></h2>
+<p>Each node represents a data table, gene set, or function call. Arrows show the analysis workflow direction.</p>
+<img alt="_images/report_overview.webp" src="_images/report_overview.webp" />
+</section>
+<section id="node-details-at-a-glance">
+<h2>Node Details at a Glance<a class="headerlink" href="#node-details-at-a-glance" title="Permalink to this heading"></a></h2>
+<p>Hover over a node to see a preview and list of parameters associated with that step in the analysis.</p>
+<img alt="_images/report_view_node.webp" src="_images/report_view_node.webp" />
+</section>
+<section id="accessing-associated-files">
+<h2>Accessing Associated Files<a class="headerlink" href="#accessing-associated-files" title="Permalink to this heading"></a></h2>
+<p>Click on the link in the hover popup to open the file associated with that node.</p>
+<img alt="../../rnalysis/gui/videos/report_access_files.webp" src="../../rnalysis/gui/videos/report_access_files.webp" />
+</section>
+<section id="navigating-the-graph-panning">
+<h2>Navigating the Graph: Panning<a class="headerlink" href="#navigating-the-graph-panning" title="Permalink to this heading"></a></h2>
+<p>To move around the graph, click and drag the screen, or use the arrow buttons on the bottom-left side of your screen.</p>
+<img alt="_images/report_pan.webp" src="_images/report_pan.webp" />
+</section>
+<section id="navigating-the-graph-zooming">
+<h2>Navigating the Graph: Zooming<a class="headerlink" href="#navigating-the-graph-zooming" title="Permalink to this heading"></a></h2>
+<p>Use the ‘+’ and ‘-’ buttons on the bottom-right of the screen to zoom in and out of the graph.</p>
+<img alt="_images/report_zoom.webp" src="_images/report_zoom.webp" />
+</section>
+<section id="fitting-the-graph-to-view">
+<h2>Fitting the Graph to View<a class="headerlink" href="#fitting-the-graph-to-view" title="Permalink to this heading"></a></h2>
+<p>Click the box-shaped button on the bottom-right to fit the entire graph into your current view.</p>
+<img alt="_images/report_fit_to_view.webp" src="_images/report_fit_to_view.webp" />
+</section>
+<section id="tracing-analysis-paths">
+<h2>Tracing Analysis Paths<a class="headerlink" href="#tracing-analysis-paths" title="Permalink to this heading"></a></h2>
+<p>Click on a node to highlight the path of analysis that led to it. Click again anywhere on the graph to reset the view.</p>
+<img alt="_images/report_trace_path.webp" src="_images/report_trace_path.webp" />
+</section>
+<section id="filtering-by-node-type">
+<h2>Filtering by Node Type<a class="headerlink" href="#filtering-by-node-type" title="Permalink to this heading"></a></h2>
+<p>Click on a node type in the legend to highlight all nodes of that type across the graph. Click again to reset the view.</p>
+<img alt="../../rnalysis/gui/videos/report_filter_nodes.webp" src="../../rnalysis/gui/videos/report_filter_nodes.webp" />
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="tutorial.html" class="btn btn-neutral float-left" title="A-to-Z tutorial - example analysis" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="faq.html" class="btn btn-neutral float-right" title="Frequently asked questions" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, Guy Teichman.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

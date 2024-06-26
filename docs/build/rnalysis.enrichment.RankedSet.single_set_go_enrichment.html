@@ -49,10 +49,11 @@
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <p class="caption" role="heading"><span class="caption-text">About RNAlysis:</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="readme.html">What is <em>RNAlysis?</em></a></li>
-<li class="toctree-l1"><a class="reference internal" href="readme.html#what-can-i-do-with-rnalysis">What can I do with <em>RNAlysis</em>?</a></li>
-<li class="toctree-l1"><a class="reference internal" href="readme.html#how-do-i-install-it">How do I install it?</a></li>
-<li class="toctree-l1"><a class="reference internal" href="readme.html#how-do-i-use-it">How do I use it?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="readme.html">🧬 What is <em>RNAlysis</em>?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="readme.html#see-rnalysis-in-action">🎥 See <em>RNAlysis</em> in Action</a></li>
+<li class="toctree-l1"><a class="reference internal" href="readme.html#key-features">🚀 Key Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="readme.html#how-do-i-install-it">🛠️ How do I install it?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="readme.html#how-do-i-use-it">📊 How do I use it?</a></li>
 <li class="toctree-l1"><a class="reference internal" href="readme.html#dependencies">Dependencies</a></li>
 <li class="toctree-l1"><a class="reference internal" href="readme.html#credits">Credits</a></li>
 <li class="toctree-l1"><a class="reference external" href="https://github.com/GuyTeichman/RNAlysis">GitHub page</a></li>
@@ -63,6 +64,7 @@
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="quick_start.html"><em>RNAlysis</em> quick-start video guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="tutorial.html">A-to-Z tutorial - example analysis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="analysis_report.html">How to use the <em>RNAlysis</em> analysis reports</a></li>
 <li class="toctree-l1"><a class="reference internal" href="faq.html">Frequently asked questions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="user_guide_gui.html">User guide - graphical interface</a></li>
 <li class="toctree-l1"><a class="reference internal" href="user_guide.html">User guide - programmatic interface</a></li>
@@ -215,7 +217,7 @@
 :param ontology_graph_format: if ontology_graph_format is not ‘none’, the ontology graph will additonally be         generated in the specified file format.
 :type parallel_backend: Literal[PARALLEL_BACKENDS] (default=’loky’)
 :param parallel_backend: Determines the babckend used to run the analysis.         if parallel_backend not ‘sequential’, will calculate the statistical tests using parallel processing.         In most cases parallel processing will lead to shorter computation time, but does not affect the results of         the analysis otherwise.
-:rtype: pd.DataFrame (default) or Tuple[pd.DataFrame, matplotlib.figure.Figure]
+:rtype: pl.DataFrame (default) or Tuple[pl.DataFrame, matplotlib.figure.Figure]
 :return: a pandas DataFrame with the indicated attribute names as rows/index;         and a matplotlib Figure, if ‘return_figure’ is set to True.</p>
 <figure class="align-center" id="id1">
 <a class="reference internal image-reference" href="_images/ontology_graph_singlelist.png"><img alt="_images/ontology_graph_singlelist.png" src="_images/ontology_graph_singlelist.png" style="width: 840.0px; height: 540.0px;" /></a>
