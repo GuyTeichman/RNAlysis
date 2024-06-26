@@ -2,6 +2,7 @@ recursive-include . *.rst *.ico *.png
 recursive-include . requirements*.txt
 
 recursive-include rnalysis *.png *.json *.qss *.R *.ico *.css *.js
+recursive-include rnalysis/data_files/ *
 recursive-exclude rnalysis *.webp
 
 recursive-include tests *
