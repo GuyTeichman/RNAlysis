@@ -1,49 +1,74 @@
 .. image:: https://raw.githubusercontent.com/GuyTeichman/RNAlysis/master/docs/source/logo.png
     :target: https://guyteichman.github.io/RNAlysis
-    :width: 400
+    :width: 200
     :alt: logo
 
 **Useful links:** `Documentation <https://guyteichman.github.io/RNAlysis>`_ |
 `Source code <https://github.com/GuyTeichman/RNAlysis>`_ |
-`Bug reports <https://github.com/GuyTeichman/RNAlysis/issues>`_ | |pipimage| | |versionssupported| | |githubactions| | |coveralls| | |downloads|
+`Bug reports <https://github.com/GuyTeichman/RNAlysis/issues>`_ | |pipimage|
+|versionssupported| | |githubactions| | |coveralls| | |downloads|
 
 ----
 
-What is *RNAlysis?*
---------------------
+🧬 What is *RNAlysis*?
+----------------------
 
-*RNAlysis* is a Python-based software for analyzing RNA sequencing data.
-*RNAlysis* allows you to build customized analysis pipelines suiting your specific research questions,
-going all the way from exploratory data analysis and data visualization through clustering analysis and gene-set enrichment analysis.
+*RNAlysis* is a powerful, user-friendly software that allows you to analyze your RNA sequencing data without writing a single line of code.
+This Python-based tool offers a complete solution for your RNA-seq analysis needs, from raw data processing to advanced statistical analyses and beautiful visualizations, all through an intuitive graphical interface.
 
 ----
 
-What can I do with *RNAlysis*?
----------------------------------
+🎥 See *RNAlysis* in Action
+---------------------------
 
-* Filter your gene expression matrices, differential expression tables, fold change data, and tabular data in general.
-* Normalize your gene expression matrices
-* Visualise, explore and describe your sequencing data
-* Find global relationships between sample expression profiles with clustering analyses and dimensionality reduction
-* Create and share analysis pipelines
-* Perform enrichment analysis with pre-determined Gene Ontology terms/KEGG pathways, or with used-defined attributes
-* Perform enrichment analysis on a single ranked list of genes, instead of a test set and a background set
+.. image:: rnalysis/gui/videos/quick_search.webp
+    :alt: Rapid Gene Information Lookup
+    :width: 600px
+
+*Instantly access gene information from various biological databases with a simple right-click.*
+
+.. image:: rnalysis/gui/videos/set_operations.webp
+    :alt: Set Operations
+    :width: 600px
+
+*Perform advanced set operations to extract and analyze specific subsets of your data.*
+
+.. image:: rnalysis/gui/videos/report_overview.webp
+    :alt: Interactive Analysis Report
+    :width: 600px
+
+*Easily generate comprehensive and intuitive analysis reports to promote reproducibility. Track the entire analysis path with just a click!*
+
+
+----
+
+🚀 Key Features
+----------------
+
+- **Code-Free Analysis**: Perform complex analyses with just a few clicks.
+- **Comprehensive Analysis Pipeline**: From data import to enrichment analysis, all in one place.
+- **Interactive Visualizations**: Explore your data with dynamic, publication-ready graphs.
+- **Customizable Workflows**: Build and share analysis pipelines tailored to your research questions.
+- **Integration with Popular Tools**: Seamless compatibility with DESeq2, kallisto, bowtie2, and more.
+- **Rapid Gene Information Lookup**: Instantly access gene information from various biological databases.
+- **Advanced Set Operations**: Easily extract and analyze specific subsets of your data.
+- **Reproducible Research**: Generate comprehensive, interactive analysis reports with a single click.
 
 To get an overview of what *RNAlysis* can do, read the `tutorial <https://guyteichman.github.io/RNAlysis/build/tutorial.html>`_ and the `user guide <https://guyteichman.github.io/RNAlysis/build/user_guide.html>`_.
 
-*RNAlysis* supports gene expression matrices and differential expression tables in general, and integrates in particular with Python's *HTSeq-count* and R's *DESeq2*.
-
 ----
 
-How do I install it?
----------------------
+
+
+🛠️ How do I install it?
+------------------------
 You can either install *RNAlysis* as a stand-alone app, or via PyPI.
 To learn how to install *RNAlysis*, visit the `Installation page <https://guyteichman.github.io/RNAlysis/build/installation.html>`_.
 
 ----
 
 
-How do I use it?
+📊 How do I use it?
 ---------------------
 If you installed *RNAlysis* as a stand-alone app, simply open the app ("RNAlysis.exe" on Windows, "RNAlysis.dmg" on MacOS) and wait for it to load (it may take a minute or two, so be patient!).
 
@@ -65,6 +90,7 @@ Dependencies
 All of *RNAlysis*'s dependencies can be installed automatically via PyPI.
 
 * `numpy <https://numpy.org/>`_
+* `polars <https://pola.rs/>`_
 * `pandas <https://pandas.pydata.org/>`_
 * `scipy <https://www.scipy.org/>`_
 * `matplotlib <https://matplotlib.org/>`_
