@@ -102,6 +102,7 @@ class ReportGenerator:
                           Path(__file__).parent.parent.joinpath('data_files/report_templates/bootstrap.min.css')]
     JS_TEMPLATE_PATHS = [Path(__file__).parent.parent.joinpath('data_files/report_templates/vis-network.min.js'),
                          Path(__file__).parent.parent.joinpath('data_files/report_templates/bootstrap.bundle.min.js')]
+    OTHER_PATHS = [Path(__file__).parent.parent.joinpath('data_files/report_templates/question-circle.svg')]
     NODE_GROUPS = {'root': 'root',
                    'Count matrix': 'count',
                    'Differential expression': 'diffexp',
@@ -190,6 +191,10 @@ class ReportGenerator:
         # set title font size
         fontsize_em = title_fontsize / 16
         html = html.replace('<h1>', f'<h1 style="font-size:{fontsize_em}em;">')
+        # add "how to use" button
+        with open(Path(__file__).parent.parent.joinpath('data_files/report_misc/report_howto_link.html')) as f:
+            howto_link = f.read()
+            html = re.sub('</center>', howto_link + '\n</center>', html, count=1)
         # remove comments from file
         comment_regex = r"<!--[\s\S]*?-->"
         html = re.sub(comment_regex, "", html)
@@ -235,7 +240,7 @@ class ReportGenerator:
         return dialog
 
     def generate_report(self, output_folder: Path, title: Union[str, Literal['auto']] = 'auto',
-                        title_fontsize: int = 24, show_settings_menu: bool = False,hierarchical_layout: bool = True):
+                        title_fontsize: int = 24, show_settings_menu: bool = False, hierarchical_layout: bool = True):
         output_folder = Path(output_folder)
         assert output_folder.exists() and output_folder.is_dir()
         save_file = output_folder.joinpath('report.html').as_posix()
@@ -249,7 +254,7 @@ class ReportGenerator:
         if assets_path.exists():
             shutil.rmtree(assets_path)
         assets_path.mkdir()
-        for item in itertools.chain(self.CSS_TEMPLATE_PATHS, self.JS_TEMPLATE_PATHS):
+        for item in itertools.chain(self.CSS_TEMPLATE_PATHS, self.JS_TEMPLATE_PATHS, self.OTHER_PATHS):
             with open(item, encoding="utf-8") as f:
                 content = f.read()
             # change suffix from .js to .jscript, so that services such as Gmail do not block the file
