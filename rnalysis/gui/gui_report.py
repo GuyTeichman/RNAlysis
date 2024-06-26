@@ -200,7 +200,9 @@ class ReportGenerator:
                           re.DOTALL)
         # set JavaScript templates to the correct paths (local version under "assets")
         for js_pth in self.JS_TEMPLATE_PATHS:
-            js_line = f'<script src="assets/{js_pth.name}"></script>'
+            # change suffix from .js to .jscript, so that services such as Gmail do not block the file
+            jscript_name = js_pth.name.replace('.js', '.jscript')
+            js_line = f'<script src="assets/{jscript_name}"></script>'
             html = re.sub(r'<script\s+src\s*=\s*"(https?:\/\/[^"]+\.js)"[^>]*><\/script>', js_line, html, 1, re.DOTALL)
 
         # add path highlighting script to the HTML file
@@ -250,7 +252,9 @@ class ReportGenerator:
         for item in itertools.chain(self.CSS_TEMPLATE_PATHS, self.JS_TEMPLATE_PATHS):
             with open(item, encoding="utf-8") as f:
                 content = f.read()
-            with open(assets_path.joinpath(item.name), 'w', encoding="utf-8") as outfile:
+            # change suffix from .js to .jscript, so that services such as Gmail do not block the file
+            outfile_path = assets_path.joinpath(item.name.replace('.js', '.jscript'))
+            with open(outfile_path, 'w', encoding="utf-8") as outfile:
                 outfile.write(content)
 
         data_path = output_folder.joinpath('data')
