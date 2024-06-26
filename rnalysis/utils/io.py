@@ -374,6 +374,9 @@ def load_table(filename: Union[str, Path], drop_columns: Union[str, List[str]] =
             df = pl.read_csv(filename, separator=sep, has_header=True, null_values=['nan', 'NaN', 'NA'], **kwargs)
         except pl.exceptions.NoDataError:
             return pl.DataFrame()
+        except pl.exceptions.ComputeError:
+            df = pl.read_csv(filename, separator=sep, has_header=True, null_values=['nan', 'NaN', 'NA'],
+                             infer_schema_length=None, **kwargs)
         if squeeze and df.shape[1] == 1:
             df = df.to_series()
 
