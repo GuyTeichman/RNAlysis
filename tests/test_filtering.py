@@ -2045,7 +2045,7 @@ def test_differential_expression_deseq2(big_countfilter, monkeypatch, comparison
     def mock_run_analysis(self):
         assert self.r_installation_folder == 'auto'
         assert self.comparisons == comparisons
-        assert CountFilter(self.data_path).df.equals(c.df)
+        assert CountFilter(self.data_path).df.equals(c.df.sort(pl.first()))
         assert io.load_table(self.design_mat_path).equals(io.load_table(sample_table_path))
 
         return Path(script_path).parent

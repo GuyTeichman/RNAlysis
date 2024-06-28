@@ -3275,8 +3275,10 @@ class CountFilter(Filter):
             design_mat_path = io.get_todays_cache_dir().joinpath(f'design_mat_{i}.csv')
             i += 1
 
-        io.save_table(self.df.select(pl.first()).with_columns(
-            self.df.select(pl.col(self._numeric_columns)).with_columns(cs.float().round())), data_path)
+        counts = self.df.lazy().select(pl.first()).with_columns(
+            self.df.lazy().select(pl.col(self._numeric_columns)).with_columns(cs.float().round()).collect()).sort(
+            pl.first()).collect()
+        io.save_table(counts, data_path)
         # use RNAlysis to automatically detect file delimiter type, then export it as a CSV file.
         design_mat_df = io.load_table(design_matrix)
         self._diff_exp_assertions(design_mat_df)
@@ -3298,15 +3300,12 @@ class CountFilter(Filter):
                 assert parsing.data_to_list(scaling_factors_df.select(pl.first())) == list(self.columns), \
                     "The sample names in the scaling factors table do not match the sample names in the count matrix!"
             else:
-                # TODO
                 scale_factor_ndims = 2
-                scaling_factors_df = scaling_factors_df.sort_index(axis=1,
-                                                                   key=lambda ind: [self.columns.index(i) for i in ind])
+                scaling_factors_df = scaling_factors_df.lazy().with_columns(pl.col(counts.columns[1:]))
+                scaling_factors_df = scaling_factors_df.sort(pl.first()).collect()
                 assert sorted(scaling_factors_df.columns) == sorted(self.columns), \
                     "The sample names in the scaling factors table do not match the sample names in the count matrix!"
-                scaling_factors_df = scaling_factors_df.sort_index(
-                    key=lambda ind: [self.df.select(pl.first()).get_loc(i) for i in ind])
-                assert all(scaling_factors_df.index == self.df.select(pl.first())), \
+                assert scaling_factors_df.select(pl.first()).equals(counts.select(pl.first())), \
                     "The gene names in the scaling factors table do not match the gene names in the count matrix!"
             scale_factor_path = None
             i = 0
