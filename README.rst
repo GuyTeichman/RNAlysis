@@ -1,12 +1,15 @@
 .. image:: https://raw.githubusercontent.com/GuyTeichman/RNAlysis/master/docs/source/logo.png
     :target: https://guyteichman.github.io/RNAlysis
-    :width: 200
+    :width: 250
+    :align: center
     :alt: logo
 
-**Useful links:** `Documentation <https://guyteichman.github.io/RNAlysis>`_ |
+
+`Documentation <https://guyteichman.github.io/RNAlysis>`_ |
 `Source code <https://github.com/GuyTeichman/RNAlysis>`_ |
-`Bug reports <https://github.com/GuyTeichman/RNAlysis/issues>`_ | |pipimage|
-|versionssupported| | |githubactions| | |coveralls| | |downloads|
+`Bug reports <https://github.com/GuyTeichman/RNAlysis/issues>`_ |
+|pipimage| | |versionssupported| |
+|githubactions| | |coveralls| | |downloads|
 
 ----
 
@@ -184,7 +187,7 @@ If you use the *Limma-Voom* differential expression pipeline in your research, p
 
 If you use the *HDBSCAN* clustering feature in your research, please cite::
 
-     L. McInnes, J. Healy, S. Astels, hdbscan: Hierarchical density based clustering In:
+     L. McInnes, J. Healy, S. Astels, hdbscan: Hierarchical density based clustering
     Journal of Open Source Software, The Open Journal, volume 2, number 11. 2017
     https://doi.org/10.1371/journal.pcbi.0030039
 
@@ -272,3 +275,4 @@ This package was created with Cookiecutter_ and the `audreyr/cookiecutter-pypack
 .. |coveralls| image:: https://coveralls.io/repos/github/GuyTeichman/RNAlysis/badge.svg?branch=master
     :target: https://coveralls.io/github/GuyTeichman/RNAlysis?branch=master
     :alt: Coverage
+    :align: middle
