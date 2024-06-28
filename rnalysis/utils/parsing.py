@@ -198,7 +198,7 @@ def data_to_tuple(data: Any, sort: bool = False) -> tuple:
         tpl = data
     elif isinstance(data, (set, list, np.ndarray)):
         tpl = tuple(data)
-    elif isinstance(data, (int, float, bool, str, pl.DataFrame, pl.Series)):
+    elif isinstance(data, (int, float, bool, str)):
         tpl = data,
     elif data is None:
         tpl = None,
