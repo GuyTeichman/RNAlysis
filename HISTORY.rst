@@ -2,8 +2,19 @@
 History
 =======
 
-4.0.0 (2024-06-??)
+4.0.0 (2024-06-29)
 -------------------
+Version 4.0.0 of RNAlysis introduces two major improvements:
+First, the software has switched from Pandas to Polars, which should substantially improve overall performance, particularly when generating automatic analysis reports.
+
+Second, significant enhancements have been made to the automatic analysis reports.
+These include new interactive features such as the ability to highlight analysis paths and filter the report by node types,
+improved hierarchical layout for better readability, performance optimizations, and additional customization options.
+The reports now offer a more comprehensive and user-friendly way to navigate and understand analysis workflows.
+
+This update also includes various bug fixes and minor improvements to other functions within the software.
+
+Happy analysis!
 
 Added
 ******
