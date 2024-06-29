@@ -4,7 +4,6 @@ import platform
 import re
 import shlex
 import warnings
-import pandas as pd
 from collections import Counter
 from itertools import islice
 from pathlib import Path
@@ -12,9 +11,9 @@ from typing import Any, Dict, Union, List, Tuple, Iterable, Literal
 
 import mslex
 import numpy as np
+import pandas as pd
 import polars as pl
 import unicodedata
-from tqdm.auto import tqdm
 
 from rnalysis.utils import validation
 
@@ -178,7 +177,7 @@ def data_to_list(data: Any, sort: bool = False) -> list:
         lst = [None]
     elif isinstance(data, pl.DataFrame):
         return data.to_series().to_list()
-    elif isinstance(data,  pl.Series):
+    elif isinstance(data, pl.Series):
         return data.to_list()
     elif callable(data):
         lst = [data]
@@ -204,7 +203,7 @@ def data_to_tuple(data: Any, sort: bool = False) -> tuple:
         tpl = None,
     elif isinstance(data, pl.DataFrame):
         return tuple(data.to_series().to_list())
-    elif isinstance(data,  pl.Series):
+    elif isinstance(data, pl.Series):
         return tuple(data.to_list())
     elif callable(data):
         tpl = data,
@@ -227,7 +226,7 @@ def data_to_set(data: Any) -> set:
         return {data}
     elif isinstance(data, pl.DataFrame):
         return set(data.to_series().to_list())
-    elif isinstance(data,  pl.Series):
+    elif isinstance(data, pl.Series):
         return set(data.to_list())
     elif data is None:
         return {None}
