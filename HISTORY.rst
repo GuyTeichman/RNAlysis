@@ -23,7 +23,7 @@ Added
 
 Changed
 *******
-* RNAlysis now uses Polars instead of Pandas. This change should improve the performance of RNAlysis by multiple orders of magnitude, especially when generating automatic analysis reports.
+* RNAlysis now uses Polars instead of Pandas. This change should improve the performance of RNAlysis by an order of magnitude, especially when generating automatic analysis reports.
 * Automatic analysis reports are now laid out in a hierarchical structure, making it easier to navigate through the report.
 * When clicking on a node in an automatic analysis report, the analysis path leading to that node will be highlighted.
 * When clicking on a legend node in an automatic analysis report, all nodes of that type will be highlighted.
@@ -35,6 +35,11 @@ Fixed
 * Fixed bug re-loading a saved session report would sometimes lead to missing connections in the analysis flow graph.
 * Fixed bug where applying not-inplace operations to differential expression tables would change the expected name of the p-value column.
 * Fixed bug where table previews in automatic analysis reports would display an extra empty line.
+
+Backwards-incompatible changes
+*******************************
+* Since RNAlysis now uses Polars instead of Pandas, all functions that previously returned Pandas DataFrames will now return Polars DataFrames. To keep your code compatible with the new version, you may need to adjust the way you interact with the returned DataFrames, or convert them back into Pandas DataFrames.
+* Sessions saved with previous versions of RNAlysis are mostly compatible with RNAlysis 4.0.0, but some of the new features of automatic analysis reports (such as highlighting the report by node type) may not work in older sessions.
 
 3.12.0 (2024-05-14)
 -------------------
