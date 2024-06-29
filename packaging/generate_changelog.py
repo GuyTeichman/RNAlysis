@@ -33,5 +33,5 @@ def get_change_log_for(version: Union[str, Literal['latest']] = 'latest'):
 
 if __name__ == '__main__':
     txt = get_change_log_for('latest')
-    with open(Path(__file__).parent.parent.joinpath('latest_changelog.md'), 'w') as f:
+    with open(Path(__file__).parent.parent.joinpath('rnalysis/data_files/latest_changelog.md'), 'w') as f:
         f.write(txt)

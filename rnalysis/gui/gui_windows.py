@@ -450,7 +450,7 @@ class ErrorMessage(QtWidgets.QDialog):
 class WhatsNewWindow(QtWidgets.QMessageBox):
     def __init__(self, parent=None):
         super().__init__(parent)
-        txt_path = str(Path(__file__).parent.parent.parent.joinpath('latest_changelog.md'))
+        txt_path = str(Path(__file__).parent.parent.joinpath('data_files/latest_changelog.md'))
         with open(txt_path) as f:
             text = f.read()
 

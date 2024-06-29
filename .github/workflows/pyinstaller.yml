@@ -33,7 +33,7 @@ jobs:
             -   uses: stefanzweifel/git-auto-commit-action@v5
                 with:
                     commit_message: Calculate quick-start video checksums and generate changelog
-                    file_pattern: 'rnalysis/gui/videos/checksums/*.txt latest_changelog.md'
+                    file_pattern: 'rnalysis/gui/videos/checksums/*.txt rnalysis/data_files/latest_changelog.md'
                     branch: master
             -   name: Create Release
                 id: create_release
@@ -43,7 +43,7 @@ jobs:
                 with:
                     tag_name: ${{ github.ref }}
                     release_name: Stable release ${{ github.ref_name }}
-                    body_path: latest_changelog.md
+                    body_path: rnalysis/data_files/latest_changelog.md
                     draft: false
                     prerelease: false
             -   name: Output Release URL File
