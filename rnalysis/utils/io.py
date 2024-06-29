@@ -1,6 +1,7 @@
 import asyncio
 import concurrent.futures
 import contextlib
+import csv
 import ftplib
 import functools
 import gzip
@@ -34,7 +35,7 @@ import appdirs
 import matplotlib.pyplot as plt
 import nest_asyncio
 import numpy as np
-import pandas as pd
+import polars as pl
 import requests
 import tenacity
 import yaml
@@ -120,7 +121,7 @@ def clear_gui_cache():
 
 
 def load_cached_gui_file(filename: Union[str, Path], load_as_obj: bool = True) -> Union[
-    str, set, pd.DataFrame, bytes, None]:
+    str, set, pl.DataFrame, bytes, None]:
     """
     Load a cached file from the GUI cache directory.
 
@@ -135,7 +136,7 @@ def load_cached_gui_file(filename: Union[str, Path], load_as_obj: bool = True) -
     file_path = directory.joinpath(filename)
     if file_path.exists():
         if file_path.suffix in {'.csv', '.tsv', '.parquet'} and load_as_obj:
-            return load_table(file_path, index_col=0)
+            return load_table(file_path)
         elif file_path.suffix in {'.txt'} and load_as_obj:
             with open(file_path) as f:
                 return {item.strip() for item in f.readlines()}
@@ -150,13 +151,13 @@ def load_cached_gui_file(filename: Union[str, Path], load_as_obj: bool = True) -
         return None
 
 
-def cache_gui_file(item: Union[pd.DataFrame, set, str], filename: str):
+def cache_gui_file(item: Union[pl.DataFrame, set, str], filename: str):
     directory = get_gui_cache_dir()
     if not directory.exists():
         directory.mkdir(parents=True)
     file_path = directory.joinpath(filename)
-    if isinstance(item, (pd.DataFrame, pd.Series)):
-        save_table(item, file_path, index=True)
+    if isinstance(item, (pl.DataFrame, pl.Series)):
+        save_table(item, file_path)
     elif isinstance(item, set):
         save_gene_set(item, file_path)
     elif isinstance(item, Path) and item.suffix == '.R':
@@ -194,7 +195,7 @@ class FileData(NamedTuple):
     item_type: str
     item_property: dict
     item_id: int = None
-    obj: Union[set, pd.DataFrame] = None
+    obj: Union[set, pl.DataFrame] = None
 
 
 class PipelineData(NamedTuple):
@@ -235,7 +236,8 @@ class GUISessionManager:
     def _create_session_data(self, file_data: List[FileData], pipeline_data: List[PipelineData], report: dict,
                              report_item_paths: dict) -> dict:
         return {
-            'files': {file.filename: (file.item_name, file.item_type, file.item_property) for file in file_data},
+            'files': {file.filename:
+                          (file.item_name, file.item_type, file.item_property, file.item_id) for file in file_data},
             'pipelines': {},
             'metadata': self._create_metadata(len(file_data), len(pipeline_data),
                                               [file.filename for file in file_data]),
@@ -325,15 +327,13 @@ class GUISessionManager:
         return file_data, pipeline_data
 
 
-def load_table(filename: Union[str, Path], index_col: int = None, drop_columns: Union[str, List[str]] = False,
-               squeeze=False, comment: str = None, engine: Literal['pyarrow', 'auto'] = 'auto'):
+def load_table(filename: Union[str, Path], drop_columns: Union[str, List[str]] = False,
+               squeeze=False, comment: str = None):
     """
-    loads a csv/parquet table into a pandas dataframe.
+    Loads a CSV, TSV, or Parquet file into a Polars DataFrame.
 
     :type filename: str or pathlib.Path
-    :param filename: name of the csv file to be loaded
-    :type index_col: int, default None
-    :param index_col: number of column to be used as index. default is None, meaning no column will be used as index.
+    :param filename: name of the file to be loaded
     :type drop_columns: str, list of str, or False (default False)
     :param drop_columns: if a string or list of strings are specified, \
     the columns of the same name/s will be dropped from the loaded DataFrame.
@@ -342,7 +342,7 @@ def load_table(filename: Union[str, Path], index_col: int = None, drop_columns: 
     :type comment: str (optional)
     :param comment: Indicates remainder of line should not be parsed. \
     If found at the beginning of a line, the line will be ignored altogether. This parameter must be a single character.
-    :return: a pandas dataframe of the csv file
+    :return: a Polars DataFrame of the loaded file
     """
     assert isinstance(filename,
                       (str, Path)), f"Filename must be of type str or pathlib.Path, is instead {type(filename)}."
@@ -352,48 +352,56 @@ def load_table(filename: Union[str, Path], index_col: int = None, drop_columns: 
         f"RNAlysis cannot load files of type '{filename.suffix}'. " \
         f"Please convert your file to a .csv, .tsv, .txt, or .parquet file and try again."
 
+    kwargs = {}
+    if comment is not None:
+        kwargs['comment_char'] = comment
     if filename.suffix.lower() == '.parquet':
-        df = pd.read_parquet(filename, engine=engine)
+        df = pl.read_parquet(filename)
+        # handle edge cases of parquet files that were exported from pandas DataFrames
+        if '__index_level_0__' in df.columns:
+            df = df.select(pl.col('__index_level_0__').alias('')).with_columns(
+                df.select(pl.exclude('__index_level_0__')))
     else:
-        kwargs = dict(sep=None, engine='python' if engine == 'auto' else engine, encoding='ISO-8859-1', comment=comment,
-                      skipinitialspace=True)
-        if index_col is not None:
-            kwargs['index_col'] = index_col
-        df = pd.read_csv(filename, **kwargs)
+        if filename.suffix.lower() == '.csv':
+            sep = ','
+        elif filename.suffix.lower() == '.tsv':
+            sep = '\t'
+        else:
+            with open(filename) as f:
+                sample = f.readline()
+                sep = csv.Sniffer().sniff(sample).delimiter
+        try:
+            df = pl.read_csv(filename, separator=sep, has_header=True, null_values=['nan', 'NaN', 'NA'], **kwargs)
+        except pl.exceptions.NoDataError:
+            return pl.DataFrame()
+        except pl.exceptions.ComputeError:
+            df = pl.read_csv(filename, separator=sep, has_header=True, null_values=['nan', 'NaN', 'NA'],
+                             infer_schema_length=None, **kwargs)
+        if squeeze and df.shape[1] == 1:
+            df = df.to_series()
 
-    if squeeze:
-        df = df.squeeze("columns")
+        # Identify string columns
+        string_cols = [col for col in df.columns if df[col].dtype in [pl.Utf8, pl.String]]
+        # Apply str.strip() to string columns
+        df = df.with_columns([pl.col(col).str.strip() for col in string_cols])
 
-    if index_col is not None:
-        df.index = df.index.astype('str')
-    df.index = [ind.strip() if isinstance(ind, str) else ind for ind in df.index]
-    if isinstance(df, pd.DataFrame):
-        df.columns = [col.strip() if isinstance(col, str) else str(col).strip() for col in df.columns]
-
-        for col in df.columns:
-            # check if the columns contains string data
-            if pd.api.types.is_string_dtype(df[col]):
-                df[col] = df[col].str.strip()
-    else:
-        if pd.api.types.is_string_dtype(df):
-            df = df.str.strip()
-    # if there remained only empty string "", change to Nan
-    df = df.replace({"": np.nan})
-    if drop_columns:
-        drop_columns_lst = parsing.data_to_list(drop_columns)
-        assert validation.isinstanceiter(drop_columns_lst,
-                                         str), f"'drop_columns' must be str, list of str, or False; " \
-                                               f"is instead {type(drop_columns)}."
-        for col in drop_columns_lst:
-            col_stripped = col.strip()
-            if col_stripped in df:
-                df.drop(col_stripped, axis=1, inplace=True)
-            else:
-                raise IndexError(f"The argument {col} in 'drop_columns' is not a column in the loaded csv file!")
+        # if there remained only empty string "", change to Nan
+        df = df.with_columns([pl.col(col).replace("", None) for col in string_cols])
+        if drop_columns:
+            drop_columns_lst = parsing.data_to_list(drop_columns)
+            assert validation.isinstanceiter(drop_columns_lst,
+                                             str), f"'drop_columns' must be str, list of str, or False; " \
+                                                   f"is instead {type(drop_columns)}."
+            for col in drop_columns_lst:
+                col_stripped = col.strip()
+                if col_stripped in df.columns:
+                    df = df.drop(col_stripped)
+                else:
+                    raise IndexError(f"The argument {col} in 'drop_columns' is not a column in the loaded file!")
     return df
 
 
-def save_table(df: pd.DataFrame, filename: Union[str, Path], postfix: str = None, index: bool = True):
+def save_table(df: pl.DataFrame, filename: Union[str, Path], postfix: str = None):
     """
     save a pandas DataFrame to csv/parquet file.
 
@@ -410,11 +418,11 @@ def save_table(df: pd.DataFrame, filename: Union[str, Path], postfix: str = None
         assert isinstance(postfix, str), "'postfix' must be either str or None!"
     new_fname = os.path.join(fname.parent.absolute(), f"{fname.stem}{postfix}{fname.suffix}")
     if fname.suffix.lower() == '.parquet':
-        if isinstance(df, pd.Series):
+        if isinstance(df, pl.Series):
             df = df.to_frame()
-        df.to_parquet(new_fname, index=index)
+        df.write_parquet(new_fname)
     else:
-        df.to_csv(new_fname, header=True, index=index)
+        df.write_csv(new_fname)
 
 
 def get_session(retries: Retry):
@@ -1026,16 +1034,19 @@ def map_taxon_id(taxon_name: Union[str, int]) -> Tuple[int, str]:
     req = requests.get(url, params=params)
     if not req.ok:
         req.raise_for_status()
-    res = pd.read_csv(StringIO(req.text), sep='\t').sort_values(by='Taxon Id', ascending=True)
-    if res.shape[0] == 0:
+    try:
+        res = pl.read_csv(StringIO(req.text), separator='\t').sort(by='Taxon Id', descending=False)
+        if len(res) == 0:
+            raise pl.exceptions.NoDataError
+    except pl.exceptions.NoDataError:
         raise ValueError(f"No taxons match the search query '{taxon_name}'.")
 
-    taxon_id = int(res['Taxon Id'].iloc[0])
-    scientific_name = res['Scientific name'].iloc[0]
+    taxon_id = res[0, 'Taxon Id']
+    scientific_name = res[0, 'Scientific name']
 
-    if res.shape[0] > 2 and not (taxon_name == taxon_id or taxon_name == scientific_name):
+    if res.shape[0] > 1 and not (taxon_name == taxon_id or taxon_name == scientific_name):
         warnings.warn(
-            f"Found {len(res) - 1} taxons matching the search query '{taxon_name}'. "
+            f"Found {len(res)} taxons matching the search query '{taxon_name}'. "
             f"Picking the match with the highest score: {scientific_name} (taxonID {taxon_id}).")
 
     return taxon_id, scientific_name
@@ -1208,8 +1219,10 @@ class PhylomeDBOrthologMapper:
 
     def __init__(self, map_to_organism, map_from_organism='auto', gene_id_type='auto'):
         legal_species = self.get_legal_species()
-        assert map_from_organism in legal_species.index, f"organism with taxon id {map_from_organism} is not supported by PhylomeDB. "
-        assert map_to_organism in legal_species.index, f"organism with taxon id {map_to_organism} is not supported by PhylomeDB. "
+        assert map_from_organism in legal_species[
+            legal_species.columns[0]], f"organism with taxon id {map_from_organism} is not supported by PhylomeDB. "
+        assert map_to_organism in legal_species[
+            legal_species.columns[0]], f"organism with taxon id {map_to_organism} is not supported by PhylomeDB. "
         self.gene_id_type = gene_id_type
         self.map_from_organism = map_from_organism
         self.map_to_organism = map_to_organism
@@ -1230,29 +1243,28 @@ class PhylomeDBOrthologMapper:
         mapping_one2one = {}
         mapping_one2many = {}
 
-        taxon_table = self._get_taxon_file(self.map_from_organism)
-        taxon_table = taxon_table[taxon_table['taxid2'] == self.map_to_organism]
+        taxon_map = self._get_taxon_map(self.map_from_organism, self.map_to_organism)
         map_fwd, map_rev = self._get_id_conversion_maps()
         ids, translated_ids = self.translate_ids(ids)
 
         n_mapped = 0
         for from_id in tqdm(translated_ids, 'Mapping orthologs', unit='genes'):
-            if from_id not in map_fwd.index:
+            if from_id not in map_fwd:
                 continue
-            from_id_conv = map_fwd.loc[from_id]
-            if from_id_conv not in taxon_table.index:
+            from_id_conv = map_fwd[from_id]
+            if from_id_conv not in taxon_map:
                 continue
-            to_id_conv = taxon_table.loc[from_id_conv, 'protid2']
-            if isinstance(to_id_conv, pd.Series):
+            to_id_conv = taxon_map[from_id_conv][0]
+            if isinstance(to_id_conv, pl.Series):
                 for i, this_to_id_conv in enumerate(to_id_conv):
-                    if this_to_id_conv not in map_rev.index:
+                    if this_to_id_conv not in map_rev:
                         continue
 
                     if from_id not in mapping_one2many:
                         mapping_one2many[from_id] = []
 
-                    to_id = map_rev.loc[this_to_id_conv]
-                    score = taxon_table.loc[from_id_conv, 'CS'].values[0]
+                    to_id = map_rev[this_to_id_conv]
+                    score = taxon_map[from_id_conv][1]
                     # filter by consistency score
                     if score < consistency_score_threshold:
                         continue
@@ -1274,10 +1286,10 @@ class PhylomeDBOrthologMapper:
                         mapping_one2one[from_id] = random.choice(mapping_one2many[from_id])[0]
                 n_mapped += 1
             else:
-                if to_id_conv not in map_rev.index:
+                if to_id_conv not in map_rev:
                     continue
-                to_id = map_rev.loc[to_id_conv]
-                score = taxon_table.loc[from_id_conv, 'CS']
+                to_id = map_rev[to_id_conv]
+                score = taxon_map[from_id_conv][1]
                 # filter by consistency score
                 if score < consistency_score_threshold:
                     continue
@@ -1295,13 +1307,13 @@ class PhylomeDBOrthologMapper:
             {k: [this_v[0] for this_v in v] for k, v in mapping_one2many.items()})
 
     @staticmethod
-    def _get_taxon_file(taxon_id: int):
+    def _get_taxon_map(taxon_id: int, target_id: int):
         cache_dir = get_todays_cache_dir()
-        cache_file = cache_dir.joinpath(f'phylomedb_{taxon_id}.parquet')
+        cache_file = cache_dir.joinpath(f'phylomedb_{taxon_id}to{target_id}.parquet')
         file_path = f"/metaphors/latest/orthologs/{taxon_id}.txt.gz"
         local_zip_file = cache_dir.joinpath(f"{taxon_id}.txt.gz")
         if cache_file.exists():
-            df = load_table(cache_file, squeeze=True, index_col=0, engine="pyarrow")
+            df = load_table(cache_file, squeeze=True)
         else:
             ftp = PhylomeDBOrthologMapper._connect()
             # Download the file
@@ -1318,21 +1330,23 @@ class PhylomeDBOrthologMapper:
             os.remove(local_zip_file)
 
             # Load into pandas dataframe
-            df = pd.read_csv(cache_file.with_suffix('.txt'), sep='\t', index_col=1, engine="pyarrow")
+            df = pl.scan_csv(cache_file.with_suffix('.txt'), separator='\t').filter(
+                pl.col('taxid2') == target_id).select(
+                pl.col(['protid1', 'protid2', 'CS'])).collect()
 
             # cache file locally
             save_table(df, cache_file)
-        return df
+        return {a: (b, c) for (a, b, c) in df.select('protid1', 'protid2', 'CS').iter_rows()}
 
     @staticmethod
-    def _get_id_conversion_maps() -> Tuple[pd.DataFrame, pd.DataFrame]:
+    def _get_id_conversion_maps() -> Tuple[dict, dict]:
         cache_dir = get_todays_cache_dir()
         cache_file = cache_dir.joinpath(f'phylomedb_id_conversion.parquet')
         file_path = "/metaphors/latest/id_conversion.txt.gz"
         local_zip_file = cache_dir.joinpath("id_conversion.txt.gz")
 
         if cache_file.exists():
-            df = pd.read_parquet(cache_file, engine='auto', dtype_backend='pyarrow')
+            df = pl.read_parquet(cache_file)
         else:
             ftp = PhylomeDBOrthologMapper._connect()
             # Download the file
@@ -1349,13 +1363,13 @@ class PhylomeDBOrthologMapper:
             os.remove(local_zip_file)
 
             # Load into pandas dataframe
-            df = pd.read_csv(cache_file.with_suffix('.txt'), index_col=0, sep='\t', dtype_backend='pyarrow',
-                             usecols=[0, 2], names=['#extid', 'protid'], header=None, skiprows=1)
+            df = pl.read_csv(cache_file.with_suffix('.txt'), separator='\t',
+                             columns=[0, 2], new_columns=['#extid', 'protid'], has_header=False, skip_rows=1)
             # cache file locally
             save_table(df, cache_file)
-
-        df_inv = df.reset_index().set_index('protid')
-        return df.squeeze(), df_inv.squeeze()
+        map_fwd = dict(df.select('#extid', 'protid').iter_rows())
+        map_rev = {v: k for k, v in map_fwd.items()}
+        return map_fwd, map_rev
 
     @staticmethod
     def _connect():
@@ -1373,8 +1387,7 @@ class PhylomeDBOrthologMapper:
         cache_file = cache_dir.joinpath("phylomedb_species.parquet")
 
         if cache_file.exists():
-            df = load_table(cache_file, squeeze=True, index_col=0, engine='pyarrow')
-            df.index = df.index.astype(int)
+            df = load_table(cache_file)
         else:
             ftp = PhylomeDBOrthologMapper._connect()
             # Download the file
@@ -1391,12 +1404,9 @@ class PhylomeDBOrthologMapper:
             os.remove(local_zip_file)
 
             # Load into pandas dataframe
-            df = pd.read_csv(cache_file.with_suffix('.txt'), sep='\t', index_col=0, engine='pyarrow').dropna()
-
+            df = pl.read_csv(cache_file.with_suffix('.txt'), separator='\t').drop_nulls()
             # Extract necessary columns and sort by name
-            df.index = df.index.astype(int)
-            df = df['name'].sort_index()
-
+            df = df.select(pl.col('#specieTaxId').cast(pl.UInt32).alias('taxid'), pl.col('name')).sort('name')
             # cache file locally
             save_table(df, cache_file)
         return df
@@ -2009,19 +2019,20 @@ class GeneIDTranslator:
 
     @staticmethod
     def format_annotations(results):
-        df = pd.DataFrame([line.split('\t') for line in results[1:]], columns=results[0].split('\t'))
+        df = pl.read_csv(StringIO('\n'.join(results)), separator='\t')
         # sort annotations by decreasing annotation score, so that the most relevant annotations are at the top
         if 'Annotation' in df.columns:
-            df.loc[df['Annotation'] == '', 'Annotation'] = '0'
-            df['Annotation'] = (df['Annotation']).astype(float)
-            df = df.sort_values('Annotation', ascending=False)
+            if df['Annotation'].dtype not in pl.FLOAT_DTYPES:
+                df = df.lazy().with_columns(
+                    Annotation=pl.col('Annotation').replace('', '0', return_dtype=pl.datatypes.Int16))
+            else:
+                df = df.lazy()
+            df = df.sort('Annotation', descending=True).drop('Annotation').collect()
         output_dict = {}
         duplicates = {}
 
         # sort duplicates from one-to-one mappings
-        for match in df.iterrows():
-            match_from = match[1][0]
-            match_to = match[1][1]
+        for match_from, match_to in df.iter_rows():  # TODO: performance profiling and potentially optimize
             if match_from in output_dict or match_from in duplicates:
                 if match_from not in duplicates:
                     duplicates[match_from] = [output_dict.pop(match_from)]
@@ -2044,14 +2055,11 @@ class GeneIDTranslator:
 
                 rev_results = self.get_mapping_results(self.UNIPROTKB_TO, self.map_to, ids_to_rev_map, session)
                 # TODO: if job fails?
-                rev_df = pd.DataFrame([line.split('\t') for line in rev_results[1:]],
-                                      columns=rev_results[0].split('\t'))
-                rev_df['Annotation'] = (rev_df['Annotation']).astype(float)
-                rev_df = rev_df.sort_values('Annotation', ascending=False)
+                rev_df = pl.read_csv(StringIO('\n'.join(rev_results)), separator='\t').lazy().with_columns(
+                    pl.col('Annotation').cast(pl.Float64)).sort('Annotation', descending=True).drop(
+                    'Annotation').collect()
                 duplicates_chosen = {}
-                for match in rev_df.iterrows():
-                    match_from_rev = match[1][0]
-                    match_to_rev = match[1][1]
+                for match_from_rev, match_to_rev in rev_df.iter_rows():
                     if match_to_rev not in output_dict:
                         output_dict[match_to_rev] = match_from_rev
                         duplicates_chosen[match_to_rev] = match_from_rev
@@ -2147,7 +2155,7 @@ def get_legal_ensembl_taxons():
 @functools.lru_cache(maxsize=2)
 def get_legal_phylomedb_taxons():
     entries = PhylomeDBOrthologMapper.get_legal_species()
-    taxons = tuple(name for name in entries.unique() if name[0].isupper())
+    taxons = tuple(name for name in entries.select(pl.col('name')).unique() if name[0].isupper())
     return taxons
 
 

@@ -28,11 +28,12 @@ def test_standard_box_cox():
     assert np.isclose(res.std(axis=0), 1).all()
     assert not np.isclose(res, standardize(data)).all()
 
-    data_df = pd.DataFrame(data, index=[f'ind{i}' for i in range(100)], columns=[f'col{j}' for j in range(5)])
+    data_df = pl.DataFrame([f'ind{i}' for i in range(100)]).with_columns(
+        pl.DataFrame(data, schema=[f'col{j}' for j in range(5)]))
     res_df = standard_box_cox(data_df)
-    assert isinstance(res_df, pd.DataFrame)
+    assert isinstance(res_df, pl.DataFrame)
     assert res_df.shape == data_df.shape
-    assert np.all(res_df.index == data_df.index)
+    assert np.all(res_df.select(pl.first()) == data_df.select(pl.first()))
     assert np.all(res_df.columns == data_df.columns)
 
 
@@ -69,7 +70,7 @@ def test_majority_vote_intersection(this_set, other_sets, majority_threshold, tr
 ])
 def test_shift_to_baseline(data, baseline, is_df, truth):
     if is_df and len(data.shape) <= 2:
-        assert shift_to_baseline(pd.DataFrame(data), baseline).equals(pd.DataFrame(truth))
+        assert shift_to_baseline(pl.DataFrame(data), baseline).equals(pl.DataFrame(truth))
     else:
         assert np.all(shift_to_baseline(data, baseline) == truth)
 

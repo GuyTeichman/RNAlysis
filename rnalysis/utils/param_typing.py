@@ -9,7 +9,9 @@ import tenacity
 import typing_extensions
 
 from rnalysis.utils import io, parsing
+from polars.type_aliases import RollingInterpolationMethod
 
+QUANTILE_INTERPOLATION_METHODS = RollingInterpolationMethod
 SUMMATION_METHODS = ('scaled_tpm', 'raw')
 
 K_CRITERIA = ('gap', 'silhouette', 'calinski_harabasz', 'davies_bouldin', 'bic')

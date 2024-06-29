@@ -17,6 +17,7 @@ for item in tmp_collection:
     datas.append(item)
 
 datas += collect_data_files('pyvis')
+datas += 'latest_changelog.md'
 
 hiddenimports += collect_submodules('sklearn')
 hiddenimports += collect_submodules('cutadapt')
@@ -91,5 +92,5 @@ if not is_darwin:
         strip=False,
         upx=True,
         upx_exclude=[],
-        name='RNAlysis-3.12.0',
+        name='RNAlysis-4.0.0',
     )

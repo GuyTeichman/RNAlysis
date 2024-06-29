@@ -6,8 +6,7 @@ reading and updating the settings file, parsing common types of genomic feature 
 import re
 from typing import Union
 
-import pandas as pd
-
+import polars as pl
 from rnalysis import __attr_file_key__, __biotype_file_key__
 from rnalysis.filtering import Filter
 from rnalysis.utils import io, validation, settings
@@ -146,7 +145,7 @@ def print_settings_file():
     settings.get_biotype_ref_path('predefined')
 
 
-def save_to_csv(df: Union[pd.DataFrame, Filter], filename: str):
+def save_to_csv(df: Union[pl.DataFrame, Filter], filename: str):
     """
     save a pandas DataFrame or Filter object to csv.
     :type df: Filter object or pandas DataFrame
@@ -154,7 +153,7 @@ def save_to_csv(df: Union[pd.DataFrame, Filter], filename: str):
     :type filename: str
     :param filename: name for the saved file. Specify full path to control the directory where the file will be saved.
     """
-    if isinstance(df, pd.DataFrame):
+    if isinstance(df, pl.DataFrame):
         io.save_table(df, filename)
     elif validation.isinstanceinh(df, Filter):
         io.save_table(df.df, filename)

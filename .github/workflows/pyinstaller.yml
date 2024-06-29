@@ -30,8 +30,14 @@ jobs:
                     commit_message: Calculate quick-start video checksums
                     file_pattern: 'rnalysis/gui/videos/checksums/*.txt'
                     branch: master
-            -   name: Get latest changelog
-                run: python packaging/parse_changelog.py
+            -   name: Generate Changelog
+                run: python packaging/generate_changelog.py
+            -   uses: stefanzweifel/git-auto-commit-action@v4
+                with:
+                    # Commit message for the created commit.
+                    commit_message: Generate changelog
+                    file_pattern: 'latest_changelog.md'
+                    branch: master
             -   name: Create Release
                 id: create_release
                 uses: actions/create-release@v1
@@ -63,17 +69,17 @@ jobs:
                         CMD_BUILD: >
                             pyinstaller RNAlysis.spec &&
                             cd dist/ &&
-                            zip -r RNAlysis-3.12.0_macos.zip ./RNAlysis* &&
+                            zip -r RNAlysis-4.0.0_macos.zip ./RNAlysis* &&
                             ls -ltr
-                        OUT_FILE_NAME: RNAlysis-3.12.0_macos.zip
+                        OUT_FILE_NAME: RNAlysis-4.0.0_macos.zip
                         ASSET_MIME: application/zip
                     -   os: windows-latest
                         TARGET: windows
                         CMD_BUILD: >
                             pyinstaller RNAlysis.spec &&
                             cd dist/ &&
-                            7z a RNAlysis-3.12.0_windows.zip -r "RNAlysis-3.12.0/"
-                        OUT_FILE_NAME: RNAlysis-3.12.0_windows.zip
+                            7z a RNAlysis-4.0.0_windows.zip -r "RNAlysis-4.0.0/"
+                        OUT_FILE_NAME: RNAlysis-4.0.0_windows.zip
                         ASSET_MIME: application/zip
         steps:
             -   name: Checkout repository

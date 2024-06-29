@@ -12,7 +12,8 @@ from typing import List, Dict, Tuple, Sequence, Iterable, Union, Callable, Liter
 import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
-import pandas as pd
+import polars as pl
+import polars.selectors as cs
 from PyQt5 import QtCore, QtWidgets, QtGui
 from joblib import Parallel, parallel_backend
 from tqdm.auto import tqdm
@@ -1316,7 +1317,7 @@ class DiffExpPickerGroup(QtWidgets.QWidget):
                  'inputs': 'inputs',
                  'input_labels': 'labels for inputs', }
 
-    def __init__(self, design_mat: pd.DataFrame, parent=None):
+    def __init__(self, design_mat: pl.DataFrame, parent=None):
         super().__init__(parent)
         self.design_mat = design_mat
         self.widgets = {}
@@ -1340,18 +1341,22 @@ class DiffExpPickerGroup(QtWidgets.QWidget):
 
 
 class CovariatePicker(QtWidgets.QWidget):
-    def __init__(self, design_mat: pd.DataFrame, parent=None):
+    __slots__ = {'design_mat': 'design matrix',
+                 'layout': 'layout',
+                 'factor': 'factor',
+                 'factors_tpl': 'factors tuple'}
+
+    def __init__(self, design_mat: pl.DataFrame, parent=None):
         super().__init__(parent)
         self.design_mat = design_mat
         self.layout = QtWidgets.QHBoxLayout(self)
         self.factor = QtWidgets.QComboBox(self)
+        self.factors_tpl = parsing.data_to_tuple(design_mat.select(cs.numeric()).columns)
+        self.factor.addItems(self.factors_tpl)
         self.init_ui()
 
     def init_ui(self):
         self.layout.addWidget(self.factor)
-        factors = [str(item) for item in self.design_mat.columns if
-                   pd.api.types.is_numeric_dtype(self.design_mat[item])]
-        self.factor.addItems(factors)
 
     def value(self) -> str:
         return self.factor.currentText()
@@ -1383,14 +1388,21 @@ class CovariatePickerGroup(DiffExpPickerGroup):
 
 
 class LRTPicker(QtWidgets.QWidget):
-    def __init__(self, design_mat: pd.DataFrame, parent=None):
+    __slots__ = {'design_mat': 'design matrix',
+                 'layout': 'layout',
+                 'factor': 'factor combo box',
+                 'factors': 'factors in the design matrix',
+                 'poly': 'polynomial terms',
+                 'interactions': 'interaction terms'}
+
+    def __init__(self, design_mat: pl.DataFrame, parent=None):
         super().__init__(parent)
         self.design_mat = design_mat
         self.layout = QtWidgets.QHBoxLayout(self)
         self.factor = QtWidgets.QComboBox(self)
-        self.factors = [str(item) for item in self.design_mat.columns]
-        self.poly = self._get_polynomial_terms(self.factors)
-        self.interactions = self._get_interaction_terms(self.factors)
+        self.factors = self.design_mat.columns[1:]
+        self.poly = self._get_polynomial_terms()
+        self.interactions = self._get_interaction_terms()
 
         self.init_ui()
 
@@ -1403,10 +1415,10 @@ class LRTPicker(QtWidgets.QWidget):
         self.factor.insertSeparator(self.factor.count())
         self.factor.addItems(self.interactions)
 
-    @staticmethod
-    def _get_interaction_terms(factors: List[str]) -> List[str]:
+    def _get_interaction_terms(self) -> List[str]:
         # calculate only two-way and three-way interactions
         # because higher order interactions are rarely ever relevant
+        factors = self.factors
         two_way = []
         three_way = []
         for i in range(len(factors)):
@@ -1417,10 +1429,10 @@ class LRTPicker(QtWidgets.QWidget):
 
         return two_way + three_way
 
-    def _get_polynomial_terms(self, factors: List[str]) -> Dict[str, str]:
+    def _get_polynomial_terms(self) -> Dict[str, str]:
         # calculate only 2nd and 3rd degree polynomials because higher order polynomials are rarely ever relevant
         poly = {}
-        numerical_factors = [factor for factor in factors if pd.api.types.is_numeric_dtype(self.design_mat[factor])]
+        numerical_factors = self.design_mat.select(cs.numeric()).columns
         for this_factor in numerical_factors:
             poly[f'{this_factor}+{this_factor}^2'] = f'poly({this_factor}, degree = 2)'
             poly[f'{this_factor}+{this_factor}^2+{this_factor}^3'] = f'poly({this_factor}, degree = 3)'
@@ -1464,15 +1476,17 @@ class ComparisonPicker(QtWidgets.QWidget):
                  'layout': 'layout',
                  'factor': 'factor combo box',
                  'numerator': 'numerator combo box',
-                 'denominator': 'denominator combo box'}
+                 'denominator': 'denominator combo box',
+                 'factor_tpl': 'tuple of factors in the design matrix'}
 
-    def __init__(self, design_mat: pd.DataFrame, parent=None):
+    def __init__(self, design_mat: pl.DataFrame, parent=None):
         super().__init__(parent)
         self.design_mat = design_mat
         self.layout = QtWidgets.QHBoxLayout(self)
         self.factor = QtWidgets.QComboBox(self)
         self.numerator = QtWidgets.QComboBox(self)
         self.denominator = QtWidgets.QComboBox(self)
+        self.factor_tpl = parsing.data_to_tuple(self.design_mat.columns[1:])
 
         self.init_ui()
 
@@ -1482,11 +1496,11 @@ class ComparisonPicker(QtWidgets.QWidget):
         self.layout.addWidget(self.denominator)
 
         self.factor.currentTextChanged.connect(self.update_combos)
-        self.factor.addItems([str(item) for item in self.design_mat.columns])
+        self.factor.addItems([str(item) for item in self.factor_tpl])
 
     def update_combos(self):
         this_factor = self.factor.currentText()
-        if this_factor in self.design_mat.columns:
+        if this_factor in self.factor_tpl:
             options = sorted({str(item) for item in self.design_mat[this_factor]})
         else:
             options = ["Select a factor..."]
@@ -1504,7 +1518,7 @@ class ComparisonPicker(QtWidgets.QWidget):
 
 class ComparisonPickerGroup(DiffExpPickerGroup):
 
-    def __init__(self, design_mat: pd.DataFrame, parent=None):
+    def __init__(self, design_mat: pl.DataFrame, parent=None):
         super().__init__(design_mat, parent)
         self.add_comparison_widget()
 

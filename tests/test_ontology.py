@@ -311,7 +311,7 @@ def test_dag_tree_parser_upper_induced_tree_iterator():
 
 
 def test_dag_plot_ontology():
-    results = io.load_table('tests/test_files/go_enrichment_runner_sample_results.csv', index_col=0)
+    results = io.load_table('tests/test_files/go_enrichment_runner_sample_results.csv')
     dag_tree = fetch_go_basic()
     en_score_col = 'colName'
     ontology_graph_format = 'svg'

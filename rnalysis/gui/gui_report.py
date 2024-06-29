@@ -5,12 +5,13 @@ import shutil
 import typing
 import webbrowser
 from pathlib import Path
-from typing import Literal
+from typing import Literal, Union
 
 import networkx
 from pyvis.network import Network
 
 from rnalysis import __version__
+from rnalysis.gui import gui_windows
 from rnalysis.utils import parsing, io
 
 
@@ -101,15 +102,16 @@ class ReportGenerator:
                           Path(__file__).parent.parent.joinpath('data_files/report_templates/bootstrap.min.css')]
     JS_TEMPLATE_PATHS = [Path(__file__).parent.parent.joinpath('data_files/report_templates/vis-network.min.js'),
                          Path(__file__).parent.parent.joinpath('data_files/report_templates/bootstrap.bundle.min.js')]
-    NODE_STYLES = {'root': dict(shape='box', color='#00D4D8'),
-                   'Count matrix': dict(color='#0D47A1'),
-                   'Differential expression': dict(color='#BF360C'),
-                   'Fold change': dict(color='#00838F'),
-                   'Other table': dict(color='#F7B30A'),
-                   'Gene set': dict(color='#BA68C8'),
-                   'Function': dict(shape='triangleDown', color='#00D4D8'),
-                   'Other output': dict(shape='square', color='#228B22'),
-                   'Pipeline': dict(shape='diamond', color='#FF66B8')}
+    OTHER_PATHS = [Path(__file__).parent.parent.joinpath('data_files/report_templates/question-circle.svg')]
+    NODE_GROUPS = {'root': 'root',
+                   'Count matrix': 'count',
+                   'Differential expression': 'diffexp',
+                   'Fold change': 'foldchange',
+                   'Other table': 'table',
+                   'Gene set': 'geneset',
+                   'Function': 'function',
+                   'Other output': 'other',
+                   'Pipeline': 'pipeline'}
     ROOT_FNAME = 'session.rnal'
     TITLE = f"Data analysis report (<i>RNAlysis</i> version {__version__})"
 
@@ -118,22 +120,23 @@ class ReportGenerator:
         self.nodes: typing.Dict[int, Node] = {}
         self.create_legend()
         href = Path('data').joinpath(self.ROOT_FNAME).as_posix()
-        root_desc = f'<a href="{href}" target="_blank" rel="noopener noreferrer">Open RNAlysis session</a>'
+        root_desc = (f'<i>RNAlysis</i> version {__version__}<br>'
+                     f'<a href="{href}" target="_blank" rel="noopener noreferrer">Open RNAlysis session</a>')
         self.add_node('Started RNAlysis session', 0, [], root_desc, node_type='root', filename=self.ROOT_FNAME)
 
     def create_legend(self):
         x = -750
         y = -350
         step = 75
-        for node_type, kwargs in self.NODE_STYLES.items():
+        for node_type, group_id in self.NODE_GROUPS.items():
             if node_type in {'root'}:
                 continue
-            self.graph.add_node(node_type, label=node_type.capitalize(), fixed=True, physics=False, x=x, y=y,
-                                font={'size': 16}, widthConstraint=100, **kwargs)
+            self.graph.add_node(node_type, group=group_id, is_legend=True, label=node_type.capitalize(), fixed=True,
+                                physics=False, x=x, y=y, font={'size': 16}, widthConstraint=100, shape=None)
             y += step
 
     def add_node(self, name: str, node_id: int, predecessors: typing.List[int] = tuple(), popup_element: str = '',
-                 node_type: Literal[tuple(NODE_STYLES)] = 'Other table', filename: str = None):
+                 node_type: Literal[tuple(NODE_GROUPS)] = 'Other table', filename: str = None):
         # parentless nodes should be attached to the root node
         if len(predecessors) == 0 and node_id > 0:
             predecessors = [0]
@@ -150,8 +153,8 @@ class ReportGenerator:
         else:
             node = Node(node_id, name, predecessors, popup_element, node_type, filename)
             self.nodes[node_id] = node
-        kwargs = self.NODE_STYLES[node.node_type]
-        self.graph.add_node(node.node_id, label=node.node_name, title=node.popup_element, **kwargs)
+        group_id = self.NODE_GROUPS[node.node_type]
+        self.graph.add_node(node.node_id, label=node.node_name, title=node.popup_element, group=group_id, shape=None)
         for pred in predecessors:
             self.graph.add_edge(pred, node_id)
 
@@ -180,73 +183,97 @@ class ReportGenerator:
                 if self.nodes[pred].node_type == 'Function':
                     self.trim_node(pred)
 
-    def _modify_html(self, html: str) -> str:
-        if html.count(self.TITLE) > 1:
+    def trim_function_nodes(self):
+        """
+        Trims all nodes of type 'Function' that are now leaf nodes from the report graph.
+        """
+        for node in self.nodes:
+            if self.nodes[node].node_type == 'Function' and node in self.graph and self.graph.out_degree(node) == 0:
+                self.trim_node(node)
+
+    def _modify_html(self, html: str, title: str, title_fontsize: int) -> str:
+        # remove duplicate title
+        title = self.TITLE if title == 'auto' else title
+        if html.count(title) > 1:
             html = re.sub(r'<center>.+?<\/h1>\s+<\/center>', '', html, 1, re.DOTALL)
+        # set title font size
+        fontsize_em = title_fontsize / 16
+        html = html.replace('<h1>', f'<h1 style="font-size:{fontsize_em}em;">')
+        # add "how to use" button
+        with open(Path(__file__).parent.parent.joinpath('data_files/report_misc/report_howto_link.html')) as f:
+            howto_link = f.read()
+            html = re.sub('</center>', howto_link + '\n</center>', html, count=1)
         # remove comments from file
         comment_regex = r"<!--[\s\S]*?-->"
         html = re.sub(comment_regex, "", html)
-
+        # set CSS templates to the correct paths (local version under "assets")
         for css_pth in self.CSS_TEMPLATE_PATHS:
             css_line = f'<link rel="stylesheet" href="assets/{css_pth.name}"/>'
             html = re.sub(r'<link(?:\s+[\w-]+="[^"]*")*\s+href="[^"]+"\s+(?:[\w-]+="[^"]*"\s+)*?\/>', css_line, html, 1,
                           re.DOTALL)
-
+        # set JavaScript templates to the correct paths (local version under "assets")
         for js_pth in self.JS_TEMPLATE_PATHS:
-            js_line = f'<script src="assets/{js_pth.name}"></script>'
+            # change suffix from .js to .jscript, so that services such as Gmail do not block the file
+            jscript_name = js_pth.name.replace('.js', '.jscript')
+            js_line = f'<script src="assets/{jscript_name}"></script>'
             html = re.sub(r'<script\s+src\s*=\s*"(https?:\/\/[^"]+\.js)"[^>]*><\/script>', js_line, html, 1, re.DOTALL)
 
+        # add path highlighting script to the HTML file
+        with open(Path(__file__).parent.parent.joinpath('data_files/report_misc/globalVars.js')) as f:
+            global_vars = f.read()
+            html = re.sub(r'(var\s+[^;]+;\s*)+', r'\g<0>' + global_vars, html, count=1)
+        with open(Path(__file__).parent.parent.joinpath('data_files/report_misc/listeners.js')) as f:
+            listeners = f.read()
+        with open(Path(__file__).parent.parent.joinpath('data_files/report_misc/drawPath.js')) as f:
+            draw_path_func = f.read()
+        merged_code = listeners + '\n' + draw_path_func
+        html = re.sub(r'(network\s*=\s*new\s+vis\.Network\([^;]+;\s*)', r'\g<0>' + merged_code, html, count=1)
+        # point all table links to their .csv version instead of the .parquet version
+        html = html.replace('.parquet', '.csv')
         return html
 
-    def _report_from_nx(self, show_buttons: bool) -> Network:
-        vis_report = Network(directed=True, layout=False, heading=self.TITLE)
+    def _report_from_nx(self, show_settings: bool, title: Union[str, Literal['auto']],
+                        hierarchical_layout: bool) -> Network:
+        vis_report = Network(directed=True, layout=False, heading=self.TITLE if title == 'auto' else title)
         vis_report.from_nx(self.graph)
-        enabled_str = 'true' if show_buttons else 'false'
 
-        vis_report.set_options("""const options = {
-            "configure": {"""
-                               f'"enabled": {enabled_str}'
-                               """
-            },
-            "layout": {
-                "hierarchical": {
-                    "enabled": false,
-                    "levelSeparation": 250,
-                    "nodeSpacing": 250,
-                    "treeSpacing": 250,
-                    "direction": "LR",
-                    "sortMethod": "directed"
-                }
-            },
-            "physics": {
-                "solver": "repulsion"
-            },
-            "interaction": {
-            "navigationButtons": true
-            }
-        }""")
+        with open(Path(__file__).parent.parent.joinpath('data_files/report_misc/options.json')) as f:
+            options = json.load(f)
+            options['configure']['enabled'] = show_settings
+            options['layout']['hierarchical']['enabled'] = hierarchical_layout
+            vis_report.set_options(json.dumps(options))
         return vis_report
 
-    def generate_report(self, save_path: Path, show_buttons: bool = True):
-        assert save_path.exists() and save_path.is_dir()
-        save_file = save_path.joinpath('report.html').as_posix()
-        vis_report = self._report_from_nx(show_buttons)
-        html = self._modify_html(vis_report.generate_html(save_file))
+    @staticmethod
+    def generate_report_dialog(parent=None):
+        dialog = ConfigureReportWindow(parent)
+        return dialog
+
+    def generate_report(self, output_folder: Path, title: Union[str, Literal['auto']] = 'auto',
+                        title_fontsize: int = 24, show_settings_menu: bool = False, hierarchical_layout: bool = True):
+        output_folder = Path(output_folder)
+        assert output_folder.exists() and output_folder.is_dir()
+        save_file = output_folder.joinpath('report.html').as_posix()
+        self.trim_function_nodes()
+        vis_report = self._report_from_nx(show_settings_menu, title, hierarchical_layout)
+        html = self._modify_html(vis_report.generate_html(save_file), title, title_fontsize)
 
         with open(save_file, 'w') as f:
             f.write(html)
 
-        assets_path = save_path.joinpath('assets')
+        assets_path = output_folder.joinpath('assets')
         if assets_path.exists():
             shutil.rmtree(assets_path)
         assets_path.mkdir()
-        for item in itertools.chain(self.CSS_TEMPLATE_PATHS, self.JS_TEMPLATE_PATHS):
+        for item in itertools.chain(self.CSS_TEMPLATE_PATHS, self.JS_TEMPLATE_PATHS, self.OTHER_PATHS):
             with open(item, encoding="utf-8") as f:
                 content = f.read()
-            with open(assets_path.joinpath(item.name), 'w', encoding="utf-8") as outfile:
+            # change suffix from .js to .jscript, so that services such as Gmail do not block the file
+            outfile_path = assets_path.joinpath(item.name.replace('.js', '.jscript'))
+            with open(outfile_path, 'w', encoding="utf-8") as outfile:
                 outfile.write(content)
 
-        data_path = save_path.joinpath('data')
+        data_path = output_folder.joinpath('data')
         if data_path.exists():
             shutil.rmtree(data_path)
         data_path.mkdir()
@@ -270,9 +297,9 @@ class ReportGenerator:
         webbrowser.open(save_file)
 
     def serialize(self):
-        data = {}
-        data['graph'] = networkx.node_link_data(self.graph)
-        data['nodes'] = {ind: node.to_json() for ind, node in self.nodes.items()}
+        self.trim_function_nodes()
+        data = {'graph': networkx.node_link_data(self.graph),
+                'nodes': {ind: node.to_json() for ind, node in self.nodes.items()}}
         current_file_paths = {ind: node.filename for ind, node in self.nodes.items() if node.filename is not None}
         current_file_paths.pop(0)  # do not reference session file to avoid infinite recursion
         return data, current_file_paths
@@ -283,3 +310,15 @@ class ReportGenerator:
         obj.graph = networkx.node_link_graph(data['graph'])
         obj.nodes = {ind: Node.from_json(node_json) for ind, node_json in data['nodes'].items()}
         return obj
+
+
+class ConfigureReportWindow(gui_windows.FuncExternalWindow):
+    __slots__ = {}
+    EXCLUDED_PARAMS = {'self'}
+
+    def __init__(self, parent=None):
+        func = ReportGenerator.generate_report
+        super().__init__('Generate analysis report', func, None, self.EXCLUDED_PARAMS, threaded=True,
+                         parent=parent)
+        self.init_ui()
+        self.setWindowTitle('Generate analysis report')

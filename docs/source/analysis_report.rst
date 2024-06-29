@@ -19,7 +19,7 @@ Accessing Associated Files
 ==========================
 Click on the link in the hover popup to open the file associated with that node.
 
-.. image:: ../../rnalysis/gui/videos/report_access_files.webp
+.. image:: ../../rnalysis/gui/videos/report_access_file.webp
 
 Navigating the Graph: Panning
 =============================
@@ -49,4 +49,4 @@ Filtering by Node Type
 ======================
 Click on a node type in the legend to highlight all nodes of that type across the graph. Click again to reset the view.
 
-.. image:: ../../rnalysis/gui/videos/report_filter_nodes.webp
+.. image:: ../../rnalysis/gui/videos/report_filter_node_type.webp

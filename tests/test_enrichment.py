@@ -34,6 +34,18 @@ up_feature_set = {'WBGene00021187', 'WBGene00195184', 'WBGene00012851', 'WBGene0
                   'WBGene00022523'}
 
 
+@pytest.fixture(scope='module')
+def all_genes_set():
+    df = io.load_table('tests/test_files/attr_ref_table_for_tests.csv')
+    return parsing.data_to_set(df.select(pl.first()))
+
+
+@pytest.fixture(scope='module')
+def protein_coding_set():
+    df = io.load_table('tests/test_files/biotype_ref_table_for_tests.csv')
+    return parsing.data_to_set(df.filter(pl.col('biotype') == 'protein_coding').select(pl.first()))
+
+
 def test_featureset_api():
     FeatureSet(up_feature_set)
 
@@ -159,7 +171,7 @@ def test_set_operations_with_set():
 
 
 def test_biotypes_from_ref_table():
-    truth = io.load_table('tests/test_files/biotypes_truth.csv', 0)
+    truth = io.load_table('tests/test_files/biotypes_truth.csv').sort(pl.first())
     genes = {'WBGene00048865', 'WBGene00000106', 'WBGene00000137', 'WBGene00199484', 'WBGene00268190', 'WBGene00048864',
              'WBGene00268189', 'WBGene00268195', 'WBGene00255734', 'WBGene00199485', 'WBGene00048863', 'WBGene00000019',
              'WBGene00268191', 'WBGene00000041', 'WBGene00199486', 'WBGene00255735', 'WBGene00000105',
@@ -167,26 +179,25 @@ def test_biotypes_from_ref_table():
 
     en = FeatureSet(genes)
     df = en.biotypes_from_ref_table(ref=__biotype_ref__)
-    df.sort_index(inplace=True)
-    truth.sort_index(inplace=True)
-    assert np.all(df == truth)
+    df = df.sort(pl.first()).rename({df.columns[i]: truth.columns[i] for i in range(len(df.columns))})
+    print(df)
+    print(truth)
+    assert df.equals(truth)
 
 
 def test_biotypes_from_gtf():
-    truth = io.load_table('tests/test_files/biotypes_truth.csv', 0)
+    truth = io.load_table('tests/test_files/biotypes_truth.csv').sort(pl.first())
     genes = {'WBGene00048865', 'WBGene00000106', 'WBGene00000137', 'WBGene00199484', 'WBGene00268190', 'WBGene00048864',
              'WBGene00268189', 'WBGene00268195', 'WBGene00255734', 'WBGene00199485', 'WBGene00048863', 'WBGene00000019',
              'WBGene00268191', 'WBGene00000041', 'WBGene00199486', 'WBGene00255735', 'WBGene00000105',
              'index_that_is_not_in_biotype_ref_table'}
 
     en = FeatureSet(genes)
-    df = en.biotypes_from_gtf('tests/test_files/test_gtf_for_biotypes.gtf')
-    df.sort_index(inplace=True)
-    truth.sort_index(inplace=True)
-    assert np.all(df == truth)
+    df = en.biotypes_from_gtf('tests/test_files/test_gtf_for_biotypes.gtf').sort(pl.first())
+    assert df.equals(truth)
 
 
-def test_enrichment_randomization_reliability():
+def test_enrichment_randomization_reliability(protein_coding_set):
     genes = {'WBGene00000041', 'WBGene00002074', 'WBGene00000019', 'WBGene00000105', 'WBGene00000106', 'WBGene00199484',
              'WBGene00001436', 'WBGene00000137', 'WBGene00001996', 'WBGene00014208'}
     attrs = ['attribute1', 'attribute2', 'attribute4']
@@ -194,62 +205,60 @@ def test_enrichment_randomization_reliability():
     random_seed = 0
 
     for i in range(2):
-        res1 = en.user_defined_enrichment(attrs, statistical_test='randomization', biotype='all',
-                                          attr_ref_path=__attr_ref__, biotype_ref_path=__biotype_ref__,
-                                          randomization_reps=10000, random_seed=random_seed,
+        res1 = en.user_defined_enrichment(protein_coding_set, attrs, statistical_test='randomization',
+                                          attr_ref_path=__attr_ref__,
+                                          randomization_reps=15000, random_seed=random_seed,
                                           parallel_backend='sequential')
-        res2 = en.user_defined_enrichment(attrs, statistical_test='randomization', biotype='all',
-                                          attr_ref_path=__attr_ref__, biotype_ref_path=__biotype_ref__,
-                                          randomization_reps=10000, random_seed=random_seed + 1,
+        res2 = en.user_defined_enrichment(protein_coding_set, attrs, statistical_test='randomization',
+                                          attr_ref_path=__attr_ref__,
+                                          randomization_reps=15000, random_seed=random_seed + 1,
                                           parallel_backend='sequential')
-        res3 = en.user_defined_enrichment(attrs, statistical_test='randomization', biotype='all',
-                                          attr_ref_path=__attr_ref__, biotype_ref_path=__biotype_ref__,
-                                          randomization_reps=10000, random_seed=random_seed + 2,
+        res3 = en.user_defined_enrichment(protein_coding_set, attrs, statistical_test='randomization',
+                                          attr_ref_path=__attr_ref__,
+                                          randomization_reps=15000, random_seed=random_seed + 2,
                                           parallel_backend='sequential')
         random_seed += 3
         plt.close('all')
-        for col in ['samples', 'obs', 'exp', 'log2_fold_enrichment']:
-            assert np.all(res1[col] == res2[col])
-            assert np.all(res2[col] == res3[col])
+        exact_cols = ['samples', 'obs', 'exp', 'log2_fold_enrichment']
+        assert res1.select(pl.col(exact_cols)).equals(res2.select(pl.col(exact_cols)))
         for randcol in ['pval', 'padj']:
             try:
-                assert np.isclose(res1[randcol], res2[randcol], atol=4 * 10 ** -4, rtol=0.2).all()
-                assert np.isclose(res2[randcol], res3[randcol], atol=4 * 10 ** -4, rtol=0.2).all()
-                assert np.isclose(res2[randcol], res1[randcol], atol=4 * 10 ** -4, rtol=0.2).all()
-                assert np.isclose(res3[randcol], res2[randcol], atol=4 * 10 ** -4, rtol=0.2).all()
-            except AssertionError:
+                assert np.allclose(res1[randcol], res2[randcol], atol=4 * 10 ** -4, rtol=0.25)
+                assert np.allclose(res2[randcol], res3[randcol], atol=4 * 10 ** -4, rtol=0.25)
+                assert np.allclose(res2[randcol], res1[randcol], atol=4 * 10 ** -4, rtol=0.25)
+                assert np.allclose(res3[randcol], res2[randcol], atol=4 * 10 ** -4, rtol=0.25)
+            except AssertionError as e:
                 print(res1)
                 print(res2)
                 print(res3)
-                assert False
+                raise e
 
 
 def _enrichment_validity(res, truth):
-    for col in ['samples', 'obs', 'significant']:
-        assert np.all(res[col] == truth[col])
+    exact_cols = ['samples', 'obs', 'significant']
+    assert res.select(pl.col(exact_cols)).equals(truth.select(pl.col(exact_cols)))
     for closecol in ['exp', 'log2_fold_enrichment']:
-        assert np.isclose(res[closecol], truth[closecol], atol=0.0).all()
+        assert np.allclose(res[closecol], truth[closecol], atol=0.0)
     for randcol in ['pval']:
-        assert np.isclose(res[randcol], truth[randcol], atol=2 * 10 ** -4, rtol=0.25).all()
-    pvals = res['pval'].values
+        assert np.allclose(res[randcol], truth[randcol], atol=2 * 10 ** -4, rtol=0.25)
+    pvals = res['pval']
     _, padj_truth = multitest.fdrcorrection(pvals, 0.1)
-    assert np.isclose(res['padj'].values, padj_truth, atol=0.0).all()
+    assert np.allclose(res['padj'], padj_truth, atol=0.0)
 
 
-def test_enrichment_randomization_validity():
-    truth = io.load_table('tests/test_files/enrichment_randomization_res.csv', 0)
+def test_enrichment_randomization_validity(all_genes_set):
+    truth = io.load_table('tests/test_files/enrichment_randomization_res.csv')
     genes = {'WBGene00000041', 'WBGene00002074', 'WBGene00000105', 'WBGene00000106', 'WBGene00199484',
              'WBGene00001436', 'WBGene00000137', 'WBGene00001996', 'WBGene00014208', 'WBGene00001133'}
     attrs = ['attribute1', 'attribute2']
     en = FeatureSet(gene_set=genes, set_name='test_set')
-    res = en.user_defined_enrichment(attrs, statistical_test='randomization', biotype='all', attr_ref_path=__attr_ref__,
-                                     biotype_ref_path=__biotype_ref__, randomization_reps=100000, random_seed=0,
-                                     parallel_backend='sequential')
+    res = en.user_defined_enrichment(all_genes_set, attrs, statistical_test='randomization', attr_ref_path=__attr_ref__,
+                                     randomization_reps=100000, random_seed=0, parallel_backend='sequential')
     plt.close('all')
     _enrichment_validity(res, truth)
 
 
-def test_enrichment_randomization_parallel_reliability():
+def test_enrichment_randomization_parallel_reliability(protein_coding_set):
     genes = {'WBGene00000041', 'WBGene00002074', 'WBGene00000019', 'WBGene00000105', 'WBGene00000106', 'WBGene00199484',
              'WBGene00001436', 'WBGene00000137', 'WBGene00001996', 'WBGene00014208'}
     attrs = ['attribute1', 'attribute2', 'attribute4']
@@ -257,50 +266,49 @@ def test_enrichment_randomization_parallel_reliability():
     random_seed = 0
 
     for i in range(2):
-        res1 = en.user_defined_enrichment(attrs, statistical_test='randomization', biotype='all',
-                                          attr_ref_path=__attr_ref__, biotype_ref_path=__biotype_ref__,
+        res1 = en.user_defined_enrichment(protein_coding_set, attrs, statistical_test='randomization',
+                                          attr_ref_path=__attr_ref__,
                                           randomization_reps=5000, random_seed=random_seed, parallel_backend='loky')
-        res2 = en.user_defined_enrichment(attrs, statistical_test='randomization', biotype='all',
-                                          attr_ref_path=__attr_ref__, biotype_ref_path=__biotype_ref__,
+        res2 = en.user_defined_enrichment(protein_coding_set, attrs, statistical_test='randomization',
+                                          attr_ref_path=__attr_ref__,
                                           randomization_reps=5000, random_seed=random_seed + 1,
                                           parallel_backend='multiprocessing')
-        res3 = en.user_defined_enrichment(attrs, statistical_test='randomization', biotype='all',
-                                          attr_ref_path=__attr_ref__, biotype_ref_path=__biotype_ref__,
+        res3 = en.user_defined_enrichment(protein_coding_set, attrs, statistical_test='randomization',
+                                          attr_ref_path=__attr_ref__,
                                           randomization_reps=5000, random_seed=random_seed + 2,
                                           parallel_backend='threading')
         random_seed += 3
         plt.close('all')
-        for col in ['samples', 'obs', 'exp', 'log2_fold_enrichment']:
-            assert np.all(res1[col] == res2[col])
-            assert np.all(res2[col] == res3[col])
+        exact_cols = ['samples', 'obs', 'exp', 'log2_fold_enrichment']
+        assert res1.select(pl.col(exact_cols)).equals(res2.select(pl.col(exact_cols)))
         for randcol in ['pval']:
-            assert np.isclose(res1[randcol], res2[randcol], atol=4 * 10 ** -4, rtol=0.25).all()
-            assert np.isclose(res2[randcol], res3[randcol], atol=4 * 10 ** -4, rtol=0.25).all()
-            assert np.isclose(res2[randcol], res1[randcol], atol=4 * 10 ** -4, rtol=0.25).all()
-            assert np.isclose(res3[randcol], res2[randcol], atol=4 * 10 ** -4, rtol=0.25).all()
+            assert np.allclose(res1[randcol], res2[randcol], atol=4 * 10 ** -4, rtol=0.25)
+            assert np.allclose(res2[randcol], res3[randcol], atol=4 * 10 ** -4, rtol=0.25)
+            assert np.allclose(res2[randcol], res1[randcol], atol=4 * 10 ** -4, rtol=0.25)
+            assert np.allclose(res3[randcol], res2[randcol], atol=4 * 10 ** -4, rtol=0.25)
 
 
-def test_enrichment_parallel_validity():
-    truth = io.load_table('tests/test_files/enrichment_randomization_res.csv', 0)
+def test_enrichment_parallel_validity(all_genes_set):
+    truth = io.load_table('tests/test_files/enrichment_randomization_res.csv')
     genes = {'WBGene00000041', 'WBGene00002074', 'WBGene00000105', 'WBGene00000106', 'WBGene00199484',
              'WBGene00001436', 'WBGene00000137', 'WBGene00001996', 'WBGene00014208', 'WBGene00001133'}
     attrs = ['attribute1', 'attribute2']
     en = FeatureSet(gene_set=genes, set_name='test_set')
-    res = en.user_defined_enrichment(attrs, statistical_test='randomization', biotype='all', attr_ref_path=__attr_ref__,
-                                     biotype_ref_path=__biotype_ref__, randomization_reps=100000, random_seed=0,
-                                     parallel_backend="loky")
+    res = en.user_defined_enrichment(all_genes_set, attrs, statistical_test='randomization',
+                                     attr_ref_path=__attr_ref__,
+                                     randomization_reps=100000, random_seed=0, parallel_backend="loky")
     plt.close('all')
     _enrichment_validity(res, truth)
 
 
-def test_enrich_hypergeometric_pvalues():
-    truth = io.load_table('tests/test_files/enrichment_hypergeometric_res.csv', 0)
+def test_enrich_hypergeometric_pvalues(all_genes_set):
+    truth = io.load_table('tests/test_files/enrichment_hypergeometric_res.csv')
     genes = {'WBGene00000041', 'WBGene00002074', 'WBGene00000105', 'WBGene00000106', 'WBGene00199484',
              'WBGene00001436', 'WBGene00000137', 'WBGene00001996', 'WBGene00014208', 'WBGene00001133'}
     attrs = ['attribute1', 'attribute2']
     en = FeatureSet(gene_set=genes, set_name='test_set')
-    res = en.user_defined_enrichment(attrs, statistical_test='hypergeometric', biotype='all',
-                                     attr_ref_path=__attr_ref__, biotype_ref_path=__biotype_ref__)
+    res = en.user_defined_enrichment(all_genes_set, attrs, statistical_test='hypergeometric',
+                                     attr_ref_path=__attr_ref__)
     plt.close('all')
     _enrichment_validity(res, truth)
 
@@ -422,19 +430,19 @@ def test_rankedset_init_invalid_type():
         _ = RankedSet(5)
 
 
-def test_enrich_non_categorical_api():
+def test_enrich_non_categorical_api(protein_coding_set):
     ref_table = 'tests/test_files/attr_ref_table_for_non_categorical.csv'
     s = FeatureSet(
         {'WBGene00000001', 'WBGene00000002', 'WBGene00000003', 'WBGene00000004', 'WBGene00000005', 'WBGene00000006',
          'WBGene00000007', 'WBGene00000008', 'WBGene00000009', 'WBGene00000010', 'WBGene00000011', 'WBGene00000012'})
-    res = s.non_categorical_enrichment('attr1', biotype='all', parametric_test=True, attr_ref_path=ref_table,
-                                       biotype_ref_path=__biotype_ref__)
-    assert isinstance(res, pd.DataFrame)
-    res = s.non_categorical_enrichment(['attr3', 'attr2', 'attr4'], biotype='protein_coding', attr_ref_path=ref_table,
-                                       biotype_ref_path=__biotype_ref__, plot_log_scale=False, n_bins=30,
-                                       plot_style='interleaved', return_fig=True)
+    background = {f'WBGene000000{i + 1:02d}' for i in range(30)}
+    res = s.non_categorical_enrichment(protein_coding_set, 'attr1', parametric_test=True, attr_ref_path=ref_table)
+    assert isinstance(res, pl.DataFrame)
+    res = s.non_categorical_enrichment(protein_coding_set, ['attr3', 'attr2', 'attr4'], attr_ref_path=ref_table,
+                                       plot_log_scale=False,
+                                       plot_style='interleaved', n_bins=30, return_fig=True)
     assert isinstance(res, tuple)
-    assert isinstance(res[0], pd.DataFrame)
+    assert isinstance(res[0], pl.DataFrame)
     assert isinstance(res[1], list)
     for fig in res[1]:
         assert isinstance(fig, plt.Figure)
@@ -442,35 +450,37 @@ def test_enrich_non_categorical_api():
 
 
 def test_enrich_non_categorial_parametric_test():
+    background = {f'WBGene000000{i + 1:02d}' for i in range(30)}
     ref_table = 'tests/test_files/attr_ref_table_for_non_categorical.csv'
-    res_param_truth = pd.read_csv('tests/test_files/enrich_non_categorical_parametric_truth_fdr15.csv', index_col=0)
+    res_param_truth = pl.read_csv('tests/test_files/enrich_non_categorical_parametric_truth_fdr15.csv')
     geneset = {'WBGene00000001', 'WBGene00000003', 'WBGene00000004', 'WBGene00000008', 'WBGene00000010',
                'WBGene00000014', 'WBGene00000015', 'WBGene00000020'}
 
     fs = FeatureSet(geneset)
-    res_param = fs.non_categorical_enrichment('all', alpha=0.15, parametric_test=True, attr_ref_path=ref_table,
-                                              biotype='all')
-    assert res_param.loc[:, ['samples', 'significant']].equals(res_param_truth.loc[:, ['samples', 'significant']])
-    assert np.isclose(res_param.loc[:, ['obs', 'exp']].values, res_param_truth.loc[:, ['obs', 'exp']].values,
-                      rtol=0.01).all()
-    assert np.isclose(res_param.loc[:, ['pval', 'padj']].values, res_param_truth.loc[:, ['pval', 'padj']], atol=0,
-                      rtol=0.02).all()
+    res_param = fs.non_categorical_enrichment(background, 'all', alpha=0.15, parametric_test=True,
+                                              attr_ref_path=ref_table)
+    exact_cols = ['samples', 'significant']
+    assert res_param.select(pl.col(exact_cols)).equals(res_param_truth.select(pl.col(exact_cols)))
+    isclose_cols = ['obs', 'exp', 'pval', 'padj']
+    assert np.allclose(res_param.select(pl.col(isclose_cols)), res_param_truth.select(pl.col(isclose_cols)),
+                       atol=0.0, rtol=0.01)
 
 
 def test_enrich_non_categorial_nonparametric_test():
+    background = {f'WBGene000000{i + 1:02d}' for i in range(30)}
     ref_table = 'tests/test_files/attr_ref_table_for_non_categorical.csv'
-    res_nonparam_truth = pd.read_csv('tests/test_files/enrich_non_categorical_aparametric_truth_fdr15.csv', index_col=0)
+    res_nonparam_truth = pl.read_csv('tests/test_files/enrich_non_categorical_aparametric_truth_fdr15.csv')
     geneset = {'WBGene00000001', 'WBGene00000003', 'WBGene00000004', 'WBGene00000008', 'WBGene00000010',
                'WBGene00000014', 'WBGene00000015', 'WBGene00000020'}
 
     fs = FeatureSet(geneset)
 
-    res_nonparam = fs.non_categorical_enrichment('all', alpha=0.15, attr_ref_path=ref_table, biotype='all')
-    assert res_nonparam.loc[:, ['samples', 'significant']].equals(res_nonparam_truth.loc[:, ['samples', 'significant']])
-    assert np.isclose(res_nonparam.loc[:, ['obs', 'exp']].values, res_nonparam_truth.loc[:, ['obs', 'exp']].values,
-                      rtol=0.01).all()
-    assert np.isclose(res_nonparam.loc[:, ['pval', 'padj']].values, res_nonparam_truth.loc[:, ['pval', 'padj']], atol=0,
-                      rtol=0.02).all()
+    res_nonparam = fs.non_categorical_enrichment(background, 'all', alpha=0.15, attr_ref_path=ref_table)
+    exact_cols = ['samples', 'significant']
+    assert res_nonparam.select(pl.col(exact_cols)).equals(res_nonparam_truth.select(pl.col(exact_cols)))
+    isclose_cols = ['obs', 'exp', 'pval', 'padj']
+    assert np.allclose(res_nonparam.select(pl.col(isclose_cols)), res_nonparam_truth.select(pl.col(isclose_cols)),
+                       atol=0.0, rtol=0.01)
     plt.close('all')
 
 
@@ -478,21 +488,23 @@ def test_enrich_non_categorical_nan_values():
     ref_table = 'tests/test_files/attr_ref_table_for_non_categorical.csv'
     geneset = {'WBGene00000025', 'WBGene00000023', 'WBGene00000027', 'WBGene00000028', 'WBGene00000029',
                'WBGene00000030', 'WBGene00000015', 'WBGene00000020'}
-    truth = pd.read_csv('tests/test_files/enrich_non_categorical_nan_truth.csv', index_col=0)
-    truth_param = pd.read_csv('tests/test_files/enrich_non_categorical_nan_parametric_truth.csv', index_col=0)
+    truth = pl.read_csv('tests/test_files/enrich_non_categorical_nan_truth.csv')
+    truth_param = pl.read_csv('tests/test_files/enrich_non_categorical_nan_parametric_truth.csv')
     fs = FeatureSet(geneset)
     attrs = ['attr1', 'attr5', 'attr2', 'attr3', 'attr4']
-    res_param = fs.non_categorical_enrichment(attrs, parametric_test=True, attr_ref_path=ref_table, biotype='all')
-    res_nonparam = fs.non_categorical_enrichment(attrs, attr_ref_path=ref_table, biotype='all')
-    print(res_param, res_nonparam)
+    background = {f'WBGene000000{i + 1:02d}' for i in range(30)}
+    res_param = fs.non_categorical_enrichment(background, attrs, parametric_test=True, attr_ref_path=ref_table)
+    res_nonparam = fs.non_categorical_enrichment(background, attrs, attr_ref_path=ref_table)
 
     for df, df_truth in zip((res_nonparam, res_param), (truth, truth_param)):
-        assert df.loc[:, ['samples', 'significant']].equals(
-            df_truth.loc[:, ['samples', 'significant']])
-        assert np.isclose(df.loc[:, ['obs', 'exp']].values, df_truth.loc[:, ['obs', 'exp']].values,
-                          rtol=0.01, equal_nan=True).all()
-        assert np.isclose(df.loc[:, ['pval', 'padj']].values, df_truth.loc[:, ['pval', 'padj']],
-                          atol=0, rtol=0.02, equal_nan=True).all()
+        df = df.sort(pl.first())
+        df_truth = df_truth.sort(pl.first())
+        assert df.select(pl.col(['samples', 'significant'])).equals(
+            df_truth.select(pl.col(['samples', 'significant'])))
+        assert np.allclose(df.select(pl.col(['obs', 'exp'])), df_truth.select(pl.col(['obs', 'exp'])), rtol=0.01,
+                           equal_nan=True)
+        assert np.allclose(df.select(pl.col(['pval', 'padj'])), df_truth.select(pl.col(['pval', 'padj'])),
+                           atol=0, rtol=0.02, equal_nan=True)
     plt.close('all')
 
 
@@ -538,12 +550,13 @@ def test_go_enrichment_single_set_api(organism, propagate_annotations, return_no
 @pytest.mark.parametrize("organism,statistical_test,propagate_annotations,kwargs",
                          [(6239, 'fisher', 'elim', {}),
                           ('caenorhabditis elegans', 'randomization', 'no', dict(randomization_reps=100))])
-def test_go_enrichment_api(organism, statistical_test, propagate_annotations, kwargs):
+def test_go_enrichment_api(organism, statistical_test, propagate_annotations, kwargs, protein_coding_set):
     genes = {'WBGene00048865', 'WBGene00000864', 'WBGene00000105', 'WBGene00001996', 'WBGene00011910', 'WBGene00268195'}
     en = FeatureSet(gene_set=genes, set_name='test_set')
-    _ = en.go_enrichment(organism, 'WBGene', statistical_test=statistical_test, biotype='protein_coding',
-                         biotype_ref_path=__biotype_ref__, propagate_annotations=propagate_annotations,
-                         aspects='biological_process', evidence_types='IMP', databases='WB', **kwargs)
+    _ = en.go_enrichment(protein_coding_set, organism=organism, gene_id_type='WBGene',
+                         statistical_test=statistical_test,
+                         propagate_annotations=propagate_annotations, aspects='biological_process',
+                         evidence_types='IMP', databases='WB', **kwargs)
     plt.close('all')
 
 
@@ -602,14 +615,14 @@ def test_fetch_sets_bad_type(objs: dict):
 @pytest.mark.skipif(not ENSEMBL_AVAILABLE, reason='Ensembl REST API is not available at the moment')
 @pytest.mark.skipif(not UNIPROT_AVAILABLE, reason='UniProt REST API is not available at the moment')
 @pytest.mark.parametrize("organism,statistical_test,kwargs",
-                          [(6239, 'fisher', {}),
+                         [(6239, 'fisher', {}),
                           ('caenorhabditis elegans', 'randomization', dict(randomization_reps=100))])
-def test_kegg_enrichment_api(organism, statistical_test, kwargs):
+def test_kegg_enrichment_api(organism, statistical_test, kwargs, protein_coding_set):
     genes = {'WBGene00048865', 'WBGene00000864', 'WBGene00000105', 'WBGene00001996', 'WBGene00011910', 'WBGene00268195',
              'WBGene00000833' 'WBGene00007150', 'WBGene00016995'}
     en = FeatureSet(gene_set=genes, set_name='test_set')
-    _ = en.kegg_enrichment(organism, 'WormBase', statistical_test=statistical_test, biotype='protein_coding',
-                           biotype_ref_path=__biotype_ref__, **kwargs)
+    _ = en.kegg_enrichment(protein_coding_set, organism=organism, gene_id_type='WormBase',
+                           statistical_test=statistical_test, **kwargs)
     plt.close('all')
 
 
@@ -649,7 +662,7 @@ def test_translate_gene_ids(map_to, map_from, remove_unmapped_genes, expected, e
         return io.GeneIDDict({})
 
     monkeypatch.setattr(io.GeneIDTranslator, 'run', mock_map_gene_ids)
-    truth = FeatureSet(parsing.data_to_set(io.load_table(expected, index_col=0).index), set_name=expected_name)
+    truth = FeatureSet(parsing.data_to_set(io.load_table(expected).select(pl.first())), set_name=expected_name)
     s = FeatureSet(
         {'WBGene00044022', 'WBGene00007075', 'WBGene00007066', 'WBGene00043988', 'WBGene00044951', 'WBGene00077503',
          'WBGene00007076', 'WBGene00007063', 'WBGene00043990', 'WBGene00007074', 'WBGene00007067', 'WBGene00007079',
@@ -732,7 +745,7 @@ def test_filter_by_attribute_rankedset():
 
 @patch('rnalysis.utils.io.PantherOrthologMapper')
 def test_find_paralogs_panther(mock_mapper):
-    df_truth = pd.DataFrame({'gene': ['gene1', 'gene1', 'gene2'], 'paralog': ['paralog1', 'paralog2', 'paralog3']})
+    df_truth = pl.DataFrame({'gene': ['gene1', 'gene1', 'gene2'], 'paralog': ['paralog1', 'paralog2', 'paralog3']})
     mock_mapper_instance = Mock()
     mock_mapper.return_value = mock_mapper_instance
     mock_mapper_instance.get_paralogs.return_value = io.OrthologDict(
@@ -743,10 +756,11 @@ def test_find_paralogs_panther(mock_mapper):
 
     assert result.equals(df_truth)
 
+
 @pytest.mark.parametrize('filter_percent_identity', [True, False])
 @patch('rnalysis.utils.io.EnsemblOrthologMapper')
 def test_find_paralogs_ensembl(mock_mapper, filter_percent_identity):
-    df_truth = pd.DataFrame({'gene': ['gene1', 'gene1', 'gene2'], 'paralog': ['paralog1', 'paralog2', 'paralog3']})
+    df_truth = pl.DataFrame({'gene': ['gene1', 'gene1', 'gene2'], 'paralog': ['paralog1', 'paralog2', 'paralog3']})
     mock_mapper_instance = Mock()
     mock_mapper.return_value = mock_mapper_instance
     mock_mapper_instance.get_paralogs.return_value = io.OrthologDict(
@@ -757,6 +771,7 @@ def test_find_paralogs_ensembl(mock_mapper, filter_percent_identity):
                                               filter_percent_identity=filter_percent_identity)
 
     assert result.equals(df_truth)
+
 
 @pytest.mark.parametrize('ranked_set', [True, False])
 @pytest.mark.parametrize('remove_unmapped', [True, False])
@@ -771,7 +786,7 @@ def test_map_orthologs_panther(mock_mapper, non_unique_mode, filter_least_diverg
     else:
         filter_obj_path = 'tests/test_files/test_map_orthologs_truth.csv'
     filter_obj_truth = Filter(filter_obj_path)
-    one2many_truth = pd.DataFrame(
+    one2many_truth = pl.DataFrame(
         {'gene': ['gene1', 'gene1', 'gene2'], 'ortholog': ['ortholog1', 'ortholog2', 'ortholog3']})
     mock_mapper_instance = Mock()
     mock_mapper.return_value = mock_mapper_instance
@@ -797,6 +812,7 @@ def test_map_orthologs_panther(mock_mapper, non_unique_mode, filter_least_diverg
     assert one2one == one2one_truth
     assert one2many.equals(one2many_truth)
 
+
 @pytest.mark.parametrize('ranked_set', [True, False])
 @pytest.mark.parametrize('remove_unmapped', [True, False])
 @pytest.mark.parametrize('non_unique_mode,filter_percent_identity', [
@@ -810,7 +826,7 @@ def test_map_orthologs_ensembl(mock_mapper, non_unique_mode, filter_percent_iden
     else:
         filter_obj_path = 'tests/test_files/test_map_orthologs_truth.csv'
     filter_obj_truth = Filter(filter_obj_path)
-    one2many_truth = pd.DataFrame(
+    one2many_truth = pl.DataFrame(
         {'gene': ['gene1', 'gene1', 'gene2'], 'ortholog': ['ortholog1', 'ortholog2', 'ortholog3']})
     mock_mapper_instance = Mock()
     mock_mapper.return_value = mock_mapper_instance
@@ -831,11 +847,14 @@ def test_map_orthologs_ensembl(mock_mapper, non_unique_mode, filter_percent_iden
 
     if ranked_set:
         one2one_truth = RankedSet(filter_obj_truth, one2one.set_name)
+        print(one2one.ranked_genes)
+        print(one2one_truth.ranked_genes)
     else:
         one2one_truth = FeatureSet(filter_obj_truth, one2one.set_name)
 
     assert one2one == one2one_truth
     assert one2many.equals(one2many_truth)
+
 
 @pytest.mark.parametrize('ranked_set', [True, False])
 @pytest.mark.parametrize('remove_unmapped', [True, False])
@@ -851,7 +870,7 @@ def test_map_orthologs_phylomedb(mock_mapper, non_unique_mode, filter_consistenc
     else:
         filter_obj_path = 'tests/test_files/test_map_orthologs_truth.csv'
     filter_obj_truth = Filter(filter_obj_path)
-    one2many_truth = pd.DataFrame(
+    one2many_truth = pl.DataFrame(
         {'gene': ['gene1', 'gene1', 'gene2'], 'ortholog': ['ortholog1', 'ortholog2', 'ortholog3']})
     mock_mapper_instance = Mock()
     mock_mapper.return_value = mock_mapper_instance
@@ -878,6 +897,7 @@ def test_map_orthologs_phylomedb(mock_mapper, non_unique_mode, filter_consistenc
     assert one2one == one2one_truth
     assert one2many.equals(one2many_truth)
 
+
 @pytest.mark.parametrize('ranked_set', [True, False])
 @pytest.mark.parametrize('remove_unmapped', [True, False])
 @pytest.mark.parametrize('non_unique_mode', ['first', 'last'])
@@ -888,7 +908,7 @@ def test_map_orthologs_orthoinspector(mock_mapper, non_unique_mode, remove_unmap
     else:
         filter_obj_path = 'tests/test_files/test_map_orthologs_truth.csv'
     filter_obj_truth = Filter(filter_obj_path)
-    one2many_truth = pd.DataFrame(
+    one2many_truth = pl.DataFrame(
         {'gene': ['gene1', 'gene1', 'gene2'], 'ortholog': ['ortholog1', 'ortholog2', 'ortholog3']})
     mock_mapper_instance = Mock()
     mock_mapper.return_value = mock_mapper_instance

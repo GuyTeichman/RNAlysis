@@ -1,0 +1,80 @@
+{
+    "configure": {
+        "enabled": true
+    },
+    "nodes": {
+        "font": {
+            "strokeWidth": 3
+        }
+    },
+    "groups": {
+        "count": {
+            "color": "#0D47A1",
+            "shape": "dot"
+        },
+        "diffexp": {
+            "color": "#BF360C",
+            "shape": "dot"
+        },
+        "foldchange": {
+            "color": "#00838F",
+            "shape": "dot"
+        },
+        "table": {
+            "color": "#F7B30A",
+            "shape": "dot"
+        },
+        "geneset": {
+            "color": "#BA68C8",
+            "shape": "dot"
+        },
+        "function": {
+            "color": "#00D4D8",
+            "shape": "triangleDown"
+        },
+        "other": {
+            "color": "#228B22",
+            "shape": "square"
+        },
+        "pipeline": {
+            "color": "#FF66B8",
+            "shape": "diamond"
+        },
+        "root": {
+            "color": "#00D4D8",
+            "shape": "box"
+        }
+    },
+    "edges": {
+        "color": {
+            "inherit": false
+        },
+        "smooth": {
+            "type": "cubicBezier",
+            "roundness": 0.4,
+            "forceDirection": "horizontal"
+        },
+        "width": 2,
+        "selectionWidth": 3
+    },
+    "layout": {
+        "hierarchical": {
+            "enabled": true,
+            "levelSeparation": 200,
+            "nodeSpacing": 22,
+            "treeSpacing": 65,
+            "direction": "LR",
+            "sortMethod": "directed",
+            "shakeTowards": "roots"
+        }
+    },
+    "physics": {
+        "solver": "repulsion",
+        "stabilization": {
+            "fit": true
+        }
+    },
+    "interaction": {
+        "navigationButtons": true
+    }
+}

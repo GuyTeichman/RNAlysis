@@ -14,7 +14,8 @@ import joblib
 import matplotlib.collections
 import matplotlib.pyplot as plt
 import numpy as np
-import pandas as pd
+import polars as pl
+import polars.selectors as cs
 import yaml
 from matplotlib import figure
 from matplotlib.widgets import MultiCursor
@@ -87,7 +88,7 @@ class ProgressParallel(joblib.Parallel):
         self._pbar.refresh()
 
 
-def standard_box_cox(data: Union[np.ndarray, pd.DataFrame]) -> Union[np.ndarray, pd.DataFrame]:
+def standard_box_cox(data: Union[np.ndarray, pl.DataFrame]) -> Union[np.ndarray, pl.DataFrame]:
     """
 
     :param data:
@@ -95,13 +96,18 @@ def standard_box_cox(data: Union[np.ndarray, pd.DataFrame]) -> Union[np.ndarray,
     :return:
     :rtype:
     """
-    res_array = StandardScaler().fit_transform(PowerTransformer(method='box-cox').fit_transform(data + 1))
-    if isinstance(data, pd.DataFrame):
-        return pd.DataFrame(res_array, index=data.index, columns=data.columns)
+    if isinstance(data, pl.DataFrame):
+        array = data.select(cs.numeric()).to_numpy()
+    else:
+        array = data
+    res_array = StandardScaler().fit_transform(PowerTransformer(method='box-cox').fit_transform(array + 1))
+    if isinstance(data, pl.DataFrame):
+        return data.select(~cs.numeric()).with_columns(
+            pl.DataFrame(res_array, schema=data.select(cs.numeric()).columns))
     return res_array
 
 
-def shift_to_baseline(data: Union[np.ndarray, pd.DataFrame], baseline: float = 0) -> Union[np.ndarray, pd.DataFrame]:
+def shift_to_baseline(data: Union[np.ndarray, pl.DataFrame], baseline: float = 0) -> Union[np.ndarray, pl.DataFrame]:
     """
 
     :param data:
@@ -111,14 +117,21 @@ def shift_to_baseline(data: Union[np.ndarray, pd.DataFrame], baseline: float = 0
     :return:
     :rtype:
     """
-    min_val = data.min()
-    while isinstance(min_val, (pd.DataFrame, np.ndarray, pd.Series)):
+    if isinstance(data, pl.DataFrame):
+        array = data.select(cs.numeric()).to_numpy()
+    elif isinstance(data,pl.Series):
+        array = data.to_numpy()
+    else:
+        array = data
+    min_val = array.min()
+
+    while isinstance(min_val, np.ndarray):
         min_val = min_val.min()
     diff = baseline - min_val
     return data + diff
 
 
-def standardize(data: Union[np.ndarray, pd.DataFrame]) -> Union[np.ndarray, pd.DataFrame]:
+def standardize(data: Union[np.ndarray, pl.DataFrame]) -> Union[np.ndarray, pl.DataFrame]:
     """
 
     :param data:
@@ -126,9 +139,13 @@ def standardize(data: Union[np.ndarray, pd.DataFrame]) -> Union[np.ndarray, pd.D
     :return:
     :rtype:
     """
-    res_array = StandardScaler().fit_transform(data)
-    if isinstance(data, pd.DataFrame):
-        return pd.DataFrame(res_array, index=data.index, columns=data.columns)
+    if isinstance(data, pl.DataFrame):
+        array = data.select(cs.numeric()).to_numpy()
+    else:
+        array = data
+    res_array = StandardScaler().fit_transform(array)
+    if isinstance(data, pl.DataFrame):
+        return data.select(~cs.numeric()).with_columns(pl.DataFrame(res_array, schema=data.columns))
     return res_array
 
 

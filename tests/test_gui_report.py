@@ -80,12 +80,20 @@ def test_trim_function(report_generator):
     assert report_generator.graph.number_of_edges() == 0
 
 
-def test_modify_html(report_generator):
-    html = report_generator._report_from_nx(True).generate_html()
-    modified_html = report_generator._modify_html(html)
+@pytest.mark.parametrize('show_settings,title,fontsize,hierarchical_layout',
+                         [(True, 'Test Title', 18, True),
+                          (False, 'auto', 32, True),
+                          (True, 'auto', 16, False),
+                          (True, 'Test Title2', 24, True)])
+def test_modify_html(report_generator, show_settings, title, fontsize, hierarchical_layout):
+    html = report_generator._report_from_nx(show_settings, title, hierarchical_layout).generate_html()
+    modified_html = report_generator._modify_html(html, title, fontsize)
     for filename in ['vis-network.min.css', 'bootstrap.min.css', 'vis-network.min.js', 'bootstrap.bundle.min.js']:
         assert f'assets/{filename}' in modified_html
-    assert modified_html.count(report_generator.TITLE) == 1
+    # validate title
+    if title == 'auto':
+        title = report_generator.TITLE
+    assert modified_html.count(title) == 1
 
 
 def test_generate_report(report_generator, tmp_path):
