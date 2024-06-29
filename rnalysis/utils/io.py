@@ -47,6 +47,11 @@ from rnalysis import __version__
 from rnalysis.utils import parsing, validation
 
 
+class RandomExpRetry(Retry):
+    def get_backoff_time(self):
+        return (0.5 + 0.5 * random.random()) * super().get_backoff_time()
+
+
 def get_datafile_dir() -> Path:
     bundle_dir = getattr(sys, '_MEIPASS', '')
     return Path(bundle_dir)
@@ -438,7 +443,7 @@ class KEGGAnnotationIterator:
     TAXON_MAPPING_URL = 'https://www.genome.jp/kegg-bin/download_htext?htext=br08610'
     REQUEST_DELAY_MILLIS = 250
     REQ_MAX_ENTRIES = 10
-    RETRIES = Retry(total=5, backoff_factor=0.25, status_forcelist=[500, 502, 503, 504])
+    RETRIES = RandomExpRetry(total=5, backoff_factor=0.25, status_forcelist=[500, 502, 503, 504])
     TAXON_TREE_CACHED_FILENAME = 'kegg_taxon_tree.json'
     PATHWAY_NAMES_CACHED_FILENAME = 'kegg_pathway_list.txt'
     COMPOUND_LIST_CACHED_FILENAME = 'kegg_compound_list.txt'
@@ -623,7 +628,7 @@ class GOlrAnnotationIterator:
                  'n_annotations': 'number of annotations matching the filtering criteria',
                  'session': 'session'}
     URL = 'http://golr-aux.geneontology.io/solr/select?'
-    RETRIES = Retry(total=5, backoff_factor=0.25, status_forcelist=[500, 502, 503, 504])
+    RETRIES = RandomExpRetry(total=5, backoff_factor=0.25, status_forcelist=[500, 502, 503, 504])
 
     _EXPERIMENTAL_EVIDENCE = {'EXP', 'IDA', 'IPI', 'IMP', 'IGI', 'IEP', 'HTP', 'HDA', 'HMP', 'HGI', 'HEP'}
     _PHYLOGENETIC_EVIDENCE = {'IBA', 'IBD', 'IKR', 'IRD'}
@@ -1414,7 +1419,7 @@ class PhylomeDBOrthologMapper:
 
 class OrthoInspectorOrthologMapper:
     API_URL = 'https://lbgi.fr/api/orthoinspector'
-    RETRIES = Retry(total=5, backoff_factor=1, status_forcelist=[404, 500, 502, 503, 504])
+    RETRIES = RandomExpRetry(total=5, backoff_factor=1, status_forcelist=[404, 500, 502, 503, 504])
     HEADERS = {'accept': 'application/json'}
 
     def __init__(self, map_to_organism, map_from_organism, gene_id_type):
@@ -1681,7 +1686,7 @@ class EnsemblOrthologMapper:
 
 class PantherOrthologMapper:
     API_URL = 'http://www.pantherdb.org'
-    RETRIES = Retry(total=5, backoff_factor=0.25, status_forcelist=[500, 502, 503, 504])
+    RETRIES = RandomExpRetry(total=5, backoff_factor=0.25, status_forcelist=[500, 502, 503, 504])
     HEADERS = {'accept': 'application/json'}
 
     def __init__(self, map_to_organism, map_from_organism='auto', gene_id_type='auto'):
@@ -1799,7 +1804,7 @@ class GeneIDTranslator:
     POLLING_INTERVAL = 3
     REQUEST_DELAY_MILLIS = 250
     REQ_MAX_ENTRIES = 10
-    RETRIES = Retry(total=5, backoff_factor=0.25, status_forcelist=[500, 502, 503, 504])
+    RETRIES = RandomExpRetry(total=5, backoff_factor=0.25, status_forcelist=[500, 502, 503, 504])
 
     def __init__(self, map_from: str, map_to: str = 'UniProtKB AC', verbose: bool = True,
                  session: Union[requests.Session, None] = None):
