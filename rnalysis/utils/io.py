@@ -1419,7 +1419,7 @@ class PhylomeDBOrthologMapper:
 
 class OrthoInspectorOrthologMapper:
     API_URL = 'https://lbgi.fr/api/orthoinspector'
-    RETRIES = RandomExpRetry(total=5, backoff_factor=1, status_forcelist=[404, 500, 502, 503, 504])
+    RETRIES = RandomExpRetry(total=5, backoff_factor=2, status_forcelist=[404, 500, 502, 503, 504])
     HEADERS = {'accept': 'application/json'}
 
     def __init__(self, map_to_organism, map_from_organism, gene_id_type):
