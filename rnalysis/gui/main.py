@@ -1,9 +1,15 @@
 import asyncio
 from multiprocessing import freeze_support
+from pathlib import Path
 
+import appdirs
 import nest_asyncio
 
-from rnalysis.gui import gui
+try:
+    from rnalysis.gui import gui
+except Exception: # if running into related to cache, delete the cache and try again
+    Path(appdirs.user_cache_dir('RNAlysis')).unlink(missing_ok=True)
+    from rnalysis.gui import gui
 
 
 def main():
