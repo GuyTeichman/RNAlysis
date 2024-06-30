@@ -21,7 +21,6 @@ import numpy as np
 import polars as pl
 import yaml
 from PyQt5 import QtCore, QtWidgets, QtGui
-from joblib import parallel_backend
 
 from rnalysis import fastq, filtering, enrichment, __version__
 from rnalysis.gui import gui_style, gui_widgets, gui_windows, gui_graphics, gui_quickstart
@@ -31,8 +30,6 @@ FILTER_OBJ_TYPES = {'Count matrix': filtering.CountFilter, 'Differential express
                     'Fold change': filtering.FoldChangeFilter, 'Other table': filtering.Filter}
 FILTER_OBJ_TYPES_INV = {val.__name__: key for key, val in FILTER_OBJ_TYPES.items()}
 INIT_EXCLUDED_PARAMS = {'self', 'fname', 'suppress_warnings'}
-
-FROZEN_ENV = getattr(sys, 'frozen', False) and hasattr(sys, '_MEIPASS')
 
 JOB_COUNTER = gui_widgets.JobCounter()
 
@@ -481,8 +478,6 @@ class ClicomWindow(gui_windows.FuncExternalWindow):
     EXCLUDED_PARAMS = {'self', 'parameter_dicts', 'gui_mode'}
     ADDITIONAL_EXCLUDED_PARAMS = {'power_transform', 'plot_style', 'split_plots', 'return_probabilities', 'gui_mode',
                                   'parallel_backend'}
-    if FROZEN_ENV:
-        EXCLUDED_PARAMS.add('parallel_backend')
 
     def __init__(self, funcs: dict, filter_obj: filtering.Filter, parent=None):
         func = filtering.CountFilter.split_clicom
@@ -546,8 +541,6 @@ class ClicomWindow(gui_windows.FuncExternalWindow):
 class EnrichmentWindow(gui_widgets.MinMaxDialog):
     EXCLUDED_PARAMS = {'self', 'save_csv', 'fname', 'return_fig', 'biotype', 'background_genes',
                        'statistical_test', 'parametric_test', 'biotype_ref_path', 'gui_mode'}
-    if FROZEN_ENV:
-        EXCLUDED_PARAMS.add('parallel_backend')
 
     ANALYSIS_TYPES = {'Gene Ontology (GO)': 'go',
                       'Kyoto Encyclopedia of Genes and Genomes (KEGG)': 'kegg',
@@ -1810,8 +1803,6 @@ class SetTabPage(TabPage):
 
 class FuncTypeStack(QtWidgets.QWidget):
     EXCLUDED_PARAMS = {'self', 'backend', 'gui_mode', 'legacy_args', 'function_kwargs'}
-    if FROZEN_ENV:
-        EXCLUDED_PARAMS.add('parallel_backend')
 
     NO_FUNC_CHOSEN_TEXT = "Choose a function..."
     funcSelected = QtCore.pyqtSignal(bool)
@@ -2240,8 +2231,6 @@ class FilterTabPage(TabPage):
         # otherwise this could cause issues in Pyinstaller-frozen versions of RNAlysis
         if func_name in self.CLUSTERING_FUNCS:
             kwargs['gui_mode'] = True
-            if FROZEN_ENV:
-                kwargs['parallel_backend'] = 'multiprocessing'
             partial = functools.partial(getattr(self.filter_obj, func_name), *args, **kwargs)
             predecessors = predecessors if isinstance(predecessors, list) else []
             worker = gui_widgets.Worker(partial, JOB_COUNTER.get_id(), predecessors + [self.tab_id], func_name)
@@ -4102,6 +4091,7 @@ class MainWindow(QtWidgets.QMainWindow):
                                           'You can enable it from the Settings menu.')
             return
         dialog = self.report.generate_report_dialog(self)
+
         def accept(args, kwargs, _):
             outdir = kwargs.get('output_folder')
             if outdir:
@@ -4114,7 +4104,6 @@ class MainWindow(QtWidgets.QMainWindow):
 
         dialog.paramsAccepted.connect(accept)
         dialog.exec()
-
 
     def init_menus(self):
         self.setMenuBar(self.menu_bar)
@@ -4676,9 +4665,6 @@ async def run():  # pragma: no cover
     if '_PYIBoot_SPLASH' in os.environ and importlib.util.find_spec("pyi_splash"):
         import pyi_splash
         pyi_splash.close()
-    # when using GUI, the joblib parallel backend should always be multiprocessing (since Loky is not supported in freeze mode)
-    if FROZEN_ENV:
-        parallel_backend('multiprocessing')
     lockfile = QtCore.QLockFile(QtCore.QDir.tempPath() + '/RNAlysis.lock')
     if lockfile.tryLock(100):
         show_app = True

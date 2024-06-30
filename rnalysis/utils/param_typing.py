@@ -7,10 +7,13 @@ import warnings
 import requests
 import tenacity
 import typing_extensions
-
-from rnalysis.utils import io, parsing
 from polars.type_aliases import RollingInterpolationMethod
 
+from rnalysis import FROZEN_ENV
+from rnalysis.utils import io, parsing
+
+PARALLEL_BACKENDS = ('multiprocessing', 'sequential') if FROZEN_ENV else (
+'multiprocessing', 'loky', 'threading', 'sequential')
 QUANTILE_INTERPOLATION_METHODS = RollingInterpolationMethod
 SUMMATION_METHODS = ('scaled_tpm', 'raw')
 
@@ -23,8 +26,6 @@ LEGAL_ALIGNMENT_SUFFIXES = ('.sam', '.bam', '.cram',)
 LEGAL_BOWTIE2_PRESETS = ('very-fast', 'fast', 'sensitive', 'very-sensitive')
 LEGAL_BOWTIE2_MODES = ('end-to-end', 'local')
 LEGAL_QUAL_SCORE_TYPES = ('phred33', 'phred64', 'solexa-quals', 'int-quals')
-
-PARALLEL_BACKENDS = ('multiprocessing', 'loky', 'threading', 'sequential')
 
 GRAPHVIZ_FORMATS = ('pdf', 'png', 'svg', 'none')
 
@@ -59,6 +60,7 @@ GroupedColumns = typing.NewType('GroupedColumns', typing.List[typing.Iterable[Co
 Color = typing.NewType('Color', typing.Union[str, typing.Tuple[float, float, float]])
 ColorList = typing.NewType('ColorList', typing.Union[typing.List[Color], typing.Tuple[Color, ...]])
 ColorMap = typing.NewType('ColorMap', str)
+
 
 def type_to_supertype(this_type):
     if hasattr(this_type, '__supertype__'):

@@ -28,6 +28,7 @@ Changed
 * When clicking on a node in an automatic analysis report, the analysis path leading to that node will be highlighted.
 * When clicking on a legend node in an automatic analysis report, all nodes of that type will be highlighted.
 * The 'Hierarchical clustergram plot' function should now run faster on large datasets.
+* Added support for running tasks using 'sequential' backend on standalone releases of RNAlysis.
 
 Fixed
 ******

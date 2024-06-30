@@ -1,11 +1,6 @@
 # -*- coding: utf-8 -*-
-
-"""Top-level package for RNA sequencing analysis pipeline."""
+import sys
 import warnings
-
-import pandas as pd
-
-pd.set_option("mode.copy_on_write", True)
 
 __all__ = ['general', 'filtering', 'enrichment', '__attr_file_key__', '__biotype_file_key__', '__font_key__',
            '__font_size_key__', '__stylesheet_key__', '__show_tutorial_key__', '__databases_key__']
@@ -22,6 +17,7 @@ __stylesheet_key__ = "gui_stylesheet"
 __show_tutorial_key__ = "show_tutorial_on_startup"
 __report_gen_key__ = "ask_report_generation"
 __databases_key__ = "databases"
+FROZEN_ENV = getattr(sys, 'frozen', False) and hasattr(sys, '_MEIPASS')
 
 
 def _simple_warning_format(msg, *args, **kwargs):
