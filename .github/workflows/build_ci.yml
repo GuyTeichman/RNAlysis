@@ -3,7 +3,7 @@ name: Build CI
 on:
     push:
         tags-ignore:
-            - '**'
+            - 'V*'
     pull_request:
 jobs:
     build:
