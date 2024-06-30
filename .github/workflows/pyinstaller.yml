@@ -75,7 +75,7 @@ jobs:
                         CMD_BUILD: >
                             pyinstaller RNAlysis.spec &&
                             cd dist/ &&
-                            zip -r RNAlysis-4.0.0_macos.zip ./RNAlysis* &&
+                            zip -r RNAlysis-4.0.0_macos_M1.zip ./RNAlysis* &&
                             ls -ltr
                         OUT_FILE_NAME: RNAlysis-4.0.0_macos_M1.zip
                         ASSET_MIME: application/zip
