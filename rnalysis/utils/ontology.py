@@ -717,7 +717,7 @@ class DAGTree:
         sm = ScalarMappable(cmap=colormap, norm=plt.Normalize(*bounds))
         sm.set_array(np.array([]))
         cbar_label_kwargs = dict(label=ylabel, fontsize=16, labelpad=15)
-        cbar = fig.colorbar(sm, ticks=range(int(bounds[0]), int(bounds[1]) + 1), location='bottom')
+        cbar = fig.colorbar(sm, ticks=range(int(bounds[0]), int(bounds[1]) + 1), location='bottom', ax=ax)
         cbar.set_label(**cbar_label_kwargs)
         cbar.ax.tick_params(labelsize=14, pad=6)
 
