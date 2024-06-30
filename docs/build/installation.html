@@ -1,12 +1,12 @@
 <!DOCTYPE html>
-<html class="writer-html5" lang="en">
+<html class="writer-html5" lang="en" data-content_root="./">
 <head>
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Installation &mdash; RNAlysis 4.0.0 documentation</title>
-      <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
-      <link rel="stylesheet" type="text/css" href="_static/css/theme.css" />
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=92fd9be5" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=19f00094" />
 
   
     <link rel="shortcut icon" href="_static/favicon.ico"/>
@@ -14,12 +14,12 @@
     <script src="_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
-        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
-        <script src="_static/jquery.js"></script>
-        <script src="_static/underscore.js"></script>
-        <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
-        <script src="_static/doctools.js"></script>
-        <script src="_static/copybutton.js"></script>
+        <script src="_static/jquery.js?v=5d32c60e"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="_static/documentation_options.js?v=3304f9e4"></script>
+        <script src="_static/doctools.js?v=9a2dae69"></script>
+        <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+        <script src="_static/copybutton.js?v=5b738548"></script>
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -130,20 +130,20 @@
            <div itemprop="articleBody">
              
   <section id="installation">
-<h1>Installation<a class="headerlink" href="#installation" title="Permalink to this heading"></a></h1>
+<h1>Installation<a class="headerlink" href="#installation" title="Link to this heading"></a></h1>
 <p>Latest version: <a class="reference external" href="https://pypi.python.org/pypi/rnalysis"><img alt="pipimage" src="https://img.shields.io/pypi/v/rnalysis.svg" /></a></p>
 <section id="rnalysis-stand-alone-app-most-beginner-friendly">
-<h2><em>RNAlysis</em> stand-alone app (most beginner-friendly)<a class="headerlink" href="#rnalysis-stand-alone-app-most-beginner-friendly" title="Permalink to this heading"></a></h2>
+<h2><em>RNAlysis</em> stand-alone app (most beginner-friendly)<a class="headerlink" href="#rnalysis-stand-alone-app-most-beginner-friendly" title="Link to this heading"></a></h2>
 <p>A stand-alone version of <em>RNAlysis</em> is available for both Windows and MacOS.
 This version is the most beginner-friendly to install, since it requires the least amount of setup to make it work.</p>
 <section id="how-to-install-it">
-<h3>How to install it<a class="headerlink" href="#how-to-install-it" title="Permalink to this heading"></a></h3>
+<h3>How to install it<a class="headerlink" href="#how-to-install-it" title="Link to this heading"></a></h3>
 <p>You can download the latest stand-alone of <em>RNAlysis</em> from the
 <a class="reference external" href="https://github.com/GuyTeichman/RNAlysis/releases/latest">GitHub Releases page</a> (‘RNAlysis-X.Y.Z_windows.zip’ for Windows, and ‘RNAlysis-X.Y.Z_macos.zip’ for MacOS).</p>
 <p>If you use the <em>RNAlysis</em> stand-alone app, the only other programs you will need to install are external programs that interface with <em>RNAlysis</em> - such as <a class="reference external" href="https://cran.r-project.org/bin/">R</a> (if you want to use <em>DESeq2</em>), and <a class="reference external" href="https://pachterlab.github.io/kallisto/download">kallisto</a>.</p>
 </section>
 <section id="how-to-run-it">
-<h3>How to run it<a class="headerlink" href="#how-to-run-it" title="Permalink to this heading"></a></h3>
+<h3>How to run it<a class="headerlink" href="#how-to-run-it" title="Link to this heading"></a></h3>
 <p>First, unzip the .zip file you downloaded.</p>
 <p><strong>On Windows:</strong></p>
 <p>After unzipping, enter the unzipped directory and open the “RNAlysis.exe” file:</p>
@@ -159,15 +159,15 @@ To get past it, first click on “More info”:</p>
 The <em>RNAlysis</em> app should launch now - this may take a minute or two, so be patient!</p>
 </section>
 <section id="further-guidance">
-<h3>Further guidance<a class="headerlink" href="#further-guidance" title="Permalink to this heading"></a></h3>
+<h3>Further guidance<a class="headerlink" href="#further-guidance" title="Link to this heading"></a></h3>
 <p>If you need further guidance with installing the stand-alone version of <em>RNAlysis</em>, please follow this <a class="reference external" href="https://conwaymsserver.ucd.ie/guides/rnaseq_analysis/rnalysis.html">installation guide</a> which was kindly provided by <a class="reference external" href="https://www.mwilm-conway-ucd.de/">Prof. Matthias Wilm</a>.</p>
 </section>
 </section>
 <section id="install-as-a-python-package-with-pip-best-performance">
-<h2>Install as a Python package with <em>pip</em> (best performance)<a class="headerlink" href="#install-as-a-python-package-with-pip-best-performance" title="Permalink to this heading"></a></h2>
+<h2>Install as a Python package with <em>pip</em> (best performance)<a class="headerlink" href="#install-as-a-python-package-with-pip-best-performance" title="Link to this heading"></a></h2>
 <p>You can install <em>RNAlysis</em> as a Python package via <a class="reference external" href="https://pip.pypa.io">pip</a>.</p>
 <section id="id1">
-<h3>How to install it<a class="headerlink" href="#id1" title="Permalink to this heading"></a></h3>
+<h3>How to install it<a class="headerlink" href="#id1" title="Link to this heading"></a></h3>
 <p>If you don’t have <a class="reference external" href="https://pip.pypa.io">pip</a> installed, this <a class="reference external" href="http://docs.python-guide.org/en/latest/starting/installation/">Python installation guide</a> can guide
 you through the process.</p>
 <p>To install the full version of <em>RNAlysis</em> (includes additional features that might not work out-of-the-box on all machines),
@@ -200,7 +200,7 @@ To install the basic version of <em>RNAlysis</em>, use the following command in 
 <p>will install the basic version of <em>RNAlysis</em>, along with the <cite>fastq</cite> and <cite>single-set</cite> additional features.</p>
 </section>
 <section id="id2">
-<h3>How to run it<a class="headerlink" href="#id2" title="Permalink to this heading"></a></h3>
+<h3>How to run it<a class="headerlink" href="#id2" title="Link to this heading"></a></h3>
 <p>If you installed <em>RNAlysis</em> with <em>pip</em>, you can open the <em>RNAlysis</em> app by executing the command <cite>rnalysis-gui</cite> from your terminal.</p>
 <p>Alternatively, you can open the <em>RNAlysis</em> app by typing the following code into a Python console:</p>
 <div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>&gt;&gt;&gt;<span class="w"> </span>from<span class="w"> </span>rnalysis<span class="w"> </span>import<span class="w"> </span>gui
@@ -211,10 +211,10 @@ To install the basic version of <em>RNAlysis</em>, use the following command in 
 </section>
 </section>
 <section id="from-sources">
-<h2>From sources<a class="headerlink" href="#from-sources" title="Permalink to this heading"></a></h2>
+<h2>From sources<a class="headerlink" href="#from-sources" title="Link to this heading"></a></h2>
 <p>The source code for RNAlysis can be downloaded from the <a class="reference external" href="https://github.com/GuyTeichman/RNAlysis">Github repository</a>.</p>
 <section id="id3">
-<h3>How to install it<a class="headerlink" href="#id3" title="Permalink to this heading"></a></h3>
+<h3>How to install it<a class="headerlink" href="#id3" title="Link to this heading"></a></h3>
 <p>First, clone the public repository:</p>
 <div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>git<span class="w"> </span>clone<span class="w"> </span>git://github.com/GuyTeichman/rnalysis
 </pre></div>
@@ -229,7 +229,7 @@ To install the basic version of <em>RNAlysis</em>, use the following command in 
 </div>
 </section>
 <section id="id4">
-<h3>How to run it<a class="headerlink" href="#id4" title="Permalink to this heading"></a></h3>
+<h3>How to run it<a class="headerlink" href="#id4" title="Link to this heading"></a></h3>
 <p>If you installed <em>RNAlysis</em> from source, you can open the <em>RNAlysis</em> app by executing the command <cite>rnalysis-gui</cite> from your terminal.</p>
 <p>Alternatively, you can open the <em>RNAlysis</em> app by typing the following code into a Python console:</p>
 <div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>&gt;&gt;&gt;<span class="w"> </span>from<span class="w"> </span>rnalysis<span class="w"> </span>import<span class="w"> </span>gui

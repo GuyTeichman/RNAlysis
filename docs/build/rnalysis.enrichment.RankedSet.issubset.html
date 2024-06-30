@@ -1,12 +1,12 @@
 <!DOCTYPE html>
-<html class="writer-html5" lang="en">
+<html class="writer-html5" lang="en" data-content_root="./">
 <head>
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>rnalysis.enrichment.RankedSet.issubset &mdash; RNAlysis 4.0.0 documentation</title>
-      <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
-      <link rel="stylesheet" type="text/css" href="_static/css/theme.css" />
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=92fd9be5" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=19f00094" />
 
   
     <link rel="shortcut icon" href="_static/favicon.ico"/>
@@ -14,12 +14,12 @@
     <script src="_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
-        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
-        <script src="_static/jquery.js"></script>
-        <script src="_static/underscore.js"></script>
-        <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
-        <script src="_static/doctools.js"></script>
-        <script src="_static/copybutton.js"></script>
+        <script src="_static/jquery.js?v=5d32c60e"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="_static/documentation_options.js?v=3304f9e4"></script>
+        <script src="_static/doctools.js?v=9a2dae69"></script>
+        <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+        <script src="_static/copybutton.js?v=5b738548"></script>
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -81,6 +81,7 @@
 <li class="toctree-l1 current"><a class="reference internal" href="rnalysis.enrichment.html">rnalysis.enrichment</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="rnalysis.enrichment.FeatureSet.html">rnalysis.enrichment.FeatureSet</a></li>
 <li class="toctree-l2 current"><a class="reference internal" href="rnalysis.enrichment.RankedSet.html">rnalysis.enrichment.RankedSet</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.RankedSet.html#rnalysis.enrichment.RankedSet"><code class="docutils literal notranslate"><span class="pre">RankedSet</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.RankedSet.add.html">rnalysis.enrichment.RankedSet.add</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.RankedSet.biotypes_from_gtf.html">rnalysis.enrichment.RankedSet.biotypes_from_gtf</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.RankedSet.biotypes_from_ref_table.html">rnalysis.enrichment.RankedSet.biotypes_from_ref_table</a></li>
@@ -101,7 +102,10 @@
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.RankedSet.intersection.html">rnalysis.enrichment.RankedSet.intersection</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.RankedSet.intersection_update.html">rnalysis.enrichment.RankedSet.intersection_update</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.RankedSet.isdisjoint.html">rnalysis.enrichment.RankedSet.isdisjoint</a></li>
-<li class="toctree-l3 current"><a class="current reference internal" href="#">rnalysis.enrichment.RankedSet.issubset</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">rnalysis.enrichment.RankedSet.issubset</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#rnalysis.enrichment.RankedSet.issubset"><code class="docutils literal notranslate"><span class="pre">RankedSet.issubset()</span></code></a></li>
+</ul>
+</li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.RankedSet.issuperset.html">rnalysis.enrichment.RankedSet.issuperset</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.RankedSet.kegg_enrichment.html">rnalysis.enrichment.RankedSet.kegg_enrichment</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.RankedSet.map_orthologs_ensembl.html">rnalysis.enrichment.RankedSet.map_orthologs_ensembl</a></li>
@@ -165,10 +169,10 @@
            <div itemprop="articleBody">
              
   <section id="rnalysis-enrichment-rankedset-issubset">
-<h1>rnalysis.enrichment.RankedSet.issubset<a class="headerlink" href="#rnalysis-enrichment-rankedset-issubset" title="Permalink to this heading"></a></h1>
+<h1>rnalysis.enrichment.RankedSet.issubset<a class="headerlink" href="#rnalysis-enrichment-rankedset-issubset" title="Link to this heading"></a></h1>
 <dl class="py method">
 <dt class="sig sig-object py" id="rnalysis.enrichment.RankedSet.issubset">
-<span class="sig-prename descclassname"><span class="pre">RankedSet.</span></span><span class="sig-name descname"><span class="pre">issubset</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#rnalysis.enrichment.RankedSet.issubset" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">RankedSet.</span></span><span class="sig-name descname"><span class="pre">issubset</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#rnalysis.enrichment.RankedSet.issubset" title="Link to this definition"></a></dt>
 <dd><p>Report whether another set contains this set.</p>
 </dd></dl>
 

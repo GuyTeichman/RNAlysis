@@ -1,12 +1,12 @@
 <!DOCTYPE html>
-<html class="writer-html5" lang="en">
+<html class="writer-html5" lang="en" data-content_root="./">
 <head>
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>rnalysis.filtering &mdash; RNAlysis 4.0.0 documentation</title>
-      <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
-      <link rel="stylesheet" type="text/css" href="_static/css/theme.css" />
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=92fd9be5" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=19f00094" />
 
   
     <link rel="shortcut icon" href="_static/favicon.ico"/>
@@ -14,12 +14,12 @@
     <script src="_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
-        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
-        <script src="_static/jquery.js"></script>
-        <script src="_static/underscore.js"></script>
-        <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
-        <script src="_static/doctools.js"></script>
-        <script src="_static/copybutton.js"></script>
+        <script src="_static/jquery.js?v=5d32c60e"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="_static/documentation_options.js?v=3304f9e4"></script>
+        <script src="_static/doctools.js?v=9a2dae69"></script>
+        <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+        <script src="_static/copybutton.js?v=5b738548"></script>
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -119,9 +119,9 @@
            <div itemprop="articleBody">
              
   <section id="rnalysis-filtering">
-<h1>rnalysis.filtering<a class="headerlink" href="#rnalysis-filtering" title="Permalink to this heading"></a></h1>
+<h1>rnalysis.filtering<a class="headerlink" href="#rnalysis-filtering" title="Link to this heading"></a></h1>
 <p class="rubric">Description</p>
-<span class="target" id="module-rnalysis.filtering"></span><p>This module can filter, normalize, intersect and visualize tabular data such as read counts and differential expression data.
+<p id="module-rnalysis.filtering">This module can filter, normalize, intersect and visualize tabular data such as read counts and differential expression data.
 Any tabular data saved in a csv format can be imported. Use this module to perform various filtering operations on your data,  normalize your data, perform set operations (union, intersection, etc), run basic exploratory analyses and plots (such as PCA, clustergram, violin plots, scatter, etc), save the filtered data to your computer, and more.
 When you save filtered/modified data, its new file name will include by default  all of the operations performed on it, in the order they were performed, to allow easy traceback of your analyses.</p>
 <p class="rubric">Classes</p>
@@ -139,7 +139,7 @@ When you save filtered/modified data, its new file name will include by default 
 <tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.html#rnalysis.filtering.FoldChangeFilter" title="rnalysis.filtering.FoldChangeFilter"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FoldChangeFilter</span></code></a>(fname, numerator_name, ...)</p></td>
 <td><p>A class that contains a single column, representing the gene-specific fold change between two conditions.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.Pipeline.html#rnalysis.filtering.Pipeline" title="rnalysis.filtering.Pipeline"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Pipeline</span></code></a>(filter_type, ...)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.Pipeline.html#rnalysis.filtering.Pipeline" title="rnalysis.filtering.Pipeline"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Pipeline</span></code></a>(filter_type)</p></td>
 <td><p>A collection of functions to be applied sequentially to Filter objects.</p></td>
 </tr>
 </tbody>

@@ -1,12 +1,12 @@
 <!DOCTYPE html>
-<html class="writer-html5" lang="en">
+<html class="writer-html5" lang="en" data-content_root="./">
 <head>
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>A-to-Z tutorial - example analysis &mdash; RNAlysis 4.0.0 documentation</title>
-      <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
-      <link rel="stylesheet" type="text/css" href="_static/css/theme.css" />
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=92fd9be5" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=19f00094" />
 
   
     <link rel="shortcut icon" href="_static/favicon.ico"/>
@@ -14,12 +14,12 @@
     <script src="_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
-        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
-        <script src="_static/jquery.js"></script>
-        <script src="_static/underscore.js"></script>
-        <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
-        <script src="_static/doctools.js"></script>
-        <script src="_static/copybutton.js"></script>
+        <script src="_static/jquery.js?v=5d32c60e"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="_static/documentation_options.js?v=3304f9e4"></script>
+        <script src="_static/doctools.js?v=9a2dae69"></script>
+        <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+        <script src="_static/copybutton.js?v=5b738548"></script>
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -166,24 +166,24 @@
            <div itemprop="articleBody">
              
   <section id="a-to-z-tutorial-example-analysis">
-<h1>A-to-Z tutorial - example analysis<a class="headerlink" href="#a-to-z-tutorial-example-analysis" title="Permalink to this heading"></a></h1>
+<h1>A-to-Z tutorial - example analysis<a class="headerlink" href="#a-to-z-tutorial-example-analysis" title="Link to this heading"></a></h1>
 <section id="intro-and-recommendations">
-<h2>Intro and recommendations<a class="headerlink" href="#intro-and-recommendations" title="Permalink to this heading"></a></h2>
+<h2>Intro and recommendations<a class="headerlink" href="#intro-and-recommendations" title="Link to this heading"></a></h2>
 <p>In this A-to-Z tutorial, we are going to analyze two datasets step-by-step, with each analysis covering different aspects of using <em>RNAlysis</em>.</p>
 <p>These analyses both focus on RNA sequencing data from nematodes, but the same principles can be applied to data from any organism.</p>
 <p>If you want to see more resources and exercises demonstrating how to use <em>RNAlysis</em>, please follow this <a class="reference external" href="https://conwaymsserver.ucd.ie/guides/rnaseq_analysis/rnalysis.html">RNAlysis RNA-seq analysis guide</a> as well, which was kindly provided by <a class="reference external" href="https://www.mwilm-conway-ucd.de/">Prof. Matthias Wilm</a>.</p>
 </section>
 <section id="analysis-1-time-series-rna-sequencing">
-<h2>Analysis #1 - time series RNA sequencing<a class="headerlink" href="#analysis-1-time-series-rna-sequencing" title="Permalink to this heading"></a></h2>
+<h2>Analysis #1 - time series RNA sequencing<a class="headerlink" href="#analysis-1-time-series-rna-sequencing" title="Link to this heading"></a></h2>
 <section id="the-dataset">
-<h3>The dataset<a class="headerlink" href="#the-dataset" title="Permalink to this heading"></a></h3>
+<h3>The dataset<a class="headerlink" href="#the-dataset" title="Link to this heading"></a></h3>
 <p>For the first analysis, we will use a publicly available dataset from <a class="reference external" href="https://downloads.wormbase.org/species/c_elegans/annotation/RNASeq_controls_FPKM/c_elegans.PRJNA13758.current.RNASeq_controls_FPKM.dat">WormBase</a>.
 This dataset describes the median expression level of each gene over the developmental stages of <em>C. elegans</em> nematodes, averaged from RNA-sequencing short-read experiments that have been identified in the literature as being ‘controls’.</p>
 <p>The original table linked above contains the mean expression, median expression, and number of samples for each developmental stage. Since we are only interested in the medians, before starting the analysis, I copied the Median columns to a new table, and gave the columns more readable names.
 You can find the table I created <a class="reference external" href="https://raw.githubusercontent.com/GuyTeichman/RNAlysis/master/tests/test_files/elegans_developmental_stages.tsv">here</a>.</p>
 </section>
 <section id="start-rnalysis">
-<h3>Start <em>RNAlysis</em><a class="headerlink" href="#start-rnalysis" title="Permalink to this heading"></a></h3>
+<h3>Start <em>RNAlysis</em><a class="headerlink" href="#start-rnalysis" title="Link to this heading"></a></h3>
 <p>Let’s start by opening <em>RNAlysis</em> - you can learn how to do that by reading the <a class="reference external" href="https://guyteichman.github.io/RNAlysis/build/installation.html">Installation page</a>.</p>
 <p>When you open <em>RNAlysis</em> for the first time, you will be asked whether or not do you want to enable report generation.
 <em>RNAlysis</em> allows you to generate automatic, interactive HTML reports of your RNA sequencing data analysis.
@@ -205,10 +205,10 @@ The window will now display a preview of our table, as well as a short summary o
 <p>At any point during the analysis, we can click the “Save table” button to save our table into a new file.</p>
 </section>
 <section id="data-preprocessing-and-exploratory-data-analysis">
-<h3>Data preprocessing and exploratory data analysis<a class="headerlink" href="#data-preprocessing-and-exploratory-data-analysis" title="Permalink to this heading"></a></h3>
+<h3>Data preprocessing and exploratory data analysis<a class="headerlink" href="#data-preprocessing-and-exploratory-data-analysis" title="Link to this heading"></a></h3>
 <p>We can now begin exploring our data! Let’s start with a pre-processing step - removing lowly-expressed genes.</p>
 <section id="filter-out-lowly-expressed-genes">
-<h4>Filter out lowly-expressed genes<a class="headerlink" href="#filter-out-lowly-expressed-genes" title="Permalink to this heading"></a></h4>
+<h4>Filter out lowly-expressed genes<a class="headerlink" href="#filter-out-lowly-expressed-genes" title="Link to this heading"></a></h4>
 <p>We want to filter out the genes that have not been expressed or that have low expression across all samples.
 Lowly-expressed genes can negatively affect our analysis downstream, since the % error in the expression of these genes is relatively high, and these genes are likely to add noise rather than useful signal to our analysis.</p>
 <p>In this particular example, we also want to analyze a fairly small group of genes. This is because later down the line we will take our data through clustering analysis, and trying to cluster such a large group of genes could take your computer an extremely long time to finish.
@@ -233,7 +233,7 @@ Moreover, we can see that a short summary of our filtering action has printed to
 <a class="reference internal image-reference" href="_images/01c03_filter_low_reads.png"><img alt="Filtering results" src="_images/01c03_filter_low_reads.png" style="width: 600px;" /></a>
 </section>
 <section id="examine-variance-in-our-data-with-principal-component-analysis">
-<h4>Examine variance in our data with Principal Component Analysis<a class="headerlink" href="#examine-variance-in-our-data-with-principal-component-analysis" title="Permalink to this heading"></a></h4>
+<h4>Examine variance in our data with Principal Component Analysis<a class="headerlink" href="#examine-variance-in-our-data-with-principal-component-analysis" title="Link to this heading"></a></h4>
 <p>The first analysis we will perform is Principal Component Analysis, or PCA.
 Principal component analysis is a dimensionality-reduction method. Meaning, it can reduce the dimensionality of large data sets (e.g. the expression of thousands of genes), by transforming the expression data of these genes into a smaller dataset that still contains most of the information from the original dataset.</p>
 <p>Since our dataset contains thousands of genes, it can be difficult to see how the different conditions vary in the expression of those genes.
@@ -258,7 +258,7 @@ My hypothesis would be that PC1 arranges the samples by their relative “germli
 PC2 appears to arrange the samples by their developmental stage, with embryos appearing at the top of the graph and adults at the bottom.</p>
 </section>
 <section id="examine-similarity-between-developmental-stages">
-<h4>Examine similarity between developmental stages<a class="headerlink" href="#examine-similarity-between-developmental-stages" title="Permalink to this heading"></a></h4>
+<h4>Examine similarity between developmental stages<a class="headerlink" href="#examine-similarity-between-developmental-stages" title="Link to this heading"></a></h4>
 <p>Let’s now examine the distribution of gene expression across developmental stages with a <a class="reference external" href="https://pythonbasics.org/seaborn-pairplot/">Pair-plot</a>.
 Pair-plots displays the pairwise relationships between samples, or experimental conditions, in our dataset, and also display a histogram of gene expression values within each sample/condition.</p>
 <p>To generate a Pair-plot, select “Pair-plot” from the function drop-down menu.</p>
@@ -269,7 +269,7 @@ Pair-plots displays the pairwise relationships between samples, or experimental 
 <p>We can spot some interesting trends from this plot: the embryo condition seems to be the most dissimilar from the rest of the conditions; sequential developmental stages seem to be fairly correlated with one another; and the earlier developmental stages appear to have a larger fraction of unexpressed genes compared to the later developmental stages.</p>
 </section>
 <section id="compare-the-expression-of-specific-genes-over-the-developmental-stages">
-<h4>Compare the expression of specific genes over the developmental stages<a class="headerlink" href="#compare-the-expression-of-specific-genes-over-the-developmental-stages" title="Permalink to this heading"></a></h4>
+<h4>Compare the expression of specific genes over the developmental stages<a class="headerlink" href="#compare-the-expression-of-specific-genes-over-the-developmental-stages" title="Link to this heading"></a></h4>
 <p>We already have a hypothesis about the expression of some genes over the developmental stages, which we would like to test.
 For example, the gene <em>oma-1</em> (gene ID <strong>WBGene00003864</strong>) should be expressed almost exclusively in the two-cell stage of embryonic development, and we expect the gene <em>skn-1</em> (gene ID <strong>WBGene00004804</strong>) to show a fairly consistent expression level across development.
 Let’s go to the “Visualize” tab to plot the expression of these genes over the developmental stages.</p>
@@ -287,12 +287,12 @@ However, if we had multiple sample per condition, we could have grouped the samp
 </section>
 </section>
 <section id="clustering-analysis">
-<h3>Clustering analysis<a class="headerlink" href="#clustering-analysis" title="Permalink to this heading"></a></h3>
+<h3>Clustering analysis<a class="headerlink" href="#clustering-analysis" title="Link to this heading"></a></h3>
 <p>We are interested in how different groups of genes change in expression level over the life cycle of the worm. We can use clustering analysis to group the genes in this dataset by their expression pattern over the developmental stages.
 There is an abundance of approaches when it comes to clustering analysis of gene expression. To illustrate this point, we will cluster our data using three different types of clustering algorithms, arranged from the simplest to the most complex.
 These algorithms are only a few representatives of the many clustering methods available in <em>RNAlysis</em>.</p>
 <section id="the-simple-approach-distance-based-clustering-with-k-medoids">
-<h4>The simple approach - distance-based clustering with K-Medoids<a class="headerlink" href="#the-simple-approach-distance-based-clustering-with-k-medoids" title="Permalink to this heading"></a></h4>
+<h4>The simple approach - distance-based clustering with K-Medoids<a class="headerlink" href="#the-simple-approach-distance-based-clustering-with-k-medoids" title="Link to this heading"></a></h4>
 <p>K-Medoids clustering is a distance-based clustering method, where the algorithm attempts to divide all of our genes into K clusters (K is the number of clusters we are looking for), with each cluster being centered around one gene (Medoid).
 K-Medoids clustering takes in two major parameters - the number of clusters we expect (K), and the distance metric by which we want to measure the similarity of expression between genes.</p>
 <p>Specifying the exact number of clusters we expect is a bit challenging for us, since we aren’t actually sure how many biologically-meaningful clusters are there in our data.
@@ -334,7 +334,7 @@ This is another useful way to look at our clustering results - we would hope to 
 For now, we will choose to keep none of the clusters, so that we can try out other clustering approaches. Therefore, we click either OK or Cancel without selecting any clusters.</p>
 </section>
 <section id="fine-tuning-our-approach-density-based-clustering-with-hdbscan">
-<h4>Fine-tuning our approach - density-based clustering with HDBSCAN<a class="headerlink" href="#fine-tuning-our-approach-density-based-clustering-with-hdbscan" title="Permalink to this heading"></a></h4>
+<h4>Fine-tuning our approach - density-based clustering with HDBSCAN<a class="headerlink" href="#fine-tuning-our-approach-density-based-clustering-with-hdbscan" title="Link to this heading"></a></h4>
 <p>The next clustering approach we will use, HDBSCAN, belongs to a different category of clustering algorithms - density-based clustering.
 HDBSCAN stands for Hierarchical Density-Based Spatial Clustering of Applications with Noise (see <a class="reference external" href="https://link.springer.com/chapter/10.1007/978-3-642-37456-2_14">the publication</a> for more details).
 HDBSCAN offers multiple advantages over more traditional clustering methods:</p>
@@ -355,7 +355,7 @@ For our example, let’s pick a value of 75:</p>
 <p>Let’s now move on to the final clustering approach - ensemble-based clustering.</p>
 </section>
 <section id="the-complex-approach-ensemble-based-clustering-with-clicom">
-<h4>The complex approach - ensemble-based clustering with CLICOM<a class="headerlink" href="#the-complex-approach-ensemble-based-clustering-with-clicom" title="Permalink to this heading"></a></h4>
+<h4>The complex approach - ensemble-based clustering with CLICOM<a class="headerlink" href="#the-complex-approach-ensemble-based-clustering-with-clicom" title="Link to this heading"></a></h4>
 <p>The last clustering approach we will use, CLICOM, is an emsemble-based clustering algorithm.
 CLICOM (see <a class="reference external" href="https://doi.org/10.1016/j.eswa.2011.08.059">the publication</a> ) incorporates the results of multiple clustering solutions, which can come from different clustering algorithms with differing clustering parameters, and uses these clustering solutions to create a combined “concensus” clustering solution.
 CLICOM offers multiple advantages over more traditional clustering methods:</p>
@@ -401,10 +401,10 @@ Let’s choose a few good-looking clusters to keep, and give them a name that in
 </section>
 </section>
 <section id="enrichment-analysis">
-<h3>Enrichment analysis<a class="headerlink" href="#enrichment-analysis" title="Permalink to this heading"></a></h3>
+<h3>Enrichment analysis<a class="headerlink" href="#enrichment-analysis" title="Link to this heading"></a></h3>
 <p>Now that we have extracted a few clusters of interest, we can try to characterize their biological significance using enrichment analysis. We will look at the most commonly-used enrichment analysis - Gene Ontology enrichment.</p>
 <section id="running-enrichment-analysis">
-<h4>Running enrichment analysis<a class="headerlink" href="#running-enrichment-analysis" title="Permalink to this heading"></a></h4>
+<h4>Running enrichment analysis<a class="headerlink" href="#running-enrichment-analysis" title="Link to this heading"></a></h4>
 <p>To open the Enrichent Analysis window, open the ‘Gene sets’ menu and click “Enrichment Analysis”:</p>
 <a class="reference internal image-reference" href="_images/01h01_go_enrichment.png"><img alt="Pick 'Enrichment analysis' from the 'Gene sets' menu" src="_images/01h01_go_enrichment.png" style="width: 600px;" /></a>
 <p>For basic enrichment analysis, we first need to choose our <em>enrichment set</em> (the gene set we are interested in - for example, “Down from L1 to adult”, cluster #9 we found earlier), and our background set (the reference genes we will be comparing our enrichment results to - for example, the genes in our original filtered table).
@@ -433,7 +433,7 @@ The color of the terms on the graph indicates their log2 fold change, and the de
 </section>
 </section>
 <section id="create-analysis-report">
-<h3>Create analysis report<a class="headerlink" href="#create-analysis-report" title="Permalink to this heading"></a></h3>
+<h3>Create analysis report<a class="headerlink" href="#create-analysis-report" title="Link to this heading"></a></h3>
 <p>Once we are done analyzing the data, we can generate an interactive analysis report.
 To do that, open the ‘File’ menu and click on “Create session report”:</p>
 <a class="reference internal image-reference" href="_images/01_i01_generate_report.png"><img alt="Create interactive analysis report" src="_images/01_i01_generate_report.png" style="width: 600px;" /></a>
@@ -450,9 +450,9 @@ You can get a closer look at these elements by hovering your cursor on them:</p>
 </section>
 </section>
 <section id="analysis-2-differential-expression-data">
-<h2>Analysis #2 - differential expression data<a class="headerlink" href="#analysis-2-differential-expression-data" title="Permalink to this heading"></a></h2>
+<h2>Analysis #2 - differential expression data<a class="headerlink" href="#analysis-2-differential-expression-data" title="Link to this heading"></a></h2>
 <section id="id6">
-<h3>The dataset<a class="headerlink" href="#id6" title="Permalink to this heading"></a></h3>
+<h3>The dataset<a class="headerlink" href="#id6" title="Link to this heading"></a></h3>
 <p>In the second analysis, we will analyze three publicly available datasets from GEO. Each individual dataset is an RNA sequencing experiment of <em>Caenorhabidtis elegans</em> nematodes, measuring the effect of a particular stress condition on gene expression.
 Our goal in this analysis will be to examine the similarities between the different stress conditions, and to answer a specific question - how are Epigenetic genes and pathways affected by exposure to stress?</p>
 <p>In this analysis, unlike the first analysis, we will not start from a pre-made counts table.
@@ -498,21 +498,21 @@ Instead, we are going to pre-process and quantify each dataset directly from the
 </ol>
 </section>
 <section id="quantify-fastq-files-and-differential-expression-analysis">
-<h3>Quantify FASTQ files and Differential Expression Analysis<a class="headerlink" href="#quantify-fastq-files-and-differential-expression-analysis" title="Permalink to this heading"></a></h3>
+<h3>Quantify FASTQ files and Differential Expression Analysis<a class="headerlink" href="#quantify-fastq-files-and-differential-expression-analysis" title="Link to this heading"></a></h3>
 <p>RNAlysis offers user the opportunity to start analysis right from raw FASTQ data.</p>
 <p>Since our input data is raw FASTQ files, we will first have to pre-process them, quantify them, and then detect differentially expressed genes.
 When using RNAlysis, you can start analyzing your data at any point in the analysis pipeline: raw FASTQ files, trimmed FASTQ files, quantified read counts, or differential expression tables.
 This means you can combine <em>RNAlysis</em> with any other tools or pipelines you prefer.</p>
 <p><em>RNAlysis</em> provides a graphical interface for <em>CutAdapt</em>, <em>kallisto</em>, and <em>DESeq2</em>, and we will use those tools in this tutorial analysis.</p>
 <section id="quality-control-with-fastqc">
-<h4>Quality control with <em>FastQC</em><a class="headerlink" href="#quality-control-with-fastqc" title="Permalink to this heading"></a></h4>
+<h4>Quality control with <em>FastQC</em><a class="headerlink" href="#quality-control-with-fastqc" title="Link to this heading"></a></h4>
 <p>The first step in analyzing RNA sequencing data is uaually quality control. This can help us get a general overview of our FASTQ files, and detect any potential issues with them.
 One of the most popular tools for this purpose is <a class="reference external" href="https://www.bioinformatics.babraham.ac.uk/projects/download.html#fastqc">FastQC</a>.
 FastQC is an open-source tool, and it has both a friendly graphical interface and a programmatic API.
 You can get it <a class="reference external" href="https://www.bioinformatics.babraham.ac.uk/projects/download.html#fastqc">here</a>.</p>
 </section>
 <section id="trim-adapters-and-remove-low-quality-reads-with-cutadapt">
-<h4>Trim adapters and remove low-quality reads with <em>CutAdapt</em><a class="headerlink" href="#trim-adapters-and-remove-low-quality-reads-with-cutadapt" title="Permalink to this heading"></a></h4>
+<h4>Trim adapters and remove low-quality reads with <em>CutAdapt</em><a class="headerlink" href="#trim-adapters-and-remove-low-quality-reads-with-cutadapt" title="Link to this heading"></a></h4>
 <p>After doing a quality-control of our FASTQ files with FastQC, we can see that some of our samples had a small portion of reads that still contain adapter sequences.
 Therefore, we will start our analysis by trimming the leftover adapters. We will also perform quality-trimming, removing bases with low quality scores from our reads.</p>
 <p>The first dataset we will trim is the osmotic stress dataset, which happens to be single-end sequencing.
@@ -551,7 +551,7 @@ Therefore, we will pick the read#1 and read#2 files separately by clicking on th
 <p>Once we are done setting up the trimming parameters, we can scroll down and click on the “Start CutAdapt” button.</p>
 </section>
 <section id="quantify-gene-expression-with-kallisto">
-<h4>Quantify gene expression with <em>kallisto</em><a class="headerlink" href="#quantify-gene-expression-with-kallisto" title="Permalink to this heading"></a></h4>
+<h4>Quantify gene expression with <em>kallisto</em><a class="headerlink" href="#quantify-gene-expression-with-kallisto" title="Link to this heading"></a></h4>
 <p>Now that out data has been pre-processed, we can proceed with quantifying the expression of each gene.
 For this purpose we will use <a class="reference external" href="https://pachterlab.github.io/kallisto/about">kallisto</a> - a program for rapid quantification of transcript abundances.
 <em>kallisto</em> uses a method called <strong>pseudoalignment</strong> to directly estimate the number of reads originating from each transcript in our target transcriptome, without actually aligning the reads to an exact physical position on the genome/transcriptome.
@@ -599,7 +599,7 @@ This is what our results should look like:</p>
 <p>Let’s rename the tables to reflect the names of the experiments, and proceed to differential expression analysis.</p>
 </section>
 <section id="run-differential-expression-analysis-with-deseq2">
-<h4>Run differential expression analysis with <em>DESeq2</em><a class="headerlink" href="#run-differential-expression-analysis-with-deseq2" title="Permalink to this heading"></a></h4>
+<h4>Run differential expression analysis with <em>DESeq2</em><a class="headerlink" href="#run-differential-expression-analysis-with-deseq2" title="Link to this heading"></a></h4>
 <p>We can now start Differential Expression analysis.
 For this purpose we will use <a class="reference external" href="https://bioconductor.org/packages/release/bioc/html/DESeq2.html">DESeq2</a> - an R package for differential expression analysis.
 Before proceeding with this step, make sure you have <a class="reference external" href="https://cran.r-project.org/bin/">installed R</a> on your computer.
@@ -663,14 +663,14 @@ Note that the order of conditions in the comparison matters - the first conditio
 </section>
 </section>
 <section id="data-filtering-and-visualization-with-customized-pipelines">
-<h3>Data filtering and visualization with customized Pipelines<a class="headerlink" href="#data-filtering-and-visualization-with-customized-pipelines" title="Permalink to this heading"></a></h3>
+<h3>Data filtering and visualization with customized Pipelines<a class="headerlink" href="#data-filtering-and-visualization-with-customized-pipelines" title="Link to this heading"></a></h3>
 <p>Since we ran the differential expression analysis through <em>RNAlysis</em>, the differential expression tables were loaded into the program automatically.
 Therefore, we can start analyzing the data straight away!</p>
 <p>For each of the differential expression tables we generated, we would like to generate a volcano plot, to filter out genes which are not differentially expressed, and then split the differentially expressed genes into an ‘upregulated’ group and ‘downregulated’ group.</p>
 <p>We could apply each of those operations to our data tables one by one, but that would take a long time, and there’s a decent chance we’ll make a mistake along the way.
 Therefore, we will instead create a customized Pipeline containing all of those functions and their respective parameters, and then apply this Pipeline to all three tables at once.</p>
 <section id="create-a-customized-pipeline">
-<h4>Create a customized Pipeline<a class="headerlink" href="#create-a-customized-pipeline" title="Permalink to this heading"></a></h4>
+<h4>Create a customized Pipeline<a class="headerlink" href="#create-a-customized-pipeline" title="Link to this heading"></a></h4>
 <p>To create a Pipeline, let’s open the Pipelines menu and click on “New Pipeline”:</p>
 <a class="reference internal image-reference" href="_images/02d01_pipeline.png"><img alt="Pipeline menu - new Pipeline" src="_images/02d01_pipeline.png" style="width: 600px;" /></a>
 <p>In the new window that opened, we can name our Pipeline, and choose the type of table we want to apply the Pipeline to. Let’s select “differential expression” from the drop-down menu:</p>
@@ -696,7 +696,7 @@ We can now click on the “Save Pipeline” button to save the Pipeline we creat
 <p>We can now close the Pipeline window and resume our analysis.</p>
 </section>
 <section id="apply-the-pipeline-to-our-datasets">
-<h4>Apply the Pipeline to our datasets<a class="headerlink" href="#apply-the-pipeline-to-our-datasets" title="Permalink to this heading"></a></h4>
+<h4>Apply the Pipeline to our datasets<a class="headerlink" href="#apply-the-pipeline-to-our-datasets" title="Link to this heading"></a></h4>
 <p>Now that the hard part is done, we can apply the Pipeline to our differential expression tables.
 Open the “Pipelines” menu, and then under the “Apply Pipeline” menu, choose the Pipeline we created:</p>
 <a class="reference internal image-reference" href="_images/02d08_pipeline.png"><img alt="Apply Pipeline" src="_images/02d08_pipeline.png" style="width: 600px;" /></a>
@@ -711,10 +711,10 @@ Open the “Pipelines” menu, and then under the “Apply Pipeline” menu, cho
 </section>
 </section>
 <section id="visualizing-and-extracting-gene-set-interesctions">
-<h3>Visualizing and extracting gene set interesctions<a class="headerlink" href="#visualizing-and-extracting-gene-set-interesctions" title="Permalink to this heading"></a></h3>
+<h3>Visualizing and extracting gene set interesctions<a class="headerlink" href="#visualizing-and-extracting-gene-set-interesctions" title="Link to this heading"></a></h3>
 <p>We want to know how much do the three stress conditions have in common. One easy way to do this is to visualize the intersections between the differentially expressed genes in the three stress conditions.</p>
 <section id="create-a-venn-diagram">
-<h4>Create a Venn diagram<a class="headerlink" href="#create-a-venn-diagram" title="Permalink to this heading"></a></h4>
+<h4>Create a Venn diagram<a class="headerlink" href="#create-a-venn-diagram" title="Link to this heading"></a></h4>
 <p>Open the “Gene sets” menu, and click on “Visualize Gene Sets…”:</p>
 <a class="reference internal image-reference" href="_images/02e01_gene_sets.png"><img alt="Gene sets menu - Visualize Gene Sets" src="_images/02e01_gene_sets.png" style="width: 600px;" /></a>
 <p>A new window will open.
@@ -733,7 +733,7 @@ Let’s generate a similar graph for the tables containing the significantly upr
 <a class="reference internal image-reference" href="_images/02e05_gene_sets.png"><img alt="Intersection of significantly upregulated genes" src="_images/02e05_gene_sets.png" style="width: 600px;" /></a>
 </section>
 <section id="extract-the-gene-subsets-we-are-interested-in">
-<h4>Extract the gene subsets we are interested in<a class="headerlink" href="#extract-the-gene-subsets-we-are-interested-in" title="Permalink to this heading"></a></h4>
+<h4>Extract the gene subsets we are interested in<a class="headerlink" href="#extract-the-gene-subsets-we-are-interested-in" title="Link to this heading"></a></h4>
 <p>Now that we have seen the intersection between the three sets, we want to get the actual list of genes that are significantly downreglated under all stress conditions.
 To do that, let’s open the “Gene sets” menu once again, and this time click on “Set Operations…”:</p>
 <a class="reference internal image-reference" href="_images/02f01_set_ops.png"><img alt="Gene sets menu - Set Operations" src="_images/02f01_set_ops.png" style="width: 600px;" /></a>
@@ -765,11 +765,11 @@ After renaming the set, it should look like this:</p>
 </section>
 </section>
 <section id="id9">
-<h3>Enrichment analysis<a class="headerlink" href="#id9" title="Permalink to this heading"></a></h3>
+<h3>Enrichment analysis<a class="headerlink" href="#id9" title="Link to this heading"></a></h3>
 <p>We now have two lists of genes we want to analyze - genes that are significantly downregulated in all three stress conditions, and genes that are significantly upregulated in all three stress conditions.
 Let’s now proceed to enrichment analysis!</p>
 <section id="define-a-background-set">
-<h4>Define a background set<a class="headerlink" href="#define-a-background-set" title="Permalink to this heading"></a></h4>
+<h4>Define a background set<a class="headerlink" href="#define-a-background-set" title="Link to this heading"></a></h4>
 <p>In order to run enrichment analysis, we will need an appropriate background set.
 One good example would be the set of all genes that are not lowly-expressed in at least one sequencing sample.
 We can use the process we learned earlier to generate an appropriate background set:</p>
@@ -784,7 +784,7 @@ We can use the process we learned earlier to generate an appropriate background 
 <p>Now that we have a test set and a background set, we can finally approach enrichment analysis.</p>
 </section>
 <section id="define-our-custom-enrichment-attributes">
-<h4>Define our custom enrichment attributes<a class="headerlink" href="#define-our-custom-enrichment-attributes" title="Permalink to this heading"></a></h4>
+<h4>Define our custom enrichment attributes<a class="headerlink" href="#define-our-custom-enrichment-attributes" title="Link to this heading"></a></h4>
 <p>Let’s assume that we want to specifically find out whether genes downregulated in all stress conditions are enriched for epigenetic genes.
 Unfortunately, the most common sources for functional gene annotation, Gene Ontology (GO) and KEGG, do not contain a single, well-annotated category of epigenetic genes in <em>Caenorhabditis elegans</em> nematodes.
 Therefore, to be able to test this hypothesis, we will have to source our own annotations.</p>
@@ -837,7 +837,7 @@ As an example, see this mock Attribute Reference Table:</p>
 You can find the pre-made curated Attribute Reference Table <a class="reference external" href="https://raw.githubusercontent.com/GuyTeichman/RNAlysis/development/tests/test_files/attribute_reference_table.csv">here</a>.</p>
 </section>
 <section id="id11">
-<h4>Running enrichment analysis<a class="headerlink" href="#id11" title="Permalink to this heading"></a></h4>
+<h4>Running enrichment analysis<a class="headerlink" href="#id11" title="Link to this heading"></a></h4>
 <p>To open the Enrichent Analysis window, open the ‘Gene sets’ menu and click “Enrichment Analysis”:</p>
 <a class="reference internal image-reference" href="_images/02h01_enrichment.png"><img alt="Pick 'Enrichment analysis' from the 'Gene sets' menu" src="_images/02h01_enrichment.png" style="width: 600px;" /></a>
 <p>We can choose our test and background sets (as explained in Analysis #1) from the two drop-down menus in the Enrichment window:</p>
@@ -865,7 +865,7 @@ The table also includes the statistics for each attribute (number of genes in th
 </section>
 </section>
 <section id="final-words">
-<h2>Final words<a class="headerlink" href="#final-words" title="Permalink to this heading"></a></h2>
+<h2>Final words<a class="headerlink" href="#final-words" title="Link to this heading"></a></h2>
 <p>This concludes our A-to-Z tutorial of <em>RNAlysis</em>. This tutorial could not possibly encompass every single feature in <em>RNAlysis</em>, but at this point you should be familiar enough with <em>RNAlysis</em> to start analyzing your own data.
 If you want a deeper dive into all of the features available in <em>RNAlysis</em>, or want to learn how to write code with <em>RNAlysis</em>, check out the <a class="reference external" href="https://guyteichman.github.io/RNAlysis/build/user_guide_gui.html">user guide</a>.
 If you still have questions about using <em>RNAlysis</em>, feel free to drop them in the <a class="reference external" href="https://github.com/GuyTeichman/RNAlysis/discussions">discussions area</a>.</p>
