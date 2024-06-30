@@ -24,21 +24,15 @@ This Python-based tool offers a complete solution for your RNA-seq analysis need
 🎥 See *RNAlysis* in Action
 ---------------------------
 
-.. image:: rnalysis/gui/videos/quick_search.webp
-    :alt: Rapid Gene Information Lookup
-    :width: 600px
+|quicksearch|
 
 *Instantly access gene information from various biological databases with a simple right-click.*
 
-.. image:: rnalysis/gui/videos/set_operations.webp
-    :alt: Set Operations
-    :width: 600px
+|setops|
 
 *Perform advanced set operations to extract and analyze specific subsets of your data.*
 
-.. image:: rnalysis/gui/videos/report_overview.webp
-    :alt: Interactive Analysis Report
-    :width: 600px
+|autoreport|
 
 *Easily generate comprehensive and intuitive analysis reports to promote reproducibility. Track the entire analysis path with just a click!*
 
@@ -276,3 +270,17 @@ This package was created with Cookiecutter_ and the `audreyr/cookiecutter-pypack
     :target: https://coveralls.io/github/GuyTeichman/RNAlysis?branch=master
     :alt: Coverage
     :align: middle
+
+..  |quicksearch| image:: https://github.com/GuyTeichman/RNAlysis/raw/master/rnalysis/gui/videos/quick_search.webp
+    :alt: Rapid Gene Information Lookup
+    :width: 600px
+
+
+.. |setops| image:: https://github.com/GuyTeichman/RNAlysis/raw/master/rnalysis/gui/videos/set_operations.webp
+    :alt: Set Operations
+    :width: 600px
+
+
+.. |autoreport| image:: https://github.com/GuyTeichman/RNAlysis/raw/master/rnalysis/gui/videos/report_overview.webp
+    :alt: Interactive Analysis Report
+    :width: 600px
