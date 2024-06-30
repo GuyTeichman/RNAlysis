@@ -7,8 +7,11 @@ import nest_asyncio
 
 try:
     from rnalysis.gui import gui
-except Exception: # if running into related to cache, delete the cache and try again
-    Path(appdirs.user_cache_dir('RNAlysis')).unlink(missing_ok=True)
+except Exception as e:  # if running into related to cache, delete the cache and try again
+    try:
+        Path(appdirs.user_cache_dir('RNAlysis')).unlink(missing_ok=True)
+    except PermissionError:
+        raise e
     from rnalysis.gui import gui
 
 
