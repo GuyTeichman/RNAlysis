@@ -655,7 +655,7 @@ class EnrichmentRunner:
         data_color_norm = [0.5 * (1 + i / (np.ceil(max_score))) * 255 for i in enrichment_scores]
         data_color_norm_8bit = [int(i) if i != np.inf and i != -np.inf else np.sign(i) * max(np.abs(scores_no_inf)) for
                                 i in data_color_norm]
-        my_cmap = plt.cm.get_cmap('coolwarm')
+        my_cmap = plt.colormaps.get_cmap('coolwarm')
         colors = my_cmap(data_color_norm_8bit)
 
         # generate bar plot

@@ -291,7 +291,7 @@ class KEGGPathway:
                 scores_no_inf.append(-1)
             max_score = max(np.max(scores_no_inf), 2)
             max_abs_score = max(np.abs(scores_no_inf))
-            colormap = plt.cm.get_cmap('coolwarm')
+            colormap = plt.colormaps.get_cmap('coolwarm')
 
         # generate graph
         main_graph = graphviz.Digraph()
@@ -648,7 +648,7 @@ class DAGTree:
         if len(scores_no_inf) == 0:
             scores_no_inf.append(-1)
         max_score = max(np.max(scores_no_inf), 2)
-        colormap = plt.cm.get_cmap('coolwarm')
+        colormap = plt.colormaps.get_cmap('coolwarm')
 
         # generate graph
         graph = graphviz.Digraph()
