@@ -30,7 +30,6 @@ def mainwindow_setup(monkeypatch):
     monkeypatch.setattr(QtWidgets.QMessageBox, 'question', lambda *args, **kwargs: QtWidgets.QMessageBox.Yes)
     monkeypatch.setattr(gui_widgets.ThreadStdOutStreamTextQueueReceiver, 'run', lambda self: None)
     monkeypatch.setattr(gui_quickstart.QuickStartWizard, '__init__', lambda *args, **kwargs: None)
-    parallel_backend('multiprocessing')
 
 
 @pytest.fixture
