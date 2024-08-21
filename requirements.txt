@@ -27,5 +27,5 @@ mslex>=1.1.0
 nest-asyncio>=1.6.0
 fastcluster>=1.2.6
 kmedoids>=0.5.1
-polars[async,numpy,pyarrow,matplotlib,pandas]>=1.5.0
+polars[async,numpy,pyarrow,pandas]>=1.5.0
 pandas[performance,parquet]
