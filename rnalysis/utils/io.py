@@ -388,7 +388,7 @@ def load_table(filename: Union[str, Path], drop_columns: Union[str, List[str]] =
         # Identify string columns
         string_cols = [col for col in df.columns if df[col].dtype in [pl.Utf8, pl.String]]
         # Apply str.strip() to string columns
-        df = df.with_columns([pl.col(col).str.strip() for col in string_cols])
+        df = df.with_columns([pl.col(col).str.strip_chars() for col in string_cols])
 
         # if there remained only empty string "", change to Nan
         df = df.with_columns([pl.col(col).replace("", None) for col in string_cols])
