@@ -3,10 +3,10 @@
 #
 # package[version_required]: tag1, tag2, ...
 
-hdbscan>=0.8.33:    hdbscan
-xlmhglite>=1.1.0:   single-set
-numba>=0.57.0:      randomization
-cutadapt>=4.4:      fastq
+hdbscan>=0.8.38:    hdbscan
+xlmhglite>=1.1.1:   single-set
+numba>=0.60.0:      randomization
+cutadapt>=4.9:      fastq
 pyvis>=0.3.2:       reports
 networkx>=3.0.0:    reports
 install-jdk>=1.1.0: picardtools
