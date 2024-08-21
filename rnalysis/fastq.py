@@ -2006,7 +2006,7 @@ def _sum_transcripts_to_genes(tpm: pl.DataFrame, counts: pl.DataFrame, gtf_path:
                             pl.exclude(counts.columns[0]).sum().truediv(10 ** 6)).collect()
                         tpm_cpy = tpm.lazy().join(transcript2gene, left_on=tpm.columns[0], right_on='Transcript ID',
                                                   how='left')
-                        tpm_by_gene = tpm_cpy.drop(cs.first()).groupby('Gene ID').sum()
+                        tpm_by_gene = tpm_cpy.drop(cs.first()).group_by('Gene ID').sum()
                         count_per_gene = tpm_by_gene.with_columns(
                             [(pl.col(col) * library_sizes[col][0]).alias(col) for col in tpm.columns[1:]]).collect()
                     elif summation_method == 'raw':

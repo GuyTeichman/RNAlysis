@@ -1505,7 +1505,7 @@ def test_kegg_enrichment_runner_api(monkeypatch, single_list, genes, pval_func, 
 
 def test_kegg_enrichment_runner_format_results(monkeypatch):
     def mock_correct_multiple_comparisons(self):
-        self.results = self.results.with_columns(significant=[False, True, True])
+        self.results = self.results.with_columns(significant=pl.Series([False, True, True]))
 
     monkeypatch.setattr(KEGGEnrichmentRunner, '_correct_multiple_comparisons', mock_correct_multiple_comparisons)
     runner = KEGGEnrichmentRunner.__new__(KEGGEnrichmentRunner)

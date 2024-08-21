@@ -146,7 +146,7 @@ def test_GeneSetView_save(qtbot, gene_set, truth, monkeypatch):
     (pl.DataFrame([[1, 2, 3], [4, 5, 6], [7, 8, 9]]), (3, 2)),
     (pl.DataFrame([[1, 2, 3, 0], [4, 5, 6, 0]]), (4, 1)),
     (pl.DataFrame([[1, 2, 3], [4, 5, 6], [7, 8, 9], [10, 11, 12], [13, 14, 15]]), (3, 4)),
-    (pl.DataFrame([[],[]]), (0, 0))
+    (pl.DataFrame([[],[]]), (0, 1))
 ])
 def test_DataFrameView_init(qtbot, df, shape_truth):
     qtbot, dialog = widget_setup(qtbot, DataFrameView, df, 'my df name')

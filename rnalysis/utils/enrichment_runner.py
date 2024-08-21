@@ -806,7 +806,7 @@ class NonCategoricalEnrichmentRunner(EnrichmentRunner):
 
     def format_results(self, unformatted_results_list: list):
         columns = ['name', 'samples', 'obs', 'exp', 'pval']
-        self.results = pl.DataFrame(unformatted_results_list, schema=columns)
+        self.results = pl.DataFrame(unformatted_results_list, schema=columns, orient='row')
         self._correct_multiple_comparisons()
         if self.results['pval'].is_nan().any():
             warnings.warn(f"One or more of the genes in the background set contained NaN values in "
