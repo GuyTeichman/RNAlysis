@@ -2000,7 +2000,7 @@ def venn_diagram(objs: Dict[str, Union[str, FeatureSet, Set[str]]], title: Union
                  transparency: param_typing.Fraction = 0.4, weighted: bool = True, add_outline: bool = True,
                  linecolor: param_typing.Color = 'black', linestyle: Literal['solid', 'dashed'] = 'solid',
                  linewidth: float = 2.0, title_fontsize: float = 14, set_fontsize: float = 12,
-                 subset_fontsize: float = 10, normalize_to: float = 1.0, fig: plt.Figure = None) -> plt.Figure:
+                 subset_fontsize: float = 10, fig: plt.Figure = None, **kwargs) -> plt.Figure:
     """
     Generate a Venn diagram of 2 to 3 sets, FeatureSets or attributes from the Attribute Reference Table.
 
@@ -2037,10 +2037,6 @@ def venn_diagram(objs: Dict[str, Union[str, FeatureSet, Set[str]]], title: Union
     :type subset_fontsize: float (default=10)
     :param fig: optionally, supply your own Figure to generate the plot onto.
     :type fig: matplotlib.Figure
-
-    :param normalize_to: the total (on-axes) area of the circles to be drawn. Sometimes tuning it (together
-    with the overall fiture size) may be useful to fit the text labels better.
-    :type normalize_to: float (default=1.0)
     :return: a tuple of a VennDiagram object; and a list of 2-3 Circle patches.
 
 
@@ -2059,23 +2055,27 @@ def venn_diagram(objs: Dict[str, Union[str, FeatureSet, Set[str]]], title: Union
         set_colors *= 3
 
     if len(objs) == 2:
-        func = vn.venn2 if weighted else vn.venn2_unweighted
+        func = vn.venn2
+        kwargs = dict(layout_algorithm=vn.layout.venn2.DefaultLayoutAlgorithm(
+            fixed_subset_sizes=(1, 1, 1))) if weighted else dict()
         func_circles = vn.venn2_circles
         set_colors = set_colors[0:2]
     else:
-        func = vn.venn3 if weighted else vn.venn3_unweighted
+        func = vn.venn3
+        kwargs = dict(layout_algorithm=vn.layout.venn3.DefaultLayoutAlgorithm(
+            fixed_subset_sizes=(1, 1, 1, 1, 1, 1, 1))) if weighted else dict()
         func_circles = vn.venn3_circles
         set_colors = set_colors[0:3]
     if fig is None:
         fig = plt.figure()
     ax = fig.add_subplot()
     plot_obj = func(tuple(objs.values()), tuple(objs.keys()), set_colors=set_colors, alpha=transparency,
-                    normalize_to=normalize_to, ax=ax)
+                    ax=ax, **kwargs)
     if add_outline and weighted:
         circle_obj = func_circles(tuple(objs.values()), color=linecolor, linestyle=linestyle, linewidth=linewidth,
-                                  normalize_to=normalize_to, ax=ax)
+                                  ax=ax, **kwargs)
     elif add_outline and not weighted:
-        circle_obj = func(tuple(objs.values()), tuple(objs.keys()), alpha=1, normalize_to=normalize_to, ax=ax)
+        circle_obj = func(tuple(objs.values()), tuple(objs.keys()), alpha=1, ax=ax)
         for patch in circle_obj.patches:
             patch.set_edgecolor(linecolor)
             patch.set_linewidth(linewidth)
