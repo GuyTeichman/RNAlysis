@@ -7,7 +7,7 @@ import warnings
 import requests
 import tenacity
 import typing_extensions
-from polars.type_aliases.plt import RollingInterpolationMethod
+from polars._typing import RollingInterpolationMethod
 
 from rnalysis import FROZEN_ENV
 from rnalysis.utils import io, parsing
