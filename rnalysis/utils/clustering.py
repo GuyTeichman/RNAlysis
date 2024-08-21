@@ -16,9 +16,8 @@ from sklearn.cluster import AgglomerativeClustering, KMeans
 from sklearn.decomposition import PCA
 from sklearn.metrics import pairwise_distances, silhouette_score, calinski_harabasz_score, davies_bouldin_score
 from sklearn.utils import parallel_backend as sklearn_parallel_backend
-from sklearn_extra.cluster import KMedoids
 from tqdm.auto import tqdm
-
+from kmedoids import KMedoids
 from rnalysis.utils import generic, parsing, validation
 
 try:
@@ -345,7 +344,7 @@ class KMedoidsIter:
                  'medoid_indices_': "the clustering solution's medoid indices",
                  'labels_': "the clustering solution's point labels"}
 
-    def __init__(self, n_clusters: int, metric: str = 'euclidean', init: str = 'k-medoids++', max_iter: int = 300,
+    def __init__(self, n_clusters: int, metric: str = 'euclidean', max_iter: int = 300,
                  n_init: int = 10, random_state: int = None):
         assert isinstance(n_init, int), f"'n_init' must be an integer, is {type(n_init)} instead."
         assert isinstance(metric, str), f"'metric' must be a string, is {type(metric)} instead."
@@ -353,10 +352,9 @@ class KMedoidsIter:
         self.n_clusters = n_clusters
         self.metric = metric
         self.n_init = n_init
-        self.init = init
         self.max_iter = max_iter
         self.random_state = random_state
-        self.clusterer = KMedoids(n_clusters=self.n_clusters, metric=self.metric, init=self.init,
+        self.clusterer = KMedoids(n_clusters=self.n_clusters, metric=self.metric,
                                   max_iter=self.max_iter, random_state=random_state)
         self.inertia_ = None
         self.cluster_centers_ = None
@@ -375,10 +373,10 @@ class KMedoidsIter:
         for i in range(self.n_init):
             if self.random_state is not None:
                 clusterers.append(
-                    KMedoids(n_clusters=self.n_clusters, metric=self.metric, init=self.init, max_iter=self.max_iter,
+                    KMedoids(n_clusters=self.n_clusters, metric=self.metric, max_iter=self.max_iter,
                              random_state=self.random_state + i).fit(x))
             else:
-                clusterers.append(KMedoids(n_clusters=self.n_clusters, metric=self.metric, init=self.init,
+                clusterers.append(KMedoids(n_clusters=self.n_clusters, metric=self.metric,
                                            max_iter=self.max_iter).fit(x))
             inertias[i] = clusterers[i].inertia_
         best_clusterer = clusterers[int(np.argmax(inertias))]
