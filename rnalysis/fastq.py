@@ -2012,7 +2012,7 @@ def _sum_transcripts_to_genes(tpm: pl.DataFrame, counts: pl.DataFrame, gtf_path:
                     elif summation_method == 'raw':
                         count_cpy = counts.lazy().join(transcript2gene, left_on=tpm.columns[0],
                                                        right_on='Transcript ID', how='left')
-                        count_per_gene = count_cpy.drop(cs.first()).groupby('Gene ID').sum().collect()
+                        count_per_gene = count_cpy.drop(cs.first()).group_by('Gene ID').sum().collect()
                     else:
                         raise ValueError(f"Invalid value for 'summation_method': '{summation_method}'.")
 
