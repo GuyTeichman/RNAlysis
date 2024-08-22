@@ -270,6 +270,341 @@ class XlmhgTest(StatsTest):
         return index_vec, rev_index_vec
 
 
+class EnrichmentPlotter(abc.ABC):
+    __slots__ = ('results', 'en_score_col')
+
+    def __init__(self, results: pl.DataFrame, en_score_col: str):
+        assert len(results) > 0, "No enrichment results to plot."
+        assert en_score_col in results.columns, f"Column '{en_score_col}' not found in the results DataFrame."
+        self.results = results
+        self.en_score_col = en_score_col
+
+    @staticmethod
+    def _get_pval_asterisk(pval: float, alpha: float = 0.05):
+        fontweight = 'bold'
+        if pval > alpha:
+            asterisks = 'ns'
+            fontweight = 'normal'
+        elif pval < 0.0001:
+            asterisks = u'\u2217' * 4
+        elif pval < 0.001:
+            asterisks = u'\u2217' * 3
+        elif pval < 0.01:
+            asterisks = u'\u2217' * 2
+        else:
+            asterisks = u'\u2217'
+        return asterisks, fontweight
+
+    @abc.abstractmethod
+    def run(self):
+        pass
+
+
+class BarPlotter(EnrichmentPlotter):
+    __slots__ = (
+        'n_bars', 'center_bars', 'ylabel', 'title', 'ylim', 'title_fontsize', 'label_fontsize', 'ylabel_fontsize',
+        'plot_style', 'plot_horizontal', 'alpha', 'show_expected')
+
+    def __init__(self, results: pl.DataFrame, en_score_col: str, n_bars: Union[int, Literal['all']],
+                 alpha: float, ylabel: str, title: str, ylim: Union[float, Literal['auto']],
+                 title_fontsize: float, label_fontsize: float, ylabel_fontsize: float,
+                 plot_style: Literal['bar', 'lollipop'], plot_horizontal: bool, show_expected: bool, center_bars: bool):
+        super().__init__(results, en_score_col)
+
+        assert plot_style in ['bar', 'lollipop'], \
+            f"'plot_style' must be 'bar' or 'lollipop', instead got '{self.plot_style}'."
+
+        if n_bars == 'all':
+            n_bars = len(self.results)
+        else:
+            assert isinstance(n_bars, int) and n_bars > 0, f"Invalid value for 'n_bars': {n_bars}."
+
+        self.n_bars = n_bars
+        self.ylabel = ylabel
+        self.title = title
+        self.ylim = ylim
+        self.alpha = alpha
+        self.title_fontsize = title_fontsize
+        self.label_fontsize = label_fontsize
+        self.ylabel_fontsize = ylabel_fontsize
+        self.plot_style = plot_style
+        self.plot_horizontal = plot_horizontal
+        self.center_bars = center_bars
+        self.show_expected = show_expected
+
+    def run(self):
+        results = self.results.head(self.n_bars)
+
+        if 'name' in results.columns:
+            enrichment_names = results['name'].to_list()
+        else:
+            enrichment_names = results.select(pl.first()).to_series().to_list()
+        enrichment_scores = results[self.en_score_col].to_list()
+        enrichment_pvalue = results['padj'].to_list()
+        enrichment_obs = results['obs'].to_list()
+        enrichment_exp = results['exp'].to_list()
+
+        # choose functions and parameters according to the graph's orientation (horizontal vs vertical)
+        if self.plot_horizontal:
+            figsize = [10.5, 0.4 * (4.8 + self.results.shape[0])]
+            bar_func = plt.Axes.barh if self.plot_style == 'bar' else plt.Axes.hlines
+            line_func = plt.Axes.axvline
+
+            cbar_location = 'bottom'
+            cbar_orientation = 'horizontal'
+            tick_func = plt.Axes.set_yticks
+            ticklabels_func = plt.Axes.set_yticklabels
+            ticklabels_kwargs = dict(fontsize=self.label_fontsize, rotation=0)
+
+            for lst in (enrichment_names, enrichment_scores, enrichment_pvalue, enrichment_obs, enrichment_exp):
+                lst.reverse()
+        else:
+            figsize = [0.5 * (4.8 + self.results.shape[0]), 4.2]
+            bar_func = plt.Axes.bar if self.plot_style == 'bar' else plt.Axes.vlines
+            line_func = plt.Axes.axhline
+            cbar_location = 'left'
+            cbar_orientation = 'vertical'
+            tick_func = plt.Axes.set_xticks
+            ticklabels_func = plt.Axes.set_xticklabels
+            ticklabels_kwargs = dict(fontsize=self.label_fontsize, rotation=45)
+
+        # set enrichment scores which are 'inf' or '-inf' to be the second highest/lowest enrichment score in the list
+        scores_no_inf = [abs(score) for score in enrichment_scores if score != np.inf and score != -np.inf]
+        if len(scores_no_inf) == 0:
+            scores_no_inf.append(3)
+
+        for i in range(len(enrichment_scores)):
+            if enrichment_scores[i] == -np.inf:
+                enrichment_scores[i] = -max(scores_no_inf)
+            elif enrichment_scores[i] == np.inf:
+                enrichment_scores[i] = max(scores_no_inf)
+
+        if self.ylim == 'auto':
+            if len(scores_no_inf) > 0:
+                max_score = max(max(scores_no_inf), 3)
+            else:
+                max_score = 3
+        else:
+            max_score = self.ylim
+
+        # get color values for bars
+        data_color_norm = [0.5 * (1 + i / (np.ceil(max_score))) * 255 for i in enrichment_scores]
+        data_color_norm_8bit = [int(i) if i != np.inf and i != -np.inf else np.sign(i) * max(np.abs(scores_no_inf)) for
+                                i in data_color_norm]
+        my_cmap = plt.colormaps.get_cmap('coolwarm')
+        colors = my_cmap(data_color_norm_8bit)
+
+        # generate bar plot
+        fig, ax = plt.subplots(tight_layout=True, figsize=figsize)
+
+        args = (ax, range(len(enrichment_names)), enrichment_scores) if self.plot_style == 'bar' else (
+            ax, range(len(enrichment_names)), 0, enrichment_scores)
+        kwargs = dict(linewidth=1, edgecolor='black') if self.plot_style == 'bar' else dict(linewidth=5)
+
+        graph = bar_func(*args, color=colors, zorder=2, **kwargs)
+        graph.tick_labels = enrichment_names
+
+        if self.plot_style == 'lollipop':
+            x, y = (enrichment_scores, range(len(enrichment_names))) if self.plot_horizontal else (range(
+                len(enrichment_names)), enrichment_scores)
+            ax.scatter(x, y, color=colors, zorder=3, s=dot_scaling_func(enrichment_obs))
+
+            legend_sizes = [Size(i) for i in [10, 50, 250, 500]]
+            ax.legend(legend_sizes, [f"observed={i.size}" for i in legend_sizes],
+                      labelspacing=3.2, borderpad=2.5, draggable=True,
+                      handler_map={size: SizeHandler(size.size) for size in legend_sizes}, loc='lower right')
+
+        # determine bounds, and enlarge the bound by a small margin (0.5%) so nothing gets cut out of the figure
+        if self.ylim == 'auto':
+            bounds = np.array([np.floor(-max_score), np.ceil(max_score)]) * 1.005
+        else:
+            bounds = np.array([-max_score, max_score]) * 1.005
+        # add black line at y=0 and grey lines at every round positive/negative integer in range
+        for ind in range(int(bounds[0]), int(bounds[1]) + 1):
+            color = 'black' if ind == 0 else 'grey'
+            linewidth = 1 if ind == 0 else 0.5
+            linestyle = '-' if ind == 0 else '-.'
+            line_func(ax, ind, color=color, linewidth=linewidth, linestyle=linestyle, zorder=0)
+        # apply xticks
+        tick_func(ax, range(len(enrichment_names)))
+        ticklabels_func(ax, enrichment_names, **ticklabels_kwargs)
+        ax.tick_params(axis='both', which='major', pad=10)
+        # title
+        ax.set_title(self.title, fontsize=self.title_fontsize)
+        # add significance asterisks
+        for i, (score, sig, obs, exp) in enumerate(
+            zip(enrichment_scores, enrichment_pvalue, enrichment_obs, enrichment_exp)):
+            asterisks, fontweight = self._get_pval_asterisk(sig, self.alpha)
+            if self.plot_horizontal:
+                x = score
+                y = i
+                valign = 'bottom'
+                halign = 'center'
+                rotation = 270 if np.sign(score) == 1 else 90
+                rotation_mode = 'anchor'
+            else:
+                x = i
+                y = score
+                valign = 'bottom' if np.sign(score) == 1 else 'top'
+                halign = 'center'
+                rotation = 0
+                rotation_mode = 'default'
+
+            if self.show_expected:
+                extra_text = f"{obs}/{exp:.1f}"
+                asterisks = f"{extra_text}\n{asterisks}" if self.plot_horizontal or np.sign(
+                    score) == 1 else f"{asterisks}\n{extra_text}"
+            ax.text(x=x, y=y, s=asterisks, fontname='DejaVu Sans',
+                    fontweight=fontweight, rotation=rotation, fontsize=9,
+                    horizontalalignment=halign, verticalalignment=valign, zorder=3, rotation_mode=rotation_mode)
+
+        # despine
+        _ = [ax.spines[side].set_visible(False) for side in ['top', 'bottom', 'left', 'right']]
+        # center bars
+        if self.center_bars:
+            if self.plot_horizontal:
+                ax.set_xbound(bounds)
+                plt.tick_params(axis='x', which='both', bottom=False, top=False, labelbottom=False)
+            else:
+                ax.set_ybound(bounds)
+                plt.tick_params(axis='y', which='both', left=False, right=False, labelleft=False)
+        # add colorbar
+        divider = make_axes_locatable(ax)
+        cax = divider.append_axes(cbar_location, size=f"{5 * (1 + self.plot_horizontal)}%", pad=0.05)
+        sm = ScalarMappable(cmap=my_cmap, norm=plt.Normalize(*bounds))
+        sm.set_array(np.array([]))
+        cbar_label_kwargs = dict(label=self.ylabel, fontsize=self.ylabel_fontsize, labelpad=15)
+        cbar = fig.colorbar(sm, ticks=range(int(bounds[0]), int(bounds[1]) + 1), cax=cax, orientation=cbar_orientation)
+        cbar.set_label(**cbar_label_kwargs)
+        cax.tick_params(labelsize=14, pad=6)
+
+        if not self.plot_horizontal:
+            cax.yaxis.set_ticks_position('left')
+            cax.yaxis.set_label_position('left')
+
+        plt.show()
+        return fig
+
+
+class HistogramPlotter(EnrichmentPlotter):
+    __slots__ = ('annotations', 'attributes', 'alpha', 'set_name', 'gene_set', 'background_set', 'plot_log_scale',
+                 'n_bins', 'plot_style', 'parametric_test')
+
+    def __init__(self, results: pl.DataFrame, annotations: pl.DataFrame, attributes: List[str], en_score_col: str,
+                 alpha: float, set_name: str, gene_set: set, background_set: str, plot_log_scale: bool, n_bins: int,
+                 plot_style: str, parametric_test: bool):
+        super().__init__(results, en_score_col)
+
+        assert all([attr in annotations.columns for attr in
+                    attributes]), f"Attributes {attributes} not found in annotations DataFrame."
+
+        self.alpha = alpha
+        self.annotations = annotations.select(pl.first(), pl.col(attributes))
+        self.attributes = attributes
+        self.set_name = set_name
+        self.gene_set = gene_set
+        self.background_set = background_set
+        self.plot_log_scale = plot_log_scale
+        self.n_bins = n_bins
+        self.plot_style = plot_style
+        self.parametric_test = parametric_test
+
+    def _plot_histogram(self, attribute: str):
+        # generate observed and expected Series, either linear or in log10 scale
+        exp = [self.annotations[attribute][gene] for gene in self.background_set]
+        obs = [self.annotations[attribute][gene] for gene in self.gene_set]
+        if self.plot_log_scale:
+            xlabel = r"$\log_{10}$" + f"({attribute})"
+            exp = np.log10(exp)
+            obs = np.log10(obs)
+        else:
+            xlabel = f"{attribute}"
+
+        # determine bins according to value range and 'n_bins'
+        bins = np.linspace(np.min(exp), np.max(exp), self.n_bins).squeeze()
+
+        # generate histogram according to plot style
+        fig = plt.figure(figsize=(12, 6))
+        ax = fig.add_subplot(111)
+        kwargs = dict(bins=bins, density=True, alpha=0.5, edgecolor='black', linewidth=1)
+        colors = ['C0', 'C1']
+        if self.plot_style.lower() == 'interleaved':
+            y, x, _ = ax.hist([exp, obs], **kwargs, color=colors, label=['Expected', 'Observed'])
+            max_y_val = np.max(y)
+        elif self.plot_style.lower() == 'overlap':
+            y, _, _ = ax.hist(exp, **kwargs, color=colors[0], label='Expected')
+            y2, _, _ = ax.hist(obs, **kwargs, color=colors[1], label='Observed')
+            max_y_val = np.max([np.max(y), np.max(y2)])
+        else:
+            raise NotImplementedError(f"Plot style '{self.plot_style}' not implemented.")
+
+        # set either mean or median as the measure of centrality
+        if self.parametric_test:
+            x_exp, x_obs = np.nanmean(exp), np.mean(obs)
+            label_exp, label_obs = 'Expected mean', 'Observed mean'
+        else:
+            x_exp, x_obs = np.nanmedian(exp), np.median(obs)
+            label_exp, label_obs = 'Expected median', 'Observed median'
+
+        # add lines for mean/median of observed and expected distributions
+        ax.vlines(x_exp, ymin=0, ymax=max_y_val * 1.1, color='blue', linestyle='dashed', linewidth=2,
+                  label=label_exp)
+        ax.vlines(x_obs, ymin=0, ymax=max_y_val * 1.1, color='red', linestyle='dashed', linewidth=2,
+                  label=label_obs)
+
+        # add significance notation
+        asterisks, fontweight = self._get_pval_asterisk(
+            self.results.filter(pl.first() == attribute).select('padj').item(), self.alpha)
+        ax.vlines([x_exp, x_obs], ymin=max_y_val * 1.12, ymax=max_y_val * 1.16, color='k', linewidth=1)
+        ax.hlines(max_y_val * 1.16, xmin=min(x_exp, x_obs), xmax=max(x_exp, x_obs), color='k', linewidth=1)
+        ax.text(np.mean([x_exp, x_obs]), max_y_val * 1.17, asterisks, horizontalalignment='center',
+                fontweight=fontweight)
+
+        # legend and titles
+        ax.legend()
+        obs_name = 'Observed' if self.set_name == '' else self.set_name
+        ax.set_title(f"Histogram of {attribute} - {obs_name} vs Expected", fontsize=17)
+        ax.set_ylabel("Probability density", fontsize=14)
+        ax.set_xlabel(xlabel, fontsize=14)
+        plt.show()
+
+        return fig
+
+    def run(self):
+        figs = []
+        for attr in self.attributes:
+            figs.append(self._plot_histogram(attr))
+        return figs
+
+
+class KEGGPlotter(EnrichmentPlotter):
+    def __init__(self):
+        pass
+
+    def run(self):
+        pass
+
+
+class GODagPlotter(EnrichmentPlotter):
+    def __init__(self):
+        pass
+
+    def run(self):
+        pass
+
+
+class MultiPlotter(EnrichmentPlotter):
+    def __init__(self, results: pl.DataFrame, en_score_col: str, plotter_objs: List[EnrichmentPlotter]):
+        super().__init__(results, en_score_col)
+        self.plotter_objs = plotter_objs
+
+    def run(self):
+        figs = []
+        for plotter in self.plotter_objs:
+            figs.extend(parsing.data_to_list(plotter.run()))
+        return figs
+
+
 class EnrichmentRunner:
     ENRICHMENT_SCORE_YLABEL = r"$\log_2$(Fold Enrichment)"
     SINGLE_SET_ENRICHMENT_SCORE_YLABEL = r"$\log_2$(XL-mHG enrichment score)"
@@ -298,7 +633,7 @@ class EnrichmentRunner:
                                  'pre-sorted and ranked by the user',
                  'plot_style': 'plot style',
                  'show_expected': 'show observed/expected values on plot',
-                 'annotated_genes':'set of annotated genes'}
+                 'annotated_genes': 'set of annotated genes'}
     printout_params = "appear in the Attribute Reference Table"
 
     def __init__(self, genes: Union[set, np.ndarray], attributes: Union[Iterable, str, int],
@@ -1007,7 +1342,7 @@ class KEGGEnrichmentRunner(EnrichmentRunner):
                     figs.append(fig)
         return figs
 
-    def pathway_plot(self, pathway_id: str) -> bool:
+    def pathway_plot(self, pathway_id: str) -> plt.Figure:
         ylabel = self.SINGLE_SET_ENRICHMENT_SCORE_YLABEL if self.single_set else self.ENRICHMENT_SCORE_YLABEL
         pathway_tree = ontology.fetch_kegg_pathway(pathway_id, self.gene_id_translator)
         if self.single_set:
