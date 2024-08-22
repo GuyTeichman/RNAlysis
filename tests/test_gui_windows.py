@@ -146,7 +146,7 @@ def test_GeneSetView_save(qtbot, gene_set, truth, monkeypatch):
     (pl.DataFrame([[1, 2, 3], [4, 5, 6], [7, 8, 9]]), (3, 2)),
     (pl.DataFrame([[1, 2, 3, 0], [4, 5, 6, 0]]), (4, 1)),
     (pl.DataFrame([[1, 2, 3], [4, 5, 6], [7, 8, 9], [10, 11, 12], [13, 14, 15]]), (3, 4)),
-    (pl.DataFrame([[],[]]), (0, 1))
+    (pl.DataFrame([[], []]), (0, 1))
 ])
 def test_DataFrameView_init(qtbot, df, shape_truth):
     qtbot, dialog = widget_setup(qtbot, DataFrameView, df, 'my df name')
@@ -433,3 +433,112 @@ def test_run_function_in_main_loop(qtbot):
     window.param_widgets['z'].setValue(3)
     window.run_function_in_main_loop()
     assert done == [True]
+
+
+class TestStatusBar:
+
+    @pytest.fixture
+    def main_window(self, qtbot):
+        window = QtWidgets.QMainWindow()
+        status_bar = StatusBar()
+        window.setStatusBar(status_bar)
+        window.show()
+        qtbot.addWidget(window)
+        return window
+
+    @pytest.fixture
+    def status_bar(self, main_window):
+        return main_window.statusBar()
+
+    def test_init_ui(self, status_bar):
+        """Test that the UI is initialized correctly."""
+        assert not status_bar._is_running
+        assert not status_bar.n_tasks_button.isVisible()
+        assert not status_bar.desc_label.isVisible()
+        assert not status_bar.progress_bar.isVisible()
+        assert not status_bar.elapsed_label.isVisible()
+        assert not status_bar.remaining_label.isVisible()
+
+    @pytest.mark.parametrize("n_tasks, expected_visibility, expected_text", [
+        (0, False, None),
+        (5, True, '5 tasks running... '),
+    ])
+    def test_update_n_tasks(self, status_bar, n_tasks, expected_visibility, expected_text):
+        """Test the update_n_tasks method."""
+        status_bar.update_n_tasks(n_tasks)
+        assert status_bar.n_tasks_button.isVisible() == expected_visibility
+        if expected_text:
+            assert status_bar.n_tasks_button.text() == expected_text
+
+    def test_update_desc(self, status_bar):
+        """Test the update_desc method."""
+        desc = "Processing"
+        status_bar.update_desc(desc)
+        assert status_bar.desc_label.isVisible()
+        assert status_bar.desc_label.text() == f'{desc}:'
+
+    def test_reset_progress(self, status_bar):
+        """Test the reset_progress method."""
+        status_bar.start_progress(10, "Task")
+        status_bar.reset_progress()
+        assert not status_bar._is_running
+        assert not status_bar.n_tasks_button.isVisible()
+        assert not status_bar.desc_label.isVisible()
+        assert not status_bar.progress_bar.isVisible()
+        assert not status_bar.elapsed_label.isVisible()
+        assert not status_bar.remaining_label.isVisible()
+
+    def test_start_progress(self, status_bar, qtbot):
+        """Test the start_progress method."""
+        total = 10
+        description = "Loading"
+        status_bar.start_progress(total, description)
+        qtbot.wait(500)
+        assert status_bar._is_running
+        assert status_bar.progbar_total == total
+        assert status_bar.progbar_completed_items == 0
+        assert status_bar.desc_label.isVisible()
+        assert status_bar.progress_bar.isVisible()
+        assert status_bar.progress_bar.value() == 0
+        assert status_bar.desc_label.text() == f'{description}:'
+
+    @pytest.mark.parametrize("total", [0, 10, 17, 1])
+    def test_update_bar_total(self, status_bar, total):
+        """Test the update_bar_total method."""
+        status_bar.update_bar_total(total)
+        assert status_bar.progbar_total == total
+        assert status_bar.progress_bar.maximum() == total
+
+    @pytest.mark.parametrize("completed_items", [0, 5, 10, 17])
+    def test_move_progress_bar(self, status_bar, completed_items):
+        """Test the move_progress_bar method."""
+        total = 20
+        status_bar.start_progress(total, "Task")
+        status_bar.move_progress_bar(completed_items)
+        assert status_bar.progress_bar.value() == completed_items
+        assert status_bar.progbar_completed_items == completed_items
+        # continue the progress
+        status_bar.move_progress_bar(2)
+        assert status_bar.progress_bar.value() == completed_items + 2
+        assert status_bar.progbar_completed_items == completed_items + 2
+
+        # Complete the progress
+        status_bar.move_progress_bar(total - status_bar.progbar_completed_items)
+        assert status_bar.progress_bar.value() == total
+        assert status_bar.progbar_completed_items == total
+        assert not status_bar.progress_bar.isVisible()
+
+    def test_update_time(self, status_bar, qtbot):
+        """Test the update_time method."""
+        total = 10
+        status_bar.start_progress(total, "Task")
+        qtbot.wait(1000)
+        status_bar.move_progress_bar(2)
+
+        elapsed_text = status_bar.elapsed_label.text()
+        remaining_text = status_bar.remaining_label.text()
+
+        assert "elapsed" in elapsed_text
+        assert "remaining" in remaining_text
+        assert status_bar.elapsed_label.isVisible()
+        assert status_bar.remaining_label.isVisible()
