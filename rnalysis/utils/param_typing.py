@@ -7,16 +7,15 @@ import warnings
 import requests
 import tenacity
 import typing_extensions
-from polars._typing import RollingInterpolationMethod
 
 from rnalysis import FROZEN_ENV
 from rnalysis.utils import io, parsing
 
 PARALLEL_BACKENDS = ('multiprocessing', 'sequential') if FROZEN_ENV else (
-'multiprocessing', 'loky', 'threading', 'sequential')
-QUANTILE_INTERPOLATION_METHODS = RollingInterpolationMethod
+    'multiprocessing', 'loky', 'threading', 'sequential')
+QUANTILE_INTERPOLATION_METHODS = ("nearest", "higher", "lower", "midpoint", "linear")
 SUMMATION_METHODS = ('scaled_tpm', 'raw')
-
+LIMMA_NORM = ('scale', 'quantile', 'cyclicloess')
 K_CRITERIA = ('gap', 'silhouette', 'calinski_harabasz', 'davies_bouldin', 'bic')
 
 LEGAL_GENE_LENGTH_METHODS = ('mean', 'median', 'max', 'min', 'geometric_mean', 'merged_exons')
