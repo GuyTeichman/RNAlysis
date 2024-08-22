@@ -2000,7 +2000,7 @@ def venn_diagram(objs: Dict[str, Union[str, FeatureSet, Set[str]]], title: Union
                  transparency: param_typing.Fraction = 0.4, weighted: bool = True, add_outline: bool = True,
                  linecolor: param_typing.Color = 'black', linestyle: Literal['solid', 'dashed'] = 'solid',
                  linewidth: float = 2.0, title_fontsize: float = 14, set_fontsize: float = 12,
-                 subset_fontsize: float = 10, fig: plt.Figure = None, **kwargs) -> plt.Figure:
+                 subset_fontsize: float = 10, fig: plt.Figure = None, **legacy_args) -> plt.Figure:
     """
     Generate a Venn diagram of 2 to 3 sets, FeatureSets or attributes from the Attribute Reference Table.
 

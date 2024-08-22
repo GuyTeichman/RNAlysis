@@ -905,7 +905,7 @@ class SetOperationWindow(gui_widgets.MinMaxDialog):
     SET_OPERATIONS = {'Union': 'union', 'Majority-Vote Intersection': 'majority_vote_intersection',
                       'Intersection': 'intersection', 'Difference': 'difference',
                       'Symmetric Difference': 'symmetric_difference', 'Other': 'other'}
-    EXCLUDED_PARAMS = {'self', 'other', 'others', 'return_type'}
+    EXCLUDED_PARAMS = {'self', 'other', 'others', 'return_type', 'legacy_args'}
 
     geneSetReturned = QtCore.pyqtSignal(set, str, list, dict)
     primarySetUsed = QtCore.pyqtSignal(str)
@@ -1198,7 +1198,7 @@ class SetOperationWindow(gui_widgets.MinMaxDialog):
 
 class SetVisualizationWindow(gui_widgets.MinMaxDialog):
     VISUALIZATION_FUNCS = {'Venn Diagram': 'venn_diagram', 'UpSet Plot': 'upset_plot'}
-    EXCLUDED_PARAMS = {'objs', 'attr_ref_table_path', 'fig'}
+    EXCLUDED_PARAMS = {'objs', 'attr_ref_table_path', 'fig', 'legacy_args'}
     figureGenerated = QtCore.pyqtSignal(plt.Figure, str, list, dict)
 
     def __init__(self, available_objects: dict, parent=None):
