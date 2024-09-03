@@ -412,6 +412,8 @@ def df_to_html(df: pl.DataFrame, max_rows: int = 5, max_cols: int = 5):
     """
     if isinstance(df, pl.Series):
         df = df.to_frame()
+    if df.shape[-1] == 0:
+        return ''
 
     # Limit the number of rows and columns
     df_subset = df.head(max_rows).select(pl.col(df.columns[:max_cols])).to_pandas()
