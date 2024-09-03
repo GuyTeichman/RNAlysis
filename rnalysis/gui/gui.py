@@ -4675,6 +4675,7 @@ async def run():  # pragma: no cover
     app.setDesktopFileName('RNAlysis')
     icon_pth = str(Path(__file__).parent.parent.joinpath('favicon.ico').absolute())
     app.setWindowIcon(QtGui.QIcon(icon_pth))
+    matplotlib.use('Qt5Agg')
 
     if show_app:
         splash = gui_windows.splash_screen()
@@ -4693,7 +4694,6 @@ async def run():  # pragma: no cover
                                    QtCore.Qt.AlignBottom | QtCore.Qt.AlignHCenter)
 
         splash.showMessage(base_message + 'loading application', QtCore.Qt.AlignBottom | QtCore.Qt.AlignHCenter)
-    matplotlib.use('Qt5Agg')
     window = MainWindow()
     sys.excepthook = window.excepthook
     builtins.input = window.input
