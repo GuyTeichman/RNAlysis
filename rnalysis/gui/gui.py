@@ -1414,6 +1414,7 @@ class TabPage(QtWidgets.QWidget):
         self.scroll.setWidgetResizable(True)
         self.splitter.addWidget(self.scroll)
 
+
         self.container = QtWidgets.QWidget()
         self.layout = QtWidgets.QVBoxLayout(self.container)
         self.scroll.setWidget(self.container)
@@ -1424,6 +1425,7 @@ class TabPage(QtWidgets.QWidget):
 
         # initiate function stack
         self.stack = QtWidgets.QStackedWidget(self)
+        self.stack.setVisible(False)
         self.button_box = QtWidgets.QButtonGroup(self)
         self.stack_buttons = []
         self.stack_widgets = {}
@@ -1481,7 +1483,7 @@ class TabPage(QtWidgets.QWidget):
     def init_function_ui(self):
         self.function_group.setVisible(True)
         sorted_actions = self.get_all_actions()
-
+        self.stack.setVisible(True)
         self.stack.addWidget(QtWidgets.QWidget(self))  # start the stack empty
         i = 0
         for i, action_type in enumerate(sorted_actions):
