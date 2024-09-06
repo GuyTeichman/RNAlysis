@@ -2,8 +2,8 @@ import pytest
 
 from rnalysis.gui.gui_quickstart import *
 
-LEFT_CLICK = QtCore.Qt.LeftButton
-RIGHT_CLICK = QtCore.Qt.RightButton
+LEFT_CLICK = QtCore.Qt.MouseButton.LeftButton
+RIGHT_CLICK = QtCore.Qt.MouseButton.RightButton
 
 
 def widget_setup(qtbot, widget_class, *args, **kwargs):
@@ -23,69 +23,69 @@ def test_TutorialMovie_set_frame(qtbot):
     window.video.start()
     window.pause()
     window.set_frame(17)
-    assert window.video.state() == QtGui.QMovie.Paused
+    assert window.video.state() == QtGui.QMovie.MovieState.Paused
     assert window.video.currentFrameNumber() == 17
     window.set_frame(19)
-    assert window.video.state() == QtGui.QMovie.Paused
+    assert window.video.state() == QtGui.QMovie.MovieState.Paused
     assert window.video.currentFrameNumber() == 19
     window.set_frame(19)
-    assert window.video.state() == QtGui.QMovie.Paused
+    assert window.video.state() == QtGui.QMovie.MovieState.Paused
     assert window.video.currentFrameNumber() == 19
     window.set_frame(1)
-    assert window.video.state() == QtGui.QMovie.Paused
+    assert window.video.state() == QtGui.QMovie.MovieState.Paused
     assert window.video.currentFrameNumber() == 1
 
 
 def test_TutorialMovie_start(qtbot):
     qtbot, window = widget_setup(qtbot, QuickStartMovie, Path('tests/test_files/test_video.webp'))
-    assert window.video.state() == QtGui.QMovie.NotRunning
+    assert window.video.state() == QtGui.QMovie.MovieState.NotRunning
     window.start()
-    assert window.video.state() == QtGui.QMovie.Running
+    assert window.video.state() == QtGui.QMovie.MovieState.Running
 
 
 def test_TutorialMovie_restart(qtbot):
     qtbot, window = widget_setup(qtbot, QuickStartMovie, Path('tests/test_files/test_video.webp'))
     window.restart()
     assert window.video.currentFrameNumber() in {0, 1}
-    assert window.video.state() == QtGui.QMovie.Running
+    assert window.video.state() == QtGui.QMovie.MovieState.Running
 
 
 def test_TutorialMovie_stop(qtbot):
     qtbot, window = widget_setup(qtbot, QuickStartMovie, Path('tests/test_files/test_video.webp'))
     window.video.start()
     window.stop()
-    assert window.video.state() == QtGui.QMovie.NotRunning
+    assert window.video.state() == QtGui.QMovie.MovieState.NotRunning
 
 
 def test_TutorialMovie_pause(qtbot):
     qtbot, window = widget_setup(qtbot, QuickStartMovie, Path('tests/test_files/test_video.webp'))
     window.video.start()
     window.pause()
-    assert window.video.state() == QtGui.QMovie.Paused
+    assert window.video.state() == QtGui.QMovie.MovieState.Paused
 
 
 def test_TutorialMovie_stop_button(qtbot):
     qtbot, window = widget_setup(qtbot, QuickStartMovie, Path('tests/test_files/test_video.webp'))
     qtbot.mouseClick(window.stop_button, LEFT_CLICK)
-    assert window.video.state() == QtGui.QMovie.NotRunning
+    assert window.video.state() == QtGui.QMovie.MovieState.NotRunning
 
 
 def test_TutorialMovie_pause_button(qtbot):
     qtbot, window = widget_setup(qtbot, QuickStartMovie, Path('tests/test_files/test_video.webp'))
     window.video.start()
     qtbot.mouseClick(window.play_button, LEFT_CLICK)
-    assert window.video.state() == QtGui.QMovie.Paused
+    assert window.video.state() == QtGui.QMovie.MovieState.Paused
     qtbot.mouseClick(window.play_button, LEFT_CLICK)
-    assert window.video.state() == QtGui.QMovie.Running
+    assert window.video.state() == QtGui.QMovie.MovieState.Running
 
 
 def test_TutorialMovie_pause_click_video(qtbot):
     qtbot, window = widget_setup(qtbot, QuickStartMovie, Path('tests/test_files/test_video.webp'))
     window.video.start()
     qtbot.mouseClick(window, LEFT_CLICK)
-    assert window.video.state() == QtGui.QMovie.Paused
+    assert window.video.state() == QtGui.QMovie.MovieState.Paused
     qtbot.mouseClick(window, LEFT_CLICK)
-    assert window.video.state() == QtGui.QMovie.Running
+    assert window.video.state() == QtGui.QMovie.MovieState.Running
 
 
 def test_TutorialMovie_speed_button(qtbot):
@@ -101,16 +101,16 @@ def test_TutorialMovie_speed_button(qtbot):
 def test_WelcomeWizard_init(qtbot):
     qtbot, window = widget_setup(qtbot, QuickStartWizard)
     for i in range(len(window.TITLES) + 1):
-        qtbot.mouseClick(window.button(QtWidgets.QWizard.NextButton), LEFT_CLICK)
-    qtbot.mouseClick(window.button(QtWidgets.QWizard.FinishButton), LEFT_CLICK)
+        qtbot.mouseClick(window.button(QtWidgets.QWizard.WizardButton.NextButton), LEFT_CLICK)
+    qtbot.mouseClick(window.button(QtWidgets.QWizard.WizardButton.FinishButton), LEFT_CLICK)
 
 
 @pytest.mark.parametrize('n_next', [0, 1, len(QuickStartWizard.TITLES)])
 def test_WelcomeWizard_cancel(qtbot, n_next):
     qtbot, window = widget_setup(qtbot, QuickStartWizard)
     for i in range(n_next):
-        qtbot.mouseClick(window.button(QtWidgets.QWizard.NextButton), LEFT_CLICK)
-    qtbot.mouseClick(window.button(QtWidgets.QWizard.CancelButton), LEFT_CLICK)
+        qtbot.mouseClick(window.button(QtWidgets.QWizard.WizardButton.NextButton), LEFT_CLICK)
+    qtbot.mouseClick(window.button(QtWidgets.QWizard.WizardButton.CancelButton), LEFT_CLICK)
 
 
 def test_WelcomeWizard_do_not_show_again_finish(qtbot, monkeypatch):
@@ -125,7 +125,7 @@ def test_WelcomeWizard_do_not_show_again_finish(qtbot, monkeypatch):
     qtbot, window = widget_setup(qtbot, QuickStartWizard)
     assert not window.currentPage().dont_show_again.isChecked()
     window.currentPage().dont_show_again.setChecked(True)
-    qtbot.mouseClick(window.button(QtWidgets.QWizard.FinishButton), LEFT_CLICK)
+    qtbot.mouseClick(window.button(QtWidgets.QWizard.WizardButton.FinishButton), LEFT_CLICK)
 
     assert saved[0]
 
@@ -143,5 +143,5 @@ def test_WelcomeWizard_do_not_show_again_cancel(qtbot, monkeypatch, show):
     qtbot, window = widget_setup(qtbot, QuickStartWizard)
     assert window.currentPage().dont_show_again.isChecked() != show
     window.currentPage().dont_show_again.setChecked(show)
-    qtbot.mouseClick(window.button(QtWidgets.QWizard.CancelButton), LEFT_CLICK)
+    qtbot.mouseClick(window.button(QtWidgets.QWizard.WizardButton.CancelButton), LEFT_CLICK)
     assert saved[0]

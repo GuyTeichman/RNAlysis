@@ -20,7 +20,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import polars as pl
 import yaml
-from PyQt5 import QtCore, QtWidgets, QtGui
+from PyQt6 import QtCore, QtWidgets, QtGui
 
 from rnalysis import fastq, filtering, enrichment, __version__
 from rnalysis.gui import gui_style, gui_widgets, gui_windows, gui_graphics, gui_quickstart
@@ -512,7 +512,7 @@ class ClicomWindow(gui_windows.FuncExternalWindow):
         self.setups_grid.addWidget(self.stack, 1, 0)
         self.setups_widgets['list'] = gui_widgets.MultiChoiceListWithDelete(list(), parent=self.setups_group)
         self.setups_widgets['list'].itemDeleted.connect(self.remove_clustering_setup)
-        self.setups_grid.addWidget(QtWidgets.QLabel('<b>Added setups</b>'), 0, 1, QtCore.Qt.AlignCenter)
+        self.setups_grid.addWidget(QtWidgets.QLabel('<b>Added setups</b>'), 0, 1, QtCore.Qt.AlignmentFlag.AlignCenter)
         self.setups_grid.addWidget(self.setups_widgets['list'], 1, 1, 2, 1)
 
         self.setups_widgets['add_button'] = QtWidgets.QPushButton('Add setup')
@@ -622,10 +622,10 @@ class EnrichmentWindow(gui_widgets.MinMaxDialog):
         self.plot_group.setVisible(False)
         self.stats_group.setVisible(False)
 
-        self.scroll.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
+        self.scroll.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         self.scroll.setWidgetResizable(True)
         self.scroll.setWidget(self.scroll_widget)
-        self.scroll_layout.setSizeConstraint(QtWidgets.QLayout.SetMinAndMaxSize)
+        self.scroll_layout.setSizeConstraint(QtWidgets.QLayout.SizeConstraint.SetMinAndMaxSize)
 
         self.scroll_layout.addWidget(self.list_group)
         self.scroll_layout.addWidget(self.stats_group)
@@ -994,7 +994,7 @@ class SetOperationWindow(gui_widgets.MinMaxDialog):
         self.setWindowTitle('Set Operations')
         self.setGeometry(600, 50, 1050, 800)
         self.setLayout(self.layout)
-        self.widgets['splitter'] = QtWidgets.QSplitter(QtCore.Qt.Horizontal)
+        self.widgets['splitter'] = QtWidgets.QSplitter(QtCore.Qt.Orientation.Horizontal)
         self.layout.addWidget(self.widgets['splitter'])
         self.widgets['splitter'].addWidget(self.list_group)
         self.widgets['splitter'].addWidget(self.operations_group)
@@ -1223,7 +1223,7 @@ class SetVisualizationWindow(gui_widgets.MinMaxDialog):
         self.setWindowTitle('Gene Set Visualization')
         self.setGeometry(600, 50, 1050, 800)
         self.setLayout(self.layout)
-        self.widgets['splitter'] = QtWidgets.QSplitter(QtCore.Qt.Horizontal)
+        self.widgets['splitter'] = QtWidgets.QSplitter(QtCore.Qt.Orientation.Horizontal)
         self.layout.addWidget(self.widgets['splitter'])
         self.widgets['splitter'].addWidget(self.list_group)
         self.widgets['splitter'].addWidget(self.visualization_group)
@@ -1398,18 +1398,25 @@ class TabPage(QtWidgets.QWidget):
     GENERAL_FUNCS = ()
     THREADED_FUNCS = set()
 
-    def __init__(self, parent=None, undo_stack: QtWidgets.QUndoStack = None, tab_id: int = None):
+    def __init__(self, parent=None, undo_stack: QtGui.QUndoStack = None, tab_id: int = None):
         super().__init__(parent)
         self.tab_id = tab_id
         self.undo_stack = undo_stack
         self.sup_layout = QtWidgets.QVBoxLayout(self)
-        self.container = QtWidgets.QWidget(self)
-        self.layout = QtWidgets.QVBoxLayout(self.container)
+
+        self.splitter = QtWidgets.QSplitter(QtCore.Qt.Orientation.Vertical)
+        self.sup_layout.addWidget(self.splitter)
+
+        # initiate the splitter layout for the tab
         self.scroll = QtWidgets.QScrollArea()
-        self.scroll.setWidget(self.container)
-        self.scroll.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOn)
-        self.scroll.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
+        self.scroll.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarPolicy.ScrollBarAlwaysOn)
+        self.scroll.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         self.scroll.setWidgetResizable(True)
+        self.splitter.addWidget(self.scroll)
+
+        self.container = QtWidgets.QWidget()
+        self.layout = QtWidgets.QVBoxLayout(self.container)
+        self.scroll.setWidget(self.container)
 
         self.name = None
         self.creation_time = time.time()
@@ -1429,7 +1436,7 @@ class TabPage(QtWidgets.QWidget):
         self.function_group = QtWidgets.QGroupBox('Apply functions')
         self.function_grid = QtWidgets.QGridLayout(self.function_group)
         self.function_widgets = {}
-        self.layout.insertWidget(2, self.function_group)
+        self.layout.addWidget(self.function_group)
         self.function_group.setVisible(False)
 
         self.stdout_group = QtWidgets.QGroupBox('Log')
@@ -1439,13 +1446,9 @@ class TabPage(QtWidgets.QWidget):
         # initiate apply button
         self.apply_button = QtWidgets.QPushButton('Apply')
         self.apply_button.clicked.connect(self.apply_function)
-        self.layout.insertWidget(3, self.apply_button)
+        self.layout.addWidget(self.apply_button)
         self.apply_button.setVisible(False)
 
-        # initiate the splitter layout for the tab
-        self.splitter = QtWidgets.QSplitter(QtCore.Qt.Vertical)
-        self.sup_layout.addWidget(self.splitter)
-        self.splitter.addWidget(self.scroll)
         self.splitter.addWidget(self.stdout_group)
         self.splitter.setStretchFactor(0, 1)
 
@@ -1670,7 +1673,7 @@ class SetTabPage(TabPage):
                       }
 
     def __init__(self, set_name: str, gene_set: typing.Union[set, enrichment.FeatureSet] = None, parent=None,
-                 undo_stack: QtWidgets.QUndoStack = None, tab_id: int = None):
+                 undo_stack: QtGui.QUndoStack = None, tab_id: int = None):
         super().__init__(parent, undo_stack, tab_id)
         if gene_set is None:
             gene_set = enrichment.FeatureSet(set(), set_name)
@@ -1971,7 +1974,7 @@ class FilterTabPage(TabPage):
     startedClustering = QtCore.pyqtSignal(object, object, object)
     widthChanged = QtCore.pyqtSignal()
 
-    def __init__(self, parent=None, undo_stack: QtWidgets.QUndoStack = None, tab_id: int = None):
+    def __init__(self, parent=None, undo_stack: QtGui.QUndoStack = None, tab_id: int = None):
         super().__init__(parent, undo_stack, tab_id)
         self.filter_obj = None
 
@@ -2051,8 +2054,8 @@ class FilterTabPage(TabPage):
         self.overview_widgets['table_name_label'].setWordWrap(True)
 
         self.overview_widgets['preview'] = gui_widgets.ReactiveTableView()
-        self.overview_widgets['preview'].setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
-        self.overview_widgets['preview'].setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
+        self.overview_widgets['preview'].setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        self.overview_widgets['preview'].setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
 
         self.overview_grid.addWidget(self.overview_widgets['table_name_label'], this_row, 0, 1, 4)
         this_row += 1
@@ -2158,7 +2161,7 @@ class FilterTabPage(TabPage):
         self.basic_grid.setRowStretch(4, 1)
         self.basic_grid.setColumnStretch(4, 1)
 
-    def _check_for_special_functions(self, is_selected: bool):
+    def _check_for_special_functions(self, is_selected: bool=True):
         if not is_selected:
             return
         this_stack: FuncTypeStack = self.stack.currentWidget()
@@ -2513,7 +2516,7 @@ class CreatePipelineWindow(gui_widgets.MinMaxDialog, FilterTabPage):
             err = QtWidgets.QMessageBox(self)
             err.setWindowTitle('Pipeline is already empty!')
             err.setText('Cannot remove functions from the Pipeline - it is already empty!')
-            err.setIcon(err.Warning)
+            err.setIcon(err.Icon.Warning)
             err.exec()
 
     def _get_pipeline_name(self):
@@ -2536,9 +2539,10 @@ class CreatePipelineWindow(gui_widgets.MinMaxDialog, FilterTabPage):
                        "All unsaved progress will be lost"
 
             reply = QtWidgets.QMessageBox.question(self, "Close 'Create Pipeline' window?",
-                                                   quit_msg, QtWidgets.QMessageBox.No, QtWidgets.QMessageBox.Yes)
+                                                   quit_msg, QtWidgets.QMessageBox.StandardButton.No,
+                                                   QtWidgets.QMessageBox.StandardButton.Yes)
 
-            if reply == QtWidgets.QMessageBox.Yes:
+            if reply == QtWidgets.QMessageBox.StandardButton.Yes:
                 event.accept()
             else:
                 event.ignore()
@@ -2577,7 +2581,8 @@ class MultiKeepWindow(gui_widgets.MinMaxDialog):
             self.objs[key] = obj
 
         self.files = list(self.objs.keys())
-        self.button_box = QtWidgets.QDialogButtonBox(QtWidgets.QDialogButtonBox.Ok | QtWidgets.QDialogButtonBox.Cancel)
+        self.button_box = QtWidgets.QDialogButtonBox(
+            QtWidgets.QDialogButtonBox.StandardButton.Ok | QtWidgets.QDialogButtonBox.StandardButton.Cancel)
         self.labels = dict()
         self.keep_marks = dict()
         self.names = dict()
@@ -2596,7 +2601,7 @@ class MultiKeepWindow(gui_widgets.MinMaxDialog):
         self.scroll.setWidgetResizable(True)
         self.scroll.setWidget(self.scroll_widget)
         self.scroll_widget.setLayout(self.scroll_layout)
-        self.scroll_layout.setSizeConstraint(QtWidgets.QLayout.SetMinAndMaxSize)
+        self.scroll_layout.setSizeConstraint(QtWidgets.QLayout.SizeConstraint.SetMinAndMaxSize)
 
         self.select_all.clicked.connect(self.change_all)
         self.button_box.accepted.connect(self.accept)
@@ -2658,7 +2663,8 @@ class MultiOpenWindow(QtWidgets.QDialog):
     def __init__(self, files: List[str], parent=None):
         super().__init__(parent)
         self.files = files
-        self.button_box = QtWidgets.QDialogButtonBox(QtWidgets.QDialogButtonBox.Ok | QtWidgets.QDialogButtonBox.Cancel)
+        self.button_box = QtWidgets.QDialogButtonBox(
+            QtWidgets.QDialogButtonBox.StandardButton.Ok | QtWidgets.QDialogButtonBox.StandardButton.Cancel)
         self.all_types_combo = QtWidgets.QComboBox(self)
         self.paths = dict()
         self.table_types = dict()
@@ -2679,7 +2685,7 @@ class MultiOpenWindow(QtWidgets.QDialog):
         self.scroll.setWidgetResizable(True)
         self.scroll.setWidget(self.scroll_widget)
         self.scroll_widget.setLayout(self.scroll_layout)
-        self.scroll_layout.setSizeConstraint(QtWidgets.QLayout.SetMinAndMaxSize)
+        self.scroll_layout.setSizeConstraint(QtWidgets.QLayout.SizeConstraint.SetMinAndMaxSize)
 
         self.button_box.accepted.connect(self.accept)
         self.button_box.rejected.connect(self.reject)
@@ -2770,9 +2776,9 @@ class ReactiveTabWidget(QtWidgets.QTabWidget):
         self.setElideMode(QtCore.Qt.TextElideMode.ElideMiddle)
 
     def mousePressEvent(self, event: QtGui.QMouseEvent):
-        if event.button() == QtCore.Qt.LeftButton:
+        if event.button() == QtCore.Qt.MouseButton.LeftButton:
             super().mousePressEvent(event)
-        elif event.button() == QtCore.Qt.RightButton:
+        elif event.button() == QtCore.Qt.MouseButton.RightButton:
             point = event.pos()
             if point.isNull():
                 return
@@ -2810,7 +2816,7 @@ class ReactiveTabWidget(QtWidgets.QTabWidget):
         return super().widget(index)
 
 
-class RenameCommand(QtWidgets.QUndoCommand):
+class RenameCommand(QtGui.QUndoCommand):
     __slots__ = {'prev_name': 'previous name of the tab',
                  'new_name': 'new name of the tab',
                  'prev_id': 'previous ID',
@@ -2835,7 +2841,7 @@ class RenameCommand(QtWidgets.QUndoCommand):
         self.tab._rename(self.new_name, self.job_id)
 
 
-class CloseTabCommand(QtWidgets.QUndoCommand):
+class CloseTabCommand(QtGui.QUndoCommand):
     __slots__ = {'tab_container': 'ReactiveTabWidget containing the tabs',
                  'tab_index': 'index of the tab to be closed',
                  'tab_icon': 'icon of the tab',
@@ -2868,7 +2874,7 @@ class CloseTabCommand(QtWidgets.QUndoCommand):
         self.tab_container.removeTab(self.tab_index)
 
 
-class InplaceCommand(QtWidgets.QUndoCommand):
+class InplaceCommand(QtGui.QUndoCommand):
     __slots__ = {'tab': 'tab widget',
                  'prev_job_id': 'previous job ID',
                  'new_job_id': 'new job ID',
@@ -2965,7 +2971,7 @@ class SetOpInplacCommand(InplaceCommand):
         self.tab.itemSpawned.emit(f"'{source_name}'\noutput", new_spawn_id, self.new_job_id, self.tab.obj())
 
 
-class PipelineInplaceCommand(QtWidgets.QUndoCommand):
+class PipelineInplaceCommand(QtGui.QUndoCommand):
     __slots__ = {'tab': 'tab object',
                  'pipeline': 'Pipeline to apply',
                  'pipeline_name': 'Pipeline name',
@@ -3016,8 +3022,8 @@ class MainWindow(QtWidgets.QMainWindow):
         self.report = None
         self.tabs = ReactiveTabWidget(self)
 
-        self.closed_tabs_stack = QtWidgets.QUndoStack(self)
-        self.undo_group = QtWidgets.QUndoGroup(self)
+        self.closed_tabs_stack = QtGui.QUndoStack(self)
+        self.undo_group = QtGui.QUndoGroup(self)
         self.tabs.currentChanged.connect(self._change_undo_stack)
 
         self.undo_view = QtWidgets.QUndoView(self.undo_group)
@@ -3150,12 +3156,12 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self.command_history_dock.setWidget(self.undo_view)
         self.command_history_dock.setFloating(False)
-        self.addDockWidget(QtCore.Qt.RightDockWidgetArea, self.command_history_dock)
+        self.addDockWidget(QtCore.Qt.DockWidgetArea.RightDockWidgetArea, self.command_history_dock)
 
         self.setStatusBar(self.status_bar)
         self.task_queue_window.cancelRequested.connect(self.cancel_job)
 
-        self.tabs.setCornerWidget(self.add_tab_button, QtCore.Qt.TopRightCorner)
+        self.tabs.setCornerWidget(self.add_tab_button, QtCore.Qt.Corner.TopRightCorner)
         self.setCentralWidget(self.tabs)
 
     @QtCore.pyqtSlot()
@@ -3164,11 +3170,12 @@ class MainWindow(QtWidgets.QMainWindow):
             clear_msg = """Are you sure you want to clear all command history?
             This cannot be undone!"""
             reply = QtWidgets.QMessageBox.question(self, 'Clear history',
-                                                   clear_msg, QtWidgets.QMessageBox.No, QtWidgets.QMessageBox.Yes)
+                                                   clear_msg, QtWidgets.QMessageBox.StandardButton.No,
+                                                   QtWidgets.QMessageBox.StandardButton.Yes)
         else:
-            reply = QtWidgets.QMessageBox.Yes
+            reply = QtWidgets.QMessageBox.StandardButton.Yes
 
-        if reply == QtWidgets.QMessageBox.Yes:
+        if reply == QtWidgets.QMessageBox.StandardButton.Yes:
             for stack in self.undo_group.stacks():
                 stack.clear()
             self.closed_tabs_stack.clear()
@@ -3177,7 +3184,7 @@ class MainWindow(QtWidgets.QMainWindow):
     def init_tab_contextmenu(self, ind: int):
         self.tab_contextmenu = QtWidgets.QMenu(self)
 
-        new_to_right_action = QtWidgets.QAction("New tab to the right")
+        new_to_right_action = QtGui.QAction("New tab to the right")
         new_to_right_action.triggered.connect(
             functools.partial(self.add_new_tab_at, index=ind + 1, name=None, is_set=False))
         self.tab_contextmenu.addAction(new_to_right_action)
@@ -3186,36 +3193,36 @@ class MainWindow(QtWidgets.QMainWindow):
         color_menu = self.tab_contextmenu.addMenu("Change tab &color")
         actions = []
         for color in gui_graphics.COLOR_ICONS:
-            this_action = QtWidgets.QAction(color.capitalize())
+            this_action = QtGui.QAction(color.capitalize())
             this_action.setIcon(gui_graphics.get_icon(color))
             this_action.triggered.connect(functools.partial(self.set_tab_icon, ind, icon_name=color))
             actions.append(this_action)
             color_menu.addAction(this_action)
-        reset_action = QtWidgets.QAction("Reset color")
+        reset_action = QtGui.QAction("Reset color")
         reset_action.triggered.connect(functools.partial(self.set_tab_icon, ind, icon_name=None))
         color_menu.addAction(reset_action)
         self.tab_contextmenu.addSeparator()
         # sort_menu = self.tab_contextmenu.addMenu("Sort tabs")
-        sort_by_name = QtWidgets.QAction("Sort by tab &name")
+        sort_by_name = QtGui.QAction("Sort by tab &name")
         sort_by_name.triggered.connect(self.sort_tabs_by_name)
-        sort_by_time = QtWidgets.QAction("Sort by creation &time")
+        sort_by_time = QtGui.QAction("Sort by creation &time")
         sort_by_time.triggered.connect(self.sort_tabs_by_creation_time)
-        sort_by_type = QtWidgets.QAction("Sort by tab type")
+        sort_by_type = QtGui.QAction("Sort by tab type")
         sort_by_type.triggered.connect(self.sort_tabs_by_type)
-        sort_by_size = QtWidgets.QAction("Sort by number of features")
+        sort_by_size = QtGui.QAction("Sort by number of features")
         sort_by_size.triggered.connect(self.sort_tabs_by_n_features)
-        reverse = QtWidgets.QAction("Reverse tab order")
+        reverse = QtGui.QAction("Reverse tab order")
         reverse.triggered.connect(self.sort_reverse)
         self.tab_contextmenu.addActions([sort_by_name, sort_by_time, sort_by_type, sort_by_size, reverse])
         self.tab_contextmenu.addSeparator()
 
-        close_this_action = QtWidgets.QAction("Close")
+        close_this_action = QtGui.QAction("Close")
         close_this_action.triggered.connect(functools.partial(self.close_tab, ind))
-        close_others_action = QtWidgets.QAction("Close other tabs")
+        close_others_action = QtGui.QAction("Close other tabs")
         close_others_action.triggered.connect(functools.partial(self.close_other_tabs, ind))
-        close_right_action = QtWidgets.QAction("Close tabs to the right")
+        close_right_action = QtGui.QAction("Close tabs to the right")
         close_right_action.triggered.connect(functools.partial(self.close_tabs_to_the_right, ind))
-        close_left_action = QtWidgets.QAction("Close tabs to the left")
+        close_left_action = QtGui.QAction("Close tabs to the left")
         close_left_action.triggered.connect(functools.partial(self.close_tabs_to_the_left, ind))
         self.tab_contextmenu.addActions([close_this_action, close_others_action, close_right_action, close_left_action])
 
@@ -3306,7 +3313,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.tabs.tabBar().moveTab(self.tabs.currentIndex(), index)
 
     def add_new_tab(self, name: str = None, is_set: bool = False):
-        new_undo_stack = QtWidgets.QUndoStack()
+        new_undo_stack = QtGui.QUndoStack()
         self.undo_group.addStack(new_undo_stack)
         if name is None:
             name = 'New Table'
@@ -3354,7 +3361,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.tabs.setTabText(self.tab.currentIndex(), current_name.rstrip('*'))
 
     def new_table_from_folder(self):
-        folder_name = QtWidgets.QFileDialog.getExistingDirectory(self, "Choose directory", str(Path.home()))
+        folder_name = QtWidgets.QFileDialog.getExistingDirectory(self, "Choose directory")
         if folder_name:
             filter_obj = filtering.CountFilter.from_folder(folder_name)
             if self.tabs.currentWidget().is_empty():
@@ -3362,13 +3369,13 @@ class MainWindow(QtWidgets.QMainWindow):
             self.new_tab_from_filter_obj(filter_obj, JOB_COUNTER.get_id())
 
     def new_table_from_folder_htseqcount(self):
-        folder_name = QtWidgets.QFileDialog.getExistingDirectory(self, "Choose directory", str(Path.home()))
+        folder_name = QtWidgets.QFileDialog.getExistingDirectory(self, "Choose directory")
         if folder_name:
             normalize_answer = QtWidgets.QMessageBox.question(self, 'Normalize values?',
                                                               "Do you want to normalize your count table to "
                                                               "reads-per-million (RPM)?",
-                                                              QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No)
-            to_normalize = normalize_answer == QtWidgets.QMessageBox.Yes
+                                                              QtWidgets.QMessageBox.StandardButton.Yes | QtWidgets.QMessageBox.StandardButton.No)
+            to_normalize = normalize_answer == QtWidgets.QMessageBox.StandardButton.Yes
 
             filter_obj = filtering.CountFilter.from_folder_htseqcount(folder_name, norm_to_rpm=to_normalize)
             if self.tabs.currentWidget().is_empty():
@@ -3376,10 +3383,8 @@ class MainWindow(QtWidgets.QMainWindow):
             self.new_tab_from_filter_obj(filter_obj, JOB_COUNTER.get_id())
 
     def load_multiple_files(self):
-        dialog = gui_windows.MultiFileSelectionDialog()
-        accepted = dialog.exec()
-        if accepted == QtWidgets.QDialog.Accepted:
-            filenames = dialog.result()
+        filenames, _ = QtWidgets.QFileDialog.getOpenFileNames(self, "Choose files")
+        if filenames:
             if len(filenames) > 0:
                 window = MultiOpenWindow(filenames, self)
                 accepted = window.exec()
@@ -3574,8 +3579,8 @@ class MainWindow(QtWidgets.QMainWindow):
             reply = QtWidgets.QMessageBox.question(self, 'Delete Pipeline?',
                                                    "Are you sure you want to delete this Pipeline? "
                                                    "This action cannot be undone!",
-                                                   QtWidgets.QMessageBox.No | QtWidgets.QMessageBox.Yes)
-            if reply == QtWidgets.QMessageBox.Yes:
+                                                   QtWidgets.QMessageBox.StandardButton.No | QtWidgets.QMessageBox.StandardButton.Yes)
+            if reply == QtWidgets.QMessageBox.StandardButton.Yes:
                 self.pipelines.pop(pipeline_name)
                 print(f"Pipeline '{pipeline_name}' deleted successfully")
 
@@ -3626,7 +3631,7 @@ class MainWindow(QtWidgets.QMainWindow):
     def import_multiple_gene_sets(self):
         dialog = gui_windows.MultiFileSelectionDialog()
         accepted = dialog.exec()
-        if accepted == QtWidgets.QDialog.Accepted:
+        if accepted == QtWidgets.QDialog.DialogCode.Accepted:
             filenames = dialog.result()
             tabs_to_close = None
             if len(filenames) > 0 and self.tabs.currentWidget().is_empty():
@@ -3638,11 +3643,11 @@ class MainWindow(QtWidgets.QMainWindow):
                 self.tabs.removeTab(tabs_to_close)
 
     def import_gene_set(self):
-        filename, _ = QtWidgets.QFileDialog.getOpenFileName(self, "Choose a file", str(Path.home()),
-                                                            "Text Document (*.txt);;"
-                                                            "Comma-Separated Values (*.csv);;"
-                                                            "Tab-Separated Values (*.tsv);;"
-                                                            "All Files (*)")
+        filename, _ = QtWidgets.QFileDialog.getOpenFileName(self, "Choose a file", filter=
+        "Text Document (*.txt);;"
+        "Comma-Separated Values (*.csv);;"
+        "Tab-Separated Values (*.tsv);;"
+        "All Files (*)")
         if filename:
             tabs_to_close = None
             if self.tabs.currentWidget().is_empty():
@@ -3733,13 +3738,13 @@ class MainWindow(QtWidgets.QMainWindow):
             response = QtWidgets.QMessageBox.question(self, 'Overwrite Pipeline?',
                                                       'A Pipeline with this name already exists. '
                                                       'Are you sure you want to overwrite it?',
-                                                      defaultButton=QtWidgets.QMessageBox.No)
+                                                      defaultButton=QtWidgets.QMessageBox.StandardButton.No)
 
         else:
             is_new = True
-            response = QtWidgets.QMessageBox.Yes
+            response = QtWidgets.QMessageBox.StandardButton.Yes
 
-        if response == QtWidgets.QMessageBox.Yes:
+        if response == QtWidgets.QMessageBox.StandardButton.Yes:
             new_pipeline_id = JOB_COUNTER.get_id()
             if self._generate_report:
                 if is_new:
@@ -3754,7 +3759,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.settings_window.exec()
 
     def create_action(self, name, triggered_func, checkable=False, checked=False, enabled=True, shortcut=None):
-        action = QtWidgets.QAction(name, self)
+        action = QtGui.QAction(name, self)
         action.triggered.connect(triggered_func)
         action.setCheckable(checkable)
         action.setChecked(checked)
@@ -3923,8 +3928,8 @@ class MainWindow(QtWidgets.QMainWindow):
         reply = QtWidgets.QMessageBox.question(self, 'Clear cache?',
                                                'Are you sure you want to clear the <i>RNAlysis</i> cache? '
                                                'This cannot be undone!',
-                                               defaultButton=QtWidgets.QMessageBox.No)
-        if reply == QtWidgets.QMessageBox.Yes:
+                                               defaultButton=QtWidgets.QMessageBox.StandardButton.No)
+        if reply == QtWidgets.QMessageBox.StandardButton.Yes:
             io.clear_gui_cache()
             io.clear_cache()
 
@@ -3936,16 +3941,16 @@ class MainWindow(QtWidgets.QMainWindow):
                 reply = QtWidgets.QMessageBox.question(self, 'A new version is available',
                                                        'A new version of <i>RNAlysis</i> is available! '
                                                        'Do you wish to download it?')
-                if reply == QtWidgets.QMessageBox.Yes:
+                if reply == QtWidgets.QMessageBox.StandardButton.Yes:
                     url = QtCore.QUrl('https://github.com/GuyTeichman/RNAlysis/releases/latest')
                     if not QtGui.QDesktopServices.openUrl(url):
-                        QtGui.QMessageBox.warning(self, 'Connection failed', 'Could not download new version')
+                        QtWidgets.QMessageBox.warning(self, 'Connection failed', 'Could not download new version')
                 return
 
             reply = QtWidgets.QMessageBox.question(self, 'A new version is available',
                                                    'A new version of <i>RNAlysis</i> is available! '
                                                    'Do you wish to update?')
-            if reply == QtWidgets.QMessageBox.Yes:
+            if reply == QtWidgets.QMessageBox.StandardButton.Yes:
                 io.update_rnalysis()
                 QtCore.QCoreApplication.quit()
                 self.deleteLater()
@@ -4187,7 +4192,7 @@ class MainWindow(QtWidgets.QMainWindow):
         # Dynamically create the actions
         actions = []
         for name, (pipeline, pipeline_id) in self.pipelines.items():
-            action = QtWidgets.QAction(name, self)
+            action = QtGui.QAction(name, self)
             args = []
             if pipeline_arg:
                 args.append(pipeline)
@@ -4225,11 +4230,11 @@ class MainWindow(QtWidgets.QMainWindow):
         apply_msg = f"Do you want to apply Pipeline '{pipeline_name}' inplace?"
         reply = QtWidgets.QMessageBox.question(self, f"Apply Pipeline '{pipeline_name}'",
                                                apply_msg,
-                                               QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No |
-                                               QtWidgets.QMessageBox.Cancel)
-        if reply == QtWidgets.QMessageBox.Cancel:
+                                               QtWidgets.QMessageBox.StandardButton.Yes | QtWidgets.QMessageBox.StandardButton.No |
+                                               QtWidgets.QMessageBox.StandardButton.Cancel)
+        if reply == QtWidgets.QMessageBox.StandardButton.Cancel:
             return
-        inplace = reply == QtWidgets.QMessageBox.Yes
+        inplace = reply == QtWidgets.QMessageBox.StandardButton.Yes
 
         available_objs = self.get_available_objects()
         filtered_available_objs = {}
@@ -4254,11 +4259,11 @@ class MainWindow(QtWidgets.QMainWindow):
             response = QtWidgets.QMessageBox.question(self, 'Clear session?',
                                                       'Are you sure you want to clear your session? '
                                                       'All unsaved changes will be lost!',
-                                                      defaultButton=QtWidgets.QMessageBox.No)
+                                                      defaultButton=QtWidgets.QMessageBox.StandardButton.No)
         else:
-            response = QtWidgets.QMessageBox.Yes
+            response = QtWidgets.QMessageBox.StandardButton.Yes
 
-        if response == QtWidgets.QMessageBox.Yes:
+        if response == QtWidgets.QMessageBox.StandardButton.Yes:
             self.close_figs_action.trigger()
             self.close_external_windows()
             while self.tabs.count() > 1:
@@ -4270,13 +4275,12 @@ class MainWindow(QtWidgets.QMainWindow):
             self._change_undo_stack(0)
             self._reset_reporting()
 
-        return response == QtWidgets.QMessageBox.Yes
+        return response == QtWidgets.QMessageBox.StandardButton.Yes
 
     def load_session(self):
         session_filename, _ = QtWidgets.QFileDialog.getOpenFileName(self, "Load session",
-                                                                    str(Path.home()),
-                                                                    "RNAlysis session files (*.rnal);;"
-                                                                    "All Files (*)")
+                                                                    filter="RNAlysis session files (*.rnal);;"
+                                                                           "All Files (*)")
         if session_filename:
             self._load_session_from(session_filename)
 
@@ -4290,7 +4294,7 @@ class MainWindow(QtWidgets.QMainWindow):
             load_report = QtWidgets.QMessageBox.question(self, 'Resume previous session report?',
                                                          'Do you want to resume the previous session report?\n'
                                                          'This will clear the current session and replace it. ',
-                                                         defaultButton=QtWidgets.QMessageBox.Yes) == QtWidgets.QMessageBox.Yes
+                                                         defaultButton=QtWidgets.QMessageBox.StandardButton.Yes) == QtWidgets.QMessageBox.StandardButton.Yes
         if load_report:
             self.clear_session(confirm_action=False)
             self._toggle_reporting(True)
@@ -4387,9 +4391,10 @@ class MainWindow(QtWidgets.QMainWindow):
                    "All unsaved progress will be lost"
 
         reply = QtWidgets.QMessageBox.question(self, 'Close program',
-                                               quit_msg, QtWidgets.QMessageBox.No, QtWidgets.QMessageBox.Yes)
+                                               quit_msg, QtWidgets.QMessageBox.StandardButton.No,
+                                               QtWidgets.QMessageBox.StandardButton.Yes)
 
-        if reply == QtWidgets.QMessageBox.Yes:
+        if reply == QtWidgets.QMessageBox.StandardButton.Yes:
             plt.close('all')
             # quit job and STDOUT listener threads
             try:
@@ -4675,25 +4680,34 @@ async def run():  # pragma: no cover
     app.setDesktopFileName('RNAlysis')
     icon_pth = str(Path(__file__).parent.parent.joinpath('favicon.ico').absolute())
     app.setWindowIcon(QtGui.QIcon(icon_pth))
-    matplotlib.use('Qt5Agg')
+    matplotlib.use('QtAgg')
 
     if show_app:
         splash = gui_windows.splash_screen()
         app.processEvents()
         base_message = f"<i>RNAlysis</i> version {__version__}:\t"
-        splash.showMessage(base_message + 'loading dependencies', QtCore.Qt.AlignBottom | QtCore.Qt.AlignHCenter)
+        splash.showMessage(base_message + 'loading dependencies',
+                           QtCore.Qt.AlignmentFlag.AlignBottom | QtCore.Qt.AlignmentFlag.AlignHCenter)
 
         gui_widgets.init_color_map_pixmap_cache()
 
         if io.check_changed_version():
             video_files = gui_quickstart.QuickStartWizard.VIDEO_FILES
             splash.showMessage(base_message + 'validating tutorial videos',
-                               QtCore.Qt.AlignBottom | QtCore.Qt.AlignHCenter)
+                               QtCore.Qt.AlignmentFlag.AlignBottom | QtCore.Qt.AlignmentFlag.AlignHCenter)
             async for i in io.get_gui_videos(video_files):
                 splash.showMessage(base_message + f'getting tutorial videos {i + 1}/{len(video_files)}',
-                                   QtCore.Qt.AlignBottom | QtCore.Qt.AlignHCenter)
+                                   QtCore.Qt.AlignmentFlag.AlignBottom | QtCore.Qt.AlignmentFlag.AlignHCenter)
 
-        splash.showMessage(base_message + 'loading application', QtCore.Qt.AlignBottom | QtCore.Qt.AlignHCenter)
+        splash.showMessage(base_message + 'loading application',
+                           QtCore.Qt.AlignmentFlag.AlignBottom | QtCore.Qt.AlignmentFlag.AlignHCenter)
+
+    # set taskbar icon on Windows
+    if platform.system() == 'Windows':
+        import ctypes
+        myappid = u'RNAlysis.{version}'.format(version=__version__)  # arbitrary string
+        ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(myappid)
+
     window = MainWindow()
     sys.excepthook = window.excepthook
     builtins.input = window.input

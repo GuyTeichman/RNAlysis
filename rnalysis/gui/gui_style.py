@@ -43,5 +43,5 @@ QSplitter::handle { background-color: #C9CDD0; border: 0px solid #FAFAFA; spacin
 QSplitter::handle:hover { background-color: #788D9C; }
 """
     else:
-        other_stylesheet = qdarkstyle.load_stylesheet(qt_api='pyqt5', palette=palette)
+        other_stylesheet = qdarkstyle.load_stylesheet(qt_api='pyqt6', palette=palette)
     return param_stylesheet + '\n' + other_stylesheet

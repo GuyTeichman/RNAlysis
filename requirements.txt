@@ -15,8 +15,8 @@ joblib>=1.4.2
 tqdm>=4.65
 appdirs>=1.4.0
 typing_extensions>=4.5
-PyQt5>=5.15.9
-qdarkstyle
+PyQt6>=6.7
+qdarkstyle>=3
 defusedxml>=0.7.1
 aiohttp>=3.8.4, <3.10
 aiodns>=3.0.0
@@ -26,5 +26,5 @@ tenacity>=8.2.3
 mslex>=1.1.0
 nest-asyncio>=1.6.0
 kmedoids>=0.5.1
-polars[async,numpy,pyarrow,pandas]>=1.5.0
+polars[async,numpy,pyarrow,pandas]>=1.6.0,<1.7
 pandas[performance,parquet]

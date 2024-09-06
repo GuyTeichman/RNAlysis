@@ -14,7 +14,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import polars as pl
 import polars.selectors as cs
-from PyQt5 import QtCore, QtWidgets, QtGui
+from PyQt6 import QtCore, QtWidgets, QtGui
 from joblib import Parallel, parallel_backend
 from tqdm.auto import tqdm
 from typing_extensions import get_origin, get_args
@@ -93,13 +93,13 @@ class TableColumnPicker(QtWidgets.QPushButton):
         return picked_cols
 
     def _update_window_size(self):
-        self.dialog_table.setSizePolicy(QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Minimum)
-        # self.dialog_table.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
-        self.dialog_table.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
+        self.dialog_table.setSizePolicy(QtWidgets.QSizePolicy.Policy.Minimum, QtWidgets.QSizePolicy.Policy.Minimum)
+        # self.dialog_table.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        self.dialog_table.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         self.dialog_table.resizeRowsToContents()
         self.dialog_table.resizeColumnsToContents()
-        self.dialog_table.horizontalHeader().setSectionResizeMode(QtWidgets.QHeaderView.ResizeToContents)
-        self.dialog_table.horizontalHeader().setSectionResizeMode(0, QtWidgets.QHeaderView.Stretch)
+        self.dialog_table.horizontalHeader().setSectionResizeMode(QtWidgets.QHeaderView.ResizeMode.ResizeToContents)
+        self.dialog_table.horizontalHeader().setSectionResizeMode(0, QtWidgets.QHeaderView.ResizeMode.Stretch)
 
         screen_height = QtWidgets.QApplication.primaryScreen().size().height()
 
@@ -303,7 +303,7 @@ class PathInputDialog(QtWidgets.QDialog):
         super().__init__(parent)
         self.message = message
         self.layout = QtWidgets.QVBoxLayout(self)
-        self.button_box = QtWidgets.QDialogButtonBox(QtWidgets.QDialogButtonBox.Ok)
+        self.button_box = QtWidgets.QDialogButtonBox(QtWidgets.QDialogButtonBox.StandardButton.Ok)
         self.path = PathLineEdit(parent=self)
 
         self.init_ui()
@@ -480,7 +480,7 @@ def create_colormap_pixmap(map_name: str):
         fig.canvas.draw()
         data = np.frombuffer(fig.canvas.tostring_rgb(), dtype=np.uint8)
         data = data.reshape(fig.canvas.get_width_height()[::-1] + (3,))
-        image = QtGui.QImage(data, data.shape[1], data.shape[0], QtGui.QImage.Format_RGB888)
+        image = QtGui.QImage(data, data.shape[1], data.shape[0], QtGui.QImage.Format.Format_RGB888)
         pixmap = QtGui.QPixmap.fromImage(image)
         plt.close(fig)
 
@@ -530,7 +530,7 @@ class TextWithCopyButton(QtWidgets.QWidget):
 
     def copy_to_clipboard(self):
         cb = QtWidgets.QApplication.clipboard()
-        cb.clear(mode=cb.Clipboard)
+        cb.clear(mode=QtGui.QClipboard.Mode.Clipboard)
         cb.setText(self.text_edit.toPlainText())
         self.copied_label.setText('Copied to clipboard')
 
@@ -570,7 +570,7 @@ class ToggleSwitchCore(QtWidgets.QPushButton):
         self.setMinimumHeight((radius + self.BORDER) * 2)
 
         painter = QtGui.QPainter(self)
-        painter.setRenderHint(QtGui.QPainter.Antialiasing)
+        painter.setRenderHint(QtGui.QPainter.RenderHint.Antialiasing)
         painter.translate(center)
         painter.setBrush(QtGui.QColor("#cccccc"))
 
@@ -584,7 +584,7 @@ class ToggleSwitchCore(QtWidgets.QPushButton):
         if not self.isChecked():
             sw_rect.moveLeft(-width)
         painter.drawRoundedRect(sw_rect, radius, radius)
-        painter.drawText(sw_rect, QtCore.Qt.AlignCenter, label)
+        painter.drawText(sw_rect, QtCore.Qt.AlignmentFlag.AlignCenter, label)
 
 
 class ToggleSwitch(QtWidgets.QWidget):
@@ -664,7 +664,7 @@ class HelpButton(QtWidgets.QToolButton):
 
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.setIcon(self.style().standardIcon(QtWidgets.QStyle.SP_MessageBoxQuestion))
+        self.setIcon(self.style().standardIcon(QtWidgets.QStyle.StandardPixmap.SP_MessageBoxQuestion))
         self.param_name = ''
         self.desc = ''
 
@@ -679,7 +679,7 @@ class HelpButton(QtWidgets.QToolButton):
 
     def mouseReleaseEvent(self, event: QtGui.QMouseEvent):
         super().mouseReleaseEvent(event)
-        help_event = QtGui.QHelpEvent(QtCore.QEvent.Type.ToolTip, event.pos(), event.globalPos())
+        help_event = QtGui.QHelpEvent(QtCore.QEvent.Type.ToolTip, event.pos(), event.globalPosition().toPoint())
         self.event(help_event)
 
 
@@ -752,7 +752,7 @@ class MultipleChoiceList(QtWidgets.QWidget):
         self.items = []
         self.list_items = []
         self.list = QtWidgets.QListWidget(self)
-        self.list.setSelectionMode(QtWidgets.QAbstractItemView.MultiSelection)
+        self.list.setSelectionMode(QtWidgets.QAbstractItemView.SelectionMode.MultiSelection)
         self.layout.addWidget(self.list, 1, 1, 4, 1)
 
         self.select_all_button = QtWidgets.QPushButton('Select all', self)
@@ -831,8 +831,8 @@ class MultiChoiceListWithDelete(MultipleChoiceList):
     def delete_all(self):
         accepted = QtWidgets.QMessageBox.question(self, f"{self.delete_text.capitalize()} all items?",
                                                   f"Are you sure you want to {self.delete_text} all items?",
-                                                  QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No)
-        if accepted == QtWidgets.QMessageBox.Yes:
+                                                  QtWidgets.QMessageBox.StandardButton.Yes | QtWidgets.QMessageBox.StandardButton.No)
+        if accepted == QtWidgets.QMessageBox.StandardButton.Yes:
             for n_item in reversed(range(len(self.items))):
                 self.itemDeleted.emit(n_item)
             self.delete_all_quietly()
@@ -1055,7 +1055,7 @@ class MinMaxDialog(QtWidgets.QDialog):
 
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.setWindowFlag(QtCore.Qt.WindowMinMaxButtonsHint)
+        self.setWindowFlag(QtCore.Qt.WindowType.WindowMinMaxButtonsHint)
 
 
 class TrueFalseBoth(QtWidgets.QWidget):
@@ -1796,7 +1796,7 @@ class StdOutTextEdit(QtWidgets.QTextEdit):
     @QtCore.pyqtSlot(str)
     def append_text(self, text: str):
 
-        self.moveCursor(QtGui.QTextCursor.End)
+        self.moveCursor(QtGui.QTextCursor.MoveOperation.End)
         if text == '\n':
             return
         text = text.replace("<", "&lt;").replace(">", "&gt;")
@@ -1805,8 +1805,8 @@ class StdOutTextEdit(QtWidgets.QTextEdit):
             self.carriage = False
             diff = self.document().characterCount() - self.prev_coord
             cursor = self.textCursor()
-            cursor.movePosition(QtGui.QTextCursor.PreviousCharacter, QtGui.QTextCursor.MoveAnchor, n=diff)
-            cursor.movePosition(QtGui.QTextCursor.End, QtGui.QTextCursor.KeepAnchor)
+            cursor.movePosition(QtGui.QTextCursor.MoveOperation.PreviousCharacter, QtGui.QTextCursor.MoveMode.MoveAnchor, n=diff)
+            cursor.movePosition(QtGui.QTextCursor.MoveOperation.End, QtGui.QTextCursor.MoveMode.KeepAnchor)
             cursor.removeSelectedText()
 
         if text.endswith('\r'):
@@ -2180,7 +2180,7 @@ class ReactiveHeaderView(QtWidgets.QHeaderView):
 
     def contextMenu(self, value: str):
         self.context_menu = QtWidgets.QMenu(self)
-        copy_action = QtWidgets.QAction(f'Copy "{value}"')
+        copy_action = QtGui.QAction(f'Copy "{value}"')
         copy_action.triggered.connect(functools.partial(QtWidgets.QApplication.clipboard().setText, value))
         self.context_menu.addAction(copy_action)
 
@@ -2189,7 +2189,7 @@ class ReactiveHeaderView(QtWidgets.QHeaderView):
 
         self.db_actions = []
         for name in settings.get_databases_settings():
-            action = QtWidgets.QAction(f'Search "{value}" on {name}')
+            action = QtGui.QAction(f'Search "{value}" on {name}')
             self.db_actions.append(action)
             open_url_partial = functools.partial(QtGui.QDesktopServices.openUrl,
                                                  QtCore.QUrl(f'{databases[name]}{value}'))
@@ -2225,7 +2225,7 @@ class ReactiveListWidget(QtWidgets.QListWidget):
 
     def contextMenu(self, value: str):
         self.context_menu = QtWidgets.QMenu(self)
-        copy_action = QtWidgets.QAction(f'Copy "{value}"')
+        copy_action = QtGui.QAction(f'Copy "{value}"')
         copy_action.triggered.connect(functools.partial(QtWidgets.QApplication.clipboard().setText, value))
         self.context_menu.addAction(copy_action)
 
@@ -2234,7 +2234,7 @@ class ReactiveListWidget(QtWidgets.QListWidget):
 
         self.db_actions = []
         for name in settings.get_databases_settings():
-            action = QtWidgets.QAction(f'Search "{value}" on {name}')
+            action = QtGui.QAction(f'Search "{value}" on {name}')
             self.db_actions.append(action)
             open_url_partial = functools.partial(QtGui.QDesktopServices.openUrl,
                                                  QtCore.QUrl(f'{databases[name]}{value}'))
@@ -2268,7 +2268,7 @@ class ReactiveTableView(QtWidgets.QTableView):
 
     def contextMenu(self, value: str):
         self.context_menu = QtWidgets.QMenu(self)
-        copy_action = QtWidgets.QAction(f'Copy "{value}"')
+        copy_action = QtGui.QAction(f'Copy "{value}"')
         copy_action.triggered.connect(functools.partial(QtWidgets.QApplication.clipboard().setText, value))
         self.context_menu.addAction(copy_action)
 

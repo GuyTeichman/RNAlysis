@@ -3,8 +3,8 @@ from matplotlib import patches
 
 from rnalysis.gui.gui_graphics import *
 
-LEFT_CLICK = QtCore.Qt.LeftButton
-RIGHT_CLICK = QtCore.Qt.RightButton
+LEFT_CLICK = QtCore.Qt.MouseButton.LeftButton
+RIGHT_CLICK = QtCore.Qt.MouseButton.RightButton
 
 
 class MockEvent:
@@ -47,7 +47,7 @@ def test_get_icon_invalid(qtbot):
 
 def test_get_icon_blank(qtbot):
     pixmap = QtGui.QPixmap(32, 32)
-    pixmap.fill(QtCore.Qt.transparent)
+    pixmap.fill(QtCore.Qt.GlobalColor.transparent)
     truth = pixmap.toImage()
 
     icon = get_icon('blank')

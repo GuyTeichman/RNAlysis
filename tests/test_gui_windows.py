@@ -5,8 +5,8 @@ import pytest
 
 from rnalysis.gui.gui_windows import *
 
-LEFT_CLICK = QtCore.Qt.LeftButton
-RIGHT_CLICK = QtCore.Qt.RightButton
+LEFT_CLICK = QtCore.Qt.MouseButton.LeftButton
+RIGHT_CLICK = QtCore.Qt.MouseButton.RightButton
 
 
 @pytest.fixture
@@ -205,8 +205,8 @@ def test_SettingsWindow_get_defaults(qtbot, use_temp_settings_file):
 
     for i in range(dialog.appearance_widgets['databases'].count()):
         item = dialog.appearance_widgets['databases'].item(i)
-        assert bool(item.checkState()) == (item.text() in dbs_truth)
-        if item.checkState():
+        assert (item.checkState() == QtCore.Qt.CheckState.Checked) == (item.text() in dbs_truth)
+        if item.checkState() == QtCore.Qt.CheckState.Checked:
             dbs_matched.append(item.text())
     assert sorted(dbs_matched) == sorted(dbs_truth)
 
@@ -227,7 +227,7 @@ def test_SettingsWindow_reset_settings(qtbot, monkeypatch, use_temp_settings_fil
 
     monkeypatch.setattr(settings, 'reset_settings', mock_reset)
     qtbot, dialog = widget_setup(qtbot, SettingsWindow)
-    qtbot.mouseClick(dialog.button_box.button(QtWidgets.QDialogButtonBox.RestoreDefaults), LEFT_CLICK)
+    qtbot.mouseClick(dialog.button_box.button(QtWidgets.QDialogButtonBox.StandardButton.RestoreDefaults), LEFT_CLICK)
     assert len(reset_done) == 1
     assert reset_done[0]
 
@@ -280,7 +280,7 @@ def test_SettingsWindow_save_settings(qtbot, monkeypatch, use_temp_settings_file
     qtbot.keyClicks(dialog.tables_widgets['attr_ref_path'].file_path, attr_truth)
     qtbot.keyClicks(dialog.tables_widgets['biotype_ref_path'].file_path, biotype_truth)
 
-    qtbot.mouseClick(dialog.button_box.button(QtWidgets.QDialogButtonBox.Apply), LEFT_CLICK)
+    qtbot.mouseClick(dialog.button_box.button(QtWidgets.QDialogButtonBox.StandardButton.Apply), LEFT_CLICK)
     assert settings_saved[0]
     assert settings_saved[1]
 
@@ -295,66 +295,9 @@ def test_SettingsWindow_cancel(qtbot, monkeypatch, use_temp_settings_file):
     monkeypatch.setattr(settings, 'set_table_settings', mock_save)
     qtbot, dialog = widget_setup(qtbot, SettingsWindow)
     dialog.appearance_widgets['app_font'].setCurrentText("David")
-    qtbot.mouseClick(dialog.button_box.button(QtWidgets.QDialogButtonBox.Cancel), LEFT_CLICK)
+    qtbot.mouseClick(dialog.button_box.button(QtWidgets.QDialogButtonBox.StandardButton.Cancel), LEFT_CLICK)
 
     assert len(save_done) == 0
-
-
-def test_MultiFileSelectionDialog_init(qtbot, use_temp_settings_file):
-    _, _ = widget_setup(qtbot, MultiFileSelectionDialog)
-
-
-@pytest.mark.parametrize('pth', ['tests/test_files/test_deseq.csv', 'tests/test_files/test_fastqs'])
-def test_MultiFileSelectionDialog_selection_log(qtbot, use_temp_settings_file, pth):
-    qtbot, dialog = widget_setup(qtbot, MultiFileSelectionDialog)
-    model = dialog.tree_mycomputer.model()
-
-    for parent in reversed(list(Path(pth).absolute().parents)):
-        dialog.tree_mycomputer.expand(model.index(str(parent)))
-
-    index = model.index(str(Path(pth).absolute()))
-    model.setCheckState(index, True)
-
-    dialog.update_log()
-    txt = dialog.logger.toPlainText()
-    assert str(Path(pth).name) in txt
-
-    if Path(pth).is_dir():
-        for item in Path(pth).rglob('*'):
-            assert str(item.absolute()) in txt
-
-
-@pytest.mark.parametrize('pth', ['tests/test_files/test_deseq.csv', 'tests/test_files/counted.tsv'])
-def test_MultiFileSelectionDialog_selection_files(qtbot, use_temp_settings_file, pth):
-    qtbot, dialog = widget_setup(qtbot, MultiFileSelectionDialog)
-    model = dialog.tree_mycomputer.model()
-
-    for parent in reversed(list(Path(pth).absolute().parents)):
-        dialog.tree_mycomputer.expand(model.index(str(parent)))
-
-    index = model.index(str(Path(pth).absolute()))
-    model.setCheckState(index, True)
-    assert dialog.result() == [str(Path(pth).absolute())]
-
-
-@pytest.mark.parametrize('pth', ['tests/test_files/test_count_from_folder', 'tests/test_files'])
-def test_MultiFileSelectionDialog_selection_folders(qtbot, use_temp_settings_file, pth):
-    qtbot, dialog = widget_setup(qtbot, MultiFileSelectionDialog)
-    model = dialog.tree_mycomputer.model()
-
-    for parent in reversed(list(Path(pth).absolute().parents)):
-        dialog.tree_mycomputer.expand(model.index(str(parent)))
-
-    index = model.index(str(Path(pth).absolute()))
-    model.setCheckState(index, True)
-    assert sorted(dialog.result()) == sorted(
-        [str(Path(child).absolute()) for child in Path(pth).rglob('*') if child.is_file()])
-
-
-def test_MultiFileSelectionDialog_no_selection(qtbot, use_temp_settings_file):
-    qtbot, dialog = widget_setup(qtbot, MultiFileSelectionDialog)
-
-    assert len(dialog.result()) == 0
 
 
 def test_splash_screen(qtbot):

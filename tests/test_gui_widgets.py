@@ -7,8 +7,8 @@ import pytest
 from rnalysis.gui.gui_widgets import *
 from rnalysis.utils import io
 
-LEFT_CLICK = QtCore.Qt.LeftButton
-RIGHT_CLICK = QtCore.Qt.RightButton
+LEFT_CLICK = QtCore.Qt.MouseButton.LeftButton
+RIGHT_CLICK = QtCore.Qt.MouseButton.RightButton
 
 
 def widget_setup(qtbot, widget_class, *args, **kwargs):
@@ -443,11 +443,11 @@ def test_MultipleChoiceList_emit(qtbot):
 
 def test_MultipleChoiceList_icons(qtbot):
     pixmap = QtGui.QPixmap(32, 32)
-    pixmap.fill(QtCore.Qt.transparent)
+    pixmap.fill(QtCore.Qt.GlobalColor.transparent)
     icon = QtGui.QIcon(pixmap)
 
     pixmap2 = QtGui.QPixmap(34, 34)
-    pixmap2.fill(QtCore.Qt.white)
+    pixmap2.fill(QtCore.Qt.GlobalColor.white)
     icon2 = QtGui.QIcon(pixmap2)
     items = ['item1', 'item2', 'item3']
     icons = [icon, icon2, icon2]
@@ -622,7 +622,7 @@ def test_ToggleSwitchCore(qtbot):
 
 
 def test_MultiChoiceListWithDelete_delete_all(qtbot, monkeypatch):
-    monkeypatch.setattr(QtWidgets.QMessageBox, "question", lambda *args: QtWidgets.QMessageBox.Yes)
+    monkeypatch.setattr(QtWidgets.QMessageBox, "question", lambda *args: QtWidgets.QMessageBox.StandardButton.Yes)
 
     items = ['item1', 'item2', 'item3']
     qtbot, widget = widget_setup(qtbot, MultiChoiceListWithDelete, items)

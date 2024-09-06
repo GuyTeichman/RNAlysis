@@ -7,7 +7,7 @@ import pandas as pd
 import matplotlib
 import matplotlib_venn
 import upsetplot
-from PyQt5 import QtCore, QtGui
+from PyQt6 import QtCore, QtGui
 from matplotlib import pyplot as plt
 from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg, NavigationToolbar2QT
 
@@ -473,6 +473,6 @@ def get_icon(name: str):
         return icon
     elif name == 'blank':
         pixmap = QtGui.QPixmap(32, 32)
-        pixmap.fill(QtCore.Qt.transparent)
+        pixmap.fill(QtCore.Qt.GlobalColor.transparent)
         return QtGui.QIcon(pixmap)
     return None

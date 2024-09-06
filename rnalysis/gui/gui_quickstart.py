@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from PyQt5 import QtCore, QtWidgets, QtGui
+from PyQt6 import QtCore, QtWidgets, QtGui
 
 from rnalysis.utils import settings, io
 
@@ -134,9 +134,9 @@ class QuickStartWizard(QtWidgets.QWizard):
 
         self.currentIdChanged.connect(self.play_tutorial)
 
-        self.setWizardStyle(QtWidgets.QWizard.ModernStyle)
+        self.setWizardStyle(QtWidgets.QWizard.WizardStyle.ModernStyle)
         self.setWindowTitle('Welcome to RNAlysis!')
-        self.setPixmap(self.LogoPixmap,
+        self.setPixmap(self.WizardPixmap.LogoPixmap,
                        QtGui.QPixmap(Path.cwd().parent.parent.joinpath('docs/source/favicon.ico').as_posix()))
         self.setField('dont_show_again', not settings.get_show_tutorial_settings())
 
@@ -223,22 +223,22 @@ class QuickStartMovie(QtWidgets.QWidget):
         self.layout = QtWidgets.QGridLayout(self)
         self.label = QtWidgets.QLabel(self)
         self.video = QtGui.QMovie(full_video_path)
-        self.video.setCacheMode(self.video.CacheAll)
+        self.video.setCacheMode(self.video.CacheMode.CacheAll)
         self.label.setMovie(self.video)
 
         self.play_button = QtWidgets.QToolButton()
         self.play_button.clicked.connect(self.change_play_state)
 
         self.stop_button = QtWidgets.QToolButton()
-        self.stop_button.setIcon(self.style().standardIcon(QtWidgets.QStyle.SP_MediaStop))
+        self.stop_button.setIcon(self.style().standardIcon(QtWidgets.QStyle.StandardPixmap.SP_MediaStop))
         self.stop_button.clicked.connect(self.stop)
 
         self.speed_button = QtWidgets.QToolButton()
-        self.speed_button.setIcon(self.style().standardIcon(QtWidgets.QStyle.SP_MediaSeekForward))
+        self.speed_button.setIcon(self.style().standardIcon(QtWidgets.QStyle.StandardPixmap.SP_MediaSeekForward))
         self.speed_button.setCheckable(True)
         self.speed_button.clicked.connect(self.change_speed)
 
-        self.position_slider = QtWidgets.QSlider(QtCore.Qt.Horizontal)
+        self.position_slider = QtWidgets.QSlider(QtCore.Qt.Orientation.Horizontal)
         self.position_slider.setRange(0, self.video.frameCount())
         self.position_slider.valueChanged.connect(self.set_frame)
         self.position_slider.setTracking(False)
@@ -256,7 +256,7 @@ class QuickStartMovie(QtWidgets.QWidget):
         pixmap = QtGui.QPixmap(full_video_path)
         size = pixmap.size()
 
-        size.scale(750, 750, QtCore.Qt.KeepAspectRatio)
+        size.scale(750, 750, QtCore.Qt.AspectRatioMode.KeepAspectRatio)
         self.video.setScaledSize(size)
 
         self.layout.addWidget(self.label, 0, 0, 4, 8)
@@ -279,19 +279,19 @@ class QuickStartMovie(QtWidgets.QWidget):
 
     def update_play_button(self):
         if self.paused:
-            self.play_button.setIcon(self.style().standardIcon(QtWidgets.QStyle.SP_MediaPlay))
+            self.play_button.setIcon(self.style().standardIcon(QtWidgets.QStyle.StandardPixmap.SP_MediaPlay))
         else:
-            self.play_button.setIcon(self.style().standardIcon(QtWidgets.QStyle.SP_MediaPause))
+            self.play_button.setIcon(self.style().standardIcon(QtWidgets.QStyle.StandardPixmap.SP_MediaPause))
         QtWidgets.QApplication.processEvents()
 
     def mousePressEvent(self, event):
-        if event.button() == QtCore.Qt.LeftButton:
+        if event.button() == QtCore.Qt.MouseButton.LeftButton:
             self.press_pos = event.pos()
 
     def mouseReleaseEvent(self, event):
         # ensure that the left button was pressed *and* released within the
         # geometry of the widget; if so, emit the signal;
-        if self.press_pos is not None and event.button() == QtCore.Qt.LeftButton and event.pos() in self.rect():
+        if self.press_pos is not None and event.button() == QtCore.Qt.MouseButton.LeftButton and event.pos() in self.rect():
             self.clicked.emit()
         self.press_pos = None
 

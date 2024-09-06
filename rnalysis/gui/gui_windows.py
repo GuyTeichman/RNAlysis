@@ -1,214 +1,17 @@
 import functools
-import itertools
 import json
 import time
 import traceback
-import warnings
 from pathlib import Path
-from queue import Queue
 from typing import Callable, Union, Tuple
 
 import polars as pl
 import yaml
-from PyQt5 import QtCore, QtWidgets, QtGui
+from PyQt6 import QtCore, QtWidgets, QtGui
 
 from rnalysis import __version__
 from rnalysis.gui import gui_style, gui_widgets
 from rnalysis.utils import settings, io, generic, parsing
-
-
-class CheckableFileSystemModel(QtWidgets.QFileSystemModel):
-    checkStateChanged = QtCore.pyqtSignal(str, bool)
-    finishedDataChange = QtCore.pyqtSignal()
-
-    def __init__(self):
-        super().__init__()
-        self.checkStates = {}
-        self.rowsInserted.connect(self.checkAdded)
-        self.rowsRemoved.connect(self.checkParent)
-        self.rowsAboutToBeRemoved.connect(self.checkRemoved)
-
-    def checkState(self, index):
-        return self.checkStates.get(self.filePath(index), QtCore.Qt.Unchecked)
-
-    def setCheckState(self, index, state, emitStateChange=True):
-        path = self.filePath(index)
-        if self.checkStates.get(path) == state:
-            return
-        self.checkStates[path] = state
-        if emitStateChange:
-            self.checkStateChanged.emit(path, bool(state))
-
-    def checkAdded(self, parent, first, last):
-        # if a file/directory is added, ensure it follows the parent state as long
-        # as the parent is already tracked; note that this happens also when
-        # expanding a directory that has not been previously loaded
-        if not parent.isValid():
-            return
-        if self.filePath(parent) in self.checkStates:
-            state = self.checkState(parent)
-            for row in range(first, last + 1):
-                index = self.index(row, 0, parent)
-                path = self.filePath(index)
-                if path not in self.checkStates:
-                    self.checkStates[path] = state
-        self.checkParent(parent)
-
-    def checkRemoved(self, parent, first, last):
-        # remove items from the internal dictionary when a file is deleted;
-        # note that this *has* to happen *before* the model actually updates,
-        # that's the reason this function is connected to rowsAboutToBeRemoved
-        for row in range(first, last + 1):
-            path = self.filePath(self.index(row, 0, parent))
-            if path in self.checkStates:
-                self.checkStates.pop(path)
-
-    def checkParent(self, parent):
-        # verify the state of the parent according to the children states
-        if not parent.isValid():
-            self.finishedDataChange.emit()
-            return
-        childStates = [self.checkState(self.index(r, 0, parent)) for r in range(self.rowCount(parent))]
-        newState = QtCore.Qt.Checked if all(childStates) else QtCore.Qt.Unchecked
-        oldState = self.checkState(parent)
-        if newState != oldState:
-            self.setCheckState(parent, newState)
-            self.dataChanged.emit(parent, parent)
-        self.checkParent(parent.parent())
-
-    def flags(self, index):
-        return super().flags(index) | QtCore.Qt.ItemIsUserCheckable
-
-    def data(self, index, role=QtCore.Qt.DisplayRole):
-        if role == QtCore.Qt.CheckStateRole and index.column() == 0:
-            return self.checkState(index)
-        return super().data(index, role)
-
-    def setData(self, index, value, role, checkParent=True, emitStateChange=True):
-        if role == QtCore.Qt.CheckStateRole and index.column() == 0:
-            self.setCheckState(index, value, emitStateChange)
-            for row in range(self.rowCount(index)):
-                # set the data for the children, but do not emit the state change,
-                # and don't check the parent state (to avoid recursion)
-                self.setData(index.child(row, 0), value, QtCore.Qt.CheckStateRole,
-                             checkParent=False, emitStateChange=False)
-            self.dataChanged.emit(index, index)
-            if checkParent:
-                self.checkParent(index.parent())
-            return True
-
-        return super().setData(index, value, role)
-
-
-class FilterProxy(QtCore.QSortFilterProxyModel):
-    '''
-    Based on StackOverflow answer by user ekhumoro:
-    https://stackoverflow.com/questions/72587813/how-to-filter-by-no-extension-in-qfilesystemmodel
-    '''
-
-    def __init__(self, disables=False, parent=None):
-        super().__init__(parent)
-        self._disables = bool(disables)
-
-    def filterAcceptsRow(self, row, parent):
-        index = self.sourceModel().index(row, 0, parent)
-        if not self._disables:
-            return self.matchIndex(index)
-        return index.isValid()
-
-    def matchIndex(self, index):
-        return (super().filterAcceptsRow(index.row(), index.parent()))
-
-    def flags(self, index):
-        flags = super().flags(index)
-        if (self._disables and
-            not self.matchIndex(self.mapToSource(index))):
-            flags &= ~QtCore.Qt.ItemIsEnabled
-        return flags
-
-
-class MultiFileSelectionDialog(gui_widgets.MinMaxDialog):
-    '''
-    Based on a Stack Overflow answer by user 'musicamante':
-    https://stackoverflow.com/questions/63309406/qfilesystemmodel-with-checkboxes
-    '''
-
-    def __init__(self):
-        super().__init__()
-        self.layout = QtWidgets.QGridLayout(self)
-        self.tree_mycomputer = QtWidgets.QTreeView()
-        self.tree_home = QtWidgets.QTreeView()
-        self.open_button = QtWidgets.QPushButton('Open')
-        self.cancel_button = QtWidgets.QPushButton('Cancel')
-        self.logger = QtWidgets.QPlainTextEdit()
-        self.init_models()
-        self.init_ui()
-
-    def init_models(self):
-        model_mycomputer = CheckableFileSystemModel()
-        model_mycomputer.setRootPath('')
-        model_home = CheckableFileSystemModel()
-        model_home.setRootPath('.')
-        proxy = FilterProxy(False, self)
-        proxy.setFilterRegularExpression(r'^(?![.])(?!.*[-_.]$).+')
-        proxy.setSourceModel(model_home)
-        self.tree_mycomputer.setModel(model_mycomputer)
-        self.tree_mycomputer.setRootIndex(model_mycomputer.index(model_mycomputer.myComputer()))
-        self.tree_home.setModel(proxy)
-        self.tree_home.setRootIndex(proxy.mapFromSource(
-            model_home.index(QtCore.QStandardPaths.standardLocations(QtCore.QStandardPaths.HomeLocation)[0])))
-        model_mycomputer.finishedDataChange.connect(self.update_log)
-        model_home.finishedDataChange.connect(self.update_log)
-
-    def init_ui(self):
-        self.setWindowTitle('Choose files:')
-        self.resize(1000, 750)
-
-        self.tree_mycomputer.setSortingEnabled(True)
-        self.tree_home.setSortingEnabled(True)
-        self.tree_mycomputer.header().setSectionResizeMode(QtWidgets.QHeaderView.Stretch)
-        self.tree_home.header().setSectionResizeMode(QtWidgets.QHeaderView.Stretch)
-
-        self.layout.addWidget(self.tree_mycomputer, 0, 0, 4, 8)
-        self.layout.addWidget(self.tree_home, 4, 0, 4, 8)
-        self.layout.setRowStretch(3, 2)
-        self.layout.setRowStretch(7, 2)
-
-        self.layout.addWidget(self.open_button, 8, 7)
-        self.layout.addWidget(self.cancel_button, 9, 7)
-
-        self.layout.addWidget(self.logger, 8, 0, 2, 7)
-        self.logger.setReadOnly(True)
-
-        self.open_button.clicked.connect(self.accept)
-        self.cancel_button.clicked.connect(self.reject)
-
-        self.update_log()
-
-    def update_log(self):
-        self.logger.setPlainText("\n".join(self.result()))
-        self.logger.verticalScrollBar().setValue(
-            self.logger.verticalScrollBar().maximum())
-
-    def result(self):
-        files_to_open = []
-        queue = Queue()
-        for pth, state in itertools.chain(self.tree_mycomputer.model().checkStates.items(),
-                                          self.tree_home.model().sourceModel().checkStates.items()):
-            if state:
-                queue.put(pth)
-
-        while not queue.empty():
-            this_path = Path(queue.get())
-            if this_path.is_file():
-                files_to_open.append(str(this_path))
-            else:
-                try:
-                    for item in this_path.iterdir():
-                        queue.put(item)
-                except PermissionError:
-                    warnings.warn(f'Cannot access items under {this_path} - permission denied. ')
-        return files_to_open
 
 
 class DataFrameModel(QtCore.QAbstractTableModel):
@@ -216,8 +19,8 @@ class DataFrameModel(QtCore.QAbstractTableModel):
     Based upon:
     https://stackoverflow.com/a/44605011
     """
-    DtypeRole = QtCore.Qt.UserRole + 1000
-    ValueRole = QtCore.Qt.UserRole + 1001
+    DtypeRole = QtCore.Qt.ItemDataRole.UserRole + 1000
+    ValueRole = QtCore.Qt.ItemDataRole.UserRole + 1001
 
     def __init__(self, df=pl.DataFrame(), parent=None):
         super().__init__(parent)
@@ -236,9 +39,10 @@ class DataFrameModel(QtCore.QAbstractTableModel):
     dataFrame = QtCore.pyqtProperty(pl.DataFrame, fget=dataFrame, fset=setDataFrame)
 
     @QtCore.pyqtSlot(int, QtCore.Qt.Orientation, result=str)
-    def headerData(self, section: int, orientation: QtCore.Qt.Orientation, role: int = QtCore.Qt.DisplayRole):
-        if role == QtCore.Qt.DisplayRole:
-            if orientation == QtCore.Qt.Horizontal:
+    def headerData(self, section: int, orientation: QtCore.Qt.Orientation,
+                   role: int = QtCore.Qt.ItemDataRole.DisplayRole):
+        if role == QtCore.Qt.ItemDataRole.DisplayRole:
+            if orientation == QtCore.Qt.Orientation.Horizontal:
                 return self._dataframe.columns[section + 1]
             else:
                 return str(self._dataframe.row(section)[0])
@@ -254,7 +58,7 @@ class DataFrameModel(QtCore.QAbstractTableModel):
             return 0
         return max(0, self._dataframe.width - 1)
 
-    def data(self, index, role=QtCore.Qt.DisplayRole):
+    def data(self, index, role=QtCore.Qt.ItemDataRole.DisplayRole):
         if not index.isValid() or not (0 <= index.row() < self.rowCount()
                                        and 0 <= index.column() < self.columnCount()):
             return QtCore.QVariant()
@@ -267,7 +71,7 @@ class DataFrameModel(QtCore.QAbstractTableModel):
             val = self._dataframe[row, col]
         except IndexError:
             print(row, col, self._dataframe.shape)
-        if role == QtCore.Qt.DisplayRole:
+        if role == QtCore.Qt.ItemDataRole.DisplayRole:
             return str(val)
         elif role == DataFrameModel.ValueRole:
             return val
@@ -277,7 +81,7 @@ class DataFrameModel(QtCore.QAbstractTableModel):
 
     def roleNames(self):
         roles = {
-            QtCore.Qt.DisplayRole: b'display',
+            QtCore.Qt.ItemDataRole.DisplayRole: b'display',
             DataFrameModel.DtypeRole: b'dtype',
             DataFrameModel.ValueRole: b'value'
         }
@@ -409,7 +213,7 @@ class ErrorMessage(QtWidgets.QDialog):
 
     def init_ui(self):
         self.setWindowTitle("Error")
-        self.setWindowIcon(self.style().standardIcon(QtWidgets.QStyle.SP_MessageBoxCritical))
+        self.setWindowIcon(self.style().standardIcon(QtWidgets.QStyle.StandardPixmap.SP_MessageBoxCritical))
 
         self.widgets['error_label'] = QtWidgets.QLabel('<i>RNAlysis</i> has encountered the following error:')
         self.layout.addWidget(self.widgets['error_label'])
@@ -442,8 +246,8 @@ class ErrorMessage(QtWidgets.QDialog):
 
     def copy_to_clipboard(self):
         cb = QtWidgets.QApplication.clipboard()
-        cb.clear(mode=cb.Clipboard)
-        cb.setText("".join(traceback.format_exception(*self.exception)), mode=cb.Clipboard)
+        cb.clear(mode=QtGui.QClipboard.Mode.Clipboard)
+        cb.setText("".join(traceback.format_exception(*self.exception)), mode=QtGui.QClipboard.Mode.Clipboard)
         self.widgets['copied_label'].setText('Copied to clipboard')
 
 
@@ -464,12 +268,12 @@ class WhatsNewWindow(QtWidgets.QMessageBox):
         self.text.setTextFormat(QtCore.Qt.TextFormat.MarkdownText)
         self.text.setText(text)
         self.text.setWordWrap(True)
-        self.scroll_layout.addWidget( self.text)
+        self.scroll_layout.addWidget(self.text)
         self.layout().addWidget(self.scroll, 0, 0, 1, self.layout().columnCount())
         self.setWindowTitle(f"What's new in version {__version__}")
         self.setStyleSheet("QScrollArea{min-width:900 px; min-height: 600px}"
                            "QScrollBar:vertical {width: 40;}")
-        self.setStandardButtons(QtWidgets.QMessageBox.Ok)
+        self.setStandardButtons(QtWidgets.QMessageBox.StandardButton.Ok)
         self.buttonClicked.connect(self.close)
 
 
@@ -490,7 +294,7 @@ class AboutWindow(QtWidgets.QMessageBox):
                 </p>"""
         self.setText(text)
         self.setWindowTitle("About RNAlysis")
-        self.setStandardButtons(QtWidgets.QMessageBox.Ok)
+        self.setStandardButtons(QtWidgets.QMessageBox.StandardButton.Ok)
         self.buttonClicked.connect(self.close)
 
 
@@ -516,8 +320,8 @@ class SettingsWindow(gui_widgets.MinMaxDialog):
         self.tables_widgets = {}
 
         self.button_box = QtWidgets.QDialogButtonBox(
-            QtWidgets.QDialogButtonBox.Ok | QtWidgets.QDialogButtonBox.Cancel |
-            QtWidgets.QDialogButtonBox.Apply | QtWidgets.QDialogButtonBox.RestoreDefaults)
+            QtWidgets.QDialogButtonBox.StandardButton.Ok | QtWidgets.QDialogButtonBox.StandardButton.Cancel |
+            QtWidgets.QDialogButtonBox.StandardButton.Apply | QtWidgets.QDialogButtonBox.StandardButton.RestoreDefaults)
 
         self.layout.addWidget(self.appearance_group)
         self.layout.addWidget(self.tables_group)
@@ -552,7 +356,7 @@ class SettingsWindow(gui_widgets.MinMaxDialog):
         for i in range(self.appearance_widgets['databases'].count()):
             item = self.appearance_widgets['databases'].item(i)
             if item.text() in current_dbs:
-                item.setCheckState(QtCore.Qt.Checked)
+                item.setCheckState(QtCore.Qt.CheckState.Checked)
 
         attr_ref_path = settings.get_attr_ref_path('predefined') if settings.is_setting_in_file(
             settings.__attr_file_key__) else 'No file chosen'
@@ -567,10 +371,11 @@ class SettingsWindow(gui_widgets.MinMaxDialog):
         self.appearance_widgets['app_theme'].addItems(self.THEMES.keys())
 
         self.appearance_widgets['app_font'] = QtWidgets.QFontComboBox(self.appearance_group)
-        self.appearance_widgets['app_font'].setFontFilters(QtWidgets.QFontComboBox.ScalableFonts)
+        self.appearance_widgets['app_font'].setFontFilters(QtWidgets.QFontComboBox.FontFilter.ScalableFonts)
         self.appearance_widgets['app_font'].setEditable(True)
-        self.appearance_widgets['app_font'].completer().setCompletionMode(QtWidgets.QCompleter.PopupCompletion)
-        self.appearance_widgets['app_font'].setInsertPolicy(QtWidgets.QComboBox.NoInsert)
+        self.appearance_widgets['app_font'].completer().setCompletionMode(
+            QtWidgets.QCompleter.CompletionMode.PopupCompletion)
+        self.appearance_widgets['app_font'].setInsertPolicy(QtWidgets.QComboBox.InsertPolicy.NoInsert)
 
         self.appearance_widgets['app_font_size'] = QtWidgets.QComboBox(self.appearance_group)
         self.appearance_widgets['app_font_size'].addItems(self.FONT_SIZES)
@@ -579,13 +384,13 @@ class SettingsWindow(gui_widgets.MinMaxDialog):
         with open(self.LOOKUP_DATABASES_PATH) as f:
             for key in json.load(f).keys():
                 item = QtWidgets.QListWidgetItem(key)
-                item.setCheckState(QtCore.Qt.Unchecked)
+                item.setCheckState(QtCore.Qt.CheckState.Unchecked)
                 self.appearance_widgets['databases'].addItem(item)
 
         self.appearance_widgets['show_tutorial'] = QtWidgets.QCheckBox("Show tutorial page on startup")
         self.appearance_widgets['report_gen'] = QtWidgets.QComboBox()
         self.appearance_widgets['report_gen'].addItems(self.REPORT_GEN_OPTIONS.keys())
-        self.appearance_widgets['report_gen'].setInsertPolicy(QtWidgets.QComboBox.NoInsert)
+        self.appearance_widgets['report_gen'].setInsertPolicy(QtWidgets.QComboBox.InsertPolicy.NoInsert)
 
         for widget_name in ['app_theme', 'app_font', 'app_font_size', 'report_gen']:
             self.appearance_widgets[widget_name].currentIndexChanged.connect(self._trigger_settings_changed)
@@ -659,9 +464,9 @@ class SettingsWindow(gui_widgets.MinMaxDialog):
 
     def handle_button_click(self, button):
         role = self.button_box.buttonRole(button)
-        if role == QtWidgets.QDialogButtonBox.ApplyRole:
+        if role == QtWidgets.QDialogButtonBox.ButtonRole.ApplyRole:
             self.save_settings()
-        elif role == QtWidgets.QDialogButtonBox.ResetRole:
+        elif role == QtWidgets.QDialogButtonBox.ButtonRole.ResetRole:
             self.reset_settings()
 
     def closeEvent(self, event):
@@ -670,8 +475,9 @@ class SettingsWindow(gui_widgets.MinMaxDialog):
             quit_msg = "Are you sure you want to close settings without saving?"
 
             reply = QtWidgets.QMessageBox.question(self, 'Close settings without saving?',
-                                                   quit_msg, QtWidgets.QMessageBox.No, QtWidgets.QMessageBox.Yes)
-            to_exit = reply == QtWidgets.QMessageBox.Yes
+                                                   quit_msg, QtWidgets.QMessageBox.StandardButton.No,
+                                                   QtWidgets.QMessageBox.StandardButton.Yes)
+            to_exit = reply == QtWidgets.QMessageBox.StandardButton.Yes
 
         if to_exit:
             event.accept()
@@ -681,49 +487,49 @@ class SettingsWindow(gui_widgets.MinMaxDialog):
 
 class HowToCiteWindow(gui_widgets.MinMaxDialog):
     CITATION_RNALYSIS = """
-    Teichman, G., Cohen, D., Ganon, O., Dunsky, N., Shani, S., Gingold, H., and Rechavi, O. (2022).
-    RNAlysis: analyze your RNA sequencing data without writing a single line of code. BioRxiv 2022.11.25.517851.
-    <br>
-    <a href=https://doi.org/10.1101/2022.11.25.517851>doi.org/10.1101/2022.11.25.517851</a>
-    """
+        Teichman, G., Cohen, D., Ganon, O., Dunsky, N., Shani, S., Gingold, H., and Rechavi, O. (2022).
+        RNAlysis: analyze your RNA sequencing data without writing a single line of code. BioRxiv 2022.11.25.517851.
+        <br>
+        <a href=https://doi.org/10.1101/2022.11.25.517851>doi.org/10.1101/2022.11.25.517851</a>
+        """
     CITATION_CUTADAPT = """
-    Martin, M. (2011). Cutadapt removes adapter sequences from high-throughput sequencing reads.
-    EMBnet.journal, 17(1), pp. 10-12.
-    <br>
-    <a href=https://doi.org/10.14806/ej.17.1.200>doi.org/10.14806/ej.17.1.200</a>
-    """
+        Martin, M. (2011). Cutadapt removes adapter sequences from high-throughput sequencing reads.
+        EMBnet.journal, 17(1), pp. 10-12.
+        <br>
+        <a href=https://doi.org/10.14806/ej.17.1.200>doi.org/10.14806/ej.17.1.200</a>
+        """
     CITATION_KALLISTO = """
-    Bray, N., Pimentel, H., Melsted, P. et al.
-    Near-optimal probabilistic RNA-seq quantification.
-    Nat Biotechnol 34, 525–527 (2016).
-    <br>
-    <a href=https://doi.org/10.1038/nbt.3519>doi.org/10.1038/nbt.3519</a>
-    """
+        Bray, N., Pimentel, H., Melsted, P. et al.
+        Near-optimal probabilistic RNA-seq quantification.
+        Nat Biotechnol 34, 525–527 (2016).
+        <br>
+        <a href=https://doi.org/10.1038/nbt.3519>doi.org/10.1038/nbt.3519</a>
+        """
     CITATION_DESEQ2 = """
-    Love MI, Huber W, Anders S (2014).
-    “Moderated estimation of fold change and dispersion for RNA-seq data with DESeq2.”
-    Genome Biology, 15, 550.
-    <br>
-    <a href=https://doi.org/10.1186/s13059-014-0550-8>doi.org/10.1186/s13059-014-0550-8</a>
-    """
+        Love MI, Huber W, Anders S (2014).
+        “Moderated estimation of fold change and dispersion for RNA-seq data with DESeq2.”
+        Genome Biology, 15, 550.
+        <br>
+        <a href=https://doi.org/10.1186/s13059-014-0550-8>doi.org/10.1186/s13059-014-0550-8</a>
+        """
     CITATION_HDBSCAN = """
-    L. McInnes, J. Healy, S. Astels, hdbscan:
-    Hierarchical density based clustering In:
-    Journal of Open Source Software, The Open Journal, volume 2, number 11. 2017
-    <br>
-    <a href=https://doi.org/10.1371/journal.pcbi.0030039>doi.org/10.1371/journal.pcbi.0030039</a>"""
+        L. McInnes, J. Healy, S. Astels, hdbscan:
+        Hierarchical density based clustering In:
+        Journal of Open Source Software, The Open Journal, volume 2, number 11. 2017
+        <br>
+        <a href=https://doi.org/10.1371/journal.pcbi.0030039>doi.org/10.1371/journal.pcbi.0030039</a>"""
     CITATION_XLMHG = """
-    <p>
-    Eden, E., Lipson, D., Yogev, S., and Yakhini, Z. (2007).
-     Discovering Motifs in Ranked Lists of DNA Sequences. PLOS Comput. Biol. 3, e39.
-    <br>
-    <a href=https://doi.org/10.1371/journal.pcbi.0030039>doi.org/10.1371/journal.pcbi.0030039</a>
-    </p>
-    <p>
-    Wagner, F. (2017). The XL-mHG test for gene set enrichment. ArXiv.
-    <br>
-    <a href=https://doi.org/10.48550/arXiv.1507.07905>doi.org/10.48550/arXiv.1507.07905</a>
-    </p>"""
+        <p>
+        Eden, E., Lipson, D., Yogev, S., and Yakhini, Z. (2007).
+         Discovering Motifs in Ranked Lists of DNA Sequences. PLOS Comput. Biol. 3, e39.
+        <br>
+        <a href=https://doi.org/10.1371/journal.pcbi.0030039>doi.org/10.1371/journal.pcbi.0030039</a>
+        </p>
+        <p>
+        Wagner, F. (2017). The XL-mHG test for gene set enrichment. ArXiv.
+        <br>
+        <a href=https://doi.org/10.48550/arXiv.1507.07905>doi.org/10.48550/arXiv.1507.07905</a>
+        </p>"""
     CITATION_FILE_PATH = Path(__file__).parent.parent.joinpath('data_files/tool_citations.json')
 
     def __init__(self, parent=None):
@@ -753,10 +559,10 @@ class HowToCiteWindow(gui_widgets.MinMaxDialog):
         self.init_ui()
 
     def init_ui(self):
-        self.scroll.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
+        self.scroll.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         self.scroll.setWidgetResizable(True)
         self.scroll.setWidget(self.scroll_widget)
-        self.layout.setSizeConstraint(QtWidgets.QLayout.SetMinAndMaxSize)
+        self.layout.setSizeConstraint(QtWidgets.QLayout.SizeConstraint.SetMinAndMaxSize)
 
         self.main_layout.addWidget(self.scroll)
 
@@ -777,7 +583,8 @@ def splash_screen():
     splash_font = QtGui.QFont('Calibri', 16)
     splash = QtWidgets.QSplashScreen(splash_pixmap)
     splash.setFont(splash_font)
-    splash.showMessage(f"<i>RNAlysis</i> version {__version__}", QtCore.Qt.AlignBottom | QtCore.Qt.AlignHCenter)
+    splash.showMessage(f"<i>RNAlysis</i> version {__version__}",
+                       QtCore.Qt.AlignmentFlag.AlignBottom | QtCore.Qt.AlignmentFlag.AlignHCenter)
     splash.show()
     return splash
 
@@ -834,10 +641,10 @@ class FuncExternalWindow(gui_widgets.MinMaxDialog):
         self.close_button = QtWidgets.QPushButton('Close')
 
     def init_ui(self):
-        self.scroll.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
+        self.scroll.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         self.scroll.setWidgetResizable(True)
         self.scroll.setWidget(self.scroll_widget)
-        self.scroll_layout.setSizeConstraint(QtWidgets.QLayout.SetMinAndMaxSize)
+        self.scroll_layout.setSizeConstraint(QtWidgets.QLayout.SizeConstraint.SetMinAndMaxSize)
 
         self.main_layout.addWidget(self.scroll)
 
@@ -1131,7 +938,8 @@ class ApplyTablePipelineWindow(gui_widgets.MinMaxDialog):
         self.available_objects = available_objects
         self.layout = QtWidgets.QVBoxLayout(self)
         self.label = QtWidgets.QLabel('Choose the tables you wish to apply your Pipeline to', self)
-        self.button_box = QtWidgets.QDialogButtonBox(QtWidgets.QDialogButtonBox.Ok | QtWidgets.QDialogButtonBox.Cancel)
+        self.button_box = QtWidgets.QDialogButtonBox(
+            QtWidgets.QDialogButtonBox.StandardButton.Ok | QtWidgets.QDialogButtonBox.StandardButton.Cancel)
         self.list = gui_widgets.MultipleChoiceList(self.available_objects,
                                                    [val[1] for val in self.available_objects.values()],
                                                    self)
@@ -1144,7 +952,7 @@ class ApplyTablePipelineWindow(gui_widgets.MinMaxDialog):
         self.button_box.rejected.connect(self.reject)
         self.layout.addWidget(self.label)
         self.layout.addWidget(self.list)
-        self.layout.addWidget(self.button_box, QtCore.Qt.AlignCenter)
+        self.layout.addWidget(self.button_box, QtCore.Qt.AlignmentFlag.AlignCenter)
 
     def result(self):
         return [item.text() for item in self.list.get_sorted_selection()]
@@ -1157,8 +965,8 @@ class ReportGenerationMessageBox(QtWidgets.QMessageBox):  # pragma: no cover
         self.setText("Do you want to enable report generation for this session?\n"
                      "(this will slow down the program slightly)")
 
-        self.yes_button = self.addButton(QtWidgets.QPushButton("Yes"), QtWidgets.QMessageBox.YesRole)
-        self.no_button = self.addButton(QtWidgets.QPushButton("No"), QtWidgets.QMessageBox.NoRole)
+        self.yes_button = self.addButton(QtWidgets.QPushButton("Yes"), QtWidgets.QMessageBox.ButtonRole.YesRole)
+        self.no_button = self.addButton(QtWidgets.QPushButton("No"), QtWidgets.QMessageBox.ButtonRole.NoRole)
 
         self.checkbox = QtWidgets.QCheckBox("Don't ask me again")
         self.setCheckBox(self.checkbox)

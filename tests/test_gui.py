@@ -11,8 +11,8 @@ import rnalysis.gui.gui_report
 matplotlib.use('Agg')
 from rnalysis.gui.gui import *
 
-LEFT_CLICK = QtCore.Qt.LeftButton
-RIGHT_CLICK = QtCore.Qt.RightButton
+LEFT_CLICK = QtCore.Qt.MouseButton.LeftButton
+RIGHT_CLICK = QtCore.Qt.MouseButton.RightButton
 
 
 def _pytestqt_graceful_shutdown():
@@ -27,7 +27,7 @@ def _pytestqt_graceful_shutdown():
 
 @pytest.fixture(autouse=True)
 def mainwindow_setup(monkeypatch):
-    monkeypatch.setattr(QtWidgets.QMessageBox, 'question', lambda *args, **kwargs: QtWidgets.QMessageBox.Yes)
+    monkeypatch.setattr(QtWidgets.QMessageBox, 'question', lambda *args, **kwargs: QtWidgets.QMessageBox.StandardButton.Yes)
     monkeypatch.setattr(gui_widgets.ThreadStdOutStreamTextQueueReceiver, 'run', lambda self: None)
     monkeypatch.setattr(gui_quickstart.QuickStartWizard, '__init__', lambda *args, **kwargs: None)
 
@@ -35,21 +35,21 @@ def mainwindow_setup(monkeypatch):
 @pytest.fixture
 def blank_icon():
     pixmap = QtGui.QPixmap(32, 32)
-    pixmap.fill(QtCore.Qt.transparent)
+    pixmap.fill(QtCore.Qt.GlobalColor.transparent)
     return QtGui.QIcon(pixmap)
 
 
 @pytest.fixture
 def red_icon():
     pixmap = QtGui.QPixmap(32, 32)
-    pixmap.fill(QtCore.Qt.red)
+    pixmap.fill(QtCore.Qt.GlobalColor.red)
     return QtGui.QIcon(pixmap)
 
 
 @pytest.fixture
 def green_icon():
     pixmap = QtGui.QPixmap(32, 32)
-    pixmap.fill(QtCore.Qt.green)
+    pixmap.fill(QtCore.Qt.GlobalColor.green)
     return QtGui.QIcon(pixmap)
 
 
@@ -72,11 +72,11 @@ def available_objects(qtbot, red_icon, green_icon):
     qtbot, first = widget_setup(qtbot, SetTabPage, 'first tab',
                                 {'WBGene00000002', 'WBGene00000006', 'WBGene00000015', 'WBGene00000017'})
 
-    qtbot, second = widget_setup(qtbot, FilterTabPage, undo_stack=QtWidgets.QUndoStack())
+    qtbot, second = widget_setup(qtbot, FilterTabPage, undo_stack=QtGui.QUndoStack())
     second.start_from_filter_obj(filtering.DESeqFilter('tests/test_files/test_deseq.csv'), 1)
     second.rename('second tab')
 
-    qtbot, third = widget_setup(qtbot, FilterTabPage, undo_stack=QtWidgets.QUndoStack())
+    qtbot, third = widget_setup(qtbot, FilterTabPage, undo_stack=QtGui.QUndoStack())
     third.start_from_filter_obj(filtering.CountFilter('tests/test_files/counted.tsv'), 2)
     third.rename('third tab')
 
@@ -89,19 +89,19 @@ def four_available_objects_and_empty(qtbot, red_icon, green_icon, blank_icon):
     qtbot, first = widget_setup(qtbot, SetTabPage, 'first tab',
                                 {'WBGene00008447', 'WBGene00044258', 'WBGene00045410', 'WBGene00010100'})
 
-    qtbot, second = widget_setup(qtbot, FilterTabPage, undo_stack=QtWidgets.QUndoStack())
+    qtbot, second = widget_setup(qtbot, FilterTabPage, undo_stack=QtGui.QUndoStack())
     second.start_from_filter_obj(filtering.DESeqFilter('tests/test_files/test_deseq_set_ops_1.csv'), 2)
     second.rename('second tab')
 
-    qtbot, third = widget_setup(qtbot, FilterTabPage, undo_stack=QtWidgets.QUndoStack())
+    qtbot, third = widget_setup(qtbot, FilterTabPage, undo_stack=QtGui.QUndoStack())
     third.start_from_filter_obj(filtering.DESeqFilter('tests/test_files/test_deseq_set_ops_2.csv'), 3)
     third.rename('third tab')
 
-    qtbot, fourth = widget_setup(qtbot, FilterTabPage, undo_stack=QtWidgets.QUndoStack())
+    qtbot, fourth = widget_setup(qtbot, FilterTabPage, undo_stack=QtGui.QUndoStack())
     fourth.start_from_filter_obj(filtering.CountFilter('tests/test_files/counted.tsv'), 4)
     fourth.rename('fourth tab')
 
-    qtbot, empty = widget_setup(qtbot, FilterTabPage, undo_stack=QtWidgets.QUndoStack())
+    qtbot, empty = widget_setup(qtbot, FilterTabPage, undo_stack=QtGui.QUndoStack())
 
     yield {'first tab': (first, red_icon), 'second tab': (second, red_icon), 'third tab': (third, red_icon),
            'fourth tab': (fourth, green_icon), 'empty tab': (empty, blank_icon)}
@@ -160,7 +160,7 @@ def filtertabpage(qtbot):
 
 @pytest.fixture
 def filtertabpage_with_undo_stack(qtbot):
-    stack = QtWidgets.QUndoStack()
+    stack = QtGui.QUndoStack()
     qtbot, window = widget_setup(qtbot, FilterTabPage, undo_stack=stack)
     window.start_from_filter_obj(filtering.DESeqFilter('tests/test_files/test_deseq_sig.csv'), 1)
     yield window, stack
@@ -169,7 +169,7 @@ def filtertabpage_with_undo_stack(qtbot):
 
 @pytest.fixture
 def countfiltertabpage_with_undo_stack(qtbot):
-    stack = QtWidgets.QUndoStack()
+    stack = QtGui.QUndoStack()
     qtbot, window = widget_setup(qtbot, FilterTabPage, undo_stack=stack)
     window.start_from_filter_obj(filtering.CountFilter('tests/test_files/counted.csv'), 1)
     yield window, stack
@@ -178,7 +178,7 @@ def countfiltertabpage_with_undo_stack(qtbot):
 
 @pytest.fixture
 def settabpage_with_undo_stack(qtbot):
-    stack = QtWidgets.QUndoStack()
+    stack = QtGui.QUndoStack()
     qtbot, window = widget_setup(qtbot, SetTabPage, 'my set name', {'a', 'b', 'c', 'd'}, undo_stack=stack)
     yield window, stack
     _pytestqt_graceful_shutdown()
@@ -627,7 +627,7 @@ def test_ClicomWindow_add_setup(qtbot, clicom_window):
 
 
 def test_ClicomWindow_remove_setup(qtbot, monkeypatch, clicom_window):
-    monkeypatch.setattr(QtWidgets.QMessageBox, 'question', lambda *args: QtWidgets.QMessageBox.Yes)
+    monkeypatch.setattr(QtWidgets.QMessageBox, 'question', lambda *args: QtWidgets.QMessageBox.StandardButton.Yes)
     qtbot.keyClicks(clicom_window.stack.func_combo, filtering.CountFilter.split_kmeans.readable_name)
     clicom_window.stack.parameter_widgets['n_clusters'].other.setValue(3)
     qtbot.mouseClick(clicom_window.setups_widgets['add_button'], LEFT_CLICK)
@@ -1631,7 +1631,7 @@ def test_FilterTabPage_apply_split_clustering_function(qtbot, monkeypatch, count
         self.select_all.setChecked(True)
         self.change_all()
         self.accept()
-        self.button_box.button(QtWidgets.QDialogButtonBox.Ok).click()
+        self.button_box.button(QtWidgets.QDialogButtonBox.StandardButton.Ok).click()
 
     monkeypatch.setattr(MultiKeepWindow, 'exec', mock_show_multikeep)
 
@@ -1943,7 +1943,7 @@ def test_CreatePipelineWindow_from_pipeline(qtbot):
     ('Sequence files (paired-end)', fastq.PairedEndPipeline, False)
 ])
 def test_CreatePipelineWindow_create_pipeline(qtbot, monkeypatch, pipeline_type, exp_pipeline, exp_filter_type):
-    monkeypatch.setattr(QtWidgets.QMessageBox, "question", lambda *args: QtWidgets.QMessageBox.Yes)
+    monkeypatch.setattr(QtWidgets.QMessageBox, "question", lambda *args: QtWidgets.QMessageBox.StandardButton.Yes)
     pipeline_name = 'my pipeline name'
     qtbot, window = widget_setup(qtbot, CreatePipelineWindow)
     window.basic_widgets['pipeline_name'].clear()
@@ -1962,7 +1962,7 @@ def test_CreatePipelineWindow_add_function(qtbot, monkeypatch):
     pipeline_truth = filtering.Pipeline('DESeqFilter')
     pipeline_truth.add_function('split_fold_change_direction')
 
-    monkeypatch.setattr(QtWidgets.QMessageBox, "question", lambda *args: QtWidgets.QMessageBox.Yes)
+    monkeypatch.setattr(QtWidgets.QMessageBox, "question", lambda *args: QtWidgets.QMessageBox.StandardButton.Yes)
 
     qtbot, window = widget_setup(qtbot, CreatePipelineWindow)
     window.basic_widgets['pipeline_name'].clear()
@@ -1980,7 +1980,7 @@ def test_CreatePipelineWindow_add_function(qtbot, monkeypatch):
 
 def test_CreatePipelineWindow_remove_function(qtbot, monkeypatch):
     warned = []
-    monkeypatch.setattr(QtWidgets.QMessageBox, "question", lambda *args: QtWidgets.QMessageBox.Yes)
+    monkeypatch.setattr(QtWidgets.QMessageBox, "question", lambda *args: QtWidgets.QMessageBox.StandardButton.Yes)
     monkeypatch.setattr(QtWidgets.QMessageBox, 'exec', lambda *args, **kwargs: warned.append(True))
 
     qtbot, window = widget_setup(qtbot, CreatePipelineWindow)
@@ -2009,7 +2009,7 @@ def test_CreatePipelineWindow_add_function_with_args(qtbot, monkeypatch):
     pipeline_truth = filtering.Pipeline('DESeqFilter')
     pipeline_truth.add_function('filter_significant', alpha=0.01, opposite=True)
 
-    monkeypatch.setattr(QtWidgets.QMessageBox, "question", lambda *args: QtWidgets.QMessageBox.Yes)
+    monkeypatch.setattr(QtWidgets.QMessageBox, "question", lambda *args: QtWidgets.QMessageBox.StandardButton.Yes)
 
     qtbot, window = widget_setup(qtbot, CreatePipelineWindow)
     window.basic_widgets['pipeline_name'].clear()
@@ -2039,7 +2039,7 @@ def test_CreatePipelineWindow_save_pipeline(qtbot, monkeypatch):
     pipeline_truth.add_function('describe', percentiles=[0.01, 0.25, 0.5, 0.75, 0.99])
     pipeline_name = 'my pipeline name'
 
-    monkeypatch.setattr(QtWidgets.QMessageBox, "question", lambda *args: QtWidgets.QMessageBox.Yes)
+    monkeypatch.setattr(QtWidgets.QMessageBox, "question", lambda *args: QtWidgets.QMessageBox.StandardButton.Yes)
 
     qtbot, window = widget_setup(qtbot, CreatePipelineWindow)
     window.basic_widgets['pipeline_name'].clear()
@@ -2062,7 +2062,7 @@ def test_CreatePipelineWindow_export_pipeline(qtbot, monkeypatch):
     pipeline_truth.add_function('describe', percentiles=[0.01, 0.25, 0.5, 0.75, 0.99])
     pipeline_name = 'my pipeline name'
 
-    monkeypatch.setattr(QtWidgets.QMessageBox, "question", lambda *args: QtWidgets.QMessageBox.Yes)
+    monkeypatch.setattr(QtWidgets.QMessageBox, "question", lambda *args: QtWidgets.QMessageBox.StandardButton.Yes)
 
     qtbot, window = widget_setup(qtbot, CreatePipelineWindow)
     window.basic_widgets['pipeline_name'].clear()
@@ -2212,7 +2212,7 @@ class MockTab(QtWidgets.QWidget):
 
 def test_ReactiveTabWidget_remove_tab(qtbot, tab_widget):
     qtbot, widget = widget_setup(qtbot, MockTab)
-    tab_widget.setCornerWidget(widget, QtCore.Qt.TopRightCorner)
+    tab_widget.setCornerWidget(widget, QtCore.Qt.Corner.TopRightCorner)
     for i in range(3):
         qtbot, widget = widget_setup(qtbot, MockTab)
         tab_widget.addTab(widget, 'name')
@@ -2405,8 +2405,8 @@ def test_MainWindow_new_table_from_folder_htseqcount(main_window_with_tabs, norm
 
     def mock_question(*args, **kwargs):
         if args[1] == 'Close program':
-            return QtWidgets.QMessageBox.Yes
-        return QtWidgets.QMessageBox.Yes if normalize else QtWidgets.QMessageBox.No
+            return QtWidgets.QMessageBox.StandardButton.Yes
+        return QtWidgets.QMessageBox.StandardButton.Yes if normalize else QtWidgets.QMessageBox.StandardButton.No
 
     monkeypatch.setattr(QtWidgets.QFileDialog, 'getExistingDirectory', mock_get_dir)
     monkeypatch.setattr(QtWidgets.QMessageBox, 'question', mock_question)
