@@ -476,16 +476,16 @@ class WhatsNewWindow(QtWidgets.QMessageBox):
 class AboutWindow(QtWidgets.QMessageBox):
     def __init__(self, parent=None):
         super().__init__(parent)
-        img_path = str(Path(__file__).parent.joinpath('splash_transparent.png'))
+        img_path = str(Path(__file__).parent.joinpath('logo_small.png'))
         text = f"""<br>
-                <p align="center"><b><i><b>RNAlysis</i>/<b> version {__version__}</b>
-                </p>
+                <p align="center"><b><i><b>RNAlysis</i></b> version {__version__}</b>
                 <br>
-                <img src="{img_path}" width="500"/>
-                <p>
+                <img src="{img_path}" align="center"/>
+                </p>
+                <p align="center">
                 Development lead: Guy Teichman (<a href="mailto:guyteichman@gmail.com">guyteichman@gmail.com</a>)
                 </p>
-                <p>
+                <p align="center">
                 Contributors: Dror Cohen, Or Ganon, Netta Dunsky, Shachar Shani
                 </p>"""
         self.setText(text)
@@ -730,9 +730,9 @@ class HowToCiteWindow(gui_widgets.MinMaxDialog):
         super().__init__(parent)
         img_path = str(Path(__file__).parent.joinpath('logo_small.png'))
         text = f"""<p align="center"><b><i>RNAlysis</i> version {__version__}</b>
-                </p>
                 <br>
-                <img src="{img_path}" width="250"/>"""
+                <img src="{img_path}" width="250" align="center"/>
+                </p>"""
         self.label = QtWidgets.QLabel(text)
 
         self.citation_labels = []
