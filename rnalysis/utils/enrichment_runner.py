@@ -606,7 +606,7 @@ class MultiPlotter(EnrichmentPlotter):
 
 
 class EnrichmentRunner:
-    ENRICHMENT_SCORE_YLABEL = r"$\log_2$(Fold Enrichment)"
+    ENRICHMENT_SCORE_YLABEL = "$\\log_2$(Fold Enrichment)"
     SINGLE_SET_ENRICHMENT_SCORE_YLABEL = r"$\log_2$(XL-mHG enrichment score)"
 
     __slots__ = {'results': 'DataFrame containing enrichment analysis results',
@@ -894,7 +894,7 @@ class EnrichmentRunner:
 
     def enrichment_bar_plot(self, n_bars: Union[int, Literal['all']] = 'all',
                             center_bars: bool = True,
-                            ylabel: str = r"$\log_2$(Fold Enrichment)", title: str = 'Enrichment results',
+                            ylabel: str = "$\\log_2$(Fold Enrichment)", title: str = 'Enrichment results',
                             ylim: Union[float, Literal['auto']] = 'auto', title_fontsize: float = 18,
                             label_fontsize: float = 13, ylabel_fontsize: float = 16) -> plt.Figure:
 
@@ -909,7 +909,7 @@ class EnrichmentRunner:
         :param title: plot title.
         :type title: str
         :param ylabel: plot y-axis label.
-        :type ylabel: str (default=r"$\log_2$(Fold Enrichment)")
+        :type ylabel: str (default="$\\log_2$(Fold Enrichment)")
         :param center_bars: if True, center the bars around Y=0. Otherwise, ylim is determined by min/max values.
         :type center_bars: bool (default=True)
         :param ylim: set the Y-axis limits. If `ylim`='auto', determines the axis limits automatically based on the data. \
@@ -1548,7 +1548,7 @@ class GOEnrichmentRunner(EnrichmentRunner):
             figs.extend(self.go_dag_plot(**ontology_kwargs))
         return figs
 
-    def go_dag_plot(self, title, dpi: int = 300, ylabel: str = r"$\log_2$(Fold Enrichment)") -> List[plt.Figure]:
+    def go_dag_plot(self, title, dpi: int = 300, ylabel: str = "$\\log_2$(Fold Enrichment)") -> List[plt.Figure]:
         aspects = ('biological_process', 'cellular_component',
                    'molecular_function') if self.aspects == 'any' else parsing.data_to_tuple(self.aspects)
         figs = []

@@ -1808,7 +1808,7 @@ def enrichment_bar_plot(results_table_path: Union[str, Path], alpha: param_typin
                         n_bars: Union[param_typing.PositiveInt, Literal['all']] = 'all',
                         title: str = 'Enrichment results', center_bars: bool = True,
                         plot_horizontal: bool = True, ylabel: Union[str, Literal[
-        r"$\log_2$(Fold Enrichment)", r"$\log_2$(Enrichment Score)"]] = r"$\log_2$(Fold Enrichment)",
+        "$\\log_2$(Fold Enrichment)", r"$\log_2$(Enrichment Score)"]] = "$\\log_2$(Fold Enrichment)",
                         ylim: Union[float, Literal['auto']] = 'auto',
                         plot_style: Literal['bar', 'lollipop'] = 'bar', show_expected: bool = False,
                         title_fontsize: float = 18, label_fontsize: float = 13, ylabel_fontsize: float = 16
@@ -1833,7 +1833,7 @@ def enrichment_bar_plot(results_table_path: Union[str, Path], alpha: param_typin
         Otherwise, results will be plotted with a vertical plot.
     :type plot_horizontal: bool (default=True)
     :param ylabel: plot y-axis label.
-    :type ylabel: str (default=r"$\log_2$(Fold Enrichment)")
+    :type ylabel: str (default="$\\log_2$(Fold Enrichment)")
     :param center_bars: if True, center the bars around Y=0. Otherwise, ylim is determined by min/max values.
     :type center_bars: bool (default=True)
     :param ylim: set the Y-axis limits. If `ylim`='auto', determines the axis limits automatically based on the data. \
@@ -1912,7 +1912,7 @@ def upset_plot(objs: Dict[str, Union[str, FeatureSet, Set[str]]], set_colors: pa
     a FeatureSet, a python set of feature indices, or a name of a column in the Attribute Reference Table. \
     For example: \
     {'first set':{'gene1','gene2','gene3'}, 'second set':'name_of_attribute_from_reference_table'}
-    :param set_colors: I\if one color is supplied, this will determine the color of all sets on the plot. \
+    :param set_colors: If one color is supplied, this will determine the color of all sets on the plot. \
     If multiple colors are supplied, this will determine the color of each set on the plot, and the subset colors \
     will be determined by mixing.
     :type set_colors: Iterable of colors (default=('black',)
@@ -2101,7 +2101,7 @@ def venn_diagram(objs: Dict[str, Union[str, FeatureSet, Set[str]]], title: Union
 def gene_ontology_graph(aspect: Literal[param_typing.GO_ASPECTS], results_table_path: Union[str, Path],
                         enrichment_score_column: Union[
                             str, Literal['log2_enrichment_score', 'log2_fold_enrichment']] = 'log2_fold_enrichment',
-                        title: Union[str, Literal['auto']] = 'auto', ylabel: str = r"$\log_2$(Fold Enrichment)",
+                        title: Union[str, Literal['auto']] = 'auto', ylabel: str = "$\\log_2$(Fold Enrichment)",
                         graph_format: Literal[param_typing.GRAPHVIZ_FORMATS] = 'none', dpi: PositiveInt = 300
                         ) -> Union[plt.Figure, None]:
     """
@@ -2116,7 +2116,7 @@ def gene_ontology_graph(aspect: Literal[param_typing.GO_ASPECTS], results_table_
     :param title: plot title.
     :type title: str or 'auto' (default='auto')
     :param ylabel: plot y-axis label.
-    :type ylabel: str (default=r"$\log_2$(Fold Enrichment)")
+    :type ylabel: str (default="$\\log_2$(Fold Enrichment)")
     :param graph_format: if `graph_format` is not 'none', the ontology graph will additonally be \
     generated in the specified file format.
     :type graph_format: 'pdf', 'png', 'svg', or 'none' (default='none')
@@ -2148,7 +2148,7 @@ def kegg_pathway_graph(pathway_id: str, marked_genes: Union[Sequence[str], None]
     :param title: plot title.
     :type title: str or 'auto' (default='auto')
     :param ylabel: plot y-axis label.
-    :type ylabel: str (default=r"$\log_2$(Fold Enrichment)")
+    :type ylabel: str (default="$\\log_2$(Fold Enrichment)")
     :param graph_format: if `graph_format` is not 'none', the ontology graph will additonally be \
     generated in the specified file format.
     :type graph_format: 'pdf', 'png', 'svg', or 'none' (default='none')
