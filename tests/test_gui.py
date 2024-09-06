@@ -2439,8 +2439,8 @@ def test_MainWindow_multiple_new_tables(main_window, monkeypatch):
     def mock_exec(self):
         return True
 
-    def mock_multi_selection_result(self):
-        return filenames
+    def mock_multi_selection_result(self, _):
+        return filenames, ''
 
     def mock_multi_open_result(self):
         filename_dict = {fname: fname for fname in filenames}
@@ -2451,9 +2451,8 @@ def test_MainWindow_multiple_new_tables(main_window, monkeypatch):
                        filenames[2]: {'numerator_name': 'num', 'denominator_name': 'denom'}}
         return filename_dict, types_dict, names_dict, kwargs_dict
 
-    monkeypatch.setattr(gui_windows.MultiFileSelectionDialog, 'exec', mock_exec)
     monkeypatch.setattr(MultiOpenWindow, 'exec', mock_exec)
-    monkeypatch.setattr(gui_windows.MultiFileSelectionDialog, 'result', mock_multi_selection_result)
+    monkeypatch.setattr(QtWidgets.QFileDialog, 'getOpenFileNames', mock_multi_selection_result)
     monkeypatch.setattr(MultiOpenWindow, 'result', mock_multi_open_result)
     main_window.new_multiple_action.trigger()
 
@@ -2507,11 +2506,10 @@ def test_MainWindow_import_multiple_gene_sets(main_window_with_tabs, monkeypatch
         truth_featureset = enrichment.FeatureSet(truth_set, Path(filename).stem)
         truth.append(truth_featureset)
 
-    def mock_get_files(*args, **kwargs):
-        return filenames
+    def mock_multi_selection_result(self, _):
+        return filenames, ''
 
-    monkeypatch.setattr(gui_windows.MultiFileSelectionDialog, 'result', mock_get_files)
-    monkeypatch.setattr(gui_windows.MultiFileSelectionDialog, 'exec', lambda *args, **kwargs: True)
+    monkeypatch.setattr(QtWidgets.QFileDialog, 'getOpenFileNames', mock_multi_selection_result)
     main_window_with_tabs.import_multiple_sets_action.trigger()
     assert main_window_with_tabs.tabs.count() == 5 + len(filenames)
     assert isinstance(main_window_with_tabs.tabs.currentWidget(), SetTabPage)

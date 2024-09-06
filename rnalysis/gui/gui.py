@@ -3386,28 +3386,27 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def load_multiple_files(self):
         filenames, _ = QtWidgets.QFileDialog.getOpenFileNames(self, "Choose files")
-        if filenames:
-            if len(filenames) > 0:
-                window = MultiOpenWindow(filenames, self)
-                accepted = window.exec()
-                if accepted:
-                    paths, types, names, kwargs = window.result()
-                    tabs_to_close = None
-                    if self.tabs.currentWidget().is_empty():
-                        tabs_to_close = self.tabs.currentIndex()
+        if len(filenames) > 0:
+            window = MultiOpenWindow(filenames, self)
+            accepted = window.exec()
+            if accepted:
+                paths, types, names, kwargs = window.result()
+                tabs_to_close = None
+                if self.tabs.currentWidget().is_empty():
+                    tabs_to_close = self.tabs.currentIndex()
 
-                    for filename in filenames:
-                        path = paths[filename]
-                        table_type = FILTER_OBJ_TYPES[types[filename]]
-                        name = names[filename]
-                        filter_obj = table_type(path, **kwargs[filename])
-                        if name == '':
-                            self.new_tab_from_filter_obj(filter_obj, JOB_COUNTER.get_id())
-                        else:
-                            self.new_tab_from_filter_obj(filter_obj, JOB_COUNTER.get_id(), name)
-                        QtWidgets.QApplication.processEvents()
-                    if tabs_to_close is not None:
-                        self.tabs.removeTab(tabs_to_close)
+                for filename in filenames:
+                    path = paths[filename]
+                    table_type = FILTER_OBJ_TYPES[types[filename]]
+                    name = names[filename]
+                    filter_obj = table_type(path, **kwargs[filename])
+                    if name == '':
+                        self.new_tab_from_filter_obj(filter_obj, JOB_COUNTER.get_id())
+                    else:
+                        self.new_tab_from_filter_obj(filter_obj, JOB_COUNTER.get_id(), name)
+                    QtWidgets.QApplication.processEvents()
+                if tabs_to_close is not None:
+                    self.tabs.removeTab(tabs_to_close)
 
     @QtCore.pyqtSlot(filtering.Filter, int, str)
     @QtCore.pyqtSlot(filtering.Filter, int)
@@ -3631,18 +3630,15 @@ class MainWindow(QtWidgets.QMainWindow):
             self._import_pipeline_from_str(pipeline_name, content)
 
     def import_multiple_gene_sets(self):
-        dialog = gui_windows.MultiFileSelectionDialog()
-        accepted = dialog.exec()
-        if accepted == QtWidgets.QDialog.DialogCode.Accepted:
-            filenames = dialog.result()
-            tabs_to_close = None
-            if len(filenames) > 0 and self.tabs.currentWidget().is_empty():
-                tabs_to_close = self.tabs.currentIndex()
-            for filename in filenames:
-                gene_set = self._filename_to_gene_set(filename)
-                self.new_tab_from_gene_set(gene_set, JOB_COUNTER.get_id(), Path(filename).stem)
-            if tabs_to_close is not None:
-                self.tabs.removeTab(tabs_to_close)
+        filenames, _ = QtWidgets.QFileDialog.getOpenFileNames(self, "Choose files")
+        tabs_to_close = None
+        if len(filenames) > 0 and self.tabs.currentWidget().is_empty():
+            tabs_to_close = self.tabs.currentIndex()
+        for filename in filenames:
+            gene_set = self._filename_to_gene_set(filename)
+            self.new_tab_from_gene_set(gene_set, JOB_COUNTER.get_id(), Path(filename).stem)
+        if tabs_to_close is not None:
+            self.tabs.removeTab(tabs_to_close)
 
     def import_gene_set(self):
         filename, _ = QtWidgets.QFileDialog.getOpenFileName(self, "Choose a file", filter=

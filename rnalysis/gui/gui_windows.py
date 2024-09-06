@@ -419,7 +419,7 @@ class SettingsWindow(gui_widgets.MinMaxDialog):
             dbs = []
             for i in range(self.appearance_widgets['databases'].count()):
                 item = self.appearance_widgets['databases'].item(i)
-                if item.checkState():
+                if item.checkState() == QtCore.Qt.CheckState.Checked:
                     dbs.append(item.text())
 
             settings.set_gui_settings(font, font_size, theme, dbs, show_tutorial, prompt_report_gen)
