@@ -94,7 +94,7 @@ All of *RNAlysis*'s dependencies can be installed automatically via PyPI.
 * `numba <http://numba.pydata.org/>`_
 * `requests <https://github.com/psf/requests/>`_
 * `scikit-learn <https://scikit-learn.org/>`_
-* `scikit-learn-extra <https://github.com/scikit-learn-contrib/scikit-learn-extra>`_
+* `kmedoids <https://github.com/kno10/python-kmedoids>`_
 * `hdbscan <https://github.com/scikit-learn-contrib/hdbscan>`_
 * `seaborn <https://seaborn.pydata.org/>`_
 * `statsmodels <https://www.statsmodels.org/>`_
@@ -108,7 +108,7 @@ All of *RNAlysis*'s dependencies can be installed automatically via PyPI.
 * `xlmhglite <https://github.com/GuyTeichman/xlmhglite>`_
 * `pairwisedist <https://github.com/GuyTeichman/pairwisedist/>`_
 * `typing_extensions <https://github.com/python/typing_extensions>`_
-* `PyQt5 <https://www.riverbankcomputing.com/software/pyqt/>`_
+* `PyQt6 <https://www.riverbankcomputing.com/software/pyqt/>`_
 * `qdarkstyle <https://github.com/ColinDuquesnoy/QDarkStyleSheet>`_
 * `defusedxml <https://https://github.com/tiran/defusedxml>`_
 * `cutadapt <https://github.com/marcelm/cutadapt>`_
