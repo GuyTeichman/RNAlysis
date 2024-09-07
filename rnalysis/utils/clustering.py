@@ -15,7 +15,6 @@ from grid_strategy import strategies
 from sklearn.cluster import AgglomerativeClustering, KMeans
 from sklearn.decomposition import PCA
 from sklearn.metrics import pairwise_distances, silhouette_score, calinski_harabasz_score, davies_bouldin_score
-from sklearn.utils import parallel_backend as sklearn_parallel_backend
 from tqdm.auto import tqdm
 from kmedoids import KMedoids
 from rnalysis.utils import generic, parsing, validation
@@ -446,7 +445,7 @@ class ClusteringRunner(abc.ABC):
         self.n_clusters_determine_plot = None
 
     def run(self, plot: bool = True):
-        with sklearn_parallel_backend(self.parallel_backend):
+        with joblib.parallel_backend(self.parallel_backend):
             return self._run(plot)
 
     def _transform_data(self):
