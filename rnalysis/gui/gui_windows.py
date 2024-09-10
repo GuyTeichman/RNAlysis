@@ -11,8 +11,7 @@ from PyQt6 import QtCore, QtWidgets, QtGui
 
 from rnalysis import __version__
 from rnalysis.gui import gui_style, gui_widgets
-from rnalysis.utils import io, generic, parsing
-from utils import settings
+from rnalysis.utils import io, generic, parsing, settings
 
 
 class DataFrameModel(QtCore.QAbstractTableModel):
