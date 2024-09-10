@@ -11,7 +11,8 @@ from PyQt6 import QtCore, QtWidgets, QtGui
 
 from rnalysis import __version__
 from rnalysis.gui import gui_style, gui_widgets
-from rnalysis.utils import settings, io, generic, parsing
+from rnalysis.utils import io, generic, parsing
+from utils import settings
 
 
 class DataFrameModel(QtCore.QAbstractTableModel):
@@ -58,20 +59,21 @@ class DataFrameModel(QtCore.QAbstractTableModel):
             return 0
         return max(0, self._dataframe.width - 1)
 
+    def _is_valid_index(self, index):
+        return index.isValid() and 0 <= index.row() < self.rowCount() and 0 <= index.column() < self.columnCount()
+
     def data(self, index, role=QtCore.Qt.ItemDataRole.DisplayRole):
-        if not index.isValid() or not (0 <= index.row() < self.rowCount()
-                                       and 0 <= index.column() < self.columnCount()):
+        if not self._is_valid_index(index):
             return QtCore.QVariant()
         row = index.row()
         col = index.column() + 1
+        val = self._dataframe[row, col]
         col_name = self._dataframe.columns[col]
         dt = self._dataframe[col_name].dtype
 
-        try:
-            val = self._dataframe[row, col]
-        except IndexError:
-            print(row, col, self._dataframe.shape)
         if role == QtCore.Qt.ItemDataRole.DisplayRole:
+            if isinstance(val, float):
+                return f'{val:.3f}'
             return str(val)
         elif role == DataFrameModel.ValueRole:
             return val
@@ -97,7 +99,8 @@ class DataFramePreviewModel(DataFrameModel):
         n_rows = min(2, shape[0])
         n_cols = min(3, shape[1] - 1)
         if isinstance(df, pl.DataFrame):
-            df_preview = df.head(n_rows).select(df.columns[0:n_cols + 1])  # Exclude the first column
+            df_minimal = df.head(n_rows).select(df.columns[0:n_cols + 1])  # Exclude the first column
+            df_preview = df_minimal.with_columns(pl.col(pl.Float64).round(2))  # round floats to 2 decimal points
             df_preview = df_preview.cast(pl.String)  # Cast to string data type
             if n_rows < shape[0]:
                 dot_row = pl.DataFrame({col: ['...'] for col in df_preview.columns})
@@ -105,13 +108,27 @@ class DataFramePreviewModel(DataFrameModel):
             if n_cols < shape[1] - 1:
                 df_preview = df_preview.with_columns(pl.lit('...').alias('...'))
         elif isinstance(df, pl.Series):
-            df_preview = df.head(n_rows)
-            df_preview = df_preview.cast(pl.String).to_frame()  # Cast to string data type
+            df_minimal = df.head(n_rows).to_frame()
+            df_preview = df_minimal.with_columns(pl.all().cast(pl.String))  # Cast to string data type
             if n_rows < shape[0]:
                 df_preview = pl.concat([df_preview, pl.Series(['...'])], how='vertical')
         else:
             raise TypeError(f"Expected DataFrame or Series, got {type(df)}")
         super().__init__(df_preview, parent)
+        self.df_minimal = df_minimal
+
+    def data(self, index, role=QtCore.Qt.ItemDataRole.DisplayRole):
+        if role == DataFrameModel.ValueRole:
+            if not self._is_valid_index(index):
+                return QtCore.QVariant()
+            row = index.row()
+            col = index.column() + 1
+            if col >= self.df_minimal.shape[1]:
+                return '...'
+
+            val = self.df_minimal[row, col]
+            return val
+        return super().data(index, role)
 
 
 class DataView(gui_widgets.MinMaxDialog):
@@ -146,7 +163,7 @@ class GeneSetView(DataView):
         super().__init__(data, name, parent)
         self.label = QtWidgets.QLabel(f"Gene set '{name}': {len(self.data)} features")
 
-        self.data_view = gui_widgets.ReactiveListWidget()
+        self.data_view = ReactiveListWidget()
         self.save_button = QtWidgets.QPushButton('Save gene set', self)
 
         self.init_ui()
@@ -174,7 +191,7 @@ class DataFrameView(DataView):
             shape = (shape[0], 1)
         self.label = QtWidgets.QLabel(f"Table '{name}': {shape[0]} rows, {shape[1] - 1} columns")
 
-        self.data_view = gui_widgets.ReactiveTableView()
+        self.data_view = ReactiveTableView()
         self.save_button = QtWidgets.QPushButton('Save table', self)
 
         self.init_ui()
@@ -977,3 +994,123 @@ class ReportGenerationMessageBox(QtWidgets.QMessageBox):  # pragma: no cover
         choice = self.buttonRole(result) == QtWidgets.QMessageBox.ButtonRole.YesRole
         checkbox_checked = self.checkbox.isChecked()
         return choice, checkbox_checked
+
+
+class ReactiveHeaderView(QtWidgets.QHeaderView):
+    LOOKUP_DATABASES_PATH = Path(__file__).parent.parent.joinpath('data_files/lookup_databases.json')
+    __slots__ = {'context_menu': 'context menu'}
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.setSectionsClickable(True)
+        self.context_menu = None
+        self.db_actions = None
+
+    def contextMenu(self, value: str):
+        self.context_menu = QtWidgets.QMenu(self)
+        copy_action = QtGui.QAction(f"Copy '{value}'")
+        copy_action.triggered.connect(functools.partial(QtWidgets.QApplication.clipboard().setText, value))
+        self.context_menu.addAction(copy_action)
+
+        with open(self.LOOKUP_DATABASES_PATH) as f:
+            databases = json.load(f)
+
+        self.db_actions = []
+        for name in settings.get_databases_settings():
+            action = QtGui.QAction(f'Search "{value}" on {name}')
+            self.db_actions.append(action)
+            open_url_partial = functools.partial(QtGui.QDesktopServices.openUrl,
+                                                 QtCore.QUrl(f'{databases[name]}{value}'))
+            action.triggered.connect(open_url_partial)
+            self.context_menu.addAction(action)
+
+        self.context_menu.exec(QtGui.QCursor.pos())
+
+    def mousePressEvent(self, event: QtGui.QMouseEvent):
+        if event.button() == QtCore.Qt.MouseButton.RightButton:
+            point = event.pos()
+            if point.isNull():
+                return
+            ind = self.logicalIndexAt(point)
+            if ind == -1:
+                return
+            self.contextMenu(str(self.model().headerData(ind, self.orientation())))
+
+        else:
+            super().mousePressEvent(event)
+
+
+class ReactiveListWidget(QtWidgets.QListWidget):
+    LOOKUP_DATABASES_PATH = Path(__file__).parent.parent.joinpath('data_files/lookup_databases.json')
+    __slots__ = {'context_menu': 'context menu'}
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.context_menu = None
+        self.setUniformItemSizes(True)
+        self.setSpacing(2)
+        self.db_actions = None
+
+    def contextMenu(self, value: str):
+        self.context_menu = QtWidgets.QMenu(self)
+        copy_action = QtGui.QAction(f"Copy '{value}'")
+        copy_action.triggered.connect(functools.partial(QtWidgets.QApplication.clipboard().setText, value))
+        self.context_menu.addAction(copy_action)
+
+        with open(self.LOOKUP_DATABASES_PATH) as f:
+            databases = json.load(f)
+
+        self.db_actions = []
+        for name in settings.get_databases_settings():
+            action = QtGui.QAction(f'Search "{value}" on {name}')
+            self.db_actions.append(action)
+            open_url_partial = functools.partial(QtGui.QDesktopServices.openUrl,
+                                                 QtCore.QUrl(f'{databases[name]}{value}'))
+            action.triggered.connect(open_url_partial)
+            self.context_menu.addAction(action)
+
+        self.context_menu.exec(QtGui.QCursor.pos())
+
+    def mousePressEvent(self, event: QtGui.QMouseEvent):
+        if event.button() == QtCore.Qt.MouseButton.RightButton:
+            point = event.pos()
+            if point.isNull():
+                return
+            item = self.itemAt(point)
+            if item == -1:
+                return
+            self.contextMenu(item.text())
+
+        else:
+            super().mousePressEvent(event)
+
+
+class ReactiveTableView(QtWidgets.QTableView):
+    __slots__ = {'context_menu': 'context menu'}
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.setHorizontalHeader(ReactiveHeaderView(QtCore.Qt.Orientation.Horizontal))
+        self.setVerticalHeader(ReactiveHeaderView(QtCore.Qt.Orientation.Vertical))
+        self.context_menu = None
+
+    def contextMenu(self, value: str):
+        self.context_menu = QtWidgets.QMenu(self)
+        copy_action = QtGui.QAction(f"Copy '{value}'")
+        copy_action.triggered.connect(functools.partial(QtWidgets.QApplication.clipboard().setText, value))
+        self.context_menu.addAction(copy_action)
+
+        self.context_menu.exec(QtGui.QCursor.pos())
+
+    def mousePressEvent(self, event: QtGui.QMouseEvent):
+        if event.button() == QtCore.Qt.MouseButton.RightButton:
+            point = event.pos()
+            if point.isNull():
+                return
+            ind = self.indexAt(point)
+            if ind == -1:
+                return
+            self.contextMenu(str(self.model().data(ind, role=DataFrameModel.ValueRole)))
+
+        else:
+            super().mousePressEvent(event)

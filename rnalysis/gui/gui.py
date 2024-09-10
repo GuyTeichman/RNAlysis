@@ -1414,7 +1414,6 @@ class TabPage(QtWidgets.QWidget):
         self.scroll.setWidgetResizable(True)
         self.splitter.addWidget(self.scroll)
 
-
         self.container = QtWidgets.QWidget()
         self.layout = QtWidgets.QVBoxLayout(self.container)
         self.scroll.setWidget(self.container)
@@ -1712,7 +1711,7 @@ class SetTabPage(TabPage):
         self.overview_widgets['table_name_label'] = QtWidgets.QLabel(f"Gene set name: '<b>{self.obj().set_name}</b>'")
         self.overview_widgets['table_name_label'].setWordWrap(True)
 
-        self.overview_widgets['preview'] = gui_widgets.ReactiveListWidget()
+        self.overview_widgets['preview'] = gui_windows.ReactiveListWidget()
         self.update_set_preview()
         self.overview_grid.addWidget(self.overview_widgets['table_name_label'], this_row, 0, 1, 4)
         this_row += 1
@@ -1722,8 +1721,8 @@ class SetTabPage(TabPage):
         self.overview_widgets['rename_button'].clicked.connect(self.rename)
 
         self.overview_grid.addWidget(self.overview_widgets['rename_label'], this_row, 0)
-        self.overview_grid.addWidget(self.overview_widgets['table_name'], this_row, 1)
-        self.overview_grid.addWidget(self.overview_widgets['rename_button'], this_row, 2)
+        self.overview_grid.addWidget(self.overview_widgets['table_name'], this_row, 1, 1, 2)
+        self.overview_grid.addWidget(self.overview_widgets['rename_button'], this_row, 3)
         this_row += 1
         self.overview_grid.addWidget(self.overview_widgets['preview'], this_row, 0, 1, 4)
         this_row += 1
@@ -2055,7 +2054,7 @@ class FilterTabPage(TabPage):
         self.overview_widgets['table_name_label'] = QtWidgets.QLabel()
         self.overview_widgets['table_name_label'].setWordWrap(True)
 
-        self.overview_widgets['preview'] = gui_widgets.ReactiveTableView()
+        self.overview_widgets['preview'] = gui_windows.ReactiveTableView()
         self.overview_widgets['preview'].setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         self.overview_widgets['preview'].setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
 
@@ -2067,8 +2066,8 @@ class FilterTabPage(TabPage):
         self.overview_widgets['rename_button'].clicked.connect(self.rename)
 
         self.overview_grid.addWidget(self.overview_widgets['rename_label'], this_row, 0)
-        self.overview_grid.addWidget(self.overview_widgets['table_name'], this_row, 1)
-        self.overview_grid.addWidget(self.overview_widgets['rename_button'], this_row, 2)
+        self.overview_grid.addWidget(self.overview_widgets['table_name'], this_row, 1, 1, 2)
+        self.overview_grid.addWidget(self.overview_widgets['rename_button'], this_row, 3)
         this_row += 1
         self.overview_grid.addWidget(self.overview_widgets['preview'], this_row, 0, 1, 4)
         this_row += 1
@@ -2163,7 +2162,7 @@ class FilterTabPage(TabPage):
         self.basic_grid.setRowStretch(4, 1)
         self.basic_grid.setColumnStretch(4, 1)
 
-    def _check_for_special_functions(self, is_selected: bool=True):
+    def _check_for_special_functions(self, is_selected: bool = True):
         if not is_selected:
             return
         this_stack: FuncTypeStack = self.stack.currentWidget()

@@ -11,6 +11,7 @@ Version 4.1.0 of RNAlysis features improved performance and stability across the
 Changed
 *******
 * RNAlysis now runs on Qt6 instead of Qt5. This change should improve both performance and stability across RNAlysis.
+* Made small improvements to the RNAlysis graphical interface.
 * RNAlysis and its dependencies now run on Numpy 2 instead of Numpy 1.
 * RNAlysis now uses a different implementation of the K-Medoids clustering algorithm, which should be more stable and faster than the previous implementation. However, note that the two implementations may give slightly different results.
 
