@@ -541,16 +541,26 @@ class ToggleSwitchCore(QtWidgets.QPushButton):
     https://stackoverflow.com/questions/56806987/switch-button-in-pyqt
     """
     stateChanged = QtCore.pyqtSignal(bool)
-    RADIUS = 11
+    RADIUS = 12
     WIDTH = 42
     BORDER = 2
-    __slots__ = {}
+    __slots__ = {'_hover': 'indicates if the mouse is hovering over the widget'}
 
     def __init__(self, parent=None):
         super().__init__(parent)
+        self._hover = False
         self.setCheckable(True)
         self.clicked.connect(self.state_changed)
 
+    def enterEvent(self, event):
+        self._hover = True
+        self.update()
+        super().enterEvent(event)
+
+    def leaveEvent(self, event):
+        self._hover = False
+        self.update()
+        super().leaveEvent(event)
     def state_changed(self):
         self.stateChanged.emit(self.isChecked())
 
@@ -560,7 +570,10 @@ class ToggleSwitchCore(QtWidgets.QPushButton):
 
     def paintEvent(self, event):
         label = " True" if self.isChecked() else "False"
-        bg_color = QtGui.QColor('#72e5bf') if self.isChecked() else QtGui.QColor('#e96e3a')
+        if self.isChecked():
+            bg_color = QtGui.QColor('#72e5bf') if not self._hover else QtGui.QColor('#52c59f')
+        else:
+            bg_color = QtGui.QColor('#e96e3a') if not self._hover else QtGui.QColor('#c94e1a')
 
         radius = int(self.RADIUS * (self.font().pointSize() / 10))
         width = int(self.WIDTH * (self.font().pointSize() / 10))
@@ -1805,7 +1818,8 @@ class StdOutTextEdit(QtWidgets.QTextEdit):
             self.carriage = False
             diff = self.document().characterCount() - self.prev_coord
             cursor = self.textCursor()
-            cursor.movePosition(QtGui.QTextCursor.MoveOperation.PreviousCharacter, QtGui.QTextCursor.MoveMode.MoveAnchor, n=diff)
+            cursor.movePosition(QtGui.QTextCursor.MoveOperation.PreviousCharacter,
+                                QtGui.QTextCursor.MoveMode.MoveAnchor, n=diff)
             cursor.movePosition(QtGui.QTextCursor.MoveOperation.End, QtGui.QTextCursor.MoveMode.KeepAnchor)
             cursor.removeSelectedText()
 
@@ -2166,5 +2180,3 @@ def clear_layout(layout, exceptions: set = frozenset()):
         child = layout.takeAt(0)
         if child.widget() and child.widget() not in exceptions:
             child.widget().deleteLater()
-
-
