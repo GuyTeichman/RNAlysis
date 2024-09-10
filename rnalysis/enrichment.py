@@ -2053,40 +2053,31 @@ def venn_diagram(objs: Dict[str, Union[str, FeatureSet, Set[str]]], title: Union
     set_colors = parsing.data_to_tuple(set_colors)
     if len(set_colors) == 1:
         set_colors *= 3
-
+    # pick plotting functions and parameters depending on # of sets and 'weighted' parameter
     if len(objs) == 2:
         func = vn.venn2
-        kwargs = dict(layout_algorithm=vn.layout.venn2.DefaultLayoutAlgorithm(
-            fixed_subset_sizes=(1, 1, 1))) if weighted else dict()
+        kwargs = dict() if weighted else (
+            dict(layout_algorithm=vn.layout.venn2.DefaultLayoutAlgorithm(fixed_subset_sizes=(1, 1, 1))))
         func_circles = vn.venn2_circles
         set_colors = set_colors[0:2]
     else:
         func = vn.venn3
-        kwargs = dict(layout_algorithm=vn.layout.venn3.DefaultLayoutAlgorithm(
-            fixed_subset_sizes=(1, 1, 1, 1, 1, 1, 1))) if weighted else dict()
+        kwargs = dict() if weighted else (
+            dict(layout_algorithm=vn.layout.venn3.DefaultLayoutAlgorithm(fixed_subset_sizes=(1, 1, 1, 1, 1, 1, 1))))
         func_circles = vn.venn3_circles
         set_colors = set_colors[0:3]
+
     if fig is None:
         fig = plt.figure()
     ax = fig.add_subplot()
-    plot_obj = func(tuple(objs.values()), tuple(objs.keys()), set_colors=set_colors, alpha=transparency,
-                    ax=ax, **kwargs)
-    if add_outline and weighted:
-        circle_obj = func_circles(tuple(objs.values()), color=linecolor, linestyle=linestyle, linewidth=linewidth,
-                                  ax=ax, **kwargs)
-    elif add_outline and not weighted:
-        circle_obj = func(tuple(objs.values()), tuple(objs.keys()), alpha=1, ax=ax)
-        for patch in circle_obj.patches:
-            patch.set_edgecolor(linecolor)
-            patch.set_linewidth(linewidth)
-            patch.set_linestyle(linestyle)
-            patch.set_fill(False)
-    else:
-        circle_obj = None
-
-    for label in plot_obj.set_labels:
+    vennobj = func(tuple(objs.values()), tuple(objs.keys()), set_colors=set_colors, alpha=transparency, ax=ax, **kwargs)
+    # draw outline
+    if add_outline:
+        func_circles(tuple(objs.values()), color=linecolor, linestyle=linestyle, linewidth=linewidth, ax=ax, **kwargs)
+    # set label sizes
+    for label in vennobj.set_labels:
         label.set_fontsize(set_fontsize)
-    for sublabel in plot_obj.subset_labels:
+    for sublabel in vennobj.subset_labels:
         if sublabel is not None:
             sublabel.set_fontsize(subset_fontsize)
 
