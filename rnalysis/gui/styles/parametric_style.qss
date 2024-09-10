@@ -1,3 +1,113 @@
+/* scroll bar settings */
+QScrollBar::up-arrow:vertical {
+  image: url("styles/iconmonstr-caret-up-filled.svg");
+}
+
+QScrollBar::down-arrow:vertical {
+  image: url("styles/iconmonstr-caret-down-filled.svg");
+}
+
+QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical {
+  background: none;
+}
+
+QScrollBar:vertical {
+  width: 25px;
+  margin: 30px 2px 30px 2px;
+  border-radius: 4px;
+}
+QScrollBar::handle:vertical {
+  background-color: #BBBBBB;
+  border: 1px solid #C0C4C8;
+  border-radius: 4px;
+  min-height: 16px;
+}
+
+QScrollBar::handle:vertical:hover {
+  background-color: #9FCBFF;
+  border: #9FCBFF;
+  border-radius: 4px;
+  min-height: 16px;
+}
+
+QScrollBar::handle:vertical:focus {
+  border: 1px solid #73C7FF;
+    min-height: 16px;
+
+}
+
+QScrollBar::add-line:vertical {
+    margin: 3px 0px 3px 0px;
+    border-radius: 4px;
+    height: 25px;
+    width: 25px;
+    subcontrol-position: bottom;
+    subcontrol-origin: margin;
+}
+
+QScrollBar::add-line:vertical:hover, QScrollBar::add-line:vertical:on {
+    background-color: #9FCBFF;
+    height: 25px;
+    width: 25px;
+    subcontrol-position: bottom;
+    subcontrol-origin: margin;
+}
+
+QScrollBar::sub-line:vertical {
+    margin: 3px 0px 3px 0px;
+    border-radius: 4px;
+    height: 25px;
+    width: 25px;
+    subcontrol-position: top;
+    subcontrol-origin: margin;
+}
+
+QScrollBar::sub-line:vertical:hover, QScrollBar::sub-line:vertical:on {
+    background-color: #9FCBFF;
+    height: 25px;
+    width: 25px;
+    subcontrol-position: top;
+    subcontrol-origin: margin;
+}
+
+/* tab widget settings */
+
+QTabWidget QToolButton {
+    border-radius: 4px;
+    border-width: 2px;
+    margin: 1px 2px 2px 2px;
+    font: arial;
+    font-size: $FONTSIZEPLACEHOLDER*1.25;
+}
+
+QTabBar::scroller { /* the width of the scroll buttons */
+    width: 50px;
+    height: 30px;
+    margin: 0px 4px 0px 0px;
+
+}
+
+QTabBar QToolButton {
+    border-radius: 4px;
+    border-width: 2px;
+    margin: 2px 2px 2px 2px;
+}
+
+/* other settings */
+
+QPushButton:hover {
+    background-color: #9FCBFF;
+}
+
+QComboBox {
+    min-height: 35px;
+}
+
+QToolButton:hover {
+    background-color: #99ccff;
+    border-color: #A0A0A0;
+}
+
 /* style for window types : */
 
 QWidget {
@@ -46,6 +156,7 @@ font-size: $FONTSIZEPLACEHOLDER*1;
 }
 
 QToolButton {
+background-color: #cccccc;
 font: bold;
 font-size: $FONTSIZEPLACEHOLDER*1.5;
 }
