@@ -3146,7 +3146,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def init_ui(self):
         self.setWindowTitle(f'RNAlysis {__version__}')
-        self.setGeometry(600, 50, 1050, 800)
+        self.setGeometry(350, 50, 900, 750)
         self.update_style_sheet()
 
         self.tabs.tabRightClicked.connect(self.init_tab_contextmenu)
