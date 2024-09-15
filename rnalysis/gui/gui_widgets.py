@@ -561,6 +561,7 @@ class ToggleSwitchCore(QtWidgets.QPushButton):
         self._hover = False
         self.update()
         super().leaveEvent(event)
+
     def state_changed(self):
         self.stateChanged.emit(self.isChecked())
 
@@ -1352,6 +1353,18 @@ class DiffExpPickerGroup(QtWidgets.QWidget):
             values.append(widget.value())
         return values
 
+    def set_comparison_values(self, values):
+        for i, value in enumerate(values):
+            if i >= len(self.inputs):
+                self.add_comparison_widget()
+            self.inputs[i].setValue(value)
+
+    def add_comparison_widget(self):
+        raise NotImplementedError
+
+    def init_ui(self):
+        raise NotImplementedError
+
 
 class CovariatePicker(QtWidgets.QWidget):
     __slots__ = {'design_mat': 'design matrix',
@@ -1373,6 +1386,9 @@ class CovariatePicker(QtWidgets.QWidget):
 
     def value(self) -> str:
         return self.factor.currentText()
+
+    def setValue(self, value: str):
+        self.factor.setCurrentText(value)
 
 
 class CovariatePickerGroup(DiffExpPickerGroup):
@@ -1457,6 +1473,9 @@ class LRTPicker(QtWidgets.QWidget):
             return self.poly[txt]
         return txt
 
+    def setValue(self, value: str):
+        self.factor.setCurrentText(value)  # TODO: poly works?
+
 
 class LRTPickerGroup(DiffExpPickerGroup):
 
@@ -1527,6 +1546,11 @@ class ComparisonPicker(QtWidgets.QWidget):
 
     def value(self) -> Tuple[str, str, str]:
         return self.factor.currentText(), self.numerator.currentText(), self.denominator.currentText()
+
+    def setValue(self, value: Tuple[str, str, str]):
+        self.factor.setCurrentText(value[0])
+        self.numerator.setCurrentText(value[1])
+        self.denominator.setCurrentText(value[2])
 
 
 class ComparisonPickerGroup(DiffExpPickerGroup):

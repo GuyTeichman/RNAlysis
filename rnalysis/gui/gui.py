@@ -445,6 +445,30 @@ class DiffExpWindow(gui_windows.FuncExternalWindow):
             kwargs['lrt_factors'] = self.lrt_widgets['picker'].get_comparison_values()
         return kwargs
 
+    def import_parameters(self):
+        params = super().import_parameters()
+        self.init_righthand_uis()
+
+        kwargs = params['kwargs']
+        comparisons = kwargs.get('comparisons', [])
+        covariates = kwargs.get('covariates', [])
+        lrt_factors = kwargs.get('lrt_factors', [])
+
+        if 'picker' in self.comparisons_widgets:
+            self.comparisons_widgets['picker'].set_comparison_values(comparisons)
+
+        if self.simplified:
+            assert covariates is None or len(covariates) == 0, "Covariates are not supported in simplified mode."
+            assert lrt_factors is None or len(lrt_factors) == 0, \
+                "Likelihood Ratio Tests are not supported in simplified mode."
+        else:
+            if 'picker' in self.covariates_widgets:
+                self.covariates_widgets['picker'].set_comparison_values(covariates)
+            if 'picker' in self.lrt_widgets:
+                self.lrt_widgets['picker'].set_comparison_values(lrt_factors)
+
+        return params
+
 
 class DESeqWindow(DiffExpWindow):
     def __init__(self, parent=None, simplified: bool = False):
