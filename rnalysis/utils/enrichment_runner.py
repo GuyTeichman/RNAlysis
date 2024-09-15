@@ -273,11 +273,8 @@ class XlmhgTest(StatsTest):
 class EnrichmentPlotter(abc.ABC):
     __slots__ = ('results', 'en_score_col')
 
-    def __init__(self, results: pl.DataFrame, en_score_col: str):
-        assert len(results) > 0, "No enrichment results to plot."
-        assert en_score_col in results.columns, f"Column '{en_score_col}' not found in the results DataFrame."
+    def __init__(self, results: pl.DataFrame):
         self.results = results
-        self.en_score_col = en_score_col
 
     @staticmethod
     def _get_pval_asterisk(pval: float, alpha: float = 0.05):
@@ -306,18 +303,20 @@ class BarPlotter(EnrichmentPlotter):
         'plot_style', 'plot_horizontal', 'alpha', 'show_expected')
 
     def __init__(self, results: pl.DataFrame, en_score_col: str, n_bars: Union[int, Literal['all']],
-                 alpha: float, ylabel: str, title: str, ylim: Union[float, Literal['auto']],
-                 title_fontsize: float, label_fontsize: float, ylabel_fontsize: float,
-                 plot_style: Literal['bar', 'lollipop'], plot_horizontal: bool, show_expected: bool, center_bars: bool):
-        super().__init__(results, en_score_col)
-
+                 alpha: float, ylabel: str, title: str, ylim: Union[float, Literal['auto']] = 'auto',
+                 title_fontsize: float = 18, label_fontsize: float = 13, ylabel_fontsize: float = 16,
+                 plot_style: Literal['bar', 'lollipop'] = 'bar', plot_horizontal: bool = True,
+                 show_expected: bool = False, center_bars: bool = True):
+        super().__init__(results)
+        assert en_score_col in results.columns, f"Column '{en_score_col}' not found in the results DataFrame."
+        self.en_score_col = en_score_col
         assert plot_style in ['bar', 'lollipop'], \
             f"'plot_style' must be 'bar' or 'lollipop', instead got '{self.plot_style}'."
 
         if n_bars == 'all':
             n_bars = len(self.results)
         else:
-            assert isinstance(n_bars, int) and n_bars > 0, f"Invalid value for 'n_bars': {n_bars}."
+            assert isinstance(n_bars, int) and n_bars >= 0, f"Invalid value for 'n_bars': {n_bars}."
 
         self.n_bars = n_bars
         self.ylabel = ylabel
@@ -333,6 +332,9 @@ class BarPlotter(EnrichmentPlotter):
         self.show_expected = show_expected
 
     def run(self):
+        if len(self.results) == 0:
+            return plt.Figure()
+
         results = self.results.head(self.n_bars)
 
         if 'name' in results.columns:
@@ -490,16 +492,16 @@ class HistogramPlotter(EnrichmentPlotter):
     __slots__ = ('annotations', 'attributes', 'alpha', 'set_name', 'gene_set', 'background_set', 'plot_log_scale',
                  'n_bins', 'plot_style', 'parametric_test')
 
-    def __init__(self, results: pl.DataFrame, annotations: pl.DataFrame, attributes: List[str], en_score_col: str,
-                 alpha: float, set_name: str, gene_set: set, background_set: str, plot_log_scale: bool, n_bins: int,
+    def __init__(self, results: pl.DataFrame, annotations: dict, attributes: List[str],
+                 alpha: float, set_name: str, gene_set: set, background_set: set, plot_log_scale: bool, n_bins: int,
                  plot_style: str, parametric_test: bool):
-        super().__init__(results, en_score_col)
+        super().__init__(results)
 
-        assert all([attr in annotations.columns for attr in
+        assert all([attr in annotations for attr in
                     attributes]), f"Attributes {attributes} not found in annotations DataFrame."
 
         self.alpha = alpha
-        self.annotations = annotations.select(pl.first(), pl.col(attributes))
+        self.annotations = annotations
         self.attributes = attributes
         self.set_name = set_name
         self.gene_set = gene_set
@@ -571,32 +573,85 @@ class HistogramPlotter(EnrichmentPlotter):
         return fig
 
     def run(self):
+        if len(self.results) == 0:
+            return []
         figs = []
         for attr in self.attributes:
-            figs.append(self._plot_histogram(attr))
+            padj = self.results.filter(pl.first() == attr).select('padj').item()
+            if (padj is not None) and (not np.isnan(padj)):
+                figs.append(self._plot_histogram(attr))
         return figs
 
 
 class KEGGPlotter(EnrichmentPlotter):
-    def __init__(self):
-        pass
+    def __init__(self, results: pl.DataFrame, en_score_col: str, gene_set: set, pathway_names_dict: dict,
+                 gene_id_map: io.GeneIDDict, pathway_graphs_format: Literal[param_typing.GRAPHVIZ_FORMATS],
+                 single_set: bool, ylabel: str = "$\\log_2$(Fold Enrichment)"):
+        super().__init__(results)
+        assert en_score_col in results.columns, f"Column '{en_score_col}' not found in the results DataFrame."
+        self.en_score_col = en_score_col
+        self.gene_set = gene_set
+        self.gene_id_map = gene_id_map
+        self.single_set = single_set
+        self.ylabel = ylabel
+        self.pathway_graphs_format = pathway_graphs_format
+        self.pathway_names_dict = pathway_names_dict
 
     def run(self):
-        pass
+        figs = []
+        if len(self.results) == 0:
+            return figs
+        for pathway_id in self.pathway_names_dict:
+            if pathway_id in self.results.select(pl.first()) and self.results[pathway_id, 'significant']:
+                fig = self._pathway_plot(pathway_id)
+                if fig is None:
+                    break
+                figs.append(fig)
+        return figs
+
+    def _pathway_plot(self, pathway_id: str) -> plt.Figure:
+        pathway_tree = ontology.fetch_kegg_pathway(pathway_id, self.gene_id_map)
+        if self.single_set:
+            highlight_genes = self.gene_set
+            # TODO: color by rank/ranking metric?
+        else:
+            highlight_genes = self.gene_set
+        return pathway_tree.plot_pathway(highlight_genes, ylabel=self.ylabel, graph_format=self.pathway_graphs_format)
 
 
 class GODagPlotter(EnrichmentPlotter):
-    def __init__(self):
-        pass
+    def __init__(self, results: pl.DataFrame, en_score_col: str, dag_tree: ontology.DAGTree,
+                 go_aspects: Union[Iterable[Literal[param_typing.GO_ASPECTS]], Literal['any']],
+                 title: str, ylabel: str = "$\\log_2$(Fold Enrichment)", dpi: int = 300,
+                 graph_format: Literal[param_typing.GRAPHVIZ_FORMATS] = 'none'):
+        super().__init__(results)
+        assert en_score_col in results.columns, f"Column '{en_score_col}' not found in the results DataFrame."
+        self.en_score_col = en_score_col
+        self.dag_tree = dag_tree
+        self.go_aspects = ('biological_process', 'cellular_component', 'molecular_function') if (
+            go_aspects == 'any') else parsing.data_to_tuple(go_aspects)
+        self.title = title
+        self.ylabel = ylabel
+        self.dpi = dpi
+        self.graph_format = graph_format
 
     def run(self):
-        pass
+        figs = []
+        for go_aspect in self.go_aspects:
+            this_title = self.title + f'\n{go_aspect}'.replace('_', ' ').title()
+            fig = self.dag_tree.plot_ontology(go_aspect, self.results, self.en_score_col, this_title, self.ylabel,
+                                              self.graph_format, self.dpi)
+            if fig is None:
+                return figs
+            figs.append(fig)
+        return figs
 
 
 class MultiPlotter(EnrichmentPlotter):
-    def __init__(self, results: pl.DataFrame, en_score_col: str, plotter_objs: List[EnrichmentPlotter]):
-        super().__init__(results, en_score_col)
+    def __init__(self, results: pl.DataFrame, plotter_objs: List[EnrichmentPlotter]):
+        super().__init__(results)
         self.plotter_objs = plotter_objs
+        print(plotter_objs)
 
     def run(self):
         figs = []
@@ -619,7 +674,6 @@ class EnrichmentRunner:
                                           'statistically significant after enrichment analysis',
                  'save_csv': 'indicates whether the results should be saved to a csv file',
                  'fname': 'name of the file to save results to',
-                 'return_fig': 'indicates whether to return a matplotlib Figure after plotting the results',
                  'plot_horizontal': 'indicates whether to plot the results horizontally or vertically',
                  'set_name': 'name of the set of genes/genomic features whose enrichment is calculated',
                  'parallel_backend': 'indicates whether to use parallel processing, and with which backend',
@@ -638,7 +692,7 @@ class EnrichmentRunner:
 
     def __init__(self, genes: Union[set, np.ndarray], attributes: Union[Iterable, str, int],
                  alpha: param_typing.Fraction, attr_ref_path: str, return_nonsignificant: bool, save_csv: bool,
-                 fname: str, return_fig: bool, plot_horizontal: bool, set_name: str,
+                 fname: str, plot_horizontal: bool, set_name: str,
                  parallel_backend: Literal[PARALLEL_BACKENDS], stats_test: StatsTest,
                  background_set: set = None, exclude_unannotated_genes: bool = True,
                  single_set: bool = False, plot_style: Literal['bar', 'lollipop'] = 'bar',
@@ -658,7 +712,6 @@ class EnrichmentRunner:
             else:
                 assert isinstance(fname, (str, Path))
                 self.fname = str(fname)
-        self.return_fig = return_fig
         self.plot_horizontal = plot_horizontal
         self.plot_style = plot_style
         self.show_expected = show_expected
@@ -696,7 +749,7 @@ class EnrichmentRunner:
         runner.set_name = set_name
         return runner
 
-    def run(self, plot: bool = True) -> Union[pl.DataFrame, Tuple[pl.DataFrame, plt.Figure]]:
+    def run(self) -> Union[pl.DataFrame, Tuple[pl.DataFrame, EnrichmentPlotter]]:
         if self.stats_test is None or not self.validate_statistical_test():
             return pl.DataFrame()
         self.fetch_annotations()
@@ -714,12 +767,8 @@ class EnrichmentRunner:
         self.format_results(unformatted_results)
         if self.save_csv:
             self.results_to_csv()
-        if plot:
-            fig = self.plot_results()
-
-            if self.return_fig:
-                return self.results, fig
-        return self.results
+        plotter = self.plot_results()
+        return self.results, plotter
 
     def _update_ranked_genes(self):
         if len(self.ranked_genes) == len(self.gene_set):
@@ -883,222 +932,13 @@ class EnrichmentRunner:
         self.results = pl.concat([self.results.with_columns(padj=padj, significant=significant), results_nulls],
                                  how='align')
 
-    def plot_results(self) -> plt.Figure:
-        if len(self.results) == 0:
-            return plt.Figure()
+    def plot_results(self) -> EnrichmentPlotter:
         if self.single_set:
-            return self.enrichment_bar_plot(ylabel=self.SINGLE_SET_ENRICHMENT_SCORE_YLABEL,
-                                            title=f"Single-list enrichment for gene set '{self.set_name}'")
-        return self.enrichment_bar_plot(ylabel=self.ENRICHMENT_SCORE_YLABEL,
-                                        title=f"Enrichment for gene set '{self.set_name}'")
-
-    def enrichment_bar_plot(self, n_bars: Union[int, Literal['all']] = 'all',
-                            center_bars: bool = True,
-                            ylabel: str = "$\\log_2$(Fold Enrichment)", title: str = 'Enrichment results',
-                            ylim: Union[float, Literal['auto']] = 'auto', title_fontsize: float = 18,
-                            label_fontsize: float = 13, ylabel_fontsize: float = 16) -> plt.Figure:
-
-        """
-        Receives a DataFrame output from an enrichment function and plots it in a bar plot. \
-        For the clarity of display, complete depletion (linear enrichment = 0) \
-        appears with the smallest value in the scale.
-
-        :param n_bars: number of bars to display in the bar plot. If n_bars='all', \
-         all the results will be displayed on the graph. Otherwise, only the top n results will be displayed on the graph.
-        :type n_bars: int > 1 or 'all' (default='all')
-        :param title: plot title.
-        :type title: str
-        :param ylabel: plot y-axis label.
-        :type ylabel: str (default="$\\log_2$(Fold Enrichment)")
-        :param center_bars: if True, center the bars around Y=0. Otherwise, ylim is determined by min/max values.
-        :type center_bars: bool (default=True)
-        :param ylim: set the Y-axis limits. If `ylim`='auto', determines the axis limits automatically based on the data. \
-        If `ylim` is a number, set the Y-axis limits to [-ylim, ylim].
-        :type ylim: float or 'auto' (default='auto')
-        :param title_fontsize: font size for the plot title.
-        :type title_fontsize: float (default=18)
-        :param label_fontsize: font size for the attribute labels on the plot.
-        :type label_fontsize: float (default=13)
-        :param ylabel_fontsize: font size for the y-axis colorbar label.
-        :type ylabel_fontsize: float (default=16)
-        :return: Figure object containing the bar plot
-        :rtype: matplotlib.figure.Figure instance
-        """
-        assert self.plot_style in ['bar', 'lollipop'], \
-            f"'plot_style' must be 'bar' or 'lollipop', instead got '{self.plot_style}'."
-        assert len(self.results) > 0, "No enrichment results to plot."
-        # determine number of entries/bars to plot
-        if n_bars != 'all':
-            assert isinstance(n_bars, int) and n_bars >= 0, f"Invalid value for 'n_bars': {n_bars}."
-            results = self.results.head(n_bars)
+            title = f"Single-list enrichment for gene set '{self.set_name}'"
         else:
-            results = self.results
-        # pull names/scores/pvals out to avoid accidentally changing the results DataFrame in-place
-        if 'name' in results.columns:
-            enrichment_names = results['name'].to_list()
-        else:
-            enrichment_names = results.select(pl.first()).to_series().to_list()
-        enrichment_scores = results[self.en_score_col].to_list()
-        enrichment_pvalue = results['padj'].to_list()
-        enrichment_obs = results['obs'].to_list()
-        enrichment_exp = results['exp'].to_list()
-
-        # choose functions and parameters according to the graph's orientation (horizontal vs vertical)
-        if self.plot_horizontal:
-            figsize = [10.5, 0.4 * (4.8 + self.results.shape[0])]
-            bar_func = plt.Axes.barh if self.plot_style == 'bar' else plt.Axes.hlines
-            line_func = plt.Axes.axvline
-
-            cbar_location = 'bottom'
-            cbar_orientation = 'horizontal'
-            tick_func = plt.Axes.set_yticks
-            ticklabels_func = plt.Axes.set_yticklabels
-            ticklabels_kwargs = dict(fontsize=label_fontsize, rotation=0)
-
-            for lst in (enrichment_names, enrichment_scores, enrichment_pvalue, enrichment_obs, enrichment_exp):
-                lst.reverse()
-        else:
-            figsize = [0.5 * (4.8 + self.results.shape[0]), 4.2]
-            bar_func = plt.Axes.bar if self.plot_style == 'bar' else plt.Axes.vlines
-            line_func = plt.Axes.axhline
-            cbar_location = 'left'
-            cbar_orientation = 'vertical'
-            tick_func = plt.Axes.set_xticks
-            ticklabels_func = plt.Axes.set_xticklabels
-            ticklabels_kwargs = dict(fontsize=label_fontsize, rotation=45)
-
-        # set enrichment scores which are 'inf' or '-inf' to be the second highest/lowest enrichment score in the list
-        scores_no_inf = [abs(score) for score in enrichment_scores if score != np.inf and score != -np.inf]
-        if len(scores_no_inf) == 0:
-            scores_no_inf.append(3)
-
-        for i in range(len(enrichment_scores)):
-            if enrichment_scores[i] == -np.inf:
-                enrichment_scores[i] = -max(scores_no_inf)
-            elif enrichment_scores[i] == np.inf:
-                enrichment_scores[i] = max(scores_no_inf)
-
-        if ylim == 'auto':
-            if len(scores_no_inf) > 0:
-                max_score = max(max(scores_no_inf), 3)
-            else:
-                max_score = 3
-        else:
-            max_score = ylim
-
-        # get color values for bars
-        data_color_norm = [0.5 * (1 + i / (np.ceil(max_score))) * 255 for i in enrichment_scores]
-        data_color_norm_8bit = [int(i) if i != np.inf and i != -np.inf else np.sign(i) * max(np.abs(scores_no_inf)) for
-                                i in data_color_norm]
-        my_cmap = plt.colormaps.get_cmap('coolwarm')
-        colors = my_cmap(data_color_norm_8bit)
-
-        # generate bar plot
-        fig, ax = plt.subplots(tight_layout=True, figsize=figsize)
-
-        args = (ax, range(len(enrichment_names)), enrichment_scores) if self.plot_style == 'bar' else (
-            ax, range(len(enrichment_names)), 0, enrichment_scores)
-        kwargs = dict(linewidth=1, edgecolor='black') if self.plot_style == 'bar' else dict(linewidth=5)
-
-        graph = bar_func(*args, color=colors, zorder=2, **kwargs)
-        graph.tick_labels = enrichment_names
-
-        if self.plot_style == 'lollipop':
-            x, y = (enrichment_scores, range(len(enrichment_names))) if self.plot_horizontal else (range(
-                len(enrichment_names)), enrichment_scores)
-            ax.scatter(x, y, color=colors, zorder=3, s=dot_scaling_func(enrichment_obs))
-
-            legend_sizes = [Size(i) for i in [10, 50, 250, 500]]
-            ax.legend(legend_sizes, [f"observed={i.size}" for i in legend_sizes],
-                      labelspacing=3.2, borderpad=2.5, draggable=True,
-                      handler_map={size: SizeHandler(size.size) for size in legend_sizes}, loc='lower right')
-
-        # determine bounds, and enlarge the bound by a small margin (0.5%) so nothing gets cut out of the figure
-        if ylim == 'auto':
-            bounds = np.array([np.floor(-max_score), np.ceil(max_score)]) * 1.005
-        else:
-            bounds = np.array([-max_score, max_score]) * 1.005
-        # add black line at y=0 and grey lines at every round positive/negative integer in range
-        for ind in range(int(bounds[0]), int(bounds[1]) + 1):
-            color = 'black' if ind == 0 else 'grey'
-            linewidth = 1 if ind == 0 else 0.5
-            linestyle = '-' if ind == 0 else '-.'
-            line_func(ax, ind, color=color, linewidth=linewidth, linestyle=linestyle, zorder=0)
-        # apply xticks
-        tick_func(ax, range(len(enrichment_names)))
-        ticklabels_func(ax, enrichment_names, **ticklabels_kwargs)
-        ax.tick_params(axis='both', which='major', pad=10)
-        # title
-        ax.set_title(title, fontsize=title_fontsize)
-        # add significance asterisks
-        for i, (score, sig, obs, exp) in enumerate(
-            zip(enrichment_scores, enrichment_pvalue, enrichment_obs, enrichment_exp)):
-            asterisks, fontweight = self._get_pval_asterisk(sig, self.alpha)
-            if self.plot_horizontal:
-                x = score
-                y = i
-                valign = 'bottom'
-                halign = 'center'
-                rotation = 270 if np.sign(score) == 1 else 90
-                rotation_mode = 'anchor'
-            else:
-                x = i
-                y = score
-                valign = 'bottom' if np.sign(score) == 1 else 'top'
-                halign = 'center'
-                rotation = 0
-                rotation_mode = 'default'
-
-            if self.show_expected:
-                extra_text = f"{obs}/{exp:.1f}"
-                asterisks = f"{extra_text}\n{asterisks}" if self.plot_horizontal or np.sign(
-                    score) == 1 else f"{asterisks}\n{extra_text}"
-            ax.text(x=x, y=y, s=asterisks, fontname='DejaVu Sans',
-                    fontweight=fontweight, rotation=rotation, fontsize=9,
-                    horizontalalignment=halign, verticalalignment=valign, zorder=3, rotation_mode=rotation_mode)
-
-        # despine
-        _ = [ax.spines[side].set_visible(False) for side in ['top', 'bottom', 'left', 'right']]
-        # center bars
-        if center_bars:
-            if self.plot_horizontal:
-                ax.set_xbound(bounds)
-                plt.tick_params(axis='x', which='both', bottom=False, top=False, labelbottom=False)
-            else:
-                ax.set_ybound(bounds)
-                plt.tick_params(axis='y', which='both', left=False, right=False, labelleft=False)
-        # add colorbar
-        divider = make_axes_locatable(ax)
-        cax = divider.append_axes(cbar_location, size=f"{5 * (1 + self.plot_horizontal)}%", pad=0.05)
-        sm = ScalarMappable(cmap=my_cmap, norm=plt.Normalize(*bounds))
-        sm.set_array(np.array([]))
-        cbar_label_kwargs = dict(label=ylabel, fontsize=ylabel_fontsize, labelpad=15)
-        cbar = fig.colorbar(sm, ticks=range(int(bounds[0]), int(bounds[1]) + 1), cax=cax, orientation=cbar_orientation)
-        cbar.set_label(**cbar_label_kwargs)
-        cax.tick_params(labelsize=14, pad=6)
-
-        if not self.plot_horizontal:
-            cax.yaxis.set_ticks_position('left')
-            cax.yaxis.set_label_position('left')
-
-        plt.show()
-        return fig
-
-    @staticmethod
-    def _get_pval_asterisk(pval: float, alpha: float = 0.05):
-        fontweight = 'bold'
-        if pval > alpha:
-            asterisks = 'ns'
-            fontweight = 'normal'
-        elif pval < 0.0001:
-            asterisks = u'\u2217' * 4
-        elif pval < 0.001:
-            asterisks = u'\u2217' * 3
-        elif pval < 0.01:
-            asterisks = u'\u2217' * 2
-        else:
-            asterisks = u'\u2217'
-        return asterisks, fontweight
+            title = f"Enrichment for gene set '{self.set_name}'"
+        plotter = BarPlotter(self.results, self.en_score_col, 'all', self.alpha, self.ENRICHMENT_SCORE_YLABEL, title)
+        return plotter
 
 
 class NonCategoricalEnrichmentRunner(EnrichmentRunner):
@@ -1111,7 +951,7 @@ class NonCategoricalEnrichmentRunner(EnrichmentRunner):
 
     def __init__(self, genes: set, attributes: Union[Iterable, str, int], alpha: param_typing.Fraction,
                  background_set: set, attr_ref_path: str, save_csv: bool, fname: str,
-                 return_fig: bool, plot_log_scale: bool, plot_style: Literal['interleaved', 'overlap'],
+                 plot_log_scale: bool, plot_style: Literal['interleaved', 'overlap'],
                  n_bins: int, set_name: str, parallel_backend: Literal[PARALLEL_BACKENDS], parametric_test: bool):
 
         assert isinstance(plot_log_scale, bool), f"Invalid type for 'plot_log_scale': '{plot_log_scale}'."
@@ -1120,7 +960,7 @@ class NonCategoricalEnrichmentRunner(EnrichmentRunner):
                           int) and n_bins > 0, f"'n_bins' must be a positive integer. Instead got {type(n_bins)}."
 
         stats_test = TTest() if parametric_test else SignTest()
-        super().__init__(genes, attributes, alpha, attr_ref_path, True, save_csv, fname, return_fig, True, set_name,
+        super().__init__(genes, attributes, alpha, attr_ref_path, True, save_csv, fname, True, set_name,
                          parallel_backend, stats_test, background_set, exclude_unannotated_genes=True, single_set=False)
         self.parametric_test = parametric_test
         self.plot_log_scale = plot_log_scale
@@ -1150,77 +990,12 @@ class NonCategoricalEnrichmentRunner(EnrichmentRunner):
         if not self.return_nonsignificant:
             self.results = self.results.filter(pl.col('significant') == True)
 
-    def plot_results(self) -> List[plt.Figure]:
-        if len(self.results) == 0:
-            return []
-        figs = []
-        for attribute in self.attributes:
-            padj = self.results.filter(pl.first() == attribute).select('padj').item()
-            if (padj is not None) and (not np.isnan(padj)):
-                fig = self.enrichment_histogram(attribute)
-                figs.append(fig)
-        return figs
-
-    def enrichment_histogram(self, attribute):
-        # generate observed and expected Series, either linear or in log10 scale
-        exp = [self.annotations[attribute][gene] for gene in self.background_set]
-        obs = [self.annotations[attribute][gene] for gene in self.gene_set]
-        if self.plot_log_scale:
-            xlabel = r"$\log_{10}$" + f"({attribute})"
-            exp = np.log10(exp)
-            obs = np.log10(obs)
-        else:
-            xlabel = f"{attribute}"
-
-        # determine bins according to value range and 'n_bins'
-        bins = np.linspace(np.min(exp), np.max(exp), self.n_bins).squeeze()
-
-        # generate histogram according to plot style
-        fig = plt.figure(figsize=(12, 6))
-        ax = fig.add_subplot(111)
-        kwargs = dict(bins=bins, density=True, alpha=0.5, edgecolor='black', linewidth=1)
-        colors = ['C0', 'C1']
-        if self.plot_style.lower() == 'interleaved':
-            y, x, _ = ax.hist([exp, obs], **kwargs, color=colors, label=['Expected', 'Observed'])
-            max_y_val = np.max(y)
-        elif self.plot_style.lower() == 'overlap':
-            y, _, _ = ax.hist(exp, **kwargs, color=colors[0], label='Expected')
-            y2, _, _ = ax.hist(obs, **kwargs, color=colors[1], label='Observed')
-            max_y_val = np.max([np.max(y), np.max(y2)])
-        else:
-            raise NotImplementedError(f"Plot style '{self.plot_style}' not implemented.")
-
-        # set either mean or median as the measure of centrality
-        if self.parametric_test:
-            x_exp, x_obs = np.nanmean(exp), np.mean(obs)
-            label_exp, label_obs = 'Expected mean', 'Observed mean'
-        else:
-            x_exp, x_obs = np.nanmedian(exp), np.median(obs)
-            label_exp, label_obs = 'Expected median', 'Observed median'
-
-        # add lines for mean/median of observed and expected distributions
-        ax.vlines(x_exp, ymin=0, ymax=max_y_val * 1.1, color='blue', linestyle='dashed', linewidth=2,
-                  label=label_exp)
-        ax.vlines(x_obs, ymin=0, ymax=max_y_val * 1.1, color='red', linestyle='dashed', linewidth=2,
-                  label=label_obs)
-
-        # add significance notation
-        asterisks, fontweight = self._get_pval_asterisk(
-            self.results.filter(pl.first() == attribute).select('padj').item(), self.alpha)
-        ax.vlines([x_exp, x_obs], ymin=max_y_val * 1.12, ymax=max_y_val * 1.16, color='k', linewidth=1)
-        ax.hlines(max_y_val * 1.16, xmin=min(x_exp, x_obs), xmax=max(x_exp, x_obs), color='k', linewidth=1)
-        ax.text(np.mean([x_exp, x_obs]), max_y_val * 1.17, asterisks, horizontalalignment='center',
-                fontweight=fontweight)
-
-        # legend and titles
-        ax.legend()
-        obs_name = 'Observed' if self.set_name == '' else self.set_name
-        ax.set_title(f"Histogram of {attribute} - {obs_name} vs Expected", fontsize=17)
-        ax.set_ylabel("Probability density", fontsize=14)
-        ax.set_xlabel(xlabel, fontsize=14)
-        plt.show()
-
-        return fig
+    def plot_results(self) -> HistogramPlotter:
+        plotter = HistogramPlotter(self.results, self.annotations,
+                                   parsing.data_to_list(self.attributes), self.alpha, self.set_name, self.gene_set,
+                                   self.background_set, self.plot_log_scale, self.n_bins, self.plot_style,
+                                   self.parametric_test)
+        return plotter
 
 
 class KEGGEnrichmentRunner(EnrichmentRunner):
@@ -1233,18 +1008,18 @@ class KEGGEnrichmentRunner(EnrichmentRunner):
                  'pathway_names_dict': 'a dict with KEGG Pathway IDs as keys and their names as values',
                  'plot_pathway_graphs': 'indicates whether to plot pathway graphs of the statistically significant KEGG pathways',
                  'pathway_graphs_format': 'file format for the generated pathway graphs',
-                 'gene_id_translator': 'gene ID translator from KEGG into a user-defined gene ID type'
+                 'gene_id_map': 'gene ID translator from KEGG into a user-defined gene ID type'
                  }
     KEGG_DF_QUERIES = {}
     printout_params = "have any KEGG Annotations asocciated with them"
 
     def __init__(self, genes: Union[set, np.ndarray], organism: Union[str, int], gene_id_type: str, alpha: float,
-                 return_nonsignificant: bool, save_csv: bool, fname: str, return_fig: bool, plot_horizontal: bool,
+                 return_nonsignificant: bool, save_csv: bool, fname: str, plot_horizontal: bool,
                  plot_pathway_graphs: bool, set_name: str, parallel_backend: Literal[PARALLEL_BACKENDS],
                  stats_test: StatsTest, background_set: set = None, exclude_unannotated_genes: bool = True,
                  single_set: bool = False, pathway_graphs_format: Literal[GRAPHVIZ_FORMATS] = 'none',
                  plot_style: Literal['bar', 'lollipop'] = 'bar', show_expected: bool = False):
-        super().__init__(genes, [], alpha, '', return_nonsignificant, save_csv, fname, return_fig, plot_horizontal,
+        super().__init__(genes, [], alpha, '', return_nonsignificant, save_csv, fname, plot_horizontal,
                          set_name, parallel_backend, stats_test, background_set, exclude_unannotated_genes, single_set,
                          plot_style, show_expected)
         if not self.stats_test:
@@ -1254,7 +1029,7 @@ class KEGGEnrichmentRunner(EnrichmentRunner):
         self.pathway_names_dict: dict = {}
         self.plot_pathway_graphs = plot_pathway_graphs
         self.pathway_graphs_format = pathway_graphs_format
-        self.gene_id_translator = None
+        self.gene_id_map = None
 
     def _get_annotation_iterator(self):
         return io.KEGGAnnotationIterator(self.taxon_id)
@@ -1312,14 +1087,14 @@ class KEGGEnrichmentRunner(EnrichmentRunner):
         translated_dict = {}
         source = 'KEGG'
 
-        translator = io.GeneIDTranslator(source, self.gene_id_type).run(
+        gene_id_map = io.GeneIDTranslator(source, self.gene_id_type).run(
             set.union(*annotation_dict.values()))
-        self.gene_id_translator = translator
+        self.gene_id_map = gene_id_map
         for kegg_id in annotation_dict:
             translated_dict[kegg_id] = set()
             for gene_id in annotation_dict[kegg_id]:
-                if gene_id in translator:
-                    translated_dict[kegg_id].add(translator[gene_id])
+                if gene_id in gene_id_map:
+                    translated_dict[kegg_id].add(gene_id_map[gene_id])
         return translated_dict
 
     def _get_query_key(self):
@@ -1329,28 +1104,14 @@ class KEGGEnrichmentRunner(EnrichmentRunner):
         self.attributes = parsing.data_to_list(self.annotations.keys())
         self.attributes_set = parsing.data_to_set(self.attributes)
 
-    def plot_results(self) -> List[plt.Figure]:
-        if len(self.results) == 0:
-            return []
-        figs = [super().plot_results()]
+    def plot_results(self) -> EnrichmentPlotter:
+        bar_plotter = super().plot_results()
         if self.plot_pathway_graphs:
-            for pathway in self.pathway_names_dict:
-                if pathway in self.results.select(pl.first()) and self.results[pathway, 'significant']:
-                    fig = self.pathway_plot(pathway)
-                    if fig is None:
-                        break
-                    figs.append(fig)
-        return figs
-
-    def pathway_plot(self, pathway_id: str) -> plt.Figure:
-        ylabel = self.SINGLE_SET_ENRICHMENT_SCORE_YLABEL if self.single_set else self.ENRICHMENT_SCORE_YLABEL
-        pathway_tree = ontology.fetch_kegg_pathway(pathway_id, self.gene_id_translator)
-        if self.single_set:
-            highlight_genes = self.gene_set
-            # TODO: color by rank/ranking metric?
-        else:
-            highlight_genes = self.gene_set
-        return pathway_tree.plot_pathway(highlight_genes, ylabel=ylabel, graph_format=self.pathway_graphs_format)
+            ylabel = self.SINGLE_SET_ENRICHMENT_SCORE_YLABEL if self.single_set else self.ENRICHMENT_SCORE_YLABEL
+            kegg_plotter = KEGGPlotter(self.results, self.en_score_col, self.gene_set, self.pathway_names_dict,
+                                       self.gene_id_map, self.pathway_graphs_format, self.single_set, ylabel)
+            return MultiPlotter(self.results, [bar_plotter, kegg_plotter])
+        return bar_plotter
 
 
 class GOEnrichmentRunner(EnrichmentRunner):
@@ -1379,14 +1140,14 @@ class GOEnrichmentRunner(EnrichmentRunner):
                  evidence_types: Union[str, Iterable[str]], excluded_evidence_types: Union[str, Iterable[str]],
                  databases: Union[str, Iterable[str]], excluded_databases: Union[str, Iterable[str]],
                  qualifiers: Union[str, Iterable[str]], excluded_qualifiers: Union[str, Iterable[str]],
-                 return_nonsignificant: bool, save_csv: bool, fname: str, return_fig: bool, plot_horizontal: bool,
+                 return_nonsignificant: bool, save_csv: bool, fname: str, plot_horizontal: bool,
                  plot_ontology_graph: bool, set_name: str, parallel_backend: Literal[PARALLEL_BACKENDS],
                  stats_test: StatsTest, background_set: set = None, exclude_unannotated_genes: bool = True,
                  single_set: bool = False, ontology_graph_format: Literal[GRAPHVIZ_FORMATS] = 'none',
                  plot_style: Literal['bar', 'lollipop'] = 'bar', show_expected: bool = False):
 
         self.propagate_annotations = propagate_annotations.lower()
-        super().__init__(genes, [], alpha, '', return_nonsignificant, save_csv, fname, return_fig, plot_horizontal,
+        super().__init__(genes, [], alpha, '', return_nonsignificant, save_csv, fname, plot_horizontal,
                          set_name, parallel_backend, stats_test, background_set,
                          exclude_unannotated_genes, single_set, plot_style, show_expected)
         if not self.stats_test:
@@ -1526,9 +1287,7 @@ class GOEnrichmentRunner(EnrichmentRunner):
         self.results = pl.concat([self.results.with_columns(padj=padj, significant=significant), results_nulls],
                                  how='align')
 
-    def plot_results(self) -> List[plt.Figure]:
-        if len(self.results) == 0:
-            return []
+    def plot_results(self) -> EnrichmentPlotter:
         n_bars = min(10, len(self.results))
         kwargs = dict()
         if self.single_set:
@@ -1539,28 +1298,21 @@ class GOEnrichmentRunner(EnrichmentRunner):
             kwargs['ylabel'] = self.ENRICHMENT_SCORE_YLABEL
             kwargs['title'] = f"GO enrichment for gene set '{self.set_name}'\n" \
                               f"top {n_bars} most specific GO terms"
+        bar_plotter = BarPlotter(self.results, self.en_score_col, n_bars, self.alpha, **kwargs)
 
-        figs = [self.enrichment_bar_plot(n_bars=n_bars, **kwargs)]
         if self.plot_ontology_graph:
             ontology_kwargs = kwargs.copy()
             ontology_kwargs['title'] = f"Single-list GO enrichment for gene set '{self.set_name}'" if self.single_set \
                 else f"GO enrichment for gene set '{self.set_name}'"
-            figs.extend(self.go_dag_plot(**ontology_kwargs))
-        return figs
+            dag_plotter = self.go_dag_plot(**ontology_kwargs)
+            return MultiPlotter(self.results, [bar_plotter, dag_plotter])
 
-    def go_dag_plot(self, title, dpi: int = 300, ylabel: str = "$\\log_2$(Fold Enrichment)") -> List[plt.Figure]:
-        aspects = ('biological_process', 'cellular_component',
-                   'molecular_function') if self.aspects == 'any' else parsing.data_to_tuple(self.aspects)
-        figs = []
-        for go_aspect in aspects:
-            this_title = title + f'\n{go_aspect}'.replace('_', ' ').title()
-            fig = self.dag_tree.plot_ontology(go_aspect, self.results, self.en_score_col, this_title, ylabel,
-                                              self.ontology_graph_format, dpi)
-            if fig is None:
-                return figs
-            figs.append(fig)
+        return bar_plotter
 
-        return figs
+    def go_dag_plot(self, title, dpi: int = 300, ylabel: str = "$\\log_2$(Fold Enrichment)") -> GODagPlotter:
+        plotter = GODagPlotter(self.results, self.en_score_col, self.dag_tree, self.aspects, title, ylabel, dpi,
+                               self.ontology_graph_format)
+        return plotter
 
     def format_results(self, unformatted_results_dict: dict):
         super().format_results(parsing.data_to_list(unformatted_results_dict.values()))

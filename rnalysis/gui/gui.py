@@ -4508,9 +4508,9 @@ class MainWindow(QtWidgets.QMainWindow):
 
         set_name = worker_output.emit_args[0]
         job_id = worker_output.job_id
-        results, enrichment_runner = worker_output.result
+        results, plotter = worker_output.result
         self.show()
-        outputs = parsing.data_to_list(enrichment_runner.plot_results()) + [results]
+        outputs = plotter.run() + [results]
         self.display_enrichment_results(results, set_name)
 
         if self._generate_report:

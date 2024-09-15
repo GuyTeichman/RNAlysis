@@ -932,15 +932,18 @@ class FeatureSet(set):
                                                       propagate_annotations, aspects, evidence_types,
                                                       excluded_evidence_types, databases, excluded_databases,
                                                       qualifiers, excluded_qualifiers, return_nonsignificant, save_csv,
-                                                      fname, return_fig, plot_horizontal, plot_ontology_graph,
+                                                      fname, plot_horizontal, plot_ontology_graph,
                                                       self.set_name, parallel_backend, stats_test,
                                                       background_genes, exclude_unannotated_genes,
                                                       ontology_graph_format=ontology_graph_format,
                                                       plot_style=plot_style, show_expected=show_expected)
 
+        results, plotter = runner.run()
         if gui_mode:
-            return runner.run(plot=False), runner
-        return runner.run()
+            return results, plotter
+        if return_fig:
+            return results, plotter.run()
+        return results
 
     @readable_name("Enrichment for KEGG Pathways")
     def kegg_enrichment(self, background_genes: Union[Set[str], Filter, 'FeatureSet'],
@@ -1045,16 +1048,19 @@ class FeatureSet(set):
             pass
         stats_test = self._get_stats_test(statistical_test, randomization_reps, random_seed)
         runner = enrichment_runner.KEGGEnrichmentRunner(self.gene_set, organism, gene_id_type, alpha,
-                                                        return_nonsignificant, save_csv, fname, return_fig,
+                                                        return_nonsignificant, save_csv, fname,
                                                         plot_horizontal, plot_pathway_graphs, self.set_name,
                                                         parallel_backend, stats_test, background_genes,
                                                         exclude_unannotated_genes,
                                                         pathway_graphs_format=pathway_graphs_format,
                                                         plot_style=plot_style, show_expected=show_expected)
 
+        results, plotter = runner.run()
         if gui_mode:
-            return runner.run(plot=False), runner
-        return runner.run()
+            return results, plotter
+        if return_fig:
+            return results, plotter.run()
+        return results
 
     @readable_name("Enrichment for user-defined attributes")
     def user_defined_enrichment(self, background_genes: Union[Set[str], Filter, 'FeatureSet'],
@@ -1161,14 +1167,17 @@ class FeatureSet(set):
 
         stats_test = self._get_stats_test(statistical_test, randomization_reps, random_seed)
         runner = enrichment_runner.EnrichmentRunner(self.gene_set, attributes, alpha, attr_ref_path,
-                                                    return_nonsignificant, save_csv, fname, return_fig, plot_horizontal,
+                                                    return_nonsignificant, save_csv, fname, plot_horizontal,
                                                     self.set_name, parallel_backend, stats_test,
                                                     background_genes, exclude_unannotated_genes,
                                                     single_set=False, plot_style=plot_style,
                                                     show_expected=show_expected)
+        results, plotter = runner.run()
         if gui_mode:
-            return runner.run(plot=False), runner
-        return runner.run()
+            return results, plotter
+        if return_fig:
+            return results, plotter.run()
+        return results
 
     @readable_name("Enrichment for user-defined non-categorical attributes")
     def non_categorical_enrichment(self, background_genes: Union[Set[str], Filter, 'FeatureSet'],
@@ -1242,12 +1251,15 @@ class FeatureSet(set):
             pass
         runner = enrichment_runner.NonCategoricalEnrichmentRunner(self.gene_set, attributes, alpha,
                                                                   background_genes, attr_ref_path, save_csv, fname,
-                                                                  return_fig, plot_log_scale, plot_style,
+                                                                  plot_log_scale, plot_style,
                                                                   n_bins, self.set_name, parallel_backend='sequential',
                                                                   parametric_test=parametric_test)
+        results, plotter = runner.run()
         if gui_mode:
-            return runner.run(plot=False), runner
-        return runner.run()
+            return results, plotter
+        if return_fig:
+            return results, plotter.run()
+        return results
 
     @readable_name('Summarize feature biotypes (based on a reference table)')
     def biotypes_from_ref_table(self, ref: Union[str, Path, Literal['predefined']] = 'predefined'):
@@ -1562,16 +1574,19 @@ class RankedSet(FeatureSet):
                                                       propagate_annotations, aspects, evidence_types,
                                                       excluded_evidence_types, databases, excluded_databases,
                                                       qualifiers, excluded_qualifiers, return_nonsignificant, save_csv,
-                                                      fname, return_fig, plot_horizontal, plot_ontology_graph,
+                                                      fname, plot_horizontal, plot_ontology_graph,
                                                       self.set_name, parallel_backend=parallel_backend,
                                                       stats_test=stats_test,
                                                       exclude_unannotated_genes=exclude_unannotated_genes,
                                                       single_set=True, ontology_graph_format=ontology_graph_format,
                                                       plot_style=plot_style, show_expected=show_expected)
 
+        results, plotter = runner.run()
         if gui_mode:
-            return runner.run(plot=False), runner
-        return runner.run()
+            return results, plotter
+        if return_fig:
+            return results, plotter.run()
+        return results
 
     @readable_name("Single-Set Enrichment for KEGG Pathways")
     def single_set_kegg_enrichment(self,
@@ -1691,16 +1706,19 @@ class RankedSet(FeatureSet):
         """
         stats_test = enrichment_runner.XlmhgTest(min_positive_genes, lowest_cutoff)
         runner = enrichment_runner.KEGGEnrichmentRunner(self.ranked_genes, organism, gene_id_type, alpha,
-                                                        return_nonsignificant, save_csv, fname, return_fig,
+                                                        return_nonsignificant, save_csv, fname,
                                                         plot_horizontal, plot_pathway_graphs, self.set_name,
                                                         parallel_backend=parallel_backend, stats_test=stats_test,
                                                         exclude_unannotated_genes=exclude_unannotated_genes,
                                                         single_set=True, pathway_graphs_format=pathway_graphs_format,
                                                         plot_style=plot_style, show_expected=show_expected)
 
+        results, plotter = runner.run()
         if gui_mode:
-            return runner.run(plot=False), runner
-        return runner.run()
+            return results, plotter
+        if return_fig:
+            return results, plotter.run()
+        return results
 
     @readable_name("Single-Set Enrichment for user-defined attributes")
     def single_set_enrichment(self, attributes: Union[List[str], str, List[int], int, Literal['all']],
@@ -1792,14 +1810,17 @@ class RankedSet(FeatureSet):
         """
         stats_test = enrichment_runner.XlmhgTest(min_positive_genes, lowest_cutoff)
         runner = enrichment_runner.EnrichmentRunner(self.ranked_genes, attributes, alpha, attr_ref_path,
-                                                    return_nonsignificant, save_csv, fname, return_fig, plot_horizontal,
+                                                    return_nonsignificant, save_csv, fname, plot_horizontal,
                                                     self.set_name, parallel_backend=parallel_backend,
                                                     stats_test=stats_test,
                                                     exclude_unannotated_genes=exclude_unannotated_genes,
                                                     single_set=True, plot_style=plot_style, show_expected=show_expected)
+        results, plotter = runner.run()
         if gui_mode:
-            return runner.run(plot=False), runner
-        return runner.run()
+            return results, plotter
+        if return_fig:
+            return results, plotter.run()
+        return results
 
 
 def enrichment_bar_plot(results_table_path: Union[str, Path], alpha: param_typing.Fraction = 0.05,
@@ -1854,14 +1875,10 @@ def enrichment_bar_plot(results_table_path: Union[str, Path], alpha: param_typin
     :rtype: matplotlib.figure.Figure instance
     """
     results_table = io.load_table(results_table_path)
-    runner = enrichment_runner.EnrichmentRunner(set(), results_table[results_table.columns[0]].to_list(), alpha, '',
-                                                True, False, '', True,
-                                                plot_horizontal, '', False, enrichment_runner.FishersExactTest(), set(),
-                                                plot_style=plot_style, show_expected=show_expected)
-    runner.en_score_col = enrichment_score_column
-    runner.results = results_table
-    return runner.enrichment_bar_plot(n_bars, center_bars, ylabel, title, ylim, title_fontsize, label_fontsize,
-                                      ylabel_fontsize)
+    plotter = enrichment_runner.BarPlotter(results_table, enrichment_score_column, n_bars, alpha, ylabel, title, ylim,
+                                           title_fontsize, label_fontsize, ylabel_fontsize, plot_style, plot_horizontal,
+                                           show_expected, center_bars)
+    return plotter.run()
 
 
 def _fetch_sets(objs: dict, ref: Union[str, Path, Literal['predefined']] = 'predefined'):

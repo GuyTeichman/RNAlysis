@@ -33,12 +33,19 @@ def test_enrichment_runner_from_results():
     assert runner.set_name == set_name
 
 
-def test_get_pval_asterisk():
-    assert EnrichmentRunner._get_pval_asterisk(0.6) == ('ns', 'normal')
-    assert EnrichmentRunner._get_pval_asterisk(0.001, 0.00099) == ('ns', 'normal')
-    assert EnrichmentRunner._get_pval_asterisk(0.04) == (u'\u2217', 'bold')
-    assert EnrichmentRunner._get_pval_asterisk(0.0099) == (u'\u2217' * 2, 'bold')
-    assert EnrichmentRunner._get_pval_asterisk(0) == (u'\u2217' * 4, 'bold')
+@pytest.mark.parametrize("pval, alpha, expected", [
+    (0.6, None, ('ns', 'normal')),
+    (0.001, 0.00099, ('ns', 'normal')),
+    (0.04, None, (u'\u2217', 'bold')),
+    (0.0099, None, (u'\u2217' * 2, 'bold')),
+    (0, None, (u'\u2217' * 4, 'bold'))
+])
+def test_get_pval_asterisk(pval, alpha, expected):
+    if alpha is not None:
+        result = EnrichmentPlotter._get_pval_asterisk(pval, alpha)
+    else:
+        result = EnrichmentPlotter._get_pval_asterisk(pval)
+    assert result == expected
 
 
 def test_calc_randomization_pval():
@@ -109,7 +116,7 @@ def _enrichment_get_ref_tests_setup(truth, bg_genes, **kwargs):
     genes = {'WBGene00000041', 'WBGene00002074', 'WBGene00000019', 'WBGene00000105', 'WBGene00000106', 'WBGene00199484',
              'WBGene00001436', 'WBGene00000137', 'WBGene00001996', 'WBGene00014208'}
     background = None if isinstance(bg_genes, str) else bg_genes
-    e = EnrichmentRunner(genes, 'all', 0.05, __attr_ref__, True, False, '', False, True, 'test_set', False,
+    e = EnrichmentRunner(genes, 'all', 0.05, __attr_ref__, True, False, '', False, 'test_set', False,
                          HypergeometricTest(), background, **kwargs)
     e.fetch_annotations()
     e.get_attribute_names()
@@ -196,7 +203,7 @@ def test_classic_pvals(monkeypatch):
     monkeypatch.setattr(ontology, 'fetch_go_basic', lambda: DummyDAGTree())
 
     e = GOEnrichmentRunner(gene_set, 'elegans', 'WBGene', 0.05, 'classic', 'any', 'any', None, 'any', None, 'any', None,
-                           False, False, '', False, False, False, '', False, HypergeometricTest(), background)
+                           False, False, '', False, False, '', False, HypergeometricTest(), background)
     e.annotations = annotations
     e.mutable_annotations = annotations,
     e.attributes = list(annotations.keys())
@@ -217,7 +224,7 @@ def test_elim_pvals(monkeypatch):
     monkeypatch.setattr(ontology, 'fetch_go_basic', lambda: dag_tree)
 
     e = GOEnrichmentRunner(gene_set, 'elegans', 'WBGene', threshold, 'classic', 'any', 'any', None, 'any', None, 'any',
-                           None, False, False, '', False, False, False, '', False, HypergeometricTest(), background)
+                           None, False, False, '', False, False, '', False, HypergeometricTest(), background)
     e.annotations = annotations
     e.mutable_annotations = deepcopy(annotations),
     e.attributes = list(annotations.keys())
@@ -239,7 +246,7 @@ def test_weight_pvals(monkeypatch):
     monkeypatch.setattr(ontology, 'fetch_go_basic', lambda: dag_tree)
 
     e = GOEnrichmentRunner(gene_set, 'elegans', 'WBGene', 0.05, 'classic', 'any', 'any', None, 'any', None, 'any', None,
-                           False, False, '', False, False, False, '', False, HypergeometricTest())
+                           False, False, '', False, False, '', False, HypergeometricTest())
     e.annotations = _df_to_dict(goa_df, null_mode=False)
     e.mutable_annotations = {attr: {v: 1 for v in val} for attr, val in e.annotations.items()},
     e.attributes = list(goa_df.columns)
@@ -262,7 +269,7 @@ def test_allm_pvals(monkeypatch):
     monkeypatch.setattr(ontology, 'fetch_go_basic', lambda: dag_tree)
 
     e = GOEnrichmentRunner(gene_set, 'elegans', 'WBGene', threshold, 'classic', 'any', 'any', None, 'any', None, 'any',
-                           None, False, False, '', False, False, False, '', False, HypergeometricTest(), background)
+                           None, False, False, '', False, False, '', False, HypergeometricTest(), background)
     e.annotations = annotations
     e.mutable_annotations = deepcopy(annotations),
     e.attributes = list(annotations.keys())
@@ -408,7 +415,7 @@ def test_enrichment_runner_api(exclude_unannotated, return_nonsignificant, save_
     monkeypatch.setattr('builtins.input', lambda x: 'fname')
 
     runner = EnrichmentRunner(genes, ['attr1', 'attr2'], 0.05, 'path/to/attr/ref', return_nonsignificant, save_csv,
-                              fname, False, False, 'set_name', False, pval_func, background_set,
+                              fname, False, 'set_name', False, pval_func, background_set,
                               exclude_unannotated, single_list)
     if save_csv:
         assert runner.fname == 'fname'
@@ -614,19 +621,22 @@ def test_enrichment_runner_correct_multiple_comparisons():
 
 @pytest.mark.parametrize('single_list', [True, False])
 def test_enrichment_runner_plot_results(monkeypatch, single_list):
-    def validate_params(self, title, ylabel=''):
-        assert isinstance(title, str)
-        assert self.set_name in title
-        assert isinstance(ylabel, str)
-        return plt.Figure()
+    def validate_params(self):
+        assert isinstance(self.title, str)
+        assert runner.set_name in self.title
+        assert isinstance(self.ylabel, str)
+        return [plt.Figure()]
 
-    monkeypatch.setattr(EnrichmentRunner, 'enrichment_bar_plot', validate_params)
+    monkeypatch.setattr(BarPlotter, 'run', validate_params)
     runner = EnrichmentRunner.__new__(EnrichmentRunner)
     runner.single_set = single_list
     runner.set_name = 'name of the set'
     runner.results = pl.DataFrame([1])
-    res = runner.plot_results()
-    assert isinstance(res, plt.Figure)
+    runner.en_score_col = 'column_0'
+    runner.alpha = 0.05
+
+    res = runner.plot_results().run()
+    assert validation.isinstanceiter(res, plt.Figure)
 
 
 @pytest.mark.parametrize('n_bars', ['all', 2])
@@ -640,14 +650,16 @@ def test_enrichment_runner_enrichment_bar_plot(plot_horizontal, n_bars, plot_sty
     runner.alpha = 0.05
     runner.plot_horizontal = plot_horizontal
     runner.show_expected = show_expected
+    runner.single_set = False
+    runner.set_name = 'set name'
     runner.plot_style = plot_style
-    runner.enrichment_bar_plot(n_bars=n_bars)
+    runner.plot_results().run()
 
 
 def test_noncategorical_enrichment_runner_api():
     NonCategoricalEnrichmentRunner({'gene1', 'gene2', 'gene4'}, ['attr1', 'attr2'], 0.05,
                                    {'gene1', 'gene2', 'gene3', 'gene4'}, 'path/to/attr/ref',
-                                   False, 'fname', False, False, 'overlap', 5,
+                                   False, 'fname', False, 'overlap', 5,
                                    'set_name', False, True)
 
 
@@ -733,12 +745,21 @@ def test_noncategorical_enrichment_runner_plot_results(monkeypatch):
         attrs_without_nan.append(attr)
         return plt.Figure()
 
-    monkeypatch.setattr(NonCategoricalEnrichmentRunner, 'enrichment_histogram', proccess_attr)
+    monkeypatch.setattr(HistogramPlotter, '_plot_histogram', proccess_attr)
     runner = NonCategoricalEnrichmentRunner.__new__(NonCategoricalEnrichmentRunner)
     runner.attributes = ['attr1', 'attr2', 'attr3', 'attr4']
-    runner.results = pl.DataFrame({'attributes':runner.attributes,'padj': [0.05, 0.3, np.nan, 1]})
+    runner.results = pl.DataFrame({'attributes': runner.attributes, 'padj': [0.05, 0.3, np.nan, 1]})
+    runner.annotations = {'attr1': [], 'attr2': [], 'attr3': [], 'attr4': []}
+    runner.alpha = 0.05
+    runner.gene_set = set()
+    runner.background_set = set()
+    runner.plot_log_scale = True
+    runner.n_bins = 10
+    runner.plot_style = 'interleaved'
+    runner.set_name = 'set name'
+    runner.parametric_test = True
 
-    res = runner.plot_results()
+    res = runner.plot_results().run()
     assert attrs_without_nan == attrs_without_nan_truth
     assert len(res) == len(attrs_without_nan)
     for plot in res:
@@ -762,9 +783,10 @@ def test_noncategorical_enrichment_runner_enrichment_histogram(plot_style, plot_
     runner.attr_ref_path = 'tests/test_files/attr_ref_table_for_non_categorical.csv'
     runner.gene_set = {f'WBGene0000000{i + 1}' for i in range(5)}
     runner.fetch_annotations()
+    runner.attributes = ['attr5']
 
-    res = runner.enrichment_histogram('attr5')
-    assert isinstance(res, plt.Figure)
+    res = runner.plot_results().run()
+    assert validation.isinstanceiter(res, plt.Figure)
 
 
 @pytest.mark.parametrize('exclude_unannotated', [True, False])
@@ -775,7 +797,7 @@ def test_noncategorical_enrichment_runner_enrichment_histogram(plot_style, plot_
 def test_go_enrichment_runner_api(monkeypatch, single_list, genes, pval_func, background_set, exclude_unannotated):
     monkeypatch.setattr(ontology, 'fetch_go_basic', lambda: 'dag_tree')
     runner = GOEnrichmentRunner(genes, 'organism', 'gene_id_type', 0.05, 'elim', 'any', 'any', None, 'any', None, 'any',
-                                None, False, False, 'fname', False, False, False, 'set_name', False, pval_func,
+                                None, False, False, 'fname', False, False, 'set_name', False, pval_func,
                                 background_set, exclude_unannotated, single_list)
 
     assert runner.dag_tree == 'dag_tree'
@@ -959,27 +981,32 @@ def test_go_enrichment_runner_correct_multiple_comparisons():
 def test_go_enrichment_runner_plot_results(monkeypatch, single_list, results, n_bars_truth, plot_ontology_graph):
     dag_plotted = []
 
-    def validate_params(self, title, n_bars, ylabel=''):
-        assert isinstance(title, str)
-        assert self.set_name in title
-        assert isinstance(ylabel, str)
-        assert isinstance(n_bars, int)
-        assert n_bars == n_bars_truth
-        return plt.Figure()
+    def validate_params_bar(self):
+        assert isinstance(self.title, str)
+        assert runner.set_name in self.title
+        assert isinstance(self.ylabel, str)
+        assert isinstance(self.n_bars, int)
+        assert self.n_bars == n_bars_truth
+        return [plt.Figure()]
 
-    def go_dag_plot(dpi, **kwargs):
+    def validate_params_dag(self):
         assert plot_ontology_graph
         dag_plotted.append(True)
         return []
 
-    monkeypatch.setattr(GOEnrichmentRunner, 'enrichment_bar_plot', validate_params)
-    monkeypatch.setattr(GOEnrichmentRunner, 'go_dag_plot', go_dag_plot)
+    monkeypatch.setattr(BarPlotter, 'run', validate_params_bar)
+    monkeypatch.setattr(GODagPlotter, 'run', validate_params_dag)
     runner = GOEnrichmentRunner.__new__(GOEnrichmentRunner)
     runner.single_set = single_list
     runner.set_name = 'name of the set'
-    runner.results = results
+    runner.results = pl.DataFrame(results)
+    runner.en_score_col = 'column_0'
+    runner.alpha = 0.05
+    runner.dag_tree = ontology.DAGTree.__new__(ontology.DAGTree)
+    runner.aspects = 'any'
+    runner.ontology_graph_format = 'none'
     runner.plot_ontology_graph = plot_ontology_graph
-    res = runner.plot_results()
+    res = runner.plot_results().run()
     assert validation.isinstanceiter(res, plt.Figure)
     if plot_ontology_graph:
         assert dag_plotted == [True]
@@ -1499,7 +1526,7 @@ def test_extract_xlmhg_results(pval_fwd, pval_rev, escore_fwd, escore_rev, pval_
 def test_kegg_enrichment_runner_api(monkeypatch, single_list, genes, pval_func, background_set, graph_format,
                                     exclude_unannotated):
     monkeypatch.setattr(io, 'get_taxon_and_id_type', lambda *args: (('a', 'b'), 'gene_id_type'))
-    KEGGEnrichmentRunner(genes, 'organism', 'gene_id_type', 0.05, True, False, 'fname', False, False, True, 'set_name',
+    KEGGEnrichmentRunner(genes, 'organism', 'gene_id_type', 0.05, True, False, 'fname', False, False, 'set_name',
                          False, pval_func, background_set, exclude_unannotated, single_list, graph_format)
 
 
@@ -1633,10 +1660,18 @@ def test_kegg_enrichment_runner_pathway_plot(single_set, graph_format, monkeypat
             plotted.append(True)
 
     monkeypatch.setattr(ontology, 'fetch_kegg_pathway', lambda *args, **kwargs: MockPathway(*args, **kwargs))
+    monkeypatch.setattr(BarPlotter, 'run', lambda *args: list())
 
     runner = KEGGEnrichmentRunner.__new__(KEGGEnrichmentRunner)
     runner.gene_set = {'a', 'b', 'c'}
     runner.single_set = single_set
     runner.pathway_graphs_format = graph_format
-    runner.gene_id_translator = translator_truth
-    runner.pathway_plot(pathway_id_truth)
+    runner.gene_id_map = translator_truth
+    runner.alpha = 0.05
+    runner.set_name = 'set name'
+    runner.pathway_graphs_format = 'none'
+    runner.results = pl.DataFrame({'column_0': [pathway_id_truth], 'padj': [True]})
+    runner.en_score_col = 'column_0'
+    runner.plot_pathway_graphs = True
+    runner.pathway_names_dict = {pathway_id_truth: 'name'}
+    runner.plot_results().run()
