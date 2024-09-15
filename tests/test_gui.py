@@ -3261,7 +3261,7 @@ class TestMainWindowJobRunning:
         worker_output = mocker.Mock(spec=gui_widgets.WorkerOutput)
         worker_output.raised_exception = None
         worker_output.result = [mocker.Mock(spec=pl.DataFrame),
-                                mocker.Mock(spec=enrichment.enrichment_runner.EnrichmentRunner)]
+                                mocker.Mock(spec=enrichment.enrichment_runner.EnrichmentPlotter)]
         worker_output.emit_args = ["set_name"]
         worker_output.job_id = 1
 
@@ -3365,7 +3365,7 @@ class TestMainWindowJobRunning:
         worker_output = mocker.Mock(spec=gui_widgets.WorkerOutput)
         worker_output.raised_exception = None
         worker_output.result = [mocker.Mock(spec=pl.DataFrame),
-                                mocker.Mock(spec=enrichment.enrichment_runner.EnrichmentRunner)]
+                                mocker.Mock(spec=enrichment.enrichment_runner.EnrichmentPlotter)]
         worker_output.emit_args = ["set_name"]
         worker_output.job_id = 1
 
@@ -3384,7 +3384,7 @@ class TestMainWindowJobRunning:
         worker_output = mocker.Mock(spec=gui_widgets.WorkerOutput)
         worker_output.raised_exception = None
         worker_output.result = [mocker.Mock(spec=pl.DataFrame),
-                                mocker.Mock(spec=enrichment.enrichment_runner.EnrichmentRunner)]
+                                mocker.Mock(spec=enrichment.enrichment_runner.EnrichmentPlotter)]
         worker_output.emit_args = ["set_name"]
         worker_output.job_id = 1
 

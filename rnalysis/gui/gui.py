@@ -4510,7 +4510,7 @@ class MainWindow(QtWidgets.QMainWindow):
         job_id = worker_output.job_id
         results, plotter = worker_output.result
         self.show()
-        outputs = plotter.run() + [results]
+        outputs = parsing.data_to_list(plotter.run()) + [results]
         self.display_enrichment_results(results, set_name)
 
         if self._generate_report:
