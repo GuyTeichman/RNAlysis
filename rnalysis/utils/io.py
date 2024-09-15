@@ -2075,7 +2075,7 @@ class GeneIDTranslator:
     def reformat_ids(self, output_dict: dict):
         if self.map_to == 'Ensembl':
             for key, val in output_dict.items():
-                output_dict[key] = re.sub('(\.\d+)$', '', val)
+                output_dict[key] = re.sub(r'(\.\d+)$', '', val)
 
 
 def _format_ids_iter(ids: Union[str, int, list, set], chunk_size: int = 250):
