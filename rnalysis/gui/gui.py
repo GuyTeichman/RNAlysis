@@ -2932,7 +2932,8 @@ class InplaceCommand(QtGui.QUndoCommand):
     def redo(self):
         self.new_job_id = JOB_COUNTER.get_id() if self.new_job_id is None else self.new_job_id
         self.tab._apply_function_from_params(self.func_name, self.args, self.kwargs, job_id=self.new_job_id,
-                                             predecessors=self.predecessors)
+                                             predecessors=self.predecessors,
+                                             finish_slot=functools.partial(self.tab.update_tab, is_unsaved=True))
 
 
 class InplaceCachedCommand(InplaceCommand):
