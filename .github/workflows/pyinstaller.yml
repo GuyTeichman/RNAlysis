@@ -68,16 +68,6 @@ jobs:
         strategy:
             matrix:
                 include:
-                    - os: macos-13
-                      TARGET: macos
-                      CMD_BUILD: >
-                          pyinstaller RNAlysis.spec &&
-                          cd dist/ &&
-                          zip -r RNAlysis-4.1.0_macos.zip ./RNAlysis* &&
-                          ls -ltr
-                      OUT_FILE_NAME: RNAlysis-4.1.0_macos.zip
-                      ASSET_MIME: application/zip
-
                     - os: macos-latest
                       TARGET: macos-M1
                       CMD_BUILD: >
