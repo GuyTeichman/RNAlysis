@@ -150,7 +150,8 @@ jobs:
                   else
                       value=$(cat release_url/release_url.txt)
                       echo "UPLOAD_URL=$value" >> $GITHUB_ENV
-
+                  fi
+              shell: bash
             - name: Upload Release Asset
               id: upload-release-asset
               uses: softprops/action-gh-release@v1
