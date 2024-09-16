@@ -49,6 +49,7 @@ jobs:
                 if: runner.os != 'macOS'
                 uses: KyleMayes/install-llvm-action@v2
                 with:
+                    version: "14.0"
                     directory: ${{ runner.temp }}/llvm
                     cached: ${{ steps.cache-llvm.outputs.cache-hit }}
             -   name: Install R
