@@ -61,7 +61,7 @@ jobs:
         strategy:
             matrix:
                 include:
-                    -   os: macos-12
+                    -   os: macos-13
                         TARGET: macos
                         CMD_BUILD: >
                             pyinstaller RNAlysis.spec &&
