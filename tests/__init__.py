@@ -20,7 +20,7 @@ def unlink_tree(dir):
             shutil.rmtree(item)
 
 
-def are_dir_trees_equal(dir1, dir2, compare_contents: bool = True):
+def are_dir_trees_equal(dir1, dir2, compare_contents: bool = True, ignore: list = None):
     """
     Compare two directories recursively. Files in each directory are \
     assumed to be equal if their names and contents are equal.\
@@ -32,15 +32,15 @@ def are_dir_trees_equal(dir1, dir2, compare_contents: bool = True):
     :return: True if the dir trees are the same and there were no errors while accessing the directories or files, \
     False otherwise.
    """
-
-    dirs_cmp = filecmp.dircmp(dir1, dir2)
-    if len(dirs_cmp.left_only) > 0 or len(dirs_cmp.right_only) > 0 or \
-        len(dirs_cmp.funny_files) > 0:
+    ignore = [] if ignore is None else ignore
+    ignore = filecmp.DEFAULT_IGNORES + ignore
+    dirs_cmp = filecmp.dircmp(dir1, dir2, ignore=ignore)
+    if len(dirs_cmp.left_only) > 0 or len(dirs_cmp.right_only) > 0 or len(dirs_cmp.funny_files) > 0:
         print(f"mismatch between {dir1} and {dir2} with left_only={dirs_cmp.left_only}, "
               f"right_only={dirs_cmp.right_only}, funny={dirs_cmp.funny_files}")
         return False
-    (_, mismatch, errors) = filecmp.cmpfiles(
-        dir1, dir2, dirs_cmp.common_files, shallow=False)
+    files_to_cmp = [item for item in dirs_cmp.common_files if Path(item).suffix not in ignore]
+    (_, mismatch, errors) = filecmp.cmpfiles(dir1, dir2, files_to_cmp, shallow=False)
     if (len(mismatch) > 0 or len(errors) > 0) and compare_contents:
         print(f"mismatch between {dir1} and {dir2} in the files {mismatch} with errors {errors}")
         for item in mismatch:
@@ -62,7 +62,7 @@ def are_dir_trees_equal(dir1, dir2, compare_contents: bool = True):
     for common_dir in dirs_cmp.common_dirs:
         new_dir1 = Path(dir1).joinpath(common_dir).as_posix()
         new_dir2 = Path(dir2).joinpath(common_dir).as_posix()
-        if not are_dir_trees_equal(new_dir1, new_dir2, compare_contents):
+        if not are_dir_trees_equal(new_dir1, new_dir2, compare_contents, ignore):
             return False
     return True
 
