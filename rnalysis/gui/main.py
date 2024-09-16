@@ -1,4 +1,5 @@
 import asyncio
+import sys
 from multiprocessing import freeze_support
 from pathlib import Path
 
@@ -17,6 +18,8 @@ except Exception as e:  # if running into related to cache, delete the cache and
 
 def main():
     freeze_support()
+    if sys.platform == 'win32':
+        asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
     try:
         asyncio.run(gui.run())
     except RuntimeError:
