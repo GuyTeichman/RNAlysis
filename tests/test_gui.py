@@ -519,7 +519,7 @@ def test_SimpleDESeqWindow_get_analysis_params(qtbot, simple_deseq_window):
     design_mat_path = 'tests/test_files/test_design_matrix.csv'
     truth = dict(r_installation_folder='auto', design_matrix=design_mat_path, output_folder=None,
                  comparisons=[('replicate', 'rep3', 'rep2'), ('condition', 'cond1', 'cond2')], return_code=True,
-                 return_design_matrix=True)
+                 return_design_matrix=True, return_log=True)
 
     simple_deseq_window.param_widgets['design_matrix'].setText(design_mat_path)
     qtbot.mouseClick(simple_deseq_window.param_widgets['load_design'], LEFT_CLICK)
@@ -539,7 +539,7 @@ def test_SimpleDESeqWindow_start_analysis(qtbot, simple_deseq_window):
     truth_args = []
     truth_kwargs = dict(r_installation_folder='auto', design_matrix=design_mat_path, output_folder=None,
                         comparisons=[('replicate', 'rep3', 'rep2'), ('condition', 'cond1', 'cond2')], return_code=True,
-                        return_design_matrix=True)
+                        return_design_matrix=True, return_log=True)
 
     simple_deseq_window.param_widgets['design_matrix'].setText(design_mat_path)
     qtbot.mouseClick(simple_deseq_window.param_widgets['load_design'], LEFT_CLICK)
@@ -573,7 +573,7 @@ def test_SimpleLimmaWindow_get_analysis_params(qtbot, simple_limma_window):
     design_mat_path = 'tests/test_files/test_design_matrix.csv'
     truth = dict(r_installation_folder='auto', design_matrix=design_mat_path, output_folder=None,
                  comparisons=[('replicate', 'rep3', 'rep2'), ('condition', 'cond1', 'cond2')], random_effect=None,
-                 quality_weights=False, return_code=True, return_design_matrix=True)
+                 quality_weights=False, return_code=True, return_design_matrix=True, return_log=True)
 
     simple_limma_window.param_widgets['design_matrix'].setText(design_mat_path)
     qtbot.mouseClick(simple_limma_window.param_widgets['load_design'], LEFT_CLICK)
@@ -594,7 +594,7 @@ def test_SimpleLimmaWindow_start_analysis(qtbot, simple_limma_window):
     truth_kwargs = dict(r_installation_folder='auto', design_matrix=design_mat_path, output_folder=None,
                         comparisons=[('replicate', 'rep3', 'rep2'), ('condition', 'cond1', 'cond2')],
                         random_effect=None, quality_weights=False, return_code=True,
-                        return_design_matrix=True)
+                        return_design_matrix=True, return_log=True)
 
     simple_limma_window.param_widgets['design_matrix'].setText(design_mat_path)
     qtbot.mouseClick(simple_limma_window.param_widgets['load_design'], LEFT_CLICK)
@@ -3158,7 +3158,7 @@ class TestDESeqWindow:
         truth = dict(r_installation_folder='auto', design_matrix=self.design_mat_path, output_folder=None,
                      comparisons=[('replicate', 'rep3', 'rep2'), ('condition', 'cond1', 'cond2')],
                      covariates=['covariate1'], lrt_factors=['factor1'], return_code=True, return_design_matrix=True,
-                     cooks_cutoff=True, scaling_factors=None)
+                     cooks_cutoff=True, scaling_factors=None, return_log=True)
 
         deseq_window.comparisons_widgets['picker'].add_comparison_widget()
         deseq_window.comparisons_widgets['picker'].inputs[0].factor.setCurrentText('replicate')
@@ -3177,7 +3177,7 @@ class TestDESeqWindow:
         truth_args = []
         truth_kwargs = dict(r_installation_folder='auto', design_matrix=self.design_mat_path, output_folder=None,
                             comparisons=[('replicate', 'rep3', 'rep2'), ('condition', 'cond1', 'cond2')],
-                            covariates=['covariate1'], lrt_factors=['factor1'], return_code=True,
+                            covariates=['covariate1'], lrt_factors=['factor1'], return_code=True, return_log=True,
                             return_design_matrix=True, cooks_cutoff=True, scaling_factors=None)
 
         deseq_window.comparisons_widgets['picker'].add_comparison_widget()
