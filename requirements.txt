@@ -28,3 +28,4 @@ nest-asyncio>=1.6.0
 kmedoids>=0.5.1
 polars[async,numpy,pyarrow,pandas]>=1.6.0,<1.7
 pandas[performance,parquet]
+winloop
