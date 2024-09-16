@@ -1,0 +1,71 @@
+
+        ==========     _____ _    _ ____  _____  ______          _____
+        =====         / ____| |  | |  _ \|  __ \|  ____|   /\   |  __ \
+          =====      | (___ | |  | | |_) | |__) | |__     /  \  | |  | |
+            ====      \___ \| |  | |  _ <|  _  /|  __|   / /\ \ | |  | |
+              ====    ____) | |__| | |_) | | \ \| |____ / ____ \| |__| |
+        ==========   |_____/ \____/|____/|_|  \_\______/_/    \_\_____/
+       Rsubread 2.14.2
+
+//========================== featureCounts setting ===========================\\
+||                                                                            ||
+||             Input files : 1 SAM file                                       ||
+||                                                                            ||
+||                           reads_.sam                                       ||
+||                                                                            ||
+||              Paired-end : yes                                              ||
+||        Count read pairs : yes                                              ||
+||              Annotation : transcripts.gtf (GTF)                            ||
+||      Dir for temp files : .                                                ||
+||                 Threads : 1                                                ||
+||                   Level : meta-feature level                               ||
+||      Multimapping reads : not counted                                      ||
+||     Multiple alignments : primary alignment only                           ||
+|| Multi-overlapping reads : not counted                                      ||
+||   Min overlapping bases : 1                                                ||
+||                                                                            ||
+\\============================================================================//
+
+//================================= Running ==================================\\
+||                                                                            ||
+|| Load annotation file transcripts.gtf ...                                   ||
+||    Features : 79                                                           ||
+||    Meta-features : 11                                                      ||
+||    Chromosomes/contigs : 2                                                 ||
+||                                                                            ||
+|| Process SAM file reads_.sam...                                             ||
+||    Paired-end reads are included.                                          ||
+||    Total alignments : 9997                                                 ||
+||    Successfully assigned alignments : 0 (0.0%)                             ||
+||    Running time : 0.00 minutes                                             ||
+||                                                                            ||
+|| Write the final count table.                                               ||
+|| Write the read assignment summary.                                         ||
+||                                                                            ||
+\\============================================================================//
+
+R version 4.3.1 (2023-06-16 ucrt)
+Platform: x86_64-w64-mingw32/x64 (64-bit)
+Running under: Windows 11 x64 (build 22631)
+
+Matrix products: default
+
+
+locale:
+[1] LC_COLLATE=English_United States.utf8
+[2] LC_CTYPE=English_United States.utf8
+[3] LC_MONETARY=English_United States.utf8
+[4] LC_NUMERIC=C
+[5] LC_TIME=English_United States.utf8
+
+time zone: Asia/Jerusalem
+tzcode source: internal
+
+attached base packages:
+[1] stats     graphics  grDevices utils     datasets  methods   base
+
+other attached packages:
+[1] Rsubread_2.14.2
+
+loaded via a namespace (and not attached):
+[1] compiler_4.3.1 Matrix_1.6-1.1 grid_4.3.1     lattice_0.21-9
