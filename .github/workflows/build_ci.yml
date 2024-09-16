@@ -20,7 +20,7 @@ jobs:
         steps:
             -   name: Configure pagefile
                 if: runner.os == 'Windows'
-                uses: al-cheb/configure-pagefile-action@v1.2
+                uses: al-cheb/configure-pagefile-action@v1
 
             -   name: Set up pagefile
                 if: runner.os == 'Windows'
@@ -44,18 +44,17 @@ jobs:
                 uses: actions/cache@v2
                 with:
                     path: ${{ runner.temp }}/llvm
-                    key: llvm-9
+                    key: llvm
             -   name: Install LLVM and Clang
                 if: runner.os != 'macOS'
-                uses: KyleMayes/install-llvm-action@v1
+                uses: KyleMayes/install-llvm-action@v2
                 with:
-                    version: "9.0"
                     directory: ${{ runner.temp }}/llvm
                     cached: ${{ steps.cache-llvm.outputs.cache-hit }}
             -   name: Install R
                 uses: r-lib/actions/setup-r@v2
                 with:
-                    r-version: '4.3' # The R version to download (if necessary) and use.
+                    r-version: '4.4' # The R version to download (if necessary) and use.
             -   name: Install homebrew on Linux
                 if: runner.os == 'Linux'
                 uses: Homebrew/actions/setup-homebrew@master
@@ -119,7 +118,7 @@ jobs:
                     bowtie2 --version
                     bowtie2-build-s --version
             -   name: Set up Python ${{ matrix.python-version }}
-                uses: actions/setup-python@v2
+                uses: actions/setup-python@v4
                 with:
                     python-version: ${{ matrix.python-version }}
                     cache: 'pip'

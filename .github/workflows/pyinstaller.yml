@@ -15,44 +15,49 @@ jobs:
         name: Create Release
         runs-on: ubuntu-latest
         permissions:
-            # Give the default GITHUB_TOKEN write permission to commit and push the
-            # added or changed files to the repository.
             contents: write
         steps:
-            -   name: Checkout repository
-                uses: actions/checkout@v4
-                with:
-                    token: ${{ secrets.VID_CHECKSUM_PAT }}
-                    persist-credentials: true
-            -   name: Install dev requirements
-                run: python -m pip install --upgrade -r requirements_dev.txt
-            -   name: Calculate checksums
-                run: python packaging/checksum_videos.py
-            -   name: Generate Changelog
-                run: python packaging/generate_changelog.py
-            -   uses: stefanzweifel/git-auto-commit-action@v5
-                with:
-                    commit_message: Calculate quick-start video checksums and generate changelog
-                    file_pattern: 'rnalysis/gui/videos/checksums/*.txt rnalysis/data_files/latest_changelog.md'
-                    branch: master
-            -   name: Create Release
-                id: create_release
-                uses: actions/create-release@v1
-                env:
-                    GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-                with:
-                    tag_name: ${{ github.ref }}
-                    release_name: Stable release ${{ github.ref_name }}
-                    body_path: rnalysis/data_files/latest_changelog.md
-                    draft: false
-                    prerelease: false
-            -   name: Output Release URL File
-                run: echo "${{ steps.create_release.outputs.upload_url }}" > release_url.txt
-            -   name: Save Release URL File for publish
-                uses: actions/upload-artifact@v4
-                with:
-                    name: release_url
-                    path: release_url.txt
+            - name: Checkout repository
+              uses: actions/checkout@v4
+              with:
+                  token: ${{ secrets.VID_CHECKSUM_PAT }}
+                  persist-credentials: true
+
+            - name: Install dev requirements
+              run: python -m pip install --upgrade -r requirements_dev.txt
+
+            - name: Calculate checksums
+              run: python packaging/checksum_videos.py
+
+            - name: Generate Changelog
+              run: python packaging/generate_changelog.py
+
+            - uses: stefanzweifel/git-auto-commit-action@v5
+              with:
+                  commit_message: Calculate quick-start video checksums and generate changelog
+                  file_pattern: 'rnalysis/gui/videos/checksums/*.txt rnalysis/data_files/latest_changelog.md'
+                  branch: master
+
+            - name: Create Release
+              id: create_release
+              uses: actions/create-release@v1
+              env:
+                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+              with:
+                  tag_name: ${{ github.ref }}
+                  release_name: Stable release ${{ github.ref_name }}
+                  body_path: rnalysis/data_files/latest_changelog.md
+                  draft: false
+                  prerelease: false
+
+            - name: Output Release URL File
+              run: echo "${{ steps.create_release.outputs.upload_url }}" > release_url.txt
+
+            - name: Save Release URL File for publish
+              uses: actions/upload-artifact@v4
+              with:
+                  name: release_url
+                  path: release_url.txt
 
     build:
         name: Build packages
@@ -61,86 +66,101 @@ jobs:
         strategy:
             matrix:
                 include:
-                    -   os: macos-13
-                        TARGET: macos
-                        CMD_BUILD: >
-                            pyinstaller RNAlysis.spec &&
-                            cd dist/ &&
-                            zip -r RNAlysis-4.1.0_macos.zip ./RNAlysis* &&
-                            ls -ltr
-                        OUT_FILE_NAME: RNAlysis-4.1.0_macos.zip
-                        ASSET_MIME: application/zip
-                    -   os: macos-latest
-                        TARGET: macos-M1
-                        CMD_BUILD: >
-                            pyinstaller RNAlysis.spec &&
-                            cd dist/ &&
-                            zip -r RNAlysis-4.1.0_macos_M1.zip ./RNAlysis* &&
-                            ls -ltr
-                        OUT_FILE_NAME: RNAlysis-4.1.0_macos_M1.zip
-                        ASSET_MIME: application/zip
-                    -   os: windows-latest
-                        TARGET: windows
-                        CMD_BUILD: >
-                            pyinstaller RNAlysis.spec &&
-                            cd dist/ &&
-                            7z a RNAlysis-4.1.0_windows.zip -r "RNAlysis-4.1.0/"
-                        OUT_FILE_NAME: RNAlysis-4.1.0_windows.zip
-                        ASSET_MIME: application/zip
+                    - os: macos-13
+                      TARGET: macos
+                      CMD_BUILD: >
+                          pyinstaller RNAlysis.spec &&
+                          cd dist/ &&
+                          zip -r RNAlysis-4.1.0_macos.zip ./RNAlysis* &&
+                          ls -ltr
+                      OUT_FILE_NAME: RNAlysis-4.1.0_macos.zip
+                      ASSET_MIME: application/zip
+
+                    - os: macos-latest
+                      TARGET: macos-M1
+                      CMD_BUILD: >
+                          pyinstaller RNAlysis.spec &&
+                          cd dist/ &&
+                          zip -r RNAlysis-4.1.0_macos_M1.zip ./RNAlysis* &&
+                          ls -ltr
+                      OUT_FILE_NAME: RNAlysis-4.1.0_macos_M1.zip
+                      ASSET_MIME: application/zip
+
+                    - os: windows-latest
+                      TARGET: windows
+                      CMD_BUILD: >
+                          pyinstaller RNAlysis.spec &&
+                          cd dist/ &&
+                          7z a RNAlysis-4.1.0_windows.zip -r "RNAlysis-4.1.0/"
+                      OUT_FILE_NAME: RNAlysis-4.1.0_windows.zip
+                      ASSET_MIME: application/zip
+
         steps:
-            -   name: Checkout repository
-                uses: actions/checkout@v2
-            -   name: brew update (macOS)
-                if: runner.os == 'MacOS'
-                run: brew update
-            -   name: Setup Graphviz
-                uses: ts-graphviz/setup-graphviz@v2
-                with:
-                    macos-skip-brew-update: 'true' # defalt false
-            -   name: Cache LLVM and Clang
-                id: cache-llvm
-                uses: actions/cache@v2
-                with:
-                    path: ${{ runner.temp }}/llvm
-                    key: llvm-9
-            -   name: Install LLVM and Clang
-                if: runner.os != 'macOS'
-                uses: KyleMayes/install-llvm-action@v1
-                with:
-                    version: "9.0"
-                    directory: ${{ runner.temp }}/llvm
-                    cached: ${{ steps.cache-llvm.outputs.cache-hit }}
-            -   name: command line tools on MacOS
-                if: runner.os == 'macOS'
-                run: |
-                    gcc -v -xc++ /dev/null -fsyntax-only
-            -   name: Set up Python 3.12
-                uses: actions/setup-python@v2
-                with:
-                    python-version: 3.12
-                    cache: 'pip'
-            -   name: Install PyInstaller requirements
-                run: |
-                    python -m pip install --upgrade pip
-                    python -m pip install --upgrade -r requirements_pyinstaller.txt
-            -   name: Install dependencies
-                run: python -m pip install .[all]
-            -   name: Build with pyinstaller for ${{matrix.TARGET}}
-                run: ${{matrix.CMD_BUILD}}
-            -   name: Load Release URL File from release job
-                uses: actions/download-artifact@v4
-                with:
-                    name: release_url
-            -   name: Get Release File Name & Upload URL
-                id: get_release_info
-                shell: bash
-                run: |
-                    value=`cat release_url/release_url.txt`
-                    echo ::set-output name=upload_url::$value
-            -   name: Upload Release Asset
-                id: upload-release-asset
-                uses: softprops/action-gh-release@v1
-                env:
-                    GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-                with:
-                    files: ./dist/${{ matrix.OUT_FILE_NAME}}
+            - name: Checkout repository
+              uses: actions/checkout@v4
+
+            - name: brew update (macOS)
+              if: runner.os == 'MacOS'
+              run: brew update
+
+            - name: Setup Graphviz
+              uses: ts-graphviz/setup-graphviz@v2
+              with:
+                  macos-skip-brew-update: 'true'
+
+            - name: Cache LLVM and Clang
+              id: cache-llvm
+              uses: actions/cache@v4
+              with:
+                  path: ${{ runner.temp }}/llvm
+                  key: llvm
+
+            - name: Install LLVM and Clang
+              if: runner.os != 'macOS'
+              uses: KyleMayes/install-llvm-action@v2
+              with:
+                  directory: ${{ runner.temp }}/llvm
+                  cached: ${{ steps.cache-llvm.outputs.cache-hit }}
+
+            - name: command line tools on MacOS
+              if: runner.os == 'macOS'
+              run: |
+                  gcc -v -xc++ /dev/null -fsyntax-only
+
+            - name: Set up Python 3.12
+              uses: actions/setup-python@v4
+              with:
+                  python-version: 3.12
+                  cache: 'pip'
+
+            - name: Install PyInstaller requirements
+              run: |
+                  python -m pip install --upgrade pip
+                  python -m pip install --upgrade -r requirements_pyinstaller.txt
+
+            - name: Install dependencies
+              run: python -m pip install .[all]
+
+            - name: Build with pyinstaller for ${{ matrix.TARGET }}
+              run: ${{ matrix.CMD_BUILD }}
+
+            - name: Load Release URL File from release job
+              uses: actions/download-artifact@v4
+              with:
+                  name: release_url
+                  path: release_url
+
+            - name: Get Release File Name & Upload URL
+              id: get_release_info
+              run: |
+                  value=$(cat release_url/release_url.txt)
+                  echo "UPLOAD_URL=$value" >> $GITHUB_ENV
+
+            - name: Upload Release Asset
+              id: upload-release-asset
+              uses: softprops/action-gh-release@v1
+              env:
+                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+              with:
+                  files: ./dist/${{ matrix.OUT_FILE_NAME }}
+                  name: ${{ matrix.OUT_FILE_NAME }}
