@@ -3,7 +3,7 @@ History
 =======
 
 
-4.1.0 (2024-09-??)
+4.1.0 (2024-09-16)
 -------------------
 Version 4.1.0 of RNAlysis features improved performance and stability across the board, thanks to a switch to Qt6 and Numpy 2.
 
