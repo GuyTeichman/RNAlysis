@@ -3,7 +3,7 @@ from pathlib import Path
 
 from PyInstaller.compat import is_darwin
 from PyInstaller.utils.hooks import collect_submodules, collect_data_files
-from _pyinstaller_hooks_contrib.hooks import get_hook_dirs
+from _pyinstaller_hooks_contrib import get_hook_dirs
 
 datas = []
 binaries = []
