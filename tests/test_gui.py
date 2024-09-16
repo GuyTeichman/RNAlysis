@@ -3099,7 +3099,7 @@ class TestLimmaWindow:
         truth = dict(r_installation_folder='auto', design_matrix=self.design_mat_path, output_folder=None,
                      comparisons=[('replicate', 'rep3', 'rep2'), ('condition', 'cond1', 'cond2')],
                      covariates=['covariate1'], lrt_factors=['factor1'], random_effect=None, quality_weights=False,
-                     return_code=True, return_design_matrix=True)
+                     return_code=True, return_design_matrix=True, return_log=True)
 
         limma_window.comparisons_widgets['picker'].add_comparison_widget()
         limma_window.comparisons_widgets['picker'].inputs[0].factor.setCurrentText('replicate')
@@ -3119,7 +3119,7 @@ class TestLimmaWindow:
         truth_kwargs = dict(r_installation_folder='auto', design_matrix=self.design_mat_path, output_folder=None,
                             comparisons=[('replicate', 'rep3', 'rep2'), ('condition', 'cond1', 'cond2')],
                             covariates=['covariate1'], lrt_factors=['factor1'], random_effect=None,
-                            quality_weights=False, return_code=True, return_design_matrix=True)
+                            quality_weights=False, return_code=True, return_design_matrix=True, return_log=True)
 
         limma_window.comparisons_widgets['picker'].add_comparison_widget()
         limma_window.comparisons_widgets['picker'].inputs[0].factor.setCurrentText('replicate')

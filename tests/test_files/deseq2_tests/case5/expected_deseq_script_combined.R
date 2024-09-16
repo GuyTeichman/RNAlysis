@@ -1,3 +1,8 @@
+# Open a connection to a log file
+logfile <- file("*PLACEHOLDERPATH*/logfile.log", open = "a")
+# Redirect both output and messages to the file and console
+sink(logfile, append = TRUE, split = TRUE)
+
 require("DESeq2")
 
 count_data <- read.table("tests/test_files/big_counted.csv", header=TRUE, sep= ",", row.names = 1)
@@ -21,3 +26,7 @@ dds_lrt <- DESeq(dds, test="LRT", reduced=~ condition + replicate + covariate1 +
 lrt_res <- results(dds_lrt, cooksCutoff=TRUE)
 lrt_res_ordered <- lrt_res[order(lrt_res$padj),]
 write.csv(as.data.frame(lrt_res_ordered),file="*PLACEHOLDERPATH*/DESeq2_factor2_LRT.csv")
+# get session info
+sessionInfo()
+# Close the sink to stop redirecting output
+sink()

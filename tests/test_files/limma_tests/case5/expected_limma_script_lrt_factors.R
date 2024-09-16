@@ -1,3 +1,8 @@
+# Open a connection to a log file
+logfile <- file("*PLACEHOLDERPATH*/logfile.log", open = "a")
+# Redirect both output and messages to the file and console
+sink(logfile, append = TRUE, split = TRUE)
+
 require("limma")
 
 design_matrix <- read.table("tests/test_files/test_design_matrix_advanced.csv", header=TRUE, sep= ",")
@@ -33,3 +38,7 @@ bayes_fit <- eBayes(fit)
 lrt_res <- topTable(bayes_fit, n=Inf, coef=c("factor2Y", "factor2Z"))
 lrt_res_ordered <- lrt_res[order(lrt_res$adj.P.Val),]
 write.csv(as.data.frame(lrt_res_ordered),file="*PLACEHOLDERPATH*/LimmaVoom_factor2_LRT.csv")
+# get session info
+sessionInfo()
+# Close the sink to stop redirecting output
+sink()

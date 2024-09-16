@@ -64,7 +64,7 @@ class DiffExpRunner(abc.ABC):
 
     @abc.abstractmethod
     def install_required_packages(self):
-        raise NotImplementedError
+        pass
 
     @abc.abstractmethod
     def create_script(self) -> Path:
@@ -76,6 +76,13 @@ class DiffExpRunner(abc.ABC):
 
     def create_formula(self, without: Union[List[str], Tuple[str, ...]] = tuple()) -> str:
         return "~ " + " + ".join([factor for factor in self.model_factors if factor not in without])
+
+    def get_logging_templates(self, log_path: Path) -> Tuple[str, str]:
+        with open(self.TEMPLATES_DIR.joinpath('logging.R')) as f:
+            logging_template = f.read().replace("$LOGFILE", log_path.as_posix())
+        with open(self.TEMPLATES_DIR.joinpath('sessioninfo_run.R')) as f:
+            sessioninfo_template = f.read()
+        return logging_template, sessioninfo_template
 
 
 class DESeqRunner(DiffExpRunner):
@@ -95,6 +102,7 @@ class DESeqRunner(DiffExpRunner):
         self.scaling_factors_ndims = scale_factors_ndims
 
     def install_required_packages(self):
+        super().install_required_packages()
         installs.install_deseq2(self.r_installation_folder)
 
     def _get_templates(self) -> Tuple[str, str, str, str]:
@@ -111,9 +119,13 @@ class DESeqRunner(DiffExpRunner):
     def create_script(self):
         cache_dir = self._get_cache_dir()
         save_path = cache_dir.joinpath('deseq2_run.R')
+        log_path = cache_dir.joinpath('logfile.log')
         run_template, comparison_template, covariate_template, lrt_template = self._get_templates()
+        logging_template, sessioninfo_template = self.get_logging_templates(log_path)
 
         with open(save_path, 'w') as outfile:
+            outfile.write(logging_template)
+
             formula = self.create_formula()
 
             run_template = run_template.replace("$COUNT_MATRIX", Path(self.data_path).as_posix())
@@ -159,6 +171,7 @@ class DESeqRunner(DiffExpRunner):
                 this_lrt = this_lrt.replace("$OUTFILE_NAME", export_path).replace("$COOKS", cooks)
                 outfile.write(this_lrt)
 
+            outfile.write(sessioninfo_template)
         return save_path
 
 
@@ -176,6 +189,7 @@ class LimmaVoomRunner(DiffExpRunner):
         self.quality_weights = quality_weights
 
     def install_required_packages(self):
+        super().install_required_packages()
         installs.install_limma(self.r_installation_folder)
 
     def _generate_interaction_terms(self, interaction):
@@ -259,10 +273,14 @@ class LimmaVoomRunner(DiffExpRunner):
     def create_script(self):
         cache_dir = self._get_cache_dir()
         save_path = cache_dir.joinpath('limma_run.R')
+        log_path = cache_dir.joinpath('logfile.log')
         run_template, comparison_template, covariate_template, lrt_template = self._get_templates()
+        logging_template, sessioninfo_template = self.get_logging_templates(log_path)
         coef_names = self._get_coef_names()
 
         with open(save_path, 'w') as outfile:
+            outfile.write(logging_template)
+
             baselines = {}
 
             random_effect = None
@@ -322,4 +340,5 @@ class LimmaVoomRunner(DiffExpRunner):
                 this_lrt = this_lrt.replace("$OUTFILE_NAME", export_path)
                 outfile.write(this_lrt)
 
+            outfile.write(sessioninfo_template)
         return save_path

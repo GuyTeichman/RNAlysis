@@ -146,7 +146,7 @@ def load_cached_gui_file(filename: Union[str, Path], load_as_obj: bool = True) -
             with open(file_path) as f:
                 return {item.strip() for item in f.readlines()}
 
-        elif file_path.suffix in {'.R'} and load_as_obj:
+        elif file_path.suffix in {'.R', '.log'} and load_as_obj:
             with open(file_path) as f:
                 return f.read()
         else:
@@ -165,7 +165,7 @@ def cache_gui_file(item: Union[pl.DataFrame, set, str], filename: str):
         save_table(item, file_path)
     elif isinstance(item, set):
         save_gene_set(item, file_path)
-    elif isinstance(item, Path) and item.suffix == '.R':
+    elif isinstance(item, Path) and item.suffix in ('.R', '.log'):
         assert item.exists(), f"File '{item}' flagged for caching does not exist!"
         shutil.copy(item, file_path)
     elif isinstance(item, str):

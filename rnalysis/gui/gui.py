@@ -329,7 +329,7 @@ class CutAdaptPairedWindow(gui_windows.PairedFuncExternalWindow):
 
 class DiffExpWindow(gui_windows.FuncExternalWindow):
     EXCLUDED_PARAMS = {'self', 'comparisons', 'covariates', 'lrt_factors', 'model_factors', 'return_design_matrix',
-                       'return_code'}
+                       'return_code', 'return_log'}
     IGNORED_WIDGETS = gui_windows.FuncExternalWindow.IGNORED_WIDGETS | {'load_design'}
 
     __slots__ = {'comparisons': 'list of comparisons to make',
@@ -438,6 +438,7 @@ class DiffExpWindow(gui_windows.FuncExternalWindow):
         kwargs = super().get_analysis_kwargs()
         kwargs['return_design_matrix'] = True
         kwargs['return_code'] = True
+        kwargs['return_log'] = True
 
         kwargs['comparisons'] = self.comparisons_widgets['picker'].get_comparison_values()
         if not self.simplified:

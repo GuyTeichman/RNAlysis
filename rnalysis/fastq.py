@@ -804,7 +804,9 @@ def featurecounts_single_end(input_folder: Union[str, Path], output_folder: Unio
                              ignore_secondary: bool = True,
                              count_fractionally: bool = False, is_long_read: bool = False,
                              report_read_assignment: Union[Literal['bam', 'sam', 'core'], None] = None,
-                             threads: PositiveInt = 1) -> Tuple[filtering.CountFilter, pl.DataFrame, pl.DataFrame]:
+                             threads: PositiveInt = 1, return_log: bool = False) -> Union[
+    Tuple[filtering.CountFilter, pl.DataFrame, pl.DataFrame],
+    Tuple[filtering.CountFilter, pl.DataFrame, pl.DataFrame, Path]]:
     """
     Assign mapped single-end sequencing reads to specified genomic features using \
     `RSubread featureCounts <https://doi.org/10.1093/bioinformatics/btt656>`_.
@@ -860,6 +862,9 @@ def featurecounts_single_end(input_folder: Union[str, Path], output_folder: Unio
     :type report_read_assignment: 'bam', 'sam', 'core', or None (default=None)
     :param threads: number of threads to run bowtie2-build on. More threads will generally make index building faster.
     :type threads: int > 0 (default=1)
+    :param return_log: if True, the function will return the path to the analysis logfile, \
+    which includes session info.
+    :type return_log: bool (default=False)
     :return: a count matrix (CountFilter) containing feature counts for all input files, \
     a DataFrame summarizing the features reads were aligned to, and a DataFrame summarizing the alignment statistics.
     :rtype: (filtering.CountFilter, pl.DataFrame, pl.DataFrame)
@@ -873,9 +878,9 @@ def featurecounts_single_end(input_folder: Union[str, Path], output_folder: Unio
 
     new_sample_names = _featurecounts_get_sample_names(kwargs['files'], new_sample_names)
 
-    feature_counting.run_featurecounts_analysis(kwargs, output_folder, r_installation_folder)
-    counts, annotation, stats = _process_featurecounts_output(output_folder, new_sample_names)
-    return counts, annotation, stats
+    feature_counting.FeatureCountsRunner(kwargs, output_folder, r_installation_folder).run()
+    counts, annotation, stats, log_path = _process_featurecounts_output(output_folder, new_sample_names)
+    return (counts, annotation, stats, log_path) if return_log else (counts, annotation, stats)
 
 
 @_func_type('paired')
@@ -891,7 +896,9 @@ def featurecounts_paired_end(input_folder: Union[str, Path], output_folder: Unio
                              count_chimeric_fragments: bool = False, min_fragment_length: NonNegativeInt = 50,
                              max_fragment_length: Union[PositiveInt, None] = 600,
                              report_read_assignment: Union[Literal['bam', 'sam', 'core'], None] = None,
-                             threads: PositiveInt = 1) -> Tuple[filtering.CountFilter, pl.DataFrame, pl.DataFrame]:
+                             threads: PositiveInt = 1, return_log: bool = False) -> Union[
+    Tuple[filtering.CountFilter, pl.DataFrame, pl.DataFrame],
+    Tuple[filtering.CountFilter, pl.DataFrame, pl.DataFrame, Path]]:
     """
     Assign mapped paired-end sequencing reads to specified genomic features using \
     `RSubread featureCounts <https://doi.org/10.1093/bioinformatics/btt656>`_. \
@@ -961,6 +968,9 @@ def featurecounts_paired_end(input_folder: Union[str, Path], output_folder: Unio
     :type max_fragment_length: int > 0 or None (default=600)
     :param threads: number of threads to run bowtie2-build on. More threads will generally make index building faster.
     :type threads: int > 0 (default=1)
+    :param return_log: if True, the function will return the path to the analysis logfile, \
+    which includes session info.
+    :type return_log: bool (default=False)
     :return: a count matrix (CountFilter) containing feature counts for all input files, \
     a DataFrame summarizing the features reads were aligned to, and a DataFrame summarizing the alignment statistics.
     :rtype: (filtering.CountFilter, pl.DataFrame, pl.DataFrame)
@@ -978,10 +988,9 @@ def featurecounts_paired_end(input_folder: Union[str, Path], output_folder: Unio
     kwargs.update(paired_kwargs)
 
     new_sample_names = _featurecounts_get_sample_names(kwargs['files'], new_sample_names)
-
-    feature_counting.run_featurecounts_analysis(kwargs, output_folder, r_installation_folder)
-    counts, annotation, stats = _process_featurecounts_output(output_folder, new_sample_names)
-    return counts, annotation, stats
+    feature_counting.FeatureCountsRunner(kwargs, output_folder, r_installation_folder).run()
+    counts, annotation, stats, log_path = _process_featurecounts_output(output_folder, new_sample_names)
+    return (counts, annotation, stats, log_path) if return_log else (counts, annotation, stats)
 
 
 def _parse_featurecounts_misc_args(input_folder: Union[str, Path], output_folder: Path, gtf_file: Union[str, Path],
@@ -1034,6 +1043,7 @@ def _process_featurecounts_output(output_folder, new_sample_names):
     counts_path = Path(output_folder).joinpath('featureCounts_counts.csv')
     annotation_path = Path(output_folder).joinpath('featureCounts_annotation.csv')
     stats_path = Path(output_folder).joinpath('featureCounts_stats.csv')
+    log_path = Path(output_folder).joinpath('logfile.log')
 
     counts = filtering.CountFilter(counts_path)
     counts.df = counts.df.rename(
@@ -1047,7 +1057,7 @@ def _process_featurecounts_output(output_folder, new_sample_names):
     stats = stats.rename({oldname: newname for oldname, newname in zip(stats.columns[1:], new_sample_names)})
     io.save_table(stats, stats_path)  # re-save to reflect changes in column names
 
-    return counts, annotation, stats
+    return counts, annotation, stats, log_path
 
 
 @readable_name('Bowtie2 build index')

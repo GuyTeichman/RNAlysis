@@ -655,7 +655,7 @@ def test_featurecounts_single_end():
         assert counts == counts_truth
         assert annotations.equals(annotations_truth)
         assert stats.equals(stats_truth)
-        assert are_dir_trees_equal(outdir, truth_outdir)
+        assert are_dir_trees_equal(outdir, truth_outdir, ignore=['.log'])
     finally:
         unlink_tree(outdir)
 
@@ -673,7 +673,7 @@ def test_featurecounts_paired_end():
         assert counts.df.equals(counts_truth.df)
         assert annotations.equals(annotations_truth)
         assert stats.equals(stats_truth)
-        assert are_dir_trees_equal(outdir, truth_outdir)
+        assert are_dir_trees_equal(outdir, truth_outdir, ignore=['.log'])
     finally:
         unlink_tree(outdir)
 
@@ -741,16 +741,13 @@ def test_SingleEndPipeline_apply_to():
 
     try:
         p.apply_to(in_dir, out_dir)
-        for file in Path(out_dir).joinpath('01_trim_adapters_single_end').iterdir():
-            if file.is_file() and file.suffix == '.log':
-                file.unlink()
 
         assert are_dir_trees_equal(out_dir.joinpath('01_trim_adapters_single_end'),
-                                   truth_dir.joinpath('01_trim_adapters_single_end'))
+                                   truth_dir.joinpath('01_trim_adapters_single_end'), ignore=['.log'])
         assert are_dir_trees_equal(out_dir.joinpath('02_bowtie2_align_single_end'),
                                    truth_dir.joinpath('02_bowtie2_align_single_end'), compare_contents=False)
         assert are_dir_trees_equal(out_dir.joinpath('03_featurecounts_single_end'),
-                                   truth_dir.joinpath('03_featurecounts_single_end'))
+                                   truth_dir.joinpath('03_featurecounts_single_end'), ignore=['.log'])
     finally:
         unlink_tree(out_dir)
 
@@ -826,16 +823,12 @@ def test_PairedEndPipeline_apply_to():
 
     try:
         p.apply_to([in_dir.joinpath('reads_1.fastq')], [in_dir.joinpath('reads_2.fastq')], out_dir)
-        for file in Path(out_dir).joinpath('01_trim_adapters_paired_end').iterdir():
-            if file.is_file() and file.suffix == '.log':
-                file.unlink()
-
         assert are_dir_trees_equal(out_dir.joinpath('01_trim_adapters_paired_end'),
-                                   truth_dir.joinpath('01_trim_adapters_paired_end'))
+                                   truth_dir.joinpath('01_trim_adapters_paired_end'), ignore=['.log'])
         assert are_dir_trees_equal(out_dir.joinpath('02_bowtie2_align_paired_end'),
                                    truth_dir.joinpath('02_bowtie2_align_paired_end'), compare_contents=False)
         assert are_dir_trees_equal(out_dir.joinpath('03_featurecounts_paired_end'),
-                                   truth_dir.joinpath('03_featurecounts_paired_end'))
+                                   truth_dir.joinpath('03_featurecounts_paired_end'), ignore=['.log'])
     finally:
         unlink_tree(out_dir)
 

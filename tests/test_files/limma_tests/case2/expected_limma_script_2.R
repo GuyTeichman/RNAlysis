@@ -1,3 +1,8 @@
+# Open a connection to a log file
+logfile <- file("*PLACEHOLDERPATH*/logfile.log", open = "a")
+# Redirect both output and messages to the file and console
+sink(logfile, append = TRUE, split = TRUE)
+
 require("limma")
 
 design_matrix <- read.table("tests/test_files/test_design_matrix.csv", header=TRUE, sep= ",")
@@ -33,3 +38,7 @@ contrast_bayes <- eBayes(contrast_fit)
 res <- topTable(contrast_bayes, n=Inf)
 res_ordered <- res[order(res$adj.P.Val),]
 write.csv(as.data.frame(res_ordered),file="*PLACEHOLDERPATH*/LimmaVoom_condition_cond1_vs_cond2.csv")
+# get session info
+sessionInfo()
+# Close the sink to stop redirecting output
+sink()
