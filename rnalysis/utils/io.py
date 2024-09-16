@@ -1,4 +1,9 @@
 import asyncio
+import sys
+
+if sys.platform == 'win32':
+    asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
+
 import concurrent.futures
 import contextlib
 import csv
@@ -15,7 +20,6 @@ import re
 import shlex
 import shutil
 import subprocess
-import sys
 import threading
 import time
 import typing
@@ -46,8 +50,6 @@ from tqdm import tqdm
 from rnalysis import __version__
 from rnalysis.utils import parsing, validation
 
-if sys.platform == 'win32':
-    asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
 
 
 class RandomExpRetry(Retry):
