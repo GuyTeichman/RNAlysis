@@ -15,8 +15,6 @@ jobs:
         name: Create Release
         runs-on: ubuntu-latest
         permissions:
-            # Give the default GITHUB_TOKEN write permission to commit and push the
-            # added or changed files to the repository.
             contents: write
         steps:
             - name: Checkout repository
@@ -146,8 +144,12 @@ jobs:
             - name: Get Release File Name & Upload URL
               id: get_release_info
               run: |
-                  value=$(cat release_url/release_url.txt)
-                  echo "UPLOAD_URL=$value" >> $GITHUB_ENV
+                  if [[ "${{ runner.os }}" == "Windows" ]]; then
+                      value=$(Get-Content release_url/release_url.txt)
+                      echo "UPLOAD_URL=$value" >> $GITHUB_ENV
+                  else
+                      value=$(cat release_url/release_url.txt)
+                      echo "UPLOAD_URL=$value" >> $GITHUB_ENV
 
             - name: Upload Release Asset
               id: upload-release-asset
@@ -156,4 +158,3 @@ jobs:
                   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
               with:
                   files: ./dist/${{ matrix.OUT_FILE_NAME }}
-                  name: ${{ matrix.OUT_FILE_NAME }}
