@@ -21,7 +21,9 @@ datas += collect_data_files('pyvis')
 hiddenimports += collect_submodules('sklearn')
 hiddenimports += collect_submodules('cutadapt')
 hiddenimports += collect_submodules('pyarrow')
+hiddenimports += collect_submodules('numpy')
 hiddenimports += collect_submodules('scipy')
+hiddenimports += collect_submodules('polars')
 hiddenimports += ['matplotlib.backends.backend_pdf', 'matplotlib.backends.backend_svg',
                   'matplotlib.backends.backend_agg', 'matplotlib.backends.backend_pgf',
                   'matplotlib.backends.backend_ps']
