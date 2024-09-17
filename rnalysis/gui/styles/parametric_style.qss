@@ -1,10 +1,10 @@
 /* scroll bar settings */
 QScrollBar::up-arrow:vertical {
-  image: url("styles/iconmonstr-caret-up-filled.svg");
+  image: url("$PATHPLACEHOLDER/styles/iconmonstr-caret-up-filled.svg");
 }
 
 QScrollBar::down-arrow:vertical {
-  image: url("styles/iconmonstr-caret-down-filled.svg");
+  image: url("$PATHPLACEHOLDER/styles/iconmonstr-caret-down-filled.svg");
 }
 
 QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical {

@@ -7,6 +7,7 @@ from rnalysis.utils import settings
 
 FONTPLACEHOLDER = "$FONTPLACEHOLDER"
 FONTSIZEPLACEHOLDER = "$FONTSIZEPLACEHOLDER"
+PATHPLACEHOLDER = "$PATHPLACEHOLDER"
 STYLESHEETS = {'base': None, 'light': qdarkstyle.LightPalette, 'dark': qdarkstyle.DarkPalette}
 PARAMETRIC_STYLESHEET_PATH = 'styles/parametric_style.qss'
 
@@ -22,6 +23,7 @@ def get_parametric_stylesheet(font_base_size: int, font_name: str):
         style_text = f.read()
 
     style_text = style_text.replace(FONTPLACEHOLDER, font_name)
+    style_text = style_text.replace(PATHPLACEHOLDER, Path(__file__).parent.absolute().as_posix())
 
     fontsize_pattern = f"\\{FONTSIZEPLACEHOLDER}\\*[0-9]*\\.?[0-9]+"
     for fontsize_match in reversed(list(re.finditer(fontsize_pattern, style_text))):
