@@ -144,13 +144,8 @@ jobs:
             - name: Get Release File Name & Upload URL
               id: get_release_info
               run: |
-                  if [[ "${{ runner.os }}" == "Windows" ]]; then
-                      value=$(Get-Content release_url/release_url.txt)
-                      echo "UPLOAD_URL=$value" >> $GITHUB_ENV
-                  else
-                      value=$(cat release_url/release_url.txt)
-                      echo "UPLOAD_URL=$value" >> $GITHUB_ENV
-                  fi
+                  value=$(cat release_url/release_url.txt)
+                  echo "UPLOAD_URL=$value" >> $GITHUB_ENV
               shell: bash
             - name: Upload Release Asset
               id: upload-release-asset
