@@ -3652,7 +3652,7 @@ class CountFilter(Filter):
 
         if scaling_factors.shape[0] == 1:
             assert scaling_factors.shape[1] == len(numeric_cols), \
-                f"Number of scaling factors ({scaling_factors.shape[0]}) does not match " \
+                f"Number of scaling factors ({scaling_factors.shape[1]}) does not match " \
                 f"number of numeric columns in your data table ({len(numeric_cols)})!"
 
             for column in self.df.columns:
