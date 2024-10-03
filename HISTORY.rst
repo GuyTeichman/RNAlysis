@@ -2,6 +2,12 @@
 History
 =======
 
+4.?.? (2024-??-??)
+-------------------
+
+Fixed
+******
+* Fixed bug where kallisto quantification would sometimes fail to sum transcripts to genes properly.
 
 4.1.0 (2024-09-16)
 -------------------

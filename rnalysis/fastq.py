@@ -2016,16 +2016,15 @@ def _sum_transcripts_to_genes(tpm: pl.DataFrame, counts: pl.DataFrame, gtf_path:
                             pl.exclude(counts.columns[0]).sum().truediv(10 ** 6)).collect()
                         tpm_cpy = tpm.lazy().join(transcript2gene, left_on=tpm.columns[0], right_on='Transcript ID',
                                                   how='left')
-                        tpm_by_gene = tpm_cpy.drop(cs.first()).group_by('Gene ID').sum()
+                        tpm_by_gene = tpm_cpy.drop(cs.first()).drop_nulls().group_by('Gene ID').sum()
                         count_per_gene = tpm_by_gene.with_columns(
                             [(pl.col(col) * library_sizes[col][0]).alias(col) for col in tpm.columns[1:]]).collect()
                     elif summation_method == 'raw':
                         count_cpy = counts.lazy().join(transcript2gene, left_on=tpm.columns[0],
                                                        right_on='Transcript ID', how='left')
-                        count_per_gene = count_cpy.drop(cs.first()).group_by('Gene ID').sum().collect()
+                        count_per_gene = count_cpy.drop(cs.first()).drop_nulls().group_by('Gene ID').sum().collect()
                     else:
                         raise ValueError(f"Invalid value for 'summation_method': '{summation_method}'.")
-
                     if len(count_per_gene) == 0:
                         continue
                     pbar.update(8)
