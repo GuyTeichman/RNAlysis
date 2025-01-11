@@ -925,8 +925,8 @@ class EnrichmentRunner:
         if not self.return_nonsignificant:
             self.results = self.results.filter(pl.col('significant'))
     def _correct_multiple_comparisons(self):
-        results_nulls = self.results.filter(pl.col('pval').is_null())
-        self.results = self.results.filter(pl.col('pval').is_not_null())
+        results_nulls = self.results.filter(pl.col('pval').is_nan())
+        self.results = self.results.filter(pl.col('pval').is_not_nan())
 
         significant, padj = multitest.fdrcorrection(self.results['pval'].to_list(), alpha=self.alpha)
         self.results = pl.concat([self.results.with_columns(padj=padj, significant=significant), results_nulls],
@@ -1389,7 +1389,6 @@ class GOEnrichmentRunner(EnrichmentRunner):
         """
         gene_set = self.ranked_genes if self.single_set else self.gene_set
         annotations = self.mutable_annotations[annotation_idx]
-        print(annotations)
         return {go_id: self.stats_test.run(go_id, annotations[go_id], gene_set, self.background_set) for go_id in
                 go_term_batch}
 
