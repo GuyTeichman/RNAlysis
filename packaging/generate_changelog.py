@@ -1,10 +1,9 @@
 import re
 import warnings
 from pathlib import Path
-from typing import Union
+from typing import Literal, Union
 
 import rst_to_myst
-from typing import Literal
 
 
 def get_change_log_for(version: Union[str, Literal['latest']] = 'latest'):
