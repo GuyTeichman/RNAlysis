@@ -1351,7 +1351,7 @@ class PhylomeDBOrthologMapper:
     @staticmethod
     def _get_id_conversion_maps() -> Tuple[dict, dict]:
         cache_dir = get_todays_cache_dir()
-        cache_file = cache_dir.joinpath(f'phylomedb_id_conversion.parquet')
+        cache_file = cache_dir.joinpath('phylomedb_id_conversion.parquet')
         file_path = "/metaphors/latest/id_conversion.txt.gz"
         local_zip_file = cache_dir.joinpath("id_conversion.txt.gz")
 

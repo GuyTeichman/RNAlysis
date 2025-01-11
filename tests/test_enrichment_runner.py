@@ -17,7 +17,7 @@ def _df_to_dict(df, null_mode: bool = True):
     if null_mode:
         return {attr: set(df.filter(pl.col(attr).is_not_null()).select(pl.first()).to_series()) for attr in
                 df.columns[1:]}
-    return {attr: set(df.filter(pl.col(attr) == True).select(pl.first()).to_series()) for attr in df.columns[1:]}
+    return {attr: set(df.filter(pl.col(attr) is True).select(pl.first()).to_series()) for attr in df.columns[1:]}
 
 
 def test_enrichment_runner_from_results():

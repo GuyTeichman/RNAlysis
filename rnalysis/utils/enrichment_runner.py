@@ -922,7 +922,7 @@ class EnrichmentRunner:
 
         # filter non-significant results
         if not self.return_nonsignificant:
-            self.results = self.results.filter(pl.col('significant') == True)
+            self.results = self.results.filter(pl.col('significant') is True)
 
     def _correct_multiple_comparisons(self):
         results_nulls = self.results.filter(pl.col('pval').is_nan())
@@ -988,7 +988,7 @@ class NonCategoricalEnrichmentRunner(EnrichmentRunner):
                           f"{len(self.results['pval'].is_nan())} of the attributes. "
                           f"P-values and plots will not be generated for those attributes. ")
         if not self.return_nonsignificant:
-            self.results = self.results.filter(pl.col('significant') == True)
+            self.results = self.results.filter(pl.col('significant') is True)
 
     def plot_results(self) -> HistogramPlotter:
         plotter = HistogramPlotter(self.results, self.annotations,
@@ -1272,7 +1272,7 @@ class GOEnrichmentRunner(EnrichmentRunner):
             warnings.warn("The 'weight' propagation algorithm is only compatible with Fisher's Exact test.")
             return False
         if self.propagate_annotations in {'allm'} and not isinstance(self.stats_test, FishersExactTest):
-            warnings.warn(f"The 'weight' propagation algorithm is only compatible with Fisher's Exact test. ")
+            warnings.warn("The 'weight' propagation algorithm is only compatible with Fisher's Exact test. ")
             return False
         return True
 

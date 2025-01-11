@@ -1264,7 +1264,6 @@ class TestOrthoInspectorOrthologMapper:
     @pytest.fixture
     def ortholog_mapper(self):
         # Supply legal species and a valid database for testing
-        legal_species = {'organism1', 'organism2'}  # Replace with valid species
         return OrthoInspectorOrthologMapper(map_to_organism='organism1', map_from_organism='organism2',
                                             gene_id_type='gene_type')
 

@@ -3,9 +3,10 @@ import functools
 import itertools
 from pathlib import Path
 from typing import List, Tuple, Callable
-import pandas as pd
+
 import matplotlib
 import matplotlib_venn
+import pandas as pd
 import upsetplot
 from PyQt6 import QtCore, QtGui
 from matplotlib import pyplot as plt

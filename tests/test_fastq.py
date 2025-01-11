@@ -296,7 +296,6 @@ def test_kallisto_create_index():
     out_path = 'tests/test_files/kallisto_tests/transcripts.idx'
 
     log_path = 'tests/test_files/kallisto_tests/kallisto-index_transcripts.log'
-    log_truth_path = 'tests/test_files/kallisto_tests/kallisto-index_transcripts_truth.log'
     try:
         kallisto_create_index('tests/test_files/kallisto_tests/transcripts.fasta')
         assert Path(out_path).exists()

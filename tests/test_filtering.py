@@ -354,7 +354,7 @@ class TestFilterConcatenate:
         non_filter_obj = "not a Filter object"
 
         # Assert that concatenating with a non-Filter object raises an AssertionError
-        with pytest.raises(AssertionError) as exc_info:
+        with pytest.raises(AssertionError):
             self.filter1.concatenate(non_filter_obj)
 
     def test_concatenate_with_different_columns(self):
@@ -363,7 +363,7 @@ class TestFilterConcatenate:
         filter3 = Filter.from_dataframe(df3, 'filter3.csv')
 
         # Assert that concatenating Filter objects with different columns raises an AssertionError
-        with pytest.raises(AssertionError) as exc_info:
+        with pytest.raises(AssertionError):
             self.filter1.concatenate(filter3)
 
     def test_concatenate_with_overlapping_indices(self):
@@ -372,7 +372,7 @@ class TestFilterConcatenate:
         filter4 = Filter.from_dataframe(df4, 'filter4.csv')
 
         # Assert that concatenating Filter objects with overlapping indices raises an AssertionError
-        with pytest.raises(AssertionError) as exc_info:
+        with pytest.raises(AssertionError):
             self.filter1.concatenate(filter4)
 
 

@@ -487,8 +487,8 @@ class GenericPipeline(abc.ABC):
 
     def _validate_pipeline(self):
         assert len(self.functions) > 0 and len(self.params) > 0, "Cannot apply an empty pipeline!"
-        assert len(self.functions) == len(self.params), f"Cannot apply Pipeline: " \
-                                                        f"length of 'functions' different from length of 'params'!"
+        assert len(self.functions) == len(self.params), "Cannot apply Pipeline: " \
+                                                        "length of 'functions' different from length of 'params'!"
 
     @abc.abstractmethod
     def apply_to(self, *args, **kwargs):
