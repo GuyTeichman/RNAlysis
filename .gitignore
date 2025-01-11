@@ -41,6 +41,10 @@ coverage.xml
 .hypothesis/
 .pytest_cache/
 
+# Pickles
+*.pkl
+*.pickle
+
 # Translations
 *.mo
 *.pot
