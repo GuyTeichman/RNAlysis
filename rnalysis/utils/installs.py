@@ -26,7 +26,7 @@ JDK_VERSION = "21"
 JDK_ROOT = io.get_data_dir().joinpath(f'jdk{JDK_VERSION}')
 
 
-def get_jdk_path():
+def get_jdk_path()->Path:
     try:
         if platform.system() == 'Windows':
             pattern = "java.exe"
@@ -49,7 +49,7 @@ def get_jdk_path():
         return matches[0].parent
     except FileNotFoundError:
         # find jdk installation in PATH
-        return ""
+        return Path()
 
 def is_jdk_installed():
     try:
