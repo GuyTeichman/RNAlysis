@@ -435,7 +435,7 @@ def test_enrich_non_categorical_api(protein_coding_set):
     s = FeatureSet(
         {'WBGene00000001', 'WBGene00000002', 'WBGene00000003', 'WBGene00000004', 'WBGene00000005', 'WBGene00000006',
          'WBGene00000007', 'WBGene00000008', 'WBGene00000009', 'WBGene00000010', 'WBGene00000011', 'WBGene00000012'})
-    background = {f'WBGene000000{i + 1:02d}' for i in range(30)}
+    {f'WBGene000000{i + 1:02d}' for i in range(30)}
     res = s.non_categorical_enrichment(protein_coding_set, 'attr1', parametric_test=True, attr_ref_path=ref_table)
     assert isinstance(res, pl.DataFrame)
     res = s.non_categorical_enrichment(protein_coding_set, ['attr3', 'attr2', 'attr4'], attr_ref_path=ref_table,

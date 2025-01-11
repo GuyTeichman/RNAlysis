@@ -163,7 +163,8 @@ def test_sanitize_variable_name(name, expected):
 
 
 def test_get_method_readable_name():
-    func = lambda x: x + 1
+    def func(x):
+        return x + 1
     func.readable_name = "readable name"
     assert get_method_readable_name(func) == "readable name"
 

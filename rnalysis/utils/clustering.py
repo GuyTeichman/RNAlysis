@@ -12,11 +12,12 @@ import polars as pl
 import polars.selectors as cs
 import sklearn.metrics.pairwise as sklearn_pairwise
 from grid_strategy import strategies
+from kmedoids import KMedoids
 from sklearn.cluster import AgglomerativeClustering, KMeans
 from sklearn.decomposition import PCA
 from sklearn.metrics import pairwise_distances, silhouette_score, calinski_harabasz_score, davies_bouldin_score
 from tqdm.auto import tqdm
-from kmedoids import KMedoids
+
 from rnalysis.utils import generic, parsing, validation
 
 try:

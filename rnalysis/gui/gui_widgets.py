@@ -358,7 +358,7 @@ class WorkerOutput:
         self.raised_exception = False if err is None else err
 
     def __eq__(self, other):
-        if type(self) != type(other):
+        if type(self) is not type(other):
             return False
         return self.result == other.result and \
             self.partial == other.partial and \
@@ -1979,14 +1979,14 @@ def param_to_widget(param, name: str,
         for action in actions_to_connect:
             widget.currentTextChanged.connect(action)
 
-    elif param.annotation == bool:
+    elif param.annotation is bool:
         widget = ToggleSwitch()
         default = param.default if is_default else False
         widget.setChecked(default)
         for action in actions_to_connect:
             widget.stateChanged.connect(action)
 
-    elif param.annotation == int:
+    elif param.annotation is int:
         widget = QtWidgets.QSpinBox()
         widget.setMinimum(-2147483648)
         widget.setMaximum(2147483647)
@@ -2023,7 +2023,7 @@ def param_to_widget(param, name: str,
             widget.valueChanged.connect(action)
 
 
-    elif param.annotation == float:
+    elif param.annotation is float:
         widget = QtWidgets.QDoubleSpinBox()
         widget.setMinimum(float("-inf"))
         widget.setMaximum(float("inf"))
@@ -2043,7 +2043,7 @@ def param_to_widget(param, name: str,
         for action in actions_to_connect:
             widget.valueChanged.connect(action)
 
-    elif param.annotation == str:
+    elif param.annotation is str:
         widget = QtWidgets.QLineEdit(param.default if is_default else '')
         for action in actions_to_connect:
             widget.textChanged.connect(action)

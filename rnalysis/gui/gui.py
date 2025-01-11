@@ -3451,7 +3451,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 obj_type_str = 'set'
             else:
                 obj_type = type(self.tabs.currentWidget().filter_obj)
-                obj_type_str = 'blank' if obj_type == type(None) else obj_type.__name__
+                obj_type_str = 'blank' if obj_type is type(None) else obj_type.__name__
             icon = gui_graphics.get_icon(obj_type_str)
         else:
             icon = gui_graphics.get_icon(icon_name)
