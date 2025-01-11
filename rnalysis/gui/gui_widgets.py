@@ -478,8 +478,8 @@ def create_colormap_pixmap(map_name: str):
         plt.subplots_adjust(left=0, right=1, top=1, bottom=0)
 
         fig.canvas.draw()
-        data = np.frombuffer(fig.canvas.tostring_rgb(), dtype=np.uint8)
-        data = data.reshape(fig.canvas.get_width_height()[::-1] + (3,))
+        data = np.frombuffer(fig.canvas.tostring_argb(), dtype=np.uint8)
+        data = data.reshape(fig.canvas.get_width_height()[::-1] + (4,))
         image = QtGui.QImage(data, data.shape[1], data.shape[0], QtGui.QImage.Format.Format_RGB888)
         pixmap = QtGui.QPixmap.fromImage(image)
         plt.close(fig)
