@@ -12,7 +12,7 @@ from pyvis.network import Network
 
 from rnalysis import __version__
 from rnalysis.gui import gui_windows
-from rnalysis.utils import parsing, io
+from rnalysis.utils import io, parsing
 
 
 class Node:

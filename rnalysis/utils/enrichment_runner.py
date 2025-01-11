@@ -6,7 +6,7 @@ import warnings
 from copy import deepcopy
 from functools import lru_cache
 from pathlib import Path
-from typing import Iterable, List, Tuple, Union, Collection, Set, Dict, Literal
+from typing import Collection, Dict, Iterable, List, Literal, Set, Tuple, Union
 
 import joblib
 import matplotlib.patches as mpatches
@@ -17,12 +17,13 @@ import polars.selectors as cs
 import statsmodels.stats.multitest as multitest
 from matplotlib.cm import ScalarMappable
 from mpl_toolkits.axes_grid1 import make_axes_locatable
-from scipy.stats import hypergeom, ttest_1samp, fisher_exact
+from scipy.stats import fisher_exact, hypergeom, ttest_1samp
 from statsmodels.stats.descriptivestats import sign_test
 from tqdm.auto import tqdm
 
-from rnalysis.utils import ontology, io, parsing, settings, validation, generic, param_typing
-from rnalysis.utils.param_typing import PARALLEL_BACKENDS, GRAPHVIZ_FORMATS
+from rnalysis.utils import (generic, io, ontology, param_typing, parsing,
+                            settings, validation)
+from rnalysis.utils.param_typing import GRAPHVIZ_FORMATS, PARALLEL_BACKENDS
 
 try:
     import xlmhglite

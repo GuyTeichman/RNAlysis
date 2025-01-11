@@ -5,10 +5,10 @@ from unittest.mock import Mock
 import pytest
 import yaml
 
-from rnalysis import fastq, __version__
+from rnalysis import __version__, fastq
 from rnalysis.fastq import *
 from rnalysis.utils import io
-from tests import unlink_tree, are_dir_trees_equal
+from tests import are_dir_trees_equal, unlink_tree
 
 
 @pytest.mark.parametrize(

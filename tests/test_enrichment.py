@@ -1,12 +1,13 @@
 import os
-from unittest.mock import patch, Mock
+from unittest.mock import Mock, patch
 
 import pytest
 import statsmodels.stats.multitest as multitest
 
 from rnalysis.enrichment import *
 from rnalysis.enrichment import _fetch_sets
-from tests import __attr_ref__, __biotype_ref__, is_uniprot_available, is_ensembl_available
+from tests import (__attr_ref__, __biotype_ref__, is_ensembl_available,
+                   is_uniprot_available)
 
 matplotlib.use('Agg')
 

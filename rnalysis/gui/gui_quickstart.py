@@ -1,8 +1,8 @@
 from pathlib import Path
 
-from PyQt6 import QtCore, QtWidgets, QtGui
+from PyQt6 import QtCore, QtGui, QtWidgets
 
-from rnalysis.utils import settings, io
+from rnalysis.utils import io, settings
 
 
 class QuickStartWizard(QtWidgets.QWizard):

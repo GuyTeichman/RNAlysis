@@ -1,6 +1,7 @@
 import pytest
-from rnalysis.utils.settings import *
+
 from rnalysis import __attr_file_key__, __biotype_file_key__
+from rnalysis.utils.settings import *
 
 
 @pytest.fixture

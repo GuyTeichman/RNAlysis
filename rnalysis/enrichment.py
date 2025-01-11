@@ -4,10 +4,12 @@ These include gene ontology/tissue/phenotype enrichment, enrichment for user-def
 set visualization ,etc. \
 Results of enrichment analyses can be saved to .csv files.
 """
+import functools
 import itertools
 import types
+import warnings
 from pathlib import Path
-from typing import Dict, Iterable, List, Set, Tuple, Union, Sequence, Literal
+from typing import Dict, Iterable, List, Literal, Sequence, Set, Tuple, Union
 
 import matplotlib
 import matplotlib.pyplot as plt
@@ -18,8 +20,16 @@ import polars as pl
 import upsetplot
 
 from rnalysis.filtering import Filter, readable_name
-from rnalysis.utils import settings, validation, enrichment_runner, generic, param_typing, ontology
-from rnalysis.utils.param_typing import *
+from rnalysis.utils import (enrichment_runner, generic, io, ontology,
+                            param_typing, parsing, settings, validation)
+from rnalysis.utils.param_typing import (BIOTYPE_ATTRIBUTE_NAMES, BIOTYPES,
+                                         DEFAULT_ORGANISMS, GO_ASPECTS,
+                                         GO_EVIDENCE_TYPES, GO_QUALIFIERS,
+                                         ORTHOLOG_NON_UNIQUE_MODES,
+                                         PARALLEL_BACKENDS, Fraction,
+                                         PositiveInt, get_ensembl_taxons,
+                                         get_gene_id_types, get_panther_taxons,
+                                         get_phylomedb_taxons)
 
 
 class FeatureSet(set):
@@ -67,7 +77,7 @@ class FeatureSet(set):
         return f"{self.__class__.__name__}: '{self.set_name}'"
 
     def __eq__(self, other):
-        if type(self) != type(other):
+        if type(self) is not type(other):
             return False
 
         if self.set_name != other.set_name:
@@ -1351,7 +1361,7 @@ class RankedSet(FeatureSet):
         return self.ranked_genes.__iter__()
 
     def __eq__(self, other):
-        if type(self) != type(other):
+        if type(self) is not type(other):
             return False
 
         if self.set_name != other.set_name:

@@ -1,7 +1,6 @@
 from rnalysis.utils.feature_counting import *
 
 
-
 def test_create_featurecounts_script():
     expected_path = 'tests/test_files/featurecounts_tests/expected_featurecounts_script.R'
     output_dir = Path('tests/test_files/featurecounts_tests/outdir')

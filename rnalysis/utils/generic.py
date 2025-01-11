@@ -8,7 +8,7 @@ import warnings
 from datetime import datetime
 from functools import lru_cache
 from pathlib import Path
-from typing import Union, Callable, Tuple
+from typing import Callable, Tuple, Union
 
 import joblib
 import matplotlib.collections

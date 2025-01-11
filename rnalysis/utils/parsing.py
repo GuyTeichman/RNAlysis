@@ -3,17 +3,17 @@ import itertools
 import platform
 import re
 import shlex
+import unicodedata
 import warnings
 from collections import Counter
 from itertools import islice
 from pathlib import Path
-from typing import Any, Dict, Union, List, Tuple, Iterable, Literal
+from typing import Any, Dict, Iterable, List, Literal, Tuple, Union
 
 import mslex
 import numpy as np
 import pandas as pd
 import polars as pl
-import unicodedata
 
 from rnalysis.utils import validation
 

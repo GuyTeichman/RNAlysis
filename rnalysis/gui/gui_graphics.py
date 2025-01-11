@@ -2,17 +2,18 @@ import abc
 import functools
 import itertools
 from pathlib import Path
-from typing import List, Tuple, Callable
+from typing import Callable, List, Tuple
 
 import matplotlib
 import matplotlib_venn
 import pandas as pd
 import upsetplot
-from PyQt6 import QtCore, QtGui
 from matplotlib import pyplot as plt
-from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg, NavigationToolbar2QT
+from matplotlib.backends.backend_qtagg import (FigureCanvasQTAgg,
+                                               NavigationToolbar2QT)
+from PyQt6 import QtCore, QtGui
 
-from rnalysis.utils import parsing, generic
+from rnalysis.utils import generic, parsing
 
 COLOR_ICONS = {'black': 'black_icon.png', 'green': 'green_icon.png', 'red': 'red_icon.png', 'white': 'white_icon.png',
                'blue': 'blue_icon.png', 'grey': 'grey_icon.png', 'pink': 'pink_icon.png', 'orange': 'orange_icon.png',

@@ -1,6 +1,6 @@
 import pytest
 
-from rnalysis import __biotype_file_key__, __attr_file_key__
+from rnalysis import __attr_file_key__, __biotype_file_key__
 from rnalysis.filtering import Filter
 from rnalysis.general import *
 

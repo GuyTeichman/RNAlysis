@@ -1,6 +1,6 @@
 import types
 from pathlib import Path
-from typing import Union, Iterable, Tuple
+from typing import Iterable, Tuple, Union
 
 import polars as pl
 import typing_extensions

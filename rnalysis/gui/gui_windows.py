@@ -3,15 +3,15 @@ import json
 import time
 import traceback
 from pathlib import Path
-from typing import Callable, Union, Tuple
+from typing import Callable, Tuple, Union
 
 import polars as pl
 import yaml
-from PyQt6 import QtCore, QtWidgets, QtGui
+from PyQt6 import QtCore, QtGui, QtWidgets
 
 from rnalysis import __version__
 from rnalysis.gui import gui_style, gui_widgets
-from rnalysis.utils import io, generic, parsing, settings
+from rnalysis.utils import generic, io, parsing, settings
 
 
 class DataFrameModel(QtCore.QAbstractTableModel):

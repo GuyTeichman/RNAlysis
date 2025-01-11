@@ -30,8 +30,9 @@ from io import StringIO
 from itertools import chain
 from pathlib import Path
 from sys import executable
-from typing import List, Set, Union, Iterable, Tuple, Dict, Any, Callable, Literal, NamedTuple
-from urllib.parse import urlparse, parse_qs, urlencode
+from typing import (Any, Callable, Dict, Iterable, List, Literal, NamedTuple,
+                    Set, Tuple, Union)
+from urllib.parse import parse_qs, urlencode, urlparse
 
 import aiohttp
 import aiolimiter
@@ -49,7 +50,6 @@ from tqdm import tqdm
 
 from rnalysis import __version__
 from rnalysis.utils import parsing, validation
-
 
 
 class RandomExpRetry(Retry):
