@@ -637,8 +637,8 @@ def test_kegg_enrichment_single_list_api():
 
 @pytest.mark.skipif(not UNIPROT_AVAILABLE, reason='UniProt REST API is not available at the moment')
 def test_kegg_pathway_graph():
-    kegg_pathway_graph('cel04020', None, 'WormBase')
-    kegg_pathway_graph('cel04020', {'WBGene00004039', 'WBGene00004039'}, 'WormBase')
+    kegg_pathway_graph('cel00020', None, 'WormBase')
+    kegg_pathway_graph('cel00020', {'WBGene00000041', 'WBGene00020950'}, 'WormBase')
 
 
 def test_gene_ontology_graph():
