@@ -13,18 +13,20 @@ import warnings
 from collections import OrderedDict
 from pathlib import Path
 from queue import Queue
-from typing import List, Tuple, Union, Callable, Type
+from typing import Callable, List, Tuple, Type, Union
 
 import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
 import polars as pl
 import yaml
-from PyQt6 import QtCore, QtWidgets, QtGui
+from PyQt6 import QtCore, QtGui, QtWidgets
 
-from rnalysis import fastq, filtering, enrichment, __version__
-from rnalysis.gui import gui_style, gui_widgets, gui_windows, gui_graphics, gui_quickstart
-from rnalysis.utils import io, validation, generic, parsing, settings, clustering
+from rnalysis import __version__, enrichment, fastq, filtering
+from rnalysis.gui import (gui_graphics, gui_quickstart, gui_style, gui_widgets,
+                          gui_windows)
+from rnalysis.utils import (clustering, generic, io, parsing, settings,
+                            validation)
 
 FILTER_OBJ_TYPES = {'Count matrix': filtering.CountFilter, 'Differential expression': filtering.DESeqFilter,
                     'Fold change': filtering.FoldChangeFilter, 'Other table': filtering.Filter}

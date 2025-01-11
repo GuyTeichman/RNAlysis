@@ -5,7 +5,7 @@ import re
 import warnings
 from functools import lru_cache
 from pathlib import Path
-from typing import Dict, List, Union, Tuple, Iterable, Set, Literal
+from typing import Dict, Iterable, List, Literal, Set, Tuple, Union
 
 import graphviz
 import matplotlib.image as mpimg
@@ -15,7 +15,7 @@ import polars as pl
 from defusedxml import ElementTree
 from matplotlib.cm import ScalarMappable
 
-from rnalysis.utils import parsing, io, param_typing
+from rnalysis.utils import io, param_typing, parsing
 
 
 def render_graphviz_plot(graph: graphviz.Digraph, save_path: Union[str, Path], file_format: str):

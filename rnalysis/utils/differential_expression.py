@@ -4,11 +4,11 @@ import itertools
 import re
 import time
 from pathlib import Path
-from typing import Union, Iterable, Tuple, Literal, List, Set, Dict
+from typing import Dict, Iterable, List, Literal, Set, Tuple, Union
 
 import polars as pl
 
-from rnalysis.utils import io, generic, installs, validation, parsing
+from rnalysis.utils import generic, installs, io, parsing, validation
 
 
 class DiffExpRunner(abc.ABC):

@@ -10,11 +10,14 @@ When you save filtered/modified data, its new file name will include by default 
 
 """
 import copy
+import functools
 import os
 import re
 import types
+import warnings
 from pathlib import Path
-from typing import Any, Iterable, List, Tuple, Union, Callable, Sequence, Literal
+from typing import (Any, Callable, Iterable, List, Literal, Sequence, Tuple,
+                    Union)
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -22,17 +25,27 @@ import polars as pl
 import polars.selectors as cs
 import seaborn as sns
 from grid_strategy import strategies
-from scipy.stats import gstd, spearmanr, sem
+from scipy.stats import gstd, sem, spearmanr
 from scipy.stats.mstats import gmean
 from sklearn.decomposition import PCA
 from sklearn.preprocessing import PowerTransformer, StandardScaler
 from tqdm.auto import tqdm
 
-from rnalysis.utils import clustering, generic, ontology, settings, validation, differential_expression, \
-    param_typing, genome_annotation, parsing, io
+from rnalysis.utils import (clustering, differential_expression, generic,
+                            genome_annotation, io, ontology, param_typing,
+                            parsing, settings, validation)
 from rnalysis.utils.generic import readable_name
-from rnalysis.utils.param_typing import *
-import warnings
+from rnalysis.utils.param_typing import (BIOTYPE_ATTRIBUTE_NAMES, BIOTYPES,
+                                         DEFAULT_ORGANISMS, GO_EVIDENCE_TYPES,
+                                         GO_QUALIFIERS, K_CRITERIA,
+                                         LEGAL_GENE_LENGTH_METHODS,
+                                         ORTHOLOG_NON_UNIQUE_MODES,
+                                         PARALLEL_BACKENDS, Color, ColorList,
+                                         ColorMap, Fraction, NonNegativeInt,
+                                         PositiveInt, get_ensembl_taxons,
+                                         get_gene_id_types, get_panther_taxons,
+                                         get_phylomedb_taxons)
+
 
 @readable_name('Generic table')
 class Filter:
@@ -119,7 +132,7 @@ class Filter:
         return self.shape[0]
 
     def __eq__(self, other):
-        if type(self) != type(other):
+        if type(self) is not type(other):
             return False
         if self.df.equals(other.df) and self.shape == other.shape:
             return True
@@ -4903,7 +4916,8 @@ class CountFilter(Filter):
         else:
             [clusterer] = runner.run(plot=not gui_mode)
 
-        if clusterer is None: return  # if hdbscan is not installed, the runner will return None
+        if clusterer is None:
+            return  # if hdbscan is not installed, the runner will return None
 
         n_clusters = clusterer.labels_.max() + 1
         if n_clusters == 0:

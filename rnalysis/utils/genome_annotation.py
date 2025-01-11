@@ -1,11 +1,11 @@
 import warnings
 from pathlib import Path
-from typing import Union, Literal
+from typing import Literal, Union
 
 import numpy as np
 from scipy.stats.mstats import gmean
 
-from rnalysis.utils import validation, parsing, generic
+from rnalysis.utils import generic, parsing, validation
 from rnalysis.utils.param_typing import LEGAL_GENE_LENGTH_METHODS
 
 

@@ -7,19 +7,20 @@ import threading
 from functools import lru_cache
 from pathlib import Path
 from queue import Queue
-from typing import List, Dict, Tuple, Sequence, Iterable, Union, Callable, Literal
+from typing import (Callable, Dict, Iterable, List, Literal, Sequence, Tuple,
+                    Union)
 
 import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
 import polars as pl
 import polars.selectors as cs
-from PyQt6 import QtCore, QtWidgets, QtGui
 from joblib import Parallel, parallel_backend
+from PyQt6 import QtCore, QtGui, QtWidgets
 from tqdm.auto import tqdm
-from typing_extensions import get_origin, get_args
+from typing_extensions import get_args, get_origin
 
-from rnalysis.utils import parsing, validation, generic, param_typing
+from rnalysis.utils import generic, param_typing, parsing, validation
 
 EMPTY = inspect._empty
 

@@ -2,7 +2,7 @@ import abc
 import functools
 import itertools
 import warnings
-from typing import List, Set, Tuple, Union, Callable
+from typing import Callable, List, Set, Tuple, Union
 
 import joblib
 import matplotlib.pyplot as plt
@@ -15,7 +15,8 @@ from grid_strategy import strategies
 from kmedoids import KMedoids
 from sklearn.cluster import AgglomerativeClustering, KMeans
 from sklearn.decomposition import PCA
-from sklearn.metrics import pairwise_distances, silhouette_score, calinski_harabasz_score, davies_bouldin_score
+from sklearn.metrics import (calinski_harabasz_score, davies_bouldin_score,
+                             pairwise_distances, silhouette_score)
 from tqdm.auto import tqdm
 
 from rnalysis.utils import generic, parsing, validation
@@ -95,11 +96,11 @@ class BinaryFormatClusters:
         assert item < self.n_clusters
 
         current_ind = 0
-        for l_ind, l in enumerate(self.len_index):
-            if l + current_ind <= item:
-                current_ind += l
+        for line_idx, line in enumerate(self.len_index):
+            if line + current_ind <= item:
+                current_ind += line
             else:
-                return self.clustering_solutions[l_ind][item - current_ind, :]
+                return self.clustering_solutions[line_idx][item - current_ind, :]
 
     def __iter__(self):
         for solution in self.clustering_solutions:

@@ -6,8 +6,9 @@ import requests_mock
 
 from rnalysis.utils import io
 from rnalysis.utils.io import *
-from rnalysis.utils.io import _format_ids_iter, _ensembl_lookup_post_request
-from tests import is_uniprot_available, is_ensembl_available, is_phylomedb_available
+from rnalysis.utils.io import _ensembl_lookup_post_request, _format_ids_iter
+from tests import (is_ensembl_available, is_phylomedb_available,
+                   is_uniprot_available)
 
 ENSEMBL_AVAILABLE = is_ensembl_available()
 UNIPROT_AVAILABLE = is_uniprot_available()

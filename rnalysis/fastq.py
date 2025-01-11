@@ -13,17 +13,23 @@ import types
 import typing
 import warnings
 from pathlib import Path
-from typing import Union, List, Tuple, Literal
+from typing import List, Literal, Tuple, Union
 
 import polars as pl
 import polars.selectors as cs
 from tqdm.auto import tqdm
 
 from rnalysis import filtering
-from rnalysis.utils import validation, parsing, io, feature_counting, genome_annotation, generic, installs
+from rnalysis.utils import (feature_counting, generic, genome_annotation,
+                            installs, io, parsing, validation)
 from rnalysis.utils.generic import readable_name
-from rnalysis.utils.param_typing import PositiveInt, NonNegativeInt, Fraction, LEGAL_FASTQ_SUFFIXES, \
-    LEGAL_BOWTIE2_PRESETS, LEGAL_BOWTIE2_MODES, SUMMATION_METHODS, LEGAL_QUAL_SCORE_TYPES, LEGAL_ALIGNMENT_SUFFIXES
+from rnalysis.utils.param_typing import (LEGAL_ALIGNMENT_SUFFIXES,
+                                         LEGAL_BOWTIE2_MODES,
+                                         LEGAL_BOWTIE2_PRESETS,
+                                         LEGAL_FASTQ_SUFFIXES,
+                                         LEGAL_QUAL_SCORE_TYPES,
+                                         SUMMATION_METHODS, Fraction,
+                                         NonNegativeInt, PositiveInt)
 
 try:
     from cutadapt.cli import main as cutadapt_main

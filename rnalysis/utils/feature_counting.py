@@ -1,7 +1,7 @@
 from pathlib import Path
-from typing import Union, Literal
+from typing import Literal, Union
 
-from rnalysis.utils import io, parsing, installs
+from rnalysis.utils import installs, io, parsing
 
 
 class FeatureCountsRunner:

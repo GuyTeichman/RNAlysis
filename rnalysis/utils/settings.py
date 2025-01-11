@@ -1,11 +1,13 @@
 import os
 from pathlib import Path
-from typing import Union, Any
+from typing import Any, Union
 
 import yaml
 
-from rnalysis import __attr_file_key__, __biotype_file_key__, __font_key__, __font_size_key__, __stylesheet_key__, \
-    __show_tutorial_key__, __report_gen_key__, __databases_key__
+from rnalysis import (__attr_file_key__, __biotype_file_key__,
+                      __databases_key__, __font_key__, __font_size_key__,
+                      __report_gen_key__, __show_tutorial_key__,
+                      __stylesheet_key__)
 from rnalysis.utils import io
 
 DEFAULT_VALUES = {__font_key__: 'Times New Roman', __font_size_key__: 10, __stylesheet_key__: 'base',

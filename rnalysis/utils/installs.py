@@ -5,7 +5,7 @@ import subprocess
 import warnings
 from pathlib import Path
 from shutil import copyfileobj
-from typing import Union, Literal
+from typing import Literal, Union
 from urllib.request import urlopen
 
 from rnalysis.utils import io
