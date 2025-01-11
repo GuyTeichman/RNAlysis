@@ -3,6 +3,7 @@ from collections import namedtuple
 
 import matplotlib
 import pytest
+from polars.testing import assert_frame_equal
 
 from rnalysis import filtering
 from rnalysis.utils import enrichment_runner
@@ -17,7 +18,7 @@ def _df_to_dict(df, null_mode: bool = True):
     if null_mode:
         return {attr: set(df.filter(pl.col(attr).is_not_null()).select(pl.first()).to_series()) for attr in
                 df.columns[1:]}
-    return {attr: set(df.filter(pl.col(attr) is True).select(pl.first()).to_series()) for attr in df.columns[1:]}
+    return {attr: set(df.filter(pl.col(attr)).select(pl.first()).to_series()) for attr in df.columns[1:]}
 
 
 def test_enrichment_runner_from_results():
@@ -182,7 +183,7 @@ def test_results_to_csv():
 def _compare_go_result_dfs(res, truth):
     res = res.sort(pl.first())
     truth = truth.sort(pl.first())
-    assert res.select(pl.col('GO ID', 'n', 'obs')).equals(truth.select(pl.col('GO ID', 'n', 'obs')))
+    assert_frame_equal(res.select(pl.col('GO ID', 'n', 'obs')),truth.select(pl.col('GO ID', 'n', 'obs')))
     assert np.allclose(res.select(pl.col('exp', 'log2fc', 'pval')), res.select(pl.col('exp', 'log2fc', 'pval')), atol=0)
 
 
@@ -207,7 +208,6 @@ def test_classic_pvals(monkeypatch):
     e.annotations = annotations
     e.mutable_annotations = annotations,
     e.attributes = list(annotations.keys())
-
     res = pl.DataFrame([i for i in e._go_classic_on_batch(tuple(annotations.keys()), 0).values()],
                        schema=['GO ID', 'n', 'obs', 'exp', 'log2fc', 'pval'])
     _compare_go_result_dfs(res, truth)
@@ -354,7 +354,6 @@ def test_enrichment_runner_randomization_enrichment(monkeypatch, truth):
 
     attr = truth[0]
     res = stats_test.run(attr, annotations[attr], gene_set, background_set)
-    print(res)
     assert res == truth
 
 
@@ -732,8 +731,6 @@ def test_noncategorical_enrichment_runner_format_results(monkeypatch):
     truth = io.load_table('tests/test_files/non_categorical_enrichment_runner_format_results_truth.csv')
     runner.return_nonsignificant = True
     runner.format_results(results_list)
-    print(truth)
-    print(runner.results)
     assert truth.equals(runner.results)
 
 
@@ -1040,9 +1037,8 @@ def test_go_enrichment_runner_format_results(monkeypatch, return_nonsignificant,
     runner.en_score_col = 'colName'
     runner.single_set = False
     runner.return_nonsignificant = return_nonsignificant
-
     runner.format_results(results_dict)
-    assert truth.equals(runner.results)
+    assert_frame_equal(truth, runner.results)
 
 
 @pytest.mark.parametrize("propagate_annotations,truth",
@@ -1200,7 +1196,6 @@ def test_go_enrichment_runner_process_annotations_no_annotations(monkeypatch):
         runner.organism = "organism"
         runner.taxon_id = "taxon id"
         runner._process_annotations()
-    print(e)
 
 
 def test_go_enrichment_runner_process_annotations(monkeypatch):
