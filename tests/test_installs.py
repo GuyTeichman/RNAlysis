@@ -28,7 +28,7 @@ def test_get_jdk_path_success(monkeypatch):
 
 def test_get_jdk_path_failure(monkeypatch):
     monkeypatch.setattr('os.listdir', lambda x: [])
-    assert get_jdk_path() == ""
+    assert get_jdk_path() == Path()
 
 
 # Test is_jdk_installed
