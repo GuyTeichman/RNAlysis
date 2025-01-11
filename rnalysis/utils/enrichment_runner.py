@@ -974,7 +974,7 @@ class NonCategoricalEnrichmentRunner(EnrichmentRunner):
         for attr in annotation_df.columns[1:]:
             self.annotations[attr] = {key: val[0] for key, val in
                                       annotation_df.select(cs.first() | cs.by_name(attr)).rows_by_key(
-                                          annotation_df.columns[0]).items()}
+                                          annotation_df.columns[0], unique=True).items()}
             for gene_id, val in self.annotations[attr].items():
                 if val is None:
                     self.annotations[attr][gene_id] = np.nan
