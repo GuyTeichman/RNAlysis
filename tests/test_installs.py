@@ -6,8 +6,8 @@ from rnalysis.utils import installs
 from rnalysis.utils.installs import *
 
 # Constants for mocking
-MOCK_JDK_DIRS = ['jdk-17.0.1', 'jdk-16', 'jdk-15']
-MOCK_JDK_VERSION_OUTPUT = "java version 17"
+MOCK_JDK_DIRS = [f'jdk-{installs.JDK_VERSION}.0.1', 'jdk-16', 'jdk-15']
+MOCK_JDK_VERSION_OUTPUT = f"java version {installs.JDK_VERSION}"
 
 
 @pytest.fixture
@@ -28,8 +28,7 @@ def test_get_jdk_path_success(monkeypatch):
 
 def test_get_jdk_path_failure(monkeypatch):
     monkeypatch.setattr('os.listdir', lambda x: [])
-    with pytest.raises(FileNotFoundError):
-        get_jdk_path()
+    assert get_jdk_path() == ""
 
 
 # Test is_jdk_installed
@@ -44,7 +43,8 @@ def test_is_jdk_installed_failure_no_dir(monkeypatch):
 
 def test_is_jdk_installed_failure_wrong_version(monkeypatch):
     monkeypatch.setattr('pathlib.Path.exists', lambda self: True)
-    monkeypatch.setattr('subprocess.check_output', lambda *args, **kwargs: MOCK_JDK_VERSION_OUTPUT.replace('17', '15'))
+    monkeypatch.setattr('subprocess.check_output',
+                        lambda *args, **kwargs: MOCK_JDK_VERSION_OUTPUT.replace(str(installs.JDK_VERSION), '15'))
     assert not is_jdk_installed()
 
 
