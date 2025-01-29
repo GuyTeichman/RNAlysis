@@ -26,5 +26,5 @@ tenacity>=9.0.0
 mslex>=1.3.0
 nest-asyncio>=1.6.0
 kmedoids>=0.5.3
-polars[async,numpy,pyarrow,pandas]>=1.19.0,<2
+polars[async,numpy,pyarrow,pandas]>=1.19.0,<1.21
 pandas[performance,parquet]>=2.2,<3
