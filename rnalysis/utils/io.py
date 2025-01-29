@@ -1828,7 +1828,7 @@ class GeneIDTranslator:
         self.id_dicts = _get_id_abbreviation_dicts()
 
         id_dict_to, id_dict_from = self.id_dicts
-        if id_dict_to[self.map_to] == id_dict_from[self.map_from]:
+        if id_dict_to.get(self.map_to, self.map_to) == id_dict_from.get(self.map_from, self.map_from):
             self.to_from_identical = True
         else:
             self.to_from_identical = False
@@ -1854,11 +1854,16 @@ class GeneIDTranslator:
         to its matching gene ID in 'map_to' identifier type.
         :rtype: GeneIDDict
         """
+        id_dict_to, id_dict_from = self.id_dicts
+
         if len(ids) == 0:
             if self.verbose:
                 warnings.warn('No IDs were given')
             return GeneIDDict({})
-
+        if self.map_to not in id_dict_to or self.map_from not in id_dict_from:
+            if self.verbose:
+                warnings.warn(f"Cannot map from {self.map_from} to {self.map_to}.")
+                return GeneIDDict({})
         # if self.map_from and self.map_to are the same, return an empty GeneIDTranslator (which will map any given gene ID to itself)
         if self.to_from_identical:
             return GeneIDDict()
@@ -1872,7 +1877,6 @@ class GeneIDTranslator:
         if self.verbose:
             print(f"Mapping {n_queries} entries from '{self.map_from}' to '{self.map_to}'...")
 
-        id_dict_to, id_dict_from = self.id_dicts
         if id_dict_to[self.map_to] != id_dict_to[self.UNIPROTKB_TO] and \
             id_dict_from[self.map_from] != id_dict_from[self.UNIPROTKB_FROM]:
 

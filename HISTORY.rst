@@ -13,6 +13,7 @@ Changed
 Fixed
 ******
 * Fixed bug where kallisto quantification would sometimes fail to sum transcripts to genes properly.
+* Fixed bug where automatic mapping of gene IDs would sometimes raise an exception.
 
 4.1.0 (2024-09-16)
 -------------------
