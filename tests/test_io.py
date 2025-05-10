@@ -1400,17 +1400,21 @@ class TestPantherOrthologMapper:
     def test_get_paralogs(self):
         ids = ('G5EDF7', 'P34707')
 
-        truth = {'G5EDF7': ['Q10664',
-                            'O01706',
-                            'Q20347',
-                            'Q21307',
-                            'G5EDT6',
-                            'Q58AU7',
-                            'Q58AU8',
-                            'Q8MPS3',
-                            'G5ECN5',
-                            'Q9TYV7'],
-                 'P34707': ['A0A0M7REQ4']}
+        truth = {
+            "G5EDF7": [
+                "Q10664",
+                "O01706",
+                "Q20347",
+                "Q21307",
+                "G5EDT6",
+                "Q58AU7",
+                "Q58AU8",
+                "Q8MPS3",
+                "G5ECN5",
+                "Q9TYV7",
+            ],
+            "P34707": ["A0A0M7REQ4"],
+        }
         ortholog_mapper = PantherOrthologMapper(map_to_organism=6239, map_from_organism=6239,
                                                 gene_id_type='UniProtKB AC/ID')
 
