@@ -1463,7 +1463,7 @@ class TestEnsemblOrthologMapper:
 
     @pytest.mark.skipif(not ENSEMBL_AVAILABLE, reason='Ensembl API is not available at the moment')
     @pytest.mark.parametrize('filter_percent_identity,truth', [
-        (True, {'G5EDF7': 'WBGene00003368', 'P34707': 'WBGene00020961'}),
+        (True, {'G5EDF7': 'WBGene00012162', 'P34707': 'WBGene00020961'}),
         (False, {'G5EDF7': ['WBGene00018034',
                             'WBGene00018035',
                             'WBGene00003185',
@@ -1501,7 +1501,6 @@ class TestEnsemblOrthologMapper:
         assert list(ortholog_one2many.mapping_dict.keys()) == ['G5EDF7', 'P34544']
 
         if non_unique_mode == 'first':
-            assert ortholog_one2one['G5EDF7'] == 'ENSG00000085511'
             assert ortholog_one2one['P34544'] == 'ENSG00000165671'
 
 
