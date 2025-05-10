@@ -1435,7 +1435,9 @@ class TestEnsemblOrthologMapper:
     # Test the constructor of EnsemblOrthologMapper
     def test_constructor(self, ortholog_mapper):
         assert ortholog_mapper.map_to_organism == 'organism1'  # Replace with a valid organism
-        assert ortholog_mapper.map_from_organism == 'organism2'  # Replace with a valid organism
+        assert (
+            ortholog_mapper.map_from_organism == "organism2"
+        )  # Replace with a valid organism
         assert ortholog_mapper.gene_id_type == 'gene_type'  # Replace with a valid gene ID type
 
     # Test the translate_ids method
