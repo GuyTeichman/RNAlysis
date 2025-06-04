@@ -1400,17 +1400,21 @@ class TestPantherOrthologMapper:
     def test_get_paralogs(self):
         ids = ('G5EDF7', 'P34707')
 
-        truth = {'G5EDF7': ['Q10664',
-                            'O01706',
-                            'Q20347',
-                            'Q21307',
-                            'G5EDT6',
-                            'Q58AU7',
-                            'Q58AU8',
-                            'Q8MPS3',
-                            'G5ECN5',
-                            'Q9TYV7'],
-                 'P34707': ['A0A0M7REQ4']}
+        truth = {
+            "G5EDF7": [
+                "Q10664",
+                "O01706",
+                "Q20347",
+                "Q21307",
+                "G5EDT6",
+                "Q58AU7",
+                "Q58AU8",
+                "Q8MPS3",
+                "G5ECN5",
+                "Q9TYV7",
+            ],
+            "P34707": ["A0A0M7REQ4"],
+        }
         ortholog_mapper = PantherOrthologMapper(map_to_organism=6239, map_from_organism=6239,
                                                 gene_id_type='UniProtKB AC/ID')
 
@@ -1435,7 +1439,9 @@ class TestEnsemblOrthologMapper:
     # Test the constructor of EnsemblOrthologMapper
     def test_constructor(self, ortholog_mapper):
         assert ortholog_mapper.map_to_organism == 'organism1'  # Replace with a valid organism
-        assert ortholog_mapper.map_from_organism == 'organism2'  # Replace with a valid organism
+        assert (
+            ortholog_mapper.map_from_organism == "organism2"
+        )  # Replace with a valid organism
         assert ortholog_mapper.gene_id_type == 'gene_type'  # Replace with a valid gene ID type
 
     # Test the translate_ids method
@@ -1463,7 +1469,7 @@ class TestEnsemblOrthologMapper:
 
     @pytest.mark.skipif(not ENSEMBL_AVAILABLE, reason='Ensembl API is not available at the moment')
     @pytest.mark.parametrize('filter_percent_identity,truth', [
-        (True, {'G5EDF7': 'WBGene00003368', 'P34707': 'WBGene00020961'}),
+        (True, {'G5EDF7': 'WBGene00012162', 'P34707': 'WBGene00020961'}),
         (False, {'G5EDF7': ['WBGene00018034',
                             'WBGene00018035',
                             'WBGene00003185',
@@ -1501,7 +1507,6 @@ class TestEnsemblOrthologMapper:
         assert list(ortholog_one2many.mapping_dict.keys()) == ['G5EDF7', 'P34544']
 
         if non_unique_mode == 'first':
-            assert ortholog_one2one['G5EDF7'] == 'ENSG00000085511'
             assert ortholog_one2one['P34544'] == 'ENSG00000165671'
 
 

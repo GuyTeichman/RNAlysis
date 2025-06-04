@@ -14,8 +14,9 @@ from rnalysis.gui.gui import *
 LEFT_CLICK = QtCore.Qt.MouseButton.LeftButton
 RIGHT_CLICK = QtCore.Qt.MouseButton.RightButton
 
-
-def _pytestqt_graceful_shutdown():
+@pytest.fixture(autouse=True)
+def pytestqt_graceful_shutdown():
+    yield
     app = QtWidgets.QApplication.instance()
     if app is not None:
         for w in app.topLevelWidgets():
@@ -81,7 +82,6 @@ def available_objects(qtbot, red_icon, green_icon):
     third.rename('third tab')
 
     yield {'first tab': (first, red_icon), 'second tab': (second, red_icon), 'third tab': (third, green_icon)}
-    _pytestqt_graceful_shutdown()
 
 
 @pytest.fixture
@@ -105,7 +105,6 @@ def four_available_objects_and_empty(qtbot, red_icon, green_icon, blank_icon):
 
     yield {'first tab': (first, red_icon), 'second tab': (second, red_icon), 'third tab': (third, red_icon),
            'fourth tab': (fourth, green_icon), 'empty tab': (empty, blank_icon)}
-    _pytestqt_graceful_shutdown()
 
 
 @pytest.fixture
@@ -118,7 +117,6 @@ def main_window(qtbot, monkeypatch, use_temp_settings_file):
     window._toggle_reporting(True)
     yield window
     window.close()
-    _pytestqt_graceful_shutdown()
 
 
 @pytest.fixture
@@ -135,7 +133,6 @@ def tab_widget(qtbot):
     qtbot, window = widget_setup(qtbot, ReactiveTabWidget)
     yield window
     window.close()
-    _pytestqt_graceful_shutdown()
 
 
 @pytest.fixture
@@ -146,7 +143,6 @@ def multi_keep_window(qtbot):
     qtbot, window = widget_setup(qtbot, MultiKeepWindow, objs, -1)
     yield window
     window.close()
-    _pytestqt_graceful_shutdown()
 
 
 @pytest.fixture
@@ -155,7 +151,6 @@ def filtertabpage(qtbot):
     window.start_from_filter_obj(filtering.DESeqFilter('tests/test_files/test_deseq.csv'), 1)
     yield window
     window.close()
-    _pytestqt_graceful_shutdown()
 
 
 @pytest.fixture
@@ -164,7 +159,6 @@ def filtertabpage_with_undo_stack(qtbot):
     qtbot, window = widget_setup(qtbot, FilterTabPage, undo_stack=stack)
     window.start_from_filter_obj(filtering.DESeqFilter('tests/test_files/test_deseq_sig.csv'), 1)
     yield window, stack
-    _pytestqt_graceful_shutdown()
 
 
 @pytest.fixture
@@ -173,7 +167,6 @@ def countfiltertabpage_with_undo_stack(qtbot):
     qtbot, window = widget_setup(qtbot, FilterTabPage, undo_stack=stack)
     window.start_from_filter_obj(filtering.CountFilter('tests/test_files/counted.csv'), 1)
     yield window, stack
-    _pytestqt_graceful_shutdown()
 
 
 @pytest.fixture
@@ -181,7 +174,6 @@ def settabpage_with_undo_stack(qtbot):
     stack = QtGui.QUndoStack()
     qtbot, window = widget_setup(qtbot, SetTabPage, 'my set name', {'a', 'b', 'c', 'd'}, undo_stack=stack)
     yield window, stack
-    _pytestqt_graceful_shutdown()
 
 
 @pytest.fixture
@@ -200,7 +192,6 @@ def clicom_window(qtbot):
     qtbot, window = widget_setup(qtbot, ClicomWindow, funcs, filtering.CountFilter('tests/test_files/counted.csv'))
     yield window
     window.close()
-    _pytestqt_graceful_shutdown()
 
 
 @pytest.fixture
@@ -208,7 +199,6 @@ def simple_deseq_window(qtbot) -> SimpleDESeqWindow:
     qtbot, window = widget_setup(qtbot, SimpleDESeqWindow)
     yield window
     window.close()
-    _pytestqt_graceful_shutdown()
 
 
 @pytest.fixture
@@ -216,7 +206,6 @@ def simple_limma_window(qtbot) -> SimpleLimmaWindow:
     qtbot, window = widget_setup(qtbot, SimpleLimmaWindow)
     yield window
     window.close()
-    _pytestqt_graceful_shutdown()
 
 
 @pytest.fixture
@@ -224,7 +213,6 @@ def deseq_window(qtbot) -> DESeqWindow:
     qtbot, window = widget_setup(qtbot, DESeqWindow)
     yield window
     window.close()
-    _pytestqt_graceful_shutdown()
 
 
 @pytest.fixture
@@ -232,7 +220,6 @@ def limma_window(qtbot) -> LimmaWindow:
     qtbot, window = widget_setup(qtbot, LimmaWindow)
     yield window
     window.close()
-    _pytestqt_graceful_shutdown()
 
 
 @pytest.fixture
@@ -240,7 +227,6 @@ def cutadapt_single_window(qtbot) -> CutAdaptSingleWindow:
     qtbot, window = widget_setup(qtbot, CutAdaptSingleWindow)
     yield window
     window.close()
-    _pytestqt_graceful_shutdown()
 
 
 @pytest.fixture
@@ -249,7 +235,6 @@ def cutadapt_paired_window(qtbot) -> CutAdaptPairedWindow:
     yield window
 
     window.close()
-    _pytestqt_graceful_shutdown()
 
 
 @pytest.fixture
@@ -257,7 +242,6 @@ def kallisto_index_window(qtbot) -> KallistoIndexWindow:
     qtbot, window = widget_setup(qtbot, KallistoIndexWindow)
     yield window
     window.close()
-    _pytestqt_graceful_shutdown()
 
 
 @pytest.fixture
@@ -265,7 +249,6 @@ def kallisto_single_window(qtbot) -> KallistoSingleWindow:
     qtbot, window = widget_setup(qtbot, KallistoSingleWindow)
     yield window
     window.close()
-    _pytestqt_graceful_shutdown()
 
 
 @pytest.fixture
@@ -273,7 +256,6 @@ def kallisto_paired_window(qtbot) -> KallistoPairedWindow:
     qtbot, window = widget_setup(qtbot, KallistoPairedWindow)
     yield window
     window.close()
-    _pytestqt_graceful_shutdown()
 
 
 def update_gene_sets_widget(widget: gui_widgets.GeneSetComboBox, objs):
@@ -287,21 +269,18 @@ def enrichment_window(qtbot, available_objects):
     window.widgets['parallel_backend'] = 'multiprocessing'
 
     yield window
-    _pytestqt_graceful_shutdown()
 
 
 @pytest.fixture
 def set_op_window(qtbot, four_available_objects_and_empty):
     qtbot, window = widget_setup(qtbot, SetOperationWindow, four_available_objects_and_empty)
     yield window
-    _pytestqt_graceful_shutdown()
 
 
 @pytest.fixture
 def set_vis_window(qtbot, four_available_objects_and_empty):
     qtbot, window = widget_setup(qtbot, SetVisualizationWindow, four_available_objects_and_empty)
     yield window
-    _pytestqt_graceful_shutdown()
 
 
 multi_open_window_files = ['tests/counted.csv', 'tests/test_deseq.csv', 'tests/counted.tsv']
@@ -311,14 +290,12 @@ multi_open_window_files = ['tests/counted.csv', 'tests/test_deseq.csv', 'tests/c
 def multi_open_window(qtbot):
     qtbot, window = widget_setup(qtbot, MultiOpenWindow, multi_open_window_files)
     yield window
-    _pytestqt_graceful_shutdown()
 
 
 @pytest.fixture
 def apply_table_pipeline_window(qtbot, available_objects_no_tabpages):
     qtbot, window = widget_setup(qtbot, gui_windows.ApplyTablePipelineWindow, available_objects_no_tabpages)
     yield window
-    _pytestqt_graceful_shutdown()
 
 
 @pytest.fixture

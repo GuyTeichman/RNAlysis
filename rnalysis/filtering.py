@@ -134,7 +134,7 @@ class Filter:
     def __eq__(self, other):
         if type(self) is not type(other):
             return False
-        if self.df.equals(other.df) and self.shape == other.shape:
+        if self.shape == other.shape and self.df.equals(other.df):
             return True
         return False
 
@@ -193,7 +193,7 @@ class Filter:
             f"Invalid input for variable 'printout_operation': {printout_operation}"
         # when user requests the opposite of a filter, return the Set Difference between the filtering result and self
         if opposite:
-            new_df = self.df.filter(~pl.first().is_in(new_df.select(pl.first())))
+            new_df = self.df.filter(~pl.first().is_in(new_df.select(pl.first()).to_series()))
             suffix += 'opposite'
 
         # update filename with the suffix of the operation that was just performed
@@ -1604,7 +1604,7 @@ class Filter:
             return res
         else:
             # return just the number of genes/indices belonging to each biotype
-            return ref_df.filter(pl.first().is_in(self.df.select(pl.first()))).group_by(pl.last()).count()
+            return ref_df.filter(pl.first().is_in(self.df.select(pl.first()).to_series())).group_by(pl.last()).count()
 
     @readable_name('Summarize feature biotypes (based on a reference table)')
     def biotypes_from_ref_table(self, long_format: bool = False,
@@ -2405,7 +2405,7 @@ class FoldChangeFilter(Filter):
         res = self._foldchange_randomization(ref.df['Fold Change'].to_numpy(), reps, obs_fc, exp_fc, n)
         # format the output DataFrame
         res_df = pl.DataFrame(res, schema=['group size', 'observed fold change', 'expected fold change', 'pval'])
-        res_df = res_df.with_columns(significant=res_df.select('pval') <= alpha)
+        res_df = res_df.with_columns(significant=pl.col('pval') <= alpha)
         # save the output DataFrame if requested
         if save_csv:
             io.save_table(res_df, fname)
@@ -3884,7 +3884,7 @@ class CountFilter(Filter):
 
         for this_col in numeric_cols:
             scaling_factors = scaling_factors.with_columns(
-                scaling_factors.select(pl.col(this_col).mul(lib_coefs.select(pl.col(this_col))).alias(this_col)))
+                scaling_factors.select(pl.col(this_col).mul(lib_coefs.select(pl.col(this_col)).to_series()).alias(this_col)))
 
         new_df = self._norm_scaling_factors(scaling_factors)
         if return_scaling_factors:
@@ -3999,7 +3999,7 @@ class CountFilter(Filter):
             a_post_cutoff = a_post_cutoff.filter(~pl.first().is_in(zero_genes)).collect()
 
             this_m = m_data.lazy().select(pl.first(), col).filter(pl.last().is_not_nan()).filter(
-                ~pl.first().is_in(zero_genes)).filter(pl.first().is_in(a_post_cutoff.select(pl.first()))).collect()
+                ~pl.first().is_in(zero_genes)).filter(pl.first().is_in(a_post_cutoff.select(pl.first()).to_series())).collect()
             # Trim A and M values
             m_trim_idx = int(np.ceil(log_ratio_trim * len(this_m)))
             a_trim_idx = int(np.ceil(sum_trim * len(a_post_cutoff)))
@@ -5268,9 +5268,9 @@ class CountFilter(Filter):
         filt_obj_tuples = []
         for component in components:
             loading = loadings.select(pl.first(), pl.col(str(component))).sort(pl.col(str(component)))
-            top = self._inplace(self.df.filter(pl.first().is_in(loading.tail(n_genes).select(pl.first()))),
+            top = self._inplace(self.df.filter(pl.first().is_in(loading.tail(n_genes).select(pl.first()).to_series())),
                                 opposite=False, inplace=False, suffix=f'_top{gene_fraction}PC{component}')
-            bottom = self._inplace(self.df.filter(pl.first().is_in(loading.head(n_genes).select(pl.first()))),
+            bottom = self._inplace(self.df.filter(pl.first().is_in(loading.head(n_genes).select(pl.first()).to_series())),
                                    opposite=False, inplace=False, suffix=f'_bottom{gene_fraction}PC{component}')
             filt_obj_tuples.append((top, bottom))
 
