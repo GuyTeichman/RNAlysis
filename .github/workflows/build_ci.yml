@@ -83,8 +83,8 @@ jobs:
                          echo "${GITHUB_WORKSPACE}/kallisto" >> $GITHUB_PATH
                     elif [ "$RUNNER_OS" == "Windows" ]; then
                          choco install wget -y
-                         wget  https://github.com/pachterlab/kallisto/releases/download/v0.51.1/kallisto_windows-v0.51.1.zip
-                         7z x kallisto*.zip
+                         wget  https://github.com/pachterlab/kallisto/releases/download/v0.51.1/kallisto_windows-v0.51.1.tar.gz
+                         tar -xvzf kallisto*.gz
                          echo "${GITHUB_WORKSPACE}/kallisto" >> $GITHUB_PATH
                     else
                          echo "$RUNNER_OS not supported"
