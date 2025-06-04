@@ -289,7 +289,6 @@ def test_kallisto_create_index_command(monkeypatch, transcriptome_fasta, kallist
 
     kallisto_create_index(transcriptome_fasta, kallisto_installation_folder, kmer_length, make_unique)
     assert index_created == [True]
-    return 0, []
 
 
 def test_kallisto_create_index():
