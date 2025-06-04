@@ -37,7 +37,9 @@ def pipe_graphviz_plot(graph: graphviz.Digraph, file_format: str = 'png'):
         warnings.warn("'GraphViz' installation not found. If you want to generate Ontology and Pathway Graphs, "
                       "Please install GraphViz and add it to PATH. \n"
                       "See https://graphviz.org/download/ for more information. ")
-        return ''
+    except graphviz.CalledProcessError as e: # pragma: no cover
+        warnings.warn(f"'GraphViz failed to run with error: {e}", RuntimeWarning)
+    return ''
 
 
 class KEGGEntry:
