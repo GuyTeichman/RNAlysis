@@ -1,11 +1,10 @@
-# 4.1.1 (2025-01-11)
+# 4.1.2 (2025-06-04)
 
 ## Changed
 
-- Updated dependency versions
-- Made jdk an optional dependency
+- Added Python 3.13 support
 
 ## Fixed
 
-- Fixed bug where kallisto quantification would sometimes fail to sum transcripts to genes properly.
-- Fixed bug where automatic mapping of gene IDs would sometimes raise an exception.
+- Fixed bug that caused Windows standalone version to sometimes fail to launch
+- Fixed bug that caused RNAlysis to crash when trying to clear app cache without write access
