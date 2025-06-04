@@ -38,17 +38,17 @@ jobs:
                   file_pattern: 'rnalysis/gui/videos/checksums/*.txt rnalysis/data_files/latest_changelog.md'
                   branch: master
 
-            - name: Create Release
-              id: create_release
-              uses: actions/create-release@v1
-              env:
-                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+            - name: Create GitHub Release
+              uses: softprops/action-gh-release@v2
               with:
-                  tag_name: ${{ github.ref }}
-                  release_name: Stable release ${{ github.ref_name }}
-                  body_path: rnalysis/data_files/latest_changelog.md
-                  draft: false
-                  prerelease: false
+                tag_name: ${{ github.ref }}
+                name: Stable release ${{ github.ref_name }}
+                body_path: rnalysis/data_files/latest_changelog.md
+                draft: false
+                prerelease: false
+              env:
+                GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
 
             - name: Output Release URL File
               run: echo "${{ steps.create_release.outputs.upload_url }}" > release_url.txt
@@ -97,7 +97,8 @@ jobs:
               uses: ts-graphviz/setup-graphviz@v2
               with:
                   macos-skip-brew-update: 'true'
-
+            - name: Test GraphViz installation
+              run: dot -V
             - name: Cache LLVM and Clang
               id: cache-llvm
               uses: actions/cache@v4
