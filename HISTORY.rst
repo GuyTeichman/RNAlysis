@@ -12,6 +12,7 @@ Changed
 Fixed
 ******
 * Fixed bug that caused Windows standalone version to sometimes fail to launch
+* Fixed bug that caused RNAlysis to crash when trying to clear app cache without write access
 
 4.1.1 (2025-01-11)
 -------------------
