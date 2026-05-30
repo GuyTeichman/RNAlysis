@@ -381,15 +381,38 @@ def test_map_taxon_id_no_connection(monkeypatch):
 def test_ensmbl_lookup_post_request(monkeypatch):
     ids = ('id1', 'id2', 'id3')
 
-    def mock_post_request(self, url, headers, data):
+    class AsyncMockResponse:
+        def __init__(self, json_output):
+            self.json_output = json_output
+            self.status = 200
+            self.headers = {}
+
+        async def __aenter__(self):
+            return self
+
+        async def __aexit__(self, exc_type, exc_val, exc_tb):
+            pass
+
+        async def json(self):
+            return self.json_output
+
+    def mock_post_request(self, url, **kwargs):
         assert url == 'https://rest.ensembl.org/lookup/id'
-        assert headers == {"Content-Type": "application/json", "Accept": "application/json"}
-        assert isinstance(data, str)
-        assert json.loads(data) == {'ids': list(ids)}
+        assert kwargs.get('headers') == {"Content-Type": "application/json", "Accept": "application/json"}
+
+        # Get whatever payload was sent (checking both 'json' and 'data' keys for safety)
+        payload = kwargs.get('json') or kwargs.get('data')
+
+        # If the payload is a stringified JSON, parse it back to a dictionary
+        if isinstance(payload, str):
+            payload = json.loads(payload)
+
+        assert payload == {'ids': list(ids)}
 
         return AsyncMockResponse(json_output={this_id: {} for this_id in ids})
 
     monkeypatch.setattr(aiohttp.ClientSession, 'post', mock_post_request)
+
     assert _ensembl_lookup_post_request(ids) == {'id1': {}, 'id2': {}, 'id3': {}}
 
 
@@ -483,12 +506,12 @@ def test_map_gene_ids_request(monkeypatch, ids, map_from, map_to, req_from, req_
 @pytest.mark.parametrize('ids,map_from,map_to,txt,rev_txt,truth',
                          [(['WBGene00000003', 'WBGene00000004'], 'WormBase', 'UniProtKB',
                            'From\tEntry\tAnnotation\nWBGene00000003\tQ19151\t110\nWBGene00000004\tA0A0K3AVL7\t57\nWBGene00000004\tO17395\t137.2\n'
-                           , '', {'WBGene00000003': 'Q19151', 'WBGene00000004': 'O17395'}),
+                               , '', {'WBGene00000003': 'Q19151', 'WBGene00000004': 'O17395'}),
                           (
-                              ['id1', 'id2'], 'UniProtKB', 'WormBase',
-                              'From\tTo\nid1\tWBID1\nid2\tWBID2.2\nid2\tWBID2.1\n',
-                              'From\tEntry\tAnnotation\nWBID1\tid1\t112.5\nWBID2.1\tid2\t112.5\nWBID2.2\tid2\t235\n'
-                              , {'id1': 'WBID1', 'id2': 'WBID2.2'})
+                                  ['id1', 'id2'], 'UniProtKB', 'WormBase',
+                                  'From\tTo\nid1\tWBID1\nid2\tWBID2.2\nid2\tWBID2.1\n',
+                                  'From\tEntry\tAnnotation\nWBID1\tid1\t112.5\nWBID2.1\tid2\t112.5\nWBID2.2\tid2\t235\n'
+                                  , {'id1': 'WBID1', 'id2': 'WBID2.2'})
                           ])
 def test_map_gene_ids_with_duplicates(monkeypatch, ids, map_from, map_to, txt, rev_txt, truth):
     def mock_abbrev_dict():
@@ -1023,8 +1046,9 @@ class TestOrthologDict:
 
         # One-to-one mapping contains keys, one-to-many mapping is empty
         (
-            ['trans1', 'trans2'], {'trans1': 'ortho1', 'trans2': 'ortho2'}, {}, {'gene1': 'ortho1', 'gene2': 'ortho2'},
-            {}),
+                ['trans1', 'trans2'], {'trans1': 'ortho1', 'trans2': 'ortho2'}, {},
+                {'gene1': 'ortho1', 'gene2': 'ortho2'},
+                {}),
 
         # One-to-many mapping contains keys, one-to-one mapping is empty
         (['trans1', 'trans2'], {}, {'trans1': ['ortho1', 'ortho3'], 'trans2': ['ortho2']}, {},
@@ -1172,7 +1196,6 @@ class TestPhylomeDBOrthologMapper:
         assert isinstance(sample[1], tuple)
         assert isinstance(sample[1][0], str)
         assert isinstance(sample[1][1], float)
-
 
     # Test the get_legal_species method
     def test_get_legal_species(self, ortholog_mapper):
