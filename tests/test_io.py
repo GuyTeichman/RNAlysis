@@ -8,11 +8,12 @@ from rnalysis.utils import io
 from rnalysis.utils.io import *
 from rnalysis.utils.io import _ensembl_lookup_post_request, _format_ids_iter
 from tests import (is_ensembl_available, is_phylomedb_available,
-                   is_uniprot_available)
+                   is_uniprot_available, is_pantherdb_available)
 
 ENSEMBL_AVAILABLE = is_ensembl_available()
 UNIPROT_AVAILABLE = is_uniprot_available()
 PHYLOMEDB_AVAILABLE = is_phylomedb_available()
+PANTHERDB_AVAILABLE = is_pantherdb_available()
 
 
 class MockResponse(object):
@@ -1337,6 +1338,7 @@ class TestOrthoInspectorOrthologMapper:
             assert ortholog_one2one.mapping_dict == {'G5EDF7': 'A8XPU4', 'P34544': 'A8XT55'}
 
 
+@pytest.mark.skipif(not PANTHERDB_AVAILABLE, reason='PantherDB not available')
 class TestPantherOrthologMapper:
 
     # Define a fixture to create an instance of PantherOrthologMapper for testing
