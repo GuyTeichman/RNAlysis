@@ -3884,7 +3884,8 @@ class CountFilter(Filter):
 
         for this_col in numeric_cols:
             scaling_factors = scaling_factors.with_columns(
-                scaling_factors.select(pl.col(this_col).mul(lib_coefs.select(pl.col(this_col)).to_series()).alias(this_col)))
+                scaling_factors.select(
+                    pl.col(this_col).mul(lib_coefs.select(pl.col(this_col)).to_series()).alias(this_col)))
 
         new_df = self._norm_scaling_factors(scaling_factors)
         if return_scaling_factors:
@@ -3999,7 +4000,8 @@ class CountFilter(Filter):
             a_post_cutoff = a_post_cutoff.filter(~pl.first().is_in(zero_genes)).collect()
 
             this_m = m_data.lazy().select(pl.first(), col).filter(pl.last().is_not_nan()).filter(
-                ~pl.first().is_in(zero_genes)).filter(pl.first().is_in(a_post_cutoff.select(pl.first()).to_series())).collect()
+                ~pl.first().is_in(zero_genes)).filter(
+                pl.first().is_in(a_post_cutoff.select(pl.first()).to_series())).collect()
             # Trim A and M values
             m_trim_idx = int(np.ceil(log_ratio_trim * len(this_m)))
             a_trim_idx = int(np.ceil(sum_trim * len(a_post_cutoff)))
@@ -4322,8 +4324,8 @@ class CountFilter(Filter):
         """
         validation.validate_threshold(threshold)
         self._validate_is_normalized()
-        mask = pl.when(pl.col(self._numeric_columns) >= threshold).then(True).otherwise(False).name.map(lambda x: x)
-        mask = self.df.select(pl.col(self._numeric_columns)).with_columns(mask).sum_horizontal() >= n_samples
+        mask_expr = (pl.col(self._numeric_columns) >= threshold)
+        mask = self.df.select(pl.col(self._numeric_columns)).with_columns(mask_expr).sum_horizontal() >= n_samples
         new_df = self.df.filter(mask)
         suffix = f"_filt{threshold}reads{n_samples}samples"
         return self._inplace(new_df, opposite, inplace, suffix)
@@ -5270,8 +5272,9 @@ class CountFilter(Filter):
             loading = loadings.select(pl.first(), pl.col(str(component))).sort(pl.col(str(component)))
             top = self._inplace(self.df.filter(pl.first().is_in(loading.tail(n_genes).select(pl.first()).to_series())),
                                 opposite=False, inplace=False, suffix=f'_top{gene_fraction}PC{component}')
-            bottom = self._inplace(self.df.filter(pl.first().is_in(loading.head(n_genes).select(pl.first()).to_series())),
-                                   opposite=False, inplace=False, suffix=f'_bottom{gene_fraction}PC{component}')
+            bottom = self._inplace(
+                self.df.filter(pl.first().is_in(loading.head(n_genes).select(pl.first()).to_series())),
+                opposite=False, inplace=False, suffix=f'_bottom{gene_fraction}PC{component}')
             filt_obj_tuples.append((top, bottom))
 
         return filt_obj_tuples[0] if len(filt_obj_tuples) == 1 else tuple(filt_obj_tuples)
