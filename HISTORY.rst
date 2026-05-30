@@ -2,6 +2,18 @@
 History
 =======
 
+4.2.0 (2026-05-30)
+-------------------
+
+Changed
+*******
+* Added Python 3.14 support
+
+Fixed
+******
+* Fixed bug that caused RNAlysis to crash when PantherDB is unavailable
+
+
 4.1.2 (2025-06-04)
 -------------------
 

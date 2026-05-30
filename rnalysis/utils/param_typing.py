@@ -96,7 +96,7 @@ def get_gene_id_types() -> typing.Tuple[str, ...]:
 def get_panther_taxons() -> typing.Tuple[str, ...]:
     try:
         taxons = io.get_legal_panther_taxons()
-    except requests.exceptions.ConnectionError:
+    except (requests.exceptions.ConnectionError, requests.exceptions.HTTPError):
         taxons = tuple()
         warnings.warn('Failed to retreive legal taxons from PantherDB. '
                       'Some features may not work as intended. '
