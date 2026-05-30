@@ -6,12 +6,13 @@ from typing import Callable, List, Tuple
 
 import matplotlib
 import matplotlib_venn
+import numpy as np
 import pandas as pd
 import upsetplot
+from PyQt6 import QtCore, QtGui
 from matplotlib import pyplot as plt
 from matplotlib.backends.backend_qtagg import (FigureCanvasQTAgg,
                                                NavigationToolbar2QT)
-from PyQt6 import QtCore, QtGui
 
 from rnalysis.utils import generic, parsing
 
@@ -37,6 +38,10 @@ class BasePreviewCanvas(FigureCanvasQTAgg):
         self.fig = plt.Figure(tight_layout=tight_layout)
         self.parent = parent
         self.generated_plot = plotting_func(**plotting_kwargs, fig=self.fig)
+        for ax in self.fig.axes:
+            for text in ax.texts:
+                x, y = text.get_position()
+                text.set_position((np.asarray(x).item(), np.asarray(y).item()))
         super().__init__(figure=self.fig)
 
 
@@ -131,6 +136,14 @@ class VennInteractiveCanvas(BaseInteractiveCanvas):
 
         self.venn = funcs[0](gene_sets.values(), gene_sets.keys(), set_colors=colors, ax=self.ax, alpha=1)
         self.venn_circles = funcs[1](gene_sets.values(), linestyle='solid', linewidth=2.0, ax=self.ax)
+
+        for label_list in [self.venn.set_labels, self.venn.subset_labels]:
+            if label_list is not None:
+                for label in label_list:
+                    if label is not None:
+                        x, y = label.get_position()
+                        label.set_position((np.asarray(x).item(), np.asarray(y).item()))
+
         self.default_subset_fontsize = 14
         self.states = [self.DESELECTED_STATE for _ in range(len(self.venn.patches))]
         self.set_font_size(16, self.default_subset_fontsize)
