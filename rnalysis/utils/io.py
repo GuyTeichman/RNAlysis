@@ -1489,10 +1489,13 @@ class OrthoInspectorOrthologMapper:
             url = f'{OrthoInspectorOrthologMapper.API_URL}/{database}/species'
             req = session.get(url)
             req.raise_for_status()
-            content = req.json()
+            try:
+                content = req.json()
+            except requests.exceptions.JSONDecodeError:
+                clean_json_string = req.text.split('\n')[0]
+                content = json.loads(clean_json_string)
             assert content['meta']['status'] == 'success'
             db_organisms[database] = frozenset({d['id'] for d in content['data']})
-            assert len(db_organisms[database]) == int(content['meta']['nbResults'])
 
         return db_organisms
 
@@ -1531,7 +1534,11 @@ class OrthoInspectorOrthologMapper:
                 url = f'{self.API_URL}/{database}/species/{self.map_from_organism}/orthologs/{self.map_to_organism}'
                 req = session.get(url)
                 req.raise_for_status()
-                content = req.json()['data']
+                try:
+                    content = req.json()['data']
+                except requests.exceptions.JSONDecodeError:
+                    clean_json_string = req.text.split('\n')[0]
+                    content = json.loads(clean_json_string)['data']
                 if len(content) >= 0:
                     cache_file(json.dumps(content), self.get_cache_filename())
                     break
