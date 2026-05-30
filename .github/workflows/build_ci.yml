@@ -13,6 +13,7 @@ jobs:
                 python-version: [ '3.11', '3.12','3.13', '3.14' ]
         env:
             DISPLAY: ':99.0'
+            HDF5_DISABLE_VERSION_CHECK: '2'
         steps:
             -   name: Configure pagefile
                 if: runner.os == 'Windows'
