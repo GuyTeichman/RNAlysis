@@ -872,7 +872,7 @@ def get_obo_basic_stream():
 
 # TODO: cache this! save and load gene IDs individually
 @lru_cache(maxsize=32, typed=False)
-def _ensembl_lookup_post_request(gene_ids: Tuple[str]) -> Dict[str, Dict[str, Any]]:
+def _ensembl_lookup_post_request(gene_ids: Tuple[str, ...]) -> Dict[str, Dict[str, Any]]:
     """
     Perform an Ensembl 'lookup/id' POST request to find the species and database for several identifiers. \
     See full POST API at https://rest.ensembl.org/documentation/info/lookup_post
@@ -1135,7 +1135,10 @@ class EnsemblRestClient:
 
     async def _run(self):
         tasks = []
-        async with aiohttp.ClientSession(raise_for_status=True) as self.session:
+        # Explicitly use the OS native resolver to bypass the aiodns bug
+        connector = aiohttp.TCPConnector(resolver=aiohttp.ThreadedResolver())
+
+        async with aiohttp.ClientSession(raise_for_status=True, connector=connector) as self.session:
             while not self.queue.empty():
                 req_type, endpoint, hdrs, params = self.queue.get()
                 tasks.append(self.perform_api_action(req_type, endpoint, hdrs, params))
@@ -1157,17 +1160,18 @@ class EnsemblRestClient:
             hdrs['Content-Type'] = 'application/json'
 
         content = None
-        try:
-            await self.semaphore.acquire()
-            async with self.LIMITER:
-                if req_type == 'get':
-                    request_func = self.session.get
-                    kwargs = dict(params=params) if params else {}
-                elif req_type == 'post':
-                    request_func = self.session.post
-                    kwargs = dict(data=params) if params else {}
-                else:
-                    raise ValueError(f"Invalid request type '{req_type}'. ")
+        async with self.semaphore, self.LIMITER:
+            if req_type == 'get':
+                request_func = self.session.get
+                kwargs = dict(params=params) if params else {}
+            elif req_type == 'post':
+                request_func = self.session.post
+                kwargs = dict(
+                    json=params) if params else {}  # Note: changed data to json for application/json compatibility
+            else:
+                raise ValueError(f"Invalid request type '{req_type}'. ")
+
+            try:
                 async with request_func(self.SERVER + endpoint, headers=hdrs, **kwargs) as response:
                     content = await response.json()
                     self.semaphore.release()
