@@ -78,6 +78,8 @@ jobs:
                          echo "${GITHUB_WORKSPACE}/kallisto" >> $GITHUB_PATH
                     elif [ "$RUNNER_OS" == "macOS" ]; then
                          brew install hdf5
+                         # Trick dyld into using the newer hdf5 library version
+                         ln -s /opt/homebrew/opt/hdf5/lib/libhdf5.dylib /opt/homebrew/opt/hdf5/lib/libhdf5.310.dylib
                          wget  https://github.com/pachterlab/kallisto/releases/download/v0.51.1/kallisto_mac_m1-v0.51.1.tar.gz
                          tar -xvzf kallisto*.gz
                          echo "${GITHUB_WORKSPACE}/kallisto" >> $GITHUB_PATH
