@@ -1509,7 +1509,7 @@ class TestEnsemblOrthologMapper:
         assert list(ortholog_one2many.mapping_dict.keys()) == ['G5EDF7', 'P34544']
 
         if non_unique_mode == 'first':
-            assert ortholog_one2one['P34544'] == 'ENSG00000165671'
+            assert ortholog_one2one['P34544'] == 'ENSG00000055609'
 
 
 class TestRunRScript:
