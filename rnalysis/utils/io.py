@@ -1461,7 +1461,7 @@ class PhylomeDBOrthologMapper:
 
 class OrthoInspectorOrthologMapper:
     API_URL = 'https://lbgi.fr/api/orthoinspector'
-    RETRIES = RandomExpRetry(total=5, backoff_factor=2, status_forcelist=[404, 500, 502, 503, 504])
+    RETRIES = RandomExpRetry(total=3, backoff_factor=2, status_forcelist=[404, 500, 502, 503, 504])
     HEADERS = {'accept': 'application/json'}
 
     def __init__(self, map_to_organism, map_from_organism, gene_id_type):
@@ -1537,23 +1537,33 @@ class OrthoInspectorOrthologMapper:
         mapping_one2one = {}
         mapping_one2many = {}
         ids, translated_ids = self.translate_ids(ids, session=session)
-        # TODO: progress bars on both download and parsing
-        # if a large number of genes is requested, download the entire pairwise dataset and filter it
+
+        # Check for cached results first
         cached = load_cached_file(self.get_cache_filename())
         if cached is None:
-            content = {}
+            content = None
             for database in valid_dbs:
                 url = f'{self.API_URL}/{database}/species/{self.map_from_organism}/orthologs/{self.map_to_organism}'
-                req = session.get(url)
-                req.raise_for_status()
                 try:
-                    content = req.json()['data']
-                except requests.exceptions.JSONDecodeError:
-                    clean_json_string = req.text.split('\n')[0]
-                    content = json.loads(clean_json_string)['data']
-                if len(content) >= 0:
+                    req = session.get(url)
+                    req.raise_for_status()
+                    try:
+                        content = req.json()['data']
+                    except requests.exceptions.JSONDecodeError:
+                        clean_json_string = req.text.split('\n')[0]
+                        content = json.loads(clean_json_string)['data']
+
+                    # If data retrieval is successful, cache it and break out of the loop
                     cache_file(json.dumps(content), self.get_cache_filename())
                     break
+                except requests.exceptions.RequestException as e:
+                    # Catching connection drops, timeouts, or bad status codes
+                    warnings.warn(f"Database '{database}' failed to respond ({e}). Trying next available database...")
+                    continue
+
+            # If the loop finishes and content is still None, it means all database attempts failed
+            if content is None:
+                raise RuntimeError(f"All attempted databases ({', '.join(valid_dbs)}) failed to respond.")
         else:
             content = json.loads(cached)
 
