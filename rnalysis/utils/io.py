@@ -1174,18 +1174,17 @@ class EnsemblRestClient:
             try:
                 async with request_func(self.SERVER + endpoint, headers=hdrs, **kwargs) as response:
                     content = await response.json()
-                    self.semaphore.release()
 
-        except (aiohttp.ClientConnectorError, asyncio.TimeoutError) as e:
-            # check if we are being rate limited by the server
-            if e.errno == 429:
-                if 'Retry-After' in e.request.headers:
-                    retry = e.request.headers['Retry-After']
-                    await asyncio.sleep(float(retry))
-                    raise e  # wait the minimum amount of time required by 'retry-after',
-                    # and then trigger tenacity.retry for random exponential to avoid thundering herd
-            else:
+            except aiohttp.ClientResponseError as e:
+                if e.status == 429:
+                    # Look for Ensembl's Retry-After header
+                    retry_after = e.headers.get('Retry-After', 1)
+                    await asyncio.sleep(float(retry_after))
                 raise e
+
+            except (aiohttp.ClientConnectorError, asyncio.TimeoutError) as e:
+                raise e
+
         return content
 
 
