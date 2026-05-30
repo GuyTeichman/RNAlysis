@@ -445,7 +445,6 @@ def get_session(retries: Retry):
 
 class KEGGAnnotationIterator:
     URL = 'https://rest.kegg.jp/'
-    TAXON_MAPPING_URL = 'https://www.genome.jp/kegg-bin/download_htext?htext=br08610'
     REQUEST_DELAY_MILLIS = 250
     REQ_MAX_ENTRIES = 10
     RETRIES = RandomExpRetry(total=5, backoff_factor=0.25, status_forcelist=[500, 502, 503, 504])
@@ -491,22 +490,6 @@ class KEGGAnnotationIterator:
         return fname
 
     @staticmethod
-    def _get_taxon_tree(session):
-        cached_filename = KEGGAnnotationIterator.TAXON_TREE_CACHED_FILENAME
-        cached_file = load_cached_file(cached_filename)
-        if cached_file is not None:
-            try:
-                taxon_tree = json.loads(cached_file)
-                return taxon_tree
-            except json.decoder.JSONDecodeError:
-                pass
-        with session.get(KEGGAnnotationIterator.TAXON_MAPPING_URL, params=dict(format='json')) as req:
-            content = req.content.decode('utf8')
-            cache_file(content, cached_filename)
-            taxon_tree = json.loads(content)
-        return taxon_tree
-
-    @staticmethod
     def get_compounds() -> Dict[str, str]:
         compounds = {}
         session = get_session(KEGGAnnotationIterator.RETRIES)
@@ -527,20 +510,13 @@ class KEGGAnnotationIterator:
     @staticmethod
     @functools.lru_cache(1024)
     def get_kegg_organism_code(taxon_id: int, session: requests.Session) -> str:
-        taxon_tree = KEGGAnnotationIterator._get_taxon_tree(session)
-        q = queue.Queue()
-        q.put(taxon_tree)
-        while not q.empty():
-            this_item = q.get()
-            if f"[TAX:{taxon_id}]" in this_item['name']:
-                child = this_item['children'][0]
-                organism_code = child['name'].split(" ")[0]
-                return organism_code
-            else:
-                children = this_item.get('children', tuple())
-                for child in children:
-                    q.put(child)
-        raise ValueError(f"Could not find organism code for taxon ID {taxon_id}. ")
+        url = f"{KEGGAnnotationIterator.URL}/link/genome/taxid:{taxon_id}/species"
+        data = pl.scan_csv(session.get(url).content, separator='\t', has_header=False,
+                           new_columns=["ncbi_id", "kegg_id"]).select(
+            pl.col("kegg_id").str.extract("gn:(.*)").first()).collect()
+        if len(data) == 0:
+            raise ValueError(f"Could not find organism code for taxon ID {taxon_id}. ")
+        return data.item()
 
     def get_pathways(self) -> Tuple[Dict[str, str], int]:
         pathway_names = {}

@@ -776,52 +776,9 @@ def test_kegg_annotation_iterator_get_pathway_annotations_cached():
     (9606, 'hsa'),
     (6238, 'cbr')
 ])
-def test_kegg_annotation_iterator_get_kegg_organism_code(monkeypatch, taxon_id, truth):
-    def mock_get_tree(_):
-        with open('tests/test_files/kegg_taxon_tree_truth.json') as f:
-            return json.loads(f.read())
-
-    monkeypatch.setattr(KEGGAnnotationIterator, '_get_taxon_tree', mock_get_tree)
+def test_kegg_annotation_iterator_get_kegg_organism_code(taxon_id, truth):
     session = get_session(KEGGAnnotationIterator.RETRIES)
     assert KEGGAnnotationIterator.get_kegg_organism_code(taxon_id, session) == truth
-
-
-def test_kegg_annotation_iterator_get_taxon_tree(monkeypatch):
-    truth = {"sample": "json", "lorem": "ipsum"}
-    truth_text = '{"sample": "json", "lorem": "ipsum"}'
-    cached = []
-
-    def mock_get_cached_file(filename):
-        return None
-
-    def mock_cache_file(content, filename):
-        assert filename == 'kegg_taxon_tree.json'
-        assert content == truth_text
-        cached.append(True)
-
-    def mock_get(self, url, params):
-        assert url == 'https://www.genome.jp/kegg-bin/download_htext?htext=br08610'
-        assert params == {'format': 'json'}
-        return MockResponse(content=truth_text)
-
-    monkeypatch.setattr(io, 'load_cached_file', mock_get_cached_file)
-    monkeypatch.setattr(requests.Session, 'get', mock_get)
-    monkeypatch.setattr(io, 'cache_file', mock_cache_file)
-
-    session = get_session(KEGGAnnotationIterator.RETRIES)
-    assert KEGGAnnotationIterator._get_taxon_tree(session) == truth
-    assert cached == [True]
-
-
-def test_kegg_annotation_iterator_get_taxon_tree_cached(monkeypatch):
-    truth = {"sample": "json", "lorem": "ipsum"}
-
-    def mock_get_cached_file(filename):
-        return '{"sample":"json","lorem":"ipsum"}'
-
-    monkeypatch.setattr(io, 'load_cached_file', mock_get_cached_file)
-    session = get_session(KEGGAnnotationIterator.RETRIES)
-    assert KEGGAnnotationIterator._get_taxon_tree(session) == truth
 
 
 class MockProcess:

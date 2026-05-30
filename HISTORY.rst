@@ -12,6 +12,7 @@ Changed
 Fixed
 ******
 * Fixed bug that caused RNAlysis to crash when PantherDB is unavailable
+* Adapted RNAlysis to the updated KEGG taxon mapping
 
 
 4.1.2 (2025-06-04)
