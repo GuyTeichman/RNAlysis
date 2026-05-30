@@ -1,12 +1,10 @@
 import asyncio
 import sys
 from multiprocessing import freeze_support
-from pathlib import Path
 
 if sys.platform == 'win32':
     asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
 
-import appdirs
 import nest_asyncio
 
 try:
