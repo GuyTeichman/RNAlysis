@@ -24,14 +24,15 @@ import threading
 import time
 import typing
 import warnings
+from collections import OrderedDict
 from datetime import date, datetime
-from functools import lru_cache
+from functools import lru_cache, wraps
 from io import StringIO
 from itertools import chain
 from pathlib import Path
 from sys import executable
-from typing import (Any, Callable, Dict, Iterable, List, Literal, NamedTuple,
-                    Set, Tuple, Union)
+from typing import (List, Literal, NamedTuple,
+                    Set, Tuple, Union, Callable, Iterable, Dict, Any)
 from urllib.parse import parse_qs, urlencode, urlparse
 
 import aiohttp
@@ -55,6 +56,52 @@ from rnalysis.utils import parsing, validation
 class RandomExpRetry(Retry):
     def get_backoff_time(self):
         return (0.5 + 0.5 * random.random()) * super().get_backoff_time()
+
+
+class BatchLRUCache:
+    def __init__(self, max_size: int = 50000):
+        self.cache: OrderedDict = OrderedDict()
+        self.max_size = max_size
+
+    def __call__(self, func: Callable[[Iterable[str], Any], Dict[str, Any]]):
+        @wraps(func)
+        def wrapper(ids: Iterable[str], *args, **kwargs) -> Dict[str, Any]:
+            final_results = {}
+            uncached_ids = []
+
+            # 1. Separate hits from misses
+            for item_id in ids:
+                if item_id in self.cache:
+                    final_results[item_id] = self.cache[item_id]
+                    self.cache.move_to_end(item_id)  # Mark as Most Recently Used
+                else:
+                    uncached_ids.append(item_id)
+
+            # 2. Only invoke the network function if there are cache misses
+            if uncached_ids:
+                # The wrapped function only deals with actual misses
+                new_results = func(uncached_ids, *args, **kwargs)
+
+                # 3. Write new results into the LRU cache
+                if new_results:
+                    for item_id, data in new_results.items():
+                        self._set_cache(item_id, data)
+                        final_results[item_id] = data
+
+                # 4. Guard against dead/invalid IDs omitted by the API response
+                for item_id in uncached_ids:
+                    if item_id not in self.cache:
+                        self._set_cache(item_id, None)
+                        final_results[item_id] = None
+
+            return final_results
+
+        return wrapper
+
+    def _set_cache(self, key: str, value: Any):
+        self.cache[key] = value
+        if len(self.cache) > self.max_size:
+            self.cache.popitem(last=False)  # Evict the Least Recently Used item
 
 
 def get_datafile_dir() -> Path:
@@ -870,8 +917,7 @@ def get_obo_basic_stream():
         return content
 
 
-# TODO: cache this! save and load gene IDs individually
-@lru_cache(maxsize=32, typed=False)
+@BatchLRUCache(max_size=10000)
 def _ensembl_lookup_post_request(gene_ids: Tuple[str, ...]) -> Dict[str, Dict[str, Any]]:
     """
     Perform an Ensembl 'lookup/id' POST request to find the species and database for several identifiers. \
