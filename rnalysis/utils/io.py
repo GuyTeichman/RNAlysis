@@ -1677,7 +1677,6 @@ class EnsemblOrthologMapper:
             pbar.update()
             for json_res in client.run():
                 req_output = json_res['data'][0]
-                print(req_output)
                 if len(req_output['homologies']) == 0:
                     continue
 
@@ -1791,7 +1790,6 @@ class PantherOrthologMapper:
         mapping_one2one, mapping_one2many = translate_mappings(ids, translated_ids, mapping_one2one, mapping_one2many)
         if n_mapped < len(translated_ids):
             warnings.warn(f"Ortholog mapping found for only {n_mapped} out of {len(translated_ids)} gene IDs.")
-            print({k: [this_v[0] for this_v in v] for k, v in mapping_one2many.items()})
         return OrthologDict(mapping_one2one), OrthologDict(
             {k: [this_v[0] for this_v in v] for k, v in mapping_one2many.items()})
 

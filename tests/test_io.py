@@ -1409,7 +1409,6 @@ class TestOrthoInspectorOrthologMapper:
 
         assert isinstance(ortholog_one2one, OrthologDict)
         assert isinstance(ortholog_one2many, OrthologDict)
-
         assert list(ortholog_one2one.mapping_dict.keys()) == ['G5EDF7', 'P34544']
         assert list(ortholog_one2many.mapping_dict.keys()) == ['G5EDF7', 'P34544']
 
