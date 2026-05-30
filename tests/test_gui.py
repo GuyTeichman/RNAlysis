@@ -2561,7 +2561,7 @@ def test_MainWindow_copy_gene_set(main_window_with_tabs, ind, gene_set):
 
 def test_MainWindow_add_pipeline(main_window, monkeypatch):
     window_opened = []
-    monkeypatch.setattr(CreatePipelineWindow, 'exec', functools.partial(window_opened.append, True))
+    monkeypatch.setattr(CreatePipelineWindow, 'exec', lambda *args, **kwargs: window_opened.append(True))
 
     main_window.new_pipeline_action.trigger()
     assert window_opened == [True]
@@ -2627,7 +2627,7 @@ def test_MainWindow_choose_set_op(use_temp_settings_file, main_window, monkeypat
     monkeypatch.setattr(main_window, 'get_available_objects', lambda *args, **kwargs: 'my available objects')
     window_opened = []
     monkeypatch.setattr(SetOperationWindow, '__init__', mock_init)
-    monkeypatch.setattr(SetOperationWindow, 'show', functools.partial(window_opened.append, True))
+    monkeypatch.setattr(SetOperationWindow, 'show', lambda *args, **kwargs: window_opened.append(True))
 
     main_window.set_op_action.trigger()
     assert window_opened == [True]
@@ -2641,7 +2641,7 @@ def test_MainWindow_visualize_gene_sets(use_temp_settings_file, main_window, mon
     monkeypatch.setattr(main_window, 'get_available_objects', lambda *args, **kwargs: 'my available objects')
     window_opened = []
     monkeypatch.setattr(SetVisualizationWindow, '__init__', mock_init)
-    monkeypatch.setattr(SetVisualizationWindow, 'show', functools.partial(window_opened.append, True))
+    monkeypatch.setattr(SetVisualizationWindow, 'show', lambda *args, **kwargs: window_opened.append(True))
 
     main_window.set_vis_action.trigger()
     assert window_opened == [True]
@@ -2649,7 +2649,7 @@ def test_MainWindow_visualize_gene_sets(use_temp_settings_file, main_window, mon
 
 def test_MainWindow_open_enrichment_analysis(main_window, monkeypatch):
     window_opened = []
-    monkeypatch.setattr(EnrichmentWindow, 'show', functools.partial(window_opened.append, True))
+    monkeypatch.setattr(EnrichmentWindow, 'show', lambda *args, **kwargs: window_opened.append(True))
 
     main_window.enrichment_action.trigger()
     assert window_opened == [True]
@@ -2781,7 +2781,7 @@ def test_MainWindow_load_session(use_temp_settings_file, main_window, monkeypatc
 
 def test_MainWindow_about(main_window, monkeypatch):
     window_opened = []
-    monkeypatch.setattr(gui_windows.AboutWindow, 'exec', functools.partial(window_opened.append, True))
+    monkeypatch.setattr(gui_windows.AboutWindow, 'exec', lambda *args, **kwargs: window_opened.append(True))
 
     main_window.about_action.trigger()
     assert window_opened == [True]
@@ -2789,7 +2789,7 @@ def test_MainWindow_about(main_window, monkeypatch):
 
 def test_MainWindow_cite(main_window, monkeypatch):
     window_opened = []
-    monkeypatch.setattr(gui_windows.HowToCiteWindow, 'exec', functools.partial(window_opened.append, True))
+    monkeypatch.setattr(gui_windows.HowToCiteWindow, 'exec', lambda *args, **kwargs: window_opened.append(True))
 
     main_window.cite_action.trigger()
     assert window_opened == [True]
