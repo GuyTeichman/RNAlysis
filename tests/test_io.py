@@ -1,5 +1,5 @@
 from unittest import mock
-from unittest.mock import MagicMock
+from unittest.mock import Mock, MagicMock
 
 import pytest
 import requests_mock
@@ -57,6 +57,105 @@ def test_load_csv_bad_input():
     with pytest.raises(AssertionError):
         load_table(invalid_input)
 
+
+class TestBatchLRUCache:
+
+    @pytest.fixture
+    def mock_network_func(self):
+        """
+        A fixture providing a mock function that simulates an API endpoint.
+        It expects a list of IDs and returns a dictionary mapping ID -> mock_data.
+        """
+        mock = Mock()
+        # Default behavior: return a dictionary where value is '{item_id}_data'
+        mock.side_effect = lambda ids: {item_id: f"{item_id}_data" for item_id in ids}
+        return mock
+
+    def test_cache_miss_calls_underlying_function(self, mock_network_func):
+        """Verify that when the cache is empty, the underlying function is called with all IDs."""
+        cache_decorator = BatchLRUCache(max_size=10)
+        decorated_func = cache_decorator(mock_network_func)
+
+        ids = ("gene1", "gene2")
+        result = decorated_func(ids)
+
+        # Assert correct data is returned
+        assert result == {"gene1": "gene1_data", "gene2": "gene2_data"}
+        # Assert the network function was called exactly once with the missing IDs
+        mock_network_func.assert_called_once_with(["gene1", "gene2"])
+        # Assert the cache stored them
+        assert "gene1" in cache_decorator.cache
+        assert "gene2" in cache_decorator.cache
+
+    def test_cache_hit_skips_underlying_function(self, mock_network_func):
+        """Verify that if IDs are fully cached, the underlying function is bypassed entirely."""
+        cache_decorator = BatchLRUCache(max_size=10)
+        # Manually prepopulate the cache
+        cache_decorator.cache["gene1"] = "cached_data1"
+
+        decorated_func = cache_decorator(mock_network_func)
+        result = decorated_func(("gene1",))
+
+        assert result == {"gene1": "cached_data1"}
+        # The network function should never have been executed
+        mock_network_func.assert_not_called()
+
+    def test_partial_cache_hits(self, mock_network_func):
+        """Verify that if some IDs are cached and some are missed, only the misses hit the network."""
+        cache_decorator = BatchLRUCache(max_size=10)
+        cache_decorator.cache["gene1"] = "cached_data1"
+
+        decorated_func = cache_decorator(mock_network_func)
+
+        # 'gene1' is a hit, 'gene2' is a miss
+        result = decorated_func(("gene1", "gene2"))
+
+        assert result == {"gene1": "cached_data1", "gene2": "gene2_data"}
+        # Network should only have been handed 'gene2'
+        mock_network_func.assert_called_once_with(["gene2"])
+
+    def test_lru_eviction(self, mock_network_func):
+        """Verify that exceeding max_size drops the Least Recently Used item."""
+        # Set max size strictly to 2 items
+        cache_decorator = BatchLRUCache(max_size=2)
+        decorated_func = cache_decorator(mock_network_func)
+
+        # Fill the cache up to capacity (gene1, gene2)
+        decorated_func(("gene1", "gene2"))
+
+        # Access 'gene1' again to make it the Most Recently Used (MRU) item
+        # This shifts 'gene2' to become the Least Recently Used (LRU) target
+        decorated_func(("gene1",))
+
+        # Add a 3rd unique item to force an eviction event
+        decorated_func(("gene3",))
+
+        # 'gene1' (recently hit) and 'gene3' (recently added) should remain
+        assert "gene1" in cache_decorator.cache
+        assert "gene3" in cache_decorator.cache
+        # 'gene2' should have been cleanly evicted
+        assert "gene2" not in cache_decorator.cache
+
+    def test_dead_ids_cached_as_none(self):
+        """Verify that IDs omitted by the API are explicitly cached as None to prevent future queries."""
+        cache_decorator = BatchLRUCache(max_size=10)
+
+        # Simulate an API that drops bad IDs (e.g., it receives two IDs but only returns one)
+        mock_selective_api = Mock(return_value={"good_gene": "good_data"})
+        decorated_func = cache_decorator(mock_selective_api)
+
+        result = decorated_func(("good_gene", "bad_gene"))
+
+        assert result == {"good_gene": "good_data", "bad_gene": None}
+        # Verify the bad gene was logged into the cache dictionary as None
+        assert cache_decorator.cache["bad_gene"] is None
+
+        # Re-requesting the bad gene should now hit the cache instead of the network
+        mock_selective_api.reset_mock()
+        second_result = decorated_func(("bad_gene",))
+
+        assert second_result == {"bad_gene": None}
+        mock_selective_api.assert_not_called()
 
 @pytest.mark.parametrize('pth', ("tests/test_files/test_load_csv.csv", "tests/test_files/test_load_csv.tsv",
                                  "tests/test_files/test_load_csv_tabs.txt",
