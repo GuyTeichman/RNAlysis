@@ -307,7 +307,11 @@ class ReportGenerator:
     @classmethod
     def deserialize(cls, data: dict):
         obj = cls.__new__(cls)
-        obj.graph = networkx.node_link_graph(data['graph'])
+        try:
+            obj.graph = networkx.node_link_graph(data['graph'], edges="edges")
+        except KeyError:
+            # legacy datasets (networkx < 3.5)
+            obj.graph = networkx.node_link_graph(data['graph'], edges="links")
         obj.nodes = {ind: Node.from_json(node_json) for ind, node_json in data['nodes'].items()}
         return obj
 

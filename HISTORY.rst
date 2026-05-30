@@ -14,6 +14,7 @@ Fixed
 * Fixed bug that caused RNAlysis to crash when PantherDB is unavailable
 * Adapted RNAlysis to the updated KEGG taxon mapping
 * Fixed bug that caused Ensembl ortholog mapping to fail in some environments
+* Fixed bug that caused session loading to fail in some environments
 
 
 4.1.2 (2025-06-04)
