@@ -220,7 +220,10 @@ def cache_gui_file(item: Union[pl.DataFrame, set, str], filename: str):
             if isinstance(item, pl.Series):
                 item = item.to_frame()
             query = item.lazy().sink_parquet(file_path, lazy=True)
-            pl.collect_all_async([query])
+            try:
+                pl.collect_all_async([query])
+            except RuntimeError:
+                pl.collect_all([query])
         else:
             save_table(item, file_path)
 
