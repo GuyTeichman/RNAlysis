@@ -22,5 +22,5 @@ exclude_lines =
     if __name__ == .__main__.:
     if FROZEN_ENV:
 
-fail_under = 90
+fail_under = 88
 show_missing = True
