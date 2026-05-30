@@ -213,8 +213,17 @@ def cache_gui_file(item: Union[pl.DataFrame, set, str], filename: str):
     if not directory.exists():
         directory.mkdir(parents=True)
     file_path = directory.joinpath(filename)
+
     if isinstance(item, (pl.DataFrame, pl.Series)):
-        save_table(item, file_path)
+        # Check if we can optimize via a Polars streaming sink
+        if file_path.suffix.lower() == '.parquet':
+            if isinstance(item, pl.Series):
+                item = item.to_frame()
+            query = item.lazy().sink_parquet(file_path, lazy=True)
+            pl.collect_all_async([query])
+        else:
+            save_table(item, file_path)
+
     elif isinstance(item, set):
         save_gene_set(item, file_path)
     elif isinstance(item, Path) and item.suffix in ('.R', '.log'):

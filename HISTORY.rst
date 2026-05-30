@@ -8,6 +8,7 @@ History
 Changed
 *******
 * Added Python 3.14 support
+* Performance improvements, especially when using automatic report generation.
 
 Fixed
 ******
