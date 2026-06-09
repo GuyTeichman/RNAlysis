@@ -1758,7 +1758,7 @@ class EnsemblOrthologMapper:
 
 
 class PantherOrthologMapper:
-    API_URL = 'http://www.pantherdb.org'
+    API_URL = 'https://www.pantherdb.org'
     RETRIES = RandomExpRetry(total=5, backoff_factor=0.25, status_forcelist=[500, 502, 503, 504])
     HEADERS = {'accept': 'application/json'}
 
@@ -2216,7 +2216,7 @@ def find_best_gene_mapping(ids: Tuple[str, ...], map_from_options: Union[Tuple[s
 
 @functools.lru_cache(maxsize=2)
 def get_legal_panther_taxons():
-    URL = 'http://www.pantherdb.org/services/oai/pantherdb/supportedgenomes'
+    URL = 'https://www.pantherdb.org/services/oai/pantherdb/supportedgenomes'
     req = requests.post(URL)
     req.raise_for_status()
     entries = json.loads(req.text)['search']['output']['genomes']['genome']
