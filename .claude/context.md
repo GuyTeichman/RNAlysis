@@ -88,7 +88,8 @@ Priority themes, not a committed schedule:
 - **Plan-first** when a change is risky (public API signature, the API→GUI reflection contract,
   or a serialized format). Otherwise implement and show the diff.
 - **Serialized-format back-compat and result reproducibility are hard invariants.**
-- **Never commit to `master`**; branch + PR.
+- **Branch model:** feature branch off `development` → PR into `development` → `master` at
+  release. Never commit directly to `master` or `development`.
 - **A clean-context independent agent reviews the diff at PR time.**
 - Ship only features we're confident are correct. Provide reasonable defaults. Keep it working
   on Windows, macOS, and Linux, both from source and frozen.
