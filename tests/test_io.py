@@ -1780,6 +1780,10 @@ class TestEnsemblOrthologMapper:
                 {'target': {'id': 'TARGET_C'}, 'source': {'perc_id': 90.0}},
             ]}]}]
         monkeypatch.setattr(io.EnsemblRestClient, 'run', lambda self: fake_response)
+        # get_orthologs() calls get_species_name() -> map_taxon_id(), which is a live UniProt
+        # request. Stub it so this stays a genuinely offline unit test (the real species name is
+        # irrelevant here: EnsemblRestClient.run is already mocked to return fake_response).
+        monkeypatch.setattr(io.EnsemblOrthologMapper, 'get_species_name', lambda self: 'caenorhabditis_elegans')
 
         mapper = EnsemblOrthologMapper(map_to_organism=9606, map_from_organism=6239,
                                        gene_id_type='UniProtKB AC/ID')
