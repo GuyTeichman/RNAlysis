@@ -189,7 +189,7 @@ If you use the *XL-mHG* single-set enrichment test in your research, please cite
 
     Eden, E., Lipson, D., Yogev, S., and Yakhini, Z. (2007).
      Discovering Motifs in Ranked Lists of DNA Sequences. PLOS Comput. Biol. 3, e39.
-    https://doi.org/10.1371/journal.pcbi.0030039>doi.org/10.1371/journal.pcbi.0030039</a>
+    https://doi.org/10.1371/journal.pcbi.0030039
 
     Wagner, F. (2017). The XL-mHG test for gene set enrichment. ArXiv.
     https://doi.org/10.48550/arXiv.1507.07905

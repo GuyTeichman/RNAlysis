@@ -85,7 +85,7 @@ def get_gene_id_types() -> typing.Tuple[str, ...]:
         gene_id_types = parsing.data_to_tuple(io.get_legal_gene_id_types()[0].keys())
     except requests.exceptions.ConnectionError:
         gene_id_types = tuple()
-        warnings.warn('Failed to retreive gene ID mapping data from UniProtKB. '
+        warnings.warn('Failed to retrieve gene ID mapping data from UniProtKB. '
                       'Some features may not work as intended. '
                       'To fix this issue, make sure your computer has internet connection, '
                       'and restart RNAlysis. ')
@@ -98,7 +98,7 @@ def get_panther_taxons() -> typing.Tuple[str, ...]:
         taxons = io.get_legal_panther_taxons()
     except (requests.exceptions.ConnectionError, requests.exceptions.HTTPError):
         taxons = tuple()
-        warnings.warn('Failed to retreive legal taxons from PantherDB. '
+        warnings.warn('Failed to retrieve legal taxons from PantherDB. '
                       'Some features may not work as intended. '
                       'To fix this issue, make sure your computer has internet connection, '
                       'and restart RNAlysis. ')
@@ -111,7 +111,7 @@ def get_phylomedb_taxons() -> typing.Tuple[str, ...]:
         taxons = io.get_legal_phylomedb_taxons()
     except ftplib.all_errors:
         taxons = tuple()
-        warnings.warn('Failed to retreive legal taxons from PhylomeDB. '
+        warnings.warn('Failed to retrieve legal taxons from PhylomeDB. '
                       'Some features may not work as intended. '
                       'To fix this issue, make sure your computer has internet connection, '
                       'and restart RNAlysis. ')
@@ -124,7 +124,7 @@ def get_ensembl_taxons() -> typing.Tuple[str, ...]:
         taxons = parsing.data_to_tuple(io.get_legal_ensembl_taxons())
     except (requests.exceptions.ConnectionError, tenacity.RetryError):
         taxons = tuple()
-        warnings.warn('Failed to retreive legal taxons from Ensembl. '
+        warnings.warn('Failed to retrieve legal taxons from Ensembl. '
                       'Some features may not work as intended. '
                       'To fix this issue, make sure your computer has internet connection, '
                       'and restart RNAlysis. ')
