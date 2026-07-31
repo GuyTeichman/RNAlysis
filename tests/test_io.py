@@ -1415,6 +1415,72 @@ class TestOrthoInspectorOrthologMapper:
         if non_unique_mode == 'first':
             assert ortholog_one2one.mapping_dict == {'G5EDF7': 'A8XPU4', 'P34544': 'A8XT55'}
 
+    def test_retry_policy_does_not_retry_read_timeouts(self):
+        # Locks in the second half of the fix: a stalled read must fail fast (so get_orthologs can
+        # fall back to another database) instead of being retried against the same dead endpoint.
+        assert OrthoInspectorOrthologMapper.RETRIES.read == 0
+
+    def test_get_databases_sets_request_timeout(self):
+        # Regression guard: a stalled OrthoInspector server must never hang RNAlysis indefinitely,
+        # so every request must be issued with a timeout.
+        session = MagicMock()
+        response = MagicMock()
+        response.json.return_value = {'data': ['DB1', 'DB2', 'DB3', 'DB4']}
+        response.raise_for_status.return_value = None
+        session.get.return_value = response
+
+        OrthoInspectorOrthologMapper.get_databases(session=session)
+
+        assert session.get.called
+        _, kwargs = session.get.call_args
+        assert kwargs.get('timeout') == OrthoInspectorOrthologMapper.REQUEST_TIMEOUT
+
+    # A stalled database surfaces as a ReadTimeout (no retries) or, once wrapped by requests through
+    # the retry machinery, a ConnectionError; both subclass RequestException. Test the fallback for
+    # each so the guard matches whatever the real stack raises.
+    @pytest.mark.parametrize('stall_exception', [
+        requests.exceptions.ReadTimeout("stalled"),
+        requests.exceptions.ConnectionError("Max retries exceeded (Caused by ReadTimeoutError)")])
+    def test_get_orthologs_times_out_and_falls_back_to_next_database(self, monkeypatch, stall_exception):
+        # 'auto' tries the largest database first; if that database stalls (a real-world OrthoInspector
+        # failure mode), the request must time out so the existing fallback can move on to the next
+        # database. Without a timeout the request hangs forever.
+        mapper = OrthoInspectorOrthologMapper(map_to_organism=2, map_from_organism=1,
+                                              gene_id_type='UniProtKB AC/ID')
+        monkeypatch.setattr(OrthoInspectorOrthologMapper, 'get_database_organisms',
+                            staticmethod(lambda session=None: {'BigDB': {1, 2, 3, 4, 5}, 'SmallDB': {1, 2}}))
+        monkeypatch.setattr(mapper, 'translate_ids', lambda ids, session=None: (['g1'], ['g1']))
+        monkeypatch.setattr(io, 'load_cached_file', lambda *a, **k: None)
+        monkeypatch.setattr(io, 'cache_file', lambda *a, **k: None)
+        monkeypatch.setattr(io, 'translate_mappings', lambda ids, translated, m1, m2: (m1, m2))
+
+        calls = []
+
+        def fake_get(url, **kwargs):
+            calls.append((url, kwargs))
+            if 'BigDB' in url:
+                raise stall_exception
+            resp = MagicMock()
+            resp.raise_for_status.return_value = None
+            resp.json.return_value = {'data': [{'type': 'One-to-One', 'species': 2,
+                                                'inparalogs': ['g1'], 'orthologs': ['o1']}]}
+            return resp
+
+        fake_session = MagicMock()
+        fake_session.get.side_effect = fake_get
+        monkeypatch.setattr(io, 'get_session', lambda retries: fake_session)
+
+        one2one, one2many = mapper.get_orthologs(('g1',), 'first', 'auto')
+
+        # every request carried a timeout (otherwise BigDB would hang instead of raising an error)
+        assert calls, "no requests were made"
+        assert all(kwargs.get('timeout') == OrthoInspectorOrthologMapper.REQUEST_TIMEOUT for _, kwargs in calls), \
+            "OrthoInspector ortholog requests must set a timeout"
+        # the largest DB stalled, so we fell back to the next one and still got a result
+        assert any('BigDB' in url for url, _ in calls)
+        assert any('SmallDB' in url for url, _ in calls)
+        assert one2one.mapping_dict == {'g1': 'o1'}
+
 
 @pytest.mark.skipif(not PANTHERDB_AVAILABLE, reason='PantherDB not available')
 class TestPantherOrthologMapper:
