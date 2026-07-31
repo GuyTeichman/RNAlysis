@@ -126,7 +126,7 @@ def set_biotype_ref_table_path(path: str = None):
     Biotype Reference Table path set as: my_biotype_reference_table_path
     """
     if path is None:
-        path = input("Please write the new Attribute Reference Table Path:\n")
+        path = input("Please write the new Biotype Reference Table Path:\n")
     settings.update_settings_file(path, __biotype_file_key__)
     print(f'Biotype Reference Table path set as: {path}')
 
