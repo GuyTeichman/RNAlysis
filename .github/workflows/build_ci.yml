@@ -40,7 +40,7 @@ jobs:
                 run: |
                     (Get-CimInstance Win32_PageFileUsage).AllocatedBaseSize
             -   name: Get repository
-                uses: actions/checkout@v4
+                uses: actions/checkout@v5
                 with:
                     # docs/build/ is ~600 MB of committed, generated Sphinx output that the tests
                     # never read. Excluding it from the sparse checkout speeds up "Get repository".
@@ -61,7 +61,7 @@ jobs:
             -   name: Cache LLVM and Clang
                 if: runner.os != 'macOS'
                 id: cache-llvm
-                uses: actions/cache@v4
+                uses: actions/cache@v5
                 with:
                     path: ${{ runner.temp }}/llvm
                     key: llvm
@@ -79,7 +79,7 @@ jobs:
             -   name: Cache R packages (DESeq2/limma/Rsubread)
                 # The DE/featureCounts integration tests compile these Bioconductor packages from
                 # source at test time; caching R_LIBS_USER avoids recompiling them on every run.
-                uses: actions/cache@v4
+                uses: actions/cache@v5
                 with:
                     path: ${{ github.workspace }}/.r-libs
                     key: r-libs-${{ runner.os }}-R4.4-${{ hashFiles('rnalysis/data_files/r_templates/*_install.R') }}
@@ -105,7 +105,7 @@ jobs:
                 run: Rscript -e "print('R script ran successfully')"
             -   name: Cache kallisto & bowtie2 binaries
                 id: cache-bio-tools
-                uses: actions/cache@v4
+                uses: actions/cache@v5
                 with:
                     path: |
                         ${{ github.workspace }}/kallisto
@@ -158,7 +158,7 @@ jobs:
                     bowtie2 --version
                     bowtie2-build-s --version
             -   name: Set up Python ${{ matrix.python-version }}
-                uses: actions/setup-python@v4
+                uses: actions/setup-python@v6
                 with:
                     python-version: ${{ matrix.python-version }}
                     cache: 'pip'
