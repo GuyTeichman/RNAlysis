@@ -427,6 +427,33 @@ def test_countfilter_pairplot_api(basic_countfilter, args, kwargs):
     plt.close('all')
 
 
+def test_countfilter_pairplot_shows_spearman_of_numeric_columns(basic_countfilter):
+    # Regression: pairplot annotated each cell with spearmanr of sample_df indexed by seaborn's
+    # numeric-only axis positions, but sample_df also contains the (non-numeric) gene-index column
+    # at position 0 -- so the first row/column's correlation was computed on the index column
+    # (garbage under old numpy, a hard crash under numpy 2.x). Each cell must show the Spearman
+    # correlation of *its own* pair of sample columns. We identify each cell's pair from its axis
+    # labels (which seaborn sets to the plotted column names) -- an independent path from the fix.
+    import re
+    from scipy.stats import spearmanr
+    fig = basic_countfilter.pairplot(show_corr=True, log2=False)
+    try:
+        checked = 0
+        for ax in fig.axes:
+            annotations = [t.get_text() for t in ax.texts if 'Spearman' in t.get_text()]
+            if not annotations:
+                continue
+            x_col, y_col = ax.get_xlabel(), ax.get_ylabel()
+            assert x_col and y_col and x_col != y_col  # a real off-diagonal sample pair, not the index
+            expected = f"{spearmanr(basic_countfilter.df[:, [x_col, y_col]])[0]:.2f}"
+            shown = re.search(r'Spearman.*?=\s*(-?\d+\.\d+)', annotations[0]).group(1)
+            assert shown == expected, f"cell ({y_col}, {x_col}): shown {shown} != expected {expected}"
+            checked += 1
+        assert checked >= 1  # at least one off-diagonal cell was actually verified
+    finally:
+        plt.close('all')
+
+
 @pytest.mark.parametrize('args,kwargs,xfail', [
     (tuple(), dict(), False),
     ((['cond1', 'cond2'],), dict(metric='euclidean', linkage='Ward'), False),

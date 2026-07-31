@@ -3548,6 +3548,10 @@ class CountFilter(Filter):
             title = 'Pairplot' + log2 * ' (logarithmic scale)'
         plt.suptitle(title, fontsize=title_fontsize)
 
+        # pairplt.x_vars / y_vars are the (numeric) columns seaborn actually plotted, in axis order.
+        # sample_df also holds the non-numeric gene-index column at position 0, so indexing it by the
+        # raw axis position would feed the index column into spearmanr for the first row/column
+        # (a wrong value under older NumPy, a crash under NumPy 2.x). Index by the plotted columns.
         for i, row in enumerate(pairplt.axes):
             for j, ax in enumerate(row[0:i + 1]):
                 ax.set_xlabel(ax.get_xlabel(), fontsize=label_fontsize)
@@ -3557,7 +3561,7 @@ class CountFilter(Filter):
                 if i == j:
                     continue
                 if show_corr:
-                    spearman_corr = spearmanr(sample_df[:, [i, j]])[0]
+                    spearman_corr = spearmanr(sample_df[:, [pairplt.x_vars[i], pairplt.x_vars[j]]])[0]
                     ax.text(0.05, 0.9, f"Spearman \u03C1={spearman_corr:.2f}", transform=ax.transAxes)
 
         pairplt.figure.set_size_inches(9, 9)

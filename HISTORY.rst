@@ -7,6 +7,7 @@ History
 
 Fixed
 ******
+* Fixed a bug in ``CountFilter.pairplot`` where the Spearman correlation shown for the first row/column of the plot was computed against the gene-index column instead of a sample, producing an incorrect value (and, with recent NumPy versions, an error). The correlations are now always computed between the correct pair of samples.
 * Fixed a bug where mapping orthologs through the OrthoInspector service could hang indefinitely when one of its databases stopped responding (OrthoInspector relocated its API, and its largest database can stall). OrthoInspector requests now use a timeout, target OrthoInspector's current API host directly, and automatically fall back to the next available database.
 
 
