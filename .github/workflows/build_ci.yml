@@ -2,6 +2,13 @@ name: Build CI
 
 on:
     pull_request:
+        # Skip CI for documentation-only PRs. The job still runs whenever a PR changes at least one
+        # file that is NOT matched below (e.g. a code change bundled with a HISTORY.rst update).
+        paths-ignore:
+            - '**/*.md'
+            - '**/*.rst'
+            - 'docs/**'
+            - '.claude/**'
 jobs:
     build:
 
@@ -136,8 +143,12 @@ jobs:
                 run: coverage run --append --source=rnalysis/ -m pytest -m integration tests/
             -   name: End-to-end (GUI) tests
                 run: coverage run --append --source=rnalysis/ -m pytest -m e2e tests/
+            # Interactive tmate debug session on failure. Disabled by default: tmate holds the runner
+            # open until the session is closed or times out, which freezes the job on every failure.
+            # Re-enable on demand by setting the repository variable ENABLE_TMATE to 'true'.
             -   name: Setup tmate session if tests fail
-                if: failure()
+                if: failure() && vars.ENABLE_TMATE == 'true'
+                timeout-minutes: 15
                 uses: mxschmitt/action-tmate@v3
             -   name: Generate lcov file
                 run: coverage lcov
