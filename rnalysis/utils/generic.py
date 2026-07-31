@@ -286,7 +286,7 @@ def sanitize_variable_name(name: str) -> str:
     Sanitize a string to turn it into a legal variable name in R/Python.
     :param name: name to sanitize
     :type name: str
-    :return: sanitizeed name
+    :return: sanitized name
     :rtype: str
     """
     new_name = name.rstrip().replace(' ', '_')

@@ -77,7 +77,7 @@ of things that could be improved in the source code, and of possible algorithmic
 *RNAlysis* Design Philosophy
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-As a guiding priniple for future development of *RNAlysis*, see this short list of the general design principle *RNAlysis* should follow:
+As a guiding principle for future development of *RNAlysis*, see this short list of the general design principles *RNAlysis* should follow:
 
 * **Universality** - *RNAlysis* should be usable on most computers. This means new features should be supported by commonly-used operating systems (Windows, Linux, MacOS) and currently supported Python versions. In the best case scenario, users who open *RNAlysis* should never ask themselves "which of these functions/modules are supported by my operating system?"
 * **Graphical and Programmatic support** - The majority of *RNAlysis* features should be usable both in the Graphical User Interface, and in Python scripts.
@@ -93,26 +93,30 @@ Ready to contribute? Here's how to set up `rnalysis` for local development.
 
     $ git clone git@github.com:your_name_here/rnalysis.git
 
-3. Install your local copy into a virtualenv. Assuming you have virtualenvwrapper installed, this is how you set up your fork for local development::
+3. Install your local copy into a virtual environment::
 
-    $ mkvirtualenv rnalysis
     $ cd rnalysis/
-    $ python setup.py develop
+    $ python -m venv venv
+    $ source venv/bin/activate    # on Windows: venv\Scripts\activate
+    $ pip install -e .[all]
+    $ pip install -r requirements_dev.txt
 
-4. Create a branch for local development::
+4. Create a branch for local development, based on the ``development`` branch
+   (``development`` is the integration branch; ``master`` only receives ``development``
+   at a version release)::
 
+    $ git checkout development
     $ git checkout -b name-of-your-bugfix-or-feature
 
    Now you can make your changes locally.
 
-5. When you're done making changes, check that your changes pass flake8 and the
-   tests, including testing other Python versions with tox::
+5. When you're done making changes, check that the tests still pass::
 
-    $ flake8 rnalysis tests
-    $ python setup.py test or py.test
-    $ tox
+    $ pytest tests/
 
-   To get flake8 and tox, just pip install them into your virtualenv.
+   While iterating you can run a single module, e.g. ``pytest tests/test_filtering.py``.
+   Note that the full suite is long and some tests require R, kallisto, bowtie2, or network
+   access. New code should come with tests.
 
 6. Commit your changes and push your branch to GitHub::
 
@@ -120,7 +124,7 @@ Ready to contribute? Here's how to set up `rnalysis` for local development.
     $ git commit -m "Your detailed description of your changes."
     $ git push origin name-of-your-bugfix-or-feature
 
-7. Submit a pull request through the GitHub website.
+7. Submit a pull request through the GitHub website, targeting the ``development`` branch.
 
 Pull Request Guidelines
 -----------------------
@@ -131,27 +135,31 @@ Before you submit a pull request, check that it meets these guidelines:
 2. If the pull request adds functionality, the docs should be updated. Put
    your new functionality into a function with a docstring, and add the
    feature to the list in README.rst.
-3. The pull request should work for Python versions 3.7 - 3.10, and for PyPy. Check
-   https://coveralls.io/github/GuyTeichman/RNAlysis
-   and make sure that the tests pass for all supported Python versions.
+3. Open the pull request against the ``development`` branch.
+4. The pull request should work across the supported Python versions (currently 3.10 - 3.14)
+   on Windows, macOS, and Linux. GitHub Actions runs this matrix automatically on every pull
+   request; make sure all jobs pass. Coverage is reported at
+   https://coveralls.io/github/GuyTeichman/RNAlysis.
 
 Tips
 ----
 
 To run a subset of tests::
 
-$ py.test tests.test_rnalysis
+$ pytest tests/test_filtering.py
 
 
 Deploying
 ---------
 
 A reminder for the maintainers on how to deploy.
-Make sure all your changes are committed (including an entry in HISTORY.rst).
-Then run::
+Make sure all your changes are committed (including an entry in HISTORY.rst), and that
+``development`` has been merged into ``master``.
+Then, from ``master``, run::
 
 $ bumpversion patch # possible: major / minor / patch
 $ git push
 $ git push --tags
 
-Travis will then deploy to PyPI if tests pass.
+GitHub Actions will then build and publish the release (PyPI package and standalone installers)
+when the tests pass.
