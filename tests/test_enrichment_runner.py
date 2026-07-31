@@ -401,8 +401,8 @@ def test_enrichment_runner_update_gene_set_single_list(monkeypatch):
 
 
 @pytest.mark.parametrize('exclude_unannotated', [True, False])
-@pytest.mark.parametrize('save_csv,', [True, False])
-@pytest.mark.parametrize('return_nonsignificant,', [True, False])
+@pytest.mark.parametrize('save_csv', [True, False])
+@pytest.mark.parametrize('return_nonsignificant', [True, False])
 @pytest.mark.parametrize('fname', ['fname', None])
 @pytest.mark.parametrize(
     'single_list,genes,pval_func,background_set',
