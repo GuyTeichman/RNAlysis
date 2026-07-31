@@ -268,7 +268,7 @@ def flatten(lst: list) -> list:
 
 def parse_docstring(docstring: str) -> Tuple[str, Dict[str, str]]:
     """
-    Parse a given docstring (str) to retreive the description text, as well as a dictionary of parameter descriptions.
+    Parse a given docstring (str) to retrieve the description text, as well as a dictionary of parameter descriptions.
 
     :param docstring: the docstring to be parsed
     :type docstring: str

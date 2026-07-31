@@ -1460,9 +1460,24 @@ class PhylomeDBOrthologMapper:
 
 
 class OrthoInspectorOrthologMapper:
-    API_URL = 'https://lbgi.fr/api/orthoinspector'
-    RETRIES = RandomExpRetry(total=3, backoff_factor=2, status_forcelist=[404, 500, 502, 503, 504])
+    # Canonical OrthoInspector API host. The former host, https://lbgi.fr/api/orthoinspector, now
+    # 301-redirects here; we point at the redirect target directly to avoid the extra round-trip and
+    # the dependency on the old host. If OrthoInspector relocates again, update this URL (the
+    # integration tests in tests/test_io.py will catch a stale host).
+    API_URL = 'https://api.bigest-icube.fr/orthoinspector'
+    # read=0: don't retry read timeouts (retries on connection errors and the retryable status
+    # codes below are still enabled). When an endpoint accepts the connection but stalls without
+    # sending a body (a real OrthoInspector failure mode for large databases, e.g. Eukaryota2023),
+    # retrying the *same* request just wastes another timeout — so we let it fail fast. This is
+    # deliberately class-wide: for get_orthologs the recovery is to fall back to a *different*
+    # database (see the loop below), and for get_databases/get_database_organisms a stalled read
+    # wouldn't be helped by a read-retry either.
+    RETRIES = RandomExpRetry(total=3, read=0, backoff_factor=2, status_forcelist=[404, 500, 502, 503, 504])
     HEADERS = {'accept': 'application/json'}
+    # (connect, read) timeout in seconds. Without this, a server that accepts the connection but
+    # never sends a response body would hang RNAlysis indefinitely instead of raising a catchable
+    # error and moving on to the next database.
+    REQUEST_TIMEOUT = (10, 30)
 
     def __init__(self, map_to_organism, map_from_organism, gene_id_type):
         self.gene_id_type = gene_id_type
@@ -1485,7 +1500,7 @@ class OrthoInspectorOrthologMapper:
         if session is None:
             session = get_session(OrthoInspectorOrthologMapper.RETRIES)
         url = f'{OrthoInspectorOrthologMapper.API_URL}/databases'
-        req = session.get(url)
+        req = session.get(url, timeout=OrthoInspectorOrthologMapper.REQUEST_TIMEOUT)
         req.raise_for_status()
         databases = frozenset(req.json()['data'])
         return databases
@@ -1499,7 +1514,7 @@ class OrthoInspectorOrthologMapper:
         db_organisms = {}
         for i, database in enumerate(databases):
             url = f'{OrthoInspectorOrthologMapper.API_URL}/{database}/species'
-            req = session.get(url)
+            req = session.get(url, timeout=OrthoInspectorOrthologMapper.REQUEST_TIMEOUT)
             req.raise_for_status()
             try:
                 content = req.json()
@@ -1545,7 +1560,7 @@ class OrthoInspectorOrthologMapper:
             for database in valid_dbs:
                 url = f'{self.API_URL}/{database}/species/{self.map_from_organism}/orthologs/{self.map_to_organism}'
                 try:
-                    req = session.get(url)
+                    req = session.get(url, timeout=self.REQUEST_TIMEOUT)
                     req.raise_for_status()
                     try:
                         content = req.json()['data']
