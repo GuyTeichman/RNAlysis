@@ -1460,7 +1460,11 @@ class PhylomeDBOrthologMapper:
 
 
 class OrthoInspectorOrthologMapper:
-    API_URL = 'https://lbgi.fr/api/orthoinspector'
+    # Canonical OrthoInspector API host. The former host, https://lbgi.fr/api/orthoinspector, now
+    # 301-redirects here; we point at the redirect target directly to avoid the extra round-trip and
+    # the dependency on the old host. If OrthoInspector relocates again, update this URL (the
+    # integration tests in tests/test_io.py will catch a stale host).
+    API_URL = 'https://api.bigest-icube.fr/orthoinspector'
     # read=0: don't retry read timeouts (retries on connection errors and the retryable status
     # codes below are still enabled). When an endpoint accepts the connection but stalls without
     # sending a body (a real OrthoInspector failure mode for large databases, e.g. Eukaryota2023),

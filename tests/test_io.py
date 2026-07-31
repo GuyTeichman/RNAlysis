@@ -1420,6 +1420,10 @@ class TestOrthoInspectorOrthologMapper:
         # fall back to another database) instead of being retried against the same dead endpoint.
         assert OrthoInspectorOrthologMapper.RETRIES.read == 0
 
+    def test_api_url_is_not_the_deprecated_redirecting_host(self):
+        # We point directly at the canonical host; the old lbgi.fr host only 301-redirects here.
+        assert 'lbgi.fr' not in OrthoInspectorOrthologMapper.API_URL
+
     def test_get_databases_sets_request_timeout(self):
         # Regression guard: a stalled OrthoInspector server must never hang RNAlysis indefinitely,
         # so every request must be issued with a timeout.
