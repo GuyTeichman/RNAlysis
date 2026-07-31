@@ -21,6 +21,15 @@ jobs:
         env:
             DISPLAY: ':99.0'
             HDF5_DISABLE_VERSION_CHECK: '2'
+            # Install R packages (DESeq2/limma/Rsubread) into a stable, cacheable location so they
+            # aren't recompiled from source on every run (see the "Cache R packages" step).
+            R_LIBS_USER: ${{ github.workspace }}/.r-libs
+            # Use the faster sys.monitoring coverage backend (Python >=3.12, coverage >=7.7).
+            COVERAGE_CORE: sysmon
+            # Only one job (Ubuntu / Python 3.13) collects coverage; every other job runs the tests
+            # without the coverage tracer, which is faster (most noticeably on Windows). This is the
+            # test-runner command the tier steps below invoke.
+            RUN_TESTS: ${{ (matrix.os == 'ubuntu-latest' && matrix.python-version == '3.13') && 'coverage run --append --source=rnalysis/ -m pytest' || 'python -m pytest' }}
         steps:
             -   name: Configure pagefile
                 if: runner.os == 'Windows'
@@ -32,6 +41,13 @@ jobs:
                     (Get-CimInstance Win32_PageFileUsage).AllocatedBaseSize
             -   name: Get repository
                 uses: actions/checkout@v4
+                with:
+                    # docs/build/ is ~600 MB of committed, generated Sphinx output that the tests
+                    # never read. Excluding it from the sparse checkout speeds up "Get repository".
+                    sparse-checkout: |
+                        /*
+                        !/docs/build
+                    sparse-checkout-cone-mode: false
             -   name: apt-get update (Linux)
                 if: runner.os == 'Linux'
                 run: sudo apt-get update
@@ -60,6 +76,15 @@ jobs:
                 uses: r-lib/actions/setup-r@v2
                 with:
                     r-version: '4.4' # The R version to download (if necessary) and use.
+            -   name: Cache R packages (DESeq2/limma/Rsubread)
+                # The DE/featureCounts integration tests compile these Bioconductor packages from
+                # source at test time; caching R_LIBS_USER avoids recompiling them on every run.
+                uses: actions/cache@v4
+                with:
+                    path: ${{ github.workspace }}/.r-libs
+                    key: r-libs-${{ runner.os }}-R4.4-${{ hashFiles('rnalysis/data_files/r_templates/*_install.R') }}
+                    restore-keys: |
+                        r-libs-${{ runner.os }}-R4.4-
             -   name: Install homebrew on Linux
                 if: runner.os == 'Linux'
                 uses: Homebrew/actions/setup-homebrew@master
@@ -78,46 +103,54 @@ jobs:
                     gcc -v -xc++ /dev/null -fsyntax-only
             -   name: Test R installation
                 run: Rscript -e "print('R script ran successfully')"
+            -   name: Cache kallisto & bowtie2 binaries
+                id: cache-bio-tools
+                uses: actions/cache@v4
+                with:
+                    path: |
+                        ${{ github.workspace }}/kallisto
+                        ${{ github.workspace }}/bowtie2-2.5.1-mingw-x86_64
+                    key: bio-tools-${{ runner.os }}-kallisto0.51.1-bowtie2v2.5.1
             -   name: Install kallisto
                 run: |
-                    if [ "$RUNNER_OS" == "Linux" ]; then
-                         wget  https://github.com/pachterlab/kallisto/releases/download/v0.51.1/kallisto_linux-v0.51.1.tar.gz
-                         tar -xvzf kallisto*.gz
-                         echo "${GITHUB_WORKSPACE}/kallisto" >> $GITHUB_PATH
-                    elif [ "$RUNNER_OS" == "macOS" ]; then
+                    # macOS needs the hdf5 runtime whether or not the binary was restored from cache.
+                    if [ "$RUNNER_OS" == "macOS" ]; then
                          brew install hdf5
                          # Trick dyld into using the newer hdf5 library version
-                         ln -s /opt/homebrew/opt/hdf5/lib/libhdf5.dylib /opt/homebrew/opt/hdf5/lib/libhdf5.310.dylib
-                         wget  https://github.com/pachterlab/kallisto/releases/download/v0.51.1/kallisto_mac_m1-v0.51.1.tar.gz
-                         tar -xvzf kallisto*.gz
-                         echo "${GITHUB_WORKSPACE}/kallisto" >> $GITHUB_PATH
-                    elif [ "$RUNNER_OS" == "Windows" ]; then
-                         choco install wget -y
-                         wget  https://github.com/pachterlab/kallisto/releases/download/v0.51.1/kallisto_windows-v0.51.1.tar.gz
-                         tar -xvzf kallisto*.gz
-                         echo "${GITHUB_WORKSPACE}/kallisto" >> $GITHUB_PATH
-                    else
-                         echo "$RUNNER_OS not supported"
-                         exit 1
+                         ln -sf /opt/homebrew/opt/hdf5/lib/libhdf5.dylib /opt/homebrew/opt/hdf5/lib/libhdf5.310.dylib
                     fi
+                    # Download only on a cache miss; the extracted 'kallisto' dir is restored otherwise.
+                    if [ ! -d "${GITHUB_WORKSPACE}/kallisto" ]; then
+                         if [ "$RUNNER_OS" == "Linux" ]; then
+                              wget  https://github.com/pachterlab/kallisto/releases/download/v0.51.1/kallisto_linux-v0.51.1.tar.gz
+                         elif [ "$RUNNER_OS" == "macOS" ]; then
+                              wget  https://github.com/pachterlab/kallisto/releases/download/v0.51.1/kallisto_mac_m1-v0.51.1.tar.gz
+                         elif [ "$RUNNER_OS" == "Windows" ]; then
+                              choco install wget -y
+                              wget  https://github.com/pachterlab/kallisto/releases/download/v0.51.1/kallisto_windows-v0.51.1.tar.gz
+                         else
+                              echo "$RUNNER_OS not supported"
+                              exit 1
+                         fi
+                         tar -xvzf kallisto*.gz
+                    fi
+                    echo "${GITHUB_WORKSPACE}/kallisto" >> $GITHUB_PATH
                 shell: bash
                 continue-on-error: true
             -   name: Test kallisto installation
                 run: kallisto version
             -   name: Install bowtie2
                 run: |
-                    if [ "$RUNNER_OS" == "Linux" ]; then
-                         brew install bowtie2
-                    elif [ "$RUNNER_OS" == "macOS" ]; then
-                         brew install bowtie2
-                    elif [ "$RUNNER_OS" == "Windows" ]; then
-                         choco install wget -y
-                         wget  https://github.com/BenLangmead/bowtie2/releases/download/v2.5.1/bowtie2-2.5.1-mingw-x86_64.zip
-                         7z x bowtie2-2.5.1-mingw-x86_64.zip
+                    if [ "$RUNNER_OS" == "Windows" ]; then
+                         # Download only on a cache miss; the extracted dir is restored otherwise.
+                         if [ ! -d "${GITHUB_WORKSPACE}/bowtie2-2.5.1-mingw-x86_64" ]; then
+                              choco install wget -y
+                              wget  https://github.com/BenLangmead/bowtie2/releases/download/v2.5.1/bowtie2-2.5.1-mingw-x86_64.zip
+                              7z x bowtie2-2.5.1-mingw-x86_64.zip
+                         fi
                          echo "${GITHUB_WORKSPACE}/bowtie2-2.5.1-mingw-x86_64" >> $GITHUB_PATH
                     else
-                         echo "$RUNNER_OS not supported"
-                         exit 1
+                         brew install bowtie2
                     fi
                 shell: bash
             -   name: Test bowtie2 installation
@@ -134,15 +167,19 @@ jobs:
                     python -m pip install --upgrade pip
                     python -m pip install --upgrade -r requirements_dev.txt
                     python -m pip install .[all]
+            -   name: Prepare R library cache dir
+                # R only puts R_LIBS_USER on .libPaths() (and installs there) if the dir exists.
+                run: python -c "import os, pathlib; pathlib.Path(os.environ['R_LIBS_USER']).mkdir(parents=True, exist_ok=True)"
             # Tests run in tiers (unit -> integration -> e2e). A failure in a faster tier stops the
-            # slower ones (fail-fast), and coverage is accumulated across tiers with --append.
-            # Tiers are assigned automatically in tests/conftest.py; see pytest.ini for definitions.
+            # slower ones (fail-fast). Only the coverage job wraps them in `coverage run` (see
+            # RUN_TESTS above); every other job invokes pytest directly. Tiers are assigned
+            # automatically in tests/conftest.py; see pytest.ini for definitions.
             -   name: Unit tests
-                run: coverage run --source=rnalysis/ -m pytest -m unit tests/
+                run: ${{ env.RUN_TESTS }} -m unit tests/
             -   name: Integration tests
-                run: coverage run --append --source=rnalysis/ -m pytest -m integration tests/
+                run: ${{ env.RUN_TESTS }} -m integration tests/
             -   name: End-to-end (GUI) tests
-                run: coverage run --append --source=rnalysis/ -m pytest -m e2e tests/
+                run: ${{ env.RUN_TESTS }} -m e2e tests/
             # Interactive tmate debug session on failure. Disabled by default: tmate holds the runner
             # open until the session is closed or times out, which freezes the job on every failure.
             # Re-enable on demand by setting the repository variable ENABLE_TMATE to 'true'.
@@ -151,10 +188,11 @@ jobs:
                 timeout-minutes: 15
                 uses: mxschmitt/action-tmate@v3
             -   name: Generate lcov file
+                if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.13'
                 run: coverage lcov
             -   name: Coveralls Parallel
                 uses: coverallsapp/github-action@v2
-                if: runner.os != 'macOS'
+                if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.13'
                 continue-on-error: true
                 with:
                     flag-name: run-${{ join(matrix.*, '-') }}
