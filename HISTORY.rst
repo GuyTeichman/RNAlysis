@@ -2,6 +2,14 @@
 History
 =======
 
+4.2.1 (unreleased)
+-------------------
+
+Fixed
+******
+* Fixed a bug where mapping orthologs through the OrthoInspector service could hang indefinitely when one of its databases stopped responding (OrthoInspector relocated its API, and its largest database can stall). OrthoInspector requests now use a timeout and automatically fall back to the next available database.
+
+
 4.2.0 (2026-05-30)
 -------------------
 
