@@ -2,6 +2,14 @@
 History
 =======
 
+4.2.1 (unreleased)
+-------------------
+
+Fixed
+******
+* Fixed a bug in ``CountFilter.pairplot`` where the Spearman correlation shown for the first row/column of the plot was computed against the gene-index column instead of a sample, producing an incorrect value (and, with recent NumPy versions, an error). The correlations are now always computed between the correct pair of samples.
+
+
 4.2.0 (2026-05-30)
 -------------------
 
