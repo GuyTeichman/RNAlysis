@@ -88,9 +88,19 @@ known qtbot CI flakiness — write deterministic, well-scoped assertions.
 
 ---
 
+## Branching & releases
+
+- **`development`** = long-lived integration branch; **`master`** = stable/released default branch.
+- Work happens on **feature/fix branches cut from `development`**, merged back into `development`
+  via PR. `master` receives `development` only at a **version release** (then `bumpversion` +
+  the PyInstaller build workflow produce the release).
+- So: never commit directly to `master` or `development`; branch off `development` and target
+  your PR at `development`.
+
 ## Finishing a change (PR + review)
 
-1. Confirm you're on a **branch**, not `master`.
+1. Confirm you're on a **feature branch cut from `development`** (never `master`/`development`
+   directly), and that the PR will **target `development`**.
 2. Relevant tests green locally; state clearly what you couldn't run (R / network / Qt).
 3. `HISTORY.rst` updated; `README.rst` updated if user-facing.
 4. Open the PR (`gh`). PR body ends with the Claude Code attribution footer.

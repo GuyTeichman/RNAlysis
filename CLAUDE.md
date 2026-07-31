@@ -98,7 +98,10 @@ Class hierarchy (public API): `Filter` → `CountFilter`, `DESeqFilter`, `FoldCh
 1. **TDD, always.** Red → green → refactor. Write a failing test first, make it pass, then
    clean up. New code must be covered. Use the `tdd` skill. Run the *relevant* test module(s)
    before calling anything done, and say plainly what you could **not** run (R / network / Qt paths).
-2. **Never commit to `master`.** Work on a branch; open a PR.
+2. **Branch model: feature branch → `development` → `master`.** `development` is the long-lived
+   integration branch; `master` is the stable/released default branch and only receives
+   `development` at a version release. **Never commit directly to `master` or `development`** —
+   cut a feature/fix branch off `development` and open a PR **into `development`**.
 3. **Plan-first for risky changes.** If a change touches a public API signature, the API→GUI
    reflection contract, or a serialized format (Pipeline YAML / session file / exported
    parameters), propose a short plan and wait for approval. Small localized fixes: just do it
