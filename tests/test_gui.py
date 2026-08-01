@@ -2254,6 +2254,35 @@ def test_MainWindow_shutdown_worker_threads_stops_threads(main_window):
     assert not main_window.job_thread.isRunning()
 
 
+def test_MainWindow_shutdown_worker_threads_waits_for_running_job(main_window, qtbot):
+    """A worker still running at close must be waited for (not abandoned -> the crash this fixes).
+    Proven by the job's side effect completing and the thread stopping after the helper returns."""
+    import time
+
+    finished = []
+
+    class _BlockingWorker(QtCore.QObject):
+        # mirrors the real setup: a worker moved to the job thread, run() wired to started, so the
+        # body executes *in* that thread (as opposed to a bare function, which queues to the caller)
+        @QtCore.pyqtSlot()
+        def run(self):
+            time.sleep(0.2)
+            finished.append(True)
+
+    thread = QtCore.QThread()
+    worker = _BlockingWorker()
+    worker.moveToThread(thread)
+    thread.started.connect(worker.run)
+    main_window.job_thread = thread
+    thread.start()
+    qtbot.waitUntil(thread.isRunning, timeout=2000)
+
+    main_window._shutdown_worker_threads()
+
+    assert finished == [True]           # the in-flight job ran to completion -> we actually waited
+    assert not thread.isRunning()
+
+
 def test_MainWindow_add_new_tab(main_window):
     main_window.new_table_action.trigger()
     assert main_window.tabs.count() == 2

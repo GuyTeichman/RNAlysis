@@ -3041,9 +3041,6 @@ class MainWindow(QtWidgets.QMainWindow):
     FEATURE_URL = 'https://github.com/GuyTeichman/RNAlysis/issues/new?assignees=&labels=feature+request&projects=' \
                   '&template=feature_request.yaml&title=Feature+Request%3A+'
     QUESTION_URL = 'https://github.com/GuyTeichman/RNAlysis/discussions'
-    #: Upper bound (ms) on how long closing waits for the job thread to finish an in-flight worker
-    #: before giving up, so a long-running analysis can't freeze the app on close.
-    JOB_THREAD_SHUTDOWN_TIMEOUT_MS = 10_000
 
     jobQueued = QtCore.pyqtSignal()
 
@@ -4420,9 +4417,14 @@ class MainWindow(QtWidgets.QMainWindow):
 
         The STDOUT listener's ``run()`` blocks on ``queue_stdout.get()`` and never returns to its
         event loop, so ``quit()`` alone can't stop it (and a bare ``wait()`` would hang forever).
-        Enqueue ``STOP_SIGNAL`` first to break that loop, then ``quit()`` + ``wait()``. The job
-        thread runs finite workers that quit it on completion, so it only needs ``quit()`` + a
-        bounded ``wait()`` (bounded so closing during a long-running job can't freeze the app).
+        Enqueue ``STOP_SIGNAL`` first to break that loop, then ``quit()`` + ``wait()``.
+
+        Both waits are unbounded on purpose. When the threads are idle (the common case, and every
+        e2e-test teardown) they return immediately. If a worker is still mid-run we wait for it to
+        finish rather than (a) abandon its thread -- the very crash this fixes -- or (b)
+        ``terminate()`` it, which Qt documents as unsafe (it can strand a held mutex/GIL and corrupt
+        state). A user who force-quits during a long job just kills the process, which the OS reclaims
+        without triggering the C++ "destroyed while running" crash.
         """
         listener = getattr(self, 'thread_stdout_queue_listener', None)
         if listener is not None:
@@ -4435,7 +4437,7 @@ class MainWindow(QtWidgets.QMainWindow):
         job_thread = getattr(self, 'job_thread', None)
         if job_thread is not None:
             job_thread.quit()
-            job_thread.wait(self.JOB_THREAD_SHUTDOWN_TIMEOUT_MS)
+            job_thread.wait()
 
     def closeEvent(self, event):  # pragma: no cover
 
