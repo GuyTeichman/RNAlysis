@@ -1099,6 +1099,28 @@ def test_stream_cached_parquet_to_csv_matches_eager(gui_cache_writer, tmp_path):
             cache_path.unlink()
 
 
+def test_stream_cached_parquet_to_csv_handles_legacy_index_column(tmp_path):
+    # legacy (pandas-era) session parquet files are copied raw into the cache and carry an
+    # '__index_level_0__' column that the eager load_table renames to ''. The exported CSV must match
+    # that eager output byte-for-byte, not leak the raw column name.
+    df = pl.DataFrame({'__index_level_0__': ['g1', 'g2'], 'a': [1, 2]})
+    filename = 'stream_legacy_index.parquet'
+    get_gui_cache_dir().mkdir(parents=True, exist_ok=True)
+    cache_path = get_gui_cache_dir().joinpath(filename)
+    dst = tmp_path.joinpath('out.csv')
+    try:
+        df.write_parquet(cache_path)  # simulate a raw legacy file placed in the cache by session load
+        stream_cached_parquet_to_csv(filename, dst)
+        assert dst.exists()
+        expected = tmp_path.joinpath('expected.csv')
+        save_table(load_table(cache_path), expected)  # the reference output the old eager path produced
+        assert dst.read_bytes() == expected.read_bytes()
+        assert b'__index_level_0__' not in dst.read_bytes()
+    finally:
+        if cache_path.exists():
+            cache_path.unlink()
+
+
 def test_stream_cached_parquet_to_csv_falls_back_to_eager(gui_cache_writer, tmp_path, monkeypatch):
     df = pl.DataFrame({'a': [1, 2, 3], 'b': [4, 5, 6]})
     filename = 'stream_fallback.parquet'

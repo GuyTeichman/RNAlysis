@@ -338,9 +338,18 @@ def stream_cached_parquet_to_csv(cached_filename: Union[str, Path], dst_path: Un
     src_path = get_gui_cache_dir().joinpath(cached_filename)
     flush_gui_cache_writes(src_path)  # the cached parquet may still be mid-write in the background
     dst_path = Path(dst_path)
+    streamed = False
     try:
-        pl.scan_parquet(src_path).sink_csv(dst_path)
+        lazy = pl.scan_parquet(src_path)
+        # legacy (pandas-era) session parquet files carry an '__index_level_0__' column that the eager
+        # load_table renames to ''. Streaming would skip that rename, so fall back to eager for those
+        # to keep exported CSVs byte-identical for old sessions. collect_schema() reads metadata only.
+        if '__index_level_0__' not in lazy.collect_schema().names():
+            lazy.sink_csv(dst_path)
+            streamed = True
     except Exception:  # the streaming engine can reject odd/edge files; the eager path always works
+        streamed = False
+    if not streamed:
         save_table(load_table(src_path), dst_path)
 
 
