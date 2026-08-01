@@ -1,0 +1,52 @@
+# Dependabot version-update configuration.
+# Docs: https://docs.github.com/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file
+#
+# Notes for this repo:
+#   * PRs target `development` (the integration branch), never `master` — see the branch model in
+#     CLAUDE.md. Dependabot would otherwise default to the repo's default branch (master).
+#   * versioning-strategy: increase-if-necessary — only opens a PR when the latest release falls
+#     OUTSIDE the range already declared in requirements*.txt / setup.py. In-range updates stay quiet;
+#     when a release exceeds an intentional cap (e.g. numpy <3, pandas <3, polars <1.44), Dependabot
+#     opens a CI-gated PR that *widens* the cap for review — it does not hold the cap silently. Add an
+#     `ignore` entry for a package if you'd rather it never be proposed for bumping past its cap.
+#   * For pip, routine minor/patch bumps are grouped into one PR to cut review noise; majors open
+#     individually so they get their own scrutiny. (The github-actions group batches all update types.)
+version: 2
+updates:
+  # --- Python dependencies (requirements*.txt + setup.py extras) ---------------------------------
+  - package-ecosystem: "pip"
+    directory: "/"
+    target-branch: "development"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    open-pull-requests-limit: 5
+    versioning-strategy: increase-if-necessary
+    labels:
+      - "dependencies"
+    commit-message:
+      prefix: "deps"
+    groups:
+      python-minor-patch:
+        patterns:
+          - "*"
+        update-types:
+          - "minor"
+          - "patch"
+
+  # --- GitHub Actions used in .github/workflows -------------------------------------------------
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    target-branch: "development"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    open-pull-requests-limit: 5
+    labels:
+      - "dependencies"
+    commit-message:
+      prefix: "ci"
+    groups:
+      github-actions:
+        patterns:
+          - "*"
