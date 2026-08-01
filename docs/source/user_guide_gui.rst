@@ -1137,7 +1137,7 @@ Enrichment analysis output
 Running enrichment analysis will calculate enrichment for each of the GO terms, and return a polars DataFrame in the following format:
 
 +-------------+------------------+--------------+-----+-------+----------------------+----------+----------+-------------+
-|             |       name       |    samples   | obs |   exp | log2_fold_enrichment |   pval   |   padj   | significant |
+|    GO ID    |       name       |    samples   | obs |   exp | log2_fold_enrichment |   pval   |   padj   | significant |
 +=============+==================+==============+=====+=======+======================+==========+==========+=============+
 |  GO:0001556 | oocyte maturation|    1327      | 451 | 319.52| 0.49722119558        | 0.0000999| 0.0000999| True        |
 +-------------+------------------+--------------+-----+-------+----------------------+----------+----------+-------------+
@@ -1293,7 +1293,7 @@ Enrichment analysis output
 Running enrichment analysis will calculate enrichment for each of the specified attributes, and return a polars DataFrame in the following format:
 
 +----------------+--------------+-----+-------+----------------------+----------+----------+-------------+
-|                |    samples   | obs |   exp | log2_fold_enrichment |   pval   |   padj   | significant |
+|      name      |    samples   | obs |   exp | log2_fold_enrichment |   pval   |   padj   | significant |
 +================+==============+=====+=======+======================+==========+==========+=============+
 |     attribute1 |    1327      | 451 | 319.52| 0.49722119558        | 0.0000999| 0.0000999| True        |
 +----------------+--------------+-----+-------+----------------------+----------+----------+-------------+
@@ -1365,7 +1365,7 @@ Non-Categorical Enrichment analysis output
 Running non-categorical enrichment analysis will calculate enrichment for each of the specified attributes, and return a polars DataFrame in the following format:
 
 +----------------+--------------+-------+--------+----------+----------+-------------+
-|                |    samples   |  obs  |  exp   |   pval   |   padj   | significant |
+|      name      |    samples   |  obs  |  exp   |   pval   |   padj   | significant |
 +================+==============+=======+========+==========+==========+=============+
 |     attribute1 |    1327      | 451   | 319.52 | 0.0000999| 0.0000999| True        |
 +----------------+--------------+-------+--------+----------+----------+-------------+

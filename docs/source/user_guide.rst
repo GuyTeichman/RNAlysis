@@ -256,26 +256,34 @@ but you can specify a specific number of lines to show.
 ::
 
     >>> d.head()
-                   baseMean  log2FoldChange  ...         pvalue           padj
-    WBGene00000002  6820.755327        7.567762  ...   0.000000e+00   0.000000e+00
-    WBGene00000003  3049.625670        9.138071  ...  4.660000e-302  4.280000e-298
-    WBGene00000004  1432.911791        8.111737  ...  6.400000e-237  3.920000e-233
-    WBGene00000005  4028.154186        6.534112  ...  1.700000e-228  7.800000e-225
-    WBGene00000006  1230.585240        7.157428  ...  2.070000e-216  7.590000e-213
-    <BLANKLINE>
-    [5 rows x 6 columns]
+    shape: (5, 7)
+    ┌────────────────┬─────────────┬────────────────┬──────────┬───────────┬─────────────┬─────────────┐
+    │                ┆ baseMean    ┆ log2FoldChange ┆ lfcSE    ┆ stat      ┆ pvalue      ┆ padj        │
+    │ ---            ┆ ---         ┆ ---            ┆ ---      ┆ ---       ┆ ---         ┆ ---         │
+    │ str            ┆ f64         ┆ f64            ┆ f64      ┆ f64       ┆ f64         ┆ f64         │
+    ╞════════════════╪═════════════╪════════════════╪══════════╪═══════════╪═════════════╪═════════════╡
+    │ WBGene00000002 ┆ 6820.755327 ┆ 7.567762       ┆ 0.142257 ┆ 53.197692 ┆ 0.0         ┆ 0.0         │
+    │ WBGene00000003 ┆ 3049.62567  ┆ 9.138071       ┆ 0.245989 ┆ 37.148359 ┆ 4.6600e-302 ┆ 4.2800e-298 │
+    │ WBGene00000004 ┆ 1432.911791 ┆ 8.111737       ┆ 0.246801 ┆ 32.867521 ┆ 6.4000e-237 ┆ 3.9200e-233 │
+    │ WBGene00000005 ┆ 4028.154186 ┆ 6.534112       ┆ 0.202467 ┆ 32.272543 ┆ 1.7000e-228 ┆ 7.8000e-225 │
+    │ WBGene00000006 ┆ 1230.58524  ┆ 7.157428       ┆ 0.227948 ┆ 31.399325 ┆ 2.0700e-216 ┆ 7.5900e-213 │
+    └────────────────┴─────────────┴────────────────┴──────────┴───────────┴─────────────┴─────────────┘
     >>> d.tail(8)
-                   baseMean  log2FoldChange  ...         pvalue           padj
-    WBGene00000022   365.813048        6.101303  ...  2.740000e-97  2.400000e-94
-    WBGene00000023  3168.566714        3.906719  ...  1.600000e-93  1.340000e-90
-    WBGene00000024   221.925724        4.801676  ...  1.230000e-84  9.820000e-82
-    WBGene00000025  2236.185837        2.477374  ...  1.910000e-81  1.460000e-78
-    WBGene00000026   343.648987       -4.037191  ...  2.320000e-75  1.700000e-72
-    WBGene00000027   175.142856        6.352044  ...  1.580000e-74  1.120000e-71
-    WBGene00000028   219.163200        3.913657  ...  3.420000e-72  2.320000e-69
-    WBGene00000029  1066.242402       -2.811281  ...  1.420000e-70  9.290000e-68
-    <BLANKLINE>
-    [8 rows x 6 columns]
+    shape: (8, 7)
+    ┌────────────────┬─────────────┬────────────────┬──────────┬────────────┬────────────┬────────────┐
+    │                ┆ baseMean    ┆ log2FoldChange ┆ lfcSE    ┆ stat       ┆ pvalue     ┆ padj       │
+    │ ---            ┆ ---         ┆ ---            ┆ ---      ┆ ---        ┆ ---        ┆ ---        │
+    │ str            ┆ f64         ┆ f64            ┆ f64      ┆ f64        ┆ f64        ┆ f64        │
+    ╞════════════════╪═════════════╪════════════════╪══════════╪════════════╪════════════╪════════════╡
+    │ WBGene00000022 ┆ 365.813048  ┆ 6.101303       ┆ 0.291484 ┆ 20.931891  ┆ 2.7400e-97 ┆ 2.4000e-94 │
+    │ WBGene00000023 ┆ 3168.566714 ┆ 3.906719       ┆ 0.190439 ┆ 20.514331  ┆ 1.6000e-93 ┆ 1.3400e-90 │
+    │ WBGene00000024 ┆ 221.925724  ┆ 4.801676       ┆ 0.246313 ┆ 19.494189  ┆ 1.2300e-84 ┆ 9.8200e-82 │
+    │ WBGene00000025 ┆ 2236.185837 ┆ 2.477374       ┆ 0.129606 ┆ 19.114626  ┆ 1.9100e-81 ┆ 1.4600e-78 │
+    │ WBGene00000026 ┆ 343.648987  ┆ -4.037191      ┆ 0.219781 ┆ -18.369115 ┆ 2.3200e-75 ┆ 1.7000e-72 │
+    │ WBGene00000027 ┆ 175.142856  ┆ 6.352044       ┆ 0.347777 ┆ 18.264706  ┆ 1.5800e-74 ┆ 1.1200e-71 │
+    │ WBGene00000028 ┆ 219.1632    ┆ 3.913657       ┆ 0.217802 ┆ 17.968851  ┆ 3.4200e-72 ┆ 2.3200e-69 │
+    │ WBGene00000029 ┆ 1066.242402 ┆ -2.811281      ┆ 0.158284 ┆ -17.761002 ┆ 1.4200e-70 ┆ 9.2900e-68 │
+    └────────────────┴─────────────┴────────────────┴──────────┴────────────┴────────────┴────────────┘
 
 We can also see the total number of rows and columns by accessing the 'shape' attribute::
 
@@ -414,25 +422,37 @@ Using the function Filter.filter_biotype_from_ref_table(), you can filter your g
 You can also view the number of genomic features belonging to each biotype using the function Filter.biotypes_from_ref_table()::
 
     >>> d = filtering.DESeqFilter("tests/test_files/test_deseq.csv")
-    >>> d.biotypes_from_ref_table()
-                    gene
-    biotype
-    protein_coding    26
-    pseudogene         1
-    unknown            1
+    >>> d.biotypes_from_ref_table(ref='tests/test_files/biotype_ref_table_for_tests.csv')
+    Biotype Reference Table used: tests/test_files/biotype_ref_table_for_tests.csv
+    shape: (3, 2)
+    ┌────────────────┬───────┐
+    │ biotype        ┆ count │
+    │ ---            ┆ ---   │
+    │ str            ┆ u32   │
+    ╞════════════════╪═══════╡
+    │ protein_coding ┆ 26    │
+    │ pseudogene     ┆ 1     │
+    │ unknown        ┆ 1     │
+    └────────────────┴───────┘
 
-Or view more elaborated descriptive statistics for eahc biotype by specifying return_format='long'::
+Or view more elaborated descriptive statistics for each biotype by specifying long_format=True::
 
-    >>> d.biotypes_from_ref_table(return_format='long', ref='tests/test_files/biotype_ref_table_for_tests.csv')
-
-                   baseMean               ...           padj
-                      count         mean  ...            75%            max
-    biotype                               ...
-    protein_coding     26.0  1823.089609  ...   1.005060e-90   9.290000e-68
-    pseudogene          1.0  2688.043701  ...   1.800000e-94   1.800000e-94
-    unknown             1.0  2085.995094  ...  3.070000e-152  3.070000e-152
-    <BLANKLINE>
-    [3 rows x 48 columns]
+    >>> d.biotypes_from_ref_table(long_format=True, ref='tests/test_files/biotype_ref_table_for_tests.csv')
+    Biotype Reference Table used: tests/test_files/biotype_ref_table_for_tests.csv
+    shape: (3, 49)
+    ┌───────────┬───────────┬───────────┬───────────┬───┬───────────┬───────────┬───────────┬──────────┐
+    │ biotype   ┆ baseMean_ ┆ baseMean_ ┆ baseMean_ ┆ … ┆ padj_25%  ┆ padj_50%  ┆ padj_75%  ┆ padj_max │
+    │ ---       ┆ count     ┆ mean      ┆ std       ┆   ┆ ---       ┆ ---       ┆ ---       ┆ ---      │
+    │ str       ┆ ---       ┆ ---       ┆ ---       ┆   ┆ f64       ┆ f64       ┆ f64       ┆ f64      │
+    │           ┆ f64       ┆ f64       ┆ f64       ┆   ┆           ┆           ┆           ┆          │
+    ╞═══════════╪═══════════╪═══════════╪═══════════╪═══╪═══════════╪═══════════╪═══════════╪══════════╡
+    │ protein_c ┆ 26.0      ┆ 1823.0896 ┆ 1796.5207 ┆ … ┆ 3.8506e-1 ┆ 1.1350e-1 ┆ 1.0051e-9 ┆ 9.2900e- │
+    │ oding     ┆           ┆ 09        ┆ 8         ┆   ┆ 76        ┆ 35        ┆ 0         ┆ 68       │
+    │ pseudogen ┆ 1.0       ┆ 2688.0437 ┆ null      ┆ … ┆ 1.8000e-9 ┆ 1.8000e-9 ┆ 1.8000e-9 ┆ 1.8000e- │
+    │ e         ┆           ┆ 01        ┆           ┆   ┆ 4         ┆ 4         ┆ 4         ┆ 94       │
+    │ unknown   ┆ 1.0       ┆ 2085.9950 ┆ null      ┆ … ┆ 3.0700e-1 ┆ 3.0700e-1 ┆ 3.0700e-1 ┆ 3.0700e- │
+    │           ┆           ┆ 94        ┆           ┆   ┆ 52        ┆ 52        ┆ 52        ┆ 152      │
+    └───────────┴───────────┴───────────┴───────────┴───┴───────────┴───────────┴───────────┴──────────┘
 
 
 Filtering DESeq2 output files with filtering.DESeqFilter
@@ -1013,17 +1033,21 @@ To perform a randomization test you need two :term:`FoldChangeFilter` objects: o
     Filtered 6 features, leaving 7 of the original 13 features. Filtering result saved to new object.
     >>> rand_test_res = f_test.randomization_test(f_background)
     Calculating...
-       group size  observed fold change  ...      pval  significant
-    0           7              2.806873  ...  0.360264        False
-    <BLANKLINE>
-    [1 rows x 5 columns]
+    shape: (1, 5)
+    ┌────────────┬──────────────────────┬──────────────────────┬──────────┬─────────────┐
+    │ group size ┆ observed fold change ┆ expected fold change ┆ pval     ┆ significant │
+    │ ---        ┆ ---                  ┆ ---                  ┆ ---      ┆ ---         │
+    │ f64        ┆ f64                  ┆ f64                  ┆ f64      ┆ bool        │
+    ╞════════════╪══════════════════════╪══════════════════════╪══════════╪═════════════╡
+    │ 7.0        ┆ 2.806873             ┆ 2.510859             ┆ 0.346265 ┆ false       │
+    └────────────┴──────────────────────┴──────────────────────┴──────────┴─────────────┘
 
 The output table would look like this:
 
 +------------+----------------------+----------------------+--------+-------------+
 | group size | observed fold change | expected fold change | pval   | significant |
 +============+======================+======================+========+=============+
-|   7        |       2.806873       |  2.51828             |0.36026 | False       |
+|   7        |       2.806873       |  2.510859            |0.346265| False       |
 +------------+----------------------+----------------------+--------+-------------+
 
 Sequentially applying filtering operations using Pipelines
@@ -1135,16 +1159,26 @@ If we apply a Pipeline with functions that return additional outputs (such as Fi
     Biotype Reference Table used: tests/test_files/biotype_ref_table_for_tests.csv
     Filtered 2 features, leaving 26 of the original 28 features. Filtering result saved to new object.
     Biotype Reference Table used: tests/test_files/biotype_ref_table_for_tests.csv
-    >>> print(output_dict['biotypes_1'])
-                    gene
-    biotype
-    protein_coding    26
-    pseudogene         1
-    unknown            1
-    >>> print(output_dict['biotypes_2'])
-                    gene
-    biotype
-    protein_coding    26
+    >>> print(output_dict['biotypes_from_ref_table_1'])
+    shape: (3, 2)
+    ┌────────────────┬───────┐
+    │ biotype        ┆ count │
+    │ ---            ┆ ---   │
+    │ str            ┆ u32   │
+    ╞════════════════╪═══════╡
+    │ pseudogene     ┆ 1     │
+    │ protein_coding ┆ 26    │
+    │ unknown        ┆ 1     │
+    └────────────────┴───────┘
+    >>> print(output_dict['biotypes_from_ref_table_2'])
+    shape: (1, 2)
+    ┌────────────────┬───────┐
+    │ biotype        ┆ count │
+    │ ---            ┆ ---   │
+    │ str            ┆ u32   │
+    ╞════════════════╪═══════╡
+    │ protein_coding ┆ 26    │
+    └────────────────┴───────┘
     >>> # apply the Pipeline inplace
     >>> output_dict_inplace = pipe.apply_to(d)
     Biotype Reference Table used: tests/test_files/biotype_ref_table_for_tests.csv
@@ -1152,7 +1186,7 @@ If we apply a Pipeline with functions that return additional outputs (such as Fi
     Filtered 2 features, leaving 26 of the original 28 features. Filtered inplace.
     Biotype Reference Table used: tests/test_files/biotype_ref_table_for_tests.csv
 
-When an output dictionary is returned, the keys in the dictionary will be the name of the function appended to the number of call made to this function in the Pipeline (in the example above, the first call to 'biotypes_from_ref_table' is under the key 'biotypes_1', and the second call to 'biotypes_from_ref_table' is under the key 'biotypes_2'); and the values in the dictionary will be the returned values from those functions.
+When an output dictionary is returned, the keys in the dictionary will be the name of the function appended to the number of call made to this function in the Pipeline (in the example above, the first call to 'biotypes_from_ref_table' is under the key 'biotypes_from_ref_table_1', and the second call to 'biotypes_from_ref_table' is under the key 'biotypes_from_ref_table_2'); and the values in the dictionary will be the returned values from those functions.
 We can apply the same Pipeline to as many Filter objects as we want, as long as the type of the Filter object matches the Pipeline's `filter_type`.
 
 
@@ -1403,7 +1437,7 @@ Enrichment analysis output
 Running enrichment analysis will calculate enrichment for each of the GO terms, and return a polars DataFrame in the following format:
 
 +-------------+------------------+--------------+-----+-------+----------------------+----------+----------+-------------+
-|             |       name       |    samples   | obs |   exp | log2_fold_enrichment |   pval   |   padj   | significant |
+|    GO ID    |       name       |    samples   | obs |   exp | log2_fold_enrichment |   pval   |   padj   | significant |
 +=============+==================+==============+=====+=======+======================+==========+==========+=============+
 |  GO:0001556 | oocyte maturation|    1327      | 451 | 319.52| 0.49722119558        | 0.0000999| 0.0000999| True        |
 +-------------+------------------+--------------+-----+-------+----------------------+----------+----------+-------------+
@@ -1616,7 +1650,7 @@ Enrichment analysis output
 Running enrichment analysis will calculate enrichment for each of the specified attributes, and return a polars DataFrame in the following format:
 
 +----------------+--------------+-----+-------+----------------------+----------+----------+-------------+
-|                |    samples   | obs |   exp | log2_fold_enrichment |   pval   |   padj   | significant |
+|      name      |    samples   | obs |   exp | log2_fold_enrichment |   pval   |   padj   | significant |
 +================+==============+=====+=======+======================+==========+==========+=============+
 |     attribute1 |    1327      | 451 | 319.52| 0.49722119558        | 0.0000999| 0.0000999| True        |
 +----------------+--------------+-----+-------+----------------------+----------+----------+-------------+
@@ -1711,7 +1745,7 @@ Non-Categorical Enrichment analysis output
 Running non-categorical enrichment analysis will calculate enrichment for each of the specified attributes, and return a polars DataFrame in the following format:
 
 +----------------+--------------+-------+--------+----------+----------+-------------+
-|                |    samples   |  obs  |  exp   |   pval   |   padj   | significant |
+|      name      |    samples   |  obs  |  exp   |   pval   |   padj   | significant |
 +================+==============+=======+========+==========+==========+=============+
 |     attribute1 |    1327      | 451   | 319.52 | 0.0000999| 0.0000999| True        |
 +----------------+--------------+-------+--------+----------+----------+-------------+
