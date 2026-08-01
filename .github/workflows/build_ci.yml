@@ -1,6 +1,8 @@
 name: Build CI
 
 on:
+    # A pull request (default activity types: opened, synchronize, reopened) is the pre-merge
+    # coverage and the main way CI fires. Docs-only PRs are skipped (see paths-ignore).
     pull_request:
         # Skip CI for documentation-only PRs. The job still runs whenever a PR changes at least one
         # file that is NOT matched below (e.g. a code change bundled with a HISTORY.rst update).
@@ -9,22 +11,34 @@ on:
             - '**/*.rst'
             - 'docs/**'
             - '.claude/**'
-    # Warm the Actions cache on the long-lived integration branch. GitHub scopes caches by ref and
-    # only lets a run restore caches created in (a) its own ref, (b) its base branch, or (c) the
-    # default branch -- NEVER a sibling PR's ref. So without a run on `development`, every PR starts
-    # cold and writes its own ~5 GB copy of the heavy OS/tool caches (LLVM, kallisto/bowtie2, uv
-    # wheels) into its own ref scope; a handful of open PRs then blows past the 10 GB repo cap and
-    # thrashes (evict -> re-download -> re-save). Running here seeds those caches on `development`
-    # so every PR branched off it restores them instead of rebuilding. The test tiers are skipped
-    # on push (see the `github.event_name == 'pull_request'` guards below) -- this run exists only
-    # to populate caches, so it stops after the setup/install steps.
+    # A merge/release into `master` (the default, released branch) runs the full suite. We do NOT
+    # trigger on pushes to `development`: every merge into `development` arrives via a pull request
+    # that was already tested, so a push-triggered run there is redundant -- this replaces the former
+    # `development` cache-warming push. (Bonus: a run here writes the heavy OS/tool caches on the
+    # default branch, and GitHub lets ANY ref restore default-branch caches, so open PRs branched off
+    # `development` still warm-start from them.)
     push:
-        branches: [ development ]
+        branches: [ master ]
         paths-ignore:
             - '**/*.md'
             - '**/*.rst'
             - 'docs/**'
             - '.claude/**'
+            # The release workflow (pyinstaller.yml) auto-commits generated quick-start video
+            # checksums to `master`; that commit carries no code change, so skip it here to avoid a
+            # redundant full matrix run per release (its sibling `latest_changelog.md` is already
+            # covered by `**/*.md`).
+            - 'rnalysis/gui/videos/checksums/**'
+    # Weekly run (Mondays 06:00 UTC) to catch external-service drift / bit-rot on BOTH long-lived
+    # branches. GitHub CONSTRAINT: a `schedule` trigger only ever runs the copy of this workflow that
+    # lives on the repository's DEFAULT branch (`master`) -- there is NO way to schedule the
+    # `development` copy of the file, so a naive "cron on the development branch" is impossible.
+    # Instead this single scheduled run tests both branch states: `master` is checked out by default,
+    # and `development` is added as a second value of the `ref` matrix dimension (see
+    # `strategy.matrix.ref` below) and checked out explicitly. (This trigger only takes effect once
+    # this workflow file has reached `master`.)
+    schedule:
+        - cron: '0 6 * * 1'
 jobs:
     build:
 
@@ -34,6 +48,13 @@ jobs:
             matrix:
                 os: [ ubuntu-latest, windows-latest, macos-latest ]
                 python-version: [ '3.12', '3.13', '3.14' ]
+                # Which branch state to test. On the weekly `schedule` run this expands to two refs so
+                # the suite runs against BOTH branches (see the constraint note in `on:` above):
+                # '' -> the ref that triggered the run (for a scheduled run that is the default branch,
+                # `master`), and 'development' -> that branch's tip, checked out explicitly. For
+                # pull_request/push events the only value is '' (checkout uses the triggering ref), so
+                # those runs stay at one job per OS/Python cell exactly as before.
+                ref: ${{ github.event_name == 'schedule' && fromJSON('["", "development"]') || fromJSON('[""]') }}
         env:
             DISPLAY: ':99.0'
             HDF5_DISABLE_VERSION_CHECK: '2'
@@ -73,6 +94,11 @@ jobs:
             -   name: Get repository
                 uses: actions/checkout@v7
                 with:
+                    # Branch state to test. Empty for pull_request/push events (checkout falls back to
+                    # the triggering ref); on the weekly schedule the matrix sets this to '' (default
+                    # branch = master) and 'development', so both branches are exercised. See
+                    # `strategy.matrix.ref` and the scheduling note in `on:` above.
+                    ref: ${{ matrix.ref }}
                     # docs/build/ is ~600 MB of committed, generated Sphinx output that the tests
                     # never read. Excluding it from the sparse checkout speeds up "Get repository".
                     sparse-checkout: |
@@ -98,8 +124,9 @@ jobs:
                     # Key must carry the OS and LLVM version. The bare `llvm` key silently restored a
                     # stale cache on any version bump (the path-derived cache "version" only segregates
                     # Linux from Windows, not LLVM 14 from a future 15). ~1 GB (Linux) / ~0.7 GB
-                    # (Windows) per copy -- seeded once on `development` (see the `push` trigger) and
-                    # restored by PRs rather than re-downloaded into each PR's own cache scope.
+                    # (Windows) per copy -- seeded by the push-to-`master` and weekly scheduled runs
+                    # (GitHub lets any ref restore default-branch caches) and restored by PRs rather
+                    # than re-downloaded into each PR's own cache scope.
                     key: llvm-${{ runner.os }}-14.0
             -   name: Install LLVM and Clang
                 if: runner.os != 'macOS'
@@ -268,8 +295,6 @@ jobs:
             # in `coverage run` (see RUN_TESTS above); every other job invokes pytest directly. Tiers
             # are assigned automatically in tests/conftest.py; see pytest.ini for definitions.
             -   name: Unit tests
-                # Skipped on the `development` cache-warming push; runs only for PRs (see `on:` above).
-                if: github.event_name == 'pull_request'
                 run: ${{ env.RUN_TESTS }} -m unit --durations=25 tests/
             # The network/web-API tests just hit external services (UniProt/Ensembl/PANTHER/
             # PhylomeDB/KEGG/GO), so their results are platform-independent and running them on all 9
@@ -279,13 +304,11 @@ jobs:
             # no loss of coverage. On the other 8 cells this step is skipped; integration_tools/e2e
             # still run (a skipped step keeps success() true, so it doesn't fail the job).
             -   name: Integration tests (network / web APIs)
-                if: ${{ github.event_name == 'pull_request' && matrix.os == 'ubuntu-latest' && matrix.python-version == '3.13' }}
+                if: ${{ matrix.os == 'ubuntu-latest' && matrix.python-version == '3.13' }}
                 run: ${{ env.RUN_TESTS }} -m integration_net --durations=25 tests/
             -   name: Integration tests (R / CLI tools)
-                if: github.event_name == 'pull_request'
                 run: ${{ env.RUN_TESTS }} -m integration_tools --durations=25 tests/
             -   name: End-to-end (GUI) tests
-                if: github.event_name == 'pull_request'
                 run: ${{ env.RUN_TESTS }} -m e2e --durations=25 tests/
             -   name: Report last test before a crash
                 # Runs whenever a prior tier failed (incl. a native crash that produced no pytest
@@ -320,8 +343,9 @@ jobs:
 
     finish:
         name: Finish submitting coverage
-        # Only PRs collect coverage; the `development` cache-warming push submits nothing, so there is
-        # no parallel run to finalize.
+        # Coverage is submitted only for pull requests (see the Coveralls steps above); push-to-master
+        # and scheduled runs execute the full suite but intentionally do not submit coverage, so there
+        # is no parallel run to finalize for those events.
         if: ${{ always() && github.event_name == 'pull_request' }}
         needs: build
         runs-on: ubuntu-latest
