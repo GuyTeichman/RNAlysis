@@ -121,6 +121,18 @@ jobs:
                     key: bio-tools-${{ runner.os }}-kallisto0.51.1-bowtie2v2.5.1
             -   name: Install kallisto
                 run: |
+                    # Retry downloads: wget treats a transient "Unable to establish SSL connection"
+                    # to GitHub's release-asset CDN as fatal and won't retry it on its own, so a single
+                    # network blip on a cache miss would otherwise fail the whole job. Re-invoke wget.
+                    dl() {
+                        for attempt in 1 2 3 4 5; do
+                            wget --tries=3 --timeout=30 --continue "$1" && return 0
+                            echo "::warning::download failed (attempt ${attempt}/5): $1 - retrying in 15s"
+                            sleep 15
+                        done
+                        echo "::error::download failed after 5 attempts: $1"
+                        return 1
+                    }
                     # macOS needs the hdf5 runtime whether or not the binary was restored from cache.
                     if [ "$RUNNER_OS" == "macOS" ]; then
                          brew install hdf5
@@ -130,12 +142,12 @@ jobs:
                     # Download only on a cache miss; the extracted 'kallisto' dir is restored otherwise.
                     if [ ! -d "${GITHUB_WORKSPACE}/kallisto" ]; then
                          if [ "$RUNNER_OS" == "Linux" ]; then
-                              wget  https://github.com/pachterlab/kallisto/releases/download/v0.51.1/kallisto_linux-v0.51.1.tar.gz
+                              dl https://github.com/pachterlab/kallisto/releases/download/v0.51.1/kallisto_linux-v0.51.1.tar.gz
                          elif [ "$RUNNER_OS" == "macOS" ]; then
-                              wget  https://github.com/pachterlab/kallisto/releases/download/v0.51.1/kallisto_mac_m1-v0.51.1.tar.gz
+                              dl https://github.com/pachterlab/kallisto/releases/download/v0.51.1/kallisto_mac_m1-v0.51.1.tar.gz
                          elif [ "$RUNNER_OS" == "Windows" ]; then
                               choco install wget -y
-                              wget  https://github.com/pachterlab/kallisto/releases/download/v0.51.1/kallisto_windows-v0.51.1.tar.gz
+                              dl https://github.com/pachterlab/kallisto/releases/download/v0.51.1/kallisto_windows-v0.51.1.tar.gz
                          else
                               echo "$RUNNER_OS not supported"
                               exit 1
@@ -149,11 +161,23 @@ jobs:
                 run: kallisto version
             -   name: Install bowtie2
                 run: |
+                    # Retry downloads for the same reason as the kallisto step: a transient SSL blip to
+                    # GitHub's release-asset CDN is fatal to wget and, without a retry, fails the job
+                    # before any test runs (this step, unlike kallisto, has no continue-on-error).
+                    dl() {
+                        for attempt in 1 2 3 4 5; do
+                            wget --tries=3 --timeout=30 --continue "$1" && return 0
+                            echo "::warning::download failed (attempt ${attempt}/5): $1 - retrying in 15s"
+                            sleep 15
+                        done
+                        echo "::error::download failed after 5 attempts: $1"
+                        return 1
+                    }
                     if [ "$RUNNER_OS" == "Windows" ]; then
                          # Download only on a cache miss; the extracted dir is restored otherwise.
                          if [ ! -d "${GITHUB_WORKSPACE}/bowtie2-2.5.1-mingw-x86_64" ]; then
                               choco install wget -y
-                              wget  https://github.com/BenLangmead/bowtie2/releases/download/v2.5.1/bowtie2-2.5.1-mingw-x86_64.zip
+                              dl https://github.com/BenLangmead/bowtie2/releases/download/v2.5.1/bowtie2-2.5.1-mingw-x86_64.zip
                               7z x bowtie2-2.5.1-mingw-x86_64.zip
                          fi
                          echo "${GITHUB_WORKSPACE}/bowtie2-2.5.1-mingw-x86_64" >> $GITHUB_PATH
