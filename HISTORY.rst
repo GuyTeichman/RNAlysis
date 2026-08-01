@@ -8,6 +8,7 @@ History
 Changed
 *******
 * Updated the required ``polars`` version to 1.43.x (from 1.41.x). Analysis results are unchanged; this was verified against the RNAlysis test suite.
+* Ensembl ortholog and paralog mapping now caches each gene's homology results in the daily cache, so repeating a mapping (or mapping gene sets that overlap a previous one) no longer re-requests the same data from Ensembl. This reduces load on the Ensembl REST API and speeds up repeated mappings.
 
 Fixed
 ******
