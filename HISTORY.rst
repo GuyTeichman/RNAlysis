@@ -8,6 +8,7 @@ History
 Changed
 *******
 * Updated the required ``polars`` version to 1.43.x (from 1.41.x). Analysis results are unchanged; this was verified against the RNAlysis test suite.
+* CLICOM ensemble clustering (``CountFilter.split_clicom``) now runs faster, by computing each distinct power-transform/standardization of the data only once per run and reusing it across the many clustering setups that share it, instead of recomputing the identical transform for every setup. Clustering results are bit-for-bit identical.
 
 Fixed
 ******

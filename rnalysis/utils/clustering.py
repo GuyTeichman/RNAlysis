@@ -1,4 +1,5 @@
 import abc
+import contextvars
 import functools
 import itertools
 import warnings
@@ -27,6 +28,13 @@ try:
     HAS_HDBSCAN = True
 except ImportError:
     HAS_HDBSCAN = False
+
+# Run-scoped memoization of the (expensive) Box-Cox/standardize transform. CLICOM builds many clustering
+# setups that share the same replicate-column subset and power_transform flag, and each fresh runner would
+# otherwise recompute the identical transform (once to validate the setup, once to run it). CLICOMRunner._run
+# populates this context for the duration of a single ensemble run; ClusteringRunner._transform_data consults
+# it. Default (None) means "no memoization" so every other caller keeps its original, unchanged behaviour.
+_TRANSFORM_CACHE: contextvars.ContextVar = contextvars.ContextVar('clustering_transform_cache', default=None)
 
 
 class BinaryFormatClusters:
@@ -450,9 +458,23 @@ class ClusteringRunner(abc.ABC):
         with joblib.parallel_backend(self.parallel_backend):
             return self._run(plot)
 
+    def _transform_cache_key(self):
+        # the transform result is fully determined by the (numeric) data, the power_transform flag, and — only
+        # when a precomputed distance metric is used — the metric itself (which the transform folds in). The data
+        # subset is identified by its column names, since it is always a deterministic selection of a fixed parent.
+        metric_key = self.metric_name if getattr(self, 'metric', None) == 'precomputed' else None
+        return tuple(self.data.columns), self.power_transform, metric_key
+
     def _transform_data(self):
         if self.transformed_data is None:
-            self.transformed_data = self.transform(self.data)
+            cache = _TRANSFORM_CACHE.get()
+            if cache is None:
+                self.transformed_data = self.transform(self.data)
+            else:
+                key = self._transform_cache_key()
+                if key not in cache:
+                    cache[key] = self.transform(self.data)
+                self.transformed_data = cache[key]
 
         if self.data_for_plot is None:
             if self.metric == 'precomputed':
@@ -1054,11 +1076,17 @@ class CLICOMRunner(ClusteringRunner):
                                            parallel_backend=parallel_backend)
 
     def _run(self, plot: bool = True) -> List[ArbitraryClusterer]:
-        valid_setups = self.find_valid_clustering_setups()
-        n_setups = len(valid_setups)
-        print(f"Found {n_setups} legal clustering setups.")
-        for setup in tqdm(valid_setups, desc='Running clustering setups', unit=' setup'):
-            self.clustering_solutions.extend(self.run_clustering_setup(setup))
+        # memoize the per-setup Box-Cox/standardize transform across this ensemble run: setups that share a
+        # replicate-column subset (and power_transform) otherwise recompute the identical, expensive transform.
+        cache_token = _TRANSFORM_CACHE.set({})
+        try:
+            valid_setups = self.find_valid_clustering_setups()
+            n_setups = len(valid_setups)
+            print(f"Found {n_setups} legal clustering setups.")
+            for setup in tqdm(valid_setups, desc='Running clustering setups', unit=' setup'):
+                self.clustering_solutions.extend(self.run_clustering_setup(setup))
+        finally:
+            _TRANSFORM_CACHE.reset(cache_token)
         solutions_binary_format = self.clusterers_to_binary_format()
         if solutions_binary_format.n_clusters >= 4 * np.sqrt(solutions_binary_format.n_features):
             print("Number of clusters found in all clustering solutions is large relatively to the number of features. "
