@@ -240,6 +240,26 @@ jobs:
             -   name: Prepare R library cache dir
                 # R only puts an R_LIBS entry on .libPaths() (and installs there) if the dir exists.
                 run: python -c "import os, pathlib; pathlib.Path(os.environ['R_LIBS']).mkdir(parents=True, exist_ok=True)"
+            -   name: Verify R installs into the cached R_LIBS dir
+                # Guard against a silent regression of issue #113. install.packages() /
+                # BiocManager::install() (no explicit lib=) install into .libPaths()[1]; if that is not the
+                # cached .r-libs dir, the Bioconductor packages aren't cached and recompile from source
+                # every run. Assert it now (before any install) so the fix is self-detecting -- a loud red
+                # here beats an empty r-libs-* cache discovered much later. Paths are normalized so the
+                # comparison is cross-platform (Windows backslashes / macOS symlinked workspace).
+                shell: bash
+                run: |
+                    Rscript -e '
+                      want <- normalizePath(Sys.getenv("R_LIBS"), winslash = "/", mustWork = FALSE)
+                      got  <- normalizePath(.libPaths()[1],       winslash = "/", mustWork = FALSE)
+                      cat("R_LIBS         :", want, "\n")
+                      cat(".libPaths()[1] :", got,  "\n")
+                      cat("full .libPaths():\n"); print(.libPaths())
+                      if (!identical(want, got)) {
+                        stop("R_LIBS is not first on .libPaths(); installed R packages will NOT be cached (issue #113).")
+                      }
+                      cat("OK: install.packages() will target the cached R_LIBS dir.\n")
+                    '
             # Tests run in tiers (unit -> integration_net -> integration_tools -> e2e). A failure in a
             # faster tier stops the slower ones (fail-fast). The integration tier is split into a
             # network/web-API step and an R/CLI-tools step so we can see the per-tier breakdown.
