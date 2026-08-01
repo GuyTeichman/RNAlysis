@@ -172,7 +172,87 @@ def clear_cache():
     clear_directory(cache_dir)
 
 
+def _perform_cache_write(item: Union[pl.DataFrame, pl.Series], file_path: Path):
+    """Stream a table to the GUI cache as parquet. Runs on the cache writer's background thread."""
+    if isinstance(item, pl.Series):
+        item = item.to_frame()
+    item.lazy().sink_parquet(file_path)
+
+
+class _GuiCacheWriter:
+    """Runs GUI-cache table writes on a background thread so the UI never blocks on disk I/O.
+
+    A single worker keeps submission order == on-disk order (the last write to a given filename wins),
+    so no per-path locking of the data is needed. Consumers that read, move, or delete cached files
+    must call :func:`flush_gui_cache_writes` first to guarantee the write has finished; any error
+    raised by a background write is re-raised there instead of being silently lost.
+    """
+
+    def __init__(self):
+        self._executor = concurrent.futures.ThreadPoolExecutor(max_workers=1,
+                                                               thread_name_prefix='rnalysis-gui-cache')
+        self._futures = {}  # path -> list of not-yet-flushed write futures
+        self._lock = threading.Lock()
+
+    def submit(self, item: Union[pl.DataFrame, pl.Series],
+               file_path: Union[str, Path]) -> concurrent.futures.Future:
+        file_path = Path(file_path)
+        future = self._executor.submit(_perform_cache_write, item, file_path)
+        with self._lock:
+            # keep every pending write to this path (not just the latest) so no write error is dropped
+            self._futures.setdefault(file_path, []).append(future)
+        return future
+
+    @property
+    def pending(self) -> List[Path]:
+        with self._lock:
+            return list(self._futures.keys())
+
+    def flush(self, file_path: Union[str, Path, None] = None):
+        with self._lock:
+            if file_path is None:
+                batches = list(self._futures.values())
+                self._futures.clear()
+            else:
+                batches = [self._futures.pop(Path(file_path), [])]
+        error = None
+        for futures in batches:
+            for future in futures:
+                try:
+                    future.result()
+                except Exception as e:  # surface the first background write error to the caller
+                    error = error or e
+        if error is not None:
+            raise error
+
+    def shutdown(self, wait: bool = True):
+        self._executor.shutdown(wait=wait)
+
+
+_gui_cache_writer = _GuiCacheWriter()
+
+
+def flush_gui_cache_writes(file_path: Union[str, Path, None] = None):
+    """Block until pending GUI-cache table writes finish (all of them, or only ``file_path``).
+
+    Call this before reading, moving, or deleting cached files so background writes are guaranteed to
+    be complete on disk. Re-raises any error raised by a background write.
+    """
+    _gui_cache_writer.flush(file_path)
+
+
+def _reset_gui_cache_writer():
+    """Tear down and recreate the cache writer. Used by tests so the executor is not leaked."""
+    global _gui_cache_writer
+    try:
+        _gui_cache_writer.shutdown(wait=True)
+    except Exception:  # best-effort teardown in tests; a broken writer must not block the reset
+        pass
+    _gui_cache_writer = _GuiCacheWriter()
+
+
 def clear_gui_cache():
+    flush_gui_cache_writes()  # let in-flight writes finish before the cache dir is deleted
     directory = get_gui_cache_dir()
     clear_directory(directory, skip_ok=True)
 
@@ -191,6 +271,7 @@ def load_cached_gui_file(filename: Union[str, Path], load_as_obj: bool = True) -
     """
     directory = get_gui_cache_dir()
     file_path = directory.joinpath(filename)
+    flush_gui_cache_writes(file_path)  # ensure any pending async write to this file has completed
     if file_path.exists():
         if file_path.suffix in {'.csv', '.tsv', '.parquet'} and load_as_obj:
             return load_table(file_path)
@@ -215,15 +296,9 @@ def cache_gui_file(item: Union[pl.DataFrame, set, str], filename: str):
     file_path = directory.joinpath(filename)
 
     if isinstance(item, (pl.DataFrame, pl.Series)):
-        # Check if we can optimize via a Polars streaming sink
         if file_path.suffix.lower() == '.parquet':
-            if isinstance(item, pl.Series):
-                item = item.to_frame()
-            query = item.lazy().sink_parquet(file_path, lazy=True)
-            try:
-                pl.collect_all_async([query])
-            except RuntimeError:
-                pl.collect_all([query])
+            # stream the write off the UI thread; consumers flush_gui_cache_writes() before reading
+            _gui_cache_writer.submit(item, file_path)
         else:
             save_table(item, file_path)
 
@@ -278,6 +353,7 @@ class GUISessionManager:
 
     def save_session(self, file_data: List[FileData], pipeline_data: List[PipelineData],
                      report: dict, report_file_paths: Dict[str, Path]):
+        flush_gui_cache_writes()  # cache files must be fully written before they are moved/copied
         self._prepare_session_folder()
         self._save_report_files_to_session(report_file_paths)
         session_data = self._create_session_data(file_data, pipeline_data, report, report_file_paths)

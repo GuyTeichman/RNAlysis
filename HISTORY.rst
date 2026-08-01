@@ -22,6 +22,7 @@ Fixed
 * Fixed a bug where enrichment analyses (GO, KEGG, user-defined, and single-set) could crash with a confusing ``not enough values to unpack`` error when no results could be produced — either because the enrichment gene set ended up empty (for example when a web service temporarily mapped none of the genes to the required ID type, or when every gene was filtered out), or because the chosen statistical test could not be run (for example when the optional ``xlmhglite`` package is missing for single-set analysis). Such analyses now finish gracefully with an empty result instead of crashing.
 * Fixed a bug where automatically detecting the organism or gene-ID type from a set of gene IDs (via Ensembl) failed with an ``HTTP 400`` error, because the request body sent to Ensembl was double-encoded. The request is now formatted correctly.
 * Fixed a bug where a malformed or unreachable external service (PantherDB, UniProt, Ensembl, or PhylomeDB) could crash RNAlysis on startup while it loaded the lists of supported organisms and gene-ID types. These lookups now degrade gracefully to an empty list with a warning, and their network requests use timeouts so a stalled service can't freeze startup.
+* GUI table caching now runs off the UI thread and is guaranteed to finish before a session is saved, a report is exported, or the cache is cleared. Previously the asynchronous write introduced in 4.2.0 was "fire-and-forget", which could race with those operations and produce incomplete cached files.
 
 
 4.2.0 (2026-05-30)
