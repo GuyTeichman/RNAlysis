@@ -946,8 +946,10 @@ def _ensembl_lookup_post_request(gene_ids: Tuple[str, ...]) -> Dict[str, Dict[st
     output = {}
     client = EnsemblRestClient()
     for chunk in tqdm(data_chunks, desc='Submitting jobs...', unit='jobs'):
-        data = {"ids": parsing.data_to_list(chunk)}
-        client.queue_action(req_type, endpoint, params=repr(data).replace("'", '"'))
+        # Pass the body as a dict; the client sends it via aiohttp's json= (which serializes it once).
+        # Passing a pre-serialized JSON string here double-encodes it into a quoted literal that
+        # Ensembl rejects with a 400 Bad Request.
+        client.queue_action(req_type, endpoint, params={"ids": parsing.data_to_list(chunk)})
 
     with tqdm('Finding the best-matching species...', total=client.queue.qsize() + 1) as pbar:
         pbar.update()
@@ -1263,6 +1265,10 @@ def translate_mappings(ids: list, translated_ids: list, mapping_one2one: dict,
 
 class PhylomeDBOrthologMapper:
     URL = 'ftp.phylomedb.org'
+    # Socket timeout (seconds) for the FTP control + data connections. get_legal_species() runs at
+    # import time (it populates a Literal[...] annotation), so without a timeout a stalled FTP server
+    # would freeze `import rnalysis.filtering` indefinitely.
+    FTP_TIMEOUT = 30
 
     def __init__(self, map_to_organism, map_from_organism='auto', gene_id_type='auto'):
         legal_species = self.get_legal_species()
@@ -1420,7 +1426,7 @@ class PhylomeDBOrthologMapper:
 
     @staticmethod
     def _connect():
-        ftp = ftplib.FTP(PhylomeDBOrthologMapper.URL)
+        ftp = ftplib.FTP(PhylomeDBOrthologMapper.URL, timeout=PhylomeDBOrthologMapper.FTP_TIMEOUT)
         ftp.login()
         ftp.cwd('/metaphors/latest')
         return ftp
@@ -2243,10 +2249,15 @@ def find_best_gene_mapping(ids: Tuple[str, ...], map_from_options: Union[Tuple[s
     return parsed_results[sorted_keys[0]]
 
 
+# Connect/read timeout (seconds) for the small "legal values" metadata fetches below. These run at
+# import time to populate GUI dropdowns / type annotations, so a hung request would freeze startup.
+LEGAL_VALUES_REQUEST_TIMEOUT = (10, 30)
+
+
 @functools.lru_cache(maxsize=2)
 def get_legal_panther_taxons():
     URL = 'https://www.pantherdb.org/services/oai/pantherdb/supportedgenomes'
-    req = requests.post(URL)
+    req = requests.post(URL, timeout=LEGAL_VALUES_REQUEST_TIMEOUT)
     req.raise_for_status()
     genomes = req.json()['search']['output']['genomes']['genome']
     # PantherDB returns a single genome dict (not a list) when only one genome is present; normalize
@@ -2288,7 +2299,7 @@ def get_legal_gene_id_types():
     abbrev_dict_to = {}
     abbrev_dict_from = {}
 
-    req = requests.get(URL)
+    req = requests.get(URL, timeout=LEGAL_VALUES_REQUEST_TIMEOUT)
     req.raise_for_status()
     entries = json.loads(req.text)['groups']
     entries_filtered = []

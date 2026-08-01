@@ -15,6 +15,8 @@ Fixed
 * Fixed a bug where mapping orthologs through the OrthoInspector service could hang indefinitely when one of its databases stopped responding (OrthoInspector relocated its API, and its largest database can stall). OrthoInspector requests now use a timeout, target OrthoInspector's current API host directly, and automatically fall back to the next available database.
 * Fixed a bug where gene-ID translation and enrichment analyses (which rely on UniProt) could intermittently fail with an ``HTTP 400`` error while waiting for a UniProt ID-mapping job, especially when several analyses ran at once. The job-status check now retries such transient errors with backoff instead of failing.
 * Fixed a bug where closing the RNAlysis window could occasionally crash the application, because its background worker and console threads were signalled to stop but not waited for before the window was destroyed. Closing now shuts those threads down cleanly first.
+* Fixed a bug where automatically detecting the organism or gene-ID type from a set of gene IDs (via Ensembl) failed with an ``HTTP 400`` error, because the request body sent to Ensembl was double-encoded. The request is now formatted correctly.
+* Fixed a bug where a malformed or unreachable external service (PantherDB, UniProt, Ensembl, or PhylomeDB) could crash RNAlysis on startup while it loaded the lists of supported organisms and gene-ID types. These lookups now degrade gracefully to an empty list with a warning, and their network requests use timeouts so a stalled service can't freeze startup.
 
 
 4.2.0 (2026-05-30)
