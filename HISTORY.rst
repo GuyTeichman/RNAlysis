@@ -8,6 +8,7 @@ History
 Changed
 *******
 * Updated the required ``polars`` version to 1.43.x (from 1.41.x). Analysis results are unchanged; this was verified against the RNAlysis test suite.
+* The Principal Component Analysis functions (``pca``, ``sort_by_principal_component``, and ``split_by_principal_components``) now run substantially faster on large datasets, by parallelizing the per-gene Box-Cox power transform across CPU cores. Results are unchanged up to floating-point precision (verified against the test suite's reference outputs).
 * Ensembl ortholog and paralog mapping now caches each gene's homology results in the daily cache, so repeating a mapping (or mapping gene sets that overlap a previous one) no longer re-requests the same data from Ensembl. This reduces load on the Ensembl REST API and speeds up repeated mappings.
 
 Fixed

@@ -23,7 +23,7 @@ from scipy.special import comb
 from sklearn.preprocessing import PowerTransformer, StandardScaler
 from tqdm.auto import tqdm
 
-from rnalysis import __version__
+from rnalysis import FROZEN_ENV, __version__
 
 try:
     import numba
@@ -88,23 +88,70 @@ class ProgressParallel(joblib.Parallel):
         self._pbar.refresh()
 
 
-def standard_box_cox(data: Union[np.ndarray, pl.DataFrame]) -> Union[np.ndarray, pl.DataFrame]:
-    """
+# The Box-Cox power transform fits one lambda per column via a separate optimization. When the data is
+# transposed so that genes are columns (as in the PCA/clustering paths), that is thousands of independent
+# optimizations run in a Python loop, which dominates the runtime of every clustering/PCA call. Splitting the
+# columns across workers is embarrassingly parallel; the result matches the single-process one up to
+# floating-point precision (~1e-15 on the real count-matrix fixture -- transforming a column-slice of a
+# C-contiguous matrix rather than the whole matrix can shift numpy's reduction blocking, far below anything
+# that affects PCA loadings or cluster assignments). Only pay the process-spawn cost when there are enough
+# columns to make it worthwhile.
+BOX_COX_PARALLEL_MIN_COLUMNS = 500
 
-    :param data:
-    :type data:
-    :return:
-    :rtype:
+
+def _box_cox_fit_transform(array: np.ndarray) -> np.ndarray:
+    # sklearn's PowerTransformer(box-cox) fits + applies a separate lambda to each column independently
+    # (and, with the default standardize=True, standardizes each column afterwards).
+    return PowerTransformer(method='box-cox').fit_transform(array + 1)
+
+
+def _parallel_box_cox(array: np.ndarray, backend: str, n_jobs: int) -> np.ndarray:
+    # split the columns into contiguous chunks, Box-Cox each chunk in its own worker, then reassemble in the
+    # original column order. Because every column is transformed independently, this equals the single-process
+    # result exactly.
+    n_columns = array.shape[1]
+    column_chunks = np.array_split(np.arange(n_columns), min(n_jobs, n_columns))
+    transformed_chunks = joblib.Parallel(n_jobs=len(column_chunks), backend=backend)(
+        joblib.delayed(_box_cox_fit_transform)(array[:, chunk]) for chunk in column_chunks)
+    return np.concatenate(transformed_chunks, axis=1)
+
+
+def standard_box_cox(data: Union[np.ndarray, pl.DataFrame],
+                     parallel_backend: str = 'sequential') -> Union[np.ndarray, pl.DataFrame]:
+    """
+    Apply a per-column Box-Cox power transform followed by standardization.
+
+    :param data: the data to transform (columns are transformed independently).
+    :type data: np.ndarray or pl.DataFrame
+    :param parallel_backend: joblib backend used to parallelize the per-column Box-Cox across columns. \
+    The default ('sequential') keeps the original single-process behavior; any other backend parallelizes \
+    once the number of columns reaches ``BOX_COX_PARALLEL_MIN_COLUMNS``. The result is identical either way \
+    up to floating-point precision.
+    :type parallel_backend: str (default='sequential')
     """
     if isinstance(data, pl.DataFrame):
         array = data.select(cs.numeric()).to_numpy()
     else:
         array = data
-    res_array = StandardScaler().fit_transform(PowerTransformer(method='box-cox').fit_transform(array + 1))
+    if parallel_backend not in (None, 'sequential') and array.shape[1] >= BOX_COX_PARALLEL_MIN_COLUMNS:
+        box_cox_array = _parallel_box_cox(array, backend=parallel_backend, n_jobs=joblib.cpu_count())
+    else:
+        box_cox_array = _box_cox_fit_transform(array)
+    res_array = StandardScaler().fit_transform(box_cox_array)
     if isinstance(data, pl.DataFrame):
         return data.select(~cs.numeric()).with_columns(
             pl.DataFrame(res_array, schema=data.select(cs.numeric()).columns))
     return res_array
+
+
+def box_cox_parallel_backend() -> str:
+    """Return a joblib backend suitable for parallelizing the Box-Cox transform in the current environment.
+
+    Frozen (PyInstaller) builds cannot use the ``loky`` backend, so they fall back to ``multiprocessing``
+    (see ``rnalysis.utils.param_typing.PARALLEL_BACKENDS``). This is only ever used from top-level, non-nested
+    call sites (the PCA methods), so ``multiprocessing``'s no-nested-children limitation does not apply.
+    """
+    return 'multiprocessing' if FROZEN_ENV else 'loky'
 
 
 def shift_to_baseline(data: Union[np.ndarray, pl.DataFrame], baseline: float = 0) -> Union[np.ndarray, pl.DataFrame]:
