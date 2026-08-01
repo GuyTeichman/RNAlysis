@@ -1922,3 +1922,55 @@ def test_get_legal_panther_taxons_handles_list_and_single(monkeypatch, genome_no
         assert io.get_legal_panther_taxons() == expected
     finally:
         io.get_legal_panther_taxons.cache_clear()
+
+
+@pytest.mark.unit  # fully mocked; opt out of the module's default integration_net tier
+def test_get_legal_panther_taxons_passes_request_timeout(monkeypatch):
+    # A bare requests.post with no timeout can hang forever; this runs at import time, so a hang
+    # freezes app startup. Ensure a request timeout is always passed.
+    captured = {}
+
+    class _FakeResp:
+        def raise_for_status(self):
+            pass
+
+        def json(self):
+            return {'search': {'output': {'genomes': {'genome': [{'long_name': 'Homo sapiens'}]}}}}
+
+    def _fake_post(*args, **kwargs):
+        captured['timeout'] = kwargs.get('timeout')
+        return _FakeResp()
+
+    monkeypatch.setattr(io.requests, 'post', _fake_post)
+    io.get_legal_panther_taxons.cache_clear()
+    try:
+        io.get_legal_panther_taxons()
+    finally:
+        io.get_legal_panther_taxons.cache_clear()
+    assert captured['timeout'] == io.LEGAL_VALUES_REQUEST_TIMEOUT
+
+
+@pytest.mark.unit  # fully mocked; opt out of the module's default integration_net tier
+def test_get_legal_gene_id_types_passes_request_timeout(monkeypatch):
+    captured = {}
+    payload_text = ('{"groups": [{"groupName": "UniProt", "items": '
+                    '[{"displayName": "UniProtKB AC/ID", "name": "UniProtKB_AC-ID", '
+                    '"from": true, "to": false}]}]}')
+
+    class _FakeResp:
+        text = payload_text
+
+        def raise_for_status(self):
+            pass
+
+    def _fake_get(*args, **kwargs):
+        captured['timeout'] = kwargs.get('timeout')
+        return _FakeResp()
+
+    monkeypatch.setattr(io.requests, 'get', _fake_get)
+    io.get_legal_gene_id_types.cache_clear()
+    try:
+        io.get_legal_gene_id_types()
+    finally:
+        io.get_legal_gene_id_types.cache_clear()
+    assert captured['timeout'] == io.LEGAL_VALUES_REQUEST_TIMEOUT
