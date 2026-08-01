@@ -167,6 +167,8 @@ jobs:
             -   name: Install uv
                 # uv resolves + installs far faster than pip (most noticeably on Windows). It caches
                 # built wheels itself (enable-cache), so setup-python's pip cache is no longer needed.
+                # Pinned to a full version on purpose: setup-uv no longer publishes a moving `@v9` major
+                # tag, so `@v9.0.0` (not `@v9`) is the correct current pin.
                 uses: astral-sh/setup-uv@v9.0.0
                 with:
                     enable-cache: true

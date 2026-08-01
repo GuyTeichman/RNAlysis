@@ -1,5 +1,6 @@
 import os
 import sys
+from typing import Iterable, Tuple
 
 import pytest
 
@@ -29,12 +30,15 @@ _INTEGRATION_TOOLS_MODULES = frozenset({
     'test_installs',                 # installs R packages
 })
 # Leaf tiers — an explicit one of these on a test/class/module wins over auto-assignment. The
-# umbrella `integration` is intentionally NOT listed here: a test tagged only `integration` still
-# gets sub-classified into net/tools so it lands in exactly one CI step.
+# umbrella `integration` is intentionally NOT listed here, so tagging it never suppresses
+# auto-assignment: classification keys off the module name, and each integration module maps to
+# exactly one leaf sub-tier (net or tools). (A bare `@pytest.mark.integration` isn't used anywhere in
+# the suite; such a test would be classified by its module like any other.)
 _TIER_MARKERS = ('unit', 'integration_net', 'integration_tools', 'e2e')
 
 
-def _tier_markers_for(module: str, fixturenames, has_availability_skip: bool) -> tuple:
+def _tier_markers_for(module: str, fixturenames: Iterable[str],
+                      has_availability_skip: bool) -> Tuple[str, ...]:
     """Return the marker name(s) a test should carry, from its module name and traits.
 
     Pure function (no pytest state) so it can be unit-tested directly. Integration tests get two
