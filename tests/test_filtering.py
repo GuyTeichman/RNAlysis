@@ -427,6 +427,33 @@ def test_countfilter_pairplot_api(basic_countfilter, args, kwargs):
     plt.close('all')
 
 
+def test_countfilter_pairplot_shows_spearman_of_numeric_columns(basic_countfilter):
+    # Regression: pairplot annotated each cell with spearmanr of sample_df indexed by seaborn's
+    # numeric-only axis positions, but sample_df also contains the (non-numeric) gene-index column
+    # at position 0 -- so the first row/column's correlation was computed on the index column
+    # (garbage under old numpy, a hard crash under numpy 2.x). Each cell must show the Spearman
+    # correlation of *its own* pair of sample columns. We identify each cell's pair from its axis
+    # labels (which seaborn sets to the plotted column names) -- an independent path from the fix.
+    import re
+    from scipy.stats import spearmanr
+    fig = basic_countfilter.pairplot(show_corr=True, log2=False)
+    try:
+        checked = 0
+        for ax in fig.axes:
+            annotations = [t.get_text() for t in ax.texts if 'Spearman' in t.get_text()]
+            if not annotations:
+                continue
+            x_col, y_col = ax.get_xlabel(), ax.get_ylabel()
+            assert x_col and y_col and x_col != y_col  # a real off-diagonal sample pair, not the index
+            expected = f"{spearmanr(basic_countfilter.df[:, [x_col, y_col]])[0]:.2f}"
+            shown = re.search(r'Spearman.*?=\s*(-?\d+\.\d+)', annotations[0]).group(1)
+            assert shown == expected, f"cell ({y_col}, {x_col}): shown {shown} != expected {expected}"
+            checked += 1
+        assert checked >= 1  # at least one off-diagonal cell was actually verified
+    finally:
+        plt.close('all')
+
+
 @pytest.mark.parametrize('args,kwargs,xfail', [
     (tuple(), dict(), False),
     ((['cond1', 'cond2'],), dict(metric='euclidean', linkage='Ward'), False),
@@ -1601,11 +1628,18 @@ def test_pipeline_apply_to_multiple_splits(basic_countfilter):
 
 
 def test_pipeline_apply_to_filter_normalize_split_plot(big_countfilter):
+    # Note: n=17500 (instead of a smaller value) is deliberately chosen so that filter_top_n
+    # leaves only ~2500 of the ~20000 rows before the clustering/plotting steps. This is a
+    # self-consistency check (Pipeline.apply_to vs. the same calls made manually) with no
+    # comparison to a committed truth file, so shrinking the data flowing through the slow
+    # clustering steps (split_hdbscan, clustergram, split_kmedoids) is safe as long as it still
+    # produces multiple non-trivial clusters, which it does (verified to leave >=2 clusters of
+    # size >= 7, so split_kmedoids(n_clusters=[2, 7]) remains valid on each).
     scaling_factor_path = 'tests/test_files/big_scaling_factors.csv'
     pl_c = Pipeline('CountFilter')
     pl_c.add_function(CountFilter.normalize_with_scaling_factors, scaling_factor_path)
     pl_c.add_function('biotypes_from_ref_table', ref=__biotype_ref__)
-    pl_c.add_function(CountFilter.filter_top_n, by='cond3rep1', n=1500, opposite=True)
+    pl_c.add_function(CountFilter.filter_top_n, by='cond3rep1', n=17500, opposite=True)
     pl_c.add_function(CountFilter.split_hdbscan, min_cluster_size=40, return_probabilities=True)
     pl_c.add_function(CountFilter.filter_low_reads, threshold=10)
     pl_c.add_function(CountFilter.clustergram)
@@ -1618,7 +1652,7 @@ def test_pipeline_apply_to_filter_normalize_split_plot(big_countfilter):
     c_dict = dict()
     c.normalize_with_scaling_factors(scaling_factor_path)
     c_dict['biotypes_from_ref_table_1'] = c.biotypes_from_ref_table(ref=__biotype_ref__)
-    c_res = c.filter_top_n(by='cond3rep1', n=1500, opposite=True, inplace=False)
+    c_res = c.filter_top_n(by='cond3rep1', n=17500, opposite=True, inplace=False)
     c_res, prob = c_res.split_hdbscan(min_cluster_size=40, return_probabilities=True)
     c_dict['split_hdbscan_1'] = prob
     for obj in c_res:
@@ -1656,7 +1690,12 @@ def test_pipeline_apply_to_filter_normalize_split_plot(big_countfilter):
 
 
 def test_gap_statistic_api(clustering_countfilter):
-    res = clustering_countfilter.split_kmeans(n_clusters='gap')
+    # The gap statistic evaluates every candidate k from 2 up to max_n_clusters_estimate (default
+    # 'auto' -> 20 here), fitting KMeans on 10 reference datasets per k. The assertion below only
+    # checks the return type, not a specific k or a truth file, so capping max_n_clusters_estimate
+    # at 5 (still >1, so the multi-k search code path is still exercised) cuts the number of KMeans
+    # fits substantially while testing the same behavior.
+    res = clustering_countfilter.split_kmeans(n_clusters='gap', max_n_clusters_estimate=5)
     assert isinstance(res, tuple)
 
 
@@ -1713,7 +1752,14 @@ def test_split_hdbscan_api(clustering_countfilter):
 
 
 def test_split_clicom_api(clustering_countfilter):
-    c = clustering_countfilter
+    # split_clicom's cluster-similarity-matrix step scales roughly with the square of the number
+    # of features, and this test only checks structural correctness of the split (no comparison to
+    # a committed truth file), so we shrink the working data to the first 300 (of 1345) features to
+    # keep the same code path (all 3 clustering methods, multi-value parameter combos, and the
+    # power_transform=(False, True) branch) while running much faster. 300 rows is still comfortably
+    # more than the largest n_clusters/min_cluster_size used below.
+    c = CountFilter.from_dataframe(clustering_countfilter.df.head(300), clustering_countfilter.fname,
+                                   clustering_countfilter.is_normalized, suppress_warnings=True)
     res = c.split_clicom({'method': 'hdbscan', 'min_cluster_size': [75, 40], 'metric': ['ys1', 'spearman']},
                          {'method': 'hierarchical', 'n_clusters': [7], 'metric': ['euclidean', 'jackknife'],
                           'linkage': ['average', 'ward']},
@@ -2344,7 +2390,14 @@ def test_map_orthologs_orthoinspector(mock_mapper, non_unique_mode, remove_unmap
     (3, True, True)
 ])
 def test_sort_by_principal_component(clustering_countfilter, component, ascending, power_transform):
-    c = clustering_countfilter
+    # sort_by_principal_component(power_transform=True) runs a separate Box-Cox optimization per gene
+    # (the data is transposed before the power transform), so its cost scales ~linearly with the
+    # number of genes. This test only checks structural/self-consistency properties (isinstance,
+    # inequality/equality between calls, and raised AssertionErrors) rather than a committed truth
+    # file, so shrinking the working data to the first 300 (of 1345) genes keeps the same code path
+    # while cutting the power_transform=True cases from ~25-30s each to a few seconds.
+    c = CountFilter.from_dataframe(clustering_countfilter.df.head(300), clustering_countfilter.fname,
+                                   clustering_countfilter.is_normalized, suppress_warnings=True)
     c_sorted = c.sort_by_principal_component(component, ascending=ascending, power_transform=power_transform,
                                              inplace=False)
     assert isinstance(c_sorted, CountFilter)

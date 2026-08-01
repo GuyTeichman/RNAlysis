@@ -69,6 +69,22 @@ def test_set_biotype_ref_path():
     assert success_2
 
 
+def test_set_biotype_ref_table_path_prompt_refers_to_biotype(monkeypatch):
+    # Regression guard: when no path is given, the prompt must refer to the *Biotype* reference
+    # table, not the *Attribute* one (they are separate settings).
+    settings.make_temp_copy_of_settings_file()
+    prompts = []
+    monkeypatch.setattr('builtins.input', lambda prompt='': (prompts.append(prompt), 'temp/path')[1])
+
+    set_biotype_ref_table_path()  # path=None -> triggers the input() prompt
+
+    settings.set_temp_copy_of_settings_file_as_default()
+    settings.remove_temp_copy_of_settings_file()
+    assert len(prompts) == 1
+    assert 'Biotype' in prompts[0]
+    assert 'Attribute' not in prompts[0]
+
+
 def test_reset_settings_file():
     settings.make_temp_copy_of_settings_file()
     try:
