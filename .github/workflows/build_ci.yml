@@ -57,14 +57,14 @@ jobs:
         steps:
             -   name: Configure pagefile
                 if: runner.os == 'Windows'
-                uses: al-cheb/configure-pagefile-action@v1.2
+                uses: al-cheb/configure-pagefile-action@v1.5
 
             -   name: Set up pagefile
                 if: runner.os == 'Windows'
                 run: |
                     (Get-CimInstance Win32_PageFileUsage).AllocatedBaseSize
             -   name: Get repository
-                uses: actions/checkout@v5
+                uses: actions/checkout@v7
                 with:
                     # docs/build/ is ~600 MB of committed, generated Sphinx output that the tests
                     # never read. Excluding it from the sparse checkout speeds up "Get repository".
@@ -85,7 +85,7 @@ jobs:
             -   name: Cache LLVM and Clang
                 if: runner.os != 'macOS'
                 id: cache-llvm
-                uses: actions/cache@v5
+                uses: actions/cache@v6
                 with:
                     path: ${{ runner.temp }}/llvm
                     # Key must carry the OS and LLVM version. The bare `llvm` key silently restored a
@@ -108,7 +108,7 @@ jobs:
             -   name: Cache R packages (DESeq2/limma/Rsubread)
                 # The DE/featureCounts integration tests compile these Bioconductor packages from
                 # source at test time; caching R_LIBS_USER avoids recompiling them on every run.
-                uses: actions/cache@v5
+                uses: actions/cache@v6
                 with:
                     path: ${{ github.workspace }}/.r-libs
                     key: r-libs-${{ runner.os }}-R4.4-${{ hashFiles('rnalysis/data_files/r_templates/*_install.R') }}
@@ -134,7 +134,7 @@ jobs:
                 run: Rscript -e "print('R script ran successfully')"
             -   name: Cache kallisto & bowtie2 binaries
                 id: cache-bio-tools
-                uses: actions/cache@v5
+                uses: actions/cache@v6
                 with:
                     path: |
                         ${{ github.workspace }}/kallisto
@@ -211,7 +211,7 @@ jobs:
                     bowtie2 --version
                     bowtie2-build-s --version
             -   name: Set up Python ${{ matrix.python-version }}
-                uses: actions/setup-python@v6
+                uses: actions/setup-python@v7
                 with:
                     python-version: ${{ matrix.python-version }}
             -   name: Install uv

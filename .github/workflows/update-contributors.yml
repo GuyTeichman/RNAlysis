@@ -17,13 +17,13 @@ jobs:
         runs-on: ubuntu-latest
         steps:
             -   name: Checkout
-                uses: actions/checkout@v5
+                uses: actions/checkout@v7
                 with:
                     # Compute the roster against development (the base of the PR opened below), so the
                     # branch is cut from the same ref it targets and can't re-add already-merged names.
                     ref: development
             -   name: Set up Python
-                uses: actions/setup-python@v6
+                uses: actions/setup-python@v7
                 with:
                     python-version: '3.13'
             -   name: Update README contributor roster
