@@ -232,6 +232,8 @@ Development Lead
 Contributors
 *************
 
+.. contributors-list-start
+
 * Dror Cohen
 * Or Ganon
 * Netta Dunsky
@@ -242,6 +244,8 @@ Contributors
 * `sandyl27 <https://github.com/sandyl27>`_
 * `clockgene <https://github.com/clockgene>`_
 * `NeuroRookie <https://github.com/NeuroRookie>`_
+
+.. contributors-list-end
 
 ----
 
