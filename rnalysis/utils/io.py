@@ -1651,43 +1651,76 @@ class EnsemblOrthologMapper:
 
         return ids, translated_ids
 
+    @staticmethod
+    def _homology_cache_filename(species_name: str, gene_id: str, target_taxon, homology_type: str) -> str:
+        # One cache entry per (species, gene, target taxon, homology type). Hashed so gene IDs containing
+        # filesystem-unfriendly characters still yield a valid, collision-resistant filename.
+        key = f'{species_name}|{target_taxon}|{homology_type}|{gene_id}'
+        digest = hashlib.sha256(key.encode('utf-8')).hexdigest()[:32]
+        return f'ensembl_homology_{digest}.json'
+
+    def _fetch_homologies(self, translated_ids: List[str], species_name: str,
+                          homology_type: str) -> Dict[str, list]:
+        """Return ``{gene_id: homologies}`` for the requested homology type ('orthologues'/'paralogues').
+
+        Each gene's homologies are read from the daily disk cache when available; only the cache-missing
+        genes are actually requested from Ensembl. This means re-running the same query (or the
+        parametrized non_unique_mode variants) doesn't re-hit Ensembl and multiply the request load.
+        """
+        homologies_by_gene = {}
+        client = EnsemblRestClient()
+        n_queued = 0
+        for gene_id in translated_ids:
+            cached = load_cached_file(
+                self._homology_cache_filename(species_name, gene_id, self.map_to_organism, homology_type))
+            if cached is not None:
+                homologies_by_gene[gene_id] = json.loads(cached)
+            else:
+                n_queued += 1
+                client.queue_action('get', f'{self.ENDPOINT}{species_name}/{gene_id}',
+                                    params=dict(target_taxon=self.map_to_organism, type=homology_type,
+                                                sequence='none', cigar_line=0))
+
+        if n_queued > 0:
+            with tqdm(f'Mapping {homology_type}...', total=n_queued + 1) as pbar:
+                pbar.update()
+                for json_res in client.run():
+                    req_output = json_res['data'][0]
+                    gene_id = req_output['id']
+                    gene_homologies = req_output['homologies']
+                    cache_file(json.dumps(gene_homologies),
+                               self._homology_cache_filename(species_name, gene_id, self.map_to_organism,
+                                                             homology_type))
+                    homologies_by_gene[gene_id] = gene_homologies
+                    pbar.update()
+        return homologies_by_gene
+
     def get_paralogs(self, ids: Tuple[str, ...], filter_percent_identity: bool = True):
         ids, translated_ids = self.translate_ids(ids)
-        client = EnsemblRestClient()
-        mapping_one2many = {}
         species_name = self.get_species_name()
+        mapping_one2many = {}
 
-        for gene_id in tqdm(translated_ids, 'Submitting requests', unit='requests'):
-            client.queue_action('get', f'{self.ENDPOINT}{species_name}/{gene_id}',
-                                params=dict(target_taxon=self.map_to_organism, type='paralogues',
-                                            sequence='none', cigar_line=0))
+        homologies_by_gene = self._fetch_homologies(translated_ids, species_name, 'paralogues')
+        for this_id, homologies in homologies_by_gene.items():
+            if len(homologies) == 0:
+                continue
 
-        with tqdm('Mapping paralogs...', total=client.queue.qsize() + 1) as pbar:
-            pbar.update()
-            for json_res in client.run():
-                req_output = json_res['data'][0]
-                if len(req_output['homologies']) == 0:
-                    continue
+            if filter_percent_identity:
+                max_score = 0
+                best_match = None
+                matches = []
+                for homology in homologies:
+                    current_score = homology['source']['perc_id']
+                    if current_score > max_score:
+                        max_score = current_score
+                        best_match = homology['target']['id']
+                        matches = [best_match]
+                    elif current_score == max_score:
+                        matches.append(homology['target']['id'])
 
-                this_id = req_output['id']
-
-                if filter_percent_identity:
-                    max_score = 0
-                    best_match = None
-                    matches = []
-                    for homology in req_output['homologies']:
-                        current_score = homology['source']['perc_id']
-                        if current_score > max_score:
-                            max_score = current_score
-                            best_match = homology['target']['id']
-                            matches = [best_match]
-                        elif current_score == max_score:
-                            matches.append(homology['target']['id'])
-
-                    mapping_one2many[this_id] = best_match
-                else:
-                    mapping_one2many[this_id] = [homology['target']['id'] for homology in req_output['homologies']]
-                pbar.update()
+                mapping_one2many[this_id] = best_match
+            else:
+                mapping_one2many[this_id] = [homology['target']['id'] for homology in homologies]
 
         _, mapping_one2many = translate_mappings(ids, translated_ids, {}, mapping_one2many)
 
@@ -1701,51 +1734,41 @@ class EnsemblOrthologMapper:
         Tuple[OrthologDict, OrthologDict]:
         ids, translated_ids = self.translate_ids(ids)
         species_name = self.get_species_name()
-        client = EnsemblRestClient()
         mapping_one2one = {}
         mapping_one2many = {}
 
-        for gene_id in tqdm(translated_ids, 'Submitting requests', unit='requests'):
-            client.queue_action('get', f'{self.ENDPOINT}{species_name}/{gene_id}',
-                                params=dict(target_taxon=self.map_to_organism, type='orthologues',
-                                            sequence='none', cigar_line=0))
+        homologies_by_gene = self._fetch_homologies(translated_ids, species_name, 'orthologues')
+        for this_id, homologies in homologies_by_gene.items():
+            if len(homologies) == 0:
+                continue
 
-        with tqdm('Mapping orthologs...', total=client.queue.qsize() + 1) as pbar:
-            pbar.update()
-            for json_res in client.run():
-                req_output = json_res['data'][0]
-                if len(req_output['homologies']) == 0:
-                    continue
+            mapping_one2many[this_id] = [(homology['target']['id'], homology['source']['perc_id']) for homology in
+                                         homologies]
 
-                this_id = req_output['id']
-                mapping_one2many[this_id] = [(homology['target']['id'], homology['source']['perc_id']) for homology in
-                                             req_output['homologies']]
+            if filter_percent_identity:
+                max_score = 0
+                best_match = None
+                matches = []
+                for homology in homologies:
+                    current_score = homology['source']['perc_id']
+                    if current_score > max_score:
+                        max_score = current_score
+                        best_match = homology['target']['id']
+                        matches = [best_match]
+                    elif current_score == max_score:
+                        matches.append(homology['target']['id'])
 
-                if filter_percent_identity:
-                    max_score = 0
-                    best_match = None
-                    matches = []
-                    for homology in req_output['homologies']:
-                        current_score = homology['source']['perc_id']
-                        if current_score > max_score:
-                            max_score = current_score
-                            best_match = homology['target']['id']
-                            matches = [best_match]
-                        elif current_score == max_score:
-                            matches.append(homology['target']['id'])
-
-                    if len(matches) > 1:
-                        if non_unique_mode == 'first':
-                            mapping_one2one[this_id] = matches[0]
-                        elif non_unique_mode == 'last':
-                            mapping_one2one[this_id] = matches[-1]
-                        elif non_unique_mode == 'random':
-                            mapping_one2one[this_id] = random.choice(matches)
-                    else:
-                        mapping_one2one[this_id] = best_match
+                if len(matches) > 1:
+                    if non_unique_mode == 'first':
+                        mapping_one2one[this_id] = matches[0]
+                    elif non_unique_mode == 'last':
+                        mapping_one2one[this_id] = matches[-1]
+                    elif non_unique_mode == 'random':
+                        mapping_one2one[this_id] = random.choice(matches)
                 else:
-                    mapping_one2one[this_id] = req_output['homologies'][0]['target']['id']
-                pbar.update()
+                    mapping_one2one[this_id] = best_match
+            else:
+                mapping_one2one[this_id] = homologies[0]['target']['id']
 
         mapping_one2one, mapping_one2many = translate_mappings(ids, translated_ids, mapping_one2one, mapping_one2many)
 

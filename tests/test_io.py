@@ -1838,6 +1838,48 @@ class TestEnsemblOrthologMapper:
         assert one2one_random['gene1'] in ('TARGET_A', 'TARGET_B', 'TARGET_C')
         assert set(one2many['gene1']) == {'TARGET_A', 'TARGET_B', 'TARGET_C'}
 
+    def test_get_orthologs_caches_homologies_per_gene(self, monkeypatch):
+        # Regression/perf: the ortholog & paralog mappers issue one Ensembl homology GET per gene and
+        # previously never cached the responses, so repeating the same query (e.g. the parametrized
+        # non_unique_mode variants above, or simply re-running an analysis) re-hit Ensembl every time --
+        # a driver of the flaky HTTP 400/429s under load. Homology responses are now stored in the daily
+        # disk cache keyed by (species, gene, target taxon, type), so an identical follow-up query is
+        # served from cache and never touches the network again.
+        cache = {}
+        monkeypatch.setattr(io, 'load_cached_file', lambda fname: cache.get(fname))
+        monkeypatch.setattr(io, 'cache_file', lambda content, fname: cache.__setitem__(fname, content))
+
+        class MockGeneIDTranslator:
+            def __init__(self, *args, **kwargs):
+                pass
+
+            def run(self, ids):
+                return GeneIDDict({this_id: this_id for this_id in ids})
+
+        monkeypatch.setattr(io, 'GeneIDTranslator', MockGeneIDTranslator)
+        monkeypatch.setattr(io.EnsemblOrthologMapper, 'get_species_name', lambda self: 'caenorhabditis_elegans')
+
+        run_calls = []
+        fake_response = [{'data': [{'id': 'gene1', 'homologies': [
+            {'target': {'id': 'TARGET_A'}, 'source': {'perc_id': 90.0}}]}]}]
+
+        def counting_run(self):
+            run_calls.append(1)
+            return fake_response
+
+        monkeypatch.setattr(io.EnsemblRestClient, 'run', counting_run)
+
+        mapper = EnsemblOrthologMapper(map_to_organism=7227, map_from_organism=6239,
+                                       gene_id_type='UniProtKB AC/ID')
+
+        first_one2one, _ = mapper.get_orthologs(('gene1',), 'first')
+        second_one2one, _ = mapper.get_orthologs(('gene1',), 'first')
+
+        # the network layer was invoked exactly once; the second identical query came from the cache
+        assert len(run_calls) == 1
+        assert first_one2one['gene1'] == second_one2one['gene1'] == 'TARGET_A'
+        assert len(cache) == 1  # the gene's homologies were written to the cache
+
 
 class TestRunRScript:
     @mock.patch('rnalysis.utils.io.run_subprocess')
