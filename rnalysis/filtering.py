@@ -333,7 +333,7 @@ class Filter:
 
         :type n: positive int, default 5
         :param n: Number of rows to show.
-        :rtype: polars.DataFrame
+        :rtype: pl.DataFrame
         :return: returns the last n rows of the Filter object.
 
 
@@ -1398,7 +1398,7 @@ class Filter:
         All should fall between 0 and 1. \
         The default is [.25, .5, .75], which returns the 25th, 50th, and 75th percentiles.
         :return: Summary statistics of the dataset.
-        :rtype: polars.DataFrame
+        :rtype: pl.DataFrame
 
 
         :Examples:
@@ -1575,7 +1575,7 @@ class Filter:
         :param long_format:if True, returns a short-form DataFrame, which states the biotypes \
         in the Filter object and their count. Otherwise, returns a long-form DataFrame,
         which also provides descriptive statistics of each column per biotype.
-        :rtype: polars.DataFrame
+        :rtype: pl.DataFrame
         :returns: a polars DataFrame showing the number of values belonging to each biotype, \
         as well as additional descriptive statistics of format=='long'.
         """
@@ -1619,7 +1619,7 @@ class Filter:
         in the Filter object and their count. Otherwise, returns a long-form DataFrame,
         which also provides descriptive statistics of each column per biotype.
         :param ref: Name of the biotype reference table used to determine biotype. Default is ce11 (included in the package).
-        :rtype: polars.DataFrame
+        :rtype: pl.DataFrame
         :returns: a polars DataFrame showing the number of values belonging to each biotype, \
         as well as additional descriptive statistics of format=='long'.
 
@@ -2371,7 +2371,7 @@ class FoldChangeFilter(Filter):
         :type random_seed: The random seed used to initialize the pseudorandom generator for the randomization test. \
         By default it is picked at random, but you can set it to a particular integer to get consistents results \
         over multiple runs.
-        :rtype: polars.DataFrame
+        :rtype: pl.DataFrame
         :return: A Dataframe with the number of given genes, the observed fold change for the given group of genes, \
         the expected fold change for a group of genes of that size and the p value for the comparison.
 

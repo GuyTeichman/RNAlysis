@@ -1317,7 +1317,7 @@ class FeatureSet(set):
         :param long_format:if True, returns a short-form DataFrame, which states the biotypes \
         in the Filter object and their count. Otherwise, returns a long-form DataFrame,
         which also provides descriptive statistics of each column per biotype.
-        :rtype: polars.DataFrame
+        :rtype: pl.DataFrame
         :returns: a polars DataFrame showing the number of values belonging to each biotype, \
         as well as additional descriptive statistics of format=='long'.
         """
