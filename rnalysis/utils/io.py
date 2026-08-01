@@ -327,6 +327,23 @@ def cache_gui_file(item: Union[pl.DataFrame, set, str], filename: str):
         raise TypeError(type(item))
 
 
+def stream_cached_parquet_to_csv(cached_filename: Union[str, Path], dst_path: Union[str, Path]):
+    """Transcode a cached parquet table to CSV by streaming (``scan_parquet`` -> ``sink_csv``), without
+    loading the whole table into memory. Waits for any pending background write to the cached file
+    first, and falls back to an eager load/save for the rare edge cases the streaming engine rejects.
+
+    :param cached_filename: name of the parquet file in the GUI cache directory to transcode.
+    :param dst_path: path of the CSV file to write.
+    """
+    src_path = get_gui_cache_dir().joinpath(cached_filename)
+    flush_gui_cache_writes(src_path)  # the cached parquet may still be mid-write in the background
+    dst_path = Path(dst_path)
+    try:
+        pl.scan_parquet(src_path).sink_csv(dst_path)
+    except Exception:  # the streaming engine can reject odd/edge files; the eager path always works
+        save_table(load_table(src_path), dst_path)
+
+
 def check_changed_version():  # pragma: no cover
     data_dir = get_data_dir()
     data_dir.mkdir(parents=True, exist_ok=True)

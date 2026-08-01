@@ -12,6 +12,10 @@ Changed
 * The Principal Component Analysis functions (``pca``, ``sort_by_principal_component``, and ``split_by_principal_components``) now run substantially faster on large datasets, by parallelizing the per-gene Box-Cox power transform across CPU cores. Results are unchanged up to floating-point precision (verified against the test suite's reference outputs).
 * Ensembl ortholog and paralog mapping now caches each gene's homology results in the daily cache, so repeating a mapping (or mapping gene sets that overlap a previous one) no longer re-requests the same data from Ensembl. This reduces load on the Ensembl REST API and speeds up repeated mappings.
 
+Changed
+*******
+* Exporting an analysis report now streams each table straight from parquet to CSV instead of loading the whole table into memory first, reducing peak memory use when exporting reports with large tables.
+
 Fixed
 ******
 * Fixed a bug in ``CountFilter.pairplot`` where the Spearman correlation shown for the first row/column of the plot was computed against the gene-index column instead of a sample, producing an incorrect value (and, with recent NumPy versions, an error). The correlations are now always computed between the correct pair of samples.

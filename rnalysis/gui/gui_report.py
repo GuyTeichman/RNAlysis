@@ -287,8 +287,8 @@ class ReportGenerator:
             outfile_path = data_path.joinpath(node.filename)
             suffix = node.filename.suffix.lower()
             if suffix == '.parquet':  # convert parquet files to csv files so users can open them with Excel and such
-                df = io.load_cached_gui_file(node.filename)
-                io.save_table(df, outfile_path.with_suffix('.csv'))
+                # stream the transcode instead of loading the whole table into memory
+                io.stream_cached_parquet_to_csv(node.filename, outfile_path.with_suffix('.csv'))
 
             content: bytes = io.load_cached_gui_file(node.filename, load_as_obj=False)
             if content is not None:
