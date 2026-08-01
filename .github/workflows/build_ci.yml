@@ -26,6 +26,9 @@ jobs:
             R_LIBS_USER: ${{ github.workspace }}/.r-libs
             # Use the faster sys.monitoring coverage backend (Python >=3.12, coverage >=7.7).
             COVERAGE_CORE: sysmon
+            # Let `uv pip install` target the actions/setup-python interpreter instead of requiring a
+            # virtualenv (see the "Install uv" / "Install dependencies" steps).
+            UV_SYSTEM_PYTHON: 1
             # Only one job (Ubuntu / Python 3.13) collects coverage; every other job runs the tests
             # without the coverage tracer, which is faster (most noticeably on Windows). This is the
             # test-runner command the tier steps below invoke.
@@ -161,25 +164,38 @@ jobs:
                 uses: actions/setup-python@v6
                 with:
                     python-version: ${{ matrix.python-version }}
-                    cache: 'pip'
+            -   name: Install uv
+                # uv resolves + installs far faster than pip (most noticeably on Windows). It caches
+                # built wheels itself (enable-cache), so setup-python's pip cache is no longer needed.
+                uses: astral-sh/setup-uv@v9.0.0
+                with:
+                    enable-cache: true
+                    cache-dependency-glob: |
+                        requirements*.txt
+                        pyproject.toml
             -   name: Install dependencies
+                # UV_SYSTEM_PYTHON=1 (job env) makes these install into the setup-python interpreter.
                 run: |
-                    python -m pip install --upgrade pip
-                    python -m pip install --upgrade -r requirements_dev.txt
-                    python -m pip install .[all]
+                    uv pip install --upgrade -r requirements_dev.txt
+                    uv pip install .[all]
             -   name: Prepare R library cache dir
                 # R only puts R_LIBS_USER on .libPaths() (and installs there) if the dir exists.
                 run: python -c "import os, pathlib; pathlib.Path(os.environ['R_LIBS_USER']).mkdir(parents=True, exist_ok=True)"
-            # Tests run in tiers (unit -> integration -> e2e). A failure in a faster tier stops the
-            # slower ones (fail-fast). Only the coverage job wraps them in `coverage run` (see
-            # RUN_TESTS above); every other job invokes pytest directly. Tiers are assigned
-            # automatically in tests/conftest.py; see pytest.ini for definitions.
+            # Tests run in tiers (unit -> integration_net -> integration_tools -> e2e). A failure in a
+            # faster tier stops the slower ones (fail-fast). The integration tier is split into a
+            # network/web-API step and an R/CLI-tools step so we can see the per-tier breakdown (both
+            # still run on every matrix cell for now). `--durations=25` prints the slowest tests in
+            # each tier. Only the coverage job wraps them in `coverage run` (see RUN_TESTS above);
+            # every other job invokes pytest directly. Tiers are assigned automatically in
+            # tests/conftest.py; see pytest.ini for definitions.
             -   name: Unit tests
-                run: ${{ env.RUN_TESTS }} -m unit tests/
-            -   name: Integration tests
-                run: ${{ env.RUN_TESTS }} -m integration tests/
+                run: ${{ env.RUN_TESTS }} -m unit --durations=25 tests/
+            -   name: Integration tests (network / web APIs)
+                run: ${{ env.RUN_TESTS }} -m integration_net --durations=25 tests/
+            -   name: Integration tests (R / CLI tools)
+                run: ${{ env.RUN_TESTS }} -m integration_tools --durations=25 tests/
             -   name: End-to-end (GUI) tests
-                run: ${{ env.RUN_TESTS }} -m e2e tests/
+                run: ${{ env.RUN_TESTS }} -m e2e --durations=25 tests/
             # Interactive tmate debug session on failure. Disabled by default: tmate holds the runner
             # open until the session is closed or times out, which freezes the job on every failure.
             # Re-enable on demand by setting the repository variable ENABLE_TMATE to 'true'.
