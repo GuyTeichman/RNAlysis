@@ -13,6 +13,25 @@ def pytest_configure(config):
     os.environ["QT_DEBUG_PLUGINS"] = "1"
 
 
+def pytest_runtest_logstart(nodeid, location):
+    """Write the about-to-run test's nodeid to a breadcrumb file, if PYTEST_CRASH_BREADCRUMB is set.
+
+    A native crash (e.g. the flaky Qt access violation in the e2e tier) kills the process without
+    pytest reporting which test was running. Recording the nodeid *before* each test runs means the
+    file's last value identifies the culprit after a crash (see the CI "Report last test before a
+    crash" step). No-op unless the env var is set, so it costs nothing on local/normal runs.
+    """
+    breadcrumb = os.environ.get("PYTEST_CRASH_BREADCRUMB")
+    if not breadcrumb:
+        return
+    try:
+        with open(breadcrumb, "w", encoding="utf-8") as handle:
+            handle.write(f"{nodeid}\n")
+            handle.flush()
+    except OSError:
+        pass
+
+
 # --- test tiers (unit / integration / e2e) ---------------------------------------------------
 # The `integration` tier is split into two sub-tiers so CI can time (and, later, schedule) them
 # separately:

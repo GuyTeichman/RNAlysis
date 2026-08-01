@@ -33,6 +33,11 @@ jobs:
             # without the coverage tracer, which is faster (most noticeably on Windows). This is the
             # test-runner command the tier steps below invoke.
             RUN_TESTS: ${{ (matrix.os == 'ubuntu-latest' && matrix.python-version == '3.13') && 'coverage run --append --source=rnalysis/ -m pytest' || 'python -m pytest' }}
+            # A native crash (e.g. the flaky Qt access violation in the e2e tier) kills the process
+            # without pytest reporting which test was running. tests/conftest.py writes each test's
+            # nodeid here before it runs, so the "Report last test before a crash" step below can name
+            # the culprit. No effect on runs where this env var is unset (e.g. local runs).
+            PYTEST_CRASH_BREADCRUMB: ${{ github.workspace }}/pytest_last_test.txt
         steps:
             -   name: Configure pagefile
                 if: runner.os == 'Windows'
@@ -198,6 +203,18 @@ jobs:
                 run: ${{ env.RUN_TESTS }} -m integration_tools --durations=25 tests/
             -   name: End-to-end (GUI) tests
                 run: ${{ env.RUN_TESTS }} -m e2e --durations=25 tests/
+            -   name: Report last test before a crash
+                # Runs whenever a prior tier failed (incl. a native crash that produced no pytest
+                # summary). Surfaces the breadcrumb written by tests/conftest.py so the flaky e2e crash
+                # names the exact test instead of an anonymous "access violation".
+                if: failure()
+                shell: bash
+                run: |
+                    if [ -f "${GITHUB_WORKSPACE}/pytest_last_test.txt" ]; then
+                        echo "::warning::Last test started before failure/crash: $(cat "${GITHUB_WORKSPACE}/pytest_last_test.txt")"
+                    else
+                        echo "No crash breadcrumb file was written."
+                    fi
             # Interactive tmate debug session on failure. Disabled by default: tmate holds the runner
             # open until the session is closed or times out, which freezes the job on every failure.
             # Re-enable on demand by setting the repository variable ENABLE_TMATE to 'true'.
