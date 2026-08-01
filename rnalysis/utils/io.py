@@ -2219,8 +2219,12 @@ def get_legal_panther_taxons():
     URL = 'https://www.pantherdb.org/services/oai/pantherdb/supportedgenomes'
     req = requests.post(URL)
     req.raise_for_status()
-    entries = json.loads(req.text)['search']['output']['genomes']['genome']
-    taxons = tuple(sorted(d['long_name'] for d in entries))
+    genomes = req.json()['search']['output']['genomes']['genome']
+    # PantherDB returns a single genome dict (not a list) when only one genome is present; normalize
+    # to a list the way the ortholog endpoints already do, and skip any entry lacking a long_name.
+    entries = parsing.data_to_list(genomes)
+    taxons = tuple(sorted(entry['long_name'] for entry in entries
+                          if isinstance(entry, dict) and 'long_name' in entry))
     return taxons
 
 
