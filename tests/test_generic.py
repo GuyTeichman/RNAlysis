@@ -1,6 +1,7 @@
 import pytest
 from matplotlib.backend_bases import PickEvent
 
+from rnalysis.utils import generic
 from rnalysis.utils.generic import *
 
 
@@ -35,6 +36,52 @@ def test_standard_box_cox():
     assert res_df.shape == data_df.shape
     assert np.all(res_df.select(pl.first()) == data_df.select(pl.first()))
     assert np.all(res_df.columns == data_df.columns)
+
+
+# Box-Cox each column independently, so splitting the columns across workers gives the same result as the
+# single-process path. It is not guaranteed bit-for-bit: transforming a column-slice of a C-contiguous matrix
+# vs the full matrix can shift numpy's reduction blocking, perturbing some data by ~1e-15 (measured on the
+# real count-matrix fixture; far below anything that affects PCA loadings, cluster assignments, or sort order).
+# The end-to-end loky path is covered against a committed truth file by test_split_by_principal_components.
+_BOX_COX_PARALLEL_TOL = 1e-10
+
+
+@pytest.mark.parametrize('backend', ['threading'])
+def test_parallel_box_cox_matches_serial(backend):
+    rng = np.random.default_rng(0)
+    array = rng.integers(1, 5000, (6, 40)).astype(float)
+    serial = generic._box_cox_fit_transform(array)
+    parallel = generic._parallel_box_cox(array, backend=backend, n_jobs=4)
+    assert parallel.shape == serial.shape
+    assert np.allclose(parallel, serial, rtol=0, atol=_BOX_COX_PARALLEL_TOL)
+
+
+def test_standard_box_cox_parallel_equals_sequential(monkeypatch):
+    # lower the parallelization threshold so a small (fast) array still exercises the parallel branch
+    monkeypatch.setattr(generic, 'BOX_COX_PARALLEL_MIN_COLUMNS', 4)
+    rng = np.random.default_rng(2)
+    array = rng.integers(1, 5000, (6, 30)).astype(float)
+
+    sequential = standard_box_cox(array, parallel_backend='sequential')
+    parallel = standard_box_cox(array, parallel_backend='threading')
+    assert np.allclose(parallel, sequential, rtol=0, atol=_BOX_COX_PARALLEL_TOL)
+
+    data_df = pl.DataFrame([f'ind{i}' for i in range(6)]).with_columns(
+        pl.DataFrame(array, schema=[f'col{j}' for j in range(30)]))
+    seq_df = standard_box_cox(data_df, parallel_backend='sequential')
+    par_df = standard_box_cox(data_df, parallel_backend='threading')
+    assert np.all(par_df.select(pl.first()) == seq_df.select(pl.first()))
+    assert np.allclose(par_df.select(cs.numeric()).to_numpy(),
+                       seq_df.select(cs.numeric()).to_numpy(), rtol=0, atol=_BOX_COX_PARALLEL_TOL)
+
+
+def test_standard_box_cox_default_is_sequential(monkeypatch):
+    # the default call (no parallel_backend) must be byte-identical to the pre-existing serial path
+    monkeypatch.setattr(generic, 'BOX_COX_PARALLEL_MIN_COLUMNS', 4)
+    rng = np.random.default_rng(3)
+    array = rng.integers(1, 5000, (6, 30)).astype(float)
+    reference = StandardScaler().fit_transform(PowerTransformer(method='box-cox').fit_transform(array + 1))
+    assert np.array_equal(standard_box_cox(array), reference)
 
 
 def test_color_generator():
