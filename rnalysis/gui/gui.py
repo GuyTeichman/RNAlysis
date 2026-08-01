@@ -3041,6 +3041,9 @@ class MainWindow(QtWidgets.QMainWindow):
     FEATURE_URL = 'https://github.com/GuyTeichman/RNAlysis/issues/new?assignees=&labels=feature+request&projects=' \
                   '&template=feature_request.yaml&title=Feature+Request%3A+'
     QUESTION_URL = 'https://github.com/GuyTeichman/RNAlysis/discussions'
+    #: Upper bound (ms) on how long closing waits for the job thread to finish an in-flight worker
+    #: before giving up, so a long-running analysis can't freeze the app on close.
+    JOB_THREAD_SHUTDOWN_TIMEOUT_MS = 10_000
 
     jobQueued = QtCore.pyqtSignal()
 
@@ -4410,6 +4413,30 @@ class MainWindow(QtWidgets.QMainWindow):
             return dialog.result()
         return None
 
+    def _shutdown_worker_threads(self):
+        """Stop the background QThreads cleanly so no QThread object is destroyed while its OS
+        thread is still running -- that teardown race is the flaky "Windows fatal exception:
+        access violation" seen in the e2e tier.
+
+        The STDOUT listener's ``run()`` blocks on ``queue_stdout.get()`` and never returns to its
+        event loop, so ``quit()`` alone can't stop it (and a bare ``wait()`` would hang forever).
+        Enqueue ``STOP_SIGNAL`` first to break that loop, then ``quit()`` + ``wait()``. The job
+        thread runs finite workers that quit it on completion, so it only needs ``quit()`` + a
+        bounded ``wait()`` (bounded so closing during a long-running job can't freeze the app).
+        """
+        listener = getattr(self, 'thread_stdout_queue_listener', None)
+        if listener is not None:
+            queue_stdout = getattr(self, 'queue_stdout', None)
+            receiver = getattr(self, 'stdout_receiver', None)
+            if queue_stdout is not None and receiver is not None:
+                queue_stdout.put(receiver.STOP_SIGNAL)
+            listener.quit()
+            listener.wait()
+        job_thread = getattr(self, 'job_thread', None)
+        if job_thread is not None:
+            job_thread.quit()
+            job_thread.wait(self.JOB_THREAD_SHUTDOWN_TIMEOUT_MS)
+
     def closeEvent(self, event):  # pragma: no cover
 
         quit_msg = "Are you sure you want to close <i>RNAlysis</i>?\n" \
@@ -4421,15 +4448,9 @@ class MainWindow(QtWidgets.QMainWindow):
 
         if reply == QtWidgets.QMessageBox.StandardButton.Yes:
             plt.close('all')
-            # quit job and STDOUT listener threads
-            try:
-                self.job_thread.quit()
-            except AttributeError:
-                pass
-            try:
-                self.thread_stdout_queue_listener.quit()
-            except AttributeError:
-                pass
+            # stop background threads cleanly before the window (and its QThread members) are
+            # destroyed, so neither QThread object is torn down while its OS thread is still running.
+            self._shutdown_worker_threads()
             # clear cache
             io.clear_gui_cache()
             # close all figures

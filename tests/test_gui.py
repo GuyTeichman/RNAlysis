@@ -2241,6 +2241,19 @@ def test_MainWindow_init(main_window):
     _ = main_window
 
 
+def test_MainWindow_shutdown_worker_threads_stops_threads(main_window):
+    """closeEvent must leave no QThread running: quit()+wait() so neither QThread object is
+    destroyed while its OS thread is still running (the flaky Windows access-violation crash)."""
+    # the STDOUT listener thread is started at construction (gather_stdout=True)
+    assert main_window.thread_stdout_queue_listener.isRunning()
+
+    main_window._shutdown_worker_threads()
+
+    # wait() inside the helper guarantees the OS threads have finished before it returns
+    assert not main_window.thread_stdout_queue_listener.isRunning()
+    assert not main_window.job_thread.isRunning()
+
+
 def test_MainWindow_add_new_tab(main_window):
     main_window.new_table_action.trigger()
     assert main_window.tabs.count() == 2
