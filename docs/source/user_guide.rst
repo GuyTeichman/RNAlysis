@@ -955,7 +955,7 @@ A :term:`FoldChangeFilter` object can be calculated from a :term:`CountFilter` o
 
 .. warning:: by default, :term:`FoldChangeFilter` assumes that fold change is calculated as (numerator_reads+1)/(denominator_reads+1), and does not support 0 and inf values. If you load a `csv` file which contains 0 and/or inf values into a :term:`FoldChangeFilter` object, unintended results and interactions may occur.
 
-Unlike other Filter object, the underlying data structure storing the values is a pandas Series and not a pandas DataFrame, and lacks the Columns attribute.
+Unlike other Filter objects, which can hold multiple data columns, a :term:`FoldChangeFilter` stores a single column of fold change values. Like all Filter objects, this data is held in a polars DataFrame.
 
 Loading fold change data from a `csv` file
 ------------------------------------------------
@@ -1400,7 +1400,7 @@ If you don't specify plotting parameters, *RNAlysis* will generate an ontology g
 
 Enrichment analysis output
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Running enrichment analysis will calculate enrichment for each of the GO terms, and return a pandas DataFrame in the following format:
+Running enrichment analysis will calculate enrichment for each of the GO terms, and return a polars DataFrame in the following format:
 
 +-------------+------------------+--------------+-----+-------+----------------------+----------+----------+-------------+
 |             |       name       |    samples   | obs |   exp | log2_fold_enrichment |   pval   |   padj   | significant |
@@ -1511,7 +1511,7 @@ If you don't specify plotting parameters, *RNAlysis* will generate a horizontal 
 
 Enrichment analysis output
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Running enrichment analysis will calculate enrichment for each of the KEGG pathways, and return a pandas DataFrame in the following format:
+Running enrichment analysis will calculate enrichment for each of the KEGG pathways, and return a polars DataFrame in the following format:
 
 +-----------+-----------------------------------------------------------------+--------------+-----+-------+----------------------+----------+----------+-------------+
 |   KEGG ID |                              name                               |    samples   | obs |   exp | log2_fold_enrichment |   pval   |   padj   | significant |
@@ -1613,7 +1613,7 @@ When it is set as 'True', *RNAlysis* will return the Figure object it generated 
 
 Enrichment analysis output
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Running enrichment analysis will calculate enrichment for each of the specified attributes, and return a pandas DataFrame in the following format:
+Running enrichment analysis will calculate enrichment for each of the specified attributes, and return a polars DataFrame in the following format:
 
 +----------------+--------------+-----+-------+----------------------+----------+----------+-------------+
 |                |    samples   | obs |   exp | log2_fold_enrichment |   pval   |   padj   | significant |
@@ -1708,7 +1708,7 @@ When it is set as 'True', *RNAlysis* will return the Figure object it generated 
 
 Non-Categorical Enrichment analysis output
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Running non-categorical enrichment analysis will calculate enrichment for each of the specified attributes, and return a pandas DataFrame in the following format:
+Running non-categorical enrichment analysis will calculate enrichment for each of the specified attributes, and return a polars DataFrame in the following format:
 
 +----------------+--------------+-------+--------+----------+----------+-------------+
 |                |    samples   |  obs  |  exp   |   pval   |   padj   | significant |
