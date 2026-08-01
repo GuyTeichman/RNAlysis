@@ -15,7 +15,6 @@ import sys
 
 # sys.path.insert(0, os.path.abspath('.'))
 
-
 sys.path.insert(0, os.path.abspath('../../rnalysis/gui/videos'))
 sys.path.insert(0, os.path.abspath('../../rnalysis'))
 sys.path.insert(0, os.path.abspath('../..'))
@@ -23,7 +22,7 @@ sys.path.insert(0, os.path.abspath('../..'))
 # -- Project information -----------------------------------------------------
 
 project = 'RNAlysis'
-copyright = '2024, Guy Teichman'
+copyright = '2024–2026, Guy Teichman'
 author = 'Guy Teichman'
 
 # The full version, including alpha/beta/rc tags
@@ -71,7 +70,7 @@ html_logo = 'logo.png'
 
 # -- Options for HTML output -------------------------------------------------
 
-# The theme to use for HTML and HTML Help pages.  See the documentation for
+# The theme to use for HTML and HTML Help pages. See the documentation for
 # a list of builtin themes.
 #
 html_theme = 'sphinx_rtd_theme'
