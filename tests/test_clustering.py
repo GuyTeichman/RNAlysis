@@ -2,6 +2,7 @@ from collections import namedtuple
 
 import pytest
 
+from rnalysis.utils import clustering
 from rnalysis.utils.clustering import *
 
 
@@ -223,6 +224,73 @@ def test_clicomrunner_find_valid_clustering_setups():
                           dict(method='kmedoids', n_clusters=7, n_init=5))
     setups = runner.find_valid_clustering_setups()
     _compare_setups(setups, truth)
+
+
+def _count_box_cox_calls(monkeypatch):
+    """Patch generic.standard_box_cox with a call counter, returning the counter dict."""
+    counter = {'n': 0}
+    original = generic.standard_box_cox
+
+    def counting_box_cox(data):
+        counter['n'] += 1
+        return original(data)
+
+    monkeypatch.setattr(generic, 'standard_box_cox', counting_box_cox)
+    return counter
+
+
+def test_clustering_transform_cache_disabled_by_default(monkeypatch, basic_counted_df):
+    # without an active cache context, each runner recomputes its own transform (default behaviour, unchanged)
+    counter = _count_box_cox_calls(monkeypatch)
+    KMeansRunner(basic_counted_df, power_transform=True, n_clusters=2)
+    KMeansRunner(basic_counted_df, power_transform=True, n_clusters=3)
+    assert counter['n'] == 2
+
+
+def test_clustering_transform_cache_reuses_result(monkeypatch, basic_counted_df):
+    # within an active cache context, runners sharing (columns, power_transform, metric) reuse one transform
+    reference = generic.standard_box_cox(basic_counted_df)  # computed with the real function, before patching
+    counter = _count_box_cox_calls(monkeypatch)
+
+    token = clustering._TRANSFORM_CACHE.set({})
+    try:
+        r1 = KMeansRunner(basic_counted_df, power_transform=True, n_clusters=2)
+        # a distinct DataFrame object with identical columns/values must still hit the cache (keyed by columns, not id)
+        r2 = KMeansRunner(basic_counted_df.select(pl.all()), power_transform=True, n_clusters=3)
+    finally:
+        clustering._TRANSFORM_CACHE.reset(token)
+
+    assert counter['n'] == 1
+    assert r1.transformed_data is r2.transformed_data
+    assert r1.transformed_data.equals(reference)  # cached result is bit-identical to the direct transform
+
+
+def test_clustering_transform_cache_separates_power_transform(monkeypatch, basic_counted_df):
+    # differing power_transform must NOT share a cache entry (different transforms)
+    counter = _count_box_cox_calls(monkeypatch)
+    token = clustering._TRANSFORM_CACHE.set({})
+    try:
+        KMeansRunner(basic_counted_df, power_transform=True, n_clusters=2)
+        KMeansRunner(basic_counted_df, power_transform=True, n_clusters=3)  # same key -> cache hit
+        KMeansRunner(basic_counted_df, power_transform=False, n_clusters=2)  # different key -> not box-cox at all
+    finally:
+        clustering._TRANSFORM_CACHE.reset(token)
+    # box-cox runs exactly once: the two power_transform=True runners share it; the False runner uses standardize
+    assert counter['n'] == 1
+
+
+def test_clicom_run_memoizes_transform_across_setups(monkeypatch):
+    np.random.seed(42)
+    df = pl.DataFrame(np.random.random((40, 6)), schema=[f'sample{i}' for i in range(6)])
+    counter = _count_box_cox_calls(monkeypatch)
+    runner = CLICOMRunner(df, [list(df.columns)], True, 1 / 3, False, 1,
+                          dict(method='kmeans', n_clusters=[2, 3, 4], n_init=1),
+                          plot_style='none', parallel_backend='sequential')
+    runner._run(plot=False)
+    # 3 kmeans setups share (columns, power_transform=True); without memoization each is transformed twice
+    # (once to validate the setup, once to run it) -> ~6 calls. With memoization: once, plus at most the
+    # single final CLICOM plot-data transform.
+    assert counter['n'] <= 2
 
 
 def test_find_cliques(monkeypatch):
