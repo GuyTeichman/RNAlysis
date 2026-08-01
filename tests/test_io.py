@@ -181,6 +181,14 @@ def test_load_csv_drop_columns():
         load_table('tests/test_files/counted.csv', drop_columns=['cond1', 'cond6'])
 
 
+def test_load_csv_with_comment(tmp_path):
+    pth = tmp_path / 'commented.csv'
+    pth.write_text('# this is a comment line\nidxcol,othercol\none,4\ntwo,5\nthree,6\n')
+    truth = pl.DataFrame({'idxcol': ['one', 'two', 'three'], 'othercol': [4, 5, 6]})
+    loaded = load_table(pth, comment='#')
+    assert loaded.equals(truth)
+
+
 def test_save_csv():
     try:
         df = pl.read_csv('tests/test_files/enrichment_hypergeometric_res.csv')

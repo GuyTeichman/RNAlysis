@@ -14,6 +14,8 @@ Changed
 
 Fixed
 ******
+* Fixed a bug where averaging replicate samples (``CountFilter.average_replicate_samples``) crashed when the averaging function was set to ``'median'`` or ``'geometric_mean'`` (both selectable in the GUI), because the underlying Polars calls no longer existed in current Polars versions. Both options now work correctly, computing the row-wise median / geometric mean across each group of replicate columns.
+* Restored compatibility with current Polars versions in two internal code paths that relied on since-removed Polars behavior: loading a table while skipping comment lines, and parsing annotation scores during gene-ID translation.
 * Fixed a bug in ``CountFilter.pairplot`` where the Spearman correlation shown for the first row/column of the plot was computed against the gene-index column instead of a sample, producing an incorrect value (and, with recent NumPy versions, an error). The correlations are now always computed between the correct pair of samples.
 * Fixed a bug where mapping orthologs through the OrthoInspector service could hang indefinitely when one of its databases stopped responding (OrthoInspector relocated its API, and its largest database can stall). OrthoInspector requests now use a timeout, target OrthoInspector's current API host directly, and automatically fall back to the next available database.
 * Fixed a bug where gene-ID translation and enrichment analyses (which rely on UniProt) could intermittently fail with an ``HTTP 400`` error while waiting for a UniProt ID-mapping job, especially when several analyses ran at once. The job-status check now retries such transient errors with backoff instead of failing.

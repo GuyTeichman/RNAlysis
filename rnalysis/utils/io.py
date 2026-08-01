@@ -423,7 +423,7 @@ def load_table(filename: Union[str, Path], drop_columns: Union[str, List[str]] =
 
     kwargs = {}
     if comment is not None:
-        kwargs['comment_char'] = comment
+        kwargs['comment_prefix'] = comment
     if filename.suffix.lower() == '.parquet':
         df = pl.read_parquet(filename)
         # handle edge cases of parquet files that were exported from pandas DataFrames
@@ -2166,7 +2166,7 @@ class GeneIDTranslator:
         if 'Annotation' in df.columns:
             if df['Annotation'].dtype not in pl.FLOAT_DTYPES:
                 df = df.lazy().with_columns(
-                    Annotation=pl.col('Annotation').replace('', '0', return_dtype=pl.datatypes.Int16))
+                    Annotation=pl.col('Annotation').replace('', '0').cast(pl.datatypes.Int16))
             else:
                 df = df.lazy()
             df = df.sort('Annotation', descending=True).drop('Annotation').collect()
