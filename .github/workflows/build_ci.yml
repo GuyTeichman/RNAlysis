@@ -26,10 +26,18 @@ jobs:
             R_LIBS_USER: ${{ github.workspace }}/.r-libs
             # Use the faster sys.monitoring coverage backend (Python >=3.12, coverage >=7.7).
             COVERAGE_CORE: sysmon
+            # Let `uv pip install` target the actions/setup-python interpreter instead of requiring a
+            # virtualenv (see the "Install uv" / "Install dependencies" steps).
+            UV_SYSTEM_PYTHON: 1
             # Only one job (Ubuntu / Python 3.13) collects coverage; every other job runs the tests
             # without the coverage tracer, which is faster (most noticeably on Windows). This is the
             # test-runner command the tier steps below invoke.
             RUN_TESTS: ${{ (matrix.os == 'ubuntu-latest' && matrix.python-version == '3.13') && 'coverage run --append --source=rnalysis/ -m pytest' || 'python -m pytest' }}
+            # A native crash (e.g. the flaky Qt access violation in the e2e tier) kills the process
+            # without pytest reporting which test was running. tests/conftest.py writes each test's
+            # nodeid here before it runs, so the "Report last test before a crash" step below can name
+            # the culprit. No effect on runs where this env var is unset (e.g. local runs).
+            PYTEST_CRASH_BREADCRUMB: ${{ github.workspace }}/pytest_last_test.txt
         steps:
             -   name: Configure pagefile
                 if: runner.os == 'Windows'
@@ -161,25 +169,59 @@ jobs:
                 uses: actions/setup-python@v6
                 with:
                     python-version: ${{ matrix.python-version }}
-                    cache: 'pip'
+            -   name: Install uv
+                # uv resolves + installs far faster than pip (most noticeably on Windows). It caches
+                # built wheels itself (enable-cache), so setup-python's pip cache is no longer needed.
+                # Pinned to a full version on purpose: setup-uv no longer publishes a moving `@v9` major
+                # tag, so `@v9.0.0` (not `@v9`) is the correct current pin.
+                uses: astral-sh/setup-uv@v9.0.0
+                with:
+                    enable-cache: true
+                    cache-dependency-glob: |
+                        requirements*.txt
+                        pyproject.toml
             -   name: Install dependencies
+                # UV_SYSTEM_PYTHON=1 (job env) makes these install into the setup-python interpreter.
                 run: |
-                    python -m pip install --upgrade pip
-                    python -m pip install --upgrade -r requirements_dev.txt
-                    python -m pip install .[all]
+                    uv pip install --upgrade -r requirements_dev.txt
+                    uv pip install .[all]
             -   name: Prepare R library cache dir
                 # R only puts R_LIBS_USER on .libPaths() (and installs there) if the dir exists.
                 run: python -c "import os, pathlib; pathlib.Path(os.environ['R_LIBS_USER']).mkdir(parents=True, exist_ok=True)"
-            # Tests run in tiers (unit -> integration -> e2e). A failure in a faster tier stops the
-            # slower ones (fail-fast). Only the coverage job wraps them in `coverage run` (see
-            # RUN_TESTS above); every other job invokes pytest directly. Tiers are assigned
-            # automatically in tests/conftest.py; see pytest.ini for definitions.
+            # Tests run in tiers (unit -> integration_net -> integration_tools -> e2e). A failure in a
+            # faster tier stops the slower ones (fail-fast). The integration tier is split into a
+            # network/web-API step and an R/CLI-tools step so we can see the per-tier breakdown.
+            # `--durations=25` prints the slowest tests in each tier. Only the coverage job wraps them
+            # in `coverage run` (see RUN_TESTS above); every other job invokes pytest directly. Tiers
+            # are assigned automatically in tests/conftest.py; see pytest.ini for definitions.
             -   name: Unit tests
-                run: ${{ env.RUN_TESTS }} -m unit tests/
-            -   name: Integration tests
-                run: ${{ env.RUN_TESTS }} -m integration tests/
+                run: ${{ env.RUN_TESTS }} -m unit --durations=25 tests/
+            # The network/web-API tests just hit external services (UniProt/Ensembl/PANTHER/
+            # PhylomeDB/KEGG/GO), so their results are platform-independent and running them on all 9
+            # matrix cells is redundant. Worse, 9 concurrent runners hammering rate-limited services
+            # (esp. UniProt idmapping) causes transient failures. Run them only on the coverage cell
+            # (ubuntu-latest / 3.13, matching RUN_TESTS above) to cut external-API load 9x -> 1x with
+            # no loss of coverage. On the other 8 cells this step is skipped; integration_tools/e2e
+            # still run (a skipped step keeps success() true, so it doesn't fail the job).
+            -   name: Integration tests (network / web APIs)
+                if: ${{ matrix.os == 'ubuntu-latest' && matrix.python-version == '3.13' }}
+                run: ${{ env.RUN_TESTS }} -m integration_net --durations=25 tests/
+            -   name: Integration tests (R / CLI tools)
+                run: ${{ env.RUN_TESTS }} -m integration_tools --durations=25 tests/
             -   name: End-to-end (GUI) tests
-                run: ${{ env.RUN_TESTS }} -m e2e tests/
+                run: ${{ env.RUN_TESTS }} -m e2e --durations=25 tests/
+            -   name: Report last test before a crash
+                # Runs whenever a prior tier failed (incl. a native crash that produced no pytest
+                # summary). Surfaces the breadcrumb written by tests/conftest.py so the flaky e2e crash
+                # names the exact test instead of an anonymous "access violation".
+                if: failure()
+                shell: bash
+                run: |
+                    if [ -f "${GITHUB_WORKSPACE}/pytest_last_test.txt" ]; then
+                        echo "::warning::Last test started before failure/crash: $(cat "${GITHUB_WORKSPACE}/pytest_last_test.txt")"
+                    else
+                        echo "No crash breadcrumb file was written."
+                    fi
             # Interactive tmate debug session on failure. Disabled by default: tmate holds the runner
             # open until the session is closed or times out, which freezes the job on every failure.
             # Re-enable on demand by setting the repository variable ENABLE_TMATE to 'true'.

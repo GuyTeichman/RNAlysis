@@ -1,5 +1,6 @@
 import os
 import sys
+from typing import Iterable, Tuple
 
 import pytest
 
@@ -12,17 +13,64 @@ def pytest_configure(config):
     os.environ["QT_DEBUG_PLUGINS"] = "1"
 
 
+def pytest_runtest_logstart(nodeid, location):
+    """Write the about-to-run test's nodeid to a breadcrumb file, if PYTEST_CRASH_BREADCRUMB is set.
+
+    A native crash (e.g. the flaky Qt access violation in the e2e tier) kills the process without
+    pytest reporting which test was running. Recording the nodeid *before* each test runs means the
+    file's last value identifies the culprit after a crash (see the CI "Report last test before a
+    crash" step). No-op unless the env var is set, so it costs nothing on local/normal runs.
+    """
+    breadcrumb = os.environ.get("PYTEST_CRASH_BREADCRUMB")
+    if not breadcrumb:
+        return
+    try:
+        with open(breadcrumb, "w", encoding="utf-8") as handle:
+            handle.write(f"{nodeid}\n")
+            handle.flush()
+    except OSError:
+        pass
+
+
 # --- test tiers (unit / integration / e2e) ---------------------------------------------------
-# Modules whose tests are dominated by external services (R, external CLI tools, or web APIs that
-# aren't mocked). Tests in these modules default to the `integration` tier.
-_INTEGRATION_MODULES = frozenset({
+# The `integration` tier is split into two sub-tiers so CI can time (and, later, schedule) them
+# separately:
+#   * integration_net   — bound to external WEB services; platform-independent.
+#   * integration_tools — bound to external CLIs / R; exercise OS-specific binaries.
+# Both sub-tiers also carry the umbrella `integration` marker, so `-m integration` still selects all
+# of them (back-compat with the old single tier).
+_INTEGRATION_NET_MODULES = frozenset({
     'test_io',                       # web APIs (UniProt/Ensembl/PANTHER/PhylomeDB/OrthoInspector/KEGG/GO)
+})
+_INTEGRATION_TOOLS_MODULES = frozenset({
     'test_fastq',                    # kallisto / bowtie2 / cutadapt CLIs
     'test_differential_expression',  # R (DESeq2 / limma-voom)
     'test_feature_counting',         # R (Rsubread featureCounts)
     'test_installs',                 # installs R packages
 })
-_TIER_MARKERS = ('unit', 'integration', 'e2e')
+# Leaf tiers — an explicit one of these on a test/class/module wins over auto-assignment. The
+# umbrella `integration` is intentionally NOT listed here, so tagging it never suppresses
+# auto-assignment: classification keys off the module name, and each integration module maps to
+# exactly one leaf sub-tier (net or tools). (A bare `@pytest.mark.integration` isn't used anywhere in
+# the suite; such a test would be classified by its module like any other.)
+_TIER_MARKERS = ('unit', 'integration_net', 'integration_tools', 'e2e')
+
+
+def _tier_markers_for(module: str, fixturenames: Iterable[str],
+                      has_availability_skip: bool) -> Tuple[str, ...]:
+    """Return the marker name(s) a test should carry, from its module name and traits.
+
+    Pure function (no pytest state) so it can be unit-tested directly. Integration tests get two
+    markers: the umbrella `integration` plus their leaf sub-tier. Module membership wins over the
+    availability-skip heuristic (a tools test with an 'available' skipif stays in tools).
+    """
+    if module.startswith('test_gui') or 'qtbot' in fixturenames:
+        return ('e2e',)
+    if module in _INTEGRATION_TOOLS_MODULES:
+        return ('integration', 'integration_tools')
+    if module in _INTEGRATION_NET_MODULES or has_availability_skip:
+        return ('integration', 'integration_net')
+    return ('unit',)
 
 
 def _has_availability_skip(item) -> bool:
@@ -38,20 +86,17 @@ def _has_availability_skip(item) -> bool:
 
 
 def pytest_collection_modifyitems(config, items):
-    """Auto-assign every test to exactly one tier (unit / integration / e2e).
+    """Auto-assign every test to a tier (unit / integration_net / integration_tools / e2e).
 
-    An explicit @pytest.mark.{unit,integration,e2e} on the test/class/module always wins; this only
-    fills in a tier for tests that don't declare one. See pytest.ini for the tier definitions.
+    An explicit leaf-tier marker (@pytest.mark.{unit,integration_net,integration_tools,e2e}) on the
+    test/class/module always wins; this only fills in a tier for tests that don't declare one.
+    Integration tests additionally carry the umbrella `integration` marker. See pytest.ini.
     """
     for item in items:
         if any(item.get_closest_marker(m) for m in _TIER_MARKERS):
-            continue  # respect an explicit tier
+            continue  # respect an explicit leaf tier
 
         module = item.module.__name__.rsplit('.', 1)[-1] if item.module is not None else ''
-        if module.startswith('test_gui') or 'qtbot' in getattr(item, 'fixturenames', ()):
-            tier = 'e2e'
-        elif module in _INTEGRATION_MODULES or _has_availability_skip(item):
-            tier = 'integration'
-        else:
-            tier = 'unit'
-        item.add_marker(getattr(pytest.mark, tier))
+        markers = _tier_markers_for(module, getattr(item, 'fixturenames', ()), _has_availability_skip(item))
+        for marker in markers:
+            item.add_marker(getattr(pytest.mark, marker))

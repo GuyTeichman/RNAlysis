@@ -1877,6 +1877,13 @@ class GeneIDTranslator:
     REQUEST_DELAY_MILLIS = 250
     REQ_MAX_ENTRIES = 10
     RETRIES = RandomExpRetry(total=5, backoff_factor=0.25, status_forcelist=[500, 502, 503, 504])
+    # UniProt's idmapping *status* endpoint intermittently answers a valid jobId with a transient
+    # HTTP 400 (seen when the status is polled before the job is fully registered, or under heavy
+    # concurrent load such as many parallel CI jobs). 400 is deliberately absent from RETRIES'
+    # status_forcelist because a 400 usually means a genuinely bad request, so we retry it only
+    # here, and only a bounded number of times, with jittered exponential backoff.
+    STATUS_POLL_MAX_RETRIES = 5
+    STATUS_POLL_BACKOFF = 0.5
 
     def __init__(self, map_from: str, map_to: str = 'UniProtKB AC', verbose: bool = True,
                  session: Union[requests.Session, None] = None):
@@ -2011,10 +2018,32 @@ class GeneIDTranslator:
                 return match.group(1)
 
     @staticmethod
+    def _poll_mapping_status(session, job_id: str, verbose: bool = True):
+        """Fetch the idmapping job status, retrying transient HTTP 400s with jittered backoff.
+
+        A 400 here is (empirically) transient for a valid jobId, so retry it a bounded number of
+        times; any other error, or a 400 that never clears, is re-raised so genuine failures still
+        surface. The jitter also de-synchronizes many parallel callers that bounced together."""
+        url = f"{GeneIDTranslator.API_URL}/idmapping/status/{job_id}"
+        for attempt in range(GeneIDTranslator.STATUS_POLL_MAX_RETRIES + 1):
+            r = session.get(url)
+            try:
+                r.raise_for_status()
+            except requests.exceptions.HTTPError:
+                if r.status_code == 400 and attempt < GeneIDTranslator.STATUS_POLL_MAX_RETRIES:
+                    backoff = GeneIDTranslator.STATUS_POLL_BACKOFF * (2 ** attempt)
+                    backoff *= 0.5 + 0.5 * random.random()  # jitter
+                    if verbose:
+                        print(f"Transient error polling job status; retrying in {backoff:.1f}s")
+                    time.sleep(backoff)
+                    continue
+                raise
+            return r
+
+    @staticmethod
     def check_id_mapping_results_ready(session, job_id: str, polling_interval: float, verbose: bool = True):
         while True:
-            r = session.get(f"{GeneIDTranslator.API_URL}/idmapping/status/{job_id}")
-            r.raise_for_status()
+            r = GeneIDTranslator._poll_mapping_status(session, job_id, verbose)
             j = r.json()
             if "jobStatus" in j:
                 if j["jobStatus"] in {"RUNNING", "NEW"}:

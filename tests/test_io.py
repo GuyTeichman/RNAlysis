@@ -1097,7 +1097,8 @@ def test_check_id_mapping_results_ready_running():
 
 def test_check_id_mapping_results_ready_error():
     with requests_mock.Mocker() as m:
-        # Mock the response from the server
+        # A 200 response whose jobStatus is ERROR must raise (this exercises the ERROR branch;
+        # note check_id_mapping_results_ready's signature is (session, job_id, polling_interval)).
         m.get("https://rest.uniprot.org/idmapping/status/123", json={"jobStatus": "ERROR"})
 
         # Call the function
@@ -1105,7 +1106,47 @@ def test_check_id_mapping_results_ready_error():
 
         # Check that an exception is raised
         with pytest.raises(Exception):
-            GeneIDTranslator.check_id_mapping_results_ready(session, "https://rest.uniprot.org", "123", 0.1)
+            GeneIDTranslator.check_id_mapping_results_ready(session, "123", 0.1)
+
+
+def test_check_id_mapping_results_ready_retries_transient_400(monkeypatch):
+    # UniProt's idmapping status endpoint intermittently returns a transient HTTP 400 when the
+    # job is polled before it is fully registered, or when the service is under load (e.g. many
+    # parallel CI jobs hitting it at once). Such 400s clear on a retry, so the poll must not
+    # hard-fail on the first one.
+    monkeypatch.setattr(io.time, 'sleep', lambda *args, **kwargs: None)  # don't actually wait
+    with requests_mock.Mocker() as m:
+        adapter = m.get("https://rest.uniprot.org/idmapping/status/123",
+                        [{'status_code': 400}, {'status_code': 400}, {'json': {"results": ['content']}}])
+        session = requests.Session()
+        ready = GeneIDTranslator.check_id_mapping_results_ready(session, "123", 0.1)
+        assert ready
+        assert adapter.call_count == 3  # two 400s were retried, then the success was used
+
+
+def test_check_id_mapping_results_ready_retries_up_to_the_bound_then_succeeds(monkeypatch):
+    # A success on the very last allowed attempt must still be honoured (pins the retry bound from
+    # below: STATUS_POLL_MAX_RETRIES=5 retries -> 6 total attempts, the 6th here being the success).
+    monkeypatch.setattr(io.time, 'sleep', lambda *args, **kwargs: None)
+    responses = [{'status_code': 400}] * GeneIDTranslator.STATUS_POLL_MAX_RETRIES + [{'json': {"results": ['x']}}]
+    with requests_mock.Mocker() as m:
+        adapter = m.get("https://rest.uniprot.org/idmapping/status/123", responses)
+        session = requests.Session()
+        ready = GeneIDTranslator.check_id_mapping_results_ready(session, "123", 0.1)
+        assert ready
+        assert adapter.call_count == GeneIDTranslator.STATUS_POLL_MAX_RETRIES + 1
+
+
+def test_check_id_mapping_results_ready_persistent_400_raises(monkeypatch):
+    # A 400 that never clears is a genuine error and must still surface after a *bounded* number of
+    # retries (pins the bound from above: exactly MAX_RETRIES+1 attempts, no infinite loop).
+    monkeypatch.setattr(io.time, 'sleep', lambda *args, **kwargs: None)
+    with requests_mock.Mocker() as m:
+        adapter = m.get("https://rest.uniprot.org/idmapping/status/123", status_code=400)
+        session = requests.Session()
+        with pytest.raises(requests.exceptions.HTTPError):
+            GeneIDTranslator.check_id_mapping_results_ready(session, "123", 0.1)
+        assert adapter.call_count == GeneIDTranslator.STATUS_POLL_MAX_RETRIES + 1
 
 
 # Test cases for the OrthologDict class
