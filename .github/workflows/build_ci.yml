@@ -39,7 +39,14 @@ jobs:
             HDF5_DISABLE_VERSION_CHECK: '2'
             # Install R packages (DESeq2/limma/Rsubread) into a stable, cacheable location so they
             # aren't recompiled from source on every run (see the "Cache R packages" step).
-            R_LIBS_USER: ${{ github.workspace }}/.r-libs
+            # NOTE: this MUST be R_LIBS, not R_LIBS_USER. r-lib/actions/setup-r exports its own
+            # R_LIBS_USER (=<tempdir>/Library) via $GITHUB_ENV, which overrides a job-level
+            # `env: R_LIBS_USER` in every later step -- so packages landed in setup-r's temp library
+            # and the .r-libs cache stayed empty (issue #113). setup-r never touches R_LIBS, and R
+            # puts R_LIBS dirs *ahead* of R_LIBS_USER on .libPaths(), so this makes .libPaths()[1] ==
+            # .r-libs. install.packages()/BiocManager::install() (no explicit lib=) then install here,
+            # with no change to the production install scripts driven by installs.py.
+            R_LIBS: ${{ github.workspace }}/.r-libs
             # Use the faster sys.monitoring coverage backend (Python >=3.12, coverage >=7.7).
             COVERAGE_CORE: sysmon
             # Let `uv pip install` target the actions/setup-python interpreter instead of requiring a
@@ -107,7 +114,7 @@ jobs:
                     r-version: '4.4' # The R version to download (if necessary) and use.
             -   name: Cache R packages (DESeq2/limma/Rsubread)
                 # The DE/featureCounts integration tests compile these Bioconductor packages from
-                # source at test time; caching R_LIBS_USER avoids recompiling them on every run.
+                # source at test time; caching R_LIBS (=.r-libs) avoids recompiling them on every run.
                 uses: actions/cache@v5
                 with:
                     path: ${{ github.workspace }}/.r-libs
@@ -231,8 +238,29 @@ jobs:
                     uv pip install --upgrade -r requirements_dev.txt
                     uv pip install .[all]
             -   name: Prepare R library cache dir
-                # R only puts R_LIBS_USER on .libPaths() (and installs there) if the dir exists.
-                run: python -c "import os, pathlib; pathlib.Path(os.environ['R_LIBS_USER']).mkdir(parents=True, exist_ok=True)"
+                # R only puts an R_LIBS entry on .libPaths() (and installs there) if the dir exists.
+                run: python -c "import os, pathlib; pathlib.Path(os.environ['R_LIBS']).mkdir(parents=True, exist_ok=True)"
+            -   name: Verify R installs into the cached R_LIBS dir
+                # Guard against a silent regression of issue #113. install.packages() /
+                # BiocManager::install() (no explicit lib=) install into .libPaths()[1]; if that is not the
+                # cached .r-libs dir, the Bioconductor packages aren't cached and recompile from source
+                # every run. Assert it now (before any install) so the fix is self-detecting -- a loud red
+                # here beats an empty r-libs-* cache discovered much later. Paths are normalized so the
+                # comparison is cross-platform (Windows backslashes / macOS symlinked workspace).
+                # Run the body directly via `shell: Rscript {0}` rather than `shell: bash`: on Windows
+                # `shell: bash` resolves to rtools' MSYS2 bash, and launching the native-Windows Rscript
+                # from it segfaults R at startup (SIGSEGV, exit 139) before it evaluates anything.
+                shell: Rscript {0}
+                run: |
+                    want <- normalizePath(Sys.getenv("R_LIBS"), winslash = "/", mustWork = FALSE)
+                    got  <- normalizePath(.libPaths()[1],       winslash = "/", mustWork = FALSE)
+                    cat("R_LIBS         :", want, "\n")
+                    cat(".libPaths()[1] :", got,  "\n")
+                    cat("full .libPaths():\n"); print(.libPaths())
+                    if (!identical(want, got)) {
+                      stop("R_LIBS is not first on .libPaths(); installed R packages will NOT be cached (issue #113).")
+                    }
+                    cat("OK: install.packages() will target the cached R_LIBS dir.\n")
             # Tests run in tiers (unit -> integration_net -> integration_tools -> e2e). A failure in a
             # faster tier stops the slower ones (fail-fast). The integration tier is split into a
             # network/web-API step and an R/CLI-tools step so we can see the per-tier breakdown.
