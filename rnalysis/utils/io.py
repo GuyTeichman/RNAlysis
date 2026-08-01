@@ -2243,10 +2243,15 @@ def find_best_gene_mapping(ids: Tuple[str, ...], map_from_options: Union[Tuple[s
     return parsed_results[sorted_keys[0]]
 
 
+# Connect/read timeout (seconds) for the small "legal values" metadata fetches below. These run at
+# import time to populate GUI dropdowns / type annotations, so a hung request would freeze startup.
+LEGAL_VALUES_REQUEST_TIMEOUT = (10, 30)
+
+
 @functools.lru_cache(maxsize=2)
 def get_legal_panther_taxons():
     URL = 'https://www.pantherdb.org/services/oai/pantherdb/supportedgenomes'
-    req = requests.post(URL)
+    req = requests.post(URL, timeout=LEGAL_VALUES_REQUEST_TIMEOUT)
     req.raise_for_status()
     genomes = req.json()['search']['output']['genomes']['genome']
     # PantherDB returns a single genome dict (not a list) when only one genome is present; normalize
@@ -2288,7 +2293,7 @@ def get_legal_gene_id_types():
     abbrev_dict_to = {}
     abbrev_dict_from = {}
 
-    req = requests.get(URL)
+    req = requests.get(URL, timeout=LEGAL_VALUES_REQUEST_TIMEOUT)
     req.raise_for_status()
     entries = json.loads(req.text)['groups']
     entries_filtered = []

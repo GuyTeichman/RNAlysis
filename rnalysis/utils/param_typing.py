@@ -79,11 +79,21 @@ def type_to_supertype(this_type):
     return this_type
 
 
+# Errors that mean "couldn't fetch or parse the remote list of legal values". These getters run at
+# import time to populate Literal[...] type annotations, so an uncaught error here crashes
+# `import rnalysis.filtering` for every user and every test-collection run — degrade to an empty tuple
+# plus a warning instead. RequestException covers connection/HTTP/timeout failures (the underlying
+# io.get_legal_* calls now pass a request timeout); ValueError covers JSON-decode errors from a
+# 200-with-garbage body; Key/Type/Index errors cover otherwise-parseable-but-unexpected shapes.
+_LEGAL_VALUE_FETCH_ERRORS = (requests.exceptions.RequestException, tenacity.RetryError,
+                             ValueError, KeyError, TypeError, IndexError)
+
+
 @functools.lru_cache(maxsize=2)
 def get_gene_id_types() -> typing.Tuple[str, ...]:
     try:
         gene_id_types = parsing.data_to_tuple(io.get_legal_gene_id_types()[0].keys())
-    except requests.exceptions.ConnectionError:
+    except _LEGAL_VALUE_FETCH_ERRORS:
         gene_id_types = tuple()
         warnings.warn('Failed to retrieve gene ID mapping data from UniProtKB. '
                       'Some features may not work as intended. '
@@ -96,10 +106,7 @@ def get_gene_id_types() -> typing.Tuple[str, ...]:
 def get_panther_taxons() -> typing.Tuple[str, ...]:
     try:
         taxons = io.get_legal_panther_taxons()
-    except (requests.exceptions.ConnectionError, requests.exceptions.HTTPError,
-            KeyError, ValueError, TypeError):
-        # Also swallow parse errors: once PantherDB answers 200 (over https) but in an unexpected
-        # shape, json/key/type errors would otherwise crash instead of degrading gracefully.
+    except _LEGAL_VALUE_FETCH_ERRORS:
         taxons = tuple()
         warnings.warn('Failed to retrieve legal taxons from PantherDB. '
                       'Some features may not work as intended. '
@@ -112,7 +119,7 @@ def get_panther_taxons() -> typing.Tuple[str, ...]:
 def get_phylomedb_taxons() -> typing.Tuple[str, ...]:
     try:
         taxons = io.get_legal_phylomedb_taxons()
-    except ftplib.all_errors:
+    except (*_LEGAL_VALUE_FETCH_ERRORS, *ftplib.all_errors):
         taxons = tuple()
         warnings.warn('Failed to retrieve legal taxons from PhylomeDB. '
                       'Some features may not work as intended. '
@@ -125,7 +132,7 @@ def get_phylomedb_taxons() -> typing.Tuple[str, ...]:
 def get_ensembl_taxons() -> typing.Tuple[str, ...]:
     try:
         taxons = parsing.data_to_tuple(io.get_legal_ensembl_taxons())
-    except (requests.exceptions.ConnectionError, tenacity.RetryError):
+    except _LEGAL_VALUE_FETCH_ERRORS:
         taxons = tuple()
         warnings.warn('Failed to retrieve legal taxons from Ensembl. '
                       'Some features may not work as intended. '
