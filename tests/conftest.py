@@ -1,5 +1,6 @@
 import os
 import sys
+from typing import Iterable, Tuple
 
 import pytest
 
@@ -10,6 +11,25 @@ if sys.platform == 'darwin':
 
 def pytest_configure(config):
     os.environ["QT_DEBUG_PLUGINS"] = "1"
+
+
+def pytest_runtest_logstart(nodeid, location):
+    """Write the about-to-run test's nodeid to a breadcrumb file, if PYTEST_CRASH_BREADCRUMB is set.
+
+    A native crash (e.g. the flaky Qt access violation in the e2e tier) kills the process without
+    pytest reporting which test was running. Recording the nodeid *before* each test runs means the
+    file's last value identifies the culprit after a crash (see the CI "Report last test before a
+    crash" step). No-op unless the env var is set, so it costs nothing on local/normal runs.
+    """
+    breadcrumb = os.environ.get("PYTEST_CRASH_BREADCRUMB")
+    if not breadcrumb:
+        return
+    try:
+        with open(breadcrumb, "w", encoding="utf-8") as handle:
+            handle.write(f"{nodeid}\n")
+            handle.flush()
+    except OSError:
+        pass
 
 
 # --- test tiers (unit / integration / e2e) ---------------------------------------------------
@@ -29,12 +49,15 @@ _INTEGRATION_TOOLS_MODULES = frozenset({
     'test_installs',                 # installs R packages
 })
 # Leaf tiers — an explicit one of these on a test/class/module wins over auto-assignment. The
-# umbrella `integration` is intentionally NOT listed here: a test tagged only `integration` still
-# gets sub-classified into net/tools so it lands in exactly one CI step.
+# umbrella `integration` is intentionally NOT listed here, so tagging it never suppresses
+# auto-assignment: classification keys off the module name, and each integration module maps to
+# exactly one leaf sub-tier (net or tools). (A bare `@pytest.mark.integration` isn't used anywhere in
+# the suite; such a test would be classified by its module like any other.)
 _TIER_MARKERS = ('unit', 'integration_net', 'integration_tools', 'e2e')
 
 
-def _tier_markers_for(module: str, fixturenames, has_availability_skip: bool) -> tuple:
+def _tier_markers_for(module: str, fixturenames: Iterable[str],
+                      has_availability_skip: bool) -> Tuple[str, ...]:
     """Return the marker name(s) a test should carry, from its module name and traits.
 
     Pure function (no pytest state) so it can be unit-tested directly. Integration tests get two
