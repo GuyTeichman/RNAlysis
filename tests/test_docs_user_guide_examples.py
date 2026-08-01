@@ -7,8 +7,11 @@ GUI_GUIDE = DOCS_DIR / 'user_guide_gui.rst'
 
 
 def test_user_guide_examples_use_current_api_names_and_paths():
-    user_guide = USER_GUIDE.read_text()
-    gui_guide = GUI_GUIDE.read_text()
+    # The guides contain non-ASCII characters (e.g. Polars table-repr box-drawing glyphs), so the
+    # encoding must be pinned to UTF-8 -- otherwise read_text() uses the platform default (cp1252 on
+    # Windows), which fails to decode them and breaks this test on Windows only.
+    user_guide = USER_GUIDE.read_text(encoding='utf-8')
+    gui_guide = GUI_GUIDE.read_text(encoding='utf-8')
 
     assert 'normalize_quantile' not in user_guide
     assert 'normalize_quantile' not in gui_guide
