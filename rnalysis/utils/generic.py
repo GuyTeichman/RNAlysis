@@ -290,6 +290,8 @@ def sanitize_variable_name(name: str) -> str:
     :rtype: str
     """
     new_name = name.rstrip().replace(' ', '_')
+    if not new_name:
+        return new_name
     if new_name[0].isdigit():
         new_name = 'var_' + new_name
 
