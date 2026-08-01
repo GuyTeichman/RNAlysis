@@ -1,0 +1,11 @@
+#!genome-build TESTv1
+1	HAVANA	gene	100	399	.	+	.	gene_id "ENSG00000000001.3"; gene_type "protein_coding"; gene_name "GENEA";
+1	HAVANA	transcript	100	399	.	+	.	gene_id "ENSG00000000001.3"; transcript_id "ENST00000000001.2"; gene_type "protein_coding"; transcript_type "protein_coding"; gene_name "GENEA"; transcript_name "GENEA-201";
+1	HAVANA	exon	100	199	.	+	.	gene_id "ENSG00000000001.3"; transcript_id "ENST00000000001.2"; gene_type "protein_coding"; transcript_type "protein_coding"; gene_name "GENEA"; transcript_name "GENEA-201"; exon_number "1"; exon_id "ENSE00000000001.1";
+1	HAVANA	exon	300	399	.	+	.	gene_id "ENSG00000000001.3"; transcript_id "ENST00000000001.2"; gene_type "protein_coding"; transcript_type "protein_coding"; gene_name "GENEA"; transcript_name "GENEA-201"; exon_number "2"; exon_id "ENSE00000000002.1";
+1	HAVANA	transcript	100	349	.	+	.	gene_id "ENSG00000000001.3"; transcript_id "ENST00000000002.1"; gene_type "protein_coding"; transcript_type "protein_coding"; gene_name "GENEA"; transcript_name "GENEA-202";
+1	HAVANA	exon	100	149	.	+	.	gene_id "ENSG00000000001.3"; transcript_id "ENST00000000002.1"; gene_type "protein_coding"; transcript_type "protein_coding"; gene_name "GENEA"; transcript_name "GENEA-202"; exon_number "1"; exon_id "ENSE00000000003.1";
+1	HAVANA	exon	300	349	.	+	.	gene_id "ENSG00000000001.3"; transcript_id "ENST00000000002.1"; gene_type "protein_coding"; transcript_type "protein_coding"; gene_name "GENEA"; transcript_name "GENEA-202"; exon_number "2"; exon_id "ENSE00000000004.1";
+1	HAVANA	gene	500	599	.	-	.	gene_id "ENSG00000000002.1"; gene_type "lincRNA"; gene_name "GENEB";
+1	HAVANA	transcript	500	599	.	-	.	gene_id "ENSG00000000002.1"; transcript_id "ENST00000000003.4"; gene_type "lincRNA"; transcript_type "lincRNA"; gene_name "GENEB"; transcript_name "GENEB-201";
+1	HAVANA	exon	500	599	.	-	.	gene_id "ENSG00000000002.1"; transcript_id "ENST00000000003.4"; gene_type "lincRNA"; transcript_type "lincRNA"; gene_name "GENEB"; transcript_name "GENEB-201"; exon_number "1"; exon_id "ENSE00000000005.1";
