@@ -1880,6 +1880,56 @@ class TestEnsemblOrthologMapper:
         assert first_one2one['gene1'] == second_one2one['gene1'] == 'TARGET_A'
         assert len(cache) == 1  # the gene's homologies were written to the cache
 
+    def test_get_orthologs_cache_keyed_by_requested_id_not_echoed_id(self, monkeypatch):
+        # The homology response's 'id' field echoes back whatever Ensembl considers canonical, which is
+        # not guaranteed to be byte-identical to the ID we requested (e.g. Ensembl may append/normalize a
+        # version suffix). The cache-MISS path must key results by the *requested* gene ID -- the same key
+        # the cache-HIT path and translate_mappings() use -- otherwise (a) the mapped gene is silently
+        # dropped from the result, and (b) a repeat query never finds the cache entry and re-hits Ensembl,
+        # so a first run and a cached re-run of the same query could disagree. Two genes also pin down that
+        # responses are paired with requests by order, not by the echoed ID.
+        cache = {}
+        monkeypatch.setattr(io, 'load_cached_file', lambda fname: cache.get(fname))
+        monkeypatch.setattr(io, 'cache_file', lambda content, fname: cache.__setitem__(fname, content))
+
+        class MockGeneIDTranslator:
+            def __init__(self, *args, **kwargs):
+                pass
+
+            def run(self, ids):
+                return GeneIDDict({this_id: this_id for this_id in ids})
+
+        monkeypatch.setattr(io, 'GeneIDTranslator', MockGeneIDTranslator)
+        monkeypatch.setattr(io.EnsemblOrthologMapper, 'get_species_name', lambda self: 'caenorhabditis_elegans')
+
+        run_calls = []
+        # Ensembl echoes a version-suffixed ID ('REQ1.1') that differs from the requested 'REQ1'. Response
+        # order matches the queued request order (asyncio.gather preserves order).
+        fake_response = [
+            {'data': [{'id': 'REQ1.1', 'homologies': [
+                {'target': {'id': 'ORTH1'}, 'source': {'perc_id': 90.0}}]}]},
+            {'data': [{'id': 'REQ2.1', 'homologies': [
+                {'target': {'id': 'ORTH2'}, 'source': {'perc_id': 88.0}}]}]},
+        ]
+
+        def counting_run(self):
+            run_calls.append(1)
+            return fake_response
+
+        monkeypatch.setattr(io.EnsemblRestClient, 'run', counting_run)
+
+        mapper = EnsemblOrthologMapper(map_to_organism=7227, map_from_organism=6239,
+                                       gene_id_type='UniProtKB AC/ID')
+
+        first_one2one, _ = mapper.get_orthologs(('REQ1', 'REQ2'), 'first')
+        second_one2one, _ = mapper.get_orthologs(('REQ1', 'REQ2'), 'first')
+
+        # genes are keyed by the requested IDs, so neither is dropped
+        assert first_one2one.mapping_dict == {'REQ1': 'ORTH1', 'REQ2': 'ORTH2'}
+        # the cached re-run reproduces the first run exactly and does not re-hit the network
+        assert second_one2one.mapping_dict == first_one2one.mapping_dict
+        assert len(run_calls) == 1
+
 
 class TestRunRScript:
     @mock.patch('rnalysis.utils.io.run_subprocess')

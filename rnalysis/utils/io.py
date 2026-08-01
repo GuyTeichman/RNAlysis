@@ -1669,25 +1669,28 @@ class EnsemblOrthologMapper:
         """
         homologies_by_gene = {}
         client = EnsemblRestClient()
-        n_queued = 0
+        queued_ids = []
         for gene_id in translated_ids:
             cached = load_cached_file(
                 self._homology_cache_filename(species_name, gene_id, self.map_to_organism, homology_type))
             if cached is not None:
                 homologies_by_gene[gene_id] = json.loads(cached)
             else:
-                n_queued += 1
+                queued_ids.append(gene_id)
                 client.queue_action('get', f'{self.ENDPOINT}{species_name}/{gene_id}',
                                     params=dict(target_taxon=self.map_to_organism, type=homology_type,
                                                 sequence='none', cigar_line=0))
 
-        if n_queued > 0:
-            with tqdm(f'Mapping {homology_type}...', total=n_queued + 1) as pbar:
+        if queued_ids:
+            with tqdm(f'Mapping {homology_type}...', total=len(queued_ids) + 1) as pbar:
                 pbar.update()
-                for json_res in client.run():
-                    req_output = json_res['data'][0]
-                    gene_id = req_output['id']
-                    gene_homologies = req_output['homologies']
+                # EnsemblRestClient.run() (asyncio.gather) preserves request order, so the Nth response
+                # matches the Nth queued gene. Key results and the cache entry by the *requested* gene ID
+                # rather than the ID Ensembl echoes back (which may be normalized, e.g. version-suffixed):
+                # this keeps the cache-miss and cache-hit paths consistent, so a repeat query is actually
+                # served from the cache and reproduces the first run exactly.
+                for gene_id, json_res in zip(queued_ids, client.run()):
+                    gene_homologies = json_res['data'][0]['homologies']
                     cache_file(json.dumps(gene_homologies),
                                self._homology_cache_filename(species_name, gene_id, self.map_to_organism,
                                                              homology_type))
