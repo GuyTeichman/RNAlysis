@@ -1537,8 +1537,8 @@ Enrichment analysis for user-defined attributes is performed using FeatureSet.us
 Choose which user-defined attributes to calculate enrichment for
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Our attributes should be defined in a Reference Table `csv` file. You can read more about Reference Tables and their format in the section :ref:`reference-table-ref`.
-Once we have a Reference Table, we can perform enrichment analysis for those attributes using the function FeatureSet.enrich_randomization.
-If your Reference Tables are set to be the default Reference Tables (as explained in :ref:`reference-table-ref`) you do not need to specify them when calling enrich_randomization. Otherwise, you need to specify your Reference Tables' path.
+Once we have a Reference Table, we can perform enrichment analysis for those attributes using the function FeatureSet.user_defined_enrichment.
+If your Reference Tables are set to be the default Reference Tables (as explained in :ref:`reference-table-ref`) you do not need to specify them when calling user_defined_enrichment. Otherwise, you need to specify your Reference Tables' path.
 The names of the attributes you want to calculate enrichment for can be specified as a list of names (for example, ['attribute1', 'attribute2']).
 
 Define the background set
@@ -1943,20 +1943,10 @@ Once we have an Attribute and/or Biotype Reference Table, we can set it to be th
 
 This will create a file called 'settings.yaml', which will store the full paths of your reference tables.
 Whenever *RNAlysis* needs to use an Attribute/Biotype Reference Table and no other path is specified, *RNAlysis* will automatically use the path saved in the settings file.
-The saved path can be changed any time using the general.set_attr_ref_table_path() and general.set_biotype_ref_table_path() functions.
 
-Load the default Attribute Reference Table path
--------------------------------------------------
-You can read the saved path from the settings file using the general.read_attr_ref_table_path() and general.read_biotype_ref_table_path() functions::
-
-    >>> from *RNAlysis* import general
-    >>> attr_table_path = general.read_attr_ref_table_path()
-    Attribute Reference Table used: the_attribute_reference_table_path_that_was_saved_in_the_settings_file
-
-    >>> biotype_table_path = general.read_biotype_ref_table_path()
-    Biotype Reference Table used: the_biotype_reference_table_path_that_was_saved_in_the_settings_file
-
-If an :term:`Attribute Reference Table` path was not previously defined, you will be requested to define it when you run this function.
+Inspect or change default Reference Table paths
+-----------------------------------------------
+The saved path can be changed any time using the general.set_attr_ref_table_path() and general.set_biotype_ref_table_path() functions. If you need to inspect the currently saved defaults, open the settings file that *RNAlysis* creates after you set them.
 
 Parse *C. elegans* gene names, WBGene indices and sequence names using regular expressions
 ===========================================================================================
