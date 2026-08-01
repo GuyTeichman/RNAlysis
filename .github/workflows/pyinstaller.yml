@@ -18,7 +18,7 @@ jobs:
             contents: write
         steps:
             - name: Checkout repository
-              uses: actions/checkout@v4
+              uses: actions/checkout@v7
               with:
                   token: ${{ secrets.VID_CHECKSUM_PAT }}
                   persist-credentials: true
@@ -32,14 +32,14 @@ jobs:
             - name: Generate Changelog
               run: python packaging/generate_changelog.py
 
-            - uses: stefanzweifel/git-auto-commit-action@v5
+            - uses: stefanzweifel/git-auto-commit-action@v7
               with:
                   commit_message: Calculate quick-start video checksums and generate changelog
                   file_pattern: 'rnalysis/gui/videos/checksums/*.txt rnalysis/data_files/latest_changelog.md'
                   branch: master
 
             - name: Create GitHub Release
-              uses: softprops/action-gh-release@v2
+              uses: softprops/action-gh-release@v3
               with:
                 tag_name: ${{ github.ref }}
                 name: Stable release ${{ github.ref_name }}
@@ -54,7 +54,7 @@ jobs:
               run: echo "${{ steps.create_release.outputs.upload_url }}" > release_url.txt
 
             - name: Save Release URL File for publish
-              uses: actions/upload-artifact@v4
+              uses: actions/upload-artifact@v7
               with:
                   name: release_url
                   path: release_url.txt
@@ -87,7 +87,7 @@ jobs:
 
         steps:
             - name: Checkout repository
-              uses: actions/checkout@v4
+              uses: actions/checkout@v7
 
             - name: brew update (macOS)
               if: runner.os == 'MacOS'
@@ -101,7 +101,7 @@ jobs:
               run: dot -V
             - name: Cache LLVM and Clang
               id: cache-llvm
-              uses: actions/cache@v4
+              uses: actions/cache@v6
               with:
                   path: ${{ runner.temp }}/llvm
                   key: llvm
@@ -120,7 +120,7 @@ jobs:
                   gcc -v -xc++ /dev/null -fsyntax-only
 
             - name: Set up Python
-              uses: actions/setup-python@v4
+              uses: actions/setup-python@v7
               with:
                   python-version: 3.13
                   cache: 'pip'
@@ -137,7 +137,7 @@ jobs:
               run: ${{ matrix.CMD_BUILD }}
 
             - name: Load Release URL File from release job
-              uses: actions/download-artifact@v4
+              uses: actions/download-artifact@v8
               with:
                   name: release_url
                   path: release_url
@@ -150,7 +150,7 @@ jobs:
               shell: bash
             - name: Upload Release Asset
               id: upload-release-asset
-              uses: softprops/action-gh-release@v1
+              uses: softprops/action-gh-release@v3
               env:
                   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
               with:

@@ -5219,7 +5219,8 @@ class CountFilter(Filter):
         self._validate_is_normalized()
         suffix = f'_sortbyPC{component}' + 'powertransform' * bool(power_transform)
         data = self.df[self._numeric_columns].to_numpy().transpose()
-        data_standardized = generic.standard_box_cox(data) if power_transform else generic.standardize(data)
+        data_standardized = generic.standard_box_cox(
+            data, parallel_backend=generic.box_cox_parallel_backend()) if power_transform else generic.standardize(data)
         pca_obj = PCA(component)
         pca_obj.fit(data_standardized)
         loading = self.df.select(pl.first()).with_columns(
@@ -5265,7 +5266,8 @@ class CountFilter(Filter):
               f'contributing to each specified Principal Component...')
 
         data = self.df[self._numeric_columns].transpose()
-        data_standardized = generic.standard_box_cox(data) if power_transform else generic.standardize(data)
+        data_standardized = generic.standard_box_cox(
+            data, parallel_backend=generic.box_cox_parallel_backend()) if power_transform else generic.standardize(data)
 
         pca_obj = PCA(n_components)
         pca_obj.fit(data_standardized)
@@ -5341,7 +5343,8 @@ class CountFilter(Filter):
         if samples == 'all':
             samples = [[col] for col in self._numeric_columns]
         data = self.df.select(pl.col(parsing.flatten(samples))).transpose()
-        data_standardized = generic.standard_box_cox(data) if power_transform else generic.standardize(data)
+        data_standardized = generic.standard_box_cox(
+            data, parallel_backend=generic.box_cox_parallel_backend()) if power_transform else generic.standardize(data)
 
         pca_obj = PCA()
         pcomps = pca_obj.fit_transform(data_standardized)
