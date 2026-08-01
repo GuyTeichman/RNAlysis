@@ -55,7 +55,7 @@ class Filter:
 
     **Attributes**
 
-    df: pandas DataFrame
+    df: polars DataFrame
         A DataFrame that contains the DESeq output file contents. \
         The DataFrame is modified upon usage of filter operations.
     shape: tuple (rows, columns)
@@ -71,7 +71,7 @@ class Filter:
     index_string: string
         A string of all feature indices in the current DataFrame separated by newline.
     """
-    __slots__ = {'fname': 'filename with full path', 'df': 'pandas.DataFrame with the data'}
+    __slots__ = {'fname': 'filename with full path', 'df': 'polars.DataFrame with the data'}
 
     def __init__(self, fname: Union[str, Path], drop_columns: Union[str, List[str]] = None,
                  suppress_warnings: bool = False):
@@ -294,7 +294,7 @@ class Filter:
     def head(self, n: PositiveInt = 5) -> pl.DataFrame:
 
         """
-        Return the first n rows of the Filter object. See pandas.DataFrame.head documentation.
+        Return the first n rows of the Filter object. See polars.DataFrame.head documentation.
 
         :type n: positive int, default 5
         :param n: Number of rows to show.
@@ -329,11 +329,11 @@ class Filter:
     def tail(self, n: PositiveInt = 5) -> pl.DataFrame:
 
         """
-        Return the last n rows of the Filter object. See pandas.DataFrame.tail documentation.
+        Return the last n rows of the Filter object. See polars.DataFrame.tail documentation.
 
         :type n: positive int, default 5
         :param n: Number of rows to show.
-        :rtype: pandas.DataFrame
+        :rtype: polars.DataFrame
         :return: returns the last n rows of the Filter object.
 
 
@@ -1391,14 +1391,14 @@ class Filter:
         """
         Generate descriptive statistics that summarize the central tendency, dispersion and shape \
         of the dataset's distribution, excluding NaN values. \
-        For more information see the documentation of pandas.DataFrame.describe.
+        For more information see the documentation of polars.DataFrame.describe.
 
         :type percentiles: list-like of floats (default=(0.01, 0.25, 0.5, 0.75, 0.99))
         :param percentiles: The percentiles to include in the output. \
         All should fall between 0 and 1. \
         The default is [.25, .5, .75], which returns the 25th, 50th, and 75th percentiles.
         :return: Summary statistics of the dataset.
-        :rtype: Series or DataFrame
+        :rtype: polars.DataFrame
 
 
         :Examples:
@@ -1575,8 +1575,8 @@ class Filter:
         :param long_format:if True, returns a short-form DataFrame, which states the biotypes \
         in the Filter object and their count. Otherwise, returns a long-form DataFrame,
         which also provides descriptive statistics of each column per biotype.
-        :rtype: pandas.DataFrame
-        :returns: a pandas DataFrame showing the number of values belonging to each biotype, \
+        :rtype: polars.DataFrame
+        :returns: a polars DataFrame showing the number of values belonging to each biotype, \
         as well as additional descriptive statistics of format=='long'.
         """
         # load the Biotype Reference Table
@@ -1619,8 +1619,8 @@ class Filter:
         in the Filter object and their count. Otherwise, returns a long-form DataFrame,
         which also provides descriptive statistics of each column per biotype.
         :param ref: Name of the biotype reference table used to determine biotype. Default is ce11 (included in the package).
-        :rtype: pandas.DataFrame
-        :returns: a pandas DataFrame showing the number of values belonging to each biotype, \
+        :rtype: polars.DataFrame
+        :returns: a polars DataFrame showing the number of values belonging to each biotype, \
         as well as additional descriptive statistics of format=='long'.
 
 
@@ -2270,9 +2270,9 @@ class FoldChangeFilter(Filter):
 
     **Attributes**
 
-    df: pandas Series
-        A Series that contains the fold change values. \
-        The Series is modified upon usage of filter operations.
+    df: polars DataFrame
+        A DataFrame containing the gene names and their fold change values. \
+        The DataFrame is modified upon usage of filter operations.
     shape: tuple (rows, columns)
         The dimensions of df.
     columns: list
@@ -2371,7 +2371,7 @@ class FoldChangeFilter(Filter):
         :type random_seed: The random seed used to initialize the pseudorandom generator for the randomization test. \
         By default it is picked at random, but you can set it to a particular integer to get consistents results \
         over multiple runs.
-        :rtype: pandas DataFrame
+        :rtype: polars.DataFrame
         :return: A Dataframe with the number of given genes, the observed fold change for the given group of genes, \
         the expected fold change for a group of genes of that size and the p value for the comparison.
 
@@ -2562,7 +2562,7 @@ class DESeqFilter(Filter):
 
     **Attributes**
 
-    df: pandas DataFrame
+    df: polars DataFrame
         A DataFrame that contains the DESeq output file contents. \
         The DataFrame is modified upon usage of filter operations.
     shape: tuple (rows, columns)
@@ -2939,7 +2939,7 @@ class CountFilter(Filter):
 
     **Attributes**
 
-    df: pandas DataFrame
+    df: polars DataFrame
         A DataFrame that contains the count matrix contents. \
         The DataFrame is modified upon usage of filter operations.
     shape: tuple (rows, columns)
@@ -3615,7 +3615,7 @@ class CountFilter(Filter):
         [['SAMPLE1A', 'SAMPLE1B', 'SAMPLE1C'], ['SAMPLE2A', 'SAMPLE2B', 'SAMPLE2C'],'SAMPLE3' , 'SAMPLE6'] \
         and the resulting output will be a DataFrame containing the following columns: \
         ['SAMPLE1', 'SAMPLE2', 'SAMPLE3', 'SAMPLE6']
-        :return: a pandas DataFrame containing samples/averaged subsamples according to the specified sample_list.
+        :return: a polars DataFrame containing samples/averaged subsamples according to the specified sample_list.
 
         """
         assert isinstance(function, str), "'function' must be a string!"
