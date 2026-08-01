@@ -1284,12 +1284,18 @@ class FeatureSet(set):
             >>> from rnalysis import enrichment, filtering
             >>> d = filtering.Filter("tests/test_files/test_deseq.csv")
             >>> en = enrichment.FeatureSet(d)
-            >>> en.biotypes(ref='tests/biotype_ref_table_for_tests.csv')
-                            gene
-            biotype
-            protein_coding    26
-            pseudogene         1
-            unknown            1
+            >>> en.biotypes_from_ref_table(ref='tests/test_files/biotype_ref_table_for_tests.csv')
+            Biotype Reference Table used: tests/test_files/biotype_ref_table_for_tests.csv
+            shape: (3, 2)
+            ┌────────────────┬───────┐
+            │ biotype        ┆ count │
+            │ ---            ┆ ---   │
+            │ str            ┆ u32   │
+            ╞════════════════╪═══════╡
+            │ protein_coding ┆ 26    │
+            │ pseudogene     ┆ 1     │
+            │ unknown        ┆ 1     │
+            └────────────────┴───────┘
 
         """
 
