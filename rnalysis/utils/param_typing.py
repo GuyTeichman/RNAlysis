@@ -85,6 +85,9 @@ def type_to_supertype(this_type):
 # plus a warning instead. RequestException covers connection/HTTP/timeout failures (the underlying
 # io.get_legal_* calls now pass a request timeout); ValueError covers JSON-decode errors from a
 # 200-with-garbage body; Key/Type/Index errors cover otherwise-parseable-but-unexpected shapes.
+# These getters are lru_cached, so a degraded empty result is intentionally pinned for the process:
+# the Literal[...] annotations are evaluated exactly once at import, and the warning tells the user to
+# restart RNAlysis to retry.
 _LEGAL_VALUE_FETCH_ERRORS = (requests.exceptions.RequestException, tenacity.RetryError,
                              ValueError, KeyError, TypeError, IndexError)
 

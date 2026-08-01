@@ -1263,6 +1263,10 @@ def translate_mappings(ids: list, translated_ids: list, mapping_one2one: dict,
 
 class PhylomeDBOrthologMapper:
     URL = 'ftp.phylomedb.org'
+    # Socket timeout (seconds) for the FTP control + data connections. get_legal_species() runs at
+    # import time (it populates a Literal[...] annotation), so without a timeout a stalled FTP server
+    # would freeze `import rnalysis.filtering` indefinitely.
+    FTP_TIMEOUT = 30
 
     def __init__(self, map_to_organism, map_from_organism='auto', gene_id_type='auto'):
         legal_species = self.get_legal_species()
@@ -1420,7 +1424,7 @@ class PhylomeDBOrthologMapper:
 
     @staticmethod
     def _connect():
-        ftp = ftplib.FTP(PhylomeDBOrthologMapper.URL)
+        ftp = ftplib.FTP(PhylomeDBOrthologMapper.URL, timeout=PhylomeDBOrthologMapper.FTP_TIMEOUT)
         ftp.login()
         ftp.cwd('/metaphors/latest')
         return ftp

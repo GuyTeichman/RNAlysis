@@ -1923,6 +1923,7 @@ def test_get_legal_panther_taxons_handles_list_and_single(monkeypatch, genome_no
         io.get_legal_panther_taxons.cache_clear()
 
 
+@pytest.mark.unit  # fully mocked; opt out of the module's default integration_net tier
 def test_get_legal_panther_taxons_passes_request_timeout(monkeypatch):
     # A bare requests.post with no timeout can hang forever; this runs at import time, so a hang
     # freezes app startup. Ensure a request timeout is always passed.
@@ -1945,9 +1946,10 @@ def test_get_legal_panther_taxons_passes_request_timeout(monkeypatch):
         io.get_legal_panther_taxons()
     finally:
         io.get_legal_panther_taxons.cache_clear()
-    assert captured['timeout'] is not None
+    assert captured['timeout'] == io.LEGAL_VALUES_REQUEST_TIMEOUT
 
 
+@pytest.mark.unit  # fully mocked; opt out of the module's default integration_net tier
 def test_get_legal_gene_id_types_passes_request_timeout(monkeypatch):
     captured = {}
     payload_text = ('{"groups": [{"groupName": "UniProt", "items": '
@@ -1970,4 +1972,4 @@ def test_get_legal_gene_id_types_passes_request_timeout(monkeypatch):
         io.get_legal_gene_id_types()
     finally:
         io.get_legal_gene_id_types.cache_clear()
-    assert captured['timeout'] is not None
+    assert captured['timeout'] == io.LEGAL_VALUES_REQUEST_TIMEOUT
