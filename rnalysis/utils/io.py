@@ -1263,6 +1263,10 @@ def translate_mappings(ids: list, translated_ids: list, mapping_one2one: dict,
 
 class PhylomeDBOrthologMapper:
     URL = 'ftp.phylomedb.org'
+    # Socket timeout (seconds) for the FTP control + data connections. get_legal_species() runs at
+    # import time (it populates a Literal[...] annotation), so without a timeout a stalled FTP server
+    # would freeze `import rnalysis.filtering` indefinitely.
+    FTP_TIMEOUT = 30
 
     def __init__(self, map_to_organism, map_from_organism='auto', gene_id_type='auto'):
         legal_species = self.get_legal_species()
@@ -1420,7 +1424,7 @@ class PhylomeDBOrthologMapper:
 
     @staticmethod
     def _connect():
-        ftp = ftplib.FTP(PhylomeDBOrthologMapper.URL)
+        ftp = ftplib.FTP(PhylomeDBOrthologMapper.URL, timeout=PhylomeDBOrthologMapper.FTP_TIMEOUT)
         ftp.login()
         ftp.cwd('/metaphors/latest')
         return ftp
@@ -2243,10 +2247,15 @@ def find_best_gene_mapping(ids: Tuple[str, ...], map_from_options: Union[Tuple[s
     return parsed_results[sorted_keys[0]]
 
 
+# Connect/read timeout (seconds) for the small "legal values" metadata fetches below. These run at
+# import time to populate GUI dropdowns / type annotations, so a hung request would freeze startup.
+LEGAL_VALUES_REQUEST_TIMEOUT = (10, 30)
+
+
 @functools.lru_cache(maxsize=2)
 def get_legal_panther_taxons():
     URL = 'https://www.pantherdb.org/services/oai/pantherdb/supportedgenomes'
-    req = requests.post(URL)
+    req = requests.post(URL, timeout=LEGAL_VALUES_REQUEST_TIMEOUT)
     req.raise_for_status()
     genomes = req.json()['search']['output']['genomes']['genome']
     # PantherDB returns a single genome dict (not a list) when only one genome is present; normalize
@@ -2288,7 +2297,7 @@ def get_legal_gene_id_types():
     abbrev_dict_to = {}
     abbrev_dict_from = {}
 
-    req = requests.get(URL)
+    req = requests.get(URL, timeout=LEGAL_VALUES_REQUEST_TIMEOUT)
     req.raise_for_status()
     entries = json.loads(req.text)['groups']
     entries_filtered = []
