@@ -608,9 +608,11 @@ Normalizing reads with CountFilter
 
 * Relative Log Expression (RLE - 'normalize_rle'), used by default by R's DESeq2
 * Trimmed Mean of M-values (TMM - 'normalize_tmm'), used by default by R's edgeR
-* Quantile normalization, a generalization of Upper Quantile normalization (UQ - 'normalize_quantile'), used by default by R's Limma
-* Median of Ratios Normalization (MRN - 'normalize_mrn')
+* Quantile normalization, a generalization of Upper Quantile normalization (UQ - 'normalize_to_quantile'), used by default by R's Limma
+* Median of Ratios Normalization (MRN - 'normalize_median_of_ratios')
 * Reads Per Million (RPM - 'normalize_to_rpm')
+* Reads Per Kilobase Million (RPKM - 'normalize_to_rpkm')
+* Transcripts Per Million (TPM - 'normalize_to_tpm')
 
 To normalize a :term:`CountFilter` with one of these functions, simply call the function with your preferred parameters, if there are any. For example::
 
@@ -654,7 +656,7 @@ To normalize a :term:`CountFilter` that originated from HTSeq-count to reads per
 Such a `csv` table is generated automatically when you create a :term:`CountFilter` object from a folder of text files (CountFilter.from_folder_htseqcount(), see :ref:`from-folder-ref`).
 We would then supply the normalization function with the path to the special counter file::
 
-    >>> counts = CountFilter("tests/test_files/counted.csv")
+    >>> counts = filtering.CountFilter("tests/test_files/counted.csv")
     >>> counts.normalize_to_rpm_htseqcount("tests/test_files/uncounted.csv")
     Normalized 22 features. Normalized inplace.
 
@@ -698,7 +700,7 @@ The expression plots can also by split into separate graphs, one for each discov
 All clustering methods in *RNAlysis* which require you to specify the expected number of clusters (such as K in K-Means clustering) allow multiple ways of specifying the number of clusters you want to find.
 You can specify a single value::
 
-    >>> counts = CountFilter("tests/test_files/counted.csv")
+    >>> counts = filtering.CountFilter("tests/test_files/counted.csv")
     >>> five_clusters = counts.split_kmeans(n_clusters=5)
     Filtered 20 features, leaving 2 of the original 22 features. Filtering result saved to new object.
     Filtered 7 features, leaving 15 of the original 22 features. Filtering result saved to new object.
@@ -710,7 +712,7 @@ You can specify a single value::
 
 You can specify a list of values to be used, and each value will be calculated and returned separately::
 
-    >>> counts = CountFilter("tests/test_files/counted.csv")
+    >>> counts = filtering.CountFilter("tests/test_files/counted.csv")
     >>> five_clusters, two_clusters = counts.split_kmeans(n_clusters=[5,2])
     Filtered 21 features, leaving 1 of the original 22 features. Filtering result saved to new object.
     Filtered 20 features, leaving 2 of the original 22 features. Filtering result saved to new object.
@@ -726,7 +728,7 @@ You can specify a list of values to be used, and each value will be calculated a
 
 Finally, you can use a model selection method to estimate the number of clusters in your dataset. *RNAlysis* supports both the Silhouette method and the Gap Statistic method::
 
-    >>> counts = CountFilter("tests/test_files/counted.csv")
+    >>> counts = filtering.CountFilter("tests/test_files/counted.csv")
     >>> silhouette_clusters = counts.split_kmeans(n_clusters='silhouette')
     Estimating the optimal number of clusters using the Silhouette method in range 2:5...
     Using the Silhouette method, 4 was chosen as the best number of clusters (k).
@@ -1034,7 +1036,7 @@ Creating a new Pipeline
 To create a new empty :term:`Pipeline`, simply create a new Pipeline object::
 
     >>> from *RNAlysis* import filtering
-    >>> pipe = Pipeline()
+    >>> pipe = filtering.Pipeline()
 
 Because every :term:`Filter object` has its own unique functions, a particular Pipeline can only contain functions of a specific Filter object type, and can only be applied to objects of that type.
 By default, a new Pipeline's `filter_type` is :term:`Filter`, and can only contain general functions from the *filtering* module that can apply to any Filter object.
@@ -1099,7 +1101,7 @@ You can determine that via the `inplace` argument of the function `Pipeline.appl
     >>> pipe.add_function('sort', by='baseMean')
     Added function 'DESeqFilter.sort(by='baseMean')' to the pipeline.
     >>> # load the Filter object
-    >>> d = filtering.DESeqFilter('tests/test_files/test_files/test_deseq_with_nan.csv')
+    >>> d = filtering.DESeqFilter('tests/test_files/test_deseq_with_nan.csv')
     >>> # apply the Pipeline not-inplace
     >>> d_filtered = pipe.apply_to(d, inplace=False)
     Filtered 3 features, leaving 25 of the original 28 features. Filtering result saved to new object.
@@ -1119,20 +1121,20 @@ If we apply a Pipeline with functions that return additional outputs (such as Fi
     >>> from *RNAlysis* import filtering
     >>> # create the pipeline
     >>> pipe = filtering.Pipeline('DESeqFilter')
-    >>> pipe.add_function('biotypes_from_ref_table', ref='tests/test_files/test_files/biotype_ref_table_for_tests.csv')
-    Added function 'DESeqFilter.biotypes_from_ref_table(ref='tests/test_files/test_files/biotype_ref_table_for_tests.csv')' to the pipeline.
-    >>> pipe.add_function('filter_biotype_from_ref_table', 'protein_coding', ref='tests/test_files/test_files/biotype_ref_table_for_tests.csv')
-    Added function 'DESeqFilter.filter_biotype_from_ref_table('protein_coding', ref='tests/test_files/test_files/biotype_ref_table_for_tests.csv')' to the pipeline.
-    >>> pipe.add_function('biotypes_from_ref_table', ref='tests/test_files/test_files/biotype_ref_table_for_tests.csv')
-    Added function 'DESeqFilter.biotypes_from_ref_table(ref='tests/test_files/test_files/biotype_ref_table_for_tests.csv')' to the pipeline.
+    >>> pipe.add_function('biotypes_from_ref_table', ref='tests/test_files/biotype_ref_table_for_tests.csv')
+    Added function 'DESeqFilter.biotypes_from_ref_table(ref='tests/test_files/biotype_ref_table_for_tests.csv')' to the pipeline.
+    >>> pipe.add_function('filter_biotype_from_ref_table', 'protein_coding', ref='tests/test_files/biotype_ref_table_for_tests.csv')
+    Added function 'DESeqFilter.filter_biotype_from_ref_table('protein_coding', ref='tests/test_files/biotype_ref_table_for_tests.csv')' to the pipeline.
+    >>> pipe.add_function('biotypes_from_ref_table', ref='tests/test_files/biotype_ref_table_for_tests.csv')
+    Added function 'DESeqFilter.biotypes_from_ref_table(ref='tests/test_files/biotype_ref_table_for_tests.csv')' to the pipeline.
     >>> # load the Filter object
-    >>> d = filtering.DESeqFilter('tests/test_files/test_files/test_deseq_with_nan.csv')
+    >>> d = filtering.DESeqFilter('tests/test_files/test_deseq_with_nan.csv')
     >>> # apply the Pipeline not-inplace
     >>> d_filtered, output_dict = pipe.apply_to(d, inplace=False)
-    Biotype Reference Table used: tests/test_files/test_files/biotype_ref_table_for_tests.csv
-    Biotype Reference Table used: tests/test_files/test_files/biotype_ref_table_for_tests.csv
+    Biotype Reference Table used: tests/test_files/biotype_ref_table_for_tests.csv
+    Biotype Reference Table used: tests/test_files/biotype_ref_table_for_tests.csv
     Filtered 2 features, leaving 26 of the original 28 features. Filtering result saved to new object.
-    Biotype Reference Table used: tests/test_files/test_files/biotype_ref_table_for_tests.csv
+    Biotype Reference Table used: tests/test_files/biotype_ref_table_for_tests.csv
     >>> print(output_dict['biotypes_1'])
                     gene
     biotype
@@ -1145,10 +1147,10 @@ If we apply a Pipeline with functions that return additional outputs (such as Fi
     protein_coding    26
     >>> # apply the Pipeline inplace
     >>> output_dict_inplace = pipe.apply_to(d)
-    Biotype Reference Table used: tests/test_files/test_files/biotype_ref_table_for_tests.csv
-    Biotype Reference Table used: tests/test_files/test_files/biotype_ref_table_for_tests.csv
+    Biotype Reference Table used: tests/test_files/biotype_ref_table_for_tests.csv
+    Biotype Reference Table used: tests/test_files/biotype_ref_table_for_tests.csv
     Filtered 2 features, leaving 26 of the original 28 features. Filtered inplace.
-    Biotype Reference Table used: tests/test_files/test_files/biotype_ref_table_for_tests.csv
+    Biotype Reference Table used: tests/test_files/biotype_ref_table_for_tests.csv
 
 When an output dictionary is returned, the keys in the dictionary will be the name of the function appended to the number of call made to this function in the Pipeline (in the example above, the first call to 'biotypes_from_ref_table' is under the key 'biotypes_1', and the second call to 'biotypes_from_ref_table' is under the key 'biotypes_2'); and the values in the dictionary will be the returned values from those functions.
 We can apply the same Pipeline to as many Filter objects as we want, as long as the type of the Filter object matches the Pipeline's `filter_type`.
