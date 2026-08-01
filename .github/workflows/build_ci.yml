@@ -247,19 +247,20 @@ jobs:
                 # every run. Assert it now (before any install) so the fix is self-detecting -- a loud red
                 # here beats an empty r-libs-* cache discovered much later. Paths are normalized so the
                 # comparison is cross-platform (Windows backslashes / macOS symlinked workspace).
-                shell: bash
+                # Run the body directly via `shell: Rscript {0}` rather than `shell: bash`: on Windows
+                # `shell: bash` resolves to rtools' MSYS2 bash, and launching the native-Windows Rscript
+                # from it segfaults R at startup (SIGSEGV, exit 139) before it evaluates anything.
+                shell: Rscript {0}
                 run: |
-                    Rscript -e '
-                      want <- normalizePath(Sys.getenv("R_LIBS"), winslash = "/", mustWork = FALSE)
-                      got  <- normalizePath(.libPaths()[1],       winslash = "/", mustWork = FALSE)
-                      cat("R_LIBS         :", want, "\n")
-                      cat(".libPaths()[1] :", got,  "\n")
-                      cat("full .libPaths():\n"); print(.libPaths())
-                      if (!identical(want, got)) {
-                        stop("R_LIBS is not first on .libPaths(); installed R packages will NOT be cached (issue #113).")
-                      }
-                      cat("OK: install.packages() will target the cached R_LIBS dir.\n")
-                    '
+                    want <- normalizePath(Sys.getenv("R_LIBS"), winslash = "/", mustWork = FALSE)
+                    got  <- normalizePath(.libPaths()[1],       winslash = "/", mustWork = FALSE)
+                    cat("R_LIBS         :", want, "\n")
+                    cat(".libPaths()[1] :", got,  "\n")
+                    cat("full .libPaths():\n"); print(.libPaths())
+                    if (!identical(want, got)) {
+                      stop("R_LIBS is not first on .libPaths(); installed R packages will NOT be cached (issue #113).")
+                    }
+                    cat("OK: install.packages() will target the cached R_LIBS dir.\n")
             # Tests run in tiers (unit -> integration_net -> integration_tools -> e2e). A failure in a
             # faster tier stops the slower ones (fail-fast). The integration tier is split into a
             # network/web-API step and an R/CLI-tools step so we can see the per-tier breakdown.
