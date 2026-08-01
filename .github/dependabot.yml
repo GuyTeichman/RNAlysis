@@ -1,0 +1,51 @@
+# Dependabot version-update configuration.
+# Docs: https://docs.github.com/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file
+#
+# Notes for this repo:
+#   * PRs target `development` (the integration branch), never `master` — see the branch model in
+#     CLAUDE.md. Dependabot would otherwise default to the repo's default branch (master).
+#   * versioning-strategy: increase-if-necessary — only opens a PR when the latest release falls
+#     OUTSIDE the range already declared in requirements*.txt / setup.py. That respects the
+#     intentional upper caps (e.g. numpy <3, pandas <3, polars) and keeps in-range updates quiet.
+#   * Routine minor/patch bumps are grouped into a single PR to cut review noise; majors still open
+#     individually so they get their own scrutiny.
+version: 2
+updates:
+  # --- Python dependencies (requirements*.txt + setup.py extras) ---------------------------------
+  - package-ecosystem: "pip"
+    directory: "/"
+    target-branch: "development"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    open-pull-requests-limit: 5
+    versioning-strategy: increase-if-necessary
+    labels:
+      - "dependencies"
+    commit-message:
+      prefix: "deps"
+    groups:
+      python-minor-patch:
+        patterns:
+          - "*"
+        update-types:
+          - "minor"
+          - "patch"
+
+  # --- GitHub Actions used in .github/workflows -------------------------------------------------
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    target-branch: "development"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    open-pull-requests-limit: 5
+    labels:
+      - "dependencies"
+      - "github-actions"
+    commit-message:
+      prefix: "ci"
+    groups:
+      github-actions:
+        patterns:
+          - "*"
