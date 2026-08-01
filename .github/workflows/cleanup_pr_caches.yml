@@ -1,0 +1,38 @@
+name: Cleanup PR caches
+
+# When a PR closes (merged or not), delete the Actions caches scoped to its ref. Those caches live
+# under refs/pull/<n>/merge and, by GitHub's scoping rules, can only ever be restored by that same
+# PR -- never by a sibling PR or by `development`. Once the PR is closed they are pure dead weight:
+# unreachable to everything, yet still counted against the repo's 10 GB cache cap, where they evict
+# (LRU) caches that open PRs could actually use. Reaping them here keeps the shared budget for the
+# seeded `development` caches (see build_ci.yml's `push` trigger) plus in-flight PRs.
+on:
+    pull_request:
+        types: [ closed ]
+
+jobs:
+    cleanup:
+        runs-on: ubuntu-latest
+        permissions:
+            # Required to delete caches via the Actions cache API.
+            actions: write
+            contents: read
+        steps:
+            -   name: Delete caches for the closed PR
+                # `set +e` so a mid-loop failure (e.g. a cache already evicted) doesn't fail the job.
+                # For PRs opened from forks the pull_request token is read-only, so deletion is a no-op
+                # there; that's fine -- this repo's PRs come from same-repo branches.
+                run: |
+                    gh extension install actions/gh-actions-cache
+                    echo "Fetching cache keys for $BRANCH"
+                    cacheKeys=$(gh actions-cache list -R "$REPO" -B "$BRANCH" -L 100 | cut -f 1)
+                    set +e
+                    for cacheKey in $cacheKeys; do
+                        echo "Deleting $cacheKey"
+                        gh actions-cache delete "$cacheKey" -R "$REPO" -B "$BRANCH" --confirm
+                    done
+                    echo "Done"
+                env:
+                    GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+                    REPO: ${{ github.repository }}
+                    BRANCH: refs/pull/${{ github.event.pull_request.number }}/merge
