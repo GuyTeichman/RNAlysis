@@ -5,10 +5,12 @@
 #   * PRs target `development` (the integration branch), never `master` — see the branch model in
 #     CLAUDE.md. Dependabot would otherwise default to the repo's default branch (master).
 #   * versioning-strategy: increase-if-necessary — only opens a PR when the latest release falls
-#     OUTSIDE the range already declared in requirements*.txt / setup.py. That respects the
-#     intentional upper caps (e.g. numpy <3, pandas <3, polars) and keeps in-range updates quiet.
-#   * Routine minor/patch bumps are grouped into a single PR to cut review noise; majors still open
-#     individually so they get their own scrutiny.
+#     OUTSIDE the range already declared in requirements*.txt / setup.py. In-range updates stay quiet;
+#     when a release exceeds an intentional cap (e.g. numpy <3, pandas <3, polars <1.44), Dependabot
+#     opens a CI-gated PR that *widens* the cap for review — it does not hold the cap silently. Add an
+#     `ignore` entry for a package if you'd rather it never be proposed for bumping past its cap.
+#   * For pip, routine minor/patch bumps are grouped into one PR to cut review noise; majors open
+#     individually so they get their own scrutiny. (The github-actions group batches all update types.)
 version: 2
 updates:
   # --- Python dependencies (requirements*.txt + setup.py extras) ---------------------------------
@@ -42,7 +44,6 @@ updates:
     open-pull-requests-limit: 5
     labels:
       - "dependencies"
-      - "github-actions"
     commit-message:
       prefix: "ci"
     groups:
