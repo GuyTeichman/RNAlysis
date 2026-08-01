@@ -1,0 +1,30 @@
+# Ruff configuration — https://docs.astral.sh/ruff/
+# Ruff provides both the formatter (a Black-compatible `ruff format`) and, via the linter,
+# import sorting (`ruff check --select I`). It is wired into pre-commit; see
+# `.pre-commit-config.yaml`.
+#
+# IMPORTANT: adding this config does NOT reformat the existing codebase. A single repo-wide
+# `ruff format` / `ruff check --fix` sweep is intended to happen separately, once, when
+# `development` is next merged into `master`. Until then these settings only take effect on the
+# files a contributor actually touches (through pre-commit) or when Ruff is run manually — they
+# do not retroactively rewrite the tree.
+
+# Match the codebase's prevailing width (~120 cols; p95 ≈ 110, only a handful of lines exceed
+# 120) so the eventual one-time reformat stays small.
+line-length = 120
+
+# Oldest supported interpreter (see CONTRIBUTING.rst / setup.py).
+target-version = "py310"
+
+[format]
+# The codebase overwhelmingly uses single-quoted string literals.
+quote-style = "single"
+
+[lint]
+# Keep the linter deliberately narrow for now: import sorting only (isort-equivalent), nothing
+# that would flag or auto-rewrite logic. Broaden this in a later, intentional PR once the tree
+# has been formatted.
+select = ["I"]
+
+[lint.isort]
+known-first-party = ["rnalysis"]
