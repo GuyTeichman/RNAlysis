@@ -177,8 +177,6 @@ CI (`.github/workflows/build_ci.yml`) runs on every PR across
 - **Docstrings are load-bearing** (they become GUI help). Keep the `:param name: ...` /
   `:type name: ...` reST format when editing public functions.
 - **`docs/source/rnalysis.*.rst` are generated** by `sphinx-apidoc`. Don't hand-edit them.
-- **`CONTRIBUTING.rst` is partly stale** (mentions Py 3.7–3.10, tox, Travis). Reality: Py
-  3.10–3.15, GitHub Actions, no `tox.ini`. Trust this file and CI over `CONTRIBUTING.rst`.
 
 ---
 
