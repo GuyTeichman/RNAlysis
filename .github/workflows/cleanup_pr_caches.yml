@@ -5,7 +5,8 @@ name: Cleanup PR caches
 # PR -- never by a sibling PR or by `development`. Once the PR is closed they are pure dead weight:
 # unreachable to everything, yet still counted against the repo's 10 GB cache cap, where they evict
 # (LRU) caches that open PRs could actually use. Reaping them here keeps the shared budget for the
-# seeded `development` caches (see build_ci.yml's `push` trigger) plus in-flight PRs.
+# seeded default-branch (`master`) caches (see build_ci.yml's `push` and `schedule` triggers) plus
+# in-flight PRs.
 on:
     pull_request:
         types: [ closed ]
