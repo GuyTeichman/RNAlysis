@@ -80,3 +80,14 @@ def test_format_thanks_sorts_dedups_and_formats():
 def test_format_thanks_empty():
     assert contributors.format_thanks([]) == ""
     assert contributors.format_thanks(["", None]) == ""
+
+
+def test_next_link_returns_next_url():
+    header = ('<https://api.github.com/x?page=2>; rel="next", '
+              '<https://api.github.com/x?page=5>; rel="last"')
+    assert contributors._next_link(header) == "https://api.github.com/x?page=2"
+
+
+def test_next_link_none_when_absent_or_empty():
+    assert contributors._next_link('<https://api.github.com/x?page=5>; rel="last"') is None
+    assert contributors._next_link("") is None

@@ -120,11 +120,19 @@ def _next_link(link_header: str) -> str | None:
 
 
 def fetch_all_contributor_logins(repo: str = DEFAULT_REPO, token: str | None = None) -> List[str]:
-    """Return GitHub contributor logins (most contributions first), excluding bots."""
+    """Return GitHub contributor logins (most contributions first), excluding bots.
+
+    Best-effort: on a network/HTTP error it warns and returns whatever was collected so far, so a
+    transient API hiccup degrades to a no-op update rather than crashing the workflow.
+    """
     url = f"{GITHUB_API}/repos/{repo}/contributors?per_page=100&anon=0"
     logins: List[str] = []
     while url:
-        data, link = _api_get(url, token)
+        try:
+            data, link = _api_get(url, token)
+        except urllib.error.URLError as e:
+            print(f"warning: fetching contributors failed ({e}); using partial results", file=sys.stderr)
+            break
         for c in data:
             login = c.get("login")
             if login and c.get("type") != "Bot" and not login.endswith("[bot]"):
@@ -136,19 +144,26 @@ def fetch_all_contributor_logins(repo: str = DEFAULT_REPO, token: str | None = N
 def get_previous_release_date(repo: str = DEFAULT_REPO, token: str | None = None) -> str | None:
     try:
         data, _ = _api_get(f"{GITHUB_API}/repos/{repo}/releases/latest", token)
-    except urllib.error.HTTPError:
+    except urllib.error.URLError:
         return None
     return data.get("published_at")
 
 
 def fetch_merged_pr_authors_since(since_iso: str, repo: str = DEFAULT_REPO,
                                   token: str | None = None) -> List[str]:
-    """Return logins of authors whose PRs merged after *since_iso* (excludes bots)."""
+    """Return logins of authors whose PRs merged after *since_iso* (excludes bots).
+
+    Best-effort: on a network/HTTP error it warns and returns whatever was collected so far.
+    """
     q = quote(f"repo:{repo} is:pr is:merged merged:>{since_iso}")
     url = f"{GITHUB_API}/search/issues?q={q}&per_page=100"
     authors: List[str] = []
     while url:
-        data, link = _api_get(url, token)
+        try:
+            data, link = _api_get(url, token)
+        except urllib.error.URLError as e:
+            print(f"warning: fetching merged PRs failed ({e}); using partial results", file=sys.stderr)
+            break
         for pr in (data.get("items", []) if isinstance(data, dict) else []):
             user = (pr.get("user") or {}).get("login")
             if user and not user.endswith("[bot]"):
@@ -190,7 +205,9 @@ def main(argv=None) -> int:
     if not since:
         print("Could not determine the previous release date; pass --since YYYY-MM-DD.", file=sys.stderr)
         return 1
-    thanks = format_thanks(fetch_merged_pr_authors_since(since, args.repo, token))
+    authors = [a for a in fetch_merged_pr_authors_since(since, args.repo, token)
+               if a.lower() not in EXCLUDE_LOGINS]
+    thanks = format_thanks(authors)
     if thanks:
         print(thanks)
     else:
