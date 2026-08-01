@@ -3056,6 +3056,11 @@ class MainWindow(QtWidgets.QMainWindow):
     def __init__(self, gather_stdout: bool = True):
         super().__init__()
 
+        # own the GUI cache-write queue for this window's lifetime so table caching streams off the UI
+        # thread; io falls back to synchronous writes whenever no window has registered a queue
+        self.gui_cache_writer = io.GuiCacheWriteQueue()
+        io.set_active_gui_cache_writer(self.gui_cache_writer)
+
         self._generate_report = False
         self.report = None
         self.tabs = ReactiveTabWidget(self)
@@ -4462,8 +4467,11 @@ class MainWindow(QtWidgets.QMainWindow):
             # stop background threads cleanly before the window (and its QThread members) are
             # destroyed, so neither QThread object is torn down while its OS thread is still running.
             self._shutdown_worker_threads()
-            # clear cache
+            # clear cache (this also flushes any pending background writes first)
             io.clear_gui_cache()
+            # stop this window's background cache-write queue now that the cache has been cleared
+            io.set_active_gui_cache_writer(None)
+            self.gui_cache_writer.shutdown(wait=True)
             # close all figures
 
             # close all external windows

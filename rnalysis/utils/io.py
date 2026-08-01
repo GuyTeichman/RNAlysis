@@ -179,13 +179,18 @@ def _perform_cache_write(item: Union[pl.DataFrame, pl.Series], file_path: Path):
     item.lazy().sink_parquet(file_path)
 
 
-class _GuiCacheWriter:
-    """Runs GUI-cache table writes on a background thread so the UI never blocks on disk I/O.
+class GuiCacheWriteQueue:
+    """Serializes GUI-cache table writes onto a single background thread so the UI never blocks on disk
+    I/O, while :meth:`flush` gives consumers a completion barrier before they read, move, or delete a
+    cached file.
 
-    A single worker keeps submission order == on-disk order (the last write to a given filename wins),
-    so no per-path locking of the data is needed. Consumers that read, move, or delete cached files
-    must call :func:`flush_gui_cache_writes` first to guarantee the write has finished; any error
-    raised by a background write is re-raised there instead of being silently lost.
+    The single worker is deliberate and is *not* about parallelism: it makes submission order equal
+    on-disk order (so the last write to a given filename wins) and bounds us to one Polars sink at a
+    time, so cache writes never oversubscribe Polars' own thread pool. This is a serialization queue.
+
+    The GUI owns one instance for its lifetime -- ``MainWindow`` creates it, registers it via
+    :func:`set_active_gui_cache_writer`, and shuts it down on close. When no instance is registered
+    (scripting, CLI, tests) cache writes happen synchronously instead; see :func:`cache_gui_file`.
     """
 
     def __init__(self):
@@ -203,12 +208,9 @@ class _GuiCacheWriter:
             self._futures.setdefault(file_path, []).append(future)
         return future
 
-    @property
-    def pending(self) -> List[Path]:
-        with self._lock:
-            return list(self._futures.keys())
-
     def flush(self, file_path: Union[str, Path, None] = None):
+        """Block until pending write(s) finish -- all of them, or only those for ``file_path`` --
+        re-raising the first background write error instead of letting it vanish."""
         with self._lock:
             if file_path is None:
                 batches = list(self._futures.values())
@@ -229,26 +231,31 @@ class _GuiCacheWriter:
         self._executor.shutdown(wait=wait)
 
 
-_gui_cache_writer = _GuiCacheWriter()
+# The GUI registers its queue here for its lifetime; None means "no GUI" -> synchronous cache writes.
+# Only ever set/cleared from the main (UI) thread, so a plain module attribute needs no locking.
+_active_gui_cache_writer: Union[GuiCacheWriteQueue, None] = None
+
+
+def set_active_gui_cache_writer(writer: Union[GuiCacheWriteQueue, None]):
+    """Register (or clear, with ``None``) the queue that streams GUI-cache writes off the UI thread.
+
+    ``MainWindow`` sets this at startup and clears it on close, marrying the background writer to the
+    GUI's lifetime. While it is ``None`` (scripting/CLI/tests) cache writes are performed synchronously.
+    """
+    global _active_gui_cache_writer
+    _active_gui_cache_writer = writer
 
 
 def flush_gui_cache_writes(file_path: Union[str, Path, None] = None):
     """Block until pending GUI-cache table writes finish (all of them, or only ``file_path``).
 
     Call this before reading, moving, or deleting cached files so background writes are guaranteed to
-    be complete on disk. Re-raises any error raised by a background write.
+    be complete on disk; it re-raises any error raised by a background write. When no GUI cache writer
+    is registered (nothing was written in the background), this is a no-op.
     """
-    _gui_cache_writer.flush(file_path)
-
-
-def _reset_gui_cache_writer():
-    """Tear down and recreate the cache writer. Used by tests so the executor is not leaked."""
-    global _gui_cache_writer
-    try:
-        _gui_cache_writer.shutdown(wait=True)
-    except Exception:  # best-effort teardown in tests; a broken writer must not block the reset
-        pass
-    _gui_cache_writer = _GuiCacheWriter()
+    writer = _active_gui_cache_writer
+    if writer is not None:
+        writer.flush(file_path)
 
 
 def clear_gui_cache():
@@ -297,8 +304,12 @@ def cache_gui_file(item: Union[pl.DataFrame, set, str], filename: str):
 
     if isinstance(item, (pl.DataFrame, pl.Series)):
         if file_path.suffix.lower() == '.parquet':
-            # stream the write off the UI thread; consumers flush_gui_cache_writes() before reading
-            _gui_cache_writer.submit(item, file_path)
+            writer = _active_gui_cache_writer
+            if writer is not None:
+                # stream the write off the UI thread; consumers flush_gui_cache_writes() before reading
+                writer.submit(item, file_path)
+            else:
+                _perform_cache_write(item, file_path)  # no GUI running: write synchronously
         else:
             save_table(item, file_path)
 

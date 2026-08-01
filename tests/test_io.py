@@ -996,8 +996,23 @@ def test_load_cached_gui_file(item, filename, load_as_obj, expected_output):
             os.remove(path)
 
 
-def test_cache_gui_file_parquet_roundtrip_after_flush():
-    io._reset_gui_cache_writer()
+@pytest.fixture
+def gui_cache_writer():
+    """Register a fresh single-worker GUI cache-write queue for a test, then tear it down.
+
+    Mirrors how MainWindow owns the queue for the GUI's lifetime. Without a registered queue,
+    ``cache_gui_file`` writes synchronously instead (see the no-writer test below).
+    """
+    writer = io.GuiCacheWriteQueue()
+    io.set_active_gui_cache_writer(writer)
+    try:
+        yield writer
+    finally:
+        io.set_active_gui_cache_writer(None)
+        writer.shutdown(wait=True)
+
+
+def test_cache_gui_file_parquet_roundtrip_after_flush(gui_cache_writer):
     filename = 'test_async_roundtrip.parquet'
     df = pl.DataFrame({'a': [1, 2, 3], 'b': [4, 5, 6]})
     path = Path(get_gui_cache_dir(), filename)
@@ -1011,28 +1026,39 @@ def test_cache_gui_file_parquet_roundtrip_after_flush():
     finally:
         if path.exists():
             path.unlink()
-        io._reset_gui_cache_writer()
 
 
-def test_cache_gui_file_parquet_is_tracked_until_flush():
-    io._reset_gui_cache_writer()
+def test_cache_gui_file_routes_to_registered_writer(gui_cache_writer):
     filename = 'test_async_tracked.parquet'
     df = pl.DataFrame({'a': [1, 2, 3]})
     path = Path(get_gui_cache_dir(), filename)
     try:
         cache_gui_file(df, filename)
-        # a real handle is retained (not fire-and-forget), so the write can be awaited
-        assert path in io._gui_cache_writer.pending
+        # a real handle is retained on the registered queue (not fire-and-forget), so it can be awaited
+        assert path in gui_cache_writer._futures
         flush_gui_cache_writes()
-        assert path not in io._gui_cache_writer.pending
+        assert path not in gui_cache_writer._futures
     finally:
         if path.exists():
             path.unlink()
-        io._reset_gui_cache_writer()
 
 
-def test_cache_gui_file_parquet_last_write_wins():
-    io._reset_gui_cache_writer()
+def test_cache_gui_file_writes_synchronously_without_writer():
+    io.set_active_gui_cache_writer(None)  # no GUI running -> writes happen synchronously, no thread
+    filename = 'test_sync_write.parquet'
+    df = pl.DataFrame({'a': [1, 2, 3]})
+    path = Path(get_gui_cache_dir(), filename)
+    try:
+        cache_gui_file(df, filename)
+        assert path.exists()  # fully written before cache_gui_file returns; no flush needed
+        assert load_table(path).equals(df)
+        flush_gui_cache_writes()  # harmless no-op when no queue is registered
+    finally:
+        if path.exists():
+            path.unlink()
+
+
+def test_cache_gui_file_parquet_last_write_wins(gui_cache_writer):
     filename = 'test_async_order.parquet'
     path = Path(get_gui_cache_dir(), filename)
     first = pl.DataFrame({'a': [1]})
@@ -1045,26 +1071,20 @@ def test_cache_gui_file_parquet_last_write_wins():
     finally:
         if path.exists():
             path.unlink()
-        io._reset_gui_cache_writer()
 
 
-def test_flush_gui_cache_writes_reraises_write_errors():
-    io._reset_gui_cache_writer()
+def test_flush_gui_cache_writes_reraises_write_errors(gui_cache_writer):
     df = pl.DataFrame({'a': [1, 2, 3]})
     # parent directory does not exist -> the background sink raises, which must not be swallowed
     bad_path = Path(get_gui_cache_dir(), 'no_such_subdir', 'x.parquet')
-    try:
-        io._gui_cache_writer.submit(df, bad_path)
-        with pytest.raises(Exception):
-            flush_gui_cache_writes()
-    finally:
-        io._reset_gui_cache_writer()
+    gui_cache_writer.submit(df, bad_path)
+    with pytest.raises(Exception):
+        flush_gui_cache_writes()
 
 
-def test_flush_surfaces_error_from_superseded_write(monkeypatch):
+def test_flush_surfaces_error_from_superseded_write(gui_cache_writer, monkeypatch):
     # an earlier failed write to a path must still surface at the barrier even when a later write to
     # the same path was queued before the flush (guards against dropping the superseded future).
-    io._reset_gui_cache_writer()
     path = Path(get_gui_cache_dir(), 'superseded.parquet')
     calls = {'n': 0}
 
@@ -1074,13 +1094,10 @@ def test_flush_surfaces_error_from_superseded_write(monkeypatch):
             raise ValueError('first write failed')
 
     monkeypatch.setattr(io, '_perform_cache_write', flaky)
-    try:
-        io._gui_cache_writer.submit(pl.DataFrame({'a': [1]}), path)  # fails
-        io._gui_cache_writer.submit(pl.DataFrame({'a': [2]}), path)  # succeeds, same path
-        with pytest.raises(ValueError, match='first write failed'):
-            flush_gui_cache_writes()
-    finally:
-        io._reset_gui_cache_writer()
+    gui_cache_writer.submit(pl.DataFrame({'a': [1]}), path)  # fails
+    gui_cache_writer.submit(pl.DataFrame({'a': [2]}), path)  # succeeds, same path
+    with pytest.raises(ValueError, match='first write failed'):
+        flush_gui_cache_writes()
 
 
 def test_clear_gui_cache_flushes_pending_writes(monkeypatch):
