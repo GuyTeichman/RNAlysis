@@ -1894,3 +1894,30 @@ class TestRunRScript:
         monkeypatch.setattr(subprocess, 'Popen', mock_popen)
         with pytest.raises(FileNotFoundError):
             run_r_script('tests/test_files/test_r_script.R')
+
+
+@pytest.mark.parametrize('genome_node,expected', [
+    # PantherDB normally returns a list of genome dicts...
+    ([{'long_name': 'Homo sapiens'}, {'long_name': 'Caenorhabditis elegans'}],
+     ('Caenorhabditis elegans', 'Homo sapiens')),
+    # ...but returns a single dict (not a list) when only one genome is present.
+    ({'long_name': 'Homo sapiens'}, ('Homo sapiens',)),
+    # entries without a long_name are skipped rather than raising.
+    ([{'long_name': 'Homo sapiens'}, {'name': 'no_long_name'}], ('Homo sapiens',)),
+])
+def test_get_legal_panther_taxons_handles_list_and_single(monkeypatch, genome_node, expected):
+    payload = {'search': {'output': {'genomes': {'genome': genome_node}}}}
+
+    class _FakeResp:
+        def raise_for_status(self):
+            pass
+
+        def json(self):
+            return payload
+
+    monkeypatch.setattr(io.requests, 'post', lambda *a, **kw: _FakeResp())
+    io.get_legal_panther_taxons.cache_clear()
+    try:
+        assert io.get_legal_panther_taxons() == expected
+    finally:
+        io.get_legal_panther_taxons.cache_clear()
