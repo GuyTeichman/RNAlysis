@@ -1134,7 +1134,7 @@ If you don't specify plotting parameters, *RNAlysis* will generate an ontology g
 
 Enrichment analysis output
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Running enrichment analysis will calculate enrichment for each of the GO terms, and return a pandas DataFrame in the following format:
+Running enrichment analysis will calculate enrichment for each of the GO terms, and return a polars DataFrame in the following format:
 
 +-------------+------------------+--------------+-----+-------+----------------------+----------+----------+-------------+
 |             |       name       |    samples   | obs |   exp | log2_fold_enrichment |   pval   |   padj   | significant |
@@ -1216,7 +1216,7 @@ If you don't specify plotting parameters, *RNAlysis* will generate a horizontal 
 
 Enrichment analysis output
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Running enrichment analysis will calculate enrichment for each of the KEGG pathways, and return a pandas DataFrame in the following format:
+Running enrichment analysis will calculate enrichment for each of the KEGG pathways, and return a polars DataFrame in the following format:
 
 +-----------+-----------------------------------------------------------------+--------------+-----+-------+----------------------+----------+----------+-------------+
 |   KEGG ID |                              name                               |    samples   | obs |   exp | log2_fold_enrichment |   pval   |   padj   | significant |
@@ -1290,7 +1290,7 @@ When it is set as 'True', *RNAlysis* will return the Figure object it generated 
 
 Enrichment analysis output
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Running enrichment analysis will calculate enrichment for each of the specified attributes, and return a pandas DataFrame in the following format:
+Running enrichment analysis will calculate enrichment for each of the specified attributes, and return a polars DataFrame in the following format:
 
 +----------------+--------------+-----+-------+----------------------+----------+----------+-------------+
 |                |    samples   | obs |   exp | log2_fold_enrichment |   pval   |   padj   | significant |
@@ -1362,7 +1362,7 @@ When it is set as 'True', *RNAlysis* will return the Figure object it generated 
 
 Non-Categorical Enrichment analysis output
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Running non-categorical enrichment analysis will calculate enrichment for each of the specified attributes, and return a pandas DataFrame in the following format:
+Running non-categorical enrichment analysis will calculate enrichment for each of the specified attributes, and return a polars DataFrame in the following format:
 
 +----------------+--------------+-------+--------+----------+----------+-------------+
 |                |    samples   |  obs  |  exp   |   pval   |   padj   | significant |
