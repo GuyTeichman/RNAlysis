@@ -393,9 +393,11 @@ Normalizing count matrices
 
 * Relative Log Expression (RLE - 'normalize_rle'), used by default by R's DESeq2
 * Trimmed Mean of M-values (TMM - 'normalize_tmm'), used by default by R's edgeR
-* Quantile normalization, a generalization of Upper Quantile normalization (UQ - 'normalize_quantile'), used by default by R's Limma
-* Median of Ratios Normalization (MRN - 'normalize_mrn')
+* Quantile normalization, a generalization of Upper Quantile normalization (UQ - 'normalize_to_quantile'), used by default by R's Limma
+* Median of Ratios Normalization (MRN - 'normalize_median_of_ratios')
 * Reads Per Million (RPM - 'normalize_to_rpm')
+* Reads Per Kilobase Million (RPKM - 'normalize_to_rpkm')
+* Transcripts Per Million (TPM - 'normalize_to_tpm')
 
 To normalize a count matrix with one of these functions, click on the 'Normalize' button, pick one of the normalization functions from the drop-down menu, and click 'Apply'.
 
