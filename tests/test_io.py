@@ -500,13 +500,14 @@ def test_ensmbl_lookup_post_request(monkeypatch):
         assert url == 'https://rest.ensembl.org/lookup/id'
         assert kwargs.get('headers') == {"Content-Type": "application/json", "Accept": "application/json"}
 
-        # Get whatever payload was sent (checking both 'json' and 'data' keys for safety)
-        payload = kwargs.get('json') or kwargs.get('data')
-
-        # If the payload is a stringified JSON, parse it back to a dictionary
-        if isinstance(payload, str):
-            payload = json.loads(payload)
-
+        # The body must be handed to aiohttp as a JSON *object* via `json=`, never as a pre-serialized
+        # string. aiohttp re-encodes whatever `json=` receives with json.dumps(), so passing a string
+        # double-encodes it into a quoted JSON literal ("{\"ids\": [...]}") that Ensembl rejects with a
+        # 400 Bad Request. Assert the raw payload is a dict (and nothing was sent via `data=`) so the
+        # double-encoding regression can't come back.
+        assert kwargs.get('data') is None, "POST body must be sent via json=, not data="
+        payload = kwargs.get('json')
+        assert isinstance(payload, dict), f"POST body must be a dict passed via json=, got {type(payload).__name__}"
         assert payload == {'ids': list(ids)}
 
         return AsyncMockResponse(json_output={this_id: {} for this_id in ids})
