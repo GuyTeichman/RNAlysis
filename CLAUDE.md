@@ -180,8 +180,11 @@ CI (`.github/workflows/build_ci.yml`) runs on every PR across
 ## Style
 
 - 4-space indent, LF, UTF-8, trailing whitespace trimmed, final newline (`.editorconfig`).
-- No enforced formatter (no `black`/`ruff`/`pre-commit` config). Match the style of the file
-  you're editing. `flake8` is referenced but unconfigured — keep lines reasonable, imports tidy.
+- **Formatting/imports:** Ruff is configured (`ruff.toml`) and wired into pre-commit
+  (`.pre-commit-config.yaml`) — `ruff format` (line-length 120, single quotes) plus import
+  sorting. Enable it once with `pre-commit install`. The tree is **not fully reformatted yet**
+  (a single sweep is planned for the next `development`→`master` merge), so until then match the
+  style of the file you're editing and don't mass-reformat unrelated lines.
 - Prefer **Polars** for tabular work (the codebase migrated off Pandas in 4.0). Lazy evaluation
   is currently underused and welcome where it helps (see roadmap in context.md).
 - Give public API parameters **precise `param_typing` annotations** — that's how you design the

@@ -100,6 +100,7 @@ Ready to contribute? Here's how to set up `rnalysis` for local development.
     $ source venv/bin/activate    # on Windows: venv\Scripts\activate
     $ pip install -e .[all]
     $ pip install -r requirements_dev.txt
+    $ pre-commit install    # enable the auto-formatting git hooks (Ruff); recommended
 
 4. Create a branch for local development, based on the ``development`` branch
    (``development`` is the integration branch; ``master`` only receives ``development``
