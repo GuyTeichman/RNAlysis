@@ -24,6 +24,11 @@ on:
             - '**/*.rst'
             - 'docs/**'
             - '.claude/**'
+            # The release workflow (pyinstaller.yml) auto-commits generated quick-start video
+            # checksums to `master`; that commit carries no code change, so skip it here to avoid a
+            # redundant full matrix run per release (its sibling `latest_changelog.md` is already
+            # covered by `**/*.md`).
+            - 'rnalysis/gui/videos/checksums/**'
     # Weekly run (Mondays 06:00 UTC) to catch external-service drift / bit-rot on BOTH long-lived
     # branches. GitHub CONSTRAINT: a `schedule` trigger only ever runs the copy of this workflow that
     # lives on the repository's DEFAULT branch (`master`) -- there is NO way to schedule the
