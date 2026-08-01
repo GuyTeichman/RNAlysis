@@ -4,6 +4,11 @@ Operational guide for Claude Code (and any AI/agent) working in this repository.
 Read this first. Deeper material lives in [`.claude/context.md`](.claude/context.md),
 [`.claude/workflows.md`](.claude/workflows.md), and [`.claude/design-philosophy.md`](.claude/design-philosophy.md).
 
+> **Not using Claude Code?** This guide applies to you too. [`AGENTS.md`](AGENTS.md) is the
+> provider-neutral entry point for any AI agent or automated contributor — it distills the
+> non-negotiable rules and points back here for the full detail. `CLAUDE.md` (this file) is the
+> canonical, complete version; keep the two in sync when you change the rules.
+
 ---
 
 ## What RNAlysis is
