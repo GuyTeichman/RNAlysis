@@ -1804,6 +1804,9 @@ class QMultiToggleSwitch(QMultiInput):
 class ThreadStdOutStreamTextQueueReceiver(QtCore.QObject):
     queue_stdout_element_received_signal = QtCore.pyqtSignal(str)
     __slots__ = {'queue': 'queue'}
+    #: Sentinel put on the queue to break run()'s blocking loop so the listener thread can end.
+    #: Compared by identity, so it can never collide with a real (string) stdout item.
+    STOP_SIGNAL = object()
 
     def __init__(self, q: Queue, *args, **kwargs):
         QtCore.QObject.__init__(self, *args, **kwargs)
@@ -1814,6 +1817,8 @@ class ThreadStdOutStreamTextQueueReceiver(QtCore.QObject):
         self.queue_stdout_element_received_signal.emit('Welcome to RNAlysis!\n')
         while True:
             text = self.queue.get()
+            if text is self.STOP_SIGNAL:  # graceful shutdown (see MainWindow._shutdown_worker_threads)
+                break
             self.queue_stdout_element_received_signal.emit(text)
 
 
