@@ -3679,10 +3679,10 @@ class CountFilter(Filter):
                         self.df.select(pl.col(group)).mean_horizontal().alias(new_name))
                 elif function == 'median':
                     averaged_df = averaged_df.with_columns(
-                        self.df.select(pl.col(group)).median_horizontal().alias(new_name))
+                        self.df.select(pl.concat_list(pl.col(group)).list.median().alias(new_name)))
                 else:
-                    averaged_df = averaged_df.with_columns(
-                        self.df.select(pl.col(group).apply(lambda x: gmean(x)).alias(new_name)))
+                    group_gmean = gmean(self.df.select(pl.col(group)).to_numpy(), axis=1)
+                    averaged_df = averaged_df.with_columns(pl.Series(new_name, group_gmean))
 
             else:
                 raise TypeError(f"'sample_list' cannot contain objects of type {type(group)}.")
