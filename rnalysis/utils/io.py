@@ -470,6 +470,60 @@ def load_table(filename: Union[str, Path], drop_columns: Union[str, List[str]] =
     return df
 
 
+def load_table_lazy(filename: Union[str, Path]) -> pl.LazyFrame:
+    """
+    Lazily load a CSV, TSV, or Parquet file as a Polars LazyFrame, mirroring :func:`load_table`'s dialect
+    detection and cleanup so that ``load_table_lazy(f).collect()`` equals ``load_table(f)``.
+
+    Returning a LazyFrame lets callers push a projection (``.select``) or predicate (``.filter``) into the
+    scan, so a subset read (e.g. only the first column) never materializes the whole table -- for Parquet
+    this skips reading the unselected column chunks entirely.
+
+    The ``.collect() == load_table(...)`` equivalence holds for any non-empty table. A completely empty
+    file raises on ``.collect()`` (as a bare ``scan_csv`` does) rather than returning an empty DataFrame
+    the way :func:`load_table` does for that edge case.
+
+    :type filename: str or pathlib.Path
+    :param filename: name of the file to be loaded.
+    :return: a Polars LazyFrame over the loaded file.
+    :rtype: polars.LazyFrame
+    """
+    assert isinstance(filename,
+                      (str, Path)), f"Filename must be of type str or pathlib.Path, is instead {type(filename)}."
+    filename = Path(filename)
+    assert filename.exists() and filename.is_file(), f"File '{filename.as_posix()}' does not exist!"
+    assert filename.suffix.lower() in {'.csv', '.tsv', '.txt', '.parquet'}, \
+        f"RNAlysis cannot load files of type '{filename.suffix}'. " \
+        f"Please convert your file to a .csv, .tsv, .txt, or .parquet file and try again."
+
+    if filename.suffix.lower() == '.parquet':
+        lazy = pl.scan_parquet(filename)
+        # handle edge cases of parquet files that were exported from pandas DataFrames
+        names = lazy.collect_schema().names()  # metadata only, does not read the data
+        if '__index_level_0__' in names:
+            others = [name for name in names if name != '__index_level_0__']
+            lazy = lazy.select([pl.col('__index_level_0__').alias('')] + [pl.col(name) for name in others])
+        return lazy
+
+    if filename.suffix.lower() == '.csv':
+        sep = ','
+    elif filename.suffix.lower() == '.tsv':
+        sep = '\t'
+    else:
+        with open(filename) as f:
+            sample = f.readline()
+            sep = csv.Sniffer().sniff(sample).delimiter
+    # infer_schema_length=None resolves dtypes from the whole file, matching load_table's ComputeError
+    # fallback, while projection/predicate pushdown still prunes which columns get materialized on collect
+    lazy = pl.scan_csv(filename, separator=sep, has_header=True, null_values=['nan', 'NaN', 'NA'],
+                       infer_schema_length=None)
+    string_cols = [name for name, dtype in lazy.collect_schema().items() if dtype in (pl.Utf8, pl.String)]
+    # strip whitespace from string columns, then turn any remaining empty string into null
+    lazy = lazy.with_columns([pl.col(col).str.strip_chars() for col in string_cols])
+    lazy = lazy.with_columns([pl.col(col).replace("", None) for col in string_cols])
+    return lazy
+
+
 def save_table(df: pl.DataFrame, filename: Union[str, Path], postfix: str = None):
     """
     save a pandas DataFrame to csv/parquet file.

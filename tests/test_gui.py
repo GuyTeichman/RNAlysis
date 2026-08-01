@@ -2578,6 +2578,15 @@ def test_MainWindow_import_multiple_gene_sets(main_window_with_tabs, monkeypatch
         assert main_window_with_tabs.tabs.widget(i + 5).obj() == truth[i]
 
 
+@pytest.mark.parametrize('suffix,sep', [('.csv', ','), ('.tsv', '\t')])
+def test_MainWindow_filename_to_gene_set_strips_whitespace(tmp_path, suffix, sep):
+    # tabular gene-set imports read the first column via load_table_lazy, which trims stray
+    # whitespace from identifiers so they match reference tables loaded the same way
+    path = tmp_path / f'genes{suffix}'
+    path.write_text(f'gene{sep}score\n WBGene01 {sep}5\nWBGene02{sep}6\n')
+    assert MainWindow._filename_to_gene_set(str(path)) == {'WBGene01', 'WBGene02'}
+
+
 @pytest.mark.parametrize('filename', ['tests/test_files/counted.tsv', 'tests/test_files/test_deseq.csv',
                                       'tests/test_files/test_gene_set.txt'])
 def test_MainWindow_import_gene_set(main_window_with_tabs, monkeypatch, filename):

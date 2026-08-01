@@ -3693,10 +3693,10 @@ class MainWindow(QtWidgets.QMainWindow):
 
     @staticmethod
     def _filename_to_gene_set(filename: str):
-        if filename.endswith('.csv'):
-            gene_set = parsing.data_to_set(pl.scan_csv(filename).select(pl.first()).collect())
-        elif filename.endswith('.tsv'):
-            gene_set = parsing.data_to_set(pl.scan_csv(filename, separator='\t').select(pl.first()).collect())
+        if filename.endswith(('.csv', '.tsv')):
+            # read only the first column: projection pushdown avoids materializing the rest of the table,
+            # and load_table_lazy applies the same cleanup (whitespace strip) as a full table load
+            gene_set = parsing.data_to_set(io.load_table_lazy(filename).select(pl.first()).collect())
         else:
             with open(filename) as f:
                 gene_set = {line.strip() for line in f.readlines()}

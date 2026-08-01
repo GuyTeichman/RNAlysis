@@ -11,6 +11,7 @@ Changed
 * CLICOM ensemble clustering (``CountFilter.split_clicom``) now runs faster, by computing each distinct power-transform/standardization of the data only once per run and reusing it across the many clustering setups that share it, instead of recomputing the identical transform for every setup. Clustering results are bit-for-bit identical.
 * The Principal Component Analysis functions (``pca``, ``sort_by_principal_component``, and ``split_by_principal_components``) now run substantially faster on large datasets, by parallelizing the per-gene Box-Cox power transform across CPU cores. Results are unchanged up to floating-point precision (verified against the test suite's reference outputs).
 * Ensembl ortholog and paralog mapping now caches each gene's homology results in the daily cache, so repeating a mapping (or mapping gene sets that overlap a previous one) no longer re-requests the same data from Ensembl. This reduces load on the Ensembl REST API and speeds up repeated mappings.
+* Importing a gene set from a ``.csv`` or ``.tsv`` file now reads only its first column via a lazy scan, so the rest of the table is no longer loaded into memory, and stray leading/trailing whitespace is trimmed from the gene identifiers so they match how IDs are read from reference and count tables.
 
 Fixed
 ******

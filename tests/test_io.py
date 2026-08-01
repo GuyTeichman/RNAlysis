@@ -181,6 +181,52 @@ def test_load_csv_drop_columns():
         load_table('tests/test_files/counted.csv', drop_columns=['cond1', 'cond6'])
 
 
+@pytest.mark.parametrize('pth', ("tests/test_files/test_load_csv.csv", "tests/test_files/test_load_csv.tsv",
+                                 "tests/test_files/test_load_csv_tabs.txt",
+                                 "tests/test_files/test_load_csv_other_sep.txt", "tests/test_files/counted.csv"))
+def test_load_table_lazy_returns_lazyframe_matching_eager(pth):
+    lazy = load_table_lazy(pth)
+    assert isinstance(lazy, pl.LazyFrame)
+    assert lazy.collect().equals(load_table(pth))
+
+
+def test_load_table_lazy_matches_eager_parquet(tmp_path):
+    df = pl.DataFrame({'': ['a', 'b', 'c'], 'x': [1, 2, 3], 'y': [1.5, 2.5, 3.5]})
+    path = tmp_path / 'plain.parquet'
+    df.write_parquet(path)
+    lazy = load_table_lazy(path)
+    assert isinstance(lazy, pl.LazyFrame)
+    assert lazy.collect().equals(load_table(path))
+
+
+def test_load_table_lazy_handles_legacy_index_column(tmp_path):
+    # pandas-exported parquet carries an '__index_level_0__' column that load_table renames to ''
+    df = pl.DataFrame({'__index_level_0__': ['g1', 'g2'], 'x': [1, 2]})
+    path = tmp_path / 'legacy.parquet'
+    df.write_parquet(path)
+    collected = load_table_lazy(path).collect()
+    assert collected.columns == ['', 'x']
+    assert collected.equals(load_table(path))
+
+
+def test_load_table_lazy_strips_and_nulls_strings(tmp_path):
+    path = tmp_path / 'messy.csv'
+    path.write_text('gene, value ,label\n foo ,1,x\nbar,,\nbaz,3,NA\n,4,z\n')
+    collected = load_table_lazy(path).collect()
+    assert collected.equals(load_table(path))
+    # leading/trailing whitespace stripped from string cells, empty string -> null
+    assert collected.get_column('gene').to_list() == ['foo', 'bar', 'baz', None]
+
+
+def test_load_table_lazy_projection_pushdown_skips_unselected_columns(tmp_path):
+    wide = pl.DataFrame({f'c{i}': list(range(4)) for i in range(10)})
+    path = tmp_path / 'wide.parquet'
+    wide.write_parquet(path)
+    plan = load_table_lazy(path).select(pl.first()).explain()
+    # only the first of the 10 columns is read from the parquet file
+    assert 'PROJECT 1/10 COLUMNS' in plan
+
+
 def test_save_csv():
     try:
         df = pl.read_csv('tests/test_files/enrichment_hypergeometric_res.csv')
