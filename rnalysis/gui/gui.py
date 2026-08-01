@@ -985,10 +985,15 @@ class SetOperationWindow(gui_widgets.MinMaxDialog):
             else:
                 canvas = gui_graphics.UpSetInteractiveCanvas(items, self)
         if 'canvas' in self.widgets:
-            self.widgets['canvas'].deleteLater()
-            self.widgets['toolbar'].deleteLater()
+            # detach the old canvas/toolbar from the layout and reparent them to None *before*
+            # scheduling deletion, so no queued paint/draw event can fire against a widget whose
+            # C++ object is being torn down (a source of flaky native crashes on teardown).
             self.operations_grid.removeWidget(self.widgets['canvas'])
             self.operations_grid.removeWidget(self.widgets['toolbar'])
+            self.widgets['canvas'].setParent(None)
+            self.widgets['toolbar'].setParent(None)
+            self.widgets['canvas'].deleteLater()
+            self.widgets['toolbar'].deleteLater()
 
         self.widgets['canvas'] = canvas
         self.widgets['toolbar'] = gui_graphics.CleanPlotToolBar(self.widgets['canvas'], self)
@@ -1316,8 +1321,12 @@ class SetVisualizationWindow(gui_widgets.MinMaxDialog):
             except Exception:
                 canvas = gui_graphics.EmptyCanvas("Invalid input; please change one or more of your parameters")
         if 'canvas' in self.widgets:
-            self.widgets['canvas'].deleteLater()
+            # detach the old canvas from the layout and reparent it to None *before* scheduling
+            # deletion, so no queued paint/draw event can fire against a widget whose C++ object is
+            # being torn down (a source of flaky native crashes on teardown).
             self.visualization_grid.removeWidget(self.widgets['canvas'])
+            self.widgets['canvas'].setParent(None)
+            self.widgets['canvas'].deleteLater()
 
         self.widgets['canvas'] = canvas
         self.visualization_grid.addWidget(self.widgets['canvas'], 0, 2, 4, 3)

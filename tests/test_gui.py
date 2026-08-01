@@ -275,12 +275,14 @@ def enrichment_window(qtbot, available_objects):
 def set_op_window(qtbot, four_available_objects_and_empty):
     qtbot, window = widget_setup(qtbot, SetOperationWindow, four_available_objects_and_empty)
     yield window
+    window.close()
 
 
 @pytest.fixture
 def set_vis_window(qtbot, four_available_objects_and_empty):
     qtbot, window = widget_setup(qtbot, SetVisualizationWindow, four_available_objects_and_empty)
     yield window
+    window.close()
 
 
 multi_open_window_files = ['tests/counted.csv', 'tests/test_deseq.csv', 'tests/counted.tsv']
@@ -1054,6 +1056,27 @@ def test_SetOperationWindow_canvas_types(set_op_window):
     assert isinstance(set_op_window.widgets['canvas'], gui_graphics.EmptyCanvas)
 
 
+def test_SetOperationWindow_replacing_canvas_detaches_old_canvas(set_op_window):
+    # replacing the canvas must fully detach the old canvas (and toolbar) from the layout AND
+    # reparent them to None *before* scheduling deletion. Otherwise a queued paint/draw event can
+    # fire against a widget whose C++ object is being torn down -> native crash (segfault) later on.
+    set_op_window.widgets['set_list'].list_items[0].setSelected(True)
+    set_op_window.widgets['set_list'].list_items[1].setSelected(True)
+    old_canvas = set_op_window.widgets['canvas']
+    old_toolbar = set_op_window.widgets['toolbar']
+    assert isinstance(old_canvas, gui_graphics.VennInteractiveCanvas)
+
+    set_op_window.widgets['set_list'].list_items[2].setSelected(True)
+
+    assert set_op_window.widgets['canvas'] is not old_canvas
+    assert set_op_window.operations_grid.indexOf(old_canvas) == -1
+    assert set_op_window.operations_grid.indexOf(old_toolbar) == -1
+    # NOTE: the canvas classes shadow QWidget.parent() with a `self.parent` attribute, so query the
+    # real Qt parent via parentWidget().
+    assert old_canvas.parentWidget() is None
+    assert old_toolbar.parentWidget() is None
+
+
 @pytest.mark.parametrize('n_selected', [3, 4])
 def test_SetOperationWindow_primary_set_change(qtbot, set_op_window, n_selected):
     for i in range(n_selected):
@@ -1271,6 +1294,25 @@ def test_SetVisualizationWindow_canvas_types(qtbot, set_vis_window, is_func_sele
 
     set_vis_window.widgets['set_list'].clear_all_button.click()
     assert isinstance(set_vis_window.widgets['canvas'], gui_graphics.EmptyCanvas)
+
+
+def test_SetVisualizationWindow_replacing_canvas_detaches_old_canvas(set_vis_window):
+    # replacing the preview canvas must fully detach the old canvas from the layout AND reparent it
+    # to None *before* scheduling deletion. Otherwise a queued paint/draw event can fire against a
+    # widget whose C++ object is being torn down -> native crash (segfault) later on.
+    set_vis_window.widgets['radio_button_box'].radio_buttons['Venn Diagram'].click()
+    set_vis_window.widgets['set_list'].list_items[0].setSelected(True)
+    set_vis_window.widgets['set_list'].list_items[1].setSelected(True)
+    old_canvas = set_vis_window.widgets['canvas']
+    assert isinstance(old_canvas, gui_graphics.BasePreviewCanvas)
+
+    set_vis_window.widgets['set_list'].list_items[2].setSelected(True)
+
+    assert set_vis_window.widgets['canvas'] is not old_canvas
+    assert set_vis_window.visualization_grid.indexOf(old_canvas) == -1
+    # NOTE: the canvas classes shadow QWidget.parent() with a `self.parent` attribute, so query the
+    # real Qt parent via parentWidget().
+    assert old_canvas.parentWidget() is None
 
 
 @pytest.mark.parametrize('op_name', [
