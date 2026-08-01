@@ -3513,9 +3513,12 @@ class CountFilter(Filter):
             assert den in self.columns, f"'{den}' is not a column in the CountFilter object!"
             assert den in numeric_cols, f"Invalid dtype for column '{den}': {self.df.dtypes[den]}"
 
-        fc_df = self.df.select(pl.first()).with_columns(
-            ((self.df.select(numerator).mean_horizontal() + 1) / (
-                self.df.select(denominator).mean_horizontal() + 1)).alias('Fold Change'))
+        # fuse the three eager scans of self.df (index column + numerator mean + denominator mean) into
+        # a single lazy plan collected once; pl.mean_horizontal over each column list is the row-wise mean
+        fc_df = self.df.lazy().select(
+            pl.first(),
+            ((pl.mean_horizontal(numerator) + 1) / (pl.mean_horizontal(denominator) + 1)).alias('Fold Change')
+        ).collect()
         new_fname = Path(f"{str(self.fname.parent)}/{self.fname.stem}'_fold_change_'"
                          f"{numer_name}_over_{denom_name}_{self.fname.suffix}")
 
