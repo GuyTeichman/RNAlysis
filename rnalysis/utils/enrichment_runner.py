@@ -1,5 +1,6 @@
 import abc
 import collections
+import concurrent.futures
 import itertools
 import logging
 import warnings
@@ -1175,10 +1176,15 @@ class GOEnrichmentRunner(EnrichmentRunner):
                          exclude_unannotated_genes, single_set, plot_style, show_expected)
         if not self.stats_test:
             return
-        self.dag_tree: ontology.DAGTree = ontology.fetch_go_basic()
-        self.mutable_annotations: Tuple[dict, ...] = tuple()
-        (self.taxon_id, self.organism), self.gene_id_type = io.get_taxon_and_id_type(organism, gene_id_type,
-                                                                                     self.gene_set, 'UniProtKB')
+        # Fetch+parse the GO DAG (a blocking download on a cold cache) concurrently with resolving
+        # the organism and gene-id type (an independent network round-trip). Both are needed before
+        # annotations are processed, so overlapping them shortens __init__ to ~max() of the two.
+        with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
+            dag_future = executor.submit(ontology.fetch_go_basic)
+            self.mutable_annotations: Tuple[dict, ...] = tuple()
+            (self.taxon_id, self.organism), self.gene_id_type = io.get_taxon_and_id_type(organism, gene_id_type,
+                                                                                         self.gene_set, 'UniProtKB')
+            self.dag_tree: ontology.DAGTree = dag_future.result()
         self.aspects = aspects
         self.evidence_types = evidence_types
         self.excluded_evidence_types = excluded_evidence_types
@@ -1257,19 +1263,8 @@ class GOEnrichmentRunner(EnrichmentRunner):
                 annotation_dict[parent].add(gene_id)
 
     def _translate_gene_ids(self, annotation_dict: dict, source_to_gene_id_dict: dict):
-        # TODO: profile performance and maybe optimize this
+        translators = self._run_source_translators(source_to_gene_id_dict)
         translated_dict = {}
-        translators = []
-        for source in source_to_gene_id_dict:
-            try:
-                translator = io.GeneIDTranslator(source, self.gene_id_type).run(source_to_gene_id_dict[source])
-                translators.append(translator)
-            except AssertionError as e:
-                if 'not a valid Uniprot Dataset' in "".join(e.args):
-                    warnings.warn(f"Failed to map gene IDs for {len(source_to_gene_id_dict[source])} annotations "
-                                  f"from dataset '{source}'.")
-                else:
-                    raise e
         for go_id in annotation_dict:
             translated_dict[go_id] = set()
             for gene_id in annotation_dict[go_id]:
@@ -1278,6 +1273,32 @@ class GOEnrichmentRunner(EnrichmentRunner):
                         translated_dict[go_id].add(translator[gene_id])
                         break
         return translated_dict
+
+    def _run_source_translators(self, source_to_gene_id_dict: dict) -> List[dict]:
+        """Translate each annotation source's gene IDs to ``self.gene_id_type``, one UniProt
+        round-trip per source, run concurrently. Translators are returned in source (iteration)
+        order so the caller's first-match tie-breaking is unchanged. A source whose dataset is
+        not a valid UniProt dataset is skipped with a warning; any other error propagates."""
+        sources = list(source_to_gene_id_dict)
+        if not sources:
+            return []
+
+        def _run(source):
+            return io.GeneIDTranslator(source, self.gene_id_type).run(source_to_gene_id_dict[source])
+
+        translators = []
+        with concurrent.futures.ThreadPoolExecutor(max_workers=min(len(sources), 5)) as executor:
+            futures = {source: executor.submit(_run, source) for source in sources}
+            for source in sources:
+                try:
+                    translators.append(futures[source].result())
+                except AssertionError as e:
+                    if 'not a valid Uniprot Dataset' in "".join(e.args):
+                        warnings.warn(f"Failed to map gene IDs for {len(source_to_gene_id_dict[source])} annotations "
+                                      f"from dataset '{source}'.")
+                    else:
+                        raise e
+        return translators
 
     def _get_query_key(self):
         return (self.taxon_id, self.gene_id_type, parsing.data_to_tuple(self.aspects, sort=True),
