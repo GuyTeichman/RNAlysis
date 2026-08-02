@@ -193,7 +193,11 @@ class Filter:
             f"Invalid input for variable 'printout_operation': {printout_operation}"
         # when user requests the opposite of a filter, return the Set Difference between the filtering result and self
         if opposite:
-            new_df = self.df.filter(~pl.first().is_in(new_df.select(pl.first()).to_series()))
+            # the opposite is self.df minus the kept rows; an anti-join (order-preserving via
+            # maintain_order='left') does this in one operation instead of materializing the kept index
+            # to a Series and anti-filtering with the deprecated is_in
+            new_df = self.df.join(new_df.select(pl.first()), on=self.df.columns[0], how='anti',
+                                  maintain_order='left')
             suffix += 'opposite'
 
         # update filename with the suffix of the operation that was just performed
@@ -3715,17 +3719,14 @@ class CountFilter(Filter):
         assert scaling_factors.shape[0] >= self.shape[0] and scaling_factors.shape[1] == len(numeric_cols) + 1, \
             f"Dimensions of scaling factors table ({scaling_factors.shape}) does not match the " \
             f"dimensions of your data table ({(self.shape[0], len(numeric_cols))} - numeric columns only)!"
-        new_df = pl.DataFrame().lazy()
-        for column in self.df.columns:
-            if column in numeric_cols:
-                merged = self.df.select(cs.first() | cs.by_name(column)).join(
-                    scaling_factors.select(cs.first() | cs.by_name(column)), left_on=self.df.columns[0],
-                    right_on=scaling_factors.columns[0], how='left')
-                merged_div = merged.with_columns((pl.nth(-2).truediv(pl.nth(-1))).alias('div'))
-                new_df = new_df.with_columns((merged_div.select(pl.col('div').alias(column))))
-            else:
-                new_df = new_df.with_columns(self.df[column].alias(column))
-        return new_df.collect()
+        # one order-preserving join on the index instead of one left-join per numeric column, then divide
+        # each numeric column by its matching per-gene scaling factor in a single lazy pass
+        merged = self.df.lazy().join(scaling_factors.lazy(), left_on=self.df.columns[0],
+                                     right_on=scaling_factors.columns[0], how='left',
+                                     maintain_order='left', suffix='__sf')
+        exprs = [pl.col(column).truediv(pl.col(f'{column}__sf')).alias(column) if column in numeric_cols
+                 else pl.col(column) for column in self.df.columns]
+        return merged.select(exprs).collect()
 
     @readable_name('Normalize to reads-per-million (RPM) - HTSeq-count output')
     def normalize_to_rpm_htseqcount(self, special_counter_fname: Union[str, Path], inplace: bool = True,

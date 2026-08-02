@@ -7,8 +7,9 @@ independent *in-memory* eager oracle and asserts they are byte-for-byte identica
 drift introduced by a lazy rewrite is caught immediately.
 """
 import polars as pl
+import polars.selectors as cs
 
-from rnalysis.filtering import CountFilter
+from rnalysis.filtering import CountFilter, Filter
 
 
 def assert_bit_identical(result: pl.DataFrame, reference: pl.DataFrame):
@@ -121,4 +122,58 @@ def test_normalize_to_quantile_lazy_matches_eager():
     cf = CountFilter('tests/test_files/counted.csv')
     expected = _eager_normalize_to_quantile(cf, 0.75)
     result = cf.normalize_to_quantile(0.75, inplace=False).df
+    assert_bit_identical(result, expected)
+
+
+def _eager_opposite(original_df: pl.DataFrame, kept_df: pl.DataFrame) -> pl.DataFrame:
+    """Old ``_inplace`` opposite logic: the rows of self.df whose index is NOT among the kept rows,
+    computed with the (now-deprecated) ``is_in`` anti-filter that preserves self.df's row order."""
+    return original_df.filter(~pl.first().is_in(kept_df.select(pl.first()).to_series()))
+
+
+def test_inplace_opposite_matches_eager_row_sum():
+    cf = CountFilter('tests/test_files/counted.csv')
+    kept = cf.filter_by_row_sum(5, opposite=False, inplace=False).df
+    expected = _eager_opposite(cf.df, kept)
+    result = cf.filter_by_row_sum(5, opposite=True, inplace=False).df
+    assert_bit_identical(result, expected)
+
+
+def test_inplace_opposite_matches_eager_percentile():
+    f = Filter('tests/test_files/test_deseq.csv')
+    kept = f.filter_percentile(0.75, 'log2FoldChange', opposite=False, inplace=False).df
+    expected = _eager_opposite(f.df, kept)
+    result = f.filter_percentile(0.75, 'log2FoldChange', opposite=True, inplace=False).df
+    assert_bit_identical(result, expected)
+
+
+def _per_gene_scaling_factors(cf: CountFilter) -> pl.DataFrame:
+    """A per-gene scaling-factors table (index + one distinct value per gene per numeric column) -- the
+    ``shape[0] > 1`` case that normalize_to_rpkm/tpm feed to _norm_scaling_factors."""
+    numeric = cf._numeric_columns
+    return cf.df.select(pl.first()).with_columns(
+        [(pl.int_range(1, cf.df.height + 1) + j).cast(pl.Float64).alias(col) for j, col in enumerate(numeric)])
+
+
+def _eager_norm_per_gene(cf: CountFilter, scaling_factors: pl.DataFrame) -> pl.DataFrame:
+    """Old per-gene ``_norm_scaling_factors`` (one left-join per numeric column) -- the pre-fusion logic."""
+    numeric = cf._numeric_columns
+    out = pl.DataFrame().lazy()
+    for column in cf.df.columns:
+        if column in numeric:
+            merged = cf.df.select(cs.first() | cs.by_name(column)).join(
+                scaling_factors.select(cs.first() | cs.by_name(column)), left_on=cf.df.columns[0],
+                right_on=scaling_factors.columns[0], how='left')
+            merged_div = merged.with_columns((pl.nth(-2).truediv(pl.nth(-1))).alias('div'))
+            out = out.with_columns((merged_div.select(pl.col('div').alias(column))))
+        else:
+            out = out.with_columns(cf.df[column].alias(column))
+    return out.collect()
+
+
+def test_norm_scaling_factors_per_gene_lazy_matches_eager():
+    cf = CountFilter('tests/test_files/counted.csv')
+    sf = _per_gene_scaling_factors(cf)
+    expected = _eager_norm_per_gene(cf, sf)
+    result = cf._norm_scaling_factors(sf)
     assert_bit_identical(result, expected)
