@@ -1179,6 +1179,8 @@ class GOEnrichmentRunner(EnrichmentRunner):
         # Fetch+parse the GO DAG (a blocking download on a cold cache) concurrently with resolving
         # the organism and gene-id type (an independent network round-trip). Both are needed before
         # annotations are processed, so overlapping them shortens __init__ to ~max() of the two.
+        # If both were to fail (e.g. no network), either error may surface first; that only affects
+        # the error raised on a broken network, never the result of a successful run.
         with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
             dag_future = executor.submit(ontology.fetch_go_basic)
             self.mutable_annotations: Tuple[dict, ...] = tuple()
