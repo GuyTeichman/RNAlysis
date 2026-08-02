@@ -486,9 +486,9 @@ Finally, you can use a selection algorithm to estimate a good number of clusters
 
 To help in evaluating the result of these selection algorithms, *RNAlysis* will also plot a summary of their outcome:
 
-.. image:: /figures/ gap_statistic.png
+.. image:: /figures/gap_statistic.png
            :width: 60 %
-.. image:: /figures/ silhouette.png
+.. image:: /figures/silhouette.png
            :width: 30 %
 
 |
@@ -1068,7 +1068,7 @@ Gene Ontology terms have a somewhat hierarchical relationship that is defined as
 
 For example:
 
-        .. figure:: /figures/http://geneontology.org/assets/hexose-biosynthetic-process.png
+        .. figure:: http://geneontology.org/assets/hexose-biosynthetic-process.png
            :align:   center
            :scale: 35 %
 
