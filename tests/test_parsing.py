@@ -315,6 +315,12 @@ def test_remove_suffix(s, suffix, expected):
     ([('sample1_R1_trimmed', 'sample1_R2_trimmed')], ['sample1_R']),  # known suffixes are stripped first
     ([('x_R1', 'x_R2'), ('x_R1', 'x_R2')], ['x_R1x_R2', 'x_R1x_R2']),  # duplicate pairs: trimming to empty is avoided
     ([('café_R1', 'café_R2')], ['café_R']),  # unicode
+    # regression test for issue #181: a scope leak used the LAST pair's s1/s2 (from the loop
+    # variable) to filter every pair's result instead of each pair's own s1/s2. Since the last
+    # pair here is much shorter, the earlier (longer) pair's valid LCS result was wrongly
+    # excluded from the common-suffix computation, so the shared trailing "_R" was never trimmed.
+    ([('sampleA_long_name_R1', 'sampleA_long_name_R2'), ('sB_R1', 'sB_R2')],
+     ['sampleA_long_name', 'sB']),
 ])
 def test_generate_common_name(file_pairs, expected):
     assert generate_common_name(file_pairs) == expected
