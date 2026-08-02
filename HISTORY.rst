@@ -5,6 +5,10 @@ History
 4.2.1 (unreleased)
 -------------------
 
+Changed
+*******
+* Sped up GO and KEGG enrichment analysis. P-value computation is now memoized across the many ontology terms that share the same gene counts (typically over 90% of terms in a GO run), and the ``elim`` propagation method no longer deep-copies the full annotation set on every run. Enrichment results are unchanged; the hypergeometric test and ``elim`` propagation benefit the most (up to ~20× and ~2-9× faster respectively on large ontologies).
+
 Fixed
 ******
 * Fixed a bug in ``CountFilter.pairplot`` where the Spearman correlation shown for the first row/column of the plot was computed against the gene-index column instead of a sample, producing an incorrect value (and, with recent NumPy versions, an error). The correlations are now always computed between the correct pair of samples.

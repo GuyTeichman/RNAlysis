@@ -3,7 +3,6 @@ import collections
 import itertools
 import logging
 import warnings
-from copy import deepcopy
 from functools import lru_cache
 from pathlib import Path
 from typing import Collection, Dict, Iterable, List, Literal, Set, Tuple, Union
@@ -64,6 +63,13 @@ class SizeHandler:
                                 transform=handlebox.get_transform())
         handlebox.add_artist(patch)
         return patch
+
+
+# memoize p-values keyed on (bg_size, en_size, attr_size, en_attr_size). The p-value is a pure function of
+# these four integer counts, and the same term-shape recurs across the thousands of GO terms tested in a single
+# run (typically >90% of terms are duplicates, since bg_size/en_size are constant within a run). Bounded so a
+# long-lived GUI session testing many different gene sets cannot grow the cache without limit.
+_PVAL_CACHE_MAXSIZE = 2 ** 16
 
 
 class StatsTest(abc.ABC):
@@ -177,7 +183,7 @@ class FishersExactTest(StatsTest):
         return [attribute_name, en_size, obs, exp, log2fc, pval]
 
     @staticmethod
-    @lru_cache(maxsize=256, typed=False)
+    @lru_cache(maxsize=_PVAL_CACHE_MAXSIZE, typed=False)
     def _calc_fisher_pval(bg_size: int, en_size: int, attr_size: int, en_attr_size: int):
         contingency_table = [[en_attr_size, attr_size - en_attr_size],
                              [en_size - en_attr_size, bg_size - attr_size - en_size + en_attr_size]]
@@ -199,6 +205,7 @@ class HypergeometricTest(StatsTest):
         return [attribute_name, en_size, obs, exp, log2fc, pval]
 
     @staticmethod
+    @lru_cache(maxsize=_PVAL_CACHE_MAXSIZE, typed=False)
     def _calc_hg_pval(bg_size: int, en_size: int, attr_size: int, en_attr_size: int):
         try:
             if en_attr_size / en_size < attr_size / bg_size:
@@ -1332,7 +1339,9 @@ class GOEnrichmentRunner(EnrichmentRunner):
             self.mutable_annotations = (self.annotations,)
             result = self._go_classic_pvalues_serial(desc)
         elif self.propagate_annotations == 'elim':
-            self.mutable_annotations = (deepcopy(self.annotations),)
+            # shallow-copy each gene set (strings are immutable, so set(v) is an independent copy);
+            # much cheaper than deepcopy, which needlessly recurses into every gene-ID string.
+            self.mutable_annotations = ({attr: set(genes) for attr, genes in self.annotations.items()},)
             result = self._go_elim_pvalues_serial(desc)
         elif self.propagate_annotations == 'weight':
             self.mutable_annotations = ({attr: {v: 1.0 for v in val} for attr, val in self.annotations.items()},)
@@ -1351,7 +1360,7 @@ class GOEnrichmentRunner(EnrichmentRunner):
             result = self._go_classic_pvalues_parallel(desc)
         elif self.propagate_annotations == 'elim':
             self.mutable_annotations = tuple(
-                {attr: deepcopy(self.annotations[attr]) for attr in self._go_level_iterator(namespace) if
+                {attr: set(self.annotations[attr]) for attr in self._go_level_iterator(namespace) if
                  attr in self.annotations} for namespace in
                 self.dag_tree.namespaces)
             result = self._go_elim_pvalues_parallel(desc)

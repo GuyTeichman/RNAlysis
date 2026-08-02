@@ -1,5 +1,6 @@
 import copy
 from collections import namedtuple
+from copy import deepcopy
 
 import matplotlib
 import pytest
@@ -234,6 +235,41 @@ def test_elim_pvals(monkeypatch):
                        schema=['GO ID', 'n', 'obs', 'exp', 'log2fc', 'pval'])
 
     _compare_go_result_dfs(res, truth)
+
+
+def test_go_elim_serial_keeps_original_annotations_pristine():
+    # elim mutates a COPY of the annotations; the original self.annotations must stay
+    # untouched, because elim reads it back as the 'unfiltered' reference set for every
+    # term. This guards the annotation-copy in _calculate_enrichment_serial against
+    # accidental aliasing (which would silently corrupt the elim reference sets).
+    annotations = _df_to_dict(io.load_table('tests/test_files/goa_table.csv'), null_mode=False)
+    gene_set = {'gene1', 'gene2', 'gene5', 'gene12', 'gene13', 'gene17', 'gene19', 'gene25', 'gene27', 'gene28'}
+    background = {f'gene{i + 1}' for i in range(30)}
+    with open('tests/test_files/obo_for_go_tests.obo', 'r') as f:
+        dag_tree = ontology.DAGTree(f, ['is_a'])
+
+    e = GOEnrichmentRunner.__new__(GOEnrichmentRunner)
+    e.dag_tree = dag_tree
+    e.annotations = annotations
+    e.attributes = list(annotations.keys())
+    e.attributes_set = set(e.attributes)
+    e.gene_set = gene_set
+    e.background_set = background
+    e.single_set = False
+    e.ranked_genes = None
+    e.stats_test = HypergeometricTest()
+    e.propagate_annotations = 'elim'
+    e.alpha = 0.2  # low enough that some terms are marked significant and mutate the copy
+    e.parallel_backend = 'sequential'
+    e.mutable_annotations = tuple()
+
+    expected = deepcopy(annotations)
+    e._calculate_enrichment_serial()
+
+    assert e.annotations == expected, "elim mutated the original annotations (should mutate only its copy)"
+    assert e.mutable_annotations[0] is not e.annotations
+    assert all(e.mutable_annotations[0][go_id] is not e.annotations[go_id] for go_id in e.annotations), \
+        "elim's working copy shares set objects with the original annotations"
 
 
 def test_weight_pvals(monkeypatch):
