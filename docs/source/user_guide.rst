@@ -302,7 +302,7 @@ For example, we can the function 'filter_percentile' to remove all rows that are
     >>> d.filter_percentile(0.75,'log2FoldChange')
     Filtered 7 features, leaving 21 of the original 28 features. Filtered inplace.
 
-If we now look at the shape of d, we will see that 5954 rows have been filtered out of the object, and we remain with 17781 rows.
+If we now look at the shape of d, we will see that the 7 filtered features have been removed from the object.
 ::
 
     >>> d.shape
@@ -336,7 +336,7 @@ There are many different filtering functions within the filtering module. Some o
 Performing set operations on multiple Filter objects
 ----------------------------------------------------
 
-In addition to using regular filters, it is also possible to use set operations such as union, intersection, difference and symmetric difference to combine the results of multiple :term:`Filter objects`. Those set operations can be applied to any Filter object, as well as to python sets. The objects don't have to be of the same subtype - you can, for example, look at the union of a :term:`DESeqFilter` object, an :term:`CountFilter` object and a python set::
+In addition to using regular filters, it is also possible to use set operations such as union, intersection, difference and symmetric difference to combine the results of multiple :term:`Filter objects`. Those set operations can be applied to any Filter object, as well as to python sets. The objects don't have to be of the same subtype - you can, for example, look at the difference of a :term:`DESeqFilter` object, an :term:`CountFilter` object and a python set::
 
     >>> d = filtering.DESeqFilter("tests/test_files/test_deseq.csv")
     >>> counts = filtering.CountFilter('tests/test_files/counted.csv')
@@ -536,7 +536,7 @@ In principle, any `csv` file where the columns are different conditions/replicat
 
 .. _from-folder-ref:
 
-Generating an CountFilter object from a folder of HTSeq-count output .txt files
+Generating a CountFilter object from a folder of HTSeq-count output .txt files
 ---------------------------------------------------------------------------------
 HTSeq-count receives as input an aligned SAM/BAM file. The native output of HTSeq-count is a text file with feature indices and read-per-genomic-feature, as well as information about reads that weren't counted for any feature (alignment not unique, low alignment quality, ambiguous, unaligned, aligned to no feature).
 An HTSeq-count output file would follow the following format:
@@ -577,7 +577,7 @@ When running HTSeq-count on multiple SAM files (which could represent different 
 
     >>> counts = filtering.CountFilter.from_folder_htseqcount('tests/test_files/test_count_from_folder')
 
-By deault, 'from_folder_htseqcount' does not save the generated tables as `csv` files. However, you can choose to save them by specifying 'save_csv=True', and specifying their filenames in the arguments 'counted_fname' and 'uncounted_fname'::
+By default, 'from_folder_htseqcount' does not save the generated tables as `csv` files. However, you can choose to save them by specifying 'save_csv=True', and specifying their filenames in the arguments 'counted_fname' and 'uncounted_fname'::
 
     >>> counts = filtering.CountFilter.from_folder_htseqcount('tests/test_files/test_count_from_folder', save_csv=True, counted_fname='name_for_reads_csv_file', uncounted_fname='name_for_uncounted_reads_csv_file')
 
@@ -777,7 +777,7 @@ To help in evaluating the result of these model selection methods, *RNAlysis* wi
 
 K-Means clustering
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
-K-means is a clustering method which partitions all of the data points into K clusters by minimizing the squared eucliean distance between points within each cluster.
+K-means is a clustering method which partitions all of the data points into K clusters by minimizing the squared euclidean distance between points within each cluster.
 
 The algorithm is initiated by picking a random starting point, and therefore the exact clustering results can change between runs.
 
@@ -795,11 +795,11 @@ The K-medoids method is very similar to K-means. The main difference between the
 K-medoids picks one data point as the 'center' (medoid) of each cluster.
 In addition, K-medoids attempts to minimize the sum of dissimilarities within each cluster, instead of minimizing squared euclidean distance.
 
-Due to these differences, the K-medoids algorithm supports the use of distance metrics other than eucliean distance through the `metric` parameter.
+Due to these differences, the K-medoids algorithm supports the use of distance metrics other than euclidean distance through the `metric` parameter.
 
 K-medoids clustering in *RNAlysis* supports the following distance metrics:
 
-* eucliidean
+* euclidean
 * cosine
 * pearson
 * spearman
@@ -809,7 +809,7 @@ K-medoids clustering in *RNAlysis* supports the following distance metrics:
 * jackknife (see `Heyer, Kruglyak and Yooseph 1999 <https://doi.org/10.1101%2Fgr.9.11.1106>`_)
 * YS1 (see `Son and Baek 2007 <https://doi.org/10.1016/j.patrec.2007.09.015>`_)
 * YR1 (see `Son and Baek 2007 <https://doi.org/10.1016/j.patrec.2007.09.015>`_)
-* hammming
+* hamming
 * all other pairwise distance metrics supported by scikit-learn
 
 .. image:: /figures/kmedoids_all.png
@@ -866,7 +866,7 @@ HDBSCAN supports additional tuning parameters, which you can read more about in 
 
 HDBSCAN in *RNAlysis* supports the following distance metrics:
 
-* eucliidean
+* euclidean
 * cosine
 * pearson
 * spearman
@@ -876,7 +876,7 @@ HDBSCAN in *RNAlysis* supports the following distance metrics:
 * jackknife (see `Heyer, Kruglyak and Yooseph 1999 <https://doi.org/10.1101%2Fgr.9.11.1106>`_)
 * YS1 (see `Son and Baek 2007 <https://doi.org/10.1016/j.patrec.2007.09.015>`_)
 * YR1 (see `Son and Baek 2007 <https://doi.org/10.1016/j.patrec.2007.09.015>`_)
-* hammming
+* hamming
 * all other pairwise distance metrics elaborated in the `HDBSCAN documentation <https://hdbscan.readthedocs.io/en/latest/basic_hdbscan.html?#what-about-different-metrics>`_.
 
 .. image:: /figures/hdbscan_all.png
@@ -893,7 +893,7 @@ CLICOM offers multiple advantages over more traditional clustering methods:
 
 1. The ensemble clustering approach allows you to combine the results of multiple clustering algorithms with multiple tuning parameters, potentially making up for the weaknesses of each individual clustering method, and only taking into account patterns that robustly appear in many clustering solutions.
 2. Unlike most other clustering methods, CLICOM does not have to force every data point to belong to a cluster. Instead, it can classify data points as outliers, excluding them from the final clustering solution.
-3. CLICOM does not require you to guess the final number of clusters in the data. The main tuning parameter in HDBSCAN is the *evidence threshold* (`evidence_threshold`).
+3. CLICOM does not require you to guess the final number of clusters in the data. The main tuning parameter in CLICOM is the *evidence threshold* (`evidence_threshold`).
 
 *RNAlysis* offers a modified implementation of CLICOM. This implementation of CLICOM supports a few tuning parameters, in addition to the clustering solutions themselves:
 Moreover, ths modified version of the algorithm can cluster each batch of biological/technical replicates in your data separately, which can reduce the influence of batch effect on clustering results, and increases the accuracy and robustness of your clustering results.
@@ -1007,7 +1007,7 @@ The :term:`CountFilter` has the following columns::
     >>> counts.columns
     ['cond1_rep1', 'cond1_rep2', 'cond2_rep1', 'cond2_rep2', 'cond3_rep1', 'cond3_rep2']
 
-We will now calculate the fold change between the mean of condition1 and condition2. Fold change is calculated as (mean_numerator_reads+1)/(mean_denominator_reads+1). We will need to specify the numerator columns, the denominator columns, and the names of the numerator and denominator. Specifying names is optional - if no names are specified, they will be generator automatically from columns used as numerator and denominator. Since we have multiple replicates of each condition, we will specify all of them in a list::
+We will now calculate the fold change between the mean of condition1 and condition2. Fold change is calculated as (mean_numerator_reads+1)/(mean_denominator_reads+1). We will need to specify the numerator columns, the denominator columns, and the names of the numerator and denominator. Specifying names is optional - if no names are specified, they will be generated automatically from columns used as numerator and denominator. Since we have multiple replicates of each condition, we will specify all of them in a list::
 
     >>> f = counts.fold_change(['cond1_rep1','cond1_rep2'],['cond2_rep1','cond2_rep2'])
 
@@ -1205,10 +1205,10 @@ RNAlysis's enrichment module (rnalysis.enrichment) can be used to perform variou
 
 Working with FeatureSet objects
 =========================================
-The enrichment module is built around :term:`FeatureSet` objects. A Featureset is a container for a set of gene/genomic feature IDs, and the set's name (for example, 'genes that are upregulated under hyperosmotic conditions'). All further anslyses of the set of features is done through the :term:`FeatureSet` object.
+The enrichment module is built around :term:`FeatureSet` objects. A Featureset is a container for a set of gene/genomic feature IDs, and the set's name (for example, 'genes that are upregulated under hyperosmotic conditions'). All further analyses of the set of features is done through the :term:`FeatureSet` object.
 
 
-Initialize an FeatureSet object
+Initialize a FeatureSet object
 ------------------------------------------
 We will start by importing the enrichment module::
 
@@ -1231,7 +1231,7 @@ The third method is not to specify a gene set at all::
 
     >>> en = enrichment.FeatureSet(set_name = 'a name for my set')
 
-At this point, you will be prompted to enter a string of feature indices seperated by newline. They will be automatically paresd into a python set.
+At this point, you will be prompted to enter a string of feature indices seperated by newline. They will be automatically parsed into a python set.
 
 FeatureSet objects have two attributes: gene_set, a python set containing genomic feature indices; and set_name, a string that describes the feature set (optional).
 
@@ -1240,7 +1240,7 @@ GO Enrichment
 Using the *enrichment* module, you can perform enrichment analysis for Gene Ontology terms (GO enrichment).
 You can read more about Gene Ontology on the `Gene Ontology Consortium website <http://geneontology.org/docs/ontology-documentation/?>`_.
 
-To perform GO Enrichment analysis, we will start by creating an FeatureSet object::
+To perform GO Enrichment analysis, we will start by creating a FeatureSet object::
 
     >>> counts = filtering.CountFilter('path_to_my_file.csv')
     >>> en = enrichment.FeatureSet(counts.index_set, 'my set')
@@ -1293,16 +1293,16 @@ If we were to randomly draw *n* genes from the background set (without replaceme
 The Fisher's Exact test is similar in principle to the hypergeometric test, but is two-tailed by default, as opposed to the hypergeometric test which examines enrichment and depletion separately.
 
 The randomization test is defined as: Given *M* genes in the background set, *n* genes in the test set, with *N* genes from the background set belonging to a specific attribute and *X* genes from the test set belonging to that attribute.
-We performs the number of randomizations specified by the user (10,000 by default).
+We perform the number of randomizations specified by the user (10,000 by default).
 In each randomization we randomly draw a set of *n* genes from the background set (without replacement), and marks the randomization as a 'success' if the number of genes in the random set belonging to the attribute is >= *X* (in case of enrichment) or <= *X* (in case of depletion).
-The p-values are calculated as *(number of sucesses + 1)/(number of repetitions + 1)*.
+The p-values are calculated as *(number of successes + 1)/(number of repetitions + 1)*.
 This is a positive-bias estimator of the exact p-value, which avoids exactly-zero p-values.
 You can read more about the topic in the following publication: https://www.ncbi.nlm.nih.gov/pubmed/21044043
 
 If you don't specify which statistical test you want to use, the Fisher's Exact Test will be used by default.
 
 To choose the statistical test you want to use, utilize the `statistical_test` parameter, which accepts either 'fisher', 'hypergeometric', or 'randomization'.
-If you choose to use a randomization test, you can specify the number of randomization repititions to run using the `randomization_reps` parameter, and set the random seed using the `random_seed` parameter.
+If you choose to use a randomization test, you can specify the number of randomization repetitions to run using the `randomization_reps` parameter, and set the random seed using the `random_seed` parameter.
 
 Filter GO Terms by *GO aspects* (optional)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -1453,7 +1453,7 @@ Using the *enrichment* module, you can perform enrichment analysis for KEGG path
 You can read more about KEGG pathways on the `KEGG website <https://www.genome.jp/kegg/pathway.html>`_.
 
 
-To perform KEGG Enrichment analysis, we will start by creating an FeatureSet object::
+To perform KEGG Enrichment analysis, we will start by creating a FeatureSet object::
 
     >>> counts = filtering.CountFilter('path_to_my_file.csv')
     >>> en = enrichment.FeatureSet(counts.index_set, 'my set')
@@ -1506,16 +1506,16 @@ If we were to randomly draw *n* genes from the background set (without replaceme
 The Fisher's Exact test is similar in principle to the hypergeometric test, but is two-tailed by default, as opposed to the hypergeometric test which examines enrichment and depletion separately.
 
 The randomization test is defined as: Given *M* genes in the background set, *n* genes in the test set, with *N* genes from the background set belonging to a specific attribute and *X* genes from the test set belonging to that attribute.
-We performs the number of randomizations specified by the user (10,000 by default).
+We perform the number of randomizations specified by the user (10,000 by default).
 In each randomization we randomly draw a set of *n* genes from the background set (without replacement), and marks the randomization as a 'success' if the number of genes in the random set belonging to the attribute is >= *X* (in case of enrichment) or <= *X* (in case of depletion).
-The p-values are calculated as *(number of sucesses + 1)/(number of repetitions + 1)*.
+The p-values are calculated as *(number of successes + 1)/(number of repetitions + 1)*.
 This is a positive-bias estimator of the exact p-value, which avoids exactly-zero p-values.
 You can read more about the topic in the following publication: https://www.ncbi.nlm.nih.gov/pubmed/21044043
 
 If you don't specify which statistical test you want to use, the Fisher's Exact Test will be used by default.
 
 To choose the statistical test you want to use, utilize the `statistical_test` parameter, which accepts either 'fisher', 'hypergeometric', or 'randomization'.
-If you choose to use a randomization test, you can specify the number of randomization repititions to run using the `randomization_reps` parameter, and set the random seed using the `random_seed` parameter.
+If you choose to use a randomization test, you can specify the number of randomization repetitions to run using the `randomization_reps` parameter, and set the random seed using the `random_seed` parameter.
 
 
 Choose plotting parameters (optional)
@@ -1563,7 +1563,7 @@ Enrichment analysis for user-defined attributes
 --------------------------------------------------
 Using the *enrichment* module, you can perform enrichment analysis for user-defined attributes (such as 'genes expressed in intestine', 'epigenetic genes', 'genes that have paralogs'). The enrichment analysis can be performed using either the hypergeometric test or a randomization test.
 
-Enrichment analysis for user-defined attributes is performed using FeatureSet.user_defined_enrichment. We will start by creating an FeatureSet object::
+Enrichment analysis for user-defined attributes is performed using FeatureSet.user_defined_enrichment. We will start by creating a FeatureSet object::
 
     >>> counts = filtering.CountFilter('path_to_my_file.csv')
     >>> en = enrichment.FeatureSet(counts.index_set, 'my set')
@@ -1611,16 +1611,16 @@ If we were to randomly draw *n* genes from the background set (without replaceme
 The Fisher's Exact test is similar in principle to the hypergeometric test, but is two-tailed by default, as opposed to the hypergeometric test which examines enrichment and depletion separately.
 
 The randomization test is defined as: Given *M* genes in the background set, *n* genes in the test set, with *N* genes from the background set belonging to a specific attribute and *X* genes from the test set belonging to that attribute.
-We performs the number of randomizations specified by the user (10,000 by default).
+We perform the number of randomizations specified by the user (10,000 by default).
 In each randomization we randomly draw a set of *n* genes from the background set (without replacement), and marks the randomization as a 'success' if the number of genes in the random set belonging to the attribute is >= *X* (in case of enrichment) or <= *X* (in case of depletion).
-The p-values are calculated as *(number of sucesses + 1)/(number of repetitions + 1)*.
+The p-values are calculated as *(number of successes + 1)/(number of repetitions + 1)*.
 This is a positive-bias estimator of the exact p-value, which avoids exactly-zero p-values.
 You can read more about the topic in the following publication: https://www.ncbi.nlm.nih.gov/pubmed/21044043
 
 If you don't specify which statistical test you want to use, the Fisher's Exact Test will be used by default.
 
 To choose the statistical test you want to use, utilize the `statistical_test` parameter, which accepts either 'fisher', 'hypergeometric', or 'randomization'.
-If you choose to use a randomization test, you may specify the number of randomization repititions to run using the `randomization_reps` parameter, and set the random seed using the `random_seed` parameter.
+If you choose to use a randomization test, you may specify the number of randomization repetitions to run using the `randomization_reps` parameter, and set the random seed using the `random_seed` parameter.
 
 Choose plotting parameters (optional)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -1759,7 +1759,7 @@ Running non-categorical enrichment analysis will calculate enrichment for each o
 Performing set operations and visualisation on multiple FeatureSet objects
 -------------------------------------------------------------------------------
 
-Similarly to Filter objects, it is possible to use set operations such as union, intersection, difference and symmetric difference to combine the feature sets of multiple FeatureSet objects. Those set operations can be applied to both FeatureSet objects and python sets. The objects don't have to be of the same subtype - you can, for example, look at the union of an FeatureSet object and a python set::
+Similarly to Filter objects, it is possible to use set operations such as union, intersection, difference and symmetric difference to combine the feature sets of multiple FeatureSet objects. Those set operations can be applied to both FeatureSet objects and python sets. The objects don't have to be of the same subtype - you can, for example, look at the union of a FeatureSet object and a python set::
 
     >>> en = enrichment.FeatureSet({'WBGene00003002','WBGene00004201','WBGene00300139'})
 
@@ -1790,7 +1790,7 @@ While UpSet plots can include any number of sets:
 Saving indices from FeatureSet to a .txt file
 --------------------------------------------------------
 
-It is possible to save the feature indices from an FeatureSet object to a .txt file, for use in online enrichment tools or simply to share the list of genomic features. This is done with the 'save_txt' function::
+It is possible to save the feature indices from a FeatureSet object to a .txt file, for use in online enrichment tools or simply to share the list of genomic features. This is done with the 'save_txt' function::
 
     >>> en.save_txt('D:\path\filename')
 
@@ -1806,7 +1806,7 @@ You can read more about the *minimum hypergeometric test* and its generalized ve
 https://journals.plos.org/ploscompbiol/article?id=10.1371/journal.pcbi.0030039
 https://arxiv.org/abs/1507.07905
 
-Initialize an RankedSet object
+Initialize a RankedSet object
 ------------------------------------------
 We will start by importing the enrichment module::
 
