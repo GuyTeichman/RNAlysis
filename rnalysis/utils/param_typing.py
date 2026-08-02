@@ -30,6 +30,9 @@ GRAPHVIZ_FORMATS = ('pdf', 'png', 'svg', 'none')
 
 BIOTYPES = ('protein_coding', 'pseudogene', 'lincRNA', 'miRNA', 'ncRNA', 'piRNA', 'rRNA', 'snoRNA', 'snRNA', 'tRNA')
 BIOTYPE_ATTRIBUTE_NAMES = ('biotype', 'gene_biotype', 'transcript_biotype', 'gene_type', 'transcript_type')
+# Feature-type keywords (column 3) that denote a transcript, across GTF and GFF3 conventions. Used to identify
+# transcript rows when parsing annotation files (mRNA/primary_transcript are the GFF3/GTF equivalents of 'transcript').
+TRANSCRIPT_FEATURE_NAMES = ('transcript', 'mRNA', 'primary_transcript')
 
 GO_ASPECTS = ('biological_process', 'cellular_component', 'molecular_function')
 GO_EVIDENCE_TYPES = ('experimental', 'phylogenetic', 'computational', 'author', 'curator', 'electronic')
