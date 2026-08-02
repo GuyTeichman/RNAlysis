@@ -164,38 +164,86 @@ class CLICOM:
         return labels
 
     def find_cliques(self):
-        # fast_cliquer algorithm:
-        n_objs = self.binary_mat.shape[0]
-        # build K0
-        clique_mat = np.zeros_like(self.adj_mat, dtype='object')
-        for i in range(n_objs):
-            for j in range(n_objs):
-                if self.binary_mat[i, j]:
-                    clique_mat[i, j] = {i, j}
-                else:
-                    clique_mat[i, j] = set()
-        # create neighbors set
-        neighbor_sets = [set() for _ in range(n_objs)]
-        for i in range(n_objs):
-            for j in range(n_objs):
-                if self.binary_mat[i, j] and i != j:
-                    neighbor_sets[i].add(j)
+        # fast_cliquer algorithm, accelerated with numpy uint64 bitsets (issue #126).
+        # Each K_ij clique and each pivot's neighbour set is stored as a packed bit-array
+        # (W = ceil(n / 64) uint64 words, one bit per object), so the O(n^3) subset test and
+        # membership update become vectorised word-wise operations instead of Python set ops.
+        # The result is identical to the original set-based implementation (see
+        # test_find_cliques_matches_reference). Because each K_ij evolves independently of the
+        # others, we process only the strict-upper-triangle cells that carry an edge, in
+        # memory-bounded blocks, rather than materialising the full n*n object matrix.
+        binary_mat = self.binary_mat
+        if hasattr(binary_mat, 'to_numpy'):  # accept a polars/pandas frame as well as an ndarray
+            binary_mat = binary_mat.to_numpy()
+        binary_mat = np.asarray(binary_mat, dtype=bool)
+        n_objs = binary_mat.shape[0]
+        n_words = (n_objs + 63) // 64
 
-        # sequentially construct K1..K|V|
-        with tqdm(total=n_objs ** 2, desc='Finding cliques') as pbar:
-            for pivot in range(n_objs):
-                for i in range(n_objs):
-                    for j in range(i, n_objs):
-                        # empty-set entries stay the same; if Kij(p-1) is subset of neighbors[p], add p to Kij(p-1)
-                        if len(clique_mat[i, j]) > 0 and clique_mat[i, j].issubset(neighbor_sets[pivot]):
-                            clique_mat[i, j].add(pivot)
+        # neighbours[p] packed as a bit-array of p's neighbours, excluding p itself
+        neighbors = binary_mat.copy()
+        np.fill_diagonal(neighbors, False)
+        not_neighbor_bits = ~self._pack_bit_rows(neighbors, n_words)  # (n_objs, n_words) uint64
+
+        # bit i lives in word (i // 64) at position (i % 64)
+        obj_word = np.arange(n_objs) // 64
+        obj_bit = np.uint64(1) << (np.arange(n_objs) % 64).astype(np.uint64)
+
+        # K0: only strict-upper-triangle cells carrying an edge can ever become a clique
+        row_idx, col_idx = np.triu_indices(n_objs, k=1)
+        has_edge = binary_mat[row_idx, col_idx]
+        row_idx, col_idx = row_idx[has_edge], col_idx[has_edge]
+        n_cells = row_idx.shape[0]
+        if n_cells == 0:
+            return
+
+        # cap each block's working set (b * n_words uint64 words) at ~32 MB of RAM
+        max_block_bytes = 32 * 1024 * 1024
+        block = max(1, min(n_cells, max_block_bytes // (8 * n_words)))
+        n_blocks = (n_cells + block - 1) // block
+
+        with tqdm(total=n_objs * n_blocks, desc='Finding cliques') as pbar:
+            for start in range(0, n_cells, block):
+                b_rows = row_idx[start:start + block]
+                b_cols = col_idx[start:start + block]
+                b = b_rows.shape[0]
+                # K0 for this block: each cell (i, j) starts as the clique {i, j}
+                cliques = np.zeros((b, n_words), dtype=np.uint64)
+                local = np.arange(b)
+                cliques[local, obj_word[b_rows]] |= obj_bit[b_rows]
+                cliques[local, obj_word[b_cols]] |= obj_bit[b_cols]
+                # sequentially construct K1..K|V|
+                for pivot in range(n_objs):
+                    # a clique gains the pivot iff it is a subset of the pivot's neighbours,
+                    # i.e. it contains no member that is a non-neighbour of the pivot
+                    not_subset = (cliques & not_neighbor_bits[pivot]).any(axis=1)
+                    cliques[~not_subset, obj_word[pivot]] |= obj_bit[pivot]
                     pbar.update(1)
+                # extract cliques with 2 or more members
+                for c in range(b):
+                    members = self._bits_to_members(cliques[c])
+                    if len(members) > 1:
+                        self.clique_set.add(frozenset(members))
 
-        # extract cliques
-        for i in range(self.binary_mat.shape[0]):
-            for j in range(i + 1, self.binary_mat.shape[0]):
-                if len(clique_mat[i, j]) > 1:  # only extract cliques with 2 or more members
-                    self.clique_set.add(frozenset(clique_mat[i, j]))
+    @staticmethod
+    def _pack_bit_rows(bool_mat: np.ndarray, n_words: int) -> np.ndarray:
+        """Pack each row of a boolean matrix into ``n_words`` uint64 words (bit j -> word j // 64, position j % 64)."""
+        packed = np.zeros((bool_mat.shape[0], n_words), dtype=np.uint64)
+        rows, cols = np.nonzero(bool_mat)
+        np.bitwise_or.at(packed, (rows, cols // 64), np.uint64(1) << (cols % 64).astype(np.uint64))
+        return packed
+
+    @staticmethod
+    def _bits_to_members(words: np.ndarray) -> List[int]:
+        """Return the sorted object indices whose bit is set in a packed uint64 bit-array."""
+        members = []
+        for word_idx in range(words.shape[0]):
+            w = int(words[word_idx])
+            base = word_idx * 64
+            while w:
+                lsb = w & (-w)
+                members.append(base + lsb.bit_length() - 1)
+                w ^= lsb
+        return members
 
     def cliques_to_clusters(self, allowed_overlap: float = 0.2) -> List[Set[int]]:
         sorted_cliques = [set(clique) for clique in

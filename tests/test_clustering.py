@@ -302,6 +302,56 @@ def test_find_cliques(monkeypatch):
     assert clicom.clique_set == truth
 
 
+def _reference_find_cliques(binary_mat):
+    """Exact copy of the original set-based fast_cliquer, kept as an equivalence oracle for issue #126.
+
+    ``find_cliques`` was rewritten to use numpy bitsets for speed; it must remain byte-for-byte
+    equivalent to this reference (hard invariant #5 — results must not change between versions)."""
+    n_objs = binary_mat.shape[0]
+    clique_mat = np.zeros_like(binary_mat, dtype='object')
+    for i in range(n_objs):
+        for j in range(n_objs):
+            clique_mat[i, j] = {i, j} if binary_mat[i, j] else set()
+    neighbor_sets = [set() for _ in range(n_objs)]
+    for i in range(n_objs):
+        for j in range(n_objs):
+            if binary_mat[i, j] and i != j:
+                neighbor_sets[i].add(j)
+    for pivot in range(n_objs):
+        for i in range(n_objs):
+            for j in range(i, n_objs):
+                if len(clique_mat[i, j]) > 0 and clique_mat[i, j].issubset(neighbor_sets[pivot]):
+                    clique_mat[i, j].add(pivot)
+    clique_set = set()
+    for i in range(n_objs):
+        for j in range(i + 1, n_objs):
+            if len(clique_mat[i, j]) > 1:
+                clique_set.add(frozenset(clique_mat[i, j]))
+    return clique_set
+
+
+def _random_symmetric_binary(n, density, seed):
+    rng = np.random.default_rng(seed)
+    upper = np.triu(rng.random((n, n)) < density, 1)
+    return upper | upper.T
+
+
+@pytest.mark.parametrize('n', [8, 16, 33, 64, 65, 100, 129])
+@pytest.mark.parametrize('density', [0.15, 0.35])
+def test_find_cliques_matches_reference(n, density):
+    # the bitset rewrite (#126) must reproduce the exact clique_set of the original set-based algorithm,
+    # including across the 64-bit word boundary (n = 64/65/129) that the packing must handle
+    for seed in range(2):
+        binary_mat = _random_symmetric_binary(n, density, seed)
+        expected = _reference_find_cliques(binary_mat)
+        clusterer = CLICOM.__new__(CLICOM)
+        clusterer.adj_mat = binary_mat.astype(float)
+        clusterer.binary_mat = binary_mat
+        clusterer.clique_set = set()
+        clusterer.find_cliques()
+        assert clusterer.clique_set == expected
+
+
 def test_clicom_cluster_wise_result(valid_clustering_solutions):
     bin_format = BinaryFormatClusters(valid_clustering_solutions)
 
