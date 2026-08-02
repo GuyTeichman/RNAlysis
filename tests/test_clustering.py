@@ -302,6 +302,88 @@ def test_find_cliques(monkeypatch):
     assert clicom.clique_set == truth
 
 
+def _reference_find_cliques(binary_mat):
+    """Exact copy of the original set-based fast_cliquer, kept as an equivalence oracle for issue #126.
+
+    ``find_cliques`` was rewritten to use numpy bitsets for speed; it must remain byte-for-byte
+    equivalent to this reference (hard invariant #5 — results must not change between versions)."""
+    n_objs = binary_mat.shape[0]
+    clique_mat = np.zeros_like(binary_mat, dtype='object')
+    for i in range(n_objs):
+        for j in range(n_objs):
+            clique_mat[i, j] = {i, j} if binary_mat[i, j] else set()
+    neighbor_sets = [set() for _ in range(n_objs)]
+    for i in range(n_objs):
+        for j in range(n_objs):
+            if binary_mat[i, j] and i != j:
+                neighbor_sets[i].add(j)
+    for pivot in range(n_objs):
+        for i in range(n_objs):
+            for j in range(i, n_objs):
+                if len(clique_mat[i, j]) > 0 and clique_mat[i, j].issubset(neighbor_sets[pivot]):
+                    clique_mat[i, j].add(pivot)
+    clique_set = set()
+    for i in range(n_objs):
+        for j in range(i + 1, n_objs):
+            if len(clique_mat[i, j]) > 1:
+                clique_set.add(frozenset(clique_mat[i, j]))
+    return clique_set
+
+
+def _random_symmetric_binary(n, density, seed):
+    rng = np.random.default_rng(seed)
+    upper = np.triu(rng.random((n, n)) < density, 1)
+    return upper | upper.T
+
+
+@pytest.mark.parametrize('n', [8, 16, 33, 64, 65, 100, 129])
+@pytest.mark.parametrize('density', [0.15, 0.35])
+def test_find_cliques_matches_reference(n, density):
+    # the bitset rewrite (#126) must reproduce the exact clique_set of the original set-based algorithm,
+    # including across the 64-bit word boundary (n = 64/65/129) that the packing must handle
+    for seed in range(2):
+        binary_mat = _random_symmetric_binary(n, density, seed)
+        expected = _reference_find_cliques(binary_mat)
+        clusterer = CLICOM.__new__(CLICOM)
+        clusterer.adj_mat = binary_mat.astype(float)
+        clusterer.binary_mat = binary_mat
+        clusterer.clique_set = set()
+        clusterer.find_cliques()
+        assert clusterer.clique_set == expected
+
+
+@pytest.mark.parametrize('n,density', [(40, 0.2), (65, 0.2), (129, 0.15)])
+def test_find_cliques_matches_reference_multiblock(n, density, monkeypatch):
+    # force the memory-blocking path (one cell per block) so the multi-block loop is exercised,
+    # including across the 64-bit word boundary; the result must still equal the reference
+    monkeypatch.setattr(CLICOM, '_MAX_CLIQUE_BLOCK_BYTES', 1)
+    binary_mat = _random_symmetric_binary(n, density, 5)
+    expected = _reference_find_cliques(binary_mat)
+    clusterer = CLICOM.__new__(CLICOM)
+    clusterer.binary_mat = binary_mat
+    clusterer.clique_set = set()
+    clusterer.find_cliques()
+    assert clusterer.clique_set == expected
+
+
+def test_clicom_labels_match_reference(valid_clustering_solutions):
+    # end-to-end: the bitset find_cliques must yield the exact same labels_ as the original set-based
+    # algorithm (issue #126 spec: "same clique_set -> same final labels_"; hard invariant #5)
+    bin_format = BinaryFormatClusters(valid_clustering_solutions)
+    for cluster_wise in (True, False):
+        for threshold in (0.0, 1 / 3, 0.5, 1.01):
+            new = CLICOM(bin_format, threshold, cluster_wise_cliques=cluster_wise, min_cluster_size=1)
+            new.run()
+
+            reference = CLICOM(bin_format, threshold, cluster_wise_cliques=cluster_wise, min_cluster_size=1)
+            # drive run()'s unchanged downstream label pipeline from the ORIGINAL algorithm's clique_set
+            reference.find_cliques = lambda ref=reference: setattr(
+                ref, 'clique_set', _reference_find_cliques(np.asarray(ref.binary_mat, dtype=bool)))
+            reference.run()
+
+            assert np.array_equal(new.labels_, reference.labels_)
+
+
 def test_clicom_cluster_wise_result(valid_clustering_solutions):
     bin_format = BinaryFormatClusters(valid_clustering_solutions)
 
