@@ -490,13 +490,16 @@ def generate_common_name(file_pairs):
 
     # Prepare output based on comparison
     initial_results = []
+    pair_lengths = []
     for s1, s2, lcs in lcs_list:
+        pair_lengths.append(len(s1) + len(s2))
         if len(lcs) > len(overall_lcs):
             initial_results.append(lcs)
         else:
             initial_results.append(s1 + s2)
-    # Find and trim common suffix from LCSs
-    lcs_only = [result for result in initial_results if len(result) <= len(s1 + s2)]
+    # Find and trim common suffix from LCSs (compare each result against its OWN pair's combined
+    # length, not the loop variables left over from the last iteration of the loop above)
+    lcs_only = [result for result, pair_length in zip(initial_results, pair_lengths) if len(result) <= pair_length]
     suffix = common_suffix(lcs_only)
     if suffix and len(lcs_only) > 1:
         trimmed_results = [
