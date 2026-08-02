@@ -201,6 +201,18 @@ def test_format_annotations():
     assert duplicates == {'geneA': ['Pb', 'Pa']}  # Pb (5.0) ranked above Pa (3.0)
 
 
+def test_format_annotations_breaks_ties_deterministically():
+    # When two targets share the same annotation score for one gene, the winner must not depend on
+    # the order UniProt returned the rows (paginated vs. streamed) or on the non-stable polars sort:
+    # the tie is broken by the target id, so the result is reproducible regardless of input order.
+    forward = ['From\tTo\tAnnotation', 'geneA\tPb\t5.0', 'geneA\tPa\t5.0']
+    reverse = ['From\tTo\tAnnotation', 'geneA\tPa\t5.0', 'geneA\tPb\t5.0']
+    out_f, dup_f = GeneIDTranslator.format_annotations(forward)
+    out_r, dup_r = GeneIDTranslator.format_annotations(reverse)
+    assert out_f == out_r == {}
+    assert dup_f == dup_r == {'geneA': ['Pa', 'Pb']}  # Pa wins the tie deterministically (id order)
+
+
 def test_save_csv():
     try:
         df = pl.read_csv('tests/test_files/enrichment_hypergeometric_res.csv')
@@ -1292,6 +1304,64 @@ def test_check_id_mapping_results_ready_persistent_400_raises(monkeypatch):
         with pytest.raises(requests.exceptions.HTTPError):
             GeneIDTranslator.check_id_mapping_results_ready(session, "123", 0.1)
         assert adapter.call_count == GeneIDTranslator.STATUS_POLL_MAX_RETRIES + 1
+
+
+def test_check_id_mapping_results_ready_uses_adaptive_backoff(monkeypatch):
+    # A UniProt idmapping job is usually ready within a fraction of a second (measured sub-second),
+    # so a flat multi-second poll interval spends most of its time asleep on a finished job. While
+    # the job is still RUNNING the wait must grow adaptively from a small initial interval, doubling
+    # up to the caller's interval as a cap, instead of sleeping the full interval on every poll.
+    sleeps = []
+    monkeypatch.setattr(io.time, 'sleep', lambda seconds: sleeps.append(seconds))
+    with requests_mock.Mocker() as m:
+        count = 0
+
+        def request_callback(request, context):
+            nonlocal count
+            count += 1
+            # four RUNNING polls, then results -> four adaptive sleeps
+            return {"jobStatus": "RUNNING"} if count < 5 else {"results": ['data']}
+
+        m.get("https://rest.uniprot.org/idmapping/status/123", json=request_callback)
+        ready = GeneIDTranslator.check_id_mapping_results_ready(requests.Session(), "123", 3.0)
+
+    assert ready
+    assert sleeps == [0.25, 0.5, 1.0, 2.0]
+
+
+def test_get_id_mapping_results_search_streams_uniprotkb_target():
+    # A ->UniProtKB mapping redirects to /idmapping/uniprotkb/results/{job}, which exposes a
+    # /results/stream/ endpoint that returns every row in one request. Use it instead of walking
+    # rel="next" pages serially; the parsed rows must be identical to the paginated result.
+    tr = object.__new__(GeneIDTranslator)
+    tr.verbose = False
+    link = 'https://rest.uniprot.org/idmapping/uniprotkb/results/JOB'
+    tsv = 'From\tEntry\tAnnotation\nWBGene1\tQ1\t5\n'
+    with requests_mock.Mocker() as m:
+        stream = m.get('https://rest.uniprot.org/idmapping/uniprotkb/results/stream/JOB', text=tsv)
+        paged = m.get('https://rest.uniprot.org/idmapping/uniprotkb/results/JOB', text=tsv,
+                      headers={'x-total-results': '1'})
+        results = tr.get_id_mapping_results_search(requests.Session(), link)
+    assert stream.called
+    assert not paged.called
+    assert results == ['From\tEntry\tAnnotation', 'WBGene1\tQ1\t5']
+
+
+def test_get_id_mapping_results_search_paginates_plain_target():
+    # The plain /idmapping/results/{job} path (non-UniProtKB targets) has no stream endpoint
+    # (its /results/stream/ variant 404s), so it must keep the cursor-paginated fetch.
+    tr = object.__new__(GeneIDTranslator)
+    tr.verbose = False
+    link = 'https://rest.uniprot.org/idmapping/results/JOB'
+    tsv = 'From\tTo\nP1\tWB1\n'
+    with requests_mock.Mocker() as m:
+        stream = m.get('https://rest.uniprot.org/idmapping/results/stream/JOB', status_code=404)
+        paged = m.get('https://rest.uniprot.org/idmapping/results/JOB', text=tsv,
+                      headers={'x-total-results': '1'})
+        results = tr.get_id_mapping_results_search(requests.Session(), link)
+    assert paged.called
+    assert not stream.called
+    assert results == ['From\tTo', 'P1\tWB1']
 
 
 # Test cases for the OrthologDict class
