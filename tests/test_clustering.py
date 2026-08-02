@@ -2,6 +2,7 @@ from collections import namedtuple
 
 import pytest
 
+from rnalysis.utils import clustering
 from rnalysis.utils.clustering import *
 
 
@@ -225,6 +226,73 @@ def test_clicomrunner_find_valid_clustering_setups():
     _compare_setups(setups, truth)
 
 
+def _count_box_cox_calls(monkeypatch):
+    """Patch generic.standard_box_cox with a call counter, returning the counter dict."""
+    counter = {'n': 0}
+    original = generic.standard_box_cox
+
+    def counting_box_cox(data):
+        counter['n'] += 1
+        return original(data)
+
+    monkeypatch.setattr(generic, 'standard_box_cox', counting_box_cox)
+    return counter
+
+
+def test_clustering_transform_cache_disabled_by_default(monkeypatch, basic_counted_df):
+    # without an active cache context, each runner recomputes its own transform (default behaviour, unchanged)
+    counter = _count_box_cox_calls(monkeypatch)
+    KMeansRunner(basic_counted_df, power_transform=True, n_clusters=2)
+    KMeansRunner(basic_counted_df, power_transform=True, n_clusters=3)
+    assert counter['n'] == 2
+
+
+def test_clustering_transform_cache_reuses_result(monkeypatch, basic_counted_df):
+    # within an active cache context, runners sharing (columns, power_transform, metric) reuse one transform
+    reference = generic.standard_box_cox(basic_counted_df)  # computed with the real function, before patching
+    counter = _count_box_cox_calls(monkeypatch)
+
+    token = clustering._TRANSFORM_CACHE.set({})
+    try:
+        r1 = KMeansRunner(basic_counted_df, power_transform=True, n_clusters=2)
+        # a distinct DataFrame object with identical columns/values must still hit the cache (keyed by columns, not id)
+        r2 = KMeansRunner(basic_counted_df.select(pl.all()), power_transform=True, n_clusters=3)
+    finally:
+        clustering._TRANSFORM_CACHE.reset(token)
+
+    assert counter['n'] == 1
+    assert r1.transformed_data is r2.transformed_data
+    assert r1.transformed_data.equals(reference)  # cached result is bit-identical to the direct transform
+
+
+def test_clustering_transform_cache_separates_power_transform(monkeypatch, basic_counted_df):
+    # differing power_transform must NOT share a cache entry (different transforms)
+    counter = _count_box_cox_calls(monkeypatch)
+    token = clustering._TRANSFORM_CACHE.set({})
+    try:
+        KMeansRunner(basic_counted_df, power_transform=True, n_clusters=2)
+        KMeansRunner(basic_counted_df, power_transform=True, n_clusters=3)  # same key -> cache hit
+        KMeansRunner(basic_counted_df, power_transform=False, n_clusters=2)  # different key -> not box-cox at all
+    finally:
+        clustering._TRANSFORM_CACHE.reset(token)
+    # box-cox runs exactly once: the two power_transform=True runners share it; the False runner uses standardize
+    assert counter['n'] == 1
+
+
+def test_clicom_run_memoizes_transform_across_setups(monkeypatch):
+    np.random.seed(42)
+    df = pl.DataFrame(np.random.random((40, 6)), schema=[f'sample{i}' for i in range(6)])
+    counter = _count_box_cox_calls(monkeypatch)
+    runner = CLICOMRunner(df, [list(df.columns)], True, 1 / 3, False, 1,
+                          dict(method='kmeans', n_clusters=[2, 3, 4], n_init=1),
+                          plot_style='none', parallel_backend='sequential')
+    runner._run(plot=False)
+    # 3 kmeans setups share (columns, power_transform=True); without memoization each is transformed twice
+    # (once to validate the setup, once to run it) -> ~6 calls. With memoization: once, plus at most the
+    # single final CLICOM plot-data transform.
+    assert counter['n'] <= 2
+
+
 def test_find_cliques(monkeypatch):
     truth = {frozenset({2, 4, 7, 8}), frozenset({1, 7}), frozenset({1, 3, 6}), frozenset({0, 3, 5, 6})}
     binary_adj_mat = pl.read_csv('tests/test_files/clicom_binary_adj_matrix.csv').drop(cs.first())
@@ -232,6 +300,88 @@ def test_find_cliques(monkeypatch):
     clicom = CLICOM(BinaryFormatClusters([np.array([[0, 1]])]), 1)
     clicom.find_cliques()
     assert clicom.clique_set == truth
+
+
+def _reference_find_cliques(binary_mat):
+    """Exact copy of the original set-based fast_cliquer, kept as an equivalence oracle for issue #126.
+
+    ``find_cliques`` was rewritten to use numpy bitsets for speed; it must remain byte-for-byte
+    equivalent to this reference (hard invariant #5 — results must not change between versions)."""
+    n_objs = binary_mat.shape[0]
+    clique_mat = np.zeros_like(binary_mat, dtype='object')
+    for i in range(n_objs):
+        for j in range(n_objs):
+            clique_mat[i, j] = {i, j} if binary_mat[i, j] else set()
+    neighbor_sets = [set() for _ in range(n_objs)]
+    for i in range(n_objs):
+        for j in range(n_objs):
+            if binary_mat[i, j] and i != j:
+                neighbor_sets[i].add(j)
+    for pivot in range(n_objs):
+        for i in range(n_objs):
+            for j in range(i, n_objs):
+                if len(clique_mat[i, j]) > 0 and clique_mat[i, j].issubset(neighbor_sets[pivot]):
+                    clique_mat[i, j].add(pivot)
+    clique_set = set()
+    for i in range(n_objs):
+        for j in range(i + 1, n_objs):
+            if len(clique_mat[i, j]) > 1:
+                clique_set.add(frozenset(clique_mat[i, j]))
+    return clique_set
+
+
+def _random_symmetric_binary(n, density, seed):
+    rng = np.random.default_rng(seed)
+    upper = np.triu(rng.random((n, n)) < density, 1)
+    return upper | upper.T
+
+
+@pytest.mark.parametrize('n', [8, 16, 33, 64, 65, 100, 129])
+@pytest.mark.parametrize('density', [0.15, 0.35])
+def test_find_cliques_matches_reference(n, density):
+    # the bitset rewrite (#126) must reproduce the exact clique_set of the original set-based algorithm,
+    # including across the 64-bit word boundary (n = 64/65/129) that the packing must handle
+    for seed in range(2):
+        binary_mat = _random_symmetric_binary(n, density, seed)
+        expected = _reference_find_cliques(binary_mat)
+        clusterer = CLICOM.__new__(CLICOM)
+        clusterer.adj_mat = binary_mat.astype(float)
+        clusterer.binary_mat = binary_mat
+        clusterer.clique_set = set()
+        clusterer.find_cliques()
+        assert clusterer.clique_set == expected
+
+
+@pytest.mark.parametrize('n,density', [(40, 0.2), (65, 0.2), (129, 0.15)])
+def test_find_cliques_matches_reference_multiblock(n, density, monkeypatch):
+    # force the memory-blocking path (one cell per block) so the multi-block loop is exercised,
+    # including across the 64-bit word boundary; the result must still equal the reference
+    monkeypatch.setattr(CLICOM, '_MAX_CLIQUE_BLOCK_BYTES', 1)
+    binary_mat = _random_symmetric_binary(n, density, 5)
+    expected = _reference_find_cliques(binary_mat)
+    clusterer = CLICOM.__new__(CLICOM)
+    clusterer.binary_mat = binary_mat
+    clusterer.clique_set = set()
+    clusterer.find_cliques()
+    assert clusterer.clique_set == expected
+
+
+def test_clicom_labels_match_reference(valid_clustering_solutions):
+    # end-to-end: the bitset find_cliques must yield the exact same labels_ as the original set-based
+    # algorithm (issue #126 spec: "same clique_set -> same final labels_"; hard invariant #5)
+    bin_format = BinaryFormatClusters(valid_clustering_solutions)
+    for cluster_wise in (True, False):
+        for threshold in (0.0, 1 / 3, 0.5, 1.01):
+            new = CLICOM(bin_format, threshold, cluster_wise_cliques=cluster_wise, min_cluster_size=1)
+            new.run()
+
+            reference = CLICOM(bin_format, threshold, cluster_wise_cliques=cluster_wise, min_cluster_size=1)
+            # drive run()'s unchanged downstream label pipeline from the ORIGINAL algorithm's clique_set
+            reference.find_cliques = lambda ref=reference: setattr(
+                ref, 'clique_set', _reference_find_cliques(np.asarray(ref.binary_mat, dtype=bool)))
+            reference.run()
+
+            assert np.array_equal(new.labels_, reference.labels_)
 
 
 def test_clicom_cluster_wise_result(valid_clustering_solutions):

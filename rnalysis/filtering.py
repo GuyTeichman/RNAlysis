@@ -55,7 +55,7 @@ class Filter:
 
     **Attributes**
 
-    df: pandas DataFrame
+    df: polars DataFrame
         A DataFrame that contains the DESeq output file contents. \
         The DataFrame is modified upon usage of filter operations.
     shape: tuple (rows, columns)
@@ -71,7 +71,7 @@ class Filter:
     index_string: string
         A string of all feature indices in the current DataFrame separated by newline.
     """
-    __slots__ = {'fname': 'filename with full path', 'df': 'pandas.DataFrame with the data'}
+    __slots__ = {'fname': 'filename with full path', 'df': 'polars.DataFrame with the data'}
 
     def __init__(self, fname: Union[str, Path], drop_columns: Union[str, List[str]] = None,
                  suppress_warnings: bool = False):
@@ -294,7 +294,7 @@ class Filter:
     def head(self, n: PositiveInt = 5) -> pl.DataFrame:
 
         """
-        Return the first n rows of the Filter object. See pandas.DataFrame.head documentation.
+        Return the first n rows of the Filter object. See polars.DataFrame.head documentation.
 
         :type n: positive int, default 5
         :param n: Number of rows to show.
@@ -305,22 +305,30 @@ class Filter:
             >>> from rnalysis import filtering
             >>> d = filtering.Filter("tests/test_files/test_deseq.csv")
             >>> d.head()
-                               baseMean  log2FoldChange  ...         pvalue           padj
-            WBGene00000002  6820.755327        7.567762  ...   0.000000e+00   0.000000e+00
-            WBGene00000003  3049.625670        9.138071  ...  4.660000e-302  4.280000e-298
-            WBGene00000004  1432.911791        8.111737  ...  6.400000e-237  3.920000e-233
-            WBGene00000005  4028.154186        6.534112  ...  1.700000e-228  7.800000e-225
-            WBGene00000006  1230.585240        7.157428  ...  2.070000e-216  7.590000e-213
-            <BLANKLINE>
-            [5 rows x 6 columns]
+            shape: (5, 7)
+            ┌────────────────┬─────────────┬────────────────┬──────────┬───────────┬─────────────┬─────────────┐
+            │                ┆ baseMean    ┆ log2FoldChange ┆ lfcSE    ┆ stat      ┆ pvalue      ┆ padj        │
+            │ ---            ┆ ---         ┆ ---            ┆ ---      ┆ ---       ┆ ---         ┆ ---         │
+            │ str            ┆ f64         ┆ f64            ┆ f64      ┆ f64       ┆ f64         ┆ f64         │
+            ╞════════════════╪═════════════╪════════════════╪══════════╪═══════════╪═════════════╪═════════════╡
+            │ WBGene00000002 ┆ 6820.755327 ┆ 7.567762       ┆ 0.142257 ┆ 53.197692 ┆ 0.0         ┆ 0.0         │
+            │ WBGene00000003 ┆ 3049.62567  ┆ 9.138071       ┆ 0.245989 ┆ 37.148359 ┆ 4.6600e-302 ┆ 4.2800e-298 │
+            │ WBGene00000004 ┆ 1432.911791 ┆ 8.111737       ┆ 0.246801 ┆ 32.867521 ┆ 6.4000e-237 ┆ 3.9200e-233 │
+            │ WBGene00000005 ┆ 4028.154186 ┆ 6.534112       ┆ 0.202467 ┆ 32.272543 ┆ 1.7000e-228 ┆ 7.8000e-225 │
+            │ WBGene00000006 ┆ 1230.58524  ┆ 7.157428       ┆ 0.227948 ┆ 31.399325 ┆ 2.0700e-216 ┆ 7.5900e-213 │
+            └────────────────┴─────────────┴────────────────┴──────────┴───────────┴─────────────┴─────────────┘
 
             >>> d.head(3) # return only the first 3 rows
-                               baseMean  log2FoldChange  ...         pvalue           padj
-            WBGene00000002  6820.755327        7.567762  ...   0.000000e+00   0.000000e+00
-            WBGene00000003  3049.625670        9.138071  ...  4.660000e-302  4.280000e-298
-            WBGene00000004  1432.911791        8.111737  ...  6.400000e-237  3.920000e-233
-            <BLANKLINE>
-            [3 rows x 6 columns]
+            shape: (3, 7)
+            ┌────────────────┬─────────────┬────────────────┬──────────┬───────────┬─────────────┬─────────────┐
+            │                ┆ baseMean    ┆ log2FoldChange ┆ lfcSE    ┆ stat      ┆ pvalue      ┆ padj        │
+            │ ---            ┆ ---         ┆ ---            ┆ ---      ┆ ---       ┆ ---         ┆ ---         │
+            │ str            ┆ f64         ┆ f64            ┆ f64      ┆ f64       ┆ f64         ┆ f64         │
+            ╞════════════════╪═════════════╪════════════════╪══════════╪═══════════╪═════════════╪═════════════╡
+            │ WBGene00000002 ┆ 6820.755327 ┆ 7.567762       ┆ 0.142257 ┆ 53.197692 ┆ 0.0         ┆ 0.0         │
+            │ WBGene00000003 ┆ 3049.62567  ┆ 9.138071       ┆ 0.245989 ┆ 37.148359 ┆ 4.6600e-302 ┆ 4.2800e-298 │
+            │ WBGene00000004 ┆ 1432.911791 ┆ 8.111737       ┆ 0.246801 ┆ 32.867521 ┆ 6.4000e-237 ┆ 3.9200e-233 │
+            └────────────────┴─────────────┴────────────────┴──────────┴───────────┴─────────────┴─────────────┘
 
         """
         return self.df.head(n)
@@ -329,11 +337,11 @@ class Filter:
     def tail(self, n: PositiveInt = 5) -> pl.DataFrame:
 
         """
-        Return the last n rows of the Filter object. See pandas.DataFrame.tail documentation.
+        Return the last n rows of the Filter object. See polars.DataFrame.tail documentation.
 
         :type n: positive int, default 5
         :param n: Number of rows to show.
-        :rtype: pandas.DataFrame
+        :rtype: pl.DataFrame
         :return: returns the last n rows of the Filter object.
 
 
@@ -341,28 +349,36 @@ class Filter:
             >>> from rnalysis import filtering
             >>> d = filtering.Filter("tests/test_files/test_deseq.csv")
             >>> d.tail()
-                               baseMean  log2FoldChange  ...        pvalue          padj
-            WBGene00000025  2236.185837        2.477374  ...  1.910000e-81  1.460000e-78
-            WBGene00000026   343.648987       -4.037191  ...  2.320000e-75  1.700000e-72
-            WBGene00000027   175.142856        6.352044  ...  1.580000e-74  1.120000e-71
-            WBGene00000028   219.163200        3.913657  ...  3.420000e-72  2.320000e-69
-            WBGene00000029  1066.242402       -2.811281  ...  1.420000e-70  9.290000e-68
-            <BLANKLINE>
-            [5 rows x 6 columns]
+            shape: (5, 7)
+            ┌────────────────┬─────────────┬────────────────┬──────────┬────────────┬────────────┬────────────┐
+            │                ┆ baseMean    ┆ log2FoldChange ┆ lfcSE    ┆ stat       ┆ pvalue     ┆ padj       │
+            │ ---            ┆ ---         ┆ ---            ┆ ---      ┆ ---        ┆ ---        ┆ ---        │
+            │ str            ┆ f64         ┆ f64            ┆ f64      ┆ f64        ┆ f64        ┆ f64        │
+            ╞════════════════╪═════════════╪════════════════╪══════════╪════════════╪════════════╪════════════╡
+            │ WBGene00000025 ┆ 2236.185837 ┆ 2.477374       ┆ 0.129606 ┆ 19.114626  ┆ 1.9100e-81 ┆ 1.4600e-78 │
+            │ WBGene00000026 ┆ 343.648987  ┆ -4.037191      ┆ 0.219781 ┆ -18.369115 ┆ 2.3200e-75 ┆ 1.7000e-72 │
+            │ WBGene00000027 ┆ 175.142856  ┆ 6.352044       ┆ 0.347777 ┆ 18.264706  ┆ 1.5800e-74 ┆ 1.1200e-71 │
+            │ WBGene00000028 ┆ 219.1632    ┆ 3.913657       ┆ 0.217802 ┆ 17.968851  ┆ 3.4200e-72 ┆ 2.3200e-69 │
+            │ WBGene00000029 ┆ 1066.242402 ┆ -2.811281      ┆ 0.158284 ┆ -17.761002 ┆ 1.4200e-70 ┆ 9.2900e-68 │
+            └────────────────┴─────────────┴────────────────┴──────────┴────────────┴────────────┴────────────┘
 
 
             >>> d.tail(8) # returns the last 8 rows
-                               baseMean  log2FoldChange  ...        pvalue          padj
-            WBGene00000022   365.813048        6.101303  ...  2.740000e-97  2.400000e-94
-            WBGene00000023  3168.566714        3.906719  ...  1.600000e-93  1.340000e-90
-            WBGene00000024   221.925724        4.801676  ...  1.230000e-84  9.820000e-82
-            WBGene00000025  2236.185837        2.477374  ...  1.910000e-81  1.460000e-78
-            WBGene00000026   343.648987       -4.037191  ...  2.320000e-75  1.700000e-72
-            WBGene00000027   175.142856        6.352044  ...  1.580000e-74  1.120000e-71
-            WBGene00000028   219.163200        3.913657  ...  3.420000e-72  2.320000e-69
-            WBGene00000029  1066.242402       -2.811281  ...  1.420000e-70  9.290000e-68
-            <BLANKLINE>
-            [8 rows x 6 columns]
+            shape: (8, 7)
+            ┌────────────────┬─────────────┬────────────────┬──────────┬────────────┬────────────┬────────────┐
+            │                ┆ baseMean    ┆ log2FoldChange ┆ lfcSE    ┆ stat       ┆ pvalue     ┆ padj       │
+            │ ---            ┆ ---         ┆ ---            ┆ ---      ┆ ---        ┆ ---        ┆ ---        │
+            │ str            ┆ f64         ┆ f64            ┆ f64      ┆ f64        ┆ f64        ┆ f64        │
+            ╞════════════════╪═════════════╪════════════════╪══════════╪════════════╪════════════╪════════════╡
+            │ WBGene00000022 ┆ 365.813048  ┆ 6.101303       ┆ 0.291484 ┆ 20.931891  ┆ 2.7400e-97 ┆ 2.4000e-94 │
+            │ WBGene00000023 ┆ 3168.566714 ┆ 3.906719       ┆ 0.190439 ┆ 20.514331  ┆ 1.6000e-93 ┆ 1.3400e-90 │
+            │ WBGene00000024 ┆ 221.925724  ┆ 4.801676       ┆ 0.246313 ┆ 19.494189  ┆ 1.2300e-84 ┆ 9.8200e-82 │
+            │ WBGene00000025 ┆ 2236.185837 ┆ 2.477374       ┆ 0.129606 ┆ 19.114626  ┆ 1.9100e-81 ┆ 1.4600e-78 │
+            │ WBGene00000026 ┆ 343.648987  ┆ -4.037191      ┆ 0.219781 ┆ -18.369115 ┆ 2.3200e-75 ┆ 1.7000e-72 │
+            │ WBGene00000027 ┆ 175.142856  ┆ 6.352044       ┆ 0.347777 ┆ 18.264706  ┆ 1.5800e-74 ┆ 1.1200e-71 │
+            │ WBGene00000028 ┆ 219.1632    ┆ 3.913657       ┆ 0.217802 ┆ 17.968851  ┆ 3.4200e-72 ┆ 2.3200e-69 │
+            │ WBGene00000029 ┆ 1066.242402 ┆ -2.811281      ┆ 0.158284 ┆ -17.761002 ┆ 1.4200e-70 ┆ 9.2900e-68 │
+            └────────────────┴─────────────┴────────────────┴──────────┴────────────┴────────────┴────────────┘
 
         """
         return self.df.tail(n)
@@ -966,12 +982,12 @@ class Filter:
             >>> from rnalysis import filtering
             >>> counts = filtering.Filter('tests/test_files/counted.csv')
             >>> # keep only rows whose biotype is 'protein_coding'
-            >>> counts.filter_biotype_from_ref_table('protein_coding',ref='tests/biotype_ref_table_for_tests.csv')
+            >>> counts.filter_biotype_from_ref_table('protein_coding',ref='tests/test_files/biotype_ref_table_for_tests.csv')
             Filtered 9 features, leaving 13 of the original 22 features. Filtered inplace.
 
             >>> counts = filtering.Filter('tests/test_files/counted.csv')
             >>> # keep only rows whose biotype is 'protein_coding' or 'pseudogene'
-            >>> counts.filter_biotype_from_ref_table(['protein_coding','pseudogene'],ref='tests/biotype_ref_table_for_tests.csv')
+            >>> counts.filter_biotype_from_ref_table(['protein_coding','pseudogene'],ref='tests/test_files/biotype_ref_table_for_tests.csv')
             Filtered 0 features, leaving 22 of the original 22 features. Filtered inplace.
 
         """
@@ -1287,30 +1303,30 @@ class Filter:
             >>> from rnalysis import filtering
             >>> counts = filtering.Filter('tests/test_files/counted.csv')
             >>> # keep only rows that belong to the attribute 'attribute1'
-            >>> counts.filter_by_attribute('attribute1',ref='tests/attr_ref_table_for_examples.csv')
+            >>> counts.filter_by_attribute('attribute1',ref='tests/test_files/attr_ref_table_for_examples.csv')
             Filtered 15 features, leaving 7 of the original 22 features. Filtered inplace.
 
             >>> counts = filtering.Filter('tests/test_files/counted.csv')
             >>> # keep only rows that belong to the attributes 'attribute1' OR 'attribute3' (union)
-            >>> counts.filter_by_attribute(['attribute1','attribute3'],ref='tests/attr_ref_table_for_examples.csv')
+            >>> counts.filter_by_attribute(['attribute1','attribute3'],ref='tests/test_files/attr_ref_table_for_examples.csv')
             Filtered 14 features, leaving 8 of the original 22 features. Filtered inplace.
 
             >>> counts = filtering.Filter('tests/test_files/counted.csv')
             >>> # keep only rows that belong to both attributes 'attribute1' AND 'attribute3' (intersection)
             >>> counts.filter_by_attribute(['attribute1','attribute3'],mode='intersection',
-            ... ref='tests/attr_ref_table_for_examples.csv')
+            ... ref='tests/test_files/attr_ref_table_for_examples.csv')
             Filtered 19 features, leaving 3 of the original 22 features. Filtered inplace.
 
             >>> counts = filtering.Filter('tests/test_files/counted.csv')
             >>> # keep only rows that DON'T belong to either 'attribute1','attribute3' or both
-            >>> counts.filter_by_attribute(['attribute1','attribute3'],ref='tests/attr_ref_table_for_examples.csv',
+            >>> counts.filter_by_attribute(['attribute1','attribute3'],ref='tests/test_files/attr_ref_table_for_examples.csv',
             ... opposite=True)
             Filtered 8 features, leaving 14 of the original 22 features. Filtered inplace.
 
             >>> counts = filtering.Filter('tests/test_files/counted.csv')
             >>> # keep only rows that DON'T belong to both 'attribute1' AND 'attribute3'
             >>> counts.filter_by_attribute(['attribute1','attribute3'],mode='intersection',
-            ... ref='tests/attr_ref_table_for_examples.csv',opposite=True)
+            ... ref='tests/test_files/attr_ref_table_for_examples.csv',opposite=True)
             Filtered 3 features, leaving 19 of the original 22 features. Filtered inplace.
 
         """
@@ -1373,7 +1389,7 @@ class Filter:
             >>> from rnalysis import filtering
             >>> counts = filtering.Filter('tests/test_files/counted.csv')
             >>> attribute1,attribute2 = counts.split_by_attribute(['attribute1','attribute2'],
-            ... ref='tests/attr_ref_table_for_examples.csv')
+            ... ref='tests/test_files/attr_ref_table_for_examples.csv')
             Filtered 15 features, leaving 7 of the original 22 features. Filtering result saved to new object.
             Filtered 20 features, leaving 2 of the original 22 features. Filtering result saved to new object.
 
@@ -1391,14 +1407,14 @@ class Filter:
         """
         Generate descriptive statistics that summarize the central tendency, dispersion and shape \
         of the dataset's distribution, excluding NaN values. \
-        For more information see the documentation of pandas.DataFrame.describe.
+        For more information see the documentation of polars.DataFrame.describe.
 
         :type percentiles: list-like of floats (default=(0.01, 0.25, 0.5, 0.75, 0.99))
         :param percentiles: The percentiles to include in the output. \
         All should fall between 0 and 1. \
         The default is [.25, .5, .75], which returns the 25th, 50th, and 75th percentiles.
         :return: Summary statistics of the dataset.
-        :rtype: Series or DataFrame
+        :rtype: pl.DataFrame
 
 
         :Examples:
@@ -1575,8 +1591,8 @@ class Filter:
         :param long_format:if True, returns a short-form DataFrame, which states the biotypes \
         in the Filter object and their count. Otherwise, returns a long-form DataFrame,
         which also provides descriptive statistics of each column per biotype.
-        :rtype: pandas.DataFrame
-        :returns: a pandas DataFrame showing the number of values belonging to each biotype, \
+        :rtype: pl.DataFrame
+        :returns: a polars DataFrame showing the number of values belonging to each biotype, \
         as well as additional descriptive statistics of format=='long'.
         """
         # load the Biotype Reference Table
@@ -1619,8 +1635,8 @@ class Filter:
         in the Filter object and their count. Otherwise, returns a long-form DataFrame,
         which also provides descriptive statistics of each column per biotype.
         :param ref: Name of the biotype reference table used to determine biotype. Default is ce11 (included in the package).
-        :rtype: pandas.DataFrame
-        :returns: a pandas DataFrame showing the number of values belonging to each biotype, \
+        :rtype: pl.DataFrame
+        :returns: a polars DataFrame showing the number of values belonging to each biotype, \
         as well as additional descriptive statistics of format=='long'.
 
 
@@ -1628,23 +1644,36 @@ class Filter:
             >>> from rnalysis import filtering
             >>> d = filtering.Filter("tests/test_files/test_deseq.csv")
             >>> # short-form view
-            >>> d.biotypes_from_ref_table(ref='tests/biotype_ref_table_for_tests.csv')
-                            gene
-            biotype
-            protein_coding    26
-            pseudogene         1
-            unknown            1
+            >>> d.biotypes_from_ref_table(ref='tests/test_files/biotype_ref_table_for_tests.csv')
+            Biotype Reference Table used: tests/test_files/biotype_ref_table_for_tests.csv
+            shape: (3, 2)
+            ┌────────────────┬───────┐
+            │ biotype        ┆ count │
+            │ ---            ┆ ---   │
+            │ str            ┆ u32   │
+            ╞════════════════╪═══════╡
+            │ unknown        ┆ 1     │
+            │ protein_coding ┆ 26    │
+            │ pseudogene     ┆ 1     │
+            └────────────────┴───────┘
 
             >>> # long-form view
-            >>> d.biotypes_from_ref_table(long_format=True,ref='tests/biotype_ref_table_for_tests.csv')
-                           baseMean               ...           padj
-                              count         mean  ...            75%            max
-            biotype                               ...
-            protein_coding     26.0  1823.089609  ...   1.005060e-90   9.290000e-68
-            pseudogene          1.0  2688.043701  ...   1.800000e-94   1.800000e-94
-            unknown             1.0  2085.995094  ...  3.070000e-152  3.070000e-152
-            <BLANKLINE>
-            [3 rows x 48 columns]
+            >>> d.biotypes_from_ref_table(long_format=True,ref='tests/test_files/biotype_ref_table_for_tests.csv')
+            Biotype Reference Table used: tests/test_files/biotype_ref_table_for_tests.csv
+            shape: (3, 49)
+            ┌───────────┬───────────┬───────────┬───────────┬───┬───────────┬───────────┬───────────┬──────────┐
+            │ biotype   ┆ baseMean_ ┆ baseMean_ ┆ baseMean_ ┆ … ┆ padj_25%  ┆ padj_50%  ┆ padj_75%  ┆ padj_max │
+            │ ---       ┆ count     ┆ mean      ┆ std       ┆   ┆ ---       ┆ ---       ┆ ---       ┆ ---      │
+            │ str       ┆ ---       ┆ ---       ┆ ---       ┆   ┆ f64       ┆ f64       ┆ f64       ┆ f64      │
+            │           ┆ f64       ┆ f64       ┆ f64       ┆   ┆           ┆           ┆           ┆          │
+            ╞═══════════╪═══════════╪═══════════╪═══════════╪═══╪═══════════╪═══════════╪═══════════╪══════════╡
+            │ protein_c ┆ 26.0      ┆ 1823.0896 ┆ 1796.5207 ┆ … ┆ 3.8506e-1 ┆ 1.1350e-1 ┆ 1.0051e-9 ┆ 9.2900e- │
+            │ oding     ┆           ┆ 09        ┆ 8         ┆   ┆ 76        ┆ 35        ┆ 0         ┆ 68       │
+            │ pseudogen ┆ 1.0       ┆ 2688.0437 ┆ null      ┆ … ┆ 1.8000e-9 ┆ 1.8000e-9 ┆ 1.8000e-9 ┆ 1.8000e- │
+            │ e         ┆           ┆ 01        ┆           ┆   ┆ 4         ┆ 4         ┆ 4         ┆ 94       │
+            │ unknown   ┆ 1.0       ┆ 2085.9950 ┆ null      ┆ … ┆ 3.0700e-1 ┆ 3.0700e-1 ┆ 3.0700e-1 ┆ 3.0700e- │
+            │           ┆           ┆ 94        ┆           ┆   ┆ 52        ┆ 52        ┆ 52        ┆ 152      │
+            └───────────┴───────────┴───────────┴───────────┴───┴───────────┴───────────┴───────────┴──────────┘
 
         """
         # load the Biotype Reference Table
@@ -2270,9 +2299,9 @@ class FoldChangeFilter(Filter):
 
     **Attributes**
 
-    df: pandas Series
-        A Series that contains the fold change values. \
-        The Series is modified upon usage of filter operations.
+    df: polars DataFrame
+        A DataFrame containing the gene names and their fold change values. \
+        The DataFrame is modified upon usage of filter operations.
     shape: tuple (rows, columns)
         The dimensions of df.
     columns: list
@@ -2371,7 +2400,7 @@ class FoldChangeFilter(Filter):
         :type random_seed: The random seed used to initialize the pseudorandom generator for the randomization test. \
         By default it is picked at random, but you can set it to a particular integer to get consistents results \
         over multiple runs.
-        :rtype: pandas DataFrame
+        :rtype: pl.DataFrame
         :return: A Dataframe with the number of given genes, the observed fold change for the given group of genes, \
         the expected fold change for a group of genes of that size and the p value for the comparison.
 
@@ -2379,16 +2408,20 @@ class FoldChangeFilter(Filter):
         :Examples:
             >>> from rnalysis import filtering
             >>> f = filtering.FoldChangeFilter('tests/test_files/fc_1.csv' , 'numerator' , 'denominator')
-            >>> f_background = f.filter_biotype_from_ref_table('protein_coding', ref='tests/biotype_ref_table_for_tests.csv', inplace=False) #keep only protein-coding genes as reference
+            >>> f_background = f.filter_biotype_from_ref_table('protein_coding', ref='tests/test_files/biotype_ref_table_for_tests.csv', inplace=False) #keep only protein-coding genes as reference
             Filtered 9 features, leaving 13 of the original 22 features. Filtering result saved to new object.
-            >>> f_test = f_background.filter_by_attribute('attribute1', ref='tests/attr_ref_table_for_examples.csv', inplace=False)
+            >>> f_test = f_background.filter_by_attribute('attribute1', ref='tests/test_files/attr_ref_table_for_examples.csv', inplace=False)
             Filtered 6 features, leaving 7 of the original 13 features. Filtering result saved to new object.
             >>> rand_test_res = f_test.randomization_test(f_background)
             Calculating...
-               group size  observed fold change  ...      pval  significant
-            0           7              2.806873  ...  0.360264        False
-
-            [1 rows x 5 columns]
+            shape: (1, 5)
+            ┌────────────┬──────────────────────┬──────────────────────┬──────────┬─────────────┐
+            │ group size ┆ observed fold change ┆ expected fold change ┆ pval     ┆ significant │
+            │ ---        ┆ ---                  ┆ ---                  ┆ ---      ┆ ---         │
+            │ f64        ┆ f64                  ┆ f64                  ┆ f64      ┆ bool        │
+            ╞════════════╪══════════════════════╪══════════════════════╪══════════╪═════════════╡
+            │ 7.0        ┆ 2.806873             ┆ 2.510859             ┆ 0.354265 ┆ false       │
+            └────────────┴──────────────────────┴──────────────────────┴──────────┴─────────────┘
 
         """
         # calculate observed and expected mean fold-change, and the set size (n)
@@ -2562,7 +2595,7 @@ class DESeqFilter(Filter):
 
     **Attributes**
 
-    df: pandas DataFrame
+    df: polars DataFrame
         A DataFrame that contains the DESeq output file contents. \
         The DataFrame is modified upon usage of filter operations.
     shape: tuple (rows, columns)
@@ -2939,7 +2972,7 @@ class CountFilter(Filter):
 
     **Attributes**
 
-    df: pandas DataFrame
+    df: polars DataFrame
         A DataFrame that contains the count matrix contents. \
         The DataFrame is modified upon usage of filter operations.
     shape: tuple (rows, columns)
@@ -3480,9 +3513,12 @@ class CountFilter(Filter):
             assert den in self.columns, f"'{den}' is not a column in the CountFilter object!"
             assert den in numeric_cols, f"Invalid dtype for column '{den}': {self.df.dtypes[den]}"
 
-        fc_df = self.df.select(pl.first()).with_columns(
-            ((self.df.select(numerator).mean_horizontal() + 1) / (
-                self.df.select(denominator).mean_horizontal() + 1)).alias('Fold Change'))
+        # fuse the three eager scans of self.df (index column + numerator mean + denominator mean) into
+        # a single lazy plan collected once; pl.mean_horizontal over each column list is the row-wise mean
+        fc_df = self.df.lazy().select(
+            pl.first(),
+            ((pl.mean_horizontal(numerator) + 1) / (pl.mean_horizontal(denominator) + 1)).alias('Fold Change')
+        ).collect()
         new_fname = Path(f"{str(self.fname.parent)}/{self.fname.stem}'_fold_change_'"
                          f"{numer_name}_over_{denom_name}_{self.fname.suffix}")
 
@@ -3615,7 +3651,7 @@ class CountFilter(Filter):
         [['SAMPLE1A', 'SAMPLE1B', 'SAMPLE1C'], ['SAMPLE2A', 'SAMPLE2B', 'SAMPLE2C'],'SAMPLE3' , 'SAMPLE6'] \
         and the resulting output will be a DataFrame containing the following columns: \
         ['SAMPLE1', 'SAMPLE2', 'SAMPLE3', 'SAMPLE6']
-        :return: a pandas DataFrame containing samples/averaged subsamples according to the specified sample_list.
+        :return: a polars DataFrame containing samples/averaged subsamples according to the specified sample_list.
 
         """
         assert isinstance(function, str), "'function' must be a string!"
@@ -3646,10 +3682,10 @@ class CountFilter(Filter):
                         self.df.select(pl.col(group)).mean_horizontal().alias(new_name))
                 elif function == 'median':
                     averaged_df = averaged_df.with_columns(
-                        self.df.select(pl.col(group)).median_horizontal().alias(new_name))
+                        self.df.select(pl.concat_list(pl.col(group)).list.median().alias(new_name)))
                 else:
-                    averaged_df = averaged_df.with_columns(
-                        self.df.select(pl.col(group).apply(lambda x: gmean(x)).alias(new_name)))
+                    group_gmean = gmean(self.df.select(pl.col(group)).to_numpy(), axis=1)
+                    averaged_df = averaged_df.with_columns(pl.Series(new_name, group_gmean))
 
             else:
                 raise TypeError(f"'sample_list' cannot contain objects of type {type(group)}.")
@@ -3665,33 +3701,30 @@ class CountFilter(Filter):
 
     def _norm_scaling_factors(self, scaling_factors: pl.DataFrame):
         numeric_cols = self._numeric_columns
-        new_df = pl.DataFrame().lazy()
 
         if scaling_factors.shape[0] == 1:
             assert scaling_factors.shape[1] == len(numeric_cols), \
                 f"Number of scaling factors ({scaling_factors.shape[1]}) does not match " \
                 f"number of numeric columns in your data table ({len(numeric_cols)})!"
+            # one lazy pass over self.df instead of one eager self.df.select per column: divide each
+            # numeric column by its scalar factor and keep the non-numeric columns (e.g. the index) as-is
+            exprs = [pl.col(column).truediv(scaling_factors[column]) if column in numeric_cols else pl.col(column)
+                     for column in self.df.columns]
+            return self.df.lazy().select(exprs).collect()
 
-            for column in self.df.columns:
-                if column in numeric_cols:
-                    norm_factor = scaling_factors[column]
-                    new_df = new_df.with_columns((self.df.select(pl.col(column).truediv(norm_factor))))
-                else:
-                    new_df = new_df.with_columns(self.df[column].alias(column))
-        else:
-            assert scaling_factors.shape[0] >= self.shape[0] and scaling_factors.shape[1] == len(numeric_cols) + 1, \
-                f"Dimensions of scaling factors table ({scaling_factors.shape}) does not match the " \
-                f"dimensions of your data table ({(self.shape[0], len(numeric_cols))} - numeric columns only)!"
-            for column in self.df.columns:
-                if column in numeric_cols:
-                    merged = self.df.select(cs.first() | cs.by_name(column)).join(
-                        scaling_factors.select(cs.first() | cs.by_name(column)), left_on=self.df.columns[0],
-                        right_on=scaling_factors.columns[0], how='left')
-                    merged_div = merged.with_columns((pl.nth(-2).truediv(pl.nth(-1))).alias('div'))
-                    new_df = new_df.with_columns((merged_div.select(pl.col('div').alias(column))))
-                else:
-                    new_df = new_df.with_columns(self.df[column].alias(column))
-
+        assert scaling_factors.shape[0] >= self.shape[0] and scaling_factors.shape[1] == len(numeric_cols) + 1, \
+            f"Dimensions of scaling factors table ({scaling_factors.shape}) does not match the " \
+            f"dimensions of your data table ({(self.shape[0], len(numeric_cols))} - numeric columns only)!"
+        new_df = pl.DataFrame().lazy()
+        for column in self.df.columns:
+            if column in numeric_cols:
+                merged = self.df.select(cs.first() | cs.by_name(column)).join(
+                    scaling_factors.select(cs.first() | cs.by_name(column)), left_on=self.df.columns[0],
+                    right_on=scaling_factors.columns[0], how='left')
+                merged_div = merged.with_columns((pl.nth(-2).truediv(pl.nth(-1))).alias('div'))
+                new_df = new_df.with_columns((merged_div.select(pl.col('div').alias(column))))
+            else:
+                new_df = new_df.with_columns(self.df[column].alias(column))
         return new_df.collect()
 
     @readable_name('Normalize to reads-per-million (RPM) - HTSeq-count output')
@@ -4328,9 +4361,10 @@ class CountFilter(Filter):
         """
         validation.validate_threshold(threshold)
         self._validate_is_normalized()
-        mask_expr = (pl.col(self._numeric_columns) >= threshold)
-        mask = self.df.select(pl.col(self._numeric_columns)).with_columns(mask_expr).sum_horizontal() >= n_samples
-        new_df = self.df.filter(mask)
+        # fuse into one lazy pass over self.df instead of two eager scans (build the count mask on a
+        # selected copy, then filter the full frame): count, per row, the numeric columns >= threshold
+        new_df = self.df.lazy().filter(
+            pl.sum_horizontal(pl.col(self._numeric_columns) >= threshold) >= n_samples).collect()
         suffix = f"_filt{threshold}reads{n_samples}samples"
         return self._inplace(new_df, opposite, inplace, suffix)
 
@@ -4362,8 +4396,10 @@ class CountFilter(Filter):
         """
         validation.validate_threshold(threshold)
         self._validate_is_normalized()
-        high_expr = self.df.filter(self.df.select(pl.col(self._numeric_columns)).max_horizontal() >= threshold)
-        low_expr = self.df.filter(self.df.select(pl.col(self._numeric_columns)).max_horizontal() < threshold)
+        # one lazy pass each instead of scanning self.df twice (max_horizontal on a selected copy, then
+        # filter the full frame)
+        high_expr = self.df.lazy().filter(pl.max_horizontal(pl.col(self._numeric_columns)) >= threshold).collect()
+        low_expr = self.df.lazy().filter(pl.max_horizontal(pl.col(self._numeric_columns)) < threshold).collect()
         return self._inplace(high_expr, opposite=False, inplace=False, suffix=f'_above{threshold}reads'), self._inplace(
             low_expr, opposite=False, inplace=False, suffix=f'_below{threshold}reads')
 
@@ -4395,7 +4431,8 @@ class CountFilter(Filter):
         validation.validate_threshold(threshold)
         self._validate_is_normalized()
 
-        new_df = self.df.filter(self.df.select(pl.col(self._numeric_columns)).sum_horizontal() >= threshold)
+        # one lazy pass instead of scanning self.df twice (sum_horizontal on a selected copy, then filter)
+        new_df = self.df.lazy().filter(pl.sum_horizontal(pl.col(self._numeric_columns)) >= threshold).collect()
         suffix = f"_filt{threshold}sum"
         return self._inplace(new_df, opposite, inplace, suffix)
 
@@ -5219,7 +5256,8 @@ class CountFilter(Filter):
         self._validate_is_normalized()
         suffix = f'_sortbyPC{component}' + 'powertransform' * bool(power_transform)
         data = self.df[self._numeric_columns].to_numpy().transpose()
-        data_standardized = generic.standard_box_cox(data) if power_transform else generic.standardize(data)
+        data_standardized = generic.standard_box_cox(
+            data, parallel_backend=generic.box_cox_parallel_backend()) if power_transform else generic.standardize(data)
         pca_obj = PCA(component)
         pca_obj.fit(data_standardized)
         loading = self.df.select(pl.first()).with_columns(
@@ -5265,7 +5303,8 @@ class CountFilter(Filter):
               f'contributing to each specified Principal Component...')
 
         data = self.df[self._numeric_columns].transpose()
-        data_standardized = generic.standard_box_cox(data) if power_transform else generic.standardize(data)
+        data_standardized = generic.standard_box_cox(
+            data, parallel_backend=generic.box_cox_parallel_backend()) if power_transform else generic.standardize(data)
 
         pca_obj = PCA(n_components)
         pca_obj.fit(data_standardized)
@@ -5341,7 +5380,8 @@ class CountFilter(Filter):
         if samples == 'all':
             samples = [[col] for col in self._numeric_columns]
         data = self.df.select(pl.col(parsing.flatten(samples))).transpose()
-        data_standardized = generic.standard_box_cox(data) if power_transform else generic.standardize(data)
+        data_standardized = generic.standard_box_cox(
+            data, parallel_backend=generic.box_cox_parallel_backend()) if power_transform else generic.standardize(data)
 
         pca_obj = PCA()
         pcomps = pca_obj.fit_transform(data_standardized)

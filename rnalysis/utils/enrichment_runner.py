@@ -305,6 +305,19 @@ class EnrichmentPlotter(abc.ABC):
         pass
 
 
+class EmptyPlotter(EnrichmentPlotter):
+    """A no-op plotter for enrichment runs that produced no results (e.g. an empty gene set, or no valid
+    statistical test). Returns an empty figure so callers that request a plot degrade gracefully instead
+    of crashing."""
+    __slots__ = ()
+
+    def __init__(self):
+        super().__init__(pl.DataFrame())
+
+    def run(self):
+        return plt.Figure()
+
+
 class BarPlotter(EnrichmentPlotter):
     __slots__ = (
         'n_bars', 'center_bars', 'ylabel', 'title', 'ylim', 'title_fontsize', 'label_fontsize', 'ylabel_fontsize',
@@ -757,9 +770,12 @@ class EnrichmentRunner:
         runner.set_name = set_name
         return runner
 
-    def run(self) -> Union[pl.DataFrame, Tuple[pl.DataFrame, EnrichmentPlotter]]:
+    def run(self) -> Tuple[pl.DataFrame, EnrichmentPlotter]:
+        # Always return a (results, plotter) tuple: every caller unpacks two values, so short-circuiting
+        # with a bare DataFrame here crashes them with "not enough values to unpack". EmptyPlotter yields
+        # an empty figure so a no-result run degrades gracefully instead of raising.
         if self.stats_test is None or not self.validate_statistical_test():
-            return pl.DataFrame()
+            return pl.DataFrame(), EmptyPlotter()
         self.fetch_annotations()
         self.get_attribute_names()
         if not self.single_set:
@@ -769,7 +785,7 @@ class EnrichmentRunner:
             warnings.warn('After removing unannotated genes and/or genes not in the background set, '
                           'the enrichment set is empty. '
                           'Therefore, RNAlysis will not proceed with enrichment analysis. ')
-            return pl.DataFrame()
+            return pl.DataFrame(), EmptyPlotter()
         self.filter_annotations()
         unformatted_results = self.calculate_enrichment()
         self.format_results(unformatted_results)

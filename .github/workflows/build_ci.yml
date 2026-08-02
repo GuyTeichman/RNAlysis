@@ -1,6 +1,8 @@
 name: Build CI
 
 on:
+    # A pull request (default activity types: opened, synchronize, reopened) is the pre-merge
+    # coverage and the main way CI fires. Docs-only PRs are skipped (see paths-ignore).
     pull_request:
         # Skip CI for documentation-only PRs. The job still runs whenever a PR changes at least one
         # file that is NOT matched below (e.g. a code change bundled with a HISTORY.rst update).
@@ -9,6 +11,34 @@ on:
             - '**/*.rst'
             - 'docs/**'
             - '.claude/**'
+    # A merge/release into `master` (the default, released branch) runs the full suite. We do NOT
+    # trigger on pushes to `development`: every merge into `development` arrives via a pull request
+    # that was already tested, so a push-triggered run there is redundant -- this replaces the former
+    # `development` cache-warming push. (Bonus: a run here writes the heavy OS/tool caches on the
+    # default branch, and GitHub lets ANY ref restore default-branch caches, so open PRs branched off
+    # `development` still warm-start from them.)
+    push:
+        branches: [ master ]
+        paths-ignore:
+            - '**/*.md'
+            - '**/*.rst'
+            - 'docs/**'
+            - '.claude/**'
+            # The release workflow (pyinstaller.yml) auto-commits generated quick-start video
+            # checksums to `master`; that commit carries no code change, so skip it here to avoid a
+            # redundant full matrix run per release (its sibling `latest_changelog.md` is already
+            # covered by `**/*.md`).
+            - 'rnalysis/gui/videos/checksums/**'
+    # Weekly run (Mondays 06:00 UTC) to catch external-service drift / bit-rot on BOTH long-lived
+    # branches. GitHub CONSTRAINT: a `schedule` trigger only ever runs the copy of this workflow that
+    # lives on the repository's DEFAULT branch (`master`) -- there is NO way to schedule the
+    # `development` copy of the file, so a naive "cron on the development branch" is impossible.
+    # Instead this single scheduled run tests both branch states: `master` is checked out by default,
+    # and `development` is added as a second value of the `ref` matrix dimension (see
+    # `strategy.matrix.ref` below) and checked out explicitly. (This trigger only takes effect once
+    # this workflow file has reached `master`.)
+    schedule:
+        - cron: '0 6 * * 1'
 jobs:
     build:
 
@@ -18,12 +48,26 @@ jobs:
             matrix:
                 os: [ ubuntu-latest, windows-latest, macos-latest ]
                 python-version: [ '3.12', '3.13', '3.14' ]
+                # Which branch state to test. On the weekly `schedule` run this expands to two refs so
+                # the suite runs against BOTH branches (see the constraint note in `on:` above):
+                # '' -> the ref that triggered the run (for a scheduled run that is the default branch,
+                # `master`), and 'development' -> that branch's tip, checked out explicitly. For
+                # pull_request/push events the only value is '' (checkout uses the triggering ref), so
+                # those runs stay at one job per OS/Python cell exactly as before.
+                ref: ${{ github.event_name == 'schedule' && fromJSON('["", "development"]') || fromJSON('[""]') }}
         env:
             DISPLAY: ':99.0'
             HDF5_DISABLE_VERSION_CHECK: '2'
             # Install R packages (DESeq2/limma/Rsubread) into a stable, cacheable location so they
             # aren't recompiled from source on every run (see the "Cache R packages" step).
-            R_LIBS_USER: ${{ github.workspace }}/.r-libs
+            # NOTE: this MUST be R_LIBS, not R_LIBS_USER. r-lib/actions/setup-r exports its own
+            # R_LIBS_USER (=<tempdir>/Library) via $GITHUB_ENV, which overrides a job-level
+            # `env: R_LIBS_USER` in every later step -- so packages landed in setup-r's temp library
+            # and the .r-libs cache stayed empty (issue #113). setup-r never touches R_LIBS, and R
+            # puts R_LIBS dirs *ahead* of R_LIBS_USER on .libPaths(), so this makes .libPaths()[1] ==
+            # .r-libs. install.packages()/BiocManager::install() (no explicit lib=) then install here,
+            # with no change to the production install scripts driven by installs.py.
+            R_LIBS: ${{ github.workspace }}/.r-libs
             # Use the faster sys.monitoring coverage backend (Python >=3.12, coverage >=7.7).
             COVERAGE_CORE: sysmon
             # Let `uv pip install` target the actions/setup-python interpreter instead of requiring a
@@ -41,15 +85,20 @@ jobs:
         steps:
             -   name: Configure pagefile
                 if: runner.os == 'Windows'
-                uses: al-cheb/configure-pagefile-action@v1.2
+                uses: al-cheb/configure-pagefile-action@v1.5
 
             -   name: Set up pagefile
                 if: runner.os == 'Windows'
                 run: |
                     (Get-CimInstance Win32_PageFileUsage).AllocatedBaseSize
             -   name: Get repository
-                uses: actions/checkout@v5
+                uses: actions/checkout@v7
                 with:
+                    # Branch state to test. Empty for pull_request/push events (checkout falls back to
+                    # the triggering ref); on the weekly schedule the matrix sets this to '' (default
+                    # branch = master) and 'development', so both branches are exercised. See
+                    # `strategy.matrix.ref` and the scheduling note in `on:` above.
+                    ref: ${{ matrix.ref }}
                     # docs/build/ is ~600 MB of committed, generated Sphinx output that the tests
                     # never read. Excluding it from the sparse checkout speeds up "Get repository".
                     sparse-checkout: |
@@ -69,10 +118,16 @@ jobs:
             -   name: Cache LLVM and Clang
                 if: runner.os != 'macOS'
                 id: cache-llvm
-                uses: actions/cache@v5
+                uses: actions/cache@v6
                 with:
                     path: ${{ runner.temp }}/llvm
-                    key: llvm
+                    # Key must carry the OS and LLVM version. The bare `llvm` key silently restored a
+                    # stale cache on any version bump (the path-derived cache "version" only segregates
+                    # Linux from Windows, not LLVM 14 from a future 15). ~1 GB (Linux) / ~0.7 GB
+                    # (Windows) per copy -- seeded by the push-to-`master` and weekly scheduled runs
+                    # (GitHub lets any ref restore default-branch caches) and restored by PRs rather
+                    # than re-downloaded into each PR's own cache scope.
+                    key: llvm-${{ runner.os }}-14.0
             -   name: Install LLVM and Clang
                 if: runner.os != 'macOS'
                 uses: KyleMayes/install-llvm-action@v2
@@ -87,7 +142,7 @@ jobs:
             -   name: Cache R packages (DESeq2/limma/Rsubread)
                 # The DE/featureCounts integration tests compile these Bioconductor packages from
                 # source at test time; caching R_LIBS_USER avoids recompiling them on every run.
-                uses: actions/cache@v5
+                uses: actions/cache@v6
                 with:
                     path: ${{ github.workspace }}/.r-libs
                     key: r-libs-${{ runner.os }}-R4.4-${{ hashFiles('rnalysis/data_files/r_templates/*_install.R') }}
@@ -113,7 +168,7 @@ jobs:
                 run: Rscript -e "print('R script ran successfully')"
             -   name: Cache kallisto & bowtie2 binaries
                 id: cache-bio-tools
-                uses: actions/cache@v5
+                uses: actions/cache@v6
                 with:
                     path: |
                         ${{ github.workspace }}/kallisto
@@ -121,6 +176,18 @@ jobs:
                     key: bio-tools-${{ runner.os }}-kallisto0.51.1-bowtie2v2.5.1
             -   name: Install kallisto
                 run: |
+                    # Retry downloads: wget treats a transient "Unable to establish SSL connection"
+                    # to GitHub's release-asset CDN as fatal and won't retry it on its own, so a single
+                    # network blip on a cache miss would otherwise fail the whole job. Re-invoke wget.
+                    dl() {
+                        for attempt in 1 2 3 4 5; do
+                            wget --tries=3 --timeout=30 --continue "$1" && return 0
+                            echo "::warning::download failed (attempt ${attempt}/5): $1 - retrying in 15s"
+                            sleep 15
+                        done
+                        echo "::error::download failed after 5 attempts: $1"
+                        return 1
+                    }
                     # macOS needs the hdf5 runtime whether or not the binary was restored from cache.
                     if [ "$RUNNER_OS" == "macOS" ]; then
                          brew install hdf5
@@ -130,12 +197,12 @@ jobs:
                     # Download only on a cache miss; the extracted 'kallisto' dir is restored otherwise.
                     if [ ! -d "${GITHUB_WORKSPACE}/kallisto" ]; then
                          if [ "$RUNNER_OS" == "Linux" ]; then
-                              wget  https://github.com/pachterlab/kallisto/releases/download/v0.51.1/kallisto_linux-v0.51.1.tar.gz
+                              dl https://github.com/pachterlab/kallisto/releases/download/v0.51.1/kallisto_linux-v0.51.1.tar.gz
                          elif [ "$RUNNER_OS" == "macOS" ]; then
-                              wget  https://github.com/pachterlab/kallisto/releases/download/v0.51.1/kallisto_mac_m1-v0.51.1.tar.gz
+                              dl https://github.com/pachterlab/kallisto/releases/download/v0.51.1/kallisto_mac_m1-v0.51.1.tar.gz
                          elif [ "$RUNNER_OS" == "Windows" ]; then
                               choco install wget -y
-                              wget  https://github.com/pachterlab/kallisto/releases/download/v0.51.1/kallisto_windows-v0.51.1.tar.gz
+                              dl https://github.com/pachterlab/kallisto/releases/download/v0.51.1/kallisto_windows-v0.51.1.tar.gz
                          else
                               echo "$RUNNER_OS not supported"
                               exit 1
@@ -149,11 +216,23 @@ jobs:
                 run: kallisto version
             -   name: Install bowtie2
                 run: |
+                    # Retry downloads for the same reason as the kallisto step: a transient SSL blip to
+                    # GitHub's release-asset CDN is fatal to wget and, without a retry, fails the job
+                    # before any test runs (this step, unlike kallisto, has no continue-on-error).
+                    dl() {
+                        for attempt in 1 2 3 4 5; do
+                            wget --tries=3 --timeout=30 --continue "$1" && return 0
+                            echo "::warning::download failed (attempt ${attempt}/5): $1 - retrying in 15s"
+                            sleep 15
+                        done
+                        echo "::error::download failed after 5 attempts: $1"
+                        return 1
+                    }
                     if [ "$RUNNER_OS" == "Windows" ]; then
                          # Download only on a cache miss; the extracted dir is restored otherwise.
                          if [ ! -d "${GITHUB_WORKSPACE}/bowtie2-2.5.1-mingw-x86_64" ]; then
                               choco install wget -y
-                              wget  https://github.com/BenLangmead/bowtie2/releases/download/v2.5.1/bowtie2-2.5.1-mingw-x86_64.zip
+                              dl https://github.com/BenLangmead/bowtie2/releases/download/v2.5.1/bowtie2-2.5.1-mingw-x86_64.zip
                               7z x bowtie2-2.5.1-mingw-x86_64.zip
                          fi
                          echo "${GITHUB_WORKSPACE}/bowtie2-2.5.1-mingw-x86_64" >> $GITHUB_PATH
@@ -166,7 +245,7 @@ jobs:
                     bowtie2 --version
                     bowtie2-build-s --version
             -   name: Set up Python ${{ matrix.python-version }}
-                uses: actions/setup-python@v6
+                uses: actions/setup-python@v7
                 with:
                     python-version: ${{ matrix.python-version }}
             -   name: Install uv
@@ -186,8 +265,29 @@ jobs:
                     uv pip install --upgrade -r requirements_dev.txt
                     uv pip install .[all]
             -   name: Prepare R library cache dir
-                # R only puts R_LIBS_USER on .libPaths() (and installs there) if the dir exists.
-                run: python -c "import os, pathlib; pathlib.Path(os.environ['R_LIBS_USER']).mkdir(parents=True, exist_ok=True)"
+                # R only puts an R_LIBS entry on .libPaths() (and installs there) if the dir exists.
+                run: python -c "import os, pathlib; pathlib.Path(os.environ['R_LIBS']).mkdir(parents=True, exist_ok=True)"
+            -   name: Verify R installs into the cached R_LIBS dir
+                # Guard against a silent regression of issue #113. install.packages() /
+                # BiocManager::install() (no explicit lib=) install into .libPaths()[1]; if that is not the
+                # cached .r-libs dir, the Bioconductor packages aren't cached and recompile from source
+                # every run. Assert it now (before any install) so the fix is self-detecting -- a loud red
+                # here beats an empty r-libs-* cache discovered much later. Paths are normalized so the
+                # comparison is cross-platform (Windows backslashes / macOS symlinked workspace).
+                # Run the body directly via `shell: Rscript {0}` rather than `shell: bash`: on Windows
+                # `shell: bash` resolves to rtools' MSYS2 bash, and launching the native-Windows Rscript
+                # from it segfaults R at startup (SIGSEGV, exit 139) before it evaluates anything.
+                shell: Rscript {0}
+                run: |
+                    want <- normalizePath(Sys.getenv("R_LIBS"), winslash = "/", mustWork = FALSE)
+                    got  <- normalizePath(.libPaths()[1],       winslash = "/", mustWork = FALSE)
+                    cat("R_LIBS         :", want, "\n")
+                    cat(".libPaths()[1] :", got,  "\n")
+                    cat("full .libPaths():\n"); print(.libPaths())
+                    if (!identical(want, got)) {
+                      stop("R_LIBS is not first on .libPaths(); installed R packages will NOT be cached (issue #113).")
+                    }
+                    cat("OK: install.packages() will target the cached R_LIBS dir.\n")
             # Tests run in tiers (unit -> integration_net -> integration_tools -> e2e). A failure in a
             # faster tier stops the slower ones (fail-fast). The integration tier is split into a
             # network/web-API step and an R/CLI-tools step so we can see the per-tier breakdown.
@@ -230,11 +330,11 @@ jobs:
                 timeout-minutes: 15
                 uses: mxschmitt/action-tmate@v3
             -   name: Generate lcov file
-                if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.13'
+                if: github.event_name == 'pull_request' && matrix.os == 'ubuntu-latest' && matrix.python-version == '3.13'
                 run: coverage lcov
             -   name: Coveralls Parallel
                 uses: coverallsapp/github-action@v2
-                if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.13'
+                if: github.event_name == 'pull_request' && matrix.os == 'ubuntu-latest' && matrix.python-version == '3.13'
                 continue-on-error: true
                 with:
                     flag-name: run-${{ join(matrix.*, '-') }}
@@ -243,7 +343,10 @@ jobs:
 
     finish:
         name: Finish submitting coverage
-        if: ${{ always() }}
+        # Coverage is submitted only for pull requests (see the Coveralls steps above); push-to-master
+        # and scheduled runs execute the full suite but intentionally do not submit coverage, so there
+        # is no parallel run to finalize for those events.
+        if: ${{ always() && github.event_name == 'pull_request' }}
         needs: build
         runs-on: ubuntu-latest
         steps:

@@ -1,0 +1,33 @@
+# Configuration for GitHub's automatically generated release notes:
+# https://docs.github.com/en/repositories/releasing-projects-on-github/automatically-generated-release-notes
+#
+# When a release is created with "Generate release notes" (UI) or `gh release create --generate-notes`,
+# GitHub groups merged PRs into the categories below (each credited to its author) and automatically
+# appends a "## New Contributors" section thanking first-time contributors. This is the low-effort
+# half of contributor acknowledgment; the roster in README.rst is maintained by
+# .github/workflows/update-contributors.yml.
+#
+# NOTE: `labels` must match labels that actually exist in this repo
+# (bug, enhancement, documentation, dependencies, github_actions).
+changelog:
+    exclude:
+        authors:
+            - dependabot
+            - github-actions
+    categories:
+        -   title: 🚀 Features & enhancements
+            labels:
+                - enhancement
+        -   title: 🐛 Bug fixes
+            labels:
+                - bug
+        -   title: 📚 Documentation
+            labels:
+                - documentation
+        -   title: 🧰 Dependencies & CI
+            labels:
+                - dependencies
+                - github_actions
+        -   title: Other changes
+            labels:
+                - "*"

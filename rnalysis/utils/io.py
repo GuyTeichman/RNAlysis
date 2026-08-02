@@ -423,7 +423,7 @@ def load_table(filename: Union[str, Path], drop_columns: Union[str, List[str]] =
 
     kwargs = {}
     if comment is not None:
-        kwargs['comment_char'] = comment
+        kwargs['comment_prefix'] = comment
     if filename.suffix.lower() == '.parquet':
         df = pl.read_parquet(filename)
         # handle edge cases of parquet files that were exported from pandas DataFrames
@@ -946,8 +946,10 @@ def _ensembl_lookup_post_request(gene_ids: Tuple[str, ...]) -> Dict[str, Dict[st
     output = {}
     client = EnsemblRestClient()
     for chunk in tqdm(data_chunks, desc='Submitting jobs...', unit='jobs'):
-        data = {"ids": parsing.data_to_list(chunk)}
-        client.queue_action(req_type, endpoint, params=repr(data).replace("'", '"'))
+        # Pass the body as a dict; the client sends it via aiohttp's json= (which serializes it once).
+        # Passing a pre-serialized JSON string here double-encodes it into a quoted literal that
+        # Ensembl rejects with a 400 Bad Request.
+        client.queue_action(req_type, endpoint, params={"ids": parsing.data_to_list(chunk)})
 
     with tqdm('Finding the best-matching species...', total=client.queue.qsize() + 1) as pbar:
         pbar.update()
@@ -1263,6 +1265,10 @@ def translate_mappings(ids: list, translated_ids: list, mapping_one2one: dict,
 
 class PhylomeDBOrthologMapper:
     URL = 'ftp.phylomedb.org'
+    # Socket timeout (seconds) for the FTP control + data connections. get_legal_species() runs at
+    # import time (it populates a Literal[...] annotation), so without a timeout a stalled FTP server
+    # would freeze `import rnalysis.filtering` indefinitely.
+    FTP_TIMEOUT = 30
 
     def __init__(self, map_to_organism, map_from_organism='auto', gene_id_type='auto'):
         legal_species = self.get_legal_species()
@@ -1420,7 +1426,7 @@ class PhylomeDBOrthologMapper:
 
     @staticmethod
     def _connect():
-        ftp = ftplib.FTP(PhylomeDBOrthologMapper.URL)
+        ftp = ftplib.FTP(PhylomeDBOrthologMapper.URL, timeout=PhylomeDBOrthologMapper.FTP_TIMEOUT)
         ftp.login()
         ftp.cwd('/metaphors/latest')
         return ftp
@@ -1651,43 +1657,79 @@ class EnsemblOrthologMapper:
 
         return ids, translated_ids
 
+    @staticmethod
+    def _homology_cache_filename(species_name: str, gene_id: str, target_taxon, homology_type: str) -> str:
+        # One cache entry per (species, gene, target taxon, homology type). Hashed so gene IDs containing
+        # filesystem-unfriendly characters still yield a valid, collision-resistant filename.
+        key = f'{species_name}|{target_taxon}|{homology_type}|{gene_id}'
+        digest = hashlib.sha256(key.encode('utf-8')).hexdigest()[:32]
+        return f'ensembl_homology_{digest}.json'
+
+    def _fetch_homologies(self, translated_ids: List[str], species_name: str,
+                          homology_type: str) -> Dict[str, list]:
+        """Return ``{gene_id: homologies}`` for the requested homology type ('orthologues'/'paralogues').
+
+        Each gene's homologies are read from the daily disk cache when available; only the cache-missing
+        genes are actually requested from Ensembl. This means re-running the same query (or the
+        parametrized non_unique_mode variants) doesn't re-hit Ensembl and multiply the request load.
+        """
+        homologies_by_gene = {}
+        client = EnsemblRestClient()
+        queued_ids = []
+        for gene_id in translated_ids:
+            cached = load_cached_file(
+                self._homology_cache_filename(species_name, gene_id, self.map_to_organism, homology_type))
+            if cached is not None:
+                homologies_by_gene[gene_id] = json.loads(cached)
+            else:
+                queued_ids.append(gene_id)
+                client.queue_action('get', f'{self.ENDPOINT}{species_name}/{gene_id}',
+                                    params=dict(target_taxon=self.map_to_organism, type=homology_type,
+                                                sequence='none', cigar_line=0))
+
+        if queued_ids:
+            with tqdm(f'Mapping {homology_type}...', total=len(queued_ids) + 1) as pbar:
+                pbar.update()
+                # EnsemblRestClient.run() (asyncio.gather) preserves request order, so the Nth response
+                # matches the Nth queued gene. Key results and the cache entry by the *requested* gene ID
+                # rather than the ID Ensembl echoes back (which may be normalized, e.g. version-suffixed):
+                # this keeps the cache-miss and cache-hit paths consistent, so a repeat query is actually
+                # served from the cache and reproduces the first run exactly.
+                for gene_id, json_res in zip(queued_ids, client.run()):
+                    gene_homologies = json_res['data'][0]['homologies']
+                    cache_file(json.dumps(gene_homologies),
+                               self._homology_cache_filename(species_name, gene_id, self.map_to_organism,
+                                                             homology_type))
+                    homologies_by_gene[gene_id] = gene_homologies
+                    pbar.update()
+        return homologies_by_gene
+
     def get_paralogs(self, ids: Tuple[str, ...], filter_percent_identity: bool = True):
         ids, translated_ids = self.translate_ids(ids)
-        client = EnsemblRestClient()
-        mapping_one2many = {}
         species_name = self.get_species_name()
+        mapping_one2many = {}
 
-        for gene_id in tqdm(translated_ids, 'Submitting requests', unit='requests'):
-            client.queue_action('get', f'{self.ENDPOINT}{species_name}/{gene_id}',
-                                params=dict(target_taxon=self.map_to_organism, type='paralogues',
-                                            sequence='none', cigar_line=0))
+        homologies_by_gene = self._fetch_homologies(translated_ids, species_name, 'paralogues')
+        for this_id, homologies in homologies_by_gene.items():
+            if len(homologies) == 0:
+                continue
 
-        with tqdm('Mapping paralogs...', total=client.queue.qsize() + 1) as pbar:
-            pbar.update()
-            for json_res in client.run():
-                req_output = json_res['data'][0]
-                if len(req_output['homologies']) == 0:
-                    continue
+            if filter_percent_identity:
+                max_score = 0
+                best_match = None
+                matches = []
+                for homology in homologies:
+                    current_score = homology['source']['perc_id']
+                    if current_score > max_score:
+                        max_score = current_score
+                        best_match = homology['target']['id']
+                        matches = [best_match]
+                    elif current_score == max_score:
+                        matches.append(homology['target']['id'])
 
-                this_id = req_output['id']
-
-                if filter_percent_identity:
-                    max_score = 0
-                    best_match = None
-                    matches = []
-                    for homology in req_output['homologies']:
-                        current_score = homology['source']['perc_id']
-                        if current_score > max_score:
-                            max_score = current_score
-                            best_match = homology['target']['id']
-                            matches = [best_match]
-                        elif current_score == max_score:
-                            matches.append(homology['target']['id'])
-
-                    mapping_one2many[this_id] = best_match
-                else:
-                    mapping_one2many[this_id] = [homology['target']['id'] for homology in req_output['homologies']]
-                pbar.update()
+                mapping_one2many[this_id] = best_match
+            else:
+                mapping_one2many[this_id] = [homology['target']['id'] for homology in homologies]
 
         _, mapping_one2many = translate_mappings(ids, translated_ids, {}, mapping_one2many)
 
@@ -1701,51 +1743,41 @@ class EnsemblOrthologMapper:
         Tuple[OrthologDict, OrthologDict]:
         ids, translated_ids = self.translate_ids(ids)
         species_name = self.get_species_name()
-        client = EnsemblRestClient()
         mapping_one2one = {}
         mapping_one2many = {}
 
-        for gene_id in tqdm(translated_ids, 'Submitting requests', unit='requests'):
-            client.queue_action('get', f'{self.ENDPOINT}{species_name}/{gene_id}',
-                                params=dict(target_taxon=self.map_to_organism, type='orthologues',
-                                            sequence='none', cigar_line=0))
+        homologies_by_gene = self._fetch_homologies(translated_ids, species_name, 'orthologues')
+        for this_id, homologies in homologies_by_gene.items():
+            if len(homologies) == 0:
+                continue
 
-        with tqdm('Mapping orthologs...', total=client.queue.qsize() + 1) as pbar:
-            pbar.update()
-            for json_res in client.run():
-                req_output = json_res['data'][0]
-                if len(req_output['homologies']) == 0:
-                    continue
+            mapping_one2many[this_id] = [(homology['target']['id'], homology['source']['perc_id']) for homology in
+                                         homologies]
 
-                this_id = req_output['id']
-                mapping_one2many[this_id] = [(homology['target']['id'], homology['source']['perc_id']) for homology in
-                                             req_output['homologies']]
+            if filter_percent_identity:
+                max_score = 0
+                best_match = None
+                matches = []
+                for homology in homologies:
+                    current_score = homology['source']['perc_id']
+                    if current_score > max_score:
+                        max_score = current_score
+                        best_match = homology['target']['id']
+                        matches = [best_match]
+                    elif current_score == max_score:
+                        matches.append(homology['target']['id'])
 
-                if filter_percent_identity:
-                    max_score = 0
-                    best_match = None
-                    matches = []
-                    for homology in req_output['homologies']:
-                        current_score = homology['source']['perc_id']
-                        if current_score > max_score:
-                            max_score = current_score
-                            best_match = homology['target']['id']
-                            matches = [best_match]
-                        elif current_score == max_score:
-                            matches.append(homology['target']['id'])
-
-                    if len(matches) > 1:
-                        if non_unique_mode == 'first':
-                            mapping_one2one[this_id] = matches[0]
-                        elif non_unique_mode == 'last':
-                            mapping_one2one[this_id] = matches[-1]
-                        elif non_unique_mode == 'random':
-                            mapping_one2one[this_id] = random.choice(matches)
-                    else:
-                        mapping_one2one[this_id] = best_match
+                if len(matches) > 1:
+                    if non_unique_mode == 'first':
+                        mapping_one2one[this_id] = matches[0]
+                    elif non_unique_mode == 'last':
+                        mapping_one2one[this_id] = matches[-1]
+                    elif non_unique_mode == 'random':
+                        mapping_one2one[this_id] = random.choice(matches)
                 else:
-                    mapping_one2one[this_id] = req_output['homologies'][0]['target']['id']
-                pbar.update()
+                    mapping_one2one[this_id] = best_match
+            else:
+                mapping_one2one[this_id] = homologies[0]['target']['id']
 
         mapping_one2one, mapping_one2many = translate_mappings(ids, translated_ids, mapping_one2one, mapping_one2many)
 
@@ -1758,7 +1790,7 @@ class EnsemblOrthologMapper:
 
 
 class PantherOrthologMapper:
-    API_URL = 'http://www.pantherdb.org'
+    API_URL = 'https://www.pantherdb.org'
     RETRIES = RandomExpRetry(total=5, backoff_factor=0.25, status_forcelist=[500, 502, 503, 504])
     HEADERS = {'accept': 'application/json'}
 
@@ -2134,7 +2166,7 @@ class GeneIDTranslator:
         if 'Annotation' in df.columns:
             if df['Annotation'].dtype not in pl.FLOAT_DTYPES:
                 df = df.lazy().with_columns(
-                    Annotation=pl.col('Annotation').replace('', '0', return_dtype=pl.datatypes.Int16))
+                    Annotation=pl.col('Annotation').replace('', '0').cast(pl.datatypes.Int16))
             else:
                 df = df.lazy()
             df = df.sort('Annotation', descending=True).drop('Annotation').collect()
@@ -2243,13 +2275,22 @@ def find_best_gene_mapping(ids: Tuple[str, ...], map_from_options: Union[Tuple[s
     return parsed_results[sorted_keys[0]]
 
 
+# Connect/read timeout (seconds) for the small "legal values" metadata fetches below. These run at
+# import time to populate GUI dropdowns / type annotations, so a hung request would freeze startup.
+LEGAL_VALUES_REQUEST_TIMEOUT = (10, 30)
+
+
 @functools.lru_cache(maxsize=2)
 def get_legal_panther_taxons():
-    URL = 'http://www.pantherdb.org/services/oai/pantherdb/supportedgenomes'
-    req = requests.post(URL)
+    URL = 'https://www.pantherdb.org/services/oai/pantherdb/supportedgenomes'
+    req = requests.post(URL, timeout=LEGAL_VALUES_REQUEST_TIMEOUT)
     req.raise_for_status()
-    entries = json.loads(req.text)['search']['output']['genomes']['genome']
-    taxons = tuple(sorted(d['long_name'] for d in entries))
+    genomes = req.json()['search']['output']['genomes']['genome']
+    # PantherDB returns a single genome dict (not a list) when only one genome is present; normalize
+    # to a list the way the ortholog endpoints already do, and skip any entry lacking a long_name.
+    entries = parsing.data_to_list(genomes)
+    taxons = tuple(sorted(entry['long_name'] for entry in entries
+                          if isinstance(entry, dict) and 'long_name' in entry))
     return taxons
 
 
@@ -2284,7 +2325,7 @@ def get_legal_gene_id_types():
     abbrev_dict_to = {}
     abbrev_dict_from = {}
 
-    req = requests.get(URL)
+    req = requests.get(URL, timeout=LEGAL_VALUES_REQUEST_TIMEOUT)
     req.raise_for_status()
     entries = json.loads(req.text)['groups']
     entries_filtered = []

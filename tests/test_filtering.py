@@ -1880,6 +1880,25 @@ def test_avg_subsamples(sample_list, truth_path, basic_countfilter):
     assert np.isclose(res.drop(cs.first()), truth.drop(cs.first()), atol=0, rtol=0.001).all()
 
 
+@pytest.mark.parametrize('function', ['mean', 'median', 'geometric_mean'])
+def test_avg_subsamples_functions(function, basic_countfilter):
+    sample_list = [['cond1', 'cond2'], ['cond3', 'cond4']]
+    res = basic_countfilter._avg_subsamples(sample_list, function=function, new_column_names='auto')
+
+    src = basic_countfilter.df
+    numeric = res.drop(cs.first()).to_numpy()
+    for i, group in enumerate(sample_list):
+        group_vals = src.select(group).to_numpy()
+        if function == 'mean':
+            expected = group_vals.mean(axis=1)
+        elif function == 'median':
+            expected = np.median(group_vals, axis=1)
+        else:
+            with np.errstate(divide='ignore'):  # rows containing a zero -> geometric mean 0
+                expected = np.exp(np.log(group_vals).mean(axis=1))  # geometric mean, row-wise
+        assert np.allclose(numeric[:, i], expected, rtol=1e-6)
+
+
 @pytest.mark.parametrize('input_file,expected_triplicates',
                          [('tests/test_files/counted.csv', [['cond1', 'cond2', 'cond3'], ['cond4']]),
                           ('tests/test_files/counted_6cols.csv',

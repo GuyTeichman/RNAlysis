@@ -393,9 +393,11 @@ Normalizing count matrices
 
 * Relative Log Expression (RLE - 'normalize_rle'), used by default by R's DESeq2
 * Trimmed Mean of M-values (TMM - 'normalize_tmm'), used by default by R's edgeR
-* Quantile normalization, a generalization of Upper Quantile normalization (UQ - 'normalize_quantile'), used by default by R's Limma
-* Median of Ratios Normalization (MRN - 'normalize_mrn')
+* Quantile normalization, a generalization of Upper Quantile normalization (UQ - 'normalize_to_quantile'), used by default by R's Limma
+* Median of Ratios Normalization (MRN - 'normalize_median_of_ratios')
 * Reads Per Million (RPM - 'normalize_to_rpm')
+* Reads Per Kilobase Million (RPKM - 'normalize_to_rpkm')
+* Transcripts Per Million (TPM - 'normalize_to_tpm')
 
 To normalize a count matrix with one of these functions, click on the 'Normalize' button, pick one of the normalization functions from the drop-down menu, and click 'Apply'.
 
@@ -1132,10 +1134,10 @@ If you don't specify plotting parameters, *RNAlysis* will generate an ontology g
 
 Enrichment analysis output
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Running enrichment analysis will calculate enrichment for each of the GO terms, and return a pandas DataFrame in the following format:
+Running enrichment analysis will calculate enrichment for each of the GO terms, and return a polars DataFrame in the following format:
 
 +-------------+------------------+--------------+-----+-------+----------------------+----------+----------+-------------+
-|             |       name       |    samples   | obs |   exp | log2_fold_enrichment |   pval   |   padj   | significant |
+|    GO ID    |       name       |    samples   | obs |   exp | log2_fold_enrichment |   pval   |   padj   | significant |
 +=============+==================+==============+=====+=======+======================+==========+==========+=============+
 |  GO:0001556 | oocyte maturation|    1327      | 451 | 319.52| 0.49722119558        | 0.0000999| 0.0000999| True        |
 +-------------+------------------+--------------+-----+-------+----------------------+----------+----------+-------------+
@@ -1214,7 +1216,7 @@ If you don't specify plotting parameters, *RNAlysis* will generate a horizontal 
 
 Enrichment analysis output
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Running enrichment analysis will calculate enrichment for each of the KEGG pathways, and return a pandas DataFrame in the following format:
+Running enrichment analysis will calculate enrichment for each of the KEGG pathways, and return a polars DataFrame in the following format:
 
 +-----------+-----------------------------------------------------------------+--------------+-----+-------+----------------------+----------+----------+-------------+
 |   KEGG ID |                              name                               |    samples   | obs |   exp | log2_fold_enrichment |   pval   |   padj   | significant |
@@ -1288,10 +1290,10 @@ When it is set as 'True', *RNAlysis* will return the Figure object it generated 
 
 Enrichment analysis output
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Running enrichment analysis will calculate enrichment for each of the specified attributes, and return a pandas DataFrame in the following format:
+Running enrichment analysis will calculate enrichment for each of the specified attributes, and return a polars DataFrame in the following format:
 
 +----------------+--------------+-----+-------+----------------------+----------+----------+-------------+
-|                |    samples   | obs |   exp | log2_fold_enrichment |   pval   |   padj   | significant |
+|      name      |    samples   | obs |   exp | log2_fold_enrichment |   pval   |   padj   | significant |
 +================+==============+=====+=======+======================+==========+==========+=============+
 |     attribute1 |    1327      | 451 | 319.52| 0.49722119558        | 0.0000999| 0.0000999| True        |
 +----------------+--------------+-----+-------+----------------------+----------+----------+-------------+
@@ -1360,10 +1362,10 @@ When it is set as 'True', *RNAlysis* will return the Figure object it generated 
 
 Non-Categorical Enrichment analysis output
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Running non-categorical enrichment analysis will calculate enrichment for each of the specified attributes, and return a pandas DataFrame in the following format:
+Running non-categorical enrichment analysis will calculate enrichment for each of the specified attributes, and return a polars DataFrame in the following format:
 
 +----------------+--------------+-------+--------+----------+----------+-------------+
-|                |    samples   |  obs  |  exp   |   pval   |   padj   | significant |
+|      name      |    samples   |  obs  |  exp   |   pval   |   padj   | significant |
 +================+==============+=======+========+==========+==========+=============+
 |     attribute1 |    1327      | 451   | 319.52 | 0.0000999| 0.0000999| True        |
 +----------------+--------------+-------+--------+----------+----------+-------------+

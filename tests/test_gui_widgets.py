@@ -1490,3 +1490,24 @@ class TestLRTPickerGroup:
 
         widget.inputs[1].factor.setCurrentText('covariate1+covariate1^2')
         assert widget.get_comparison_values() == ['condition', 'poly(covariate1, degree = 2)']
+
+
+def test_ThreadStdOutStreamTextQueueReceiver_run_stops_on_sentinel(qtbot):
+    """run() blocks on queue.get(); enqueueing STOP_SIGNAL must break the loop so the thread ends.
+
+    Regression guard for the flaky e2e native crash: if the listener loop can't be stopped, a
+    quit()+wait() teardown would hang, and skipping wait() (the old behaviour) lets the QThread be
+    destroyed while its OS thread is still running -> "Windows fatal exception: access violation".
+    """
+    import threading
+
+    q = Queue()
+    receiver = ThreadStdOutStreamTextQueueReceiver(q)
+    thread = threading.Thread(target=receiver.run, daemon=True)
+    thread.start()
+
+    q.put('ordinary console output')      # a normal item -> loop keeps going
+    q.put(receiver.STOP_SIGNAL)           # sentinel -> loop must return
+    thread.join(timeout=5)
+
+    assert not thread.is_alive()

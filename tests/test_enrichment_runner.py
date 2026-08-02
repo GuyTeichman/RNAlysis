@@ -894,6 +894,36 @@ def test_go_enrichment_runner_run(monkeypatch):
     assert runner.taxon_id == 'taxon_id'
 
 
+def test_enrichment_runner_run_no_stats_test_returns_tuple():
+    # Regression: run() short-circuits to an empty result when no valid statistical test is set, but
+    # every caller in enrichment.py does `results, plotter = runner.run()`. Returning a bare DataFrame
+    # there raised "ValueError: not enough values to unpack (expected 2, got 0)". run() must always
+    # return a (results, plotter) tuple, and the plotter must not crash when asked for a figure.
+    runner = EnrichmentRunner({'WBGene00000041'}, 'all', 0.05, __attr_ref__, True, False, '', False,
+                              'test_set', 'sequential', None)
+    results, plotter = runner.run()
+    assert isinstance(results, pl.DataFrame)
+    assert results.is_empty()
+    assert isinstance(plotter, EnrichmentPlotter)
+    assert plotter.run() is not None  # an empty figure, not an exception
+    plt.close('all')
+
+
+def test_enrichment_runner_run_empty_gene_set_returns_tuple():
+    # Same contract for the other short-circuit: when the enrichment gene set becomes empty (e.g. a web
+    # service maps 0 genes to the target ID type, or every gene is filtered out), run() must still
+    # return (empty_df, plotter) rather than a bare DataFrame that crashes the caller's unpacking.
+    runner = EnrichmentRunner({'not_in_background'}, 'all', 0.05, __attr_ref__, True, False, '', False,
+                              'test_set', 'sequential', HypergeometricTest(), {'WBGene00000041'}, False)
+    with pytest.warns(UserWarning, match='enrichment set is empty'):
+        results, plotter = runner.run()
+    assert isinstance(results, pl.DataFrame)
+    assert results.is_empty()
+    assert isinstance(plotter, EnrichmentPlotter)
+    assert plotter.run() is not None
+    plt.close('all')
+
+
 def test_go_enrichment_runner_fetch_annotations(monkeypatch):
     monkeypatch.setattr(GOEnrichmentRunner, '_get_query_key', lambda self: 'the_query_key')
     monkeypatch.setattr(GOEnrichmentRunner, '_generate_annotation_dict', lambda self: 'goa_df')

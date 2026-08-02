@@ -985,10 +985,15 @@ class SetOperationWindow(gui_widgets.MinMaxDialog):
             else:
                 canvas = gui_graphics.UpSetInteractiveCanvas(items, self)
         if 'canvas' in self.widgets:
-            self.widgets['canvas'].deleteLater()
-            self.widgets['toolbar'].deleteLater()
+            # detach the old canvas/toolbar from the layout and reparent them to None *before*
+            # scheduling deletion, so no queued paint/draw event can fire against a widget whose
+            # C++ object is being torn down (a source of flaky native crashes on teardown).
             self.operations_grid.removeWidget(self.widgets['canvas'])
             self.operations_grid.removeWidget(self.widgets['toolbar'])
+            self.widgets['canvas'].setParent(None)
+            self.widgets['toolbar'].setParent(None)
+            self.widgets['canvas'].deleteLater()
+            self.widgets['toolbar'].deleteLater()
 
         self.widgets['canvas'] = canvas
         self.widgets['toolbar'] = gui_graphics.CleanPlotToolBar(self.widgets['canvas'], self)
@@ -1316,8 +1321,12 @@ class SetVisualizationWindow(gui_widgets.MinMaxDialog):
             except Exception:
                 canvas = gui_graphics.EmptyCanvas("Invalid input; please change one or more of your parameters")
         if 'canvas' in self.widgets:
-            self.widgets['canvas'].deleteLater()
+            # detach the old canvas from the layout and reparent it to None *before* scheduling
+            # deletion, so no queued paint/draw event can fire against a widget whose C++ object is
+            # being torn down (a source of flaky native crashes on teardown).
             self.visualization_grid.removeWidget(self.widgets['canvas'])
+            self.widgets['canvas'].setParent(None)
+            self.widgets['canvas'].deleteLater()
 
         self.widgets['canvas'] = canvas
         self.visualization_grid.addWidget(self.widgets['canvas'], 0, 2, 4, 3)
@@ -4410,6 +4419,35 @@ class MainWindow(QtWidgets.QMainWindow):
             return dialog.result()
         return None
 
+    def _shutdown_worker_threads(self):
+        """Stop the background QThreads cleanly so no QThread object is destroyed while its OS
+        thread is still running -- that teardown race is the flaky "Windows fatal exception:
+        access violation" seen in the e2e tier.
+
+        The STDOUT listener's ``run()`` blocks on ``queue_stdout.get()`` and never returns to its
+        event loop, so ``quit()`` alone can't stop it (and a bare ``wait()`` would hang forever).
+        Enqueue ``STOP_SIGNAL`` first to break that loop, then ``quit()`` + ``wait()``.
+
+        Both waits are unbounded on purpose. When the threads are idle (the common case, and every
+        e2e-test teardown) they return immediately. If a worker is still mid-run we wait for it to
+        finish rather than (a) abandon its thread -- the very crash this fixes -- or (b)
+        ``terminate()`` it, which Qt documents as unsafe (it can strand a held mutex/GIL and corrupt
+        state). A user who force-quits during a long job just kills the process, which the OS reclaims
+        without triggering the C++ "destroyed while running" crash.
+        """
+        listener = getattr(self, 'thread_stdout_queue_listener', None)
+        if listener is not None:
+            queue_stdout = getattr(self, 'queue_stdout', None)
+            receiver = getattr(self, 'stdout_receiver', None)
+            if queue_stdout is not None and receiver is not None:
+                queue_stdout.put(receiver.STOP_SIGNAL)
+            listener.quit()
+            listener.wait()
+        job_thread = getattr(self, 'job_thread', None)
+        if job_thread is not None:
+            job_thread.quit()
+            job_thread.wait()
+
     def closeEvent(self, event):  # pragma: no cover
 
         quit_msg = "Are you sure you want to close <i>RNAlysis</i>?\n" \
@@ -4421,15 +4459,9 @@ class MainWindow(QtWidgets.QMainWindow):
 
         if reply == QtWidgets.QMessageBox.StandardButton.Yes:
             plt.close('all')
-            # quit job and STDOUT listener threads
-            try:
-                self.job_thread.quit()
-            except AttributeError:
-                pass
-            try:
-                self.thread_stdout_queue_listener.quit()
-            except AttributeError:
-                pass
+            # stop background threads cleanly before the window (and its QThread members) are
+            # destroyed, so neither QThread object is torn down while its OS thread is still running.
+            self._shutdown_worker_threads()
             # clear cache
             io.clear_gui_cache()
             # close all figures
