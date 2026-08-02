@@ -148,6 +148,17 @@ def test_inplace_opposite_matches_eager_percentile():
     assert_bit_identical(result, expected)
 
 
+def test_inplace_opposite_matches_eager_null_index():
+    # edge case: a null in the index column. The old ~is_in anti-filter dropped null-index rows from the
+    # opposite; the anti-join must match that (a naive anti-join would keep them) to stay bit-identical.
+    df = pl.DataFrame({'': ['g1', None, 'g3', 'g4'], 'val': [1.0, 2.0, 3.0, 4.0]})
+    f = Filter.from_dataframe(df, 'nulltest')
+    kept = f.filter_percentile(0.75, 'val', opposite=False, inplace=False).df
+    expected = _eager_opposite(f.df, kept)
+    result = f.filter_percentile(0.75, 'val', opposite=True, inplace=False).df
+    assert_bit_identical(result, expected)
+
+
 def _per_gene_scaling_factors(cf: CountFilter) -> pl.DataFrame:
     """A per-gene scaling-factors table (index + one distinct value per gene per numeric column) -- the
     ``shape[0] > 1`` case that normalize_to_rpkm/tpm feed to _norm_scaling_factors."""

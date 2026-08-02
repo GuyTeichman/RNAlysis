@@ -194,10 +194,12 @@ class Filter:
         # when user requests the opposite of a filter, return the Set Difference between the filtering result and self
         if opposite:
             # the opposite is self.df minus the kept rows; an anti-join (order-preserving via
-            # maintain_order='left') does this in one operation instead of materializing the kept index
-            # to a Series and anti-filtering with the deprecated is_in
-            new_df = self.df.join(new_df.select(pl.first()), on=self.df.columns[0], how='anti',
-                                  maintain_order='left')
+            # maintain_order='left') does this in one pass instead of the deprecated is_in anti-filter.
+            # Drop null-index rows first: the old ``~pl.first().is_in(...)`` filtered them out (is_in(null)
+            # is null -> excluded), so the opposite stays bit-identical even when the index has nulls.
+            new_df = self.df.lazy().filter(pl.first().is_not_null()).join(
+                new_df.lazy().select(pl.first()), on=self.df.columns[0], how='anti',
+                maintain_order='left').collect()
             suffix += 'opposite'
 
         # update filename with the suffix of the operation that was just performed
