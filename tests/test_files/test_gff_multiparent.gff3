@@ -1,0 +1,7 @@
+##gff-version 3
+1	test	gene	100	499	.	+	.	ID=gene:ENSG1;biotype=protein_coding;Name=GENEA
+1	test	mRNA	100	349	.	+	.	ID=transcript:ENST1;Parent=gene:ENSG1;biotype=protein_coding
+1	test	mRNA	100	499	.	+	.	ID=transcript:ENST2;Parent=gene:ENSG1;biotype=protein_coding
+1	test	exon	100	199	.	+	.	ID=exon:shared;Parent=transcript:ENST1,transcript:ENST2
+1	test	exon	300	349	.	+	.	ID=exon:e1;Parent=transcript:ENST1
+1	test	exon	400	499	.	+	.	ID=exon:e2;Parent=transcript:ENST2
