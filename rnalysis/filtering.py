@@ -4364,9 +4364,10 @@ class CountFilter(Filter):
         """
         validation.validate_threshold(threshold)
         self._validate_is_normalized()
-        mask_expr = (pl.col(self._numeric_columns) >= threshold)
-        mask = self.df.select(pl.col(self._numeric_columns)).with_columns(mask_expr).sum_horizontal() >= n_samples
-        new_df = self.df.filter(mask)
+        # fuse into one lazy pass over self.df instead of two eager scans (build the count mask on a
+        # selected copy, then filter the full frame): count, per row, the numeric columns >= threshold
+        new_df = self.df.lazy().filter(
+            pl.sum_horizontal(pl.col(self._numeric_columns) >= threshold) >= n_samples).collect()
         suffix = f"_filt{threshold}reads{n_samples}samples"
         return self._inplace(new_df, opposite, inplace, suffix)
 
@@ -4398,8 +4399,10 @@ class CountFilter(Filter):
         """
         validation.validate_threshold(threshold)
         self._validate_is_normalized()
-        high_expr = self.df.filter(self.df.select(pl.col(self._numeric_columns)).max_horizontal() >= threshold)
-        low_expr = self.df.filter(self.df.select(pl.col(self._numeric_columns)).max_horizontal() < threshold)
+        # one lazy pass each instead of scanning self.df twice (max_horizontal on a selected copy, then
+        # filter the full frame)
+        high_expr = self.df.lazy().filter(pl.max_horizontal(pl.col(self._numeric_columns)) >= threshold).collect()
+        low_expr = self.df.lazy().filter(pl.max_horizontal(pl.col(self._numeric_columns)) < threshold).collect()
         return self._inplace(high_expr, opposite=False, inplace=False, suffix=f'_above{threshold}reads'), self._inplace(
             low_expr, opposite=False, inplace=False, suffix=f'_below{threshold}reads')
 
@@ -4431,7 +4434,8 @@ class CountFilter(Filter):
         validation.validate_threshold(threshold)
         self._validate_is_normalized()
 
-        new_df = self.df.filter(self.df.select(pl.col(self._numeric_columns)).sum_horizontal() >= threshold)
+        # one lazy pass instead of scanning self.df twice (sum_horizontal on a selected copy, then filter)
+        new_df = self.df.lazy().filter(pl.sum_horizontal(pl.col(self._numeric_columns)) >= threshold).collect()
         suffix = f"_filt{threshold}sum"
         return self._inplace(new_df, opposite, inplace, suffix)
 

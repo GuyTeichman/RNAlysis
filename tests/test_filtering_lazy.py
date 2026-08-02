@@ -39,3 +39,46 @@ def test_fold_change_lazy_matches_eager():
     expected = _eager_fold_change(h, numerator, denominator)
     result = h.fold_change(numerator, denominator).df
     assert_bit_identical(result, expected)
+
+
+def _eager_filter_low_reads(cf: CountFilter, threshold, n_samples) -> pl.DataFrame:
+    """Eager oracle for CountFilter.filter_low_reads: two scans of self.df (build the count mask on a
+    selected copy, then filter the full frame) -- what the method did before being fused into one pass."""
+    df = cf.df
+    mask = df.select(pl.col(cf._numeric_columns)).with_columns(
+        pl.col(cf._numeric_columns) >= threshold).sum_horizontal() >= n_samples
+    return df.filter(mask)
+
+
+def _eager_split_by_reads(cf: CountFilter, threshold):
+    df = cf.df
+    high = df.filter(df.select(pl.col(cf._numeric_columns)).max_horizontal() >= threshold)
+    low = df.filter(df.select(pl.col(cf._numeric_columns)).max_horizontal() < threshold)
+    return high, low
+
+
+def _eager_filter_by_row_sum(cf: CountFilter, threshold) -> pl.DataFrame:
+    df = cf.df
+    return df.filter(df.select(pl.col(cf._numeric_columns)).sum_horizontal() >= threshold)
+
+
+def test_filter_low_reads_lazy_matches_eager():
+    cf = CountFilter('tests/test_files/counted.csv')
+    expected = _eager_filter_low_reads(cf, 5, 2)
+    result = cf.filter_low_reads(5, n_samples=2, inplace=False).df
+    assert_bit_identical(result, expected)
+
+
+def test_split_by_reads_lazy_matches_eager():
+    cf = CountFilter('tests/test_files/counted.csv')
+    exp_high, exp_low = _eager_split_by_reads(cf, 5)
+    high, low = cf.split_by_reads(5)
+    assert_bit_identical(high.df, exp_high)
+    assert_bit_identical(low.df, exp_low)
+
+
+def test_filter_by_row_sum_lazy_matches_eager():
+    cf = CountFilter('tests/test_files/counted.csv')
+    expected = _eager_filter_by_row_sum(cf, 5)
+    result = cf.filter_by_row_sum(5, inplace=False).df
+    assert_bit_identical(result, expected)
