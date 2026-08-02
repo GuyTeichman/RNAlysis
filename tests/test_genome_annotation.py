@@ -1,3 +1,5 @@
+import gzip
+
 import pytest
 
 from rnalysis.utils.genome_annotation import *
@@ -124,6 +126,7 @@ def test_get_genomic_feature_lengths(gtf_path, feature_type, len_method, truth):
 ENSEMBL_GTF = 'tests/test_files/test_gtf_ensembl.gtf'  # bare IDs + gene_version/transcript_version, gene_biotype
 GENCODE_GTF = 'tests/test_files/test_gtf_gencode.gtf'  # inline-versioned IDs, NO version attrs, gene_type
 MULTIPARENT_GFF3 = 'tests/test_files/test_gff_multiparent.gff3'  # mRNA feature, biotype=, comma-separated Parent=a,b
+WORMBASE_GFF3 = 'tests/test_files/test_gff_wormbase.gff3'  # bare WBGene/dotted mRNA IDs, no type: prefix
 
 
 def _malformed_gtf(tmp_path):
@@ -206,10 +209,11 @@ def test_map_transcripts_to_genes_kallisto_realfile():
     assert unversioned['ENST00000282507'] == 'ENSG00000168671'
 
 
-def test_map_transcripts_to_genes_malformed_raises(tmp_path):
-    # Divergence (pin the contrast): map_transcripts_to_genes RAISES on a bad-column line...
-    with pytest.raises(ValueError, match='Invalid GTF format'):
-        map_transcripts_to_genes(_malformed_gtf(tmp_path))
+def test_map_transcripts_to_genes_malformed_skips_and_warns(tmp_path):
+    # #152: previously RAISED ValueError on a bad-column line; now unified on skip-and-warn like the other
+    # two functions. The one 7-column line is dropped (with a warning) and the valid transcript still maps.
+    with pytest.warns(UserWarning, match='malformed line'):
+        assert map_transcripts_to_genes(_malformed_gtf(tmp_path), use_version=False, split_ids=False) == {'T1': 'G1'}
 
 
 # ------------------------------------------------------------------ get_genomic_feature_lengths (extra coverage)
@@ -238,26 +242,27 @@ def test_get_genomic_feature_lengths_transcript_method_ignored(gtf_path, truth):
 @pytest.mark.parametrize('method,gene_len', [('mean', 175), ('median', 175), ('max', 200), ('min', 150),
                                              ('geometric_mean', 173.2050807568876), ('merged_exons', 250)])
 def test_get_genomic_feature_lengths_gff3_multiparent_gene(method, gene_len):
-    # GFF3 keeps the gene:/transcript: prefixes (no stripping). merged_exons attributes the shared exon to the
-    # FIRST parent's gene only, so the union is 100+50+100=250.
+    # #152: GFF3 SO-term prefixes (gene:/transcript:) are stripped so IDs match the user's count table.
+    # merged_exons attributes the shared exon to the FIRST parent's gene only, so the union is 100+50+100=250.
     res = get_genomic_feature_lengths(MULTIPARENT_GFF3, 'gene', method)
-    assert res.keys() == {'gene:ENSG1'}
-    assert np.isclose(res['gene:ENSG1'], gene_len)
+    assert res.keys() == {'ENSG1'}
+    assert np.isclose(res['ENSG1'], gene_len)
 
 
 def test_get_genomic_feature_lengths_gff3_multiparent_transcript():
-    # The comma-separated Parent=a,b shared exon (len 100) is added to BOTH transcripts.
+    # The comma-separated Parent=a,b shared exon (len 100) is added to BOTH transcripts (prefixes stripped, #152).
     with pytest.warns(UserWarning, match='method parameter is ignored'):
         res = get_genomic_feature_lengths(MULTIPARENT_GFF3, 'transcript', 'mean')
-    assert res == {'transcript:ENST1': 150, 'transcript:ENST2': 200}
+    assert res == {'ENST1': 150, 'ENST2': 200}
 
 
-def test_get_genomic_feature_lengths_malformed_skips(tmp_path):
-    # ...whereas get_genomic_feature_lengths SILENTLY SKIPS the same bad-column line (fix the divergence in #152).
+def test_get_genomic_feature_lengths_malformed_skips_and_warns(tmp_path):
+    # #152: the bad-column line is skipped WITH a warning now (previously silent), matching the unified behaviour.
     pth = _malformed_gtf(tmp_path)
-    with pytest.warns(UserWarning, match='method parameter is ignored'):
+    with pytest.warns(UserWarning, match='malformed line'):
         assert get_genomic_feature_lengths(pth, 'transcript', 'mean') == {'T1': 101}
-    assert get_genomic_feature_lengths(pth, 'gene', 'mean') == {'G1': 101}
+    with pytest.warns(UserWarning, match='malformed line'):
+        assert get_genomic_feature_lengths(pth, 'gene', 'mean') == {'G1': 101}
 
 
 # ------------------------------------------------------------------ map_gene_to_attr (extra coverage + known bugs)
@@ -299,14 +304,35 @@ def test_map_gene_to_attr_gencode_no_version(feature_type, attribute, split_ids,
     assert map_gene_to_attr(GENCODE_GTF, attribute, feature_type, False, False, split_ids) == truth
 
 
-@pytest.mark.parametrize('feature_type,attribute,missing_key', [
-    ('gene', 'gene_type', 'gene_version'),
-    ('transcript', 'transcript_type', 'transcript_version'),
+@pytest.mark.parametrize('feature_type,attribute,truth', [
+    ('gene', 'gene_type', {'ENSG00000000001.3': 'protein_coding', 'ENSG00000000002.1': 'lincRNA'}),
+    ('transcript', 'transcript_type', {'ENST00000000001.2': 'protein_coding', 'ENST00000000002.1': 'protein_coding',
+                                       'ENST00000000003.4': 'lincRNA'}),
 ])
-def test_map_gene_to_attr_use_version_keyerror(feature_type, attribute, missing_key):
-    # BUG #2 (fix in #152): use_version unconditionally reads *_version, so a file without those attrs raises KeyError.
-    with pytest.raises(KeyError, match=missing_key):
-        map_gene_to_attr(GENCODE_GTF, attribute, feature_type, False, True, False)
+def test_map_gene_to_attr_use_version_tolerates_missing(feature_type, attribute, truth):
+    # BUG #2 FIXED (#152): use_version no longer raises KeyError on a file without *_version attrs; the version
+    # suffix is simply omitted, so the result matches the use_version=False case (inline-versioned GENCODE IDs).
+    assert map_gene_to_attr(GENCODE_GTF, attribute, feature_type, False, True, False) == truth
+
+
+def _transcript_missing_name_gtf(tmp_path):
+    """One transcript has gene_name but NO transcript_name; the other has both."""
+    pth = tmp_path / 'missing_tx_name.gtf'
+    pth.write_text(
+        '1\tsrc\ttranscript\t100\t200\t.\t+\t.\t'
+        'gene_id "G1"; transcript_id "T1"; gene_name "GENEA"; transcript_name "GENEA-201"; gene_biotype "pc";\n'
+        '1\tsrc\ttranscript\t300\t400\t.\t+\t.\t'
+        'gene_id "G1"; transcript_id "T2"; gene_name "GENEA"; gene_biotype "pc";\n',  # no transcript_name
+        encoding='utf-8', newline='\n')
+    return pth
+
+
+def test_map_gene_to_attr_transcript_use_name_gates_on_transcript_name(tmp_path):
+    # BUG #1 FIXED (#152): with a transcript + use_name, the gate and the read are now the SAME attribute
+    # (transcript_name). The transcript lacking transcript_name is dropped rather than producing a None key.
+    res = map_gene_to_attr(_transcript_missing_name_gtf(tmp_path), 'gene_biotype', 'transcript', True, False, False)
+    assert res == {'GENEA-201': 'pc'}
+    assert None not in res
 
 
 # ------------------------------------------------------------------ anchored-key regex (PR-B, #151, item #3)
@@ -335,3 +361,127 @@ def test_map_gene_to_attr_anchored_key_ignores_compound_key(tmp_path):
     # Same guarantee via the map_gene_to_attr extraction path: the gene id key is RIGHTGENE, not WRONGGENE.
     assert map_gene_to_attr(_compound_key_gtf(tmp_path), 'gene_name', 'gene', False, False, False) == {
         'RIGHTGENE': 'GENEA'}
+
+
+# ====================================================================================================================
+# #152 (PR-C): GFF3 parity + robustness (formats, gzip, content-sniff, aliases). New behaviour, not characterization.
+# ====================================================================================================================
+
+# ------------------------------------------------------------------ GFF3 parity for map_transcripts_to_genes
+@pytest.mark.parametrize('use_version,split_ids', [(False, False), (True, False), (False, True), (True, True)])
+def test_map_transcripts_to_genes_gff3_multiparent(use_version, split_ids):
+    # GFF3 now accepted: ID->transcript, Parent->gene, SO-term prefixes stripped. GFF3 has no *_version, so
+    # use_version is inert; ENST1/ENST2 have no internal dot, so split_ids is a no-op here.
+    assert map_transcripts_to_genes(MULTIPARENT_GFF3, use_name=False, use_version=use_version,
+                                    split_ids=split_ids) == {'ENST1': 'ENSG1', 'ENST2': 'ENSG1'}
+
+
+def test_map_transcripts_to_genes_gff3_wormbase():
+    res = map_transcripts_to_genes(WORMBASE_GFF3, use_version=False, split_ids=False)
+    assert res['B0348.5a'] == 'WBGene00015153'
+    assert res['B0348.6c.1'] == 'WBGene00002061'
+    assert len(res) == 8  # 8 mRNA rows, all with distinct IDs
+
+
+def test_map_transcripts_to_genes_gff3_split_ids_collapses_dotted():
+    # split_ids strips at the first dot, collapsing the WormBase isoform ids onto their base (first-wins).
+    res = map_transcripts_to_genes(WORMBASE_GFF3, use_version=False, split_ids=True)
+    assert res == {'B0348': 'WBGene00015153'}
+
+
+# ------------------------------------------------------------------ GFF3 parity for map_gene_to_attr
+def test_map_gene_to_attr_gff3_gene():
+    # biotype= lives on the gene row; feature_type='gene' keys by the (prefix-stripped) gene ID.
+    assert map_gene_to_attr(MULTIPARENT_GFF3, 'biotype', 'gene', False, False, False) == {'ENSG1': 'protein_coding'}
+
+
+def test_map_gene_to_attr_gff3_transcript():
+    # biotype= is also on the mRNA rows; feature_type='transcript' keys by the (prefix-stripped) transcript ID.
+    assert map_gene_to_attr(MULTIPARENT_GFF3, 'biotype', 'transcript', False, False, False) == {
+        'ENST1': 'protein_coding', 'ENST2': 'protein_coding'}
+
+
+def test_map_gene_to_attr_gff3_use_name():
+    # Name= on the gene row is used as the key when use_name=True.
+    assert map_gene_to_attr(MULTIPARENT_GFF3, 'biotype', 'gene', True, False, False) == {'GENEA': 'protein_coding'}
+
+
+# ------------------------------------------------------------------ formats: .gff extension, gzip, content-sniff
+def test_map_transcripts_to_genes_accepts_gff_extension(tmp_path):
+    pth = tmp_path / 'ann.gff'
+    pth.write_text(Path(MULTIPARENT_GFF3).read_text(encoding='utf-8'), encoding='utf-8', newline='\n')
+    assert map_transcripts_to_genes(pth, use_version=False, split_ids=False) == {'ENST1': 'ENSG1', 'ENST2': 'ENSG1'}
+
+
+def test_map_transcripts_to_genes_reads_gzip(tmp_path):
+    pth = tmp_path / 'ensembl.gtf.gz'
+    with gzip.open(pth, 'wt', encoding='utf-8', newline='\n') as fh:
+        fh.write(Path(ENSEMBL_GTF).read_text(encoding='utf-8'))
+    assert map_transcripts_to_genes(pth, use_version=False, split_ids=False) == {
+        'ENST00000000001': 'ENSG00000000001', 'ENST00000000002': 'ENSG00000000001',
+        'ENST00000000003': 'ENSG00000000002'}
+
+
+def test_get_genomic_feature_lengths_reads_gzip(tmp_path):
+    pth = tmp_path / 'ensembl.gtf.gz'
+    with gzip.open(pth, 'wt', encoding='utf-8', newline='\n') as fh:
+        fh.write(Path(ENSEMBL_GTF).read_text(encoding='utf-8'))
+    assert get_genomic_feature_lengths(pth, 'gene', 'mean') == {'ENSG00000000001': 150, 'ENSG00000000002': 100}
+
+
+def test_content_sniff_overrides_extension(tmp_path):
+    # GFF3 content in a file misnamed '.gtf' must still parse as GFF3 (content-sniff wins over the extension hint).
+    pth = tmp_path / 'mislabeled.gtf'
+    pth.write_text(Path(MULTIPARENT_GFF3).read_text(encoding='utf-8'), encoding='utf-8', newline='\n')
+    assert map_transcripts_to_genes(pth, use_version=False, split_ids=False) == {'ENST1': 'ENSG1', 'ENST2': 'ENSG1'}
+
+
+def test_no_malformed_warning_for_tabless_lines(tmp_path, recwarn):
+    # A trailing GFF3 ##FASTA block (and blank lines) have no tabs; they must be skipped SILENTLY, not counted
+    # as malformed (otherwise a real genome would emit a warning about thousands of "malformed" lines).
+    pth = tmp_path / 'with_fasta.gff3'
+    pth.write_text(
+        '##gff-version 3\n'
+        '1\ttest\tgene\t100\t499\t.\t+\t.\tID=gene:ENSG1;biotype=protein_coding;Name=GENEA\n'
+        '1\ttest\tmRNA\t100\t499\t.\t+\t.\tID=transcript:ENST1;Parent=gene:ENSG1\n'
+        '\n'
+        '##FASTA\n'
+        '>1\n'
+        'ACGTACGTACGTACGT\n'
+        'ACGTACGTACGTACGT\n',
+        encoding='utf-8', newline='\n')
+    assert map_transcripts_to_genes(pth, use_version=False, split_ids=False) == {'ENST1': 'ENSG1'}
+    assert not any('malformed' in str(w.message) for w in recwarn)
+
+
+# ------------------------------------------------------------------ biotype attribute auto-resolution
+def test_map_gene_to_attr_biotype_autoresolves_family():
+    # Requesting the Ensembl name 'gene_biotype' on a GENCODE file (which uses 'gene_type') auto-resolves across
+    # the biotype family, so non-programmer defaults keep working regardless of the annotation's convention.
+    assert map_gene_to_attr(GENCODE_GTF, 'gene_biotype', 'gene', False, False, True) == {
+        'ENSG00000000001': 'protein_coding', 'ENSG00000000002': 'lincRNA'}
+
+
+def test_map_gene_to_attr_non_biotype_attribute_not_resolved(tmp_path):
+    # Auto-resolution is limited to the biotype family; a non-family attribute stays an exact lookup.
+    assert map_gene_to_attr(_compound_key_gtf(tmp_path), 'gene_name', 'gene', False, False, False) == {
+        'RIGHTGENE': 'GENEA'}
+
+
+def _gene_type_with_transcript_biotype_gtf(tmp_path):
+    """Gene-level biotype lives in gene_type ('lincRNA'); a transcript carries a DIFFERENT transcript_biotype."""
+    pth = tmp_path / 'mixed_biotype.gtf'
+    pth.write_text(
+        '1\tsrc\tgene\t100\t400\t.\t+\t.\tgene_id "G1"; gene_type "lincRNA";\n'
+        '1\tsrc\ttranscript\t100\t400\t.\t+\t.\tgene_id "G1"; transcript_id "T1"; gene_type "lincRNA"; '
+        'transcript_biotype "protein_coding";\n',
+        encoding='utf-8', newline='\n')
+    return pth
+
+
+def test_map_gene_to_attr_biotype_resolution_stays_within_feature_level(tmp_path):
+    # Review regression guard: a gene-level 'gene_biotype' request must NOT fall back to a transcript-level
+    # attribute (transcript_biotype). It resolves to the same-level gene_type -> the gene's true biotype 'lincRNA',
+    # never the transcript's 'protein_coding'.
+    assert map_gene_to_attr(_gene_type_with_transcript_biotype_gtf(tmp_path), 'gene_biotype', 'gene',
+                            False, False, False) == {'G1': 'lincRNA'}
