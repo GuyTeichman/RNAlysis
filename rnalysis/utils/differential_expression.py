@@ -166,7 +166,6 @@ class DESeqRunner(DiffExpRunner):
             for lrt_factor in self.lrt_factors:
                 export_path = cache_dir.joinpath(f"DESeq2_{lrt_factor.replace(':', '_x_')}_LRT.csv").as_posix()
                 reduced_model = self.create_formula([lrt_factor])
-                print(reduced_model)
                 this_lrt = lrt_template.replace("$REDUCED", reduced_model)
                 this_lrt = this_lrt.replace("$OUTFILE_NAME", export_path).replace("$COOKS", cooks)
                 outfile.write(this_lrt)
