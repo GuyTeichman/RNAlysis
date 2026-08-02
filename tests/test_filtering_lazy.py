@@ -82,3 +82,43 @@ def test_filter_by_row_sum_lazy_matches_eager():
     expected = _eager_filter_by_row_sum(cf, 5)
     result = cf.filter_by_row_sum(5, inplace=False).df
     assert_bit_identical(result, expected)
+
+
+def _eager_norm_apply(cf: CountFilter, scaling_factors: pl.DataFrame) -> pl.DataFrame:
+    """Old N-pass ``_norm_scaling_factors`` (single-row scaling-factors case): divides each numeric
+    column by its scalar factor via one eager ``self.df.select`` per column -- the pre-fusion logic."""
+    numeric = cf._numeric_columns
+    out = pl.DataFrame().lazy()
+    for column in cf.df.columns:
+        if column in numeric:
+            out = out.with_columns(cf.df.select(pl.col(column).truediv(scaling_factors[column])))
+        else:
+            out = out.with_columns(cf.df[column].alias(column))
+    return out.collect()
+
+
+def _eager_normalize_to_rpm(cf: CountFilter) -> pl.DataFrame:
+    sf = cf.df.select(pl.col(cf._numeric_columns)).sum() / (10 ** 6)
+    return _eager_norm_apply(cf, sf)
+
+
+def _eager_normalize_to_quantile(cf: CountFilter, quantile: float = 0.75) -> pl.DataFrame:
+    data = cf.df.select(pl.col(cf._numeric_columns))
+    expressed = data.filter(data.sum_horizontal() != 0)
+    quantiles = expressed.quantile(quantile, interpolation='linear')
+    sf = quantiles / quantiles.mean_horizontal()
+    return _eager_norm_apply(cf, sf)
+
+
+def test_normalize_to_rpm_lazy_matches_eager():
+    cf = CountFilter('tests/test_files/counted.csv')
+    expected = _eager_normalize_to_rpm(cf)
+    result = cf.normalize_to_rpm(inplace=False).df
+    assert_bit_identical(result, expected)
+
+
+def test_normalize_to_quantile_lazy_matches_eager():
+    cf = CountFilter('tests/test_files/counted.csv')
+    expected = _eager_normalize_to_quantile(cf, 0.75)
+    result = cf.normalize_to_quantile(0.75, inplace=False).df
+    assert_bit_identical(result, expected)
