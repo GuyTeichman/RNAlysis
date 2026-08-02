@@ -3681,21 +3681,24 @@ class CountFilter(Filter):
             else:
                 raise TypeError(f"'sample_list' cannot contain objects of type {type(group)}.")
 
-        if function == 'mean':
+        if function in ('mean', 'median'):
             # fuse into one lazy pass over self.df instead of one eager self.df.select per group: each
-            # multi-sample group becomes its row-wise mean, single-sample groups are copied through
+            # multi-sample group becomes its row-wise mean/median, single-sample groups are copied through.
+            # (median also fixes a pre-existing crash: DataFrame.median_horizontal was removed in Polars 1.x)
+            def _agg(cols):
+                return pl.mean_horizontal(pl.col(cols)) if function == 'mean' \
+                    else pl.concat_list(pl.col(cols)).list.median()
+
             exprs = [pl.col(group).alias(new_name) if isinstance(group, str)
-                     else pl.mean_horizontal(pl.col(group)).alias(new_name)
+                     else _agg(group).alias(new_name)
                      for group, new_name in zip(sample_grouping, new_column_names)]
             return self.df.lazy().select(pl.first(), *exprs).collect()
 
+        # geometric_mean: per-group (uses a Python UDF rather than a native Polars expression)
         averaged_df = self.df.select(pl.first())
         for group, new_name in zip(sample_grouping, new_column_names):
             if isinstance(group, str):
                 averaged_df = averaged_df.with_columns(self.df[group].alias(new_name))
-            elif function == 'median':
-                averaged_df = averaged_df.with_columns(
-                    self.df.select(pl.col(group)).median_horizontal().alias(new_name))
             else:
                 averaged_df = averaged_df.with_columns(
                     self.df.select(pl.col(group).apply(lambda x: gmean(x)).alias(new_name)))

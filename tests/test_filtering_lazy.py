@@ -6,6 +6,7 @@ tests fall back to ``np.allclose``. This harness instead compares the production
 independent *in-memory* eager oracle and asserts they are byte-for-byte identical, so any float or dtype
 drift introduced by a lazy rewrite is caught immediately.
 """
+import numpy as np
 import polars as pl
 import polars.selectors as cs
 
@@ -197,4 +198,18 @@ def test_avg_subsamples_mean_lazy_matches_eager():
     names = ['groupA', 'cond3_solo', 'groupB']
     expected = _eager_avg_mean(cf, grouping, names)
     result = cf._avg_subsamples(grouping, 'mean', names)
+    assert_bit_identical(result, expected)
+
+
+def test_avg_subsamples_median_correct():
+    # regression for a pre-existing crash: average_replicate_samples(function='median') used the
+    # removed DataFrame.median_horizontal. It now computes a correct row-wise median; verify against numpy.
+    cf = CountFilter('tests/test_files/counted.csv')
+    grouping = [['cond1', 'cond2'], ['cond3', 'cond4']]
+    names = ['g1', 'g2']
+    result = cf._avg_subsamples(grouping, 'median', names)
+    expected = cf.df.select(pl.first())
+    for group, name in zip(grouping, names):
+        med = [float(np.median(row)) for row in cf.df.select(group).to_numpy()]
+        expected = expected.with_columns(pl.Series(name, med))
     assert_bit_identical(result, expected)
