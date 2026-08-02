@@ -19,10 +19,11 @@ Try one of the following methods to solve your problem:
 
    If that worked, your system might have trouble installing one of the extended features of *RNAlysis*.
    Now you can find out which feature is causing issues by installing them one by one, by running the following commands one after the other:
-    ::
+   ::
 
         pip install RNAlysis[fastq]
         pip install RNAlysis[hdbscan]
+        pip install RNAlysis[reports]
         pip install RNAlysis[single-set]
         pip install RNAlysis[randomization]
 
@@ -81,7 +82,7 @@ To solve this problem, try one of the following solutions:
 
    On a MacOS computer, it would look something like this::
 
-        /Users/<user>>/Library/Application Support/RNAlyisis/videos
+        /Users/<user>/Library/Application Support/RNAlysis/videos
 
 
 Can I install a previous version of *RNAlysis*?
@@ -115,14 +116,14 @@ To solve this problem, try one of the following solutions:
 
    On a MacOS computer, it would look something like this::
 
-        /Users/<user>>/Library/Application Support/RNAlyisis/videos
+        /Users/<user>/Library/Application Support/RNAlysis/videos
 
 3. Try uninstalling RNAlysis, and then re-installing it::
 
         pip uninstall RNAlysis
         pip install RNAlysis[all]
 
-5. If all of these approaches failed, you can always browse the `online version <https://guyteichman.github.io/RNAlysis/build/quick_start.html>`_ of the quick-start guide.
+4. If all of these approaches failed, you can always browse the `online version <https://guyteichman.github.io/RNAlysis/build/quick_start.html>`_ of the quick-start guide.
 
 
 I am trying to apply a function to my data table. How do I know what all the different functions and parmeters do?
