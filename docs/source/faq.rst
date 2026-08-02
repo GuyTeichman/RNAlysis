@@ -180,7 +180,7 @@ When trying to run clustering/enrichment/other functions in *RNAlysis*, a progre
 By default, *RNAlysis* attempts to run performance-intensive tasks such as clustering and enrichment in parallel processing mode, in order to save time.
 However, some systems or setups don't support parallel processing very well, and can lead to tasks that never finish running successfully.
 If after waiting a few minutes nothing changes, restart *RNAlysis*, and then re-run the function in sequential mode.
-The running mode can be changed via the `parallel_backend` parameter of the function, or by setting the `parallel` parameter to False.
+The running mode can be changed via the `parallel_backend` parameter of the function — set it to `'sequential'` to run the task in a single process.
 
 I ran into a problem that is not specified here. What can I do?
 ======================================================================
