@@ -3672,27 +3672,33 @@ class CountFilter(Filter):
                 f"The number of new column names {len(new_column_names)} " \
                 f"does not match the number of sample groups {len(sample_grouping)}!"
 
-        averaged_df = self.df.select(pl.first())
-
-        for group, new_name in zip(sample_grouping, new_column_names):
+        for group in sample_grouping:
             if isinstance(group, str):
                 assert group in self.columns, f"Column '{group}' does not exist in the original table!"
-                averaged_df = averaged_df.with_columns(self.df[group].alias(new_name))
             elif isinstance(group, (list, tuple, set)):
                 for item in group:
                     assert item in self.columns, f"Column '{item}' does not exist in the original table!"
-                if function == 'mean':
-                    averaged_df = averaged_df.with_columns(
-                        self.df.select(pl.col(group)).mean_horizontal().alias(new_name))
-                elif function == 'median':
-                    averaged_df = averaged_df.with_columns(
-                        self.df.select(pl.col(group)).median_horizontal().alias(new_name))
-                else:
-                    averaged_df = averaged_df.with_columns(
-                        self.df.select(pl.col(group).apply(lambda x: gmean(x)).alias(new_name)))
-
             else:
                 raise TypeError(f"'sample_list' cannot contain objects of type {type(group)}.")
+
+        if function == 'mean':
+            # fuse into one lazy pass over self.df instead of one eager self.df.select per group: each
+            # multi-sample group becomes its row-wise mean, single-sample groups are copied through
+            exprs = [pl.col(group).alias(new_name) if isinstance(group, str)
+                     else pl.mean_horizontal(pl.col(group)).alias(new_name)
+                     for group, new_name in zip(sample_grouping, new_column_names)]
+            return self.df.lazy().select(pl.first(), *exprs).collect()
+
+        averaged_df = self.df.select(pl.first())
+        for group, new_name in zip(sample_grouping, new_column_names):
+            if isinstance(group, str):
+                averaged_df = averaged_df.with_columns(self.df[group].alias(new_name))
+            elif function == 'median':
+                averaged_df = averaged_df.with_columns(
+                    self.df.select(pl.col(group)).median_horizontal().alias(new_name))
+            else:
+                averaged_df = averaged_df.with_columns(
+                    self.df.select(pl.col(group).apply(lambda x: gmean(x)).alias(new_name)))
 
         return averaged_df
 

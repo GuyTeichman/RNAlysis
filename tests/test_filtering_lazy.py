@@ -177,3 +177,24 @@ def test_norm_scaling_factors_per_gene_lazy_matches_eager():
     expected = _eager_norm_per_gene(cf, sf)
     result = cf._norm_scaling_factors(sf)
     assert_bit_identical(result, expected)
+
+
+def _eager_avg_mean(cf: CountFilter, grouping, names) -> pl.DataFrame:
+    """Old ``_avg_subsamples`` mean path: one eager ``self.df.select().mean_horizontal()`` per group
+    (single columns copied through) -- the pre-fusion logic."""
+    out = cf.df.select(pl.first())
+    for group, new_name in zip(grouping, names):
+        if isinstance(group, str):
+            out = out.with_columns(cf.df[group].alias(new_name))
+        else:
+            out = out.with_columns(cf.df.select(pl.col(group)).mean_horizontal().alias(new_name))
+    return out
+
+
+def test_avg_subsamples_mean_lazy_matches_eager():
+    cf = CountFilter('tests/test_files/counted.csv')
+    grouping = [['cond1', 'cond2'], 'cond3', ['cond4']]  # multi-col group, single str, single-item list
+    names = ['groupA', 'cond3_solo', 'groupB']
+    expected = _eager_avg_mean(cf, grouping, names)
+    result = cf._avg_subsamples(grouping, 'mean', names)
+    assert_bit_identical(result, expected)
