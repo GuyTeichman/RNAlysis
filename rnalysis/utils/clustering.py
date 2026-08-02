@@ -125,6 +125,9 @@ class ArbitraryClusterer(abc.ABC):
 
 
 class CLICOM:
+    # cap on find_cliques' per-block working set (bytes); keeps the packed-bitset matrix bounded for large graphs
+    _MAX_CLIQUE_BLOCK_BYTES = 32 * 1024 * 1024
+
     def __init__(self, clustering_solutions: BinaryFormatClusters, threshold: float, cluster_wise_cliques: bool = True,
                  cluster_unclustered_features: bool = True, min_cluster_size: int = 15, parallel_backend='loky'):
         self.clustering_solutions: BinaryFormatClusters = clustering_solutions
@@ -172,10 +175,8 @@ class CLICOM:
         # test_find_cliques_matches_reference). Because each K_ij evolves independently of the
         # others, we process only the strict-upper-triangle cells that carry an edge, in
         # memory-bounded blocks, rather than materialising the full n*n object matrix.
-        binary_mat = self.binary_mat
-        if hasattr(binary_mat, 'to_numpy'):  # accept a polars/pandas frame as well as an ndarray
-            binary_mat = binary_mat.to_numpy()
-        binary_mat = np.asarray(binary_mat, dtype=bool)
+        # binary_mat is normally an ndarray; np.asarray also accepts the polars frame the unit tests inject
+        binary_mat = np.asarray(self.binary_mat, dtype=bool)
         n_objs = binary_mat.shape[0]
         n_words = (n_objs + 63) // 64
 
@@ -196,9 +197,8 @@ class CLICOM:
         if n_cells == 0:
             return
 
-        # cap each block's working set (b * n_words uint64 words) at ~32 MB of RAM
-        max_block_bytes = 32 * 1024 * 1024
-        block = max(1, min(n_cells, max_block_bytes // (8 * n_words)))
+        # cap each block's working set (b * n_words uint64 words) to bound memory on large graphs
+        block = max(1, min(n_cells, self._MAX_CLIQUE_BLOCK_BYTES // (8 * n_words)))
         n_blocks = (n_cells + block - 1) // block
 
         with tqdm(total=n_objs * n_blocks, desc='Finding cliques') as pbar:
