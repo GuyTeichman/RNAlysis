@@ -12,6 +12,7 @@ Changed
 * CLICOM's clique-finding step (the second-slowest part of ``CountFilter.split_clicom``) now runs up to tens of times faster, by replacing its cubic pure-Python loop over sets with a vectorized NumPy bitset implementation. Clustering results are bit-for-bit identical.
 * The Principal Component Analysis functions (``pca``, ``sort_by_principal_component``, and ``split_by_principal_components``) now run substantially faster on large datasets, by parallelizing the per-gene Box-Cox power transform across CPU cores. Results are unchanged up to floating-point precision (verified against the test suite's reference outputs).
 * Ensembl ortholog and paralog mapping now caches each gene's homology results in the daily cache, so repeating a mapping (or mapping gene sets that overlap a previous one) no longer re-requests the same data from Ensembl. This reduces load on the Ensembl REST API and speeds up repeated mappings.
+* Several ``filtering.CountFilter``/``Filter`` operations now run in a single fused Polars pass instead of scanning the table multiple times: the count-based filters (``filter_low_reads``, ``split_by_reads``, ``filter_by_row_sum``), all per-sample and per-gene normalizations, ``fold_change``, replicate averaging (``average_replicate_samples``), and the ``opposite=True`` path of every filter. Results are bit-for-bit identical, verified by a new eager-vs-lazy equivalence test suite.
 
 Fixed
 ******
@@ -25,6 +26,7 @@ Fixed
 * Fixed a bug where enrichment analyses (GO, KEGG, user-defined, and single-set) could crash with a confusing ``not enough values to unpack`` error when no results could be produced — either because the enrichment gene set ended up empty (for example when a web service temporarily mapped none of the genes to the required ID type, or when every gene was filtered out), or because the chosen statistical test could not be run (for example when the optional ``xlmhglite`` package is missing for single-set analysis). Such analyses now finish gracefully with an empty result instead of crashing.
 * Fixed a bug where automatically detecting the organism or gene-ID type from a set of gene IDs (via Ensembl) failed with an ``HTTP 400`` error, because the request body sent to Ensembl was double-encoded. The request is now formatted correctly.
 * Fixed a bug where a malformed or unreachable external service (PantherDB, UniProt, Ensembl, or PhylomeDB) could crash RNAlysis on startup while it loaded the lists of supported organisms and gene-ID types. These lookups now degrade gracefully to an empty list with a warning, and their network requests use timeouts so a stalled service can't freeze startup.
+* Fixed a crash in ``CountFilter.average_replicate_samples`` when ``function='median'``: it relied on ``DataFrame.median_horizontal``, which was removed in Polars 1.x. The row-wise median is now computed correctly.
 
 
 4.2.0 (2026-05-30)
