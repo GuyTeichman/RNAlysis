@@ -2,8 +2,10 @@ import gzip
 import platform
 from unittest.mock import Mock
 
+import polars as pl
 import pytest
 import yaml
+from polars.testing import assert_frame_equal
 
 from rnalysis import __version__, fastq
 from rnalysis.fastq import *
@@ -475,6 +477,115 @@ def test_kallisto_quantify_paired_end_command(monkeypatch, r1_files, r2_files, o
                                  seek_fusion_genes=seek_fusion_genes)
     assert sorted(pairs_covered) == sorted(pairs_to_cover)
     assert output_processed == [True]
+
+
+# ---------------------------------------------------------------------------------------------------------------
+# transcript->gene summation (issue #172): fast unit tests on synthetic inputs, no kallisto binary involved.
+# ---------------------------------------------------------------------------------------------------------------
+
+def _abundance_tsv_text(rows):
+    header = '\t'.join(['target_id', 'length', 'eff_length', 'est_counts', 'tpm'])
+    lines = [header]
+    for target_id, length, eff_length, est_counts, tpm in rows:
+        lines.append('\t'.join([target_id, str(length), str(eff_length), str(est_counts), str(tpm)]))
+    return '\n'.join(lines) + '\n'
+
+
+def test_merge_kallisto_outputs(tmp_path):
+    (tmp_path / 'sample_A').mkdir()
+    (tmp_path / 'sample_B').mkdir()
+    (tmp_path / 'sample_A' / 'abundance.tsv').write_text(_abundance_tsv_text([
+        ('ENST1', 100, 80, 10, 1000.0),
+        ('ENST2', 200, 180, 30, 3000.0),
+        ('ENST3', 150, 130, 100, 6000.0),
+    ]))
+    (tmp_path / 'sample_B' / 'abundance.tsv').write_text(_abundance_tsv_text([
+        ('ENST1', 100, 80, 5, 500.0),
+        ('ENST2', 200, 180, 15, 1500.0),
+        ('ENST3', 150, 130, 50, 3000.0),
+    ]))
+
+    counts, tpm = fastq._merge_kallisto_outputs(tmp_path, ['sample_A', 'sample_B'])
+
+    truth_counts = pl.DataFrame(
+        {'': ['ENST1', 'ENST2', 'ENST3'], 'sample_A': [10, 30, 100], 'sample_B': [5, 15, 50]})
+    truth_tpm = pl.DataFrame(
+        {'': ['ENST1', 'ENST2', 'ENST3'], 'sample_A': [1000.0, 3000.0, 6000.0],
+         'sample_B': [500.0, 1500.0, 3000.0]})
+
+    assert_frame_equal(counts, truth_counts)
+    assert_frame_equal(tpm, truth_tpm)
+
+
+def test_merge_kallisto_outputs_missing_sample_raises(tmp_path):
+    (tmp_path / 'sample_A').mkdir()
+    (tmp_path / 'sample_A' / 'abundance.tsv').write_text(_abundance_tsv_text([
+        ('ENST1', 100, 80, 10, 1000.0),
+    ]))
+
+    with pytest.raises(FileNotFoundError, match='sample_B'):
+        fastq._merge_kallisto_outputs(tmp_path, ['sample_A', 'sample_B'])
+
+
+# tiny, hand-verifiable GTF fixture (shared with tests/test_genome_annotation.py's map_transcripts_to_genes
+# characterization tests): gene ENSG00000000001.3 (GENEA) has two transcripts, gene ENSG00000000002.1 (GENEB)
+# has one. Both genes/transcripts carry version attributes, so the default (use_version=True, split_ids=True)
+# lookup that _sum_transcripts_to_genes tries first resolves versioned transcript/gene IDs.
+_KALLISTO_SUMMATION_GTF = 'tests/test_files/test_gtf_ensembl.gtf'
+
+
+def _kallisto_summation_inputs():
+    tpm = pl.DataFrame({
+        '': ['ENST00000000001.2', 'ENST00000000002.1', 'ENST00000000003.4'],
+        'sample_A': [1000.0, 3000.0, 6000.0],
+        'sample_B': [500.0, 1500.0, 3000.0],
+    })
+    counts = pl.DataFrame({
+        '': ['ENST00000000001.2', 'ENST00000000002.1', 'ENST00000000003.4'],
+        'sample_A': [10, 30, 100],
+        'sample_B': [5, 15, 50],
+    })
+    return tpm, counts
+
+
+def test_sum_transcripts_to_genes_scaled_tpm():
+    tpm, counts = _kallisto_summation_inputs()
+
+    result = fastq._sum_transcripts_to_genes(tpm, counts, _KALLISTO_SUMMATION_GTF, 'scaled_tpm')
+
+    # library size (counts-per-million divisor) = sum(counts)/1e6: sample_A=140/1e6, sample_B=70/1e6.
+    # scaled_tpm gene count = sum(tpm across the gene's transcripts) * library_size.
+    # GENEA (ENST1+ENST2): sample_A=(1000+3000)*140e-6=0.56, sample_B=(500+1500)*70e-6=0.14
+    # GENEB (ENST3 only):  sample_A=6000*140e-6=0.84,        sample_B=3000*70e-6=0.21
+    truth = pl.DataFrame({
+        'Gene ID': ['ENSG00000000001.3', 'ENSG00000000002.1'],
+        'sample_A': [0.56, 0.84],
+        'sample_B': [0.14, 0.21],
+    })
+    assert_frame_equal(result, truth)
+
+
+def test_sum_transcripts_to_genes_raw():
+    tpm, counts = _kallisto_summation_inputs()
+
+    result = fastq._sum_transcripts_to_genes(tpm, counts, _KALLISTO_SUMMATION_GTF, 'raw')
+
+    # plain per-gene sum of the transcript-level counts.
+    # GENEA (ENST1+ENST2): sample_A=10+30=40, sample_B=5+15=20
+    # GENEB (ENST3 only):  sample_A=100,      sample_B=50
+    truth = pl.DataFrame({
+        'Gene ID': ['ENSG00000000001.3', 'ENSG00000000002.1'],
+        'sample_A': [40, 100],
+        'sample_B': [20, 50],
+    })
+    assert_frame_equal(result, truth)
+
+
+def test_sum_transcripts_to_genes_invalid_method_raises():
+    tpm, counts = _kallisto_summation_inputs()
+
+    with pytest.raises(ValueError, match="Invalid value for 'summation_method'"):
+        fastq._sum_transcripts_to_genes(tpm, counts, _KALLISTO_SUMMATION_GTF, 'not_a_real_method')
 
 
 def test_trim_adapters_single_end():
