@@ -29,6 +29,7 @@ Fixed
 * Fixed a bug where a malformed or unreachable external service (PantherDB, UniProt, Ensembl, or PhylomeDB) could crash RNAlysis on startup while it loaded the lists of supported organisms and gene-ID types. These lookups now degrade gracefully to an empty list with a warning, and their network requests use timeouts so a stalled service can't freeze startup.
 * Fixed a crash in ``CountFilter.average_replicate_samples`` when ``function='median'``: it relied on ``DataFrame.median_horizontal``, which was removed in Polars 1.x. The row-wise median is now computed correctly.
 * Fixed a bug where automatic common-name generation (used by the "smart" paired-end sample-naming option in the FASTQ functions) could produce an incorrect name when input file pairs differed in length, because a filtering step reused a loop variable left over from the last pair instead of each pair's own values.
+* Fixed a crash (``IndexError``) in automatic common-name generation for inputs of uneven length.
 
 
 4.2.0 (2026-05-30)

@@ -282,6 +282,8 @@ def test_longest_common_substring(s1, s2, expected):
     (['', ''], ''),  # all strings empty
     (['a', 'ba', 'cba'], 'a'),  # strings of different lengths, suffix bounded by the shortest one
     (['日本語abc', '中国語abc'], '語abc'),  # unicode suffix
+    (['ab', 'aab'], 'ab'),  # lexicographically-smaller string is longer than the larger one (issue #180)
+    (['aac', 'ab'], ''),  # same as above, but with no shared suffix at all
 ])
 def test_common_suffix(strings, expected):
     assert common_suffix(strings) == expected
