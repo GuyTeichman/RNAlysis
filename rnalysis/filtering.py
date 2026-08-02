@@ -3513,9 +3513,12 @@ class CountFilter(Filter):
             assert den in self.columns, f"'{den}' is not a column in the CountFilter object!"
             assert den in numeric_cols, f"Invalid dtype for column '{den}': {self.df.dtypes[den]}"
 
-        fc_df = self.df.select(pl.first()).with_columns(
-            ((self.df.select(numerator).mean_horizontal() + 1) / (
-                self.df.select(denominator).mean_horizontal() + 1)).alias('Fold Change'))
+        # fuse the three eager scans of self.df (index column + numerator mean + denominator mean) into
+        # a single lazy plan collected once; pl.mean_horizontal over each column list is the row-wise mean
+        fc_df = self.df.lazy().select(
+            pl.first(),
+            ((pl.mean_horizontal(numerator) + 1) / (pl.mean_horizontal(denominator) + 1)).alias('Fold Change')
+        ).collect()
         new_fname = Path(f"{str(self.fname.parent)}/{self.fname.stem}'_fold_change_'"
                          f"{numer_name}_over_{denom_name}_{self.fname.suffix}")
 
@@ -3698,33 +3701,30 @@ class CountFilter(Filter):
 
     def _norm_scaling_factors(self, scaling_factors: pl.DataFrame):
         numeric_cols = self._numeric_columns
-        new_df = pl.DataFrame().lazy()
 
         if scaling_factors.shape[0] == 1:
             assert scaling_factors.shape[1] == len(numeric_cols), \
                 f"Number of scaling factors ({scaling_factors.shape[1]}) does not match " \
                 f"number of numeric columns in your data table ({len(numeric_cols)})!"
+            # one lazy pass over self.df instead of one eager self.df.select per column: divide each
+            # numeric column by its scalar factor and keep the non-numeric columns (e.g. the index) as-is
+            exprs = [pl.col(column).truediv(scaling_factors[column]) if column in numeric_cols else pl.col(column)
+                     for column in self.df.columns]
+            return self.df.lazy().select(exprs).collect()
 
-            for column in self.df.columns:
-                if column in numeric_cols:
-                    norm_factor = scaling_factors[column]
-                    new_df = new_df.with_columns((self.df.select(pl.col(column).truediv(norm_factor))))
-                else:
-                    new_df = new_df.with_columns(self.df[column].alias(column))
-        else:
-            assert scaling_factors.shape[0] >= self.shape[0] and scaling_factors.shape[1] == len(numeric_cols) + 1, \
-                f"Dimensions of scaling factors table ({scaling_factors.shape}) does not match the " \
-                f"dimensions of your data table ({(self.shape[0], len(numeric_cols))} - numeric columns only)!"
-            for column in self.df.columns:
-                if column in numeric_cols:
-                    merged = self.df.select(cs.first() | cs.by_name(column)).join(
-                        scaling_factors.select(cs.first() | cs.by_name(column)), left_on=self.df.columns[0],
-                        right_on=scaling_factors.columns[0], how='left')
-                    merged_div = merged.with_columns((pl.nth(-2).truediv(pl.nth(-1))).alias('div'))
-                    new_df = new_df.with_columns((merged_div.select(pl.col('div').alias(column))))
-                else:
-                    new_df = new_df.with_columns(self.df[column].alias(column))
-
+        assert scaling_factors.shape[0] >= self.shape[0] and scaling_factors.shape[1] == len(numeric_cols) + 1, \
+            f"Dimensions of scaling factors table ({scaling_factors.shape}) does not match the " \
+            f"dimensions of your data table ({(self.shape[0], len(numeric_cols))} - numeric columns only)!"
+        new_df = pl.DataFrame().lazy()
+        for column in self.df.columns:
+            if column in numeric_cols:
+                merged = self.df.select(cs.first() | cs.by_name(column)).join(
+                    scaling_factors.select(cs.first() | cs.by_name(column)), left_on=self.df.columns[0],
+                    right_on=scaling_factors.columns[0], how='left')
+                merged_div = merged.with_columns((pl.nth(-2).truediv(pl.nth(-1))).alias('div'))
+                new_df = new_df.with_columns((merged_div.select(pl.col('div').alias(column))))
+            else:
+                new_df = new_df.with_columns(self.df[column].alias(column))
         return new_df.collect()
 
     @readable_name('Normalize to reads-per-million (RPM) - HTSeq-count output')
@@ -4361,9 +4361,10 @@ class CountFilter(Filter):
         """
         validation.validate_threshold(threshold)
         self._validate_is_normalized()
-        mask_expr = (pl.col(self._numeric_columns) >= threshold)
-        mask = self.df.select(pl.col(self._numeric_columns)).with_columns(mask_expr).sum_horizontal() >= n_samples
-        new_df = self.df.filter(mask)
+        # fuse into one lazy pass over self.df instead of two eager scans (build the count mask on a
+        # selected copy, then filter the full frame): count, per row, the numeric columns >= threshold
+        new_df = self.df.lazy().filter(
+            pl.sum_horizontal(pl.col(self._numeric_columns) >= threshold) >= n_samples).collect()
         suffix = f"_filt{threshold}reads{n_samples}samples"
         return self._inplace(new_df, opposite, inplace, suffix)
 
@@ -4395,8 +4396,10 @@ class CountFilter(Filter):
         """
         validation.validate_threshold(threshold)
         self._validate_is_normalized()
-        high_expr = self.df.filter(self.df.select(pl.col(self._numeric_columns)).max_horizontal() >= threshold)
-        low_expr = self.df.filter(self.df.select(pl.col(self._numeric_columns)).max_horizontal() < threshold)
+        # one lazy pass each instead of scanning self.df twice (max_horizontal on a selected copy, then
+        # filter the full frame)
+        high_expr = self.df.lazy().filter(pl.max_horizontal(pl.col(self._numeric_columns)) >= threshold).collect()
+        low_expr = self.df.lazy().filter(pl.max_horizontal(pl.col(self._numeric_columns)) < threshold).collect()
         return self._inplace(high_expr, opposite=False, inplace=False, suffix=f'_above{threshold}reads'), self._inplace(
             low_expr, opposite=False, inplace=False, suffix=f'_below{threshold}reads')
 
@@ -4428,7 +4431,8 @@ class CountFilter(Filter):
         validation.validate_threshold(threshold)
         self._validate_is_normalized()
 
-        new_df = self.df.filter(self.df.select(pl.col(self._numeric_columns)).sum_horizontal() >= threshold)
+        # one lazy pass instead of scanning self.df twice (sum_horizontal on a selected copy, then filter)
+        new_df = self.df.lazy().filter(pl.sum_horizontal(pl.col(self._numeric_columns)) >= threshold).collect()
         suffix = f"_filt{threshold}sum"
         return self._inplace(new_df, opposite, inplace, suffix)
 
