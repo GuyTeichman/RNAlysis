@@ -196,7 +196,7 @@ def test_format_annotations():
                'geneA\tPa\t3.0',
                'geneA\tPb\t5.0',
                'geneB\tPc\t2.0']
-    output_dict, duplicates = GeneIDTranslator.format_annotations(results)
+    output_dict, duplicates = GeneIDTranslator.format_annotations(GeneIDTranslator._parse_id_mapping_tsv(results))
     assert output_dict == {'geneB': 'Pc'}
     assert duplicates == {'geneA': ['Pb', 'Pa']}  # Pb (5.0) ranked above Pa (3.0)
 
@@ -207,10 +207,194 @@ def test_format_annotations_breaks_ties_deterministically():
     # the tie is broken by the target id, so the result is reproducible regardless of input order.
     forward = ['From\tTo\tAnnotation', 'geneA\tPb\t5.0', 'geneA\tPa\t5.0']
     reverse = ['From\tTo\tAnnotation', 'geneA\tPa\t5.0', 'geneA\tPb\t5.0']
-    out_f, dup_f = GeneIDTranslator.format_annotations(forward)
-    out_r, dup_r = GeneIDTranslator.format_annotations(reverse)
+    out_f, dup_f = GeneIDTranslator.format_annotations(GeneIDTranslator._parse_id_mapping_tsv(forward))
+    out_r, dup_r = GeneIDTranslator.format_annotations(GeneIDTranslator._parse_id_mapping_tsv(reverse))
     assert out_f == out_r == {}
     assert dup_f == dup_r == {'geneA': ['Pa', 'Pb']}  # Pa wins the tie deterministically (id order)
+
+
+def test_parse_id_mapping_tsv_typed_schema():
+    # The delegated parser turns UniProt's idmapping TSV (fields=accession,annotation_score) into a
+    # fixed-schema frame: 'From' preserved, the accession column ('Entry') becomes 'To', and
+    # 'Annotation' becomes a Float64 'annotation_score' (scores can be fractional, e.g. 137.2).
+    # It only parses/types -- no sorting or dedup, which stay in format_annotations.
+    results = ['From\tEntry\tAnnotation',
+               'WBGene00000003\tQ19151\t110',
+               'WBGene00000004\tA0A0K3AVL7\t57',
+               'WBGene00000004\tO17395\t137.2']
+    lf = GeneIDTranslator._parse_id_mapping_tsv(results)
+    assert isinstance(lf, pl.LazyFrame)
+    df = lf.collect()
+    assert dict(df.schema) == {'From': pl.Utf8, 'To': pl.Utf8, 'annotation_score': pl.Float64}
+    assert df.to_dicts() == [
+        {'From': 'WBGene00000003', 'To': 'Q19151', 'annotation_score': 110.0},
+        {'From': 'WBGene00000004', 'To': 'A0A0K3AVL7', 'annotation_score': 57.0},
+        {'From': 'WBGene00000004', 'To': 'O17395', 'annotation_score': 137.2},
+    ]
+
+
+def test_parse_id_mapping_tsv_without_annotation_column():
+    # Some mapping directions return only From/target with no Annotation column. The parser must
+    # still yield the fixed schema, with annotation_score all-null so downstream skips score-sorting
+    # and preserves the input row order (matching format_annotations' current no-Annotation branch).
+    results = ['From\tTo', 'id1\tWBID1', 'id2\tWBID2.2', 'id2\tWBID2.1']
+    df = GeneIDTranslator._parse_id_mapping_tsv(results).collect()
+    assert dict(df.schema) == {'From': pl.Utf8, 'To': pl.Utf8, 'annotation_score': pl.Float64}
+    assert df.select('From', 'To').to_dicts() == [
+        {'From': 'id1', 'To': 'WBID1'},
+        {'From': 'id2', 'To': 'WBID2.2'},
+        {'From': 'id2', 'To': 'WBID2.1'},
+    ]
+    assert df['annotation_score'].is_null().all()
+
+
+# track the module's schema (single source of truth) so these tests can't drift from it
+TRANSLATION_CACHE_SCHEMA = io.TRANSLATION_CACHE_SCHEMA
+
+
+def _translation_rows(mapping):
+    return pl.DataFrame(mapping, schema=TRANSLATION_CACHE_SCHEMA)
+
+
+def test_translation_cache_write_read_roundtrip(tmp_path, monkeypatch):
+    monkeypatch.setattr(io, 'get_todays_cache_dir', lambda: tmp_path)
+    rows = _translation_rows({'From': ['g1', 'g1', 'g2'], 'To': ['A', 'B', 'C'],
+                              'annotation_score': [5.0, 3.0, 1.0]})
+    io._write_translation_cache_fragment('WormBase', 'UniProtKB', rows)
+    got = io._read_translation_cache('WormBase', 'UniProtKB').collect()
+    assert dict(got.schema) == TRANSLATION_CACHE_SCHEMA
+    assert sorted(got.iter_rows()) == sorted(rows.iter_rows())
+
+
+def test_translation_cache_dedups_identical_fragments(tmp_path, monkeypatch):
+    # Concurrent writers (<=5 GeneIDTranslator.run calls per run, plus other processes) can each write
+    # a fragment holding the same freshly-fetched rows. The read must dedup so duplicated rows don't
+    # inflate the store or skew resolution.
+    monkeypatch.setattr(io, 'get_todays_cache_dir', lambda: tmp_path)
+    rows = _translation_rows({'From': ['g1', 'g2'], 'To': ['A', 'B'], 'annotation_score': [5.0, 1.0]})
+    io._write_translation_cache_fragment('WormBase', 'UniProtKB', rows)
+    io._write_translation_cache_fragment('WormBase', 'UniProtKB', rows)
+    got = io._read_translation_cache('WormBase', 'UniProtKB').collect()
+    assert sorted(got.iter_rows()) == sorted(rows.iter_rows())
+
+
+def test_translation_cache_read_preserves_row_order(tmp_path, monkeypatch):
+    # Resolution can be row-order-sensitive for mapping directions with no annotation score (the dup
+    # winner is the first From occurrence), so a cache read must return rows in a stable, first-seen
+    # order rather than the arbitrary order of an unordered unique() -- otherwise a subset/overlap
+    # re-run could reproduce a different mapping.
+    monkeypatch.setattr(io, 'get_todays_cache_dir', lambda: tmp_path)
+    rows = _translation_rows({'From': ['g1', 'g2', 'g3', 'g4'], 'To': ['A', 'B', 'C', 'D'],
+                              'annotation_score': [None, None, None, None]})
+    io._write_translation_cache_fragment('WormBase', 'X', rows)
+    got = io._read_translation_cache('WormBase', 'X').collect()
+    assert got.select('From', 'To').rows() == rows.select('From', 'To').rows()
+
+
+def test_translation_cache_isolated_per_db_pair_and_empty_when_absent(tmp_path, monkeypatch):
+    monkeypatch.setattr(io, 'get_todays_cache_dir', lambda: tmp_path)
+    io._write_translation_cache_fragment(
+        'WormBase', 'UniProtKB', _translation_rows({'From': ['g1'], 'To': ['A'], 'annotation_score': [5.0]}))
+    # a different (from_db, to_db) store -- and an entirely absent one -- both read back empty, with schema
+    other = io._read_translation_cache('WormBase', 'Ensembl').collect()
+    assert other.height == 0
+    assert dict(other.schema) == TRANSLATION_CACHE_SCHEMA
+
+
+def test_get_mapping_results_fetches_only_cache_misses(tmp_path, monkeypatch):
+    # The per-gene cache means a subset/overlap re-run only sends the cache-miss ids to UniProt, and a
+    # full cache hit does zero network I/O -- while the returned mapping stays identical to an all-fresh
+    # fetch (bit-identical reuse).
+    monkeypatch.setattr(io, 'get_todays_cache_dir', lambda: tmp_path)
+    monkeypatch.setattr(io, '_get_id_abbreviation_dicts', _mock_gene_id_abbrev_dict)
+    translator = GeneIDTranslator('WormBase', 'UniProtKB', verbose=False)
+
+    fetched_batches = []
+
+    def fake_fetch(self, to_db, from_db, ids, session):
+        fetched_batches.append(tuple(ids))
+        return _translation_rows({'From': list(ids), 'To': [f'UP{i}' for i in ids],
+                                  'annotation_score': [5.0] * len(ids)}).lazy()
+
+    monkeypatch.setattr(GeneIDTranslator, '_fetch_mapping_results', fake_fetch)
+
+    def mapping(lf):
+        return {f: t for f, t in lf.collect().select('From', 'To').iter_rows()}
+
+    # first call: every id is a miss
+    first = translator.get_mapping_results('UniProtKB', 'WormBase', ('A', 'B'), session=Mock())
+    assert fetched_batches == [('A', 'B')]
+    assert mapping(first) == {'A': 'UPA', 'B': 'UPB'}
+
+    # overlapping call: only the new id 'C' is fetched, but all three come back
+    second = translator.get_mapping_results('UniProtKB', 'WormBase', ('A', 'B', 'C'), session=Mock())
+    assert fetched_batches == [('A', 'B'), ('C',)]
+    assert mapping(second) == {'A': 'UPA', 'B': 'UPB', 'C': 'UPC'}
+
+    # full cache hit: no further fetch at all
+    third = translator.get_mapping_results('UniProtKB', 'WormBase', ('A', 'B'), session=Mock())
+    assert fetched_batches == [('A', 'B'), ('C',)]
+    assert mapping(third) == {'A': 'UPA', 'B': 'UPB'}
+
+
+def test_get_mapping_results_caches_negatives_and_does_not_requery(tmp_path, monkeypatch):
+    # ids UniProt returns nothing for are recorded as negatives, so a later subset re-run neither
+    # re-queries them nor loses the "nothing mapped" signal.
+    monkeypatch.setattr(io, 'get_todays_cache_dir', lambda: tmp_path)
+    monkeypatch.setattr(io, '_get_id_abbreviation_dicts', _mock_gene_id_abbrev_dict)
+    translator = GeneIDTranslator('WormBase', 'UniProtKB', verbose=False)
+
+    fetched_batches = []
+
+    def fake_fetch(self, to_db, from_db, ids, session):
+        fetched_batches.append(tuple(ids))
+        mappable = [gene_id for gene_id in ids if gene_id == 'A']  # only 'A' maps; the rest are negatives
+        if not mappable:
+            return None
+        return _translation_rows({'From': mappable, 'To': [f'UP{i}' for i in mappable],
+                                  'annotation_score': [5.0] * len(mappable)}).lazy()
+
+    monkeypatch.setattr(GeneIDTranslator, '_fetch_mapping_results', fake_fetch)
+
+    def mapping(lf):
+        return {} if lf is None else {f: t for f, t in lf.collect().select('From', 'To').iter_rows()}
+
+    first = translator.get_mapping_results('UniProtKB', 'WormBase', ('A', 'B'), session=Mock())
+    assert mapping(first) == {'A': 'UPA'}
+    assert fetched_batches == [('A', 'B')]
+
+    # 'B' is now a known negative: re-running with B plus a new miss C fetches only C, not B
+    second = translator.get_mapping_results('UniProtKB', 'WormBase', ('A', 'B', 'C'), session=Mock())
+    assert fetched_batches == [('A', 'B'), ('C',)]
+    assert mapping(second) == {'A': 'UPA'}
+
+    # a request for only known-negatives does zero network I/O and returns None ("nothing mapped")
+    third = translator.get_mapping_results('UniProtKB', 'WormBase', ('B', 'C'), session=Mock())
+    assert fetched_batches == [('A', 'B'), ('C',)]
+    assert third is None
+
+
+def _fake_up_fetch(self, to_db, from_db, ids, session):
+    return _translation_rows({'From': list(ids), 'To': [f'UP{i}' for i in ids],
+                              'annotation_score': [5.0] * len(ids)}).lazy()
+
+
+@pytest.mark.parametrize('broken', ['_read_translation_cache', '_write_translation_cache_fragment'])
+def test_get_mapping_results_degrades_when_cache_io_fails(tmp_path, monkeypatch, broken):
+    # The cache is best-effort: a corrupt/unreadable store, or a failed write (disk full, permission),
+    # must never break a translation -- it falls back to fetching and still returns the mapping.
+    monkeypatch.setattr(io, 'get_todays_cache_dir', lambda: tmp_path)
+    monkeypatch.setattr(io, '_get_id_abbreviation_dicts', _mock_gene_id_abbrev_dict)
+
+    def boom(*args, **kwargs):
+        raise OSError('cache is broken')
+
+    monkeypatch.setattr(io, broken, boom)
+    monkeypatch.setattr(GeneIDTranslator, '_fetch_mapping_results', _fake_up_fetch)
+    translator = GeneIDTranslator('WormBase', 'UniProtKB', verbose=False)
+
+    res = translator.get_mapping_results('UniProtKB', 'WormBase', ('A', 'B'), session=Mock())
+    assert {f: t for f, t in res.collect().select('From', 'To').iter_rows()} == {'A': 'UPA', 'B': 'UPB'}
 
 
 def test_save_csv():
@@ -591,7 +775,10 @@ mapped_ids_truth_rev = {b: a for a, b in zip(mapped_ids_truth.keys(), mapped_ids
                          [(ids_uniprot, 'UniProtKB', 'WormBase', mapped_ids_truth),
                           (ids_wormbase, 'WormBase', 'UniProtKB', mapped_ids_truth_rev)])
 @pytest.mark.skipif(not UNIPROT_AVAILABLE, reason='UniProt REST API is not available at the moment')
-def test_map_gene_ids_connectivity(ids, map_from, map_to, expected_dict):
+def test_map_gene_ids_connectivity(ids, map_from, map_to, expected_dict, tmp_path, monkeypatch):
+    # isolate the per-gene translation cache so this stays a true connectivity test (fresh cache -> a
+    # real UniProt fetch each run) and doesn't pollute the user's real cache dir
+    monkeypatch.setattr(io, 'get_todays_cache_dir', lambda: tmp_path)
     mapped_ids = GeneIDTranslator(map_from, map_to).run(ids)
     for geneid in ids:
         assert geneid in mapped_ids
@@ -615,7 +802,8 @@ def test_map_gene_ids_to_same_set(id_type):
                            'From\tTo\nP34544\tWBGene00019883\nQ27395\tWBGene00023497\nP12844\tWBGene00003515\n',
                            {'P34544': 'WBGene00019883', 'Q27395': 'WBGene00023497', 'P12844': 'WBGene00003515'}
                            )])
-def test_map_gene_ids_request(monkeypatch, ids, map_from, map_to, req_from, req_to, req_query, txt, truth):
+def test_map_gene_ids_request(monkeypatch, ids, map_from, map_to, req_from, req_to, req_query, txt, truth, tmp_path):
+    monkeypatch.setattr(io, 'get_todays_cache_dir', lambda: tmp_path)  # isolate the translation cache
     legal_types = get_legal_gene_id_types()
 
     def mock_get(url, params=None):
@@ -662,7 +850,12 @@ def test_map_gene_ids_with_duplicates(monkeypatch, ids, map_from, map_to, txt, r
             return_txt = txt if map_from == 'UniProtKB' else rev_txt
         else:
             raise ValueError(self.map_to, self.map_from)
-        return return_txt.split('\n')
+        # mirror the real get_mapping_results contract: a typed LazyFrame, or None when only a header
+        # row / empty response came back.
+        lines = [line for line in return_txt.split('\n') if line]
+        if len(lines) <= 1:
+            return None
+        return GeneIDTranslator._parse_id_mapping_tsv(lines)
 
     monkeypatch.setattr(io, '_get_id_abbreviation_dicts', mock_abbrev_dict)
     monkeypatch.setattr(GeneIDTranslator, 'get_mapping_results', mock_get_mapping_results)
@@ -720,7 +913,7 @@ def test_handle_duplicates_else_branch_picks_highest_annotation_score(monkeypatc
         assert map_to == GeneIDTranslator.UNIPROTKB_TO
         assert map_from == 'WormBase'
         assert set(ids) == {'WB_a', 'WB_b', 'WB_c'}
-        return rev_results
+        return GeneIDTranslator._parse_id_mapping_tsv(rev_results)
 
     monkeypatch.setattr(GeneIDTranslator, 'get_mapping_results', mock_get_mapping_results)
 

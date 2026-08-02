@@ -23,6 +23,7 @@ import subprocess
 import threading
 import time
 import typing
+import uuid
 import warnings
 from collections import OrderedDict
 from datetime import date, datetime
@@ -1927,6 +1928,48 @@ class PantherOrthologMapper:
         return OrthologDict(mapping_one2many)
 
 
+# Per-gene UniProt translation cache (issue #185). Parsed mapping rows are cached under the daily
+# cache dir (so they rotate/expire with everything else in get_todays_cache_dir()), in an append-only
+# set of Parquet fragments -- one directory per (from_db, to_db). Each write drops a new, uniquely
+# named fragment (temp file + atomic rename), so concurrent writers -- the <=5 GeneIDTranslator.run
+# calls within one run, plus separate processes/app instances -- never corrupt or clobber each other:
+# lock-free, and safe on network/cluster filesystems (no byte-range locks). Reads scan the whole
+# directory and dedup. This lets a subset/overlap re-run reuse already-mapped genes and only query
+# UniProt for the cache-miss ids.
+TRANSLATION_CACHE_SCHEMA = {'From': pl.Utf8, 'To': pl.Utf8, 'annotation_score': pl.Float64}
+
+
+def _translation_cache_dir(from_db: str, to_db: str) -> Path:
+    # Hash the (from_db, to_db) pair into the directory name: db identifiers such as 'UniProtKB AC/ID'
+    # contain filesystem-unfriendly characters, and hashing yields a valid, collision-resistant name.
+    digest = hashlib.sha256(f'{from_db}|{to_db}'.encode('utf-8')).hexdigest()[:32]
+    return get_todays_cache_dir().joinpath('gene_id_translation', digest)
+
+
+def _write_translation_cache_fragment(from_db: str, to_db: str, rows: pl.DataFrame):
+    cache_dir = _translation_cache_dir(from_db, to_db)
+    cache_dir.mkdir(parents=True, exist_ok=True)
+    # Write to a temp name, then atomically rename into place, so a reader never sees a half-written
+    # fragment and two writers never touch the same file.
+    name = uuid.uuid4().hex
+    tmp_path = cache_dir.joinpath(f'.{name}.parquet.tmp')
+    final_path = cache_dir.joinpath(f'{name}.parquet')
+    rows.write_parquet(tmp_path)
+    os.replace(tmp_path, final_path)
+
+
+def _read_translation_cache(from_db: str, to_db: str) -> pl.LazyFrame:
+    cache_dir = _translation_cache_dir(from_db, to_db)
+    fragments = sorted(cache_dir.glob('*.parquet')) if cache_dir.exists() else []
+    if not fragments:
+        return pl.DataFrame(schema=TRANSLATION_CACHE_SCHEMA).lazy()
+    # Dedup identical rows that concurrent writers may have written into separate fragments.
+    # maintain_order=True keeps the read deterministic (fragments are scanned in sorted name order):
+    # resolution can be row-order-sensitive for mapping directions with no annotation score, so an
+    # unordered unique() could otherwise make a subset/overlap re-run pick a different mapping.
+    return pl.scan_parquet(fragments).unique(maintain_order=True)
+
+
 class GeneIDTranslator:
     UNIPROTKB_FROM = "UniProtKB_from"
     UNIPROTKB_TO = "UniProtKB_to"
@@ -2035,7 +2078,7 @@ class GeneIDTranslator:
             session = self.session
             results = self.get_mapping_results(self.map_to, self.map_from, ids, session)
 
-            if results is None or len(results) <= 1:
+            if results is None:
                 if self.verbose:
                     warnings.warn("No entries were mapped successfully.")
                 return GeneIDDict({})
@@ -2053,17 +2096,70 @@ class GeneIDTranslator:
         self.reformat_ids(output_dict)
         return GeneIDDict(output_dict)
 
-    def get_mapping_results(self, map_to: str, map_from: str, ids: Tuple[str, ...], session: requests.Session):
+    def get_mapping_results(self, map_to: str, map_from: str, ids: Tuple[str, ...],
+                            session: requests.Session) -> Union[pl.LazyFrame, None]:
+        """Map ``ids`` from ``map_from`` to ``map_to``, returning a fixed-schema LazyFrame
+        (``From``/``To``/``annotation_score``) of the candidate mappings, or ``None`` when nothing was
+        mapped.
+
+        Backed by the per-gene disk cache: ids already translated today are served from the cache and
+        only the cache-miss ids are sent to UniProt in a single job. The *raw candidate rows* are
+        cached (not the resolved mapping), and resolution runs over the union of cached + freshly
+        fetched rows, so a subset/overlap re-run reproduces a full fetch exactly."""
         id_dict_to, id_dict_from = self.id_dicts
         to_db = id_dict_to[map_to]
         from_db = id_dict_from[map_from]
 
+        ids = list(ids)
+        try:
+            cached = _read_translation_cache(from_db, to_db).collect()
+        except Exception as err:  # a corrupt/unreadable cache must never break translation
+            if self.verbose:
+                warnings.warn(f"Could not read the gene-ID translation cache ({err}); fetching from UniProt.")
+            cached = pl.DataFrame(schema=TRANSLATION_CACHE_SCHEMA)
+        cached_ids = set(cached['From'].to_list())
+        miss_ids = [gene_id for gene_id in dict.fromkeys(ids) if gene_id not in cached_ids]
+
+        if miss_ids:
+            fresh = self._fetch_mapping_results(to_db, from_db, tuple(miss_ids), session)
+            fresh_rows = fresh.collect() if fresh is not None else pl.DataFrame(schema=TRANSLATION_CACHE_SCHEMA)
+            # Record a negative marker for every miss id UniProt returned nothing for, so a later
+            # subset re-run doesn't re-query the unmappable ids forever.
+            mapped = set(fresh_rows['From'].to_list())
+            negatives = [gene_id for gene_id in miss_ids if gene_id not in mapped]
+            new_rows = fresh_rows
+            if negatives:
+                new_rows = pl.concat([fresh_rows, pl.DataFrame(
+                    {'From': negatives, 'To': [None] * len(negatives),
+                     'annotation_score': [None] * len(negatives)}, schema=TRANSLATION_CACHE_SCHEMA)])
+            if new_rows.height > 0:
+                try:
+                    _write_translation_cache_fragment(from_db, to_db, new_rows)
+                except Exception as err:  # a failed write (disk full, permission) is non-fatal
+                    if self.verbose:
+                        warnings.warn(f"Could not write to the gene-ID translation cache ({err}).")
+            cached = pl.concat([cached, new_rows])
+
+        # Resolve over the requested ids' positive candidate rows (negatives are cache-only markers).
+        requested = cached.filter(pl.col('From').is_in(set(ids)) & pl.col('To').is_not_null())
+        if requested.height == 0:
+            return None
+        return requested.lazy()
+
+    def _fetch_mapping_results(self, to_db: str, from_db: str, ids: Tuple[str, ...],
+                               session: requests.Session) -> Union[pl.LazyFrame, None]:
+        """Submit a single UniProt id-mapping job for ``ids`` and return its results as a fixed-schema
+        LazyFrame (``From``/``To``/``annotation_score``), or ``None`` when nothing usable came back
+        (job not ready, or only a header row / empty response)."""
         job_id = self.submit_id_mapping(to_db, from_db, session, ids)
 
         if self.check_id_mapping_results_ready(session, job_id, self.POLLING_INTERVAL, self.verbose):
             link = self.get_id_mapping_results_link(session, job_id, self.verbose)
             results = self.get_id_mapping_results_search(session, link)
-            return results
+            if results is None or len(results) <= 1:
+                return None
+            return self._parse_id_mapping_tsv(results)
+        return None
 
     @staticmethod
     def submit_id_mapping(to_db: str, from_db: str, session: requests.Session, ids: Tuple[str, ...]):
@@ -2216,21 +2312,49 @@ class GeneIDTranslator:
         print(f"Fetched: {n} / {total}")
 
     @staticmethod
-    def format_annotations(results):
-        df = pl.read_csv(StringIO('\n'.join(results)), separator='\t')
-        # sort annotations by decreasing annotation score, so that the most relevant annotations are at the top
+    def _parse_id_mapping_tsv(results) -> pl.LazyFrame:
+        """Parse UniProt's idmapping TSV into a fixed-schema frame: ``From``/``To`` (both Utf8) and a
+        Float64 ``annotation_score``.
+
+        This is the single TSV-to-frame boundary so that the resolution code (``format_annotations`` /
+        ``handle_duplicates``) and the per-gene translation cache share one predefined schema. The
+        accession column UniProt names ``Entry`` (or ``To`` in some directions) becomes ``To``; the
+        ``Annotation`` column becomes ``annotation_score`` as Float64 (scores can be fractional, and
+        an empty score is read as 0). When the mapping direction returns no ``Annotation`` column,
+        ``annotation_score`` is an all-null Float64 column so downstream can skip score-sorting.
+        Rows are neither sorted nor deduplicated here -- that stays in ``format_annotations``.
+        """
+        # infer_schema_length=0 -> read every column as Utf8, so numeric-looking gene IDs (e.g. Entrez
+        # GeneIDs) are not silently coerced to integers.
+        df = pl.read_csv(StringIO('\n'.join(results)), separator='\t', infer_schema_length=0)
+        to_col = next(col for col in df.columns if col not in ('From', 'Annotation'))
         if 'Annotation' in df.columns:
-            # Break ties on the target id, so equal-score duplicates resolve deterministically and do
-            # not depend on the order UniProt returned the rows (paginated vs. streamed) or on the
-            # non-stable single-key sort.
-            tiebreak_cols = [col for col in df.columns if col not in ('From', 'Annotation')]
-            if df['Annotation'].dtype not in pl.FLOAT_DTYPES:
-                df = df.lazy().with_columns(
-                    Annotation=pl.col('Annotation').replace('', '0').cast(pl.datatypes.Int16))
-            else:
-                df = df.lazy()
-            df = df.sort(['Annotation', *tiebreak_cols],
-                         descending=[True, *([False] * len(tiebreak_cols))]).drop('Annotation').collect()
+            annotation_score = pl.col('Annotation').replace('', '0').cast(pl.Float64)
+        else:
+            annotation_score = pl.lit(None, dtype=pl.Float64)
+        return df.lazy().select(
+            From=pl.col('From').cast(pl.Utf8),
+            To=pl.col(to_col).cast(pl.Utf8),
+            annotation_score=annotation_score,
+        )
+
+    @staticmethod
+    def _sort_by_annotation_score(frame):
+        # Sort by descending annotation score, breaking ties on the target id, so equal-score
+        # duplicates resolve deterministically and don't depend on the order UniProt returned the rows
+        # (paginated vs. streamed) or on the non-stable single-key sort. Shared by the forward and
+        # reverse resolution paths so this reproducibility-critical tiebreak lives in one place.
+        # Works on both eager DataFrames and LazyFrames.
+        return frame.sort(['annotation_score', 'To'], descending=[True, False])
+
+    @staticmethod
+    def format_annotations(results: pl.LazyFrame):
+        df = results.collect()
+        # Rank the most relevant annotations first. When the mapping direction carries no annotation
+        # score (all-null), keep the input row order (there's nothing to rank by).
+        if not df['annotation_score'].is_null().all():
+            df = GeneIDTranslator._sort_by_annotation_score(df)
+        df = df.select('From', 'To')
         output_dict = {}
         duplicates = {}
 
@@ -2257,19 +2381,15 @@ class GeneIDTranslator:
                 ids_to_rev_map = parsing.flatten(parsing.data_to_list(duplicates.values()))
 
                 rev_results = self.get_mapping_results(self.UNIPROTKB_TO, self.map_to, ids_to_rev_map, session)
-                # TODO: if job fails?
-                rev_df_raw = pl.read_csv(StringIO('\n'.join(rev_results)), separator='\t')
-                # Break ties on the target id so the cross-gene claiming below is deterministic and
-                # independent of the row order UniProt returned (paginated vs. streamed).
-                rev_tiebreak_cols = [col for col in rev_df_raw.columns if col not in ('From', 'Annotation')]
-                rev_df = rev_df_raw.lazy().with_columns(pl.col('Annotation').cast(pl.Float64)).sort(
-                    ['Annotation', *rev_tiebreak_cols],
-                    descending=[True, *([False] * len(rev_tiebreak_cols))]).drop('Annotation').collect()
                 duplicates_chosen = {}
-                for match_from_rev, match_to_rev in rev_df.iter_rows():
-                    if match_to_rev not in output_dict:
-                        output_dict[match_to_rev] = match_from_rev
-                        duplicates_chosen[match_to_rev] = match_from_rev
+                if rev_results is not None:
+                    # Rank by annotation score (ties broken by target id) so the cross-gene claiming
+                    # below is deterministic and independent of the row order UniProt returned.
+                    rev_df = self._sort_by_annotation_score(rev_results).select('From', 'To').collect()
+                    for match_from_rev, match_to_rev in rev_df.iter_rows():
+                        if match_to_rev not in output_dict:
+                            output_dict[match_to_rev] = match_from_rev
+                            duplicates_chosen[match_to_rev] = match_from_rev
             if self.verbose:
                 warnings.warn(f"Duplicate mappings were found for {len(duplicates)} genes.  The following mapping "
                               f"was chosen for them based on their annotation score: {duplicates_chosen}")
