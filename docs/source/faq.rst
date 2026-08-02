@@ -28,7 +28,7 @@ Try one of the following methods to solve your problem:
         pip install RNAlysis[randomization]
 
    See the next FAQ items to solve issues with a specific extended feature.
-3. Make sure your version of Python is supported by *RNAlysis*. Currently, any Python version between 3.7-3.10 should work, but 3.8 would probably work best.
+3. Make sure your version of Python is supported by *RNAlysis*. Currently, any Python version between 3.10-3.14 should work.
 4. Try `creating a new Python environment <https://towardsdatascience.com/virtual-environments-104c62d48c54?gi=40d0a7444922>`_ for *RNAlysis*, or `re-installing Python <http://docs.python-guide.org/en/latest/starting/installation/>`_.
 
 If you are still having trouble installing *RNAlysis*, please submit a `bug report <https://github.com/GuyTeichman/RNAlysis/issues>`_ or `contact me <mailto:guyteichman@gmail.com>`_.
@@ -53,7 +53,7 @@ I get an error message when I try to install the *RNAlysis* `randomization` feat
 The randomization module makes heavy use of the Python package `numba` for performance, but that unfortunately means that installation can cause issues, particularly on computers running Windows.
 To successfully install `numba`, try one of the following solutions:
 
-1. Make sure your Python version is supported by *RNAlysis*. Currently *RNAlysis* supports Python versions 3.7-3.10, but version 3.8 usually works best.
+1. Make sure your Python version is supported by *RNAlysis*. Currently *RNAlysis* supports Python versions 3.10-3.14.
 2. Try `creating a new Python environment <https://towardsdatascience.com/virtual-environments-104c62d48c54?gi=40d0a7444922>`_ for *RNAlysis*, or `re-installing Python <http://docs.python-guide.org/en/latest/starting/installation/>`_.
 3. Instead of installing Python normally, try installing the `Anaconda or Miniconda <https://www.edureka.co/blog/python-anaconda-tutorial/>`_ Python distribution.
 You can then install `numba` via anaconda and *RNAlysis* via pip, like so:
