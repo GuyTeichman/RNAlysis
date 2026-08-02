@@ -272,6 +272,49 @@ def test_go_elim_serial_keeps_original_annotations_pristine():
         "elim's working copy shares set objects with the original annotations"
 
 
+def test_go_elim_parallel_uses_independent_annotation_copies(monkeypatch):
+    # the parallel elim path builds one working-copy dict per namespace; each gene set must be an
+    # independent copy so that per-term difference_update on the copy cannot corrupt the original
+    # self.annotations (read back as the 'unfiltered' reference). Guards the parallel copy site.
+    # _go_elim_pvalues_parallel is stubbed so the copy is inspected without running joblib.
+    annotations = _df_to_dict(io.load_table('tests/test_files/goa_table.csv'), null_mode=False)
+    with open('tests/test_files/obo_for_go_tests.obo', 'r') as f:
+        dag_tree = ontology.DAGTree(f, ['is_a'])
+
+    captured = {}
+
+    def capture(self, progress_bar_desc=''):
+        captured['mutable'] = self.mutable_annotations
+        return {}
+
+    monkeypatch.setattr(GOEnrichmentRunner, '_go_elim_pvalues_parallel', capture)
+
+    e = GOEnrichmentRunner.__new__(GOEnrichmentRunner)
+    e.dag_tree = dag_tree
+    e.annotations = annotations
+    e.attributes = list(annotations.keys())
+    e.attributes_set = set(e.attributes)
+    e.propagate_annotations = 'elim'
+    e.parallel_backend = 'loky'  # only reached inside the (stubbed) parallel method
+    e._calculate_enrichment_parallel()
+
+    for namespace_copy in captured['mutable']:
+        for go_id, genes in namespace_copy.items():
+            assert genes == e.annotations[go_id]
+            assert genes is not e.annotations[go_id], \
+                "parallel elim working copy shares set objects with the original annotations"
+
+    # concretely: mutating a copy must leave the original untouched
+    for namespace_copy in captured['mutable']:
+        for go_id, genes in namespace_copy.items():
+            if genes:
+                before = set(e.annotations[go_id])
+                genes.pop()
+                assert e.annotations[go_id] == before, \
+                    "mutating the parallel elim copy changed the original annotations"
+                return
+
+
 def test_weight_pvals(monkeypatch):
     goa_df = io.load_table('tests/test_files/goa_table.csv')
     gene_set = {'gene1', 'gene2', 'gene5', 'gene12', 'gene13', 'gene17', 'gene19', 'gene25', 'gene27', 'gene28'}
