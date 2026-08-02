@@ -659,6 +659,130 @@ def test_map_gene_ids_with_duplicates(monkeypatch, ids, map_from, map_to, txt, r
         assert res[gene_id] == truth[gene_id]
 
 
+def _mock_gene_id_abbrev_dict():
+    d = {'WormBase': 'WormBase',
+        'UniProtKB_to': 'UniProtKB',
+        'UniProtKB_from': 'UniProtKB_AC-ID',
+        'UniProtKB': 'UniProtKB',
+        'Ensembl': 'Ensembl'}
+    return d, d
+
+
+def test_handle_duplicates_uniprotkb_to_branch_picks_first_candidate(monkeypatch):
+    # when mapping *to* UniProtKB, handle_duplicates() should simply keep the first candidate
+    # (results are already pre-sorted by annotation score by format_annotations()) and must not
+    # attempt a reverse-mapping lookup at all
+    monkeypatch.setattr(io, '_get_id_abbreviation_dicts', _mock_gene_id_abbrev_dict)
+    translator = GeneIDTranslator('WormBase', 'UniProtKB', verbose=False)
+    assert translator.map_to == GeneIDTranslator.UNIPROTKB_TO
+
+    def fail_if_called(*args, **kwargs):
+        raise AssertionError('get_mapping_results should not be called on the UniProtKB_to branch')
+
+    monkeypatch.setattr(translator, 'get_mapping_results', fail_if_called)
+
+    output_dict = {}
+    duplicates = {'gene1': ['UniProtA', 'UniProtB', 'UniProtC']}
+    translator.handle_duplicates(output_dict, duplicates, session=Mock())
+
+    assert output_dict == {'gene1': 'UniProtA'}
+
+
+def test_handle_duplicates_else_branch_picks_highest_annotation_score(monkeypatch):
+    # when mapping to anything other than UniProtKB, ambiguous duplicates are resolved by
+    # reverse-mapping the candidates back to UniProtKB and picking the one with the highest
+    # Annotation score
+    monkeypatch.setattr(io, '_get_id_abbreviation_dicts', _mock_gene_id_abbrev_dict)
+    translator = GeneIDTranslator('UniProtKB', 'WormBase', verbose=False)
+    assert translator.map_from == GeneIDTranslator.UNIPROTKB_FROM
+    assert translator.map_to == 'WormBase'
+
+    rev_results = ['From\tEntry\tAnnotation',
+                  'WB_a\tid2\t50',
+                  'WB_b\tid2\t999',
+                  'WB_c\tid2\t700']
+    calls = []
+
+    def mock_get_mapping_results(self, map_to, map_from, ids, session):
+        calls.append((map_to, map_from, tuple(ids)))
+        assert map_to == GeneIDTranslator.UNIPROTKB_TO
+        assert map_from == 'WormBase'
+        assert set(ids) == {'WB_a', 'WB_b', 'WB_c'}
+        return rev_results
+
+    monkeypatch.setattr(GeneIDTranslator, 'get_mapping_results', mock_get_mapping_results)
+
+    output_dict = {'id1': 'WB1'}
+    duplicates = {'id2': ['WB_a', 'WB_b', 'WB_c']}
+    translator.handle_duplicates(output_dict, duplicates, session=Mock())
+
+    # 'WB_b' has the highest Annotation score (999) and wins; the lower-scoring candidates for
+    # the same gene ('WB_c', 'WB_a') must not overwrite it
+    assert output_dict == {'id1': 'WB1', 'id2': 'WB_b'}
+    assert len(calls) == 1
+
+
+def test_reformat_ids_strips_version_suffix_when_mapping_to_ensembl(monkeypatch):
+    monkeypatch.setattr(io, '_get_id_abbreviation_dicts', _mock_gene_id_abbrev_dict)
+    translator = GeneIDTranslator('UniProtKB', 'Ensembl', verbose=False)
+    assert translator.map_to == 'Ensembl'
+
+    output_dict = {'gene1': 'ENSG00000001.3', 'gene2': 'ENSG00000002'}
+    translator.reformat_ids(output_dict)
+
+    assert output_dict == {'gene1': 'ENSG00000001', 'gene2': 'ENSG00000002'}
+
+
+def test_reformat_ids_leaves_ids_unchanged_when_not_mapping_to_ensembl(monkeypatch):
+    monkeypatch.setattr(io, '_get_id_abbreviation_dicts', _mock_gene_id_abbrev_dict)
+    translator = GeneIDTranslator('UniProtKB', 'WormBase', verbose=False)
+    assert translator.map_to == 'WormBase'
+
+    output_dict = {'gene1': 'WBGene00000001.3'}
+    translator.reformat_ids(output_dict)
+
+    assert output_dict == {'gene1': 'WBGene00000001.3'}
+
+
+def test_find_best_gene_mapping_picks_best_result_and_swallows_http_error(monkeypatch):
+    # find_best_gene_mapping() is lru_cache'd - clear it so this test's mocked GeneIDTranslator
+    # isn't bypassed by (or doesn't leak into) another test's cached result
+    io.find_best_gene_mapping.cache_clear()
+    calls = []
+
+    class MockGeneIDTranslator:
+        def __init__(self, map_from, map_to, verbose=False):
+            self.map_from = map_from
+            self.map_to = map_to
+
+        def run(self, ids):
+            calls.append((self.map_from, self.map_to))
+            mapping = {
+                ('X', 'A'): {'gene1': 'a1'},
+                ('X', 'B'): {'gene1': 'b1', 'gene2': 'b2'},
+                ('Y', 'A'): {'gene1': 'a1', 'gene2': 'a2'},
+            }
+            key = (self.map_from, self.map_to)
+            if key == ('Y', 'B'):
+                raise requests.exceptions.HTTPError('simulated UniProt failure')
+            return GeneIDDict(mapping.get(key, {}))
+
+    monkeypatch.setattr(io, 'GeneIDTranslator', MockGeneIDTranslator)
+
+    try:
+        result_dict, best_from, best_to = io.find_best_gene_mapping(('gene1', 'gene2'), ('X', 'Y'), ('A', 'B'))
+    finally:
+        io.find_best_gene_mapping.cache_clear()
+
+    # ('X', 'B') and ('Y', 'A') are tied at 2 successfully-mapped genes; the key function breaks
+    # ties in favor of the map_from option that appears later in map_from_options ('Y' over 'X')
+    assert (best_from, best_to) == ('Y', 'A')
+    assert result_dict.mapping_dict == {'gene1': 'a1', 'gene2': 'a2'}
+    # ('Y', 'B') raises an HTTPError - it must be swallowed (returning an empty mapping) rather
+    # than propagating and crashing the whole best-mapping search
+    assert ('Y', 'B') in calls
+
+
 def test_get_todays_cache_dir():
     today = date.today()
     today_str = str(today.year) + '_' + str(today.month).zfill(2) + '_' + str(today.day).zfill(2)
