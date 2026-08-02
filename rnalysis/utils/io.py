@@ -2128,10 +2128,10 @@ class GeneIDTranslator:
             return [line for line in response.text.split("\n") if line]
         return response.text
 
-    # Only the enriched id-mapping result namespaces (UniProtKB/UniRef/UniParc) expose a
-    # /results/stream/ endpoint; the plain /idmapping/results/ path returns 404 for stream, so it
-    # must stay paginated.
-    _STREAMABLE_RESULTS_PATH = re.compile(r'/idmapping/(uniprotkb|uniref|uniparc)/results/')
+    # The UniProtKB id-mapping result namespace exposes a /results/stream/ endpoint (verified live);
+    # the plain /idmapping/results/ path returns 404 for stream, so it must stay paginated. Every
+    # annotation-score mapping targets UniProtKB, so only that namespace is streamed here.
+    _STREAMABLE_RESULTS_PATH = re.compile(r'/idmapping/uniprotkb/results/')
 
     def get_id_mapping_results_search(self, session: requests.Session, link):
         parsed = urlparse(link)
@@ -2185,12 +2185,17 @@ class GeneIDTranslator:
         df = pl.read_csv(StringIO('\n'.join(results)), separator='\t')
         # sort annotations by decreasing annotation score, so that the most relevant annotations are at the top
         if 'Annotation' in df.columns:
+            # Break ties on the target id, so equal-score duplicates resolve deterministically and do
+            # not depend on the order UniProt returned the rows (paginated vs. streamed) or on the
+            # non-stable single-key sort.
+            tiebreak_cols = [col for col in df.columns if col not in ('From', 'Annotation')]
             if df['Annotation'].dtype not in pl.FLOAT_DTYPES:
                 df = df.lazy().with_columns(
                     Annotation=pl.col('Annotation').replace('', '0').cast(pl.datatypes.Int16))
             else:
                 df = df.lazy()
-            df = df.sort('Annotation', descending=True).drop('Annotation').collect()
+            df = df.sort(['Annotation', *tiebreak_cols],
+                         descending=[True, *([False] * len(tiebreak_cols))]).drop('Annotation').collect()
         output_dict = {}
         duplicates = {}
 
@@ -2218,9 +2223,13 @@ class GeneIDTranslator:
 
                 rev_results = self.get_mapping_results(self.UNIPROTKB_TO, self.map_to, ids_to_rev_map, session)
                 # TODO: if job fails?
-                rev_df = pl.read_csv(StringIO('\n'.join(rev_results)), separator='\t').lazy().with_columns(
-                    pl.col('Annotation').cast(pl.Float64)).sort('Annotation', descending=True).drop(
-                    'Annotation').collect()
+                rev_df_raw = pl.read_csv(StringIO('\n'.join(rev_results)), separator='\t')
+                # Break ties on the target id so the cross-gene claiming below is deterministic and
+                # independent of the row order UniProt returned (paginated vs. streamed).
+                rev_tiebreak_cols = [col for col in rev_df_raw.columns if col not in ('From', 'Annotation')]
+                rev_df = rev_df_raw.lazy().with_columns(pl.col('Annotation').cast(pl.Float64)).sort(
+                    ['Annotation', *rev_tiebreak_cols],
+                    descending=[True, *([False] * len(rev_tiebreak_cols))]).drop('Annotation').collect()
                 duplicates_chosen = {}
                 for match_from_rev, match_to_rev in rev_df.iter_rows():
                     if match_to_rev not in output_dict:

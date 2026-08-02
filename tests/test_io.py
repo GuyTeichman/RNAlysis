@@ -201,6 +201,18 @@ def test_format_annotations():
     assert duplicates == {'geneA': ['Pb', 'Pa']}  # Pb (5.0) ranked above Pa (3.0)
 
 
+def test_format_annotations_breaks_ties_deterministically():
+    # When two targets share the same annotation score for one gene, the winner must not depend on
+    # the order UniProt returned the rows (paginated vs. streamed) or on the non-stable polars sort:
+    # the tie is broken by the target id, so the result is reproducible regardless of input order.
+    forward = ['From\tTo\tAnnotation', 'geneA\tPb\t5.0', 'geneA\tPa\t5.0']
+    reverse = ['From\tTo\tAnnotation', 'geneA\tPa\t5.0', 'geneA\tPb\t5.0']
+    out_f, dup_f = GeneIDTranslator.format_annotations(forward)
+    out_r, dup_r = GeneIDTranslator.format_annotations(reverse)
+    assert out_f == out_r == {}
+    assert dup_f == dup_r == {'geneA': ['Pa', 'Pb']}  # Pa wins the tie deterministically (id order)
+
+
 def test_save_csv():
     try:
         df = pl.read_csv('tests/test_files/enrichment_hypergeometric_res.csv')
