@@ -307,3 +307,31 @@ def test_map_gene_to_attr_use_version_keyerror(feature_type, attribute, missing_
     # BUG #2 (fix in #152): use_version unconditionally reads *_version, so a file without those attrs raises KeyError.
     with pytest.raises(KeyError, match=missing_key):
         map_gene_to_attr(GENCODE_GTF, attribute, feature_type, False, True, False)
+
+
+# ------------------------------------------------------------------ anchored-key regex (PR-B, #151, item #3)
+# The Polars rewrite extracts attributes with an anchored regex so a key is never matched inside a longer
+# compound key (e.g. gene_id must not be read from havana_gene_id). These are the tripwire for that: a naive
+# unanchored pattern would capture the WRONG value below.
+def _compound_key_gtf(tmp_path):
+    pth = tmp_path / 'compound.gtf'
+    pth.write_text(
+        '1\thavana\tgene\t100\t200\t.\t+\t.\t'
+        'havana_gene_id "WRONGGENE"; gene_id "RIGHTGENE"; gene_name "GENEA";\n'
+        '1\thavana\ttranscript\t100\t200\t.\t+\t.\t'
+        'havana_gene_id "WRONGGENE"; gene_id "RIGHTGENE"; '
+        'havana_transcript_id "WRONGTX"; transcript_id "RIGHTTX"; gene_name "GENEA";\n',
+        encoding='utf-8', newline='\n')
+    return pth
+
+
+def test_map_transcripts_to_genes_anchored_key_ignores_compound_key(tmp_path):
+    # gene_id / transcript_id must come from the real keys, not havana_gene_id / havana_transcript_id.
+    assert map_transcripts_to_genes(_compound_key_gtf(tmp_path), use_version=False, split_ids=False) == {
+        'RIGHTTX': 'RIGHTGENE'}
+
+
+def test_map_gene_to_attr_anchored_key_ignores_compound_key(tmp_path):
+    # Same guarantee via the map_gene_to_attr extraction path: the gene id key is RIGHTGENE, not WRONGGENE.
+    assert map_gene_to_attr(_compound_key_gtf(tmp_path), 'gene_name', 'gene', False, False, False) == {
+        'RIGHTGENE': 'GENEA'}

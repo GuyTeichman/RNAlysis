@@ -312,33 +312,17 @@ def parse_version(version: str):
     return [int(i) for i in split]
 
 
+# parse_gtf_attributes / parse_gff3_attributes now live in utils.genome_annotation (the single home for all
+# GTF/GFF parsing). These thin shims preserve backwards compatibility for direct importers; the import is
+# deferred to call time to avoid a circular import (genome_annotation imports from this module).
 def parse_gtf_attributes(attr_str: str):
-    attributes_dict = {}
-    for this_attr in attr_str.split('; '):
-        this_attr = this_attr.strip()
-        key_end = this_attr.find(' ')
-        if key_end == -1:
-            continue
-        key = this_attr[:key_end]
-        val_start = this_attr.find('"', key_end)
-        val_end = this_attr.find('"', val_start + 1)
-        val = this_attr[val_start + 1:val_end]
-        attributes_dict[key] = val
-    return attributes_dict
+    from rnalysis.utils import genome_annotation
+    return genome_annotation.parse_gtf_attributes(attr_str)
 
 
 def parse_gff3_attributes(attr_str: str):
-    attributes_dict = {}
-    for this_attr in attr_str.rstrip().split(';'):
-        this_attr = this_attr.strip()
-        if len(this_attr) == 0:
-            continue
-        key, val = this_attr.split('=')
-        val = val.split(',')
-        if len(val) == 1:
-            val = val[0]
-        attributes_dict[key] = val
-    return attributes_dict
+    from rnalysis.utils import genome_annotation
+    return genome_annotation.parse_gff3_attributes(attr_str)
 
 
 def format_dict_for_display(d: dict) -> str:
