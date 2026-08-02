@@ -459,14 +459,13 @@ def common_suffix(strings):
     """Find the common suffix among a list of strings."""
     if not strings:
         return ''
-    if len(strings) == 1:
-        return strings[0]
     s1 = min(strings)
     s2 = max(strings)
-    for i, c in enumerate(reversed(s1)):
-        if c != s2[-(i + 1)]:
+    max_overlap = min(len(s1), len(s2))
+    for i in range(max_overlap):
+        if s1[-(i + 1)] != s2[-(i + 1)]:
             return s1[len(s1) - i:]
-    return s1
+    return s1[len(s1) - max_overlap:]
 
 
 def remove_suffix(s: str, suffix: Union[str, List[str]]):
