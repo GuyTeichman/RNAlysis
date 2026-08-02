@@ -263,3 +263,47 @@ class TestDESeqRunner:
 
         expected = expected.replace('*PLACEHOLDERPATH*', out_path.parent.as_posix())
         assert out == expected
+
+    @pytest.mark.parametrize("data,design_matrix,comparisons,scale_factor_path,scale_factors_ndims,expected_path", [
+        ('tests/test_files/big_counted.csv', 'tests/test_files/test_design_matrix.csv',
+         [('condition', 'cond2', 'cond1')], 'tests/test_files/deseq2_tests/scaling_factors_1d.csv', 1,
+         'tests/test_files/deseq2_tests/case6/expected_deseq_script_normfactors_1d.R'),
+        ('tests/test_files/big_counted.csv', 'tests/test_files/test_design_matrix.csv',
+         [('condition', 'cond2', 'cond1')], 'tests/test_files/deseq2_tests/scaling_factors_2d.csv', 2,
+         'tests/test_files/deseq2_tests/case7/expected_deseq_script_normfactors_2d.R'),
+    ])
+    def test_create_deseq2_script_with_scale_factors(self, data, design_matrix, comparisons, scale_factor_path,
+                                                      scale_factors_ndims, expected_path):
+        runner = DESeqRunner(data, design_matrix, comparisons, scale_factor_path=scale_factor_path,
+                             scale_factors_ndims=scale_factors_ndims)
+        with open(expected_path) as f:
+            expected = f.read()
+
+        out_path = runner.create_script()
+        assert Path(out_path).exists()
+        with open(out_path) as f:
+            out = f.read()
+
+        expected = expected.replace('*PLACEHOLDERPATH*', out_path.parent.as_posix())
+        assert out == expected
+
+    @pytest.mark.parametrize("data,design_matrix,comparisons,expected_path", [
+        ('tests/test_files/big_counted.csv', 'tests/test_files/test_design_matrix.csv',
+         [('condition', 'cond2', 'cond1')],
+         'tests/test_files/deseq2_tests/case1/expected_deseq_script_1.R'),
+    ])
+    def test_create_deseq2_script_without_scale_factors_strips_normfactors_placeholder(
+            self, data, design_matrix, comparisons, expected_path):
+        # cooks_cutoff=False matches the golden file used by test_create_deseq2_script's case1
+        runner = DESeqRunner(data, design_matrix, comparisons, scale_factor_path=None, cooks_cutoff=False)
+        with open(expected_path) as f:
+            expected = f.read()
+
+        out_path = runner.create_script()
+        assert Path(out_path).exists()
+        with open(out_path) as f:
+            out = f.read()
+
+        assert '$NORMFACTORS' not in out
+        expected = expected.replace('*PLACEHOLDERPATH*', out_path.parent.as_posix())
+        assert out == expected

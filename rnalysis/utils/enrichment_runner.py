@@ -1,9 +1,9 @@
 import abc
 import collections
+import concurrent.futures
 import itertools
 import logging
 import warnings
-from copy import deepcopy
 from functools import lru_cache
 from pathlib import Path
 from typing import Collection, Dict, Iterable, List, Literal, Set, Tuple, Union
@@ -64,6 +64,13 @@ class SizeHandler:
                                 transform=handlebox.get_transform())
         handlebox.add_artist(patch)
         return patch
+
+
+# memoize p-values keyed on (bg_size, en_size, attr_size, en_attr_size). The p-value is a pure function of
+# these four integer counts, and the same term-shape recurs across the thousands of GO terms tested in a single
+# run (typically >90% of terms are duplicates, since bg_size/en_size are constant within a run). Bounded so a
+# long-lived GUI session testing many different gene sets cannot grow the cache without limit.
+_PVAL_CACHE_MAXSIZE = 2 ** 16
 
 
 class StatsTest(abc.ABC):
@@ -177,7 +184,7 @@ class FishersExactTest(StatsTest):
         return [attribute_name, en_size, obs, exp, log2fc, pval]
 
     @staticmethod
-    @lru_cache(maxsize=256, typed=False)
+    @lru_cache(maxsize=_PVAL_CACHE_MAXSIZE, typed=False)
     def _calc_fisher_pval(bg_size: int, en_size: int, attr_size: int, en_attr_size: int):
         contingency_table = [[en_attr_size, attr_size - en_attr_size],
                              [en_size - en_attr_size, bg_size - attr_size - en_size + en_attr_size]]
@@ -199,6 +206,7 @@ class HypergeometricTest(StatsTest):
         return [attribute_name, en_size, obs, exp, log2fc, pval]
 
     @staticmethod
+    @lru_cache(maxsize=_PVAL_CACHE_MAXSIZE, typed=False)
     def _calc_hg_pval(bg_size: int, en_size: int, attr_size: int, en_attr_size: int):
         try:
             if en_attr_size / en_size < attr_size / bg_size:
@@ -1168,10 +1176,17 @@ class GOEnrichmentRunner(EnrichmentRunner):
                          exclude_unannotated_genes, single_set, plot_style, show_expected)
         if not self.stats_test:
             return
-        self.dag_tree: ontology.DAGTree = ontology.fetch_go_basic()
-        self.mutable_annotations: Tuple[dict, ...] = tuple()
-        (self.taxon_id, self.organism), self.gene_id_type = io.get_taxon_and_id_type(organism, gene_id_type,
-                                                                                     self.gene_set, 'UniProtKB')
+        # Fetch+parse the GO DAG (a blocking download on a cold cache) concurrently with resolving
+        # the organism and gene-id type (an independent network round-trip). Both are needed before
+        # annotations are processed, so overlapping them shortens __init__ to ~max() of the two.
+        # If both were to fail (e.g. no network), either error may surface first; that only affects
+        # the error raised on a broken network, never the result of a successful run.
+        with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
+            dag_future = executor.submit(ontology.fetch_go_basic)
+            self.mutable_annotations: Tuple[dict, ...] = tuple()
+            (self.taxon_id, self.organism), self.gene_id_type = io.get_taxon_and_id_type(organism, gene_id_type,
+                                                                                         self.gene_set, 'UniProtKB')
+            self.dag_tree: ontology.DAGTree = dag_future.result()
         self.aspects = aspects
         self.evidence_types = evidence_types
         self.excluded_evidence_types = excluded_evidence_types
@@ -1250,19 +1265,8 @@ class GOEnrichmentRunner(EnrichmentRunner):
                 annotation_dict[parent].add(gene_id)
 
     def _translate_gene_ids(self, annotation_dict: dict, source_to_gene_id_dict: dict):
-        # TODO: profile performance and maybe optimize this
+        translators = self._run_source_translators(source_to_gene_id_dict)
         translated_dict = {}
-        translators = []
-        for source in source_to_gene_id_dict:
-            try:
-                translator = io.GeneIDTranslator(source, self.gene_id_type).run(source_to_gene_id_dict[source])
-                translators.append(translator)
-            except AssertionError as e:
-                if 'not a valid Uniprot Dataset' in "".join(e.args):
-                    warnings.warn(f"Failed to map gene IDs for {len(source_to_gene_id_dict[source])} annotations "
-                                  f"from dataset '{source}'.")
-                else:
-                    raise e
         for go_id in annotation_dict:
             translated_dict[go_id] = set()
             for gene_id in annotation_dict[go_id]:
@@ -1271,6 +1275,32 @@ class GOEnrichmentRunner(EnrichmentRunner):
                         translated_dict[go_id].add(translator[gene_id])
                         break
         return translated_dict
+
+    def _run_source_translators(self, source_to_gene_id_dict: dict) -> List[dict]:
+        """Translate each annotation source's gene IDs to ``self.gene_id_type``, one UniProt
+        round-trip per source, run concurrently. Translators are returned in source (iteration)
+        order so the caller's first-match tie-breaking is unchanged. A source whose dataset is
+        not a valid UniProt dataset is skipped with a warning; any other error propagates."""
+        sources = list(source_to_gene_id_dict)
+        if not sources:
+            return []
+
+        def _run(source):
+            return io.GeneIDTranslator(source, self.gene_id_type).run(source_to_gene_id_dict[source])
+
+        translators = []
+        with concurrent.futures.ThreadPoolExecutor(max_workers=min(len(sources), 5)) as executor:
+            futures = {source: executor.submit(_run, source) for source in sources}
+            for source in sources:
+                try:
+                    translators.append(futures[source].result())
+                except AssertionError as e:
+                    if 'not a valid Uniprot Dataset' in "".join(e.args):
+                        warnings.warn(f"Failed to map gene IDs for {len(source_to_gene_id_dict[source])} annotations "
+                                      f"from dataset '{source}'.")
+                    else:
+                        raise e
+        return translators
 
     def _get_query_key(self):
         return (self.taxon_id, self.gene_id_type, parsing.data_to_tuple(self.aspects, sort=True),
@@ -1348,7 +1378,9 @@ class GOEnrichmentRunner(EnrichmentRunner):
             self.mutable_annotations = (self.annotations,)
             result = self._go_classic_pvalues_serial(desc)
         elif self.propagate_annotations == 'elim':
-            self.mutable_annotations = (deepcopy(self.annotations),)
+            # shallow-copy each gene set (strings are immutable, so set(v) is an independent copy);
+            # much cheaper than deepcopy, which needlessly recurses into every gene-ID string.
+            self.mutable_annotations = ({attr: set(genes) for attr, genes in self.annotations.items()},)
             result = self._go_elim_pvalues_serial(desc)
         elif self.propagate_annotations == 'weight':
             self.mutable_annotations = ({attr: {v: 1.0 for v in val} for attr, val in self.annotations.items()},)
@@ -1367,7 +1399,7 @@ class GOEnrichmentRunner(EnrichmentRunner):
             result = self._go_classic_pvalues_parallel(desc)
         elif self.propagate_annotations == 'elim':
             self.mutable_annotations = tuple(
-                {attr: deepcopy(self.annotations[attr]) for attr in self._go_level_iterator(namespace) if
+                {attr: set(self.annotations[attr]) for attr in self._go_level_iterator(namespace) if
                  attr in self.annotations} for namespace in
                 self.dag_tree.namespaces)
             result = self._go_elim_pvalues_parallel(desc)

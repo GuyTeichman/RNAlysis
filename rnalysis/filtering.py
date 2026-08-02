@@ -193,7 +193,13 @@ class Filter:
             f"Invalid input for variable 'printout_operation': {printout_operation}"
         # when user requests the opposite of a filter, return the Set Difference between the filtering result and self
         if opposite:
-            new_df = self.df.filter(~pl.first().is_in(new_df.select(pl.first()).to_series()))
+            # the opposite is self.df minus the kept rows; an anti-join (order-preserving via
+            # maintain_order='left') does this in one pass instead of the deprecated is_in anti-filter.
+            # Drop null-index rows first: the old ``~pl.first().is_in(...)`` filtered them out (is_in(null)
+            # is null -> excluded), so the opposite stays bit-identical even when the index has nulls.
+            new_df = self.df.lazy().filter(pl.first().is_not_null()).join(
+                new_df.lazy().select(pl.first()), on=self.df.columns[0], how='anti',
+                maintain_order='left').collect()
             suffix += 'opposite'
 
         # update filename with the suffix of the operation that was just performed
@@ -3668,27 +3674,36 @@ class CountFilter(Filter):
                 f"The number of new column names {len(new_column_names)} " \
                 f"does not match the number of sample groups {len(sample_grouping)}!"
 
-        averaged_df = self.df.select(pl.first())
-
-        for group, new_name in zip(sample_grouping, new_column_names):
+        for group in sample_grouping:
             if isinstance(group, str):
                 assert group in self.columns, f"Column '{group}' does not exist in the original table!"
-                averaged_df = averaged_df.with_columns(self.df[group].alias(new_name))
             elif isinstance(group, (list, tuple, set)):
                 for item in group:
                     assert item in self.columns, f"Column '{item}' does not exist in the original table!"
-                if function == 'mean':
-                    averaged_df = averaged_df.with_columns(
-                        self.df.select(pl.col(group)).mean_horizontal().alias(new_name))
-                elif function == 'median':
-                    averaged_df = averaged_df.with_columns(
-                        self.df.select(pl.concat_list(pl.col(group)).list.median().alias(new_name)))
-                else:
-                    group_gmean = gmean(self.df.select(pl.col(group)).to_numpy(), axis=1)
-                    averaged_df = averaged_df.with_columns(pl.Series(new_name, group_gmean))
-
             else:
                 raise TypeError(f"'sample_list' cannot contain objects of type {type(group)}.")
+
+        if function in ('mean', 'median'):
+            # fuse into one lazy pass over self.df instead of one eager self.df.select per group: each
+            # multi-sample group becomes its row-wise mean/median, single-sample groups are copied through.
+            # (median also fixes a pre-existing crash: DataFrame.median_horizontal was removed in Polars 1.x)
+            def _agg(cols):
+                return pl.mean_horizontal(pl.col(cols)) if function == 'mean' \
+                    else pl.concat_list(pl.col(cols)).list.median()
+
+            exprs = [pl.col(group).alias(new_name) if isinstance(group, str)
+                     else _agg(group).alias(new_name)
+                     for group, new_name in zip(sample_grouping, new_column_names)]
+            return self.df.lazy().select(pl.first(), *exprs).collect()
+
+        # geometric_mean: per-group row-wise geometric mean via scipy (no native Polars expression for it)
+        averaged_df = self.df.select(pl.first())
+        for group, new_name in zip(sample_grouping, new_column_names):
+            if isinstance(group, str):
+                averaged_df = averaged_df.with_columns(self.df[group].alias(new_name))
+            else:
+                group_gmean = gmean(self.df.select(pl.col(group)).to_numpy(), axis=1)
+                averaged_df = averaged_df.with_columns(pl.Series(new_name, group_gmean))
 
         return averaged_df
 
@@ -3715,17 +3730,14 @@ class CountFilter(Filter):
         assert scaling_factors.shape[0] >= self.shape[0] and scaling_factors.shape[1] == len(numeric_cols) + 1, \
             f"Dimensions of scaling factors table ({scaling_factors.shape}) does not match the " \
             f"dimensions of your data table ({(self.shape[0], len(numeric_cols))} - numeric columns only)!"
-        new_df = pl.DataFrame().lazy()
-        for column in self.df.columns:
-            if column in numeric_cols:
-                merged = self.df.select(cs.first() | cs.by_name(column)).join(
-                    scaling_factors.select(cs.first() | cs.by_name(column)), left_on=self.df.columns[0],
-                    right_on=scaling_factors.columns[0], how='left')
-                merged_div = merged.with_columns((pl.nth(-2).truediv(pl.nth(-1))).alias('div'))
-                new_df = new_df.with_columns((merged_div.select(pl.col('div').alias(column))))
-            else:
-                new_df = new_df.with_columns(self.df[column].alias(column))
-        return new_df.collect()
+        # one order-preserving join on the index instead of one left-join per numeric column, then divide
+        # each numeric column by its matching per-gene scaling factor in a single lazy pass
+        merged = self.df.lazy().join(scaling_factors.lazy(), left_on=self.df.columns[0],
+                                     right_on=scaling_factors.columns[0], how='left',
+                                     maintain_order='left', suffix='__sf')
+        exprs = [pl.col(column).truediv(pl.col(f'{column}__sf')).alias(column) if column in numeric_cols
+                 else pl.col(column) for column in self.df.columns]
+        return merged.select(exprs).collect()
 
     @readable_name('Normalize to reads-per-million (RPM) - HTSeq-count output')
     def normalize_to_rpm_htseqcount(self, special_counter_fname: Union[str, Path], inplace: bool = True,

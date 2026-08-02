@@ -201,6 +201,18 @@ def test_format_annotations():
     assert duplicates == {'geneA': ['Pb', 'Pa']}  # Pb (5.0) ranked above Pa (3.0)
 
 
+def test_format_annotations_breaks_ties_deterministically():
+    # When two targets share the same annotation score for one gene, the winner must not depend on
+    # the order UniProt returned the rows (paginated vs. streamed) or on the non-stable polars sort:
+    # the tie is broken by the target id, so the result is reproducible regardless of input order.
+    forward = ['From\tTo\tAnnotation', 'geneA\tPb\t5.0', 'geneA\tPa\t5.0']
+    reverse = ['From\tTo\tAnnotation', 'geneA\tPa\t5.0', 'geneA\tPb\t5.0']
+    out_f, dup_f = GeneIDTranslator.format_annotations(forward)
+    out_r, dup_r = GeneIDTranslator.format_annotations(reverse)
+    assert out_f == out_r == {}
+    assert dup_f == dup_r == {'geneA': ['Pa', 'Pb']}  # Pa wins the tie deterministically (id order)
+
+
 def test_save_csv():
     try:
         df = pl.read_csv('tests/test_files/enrichment_hypergeometric_res.csv')
@@ -657,6 +669,130 @@ def test_map_gene_ids_with_duplicates(monkeypatch, ids, map_from, map_to, txt, r
     res = GeneIDTranslator(map_from, map_to).run(ids)
     for gene_id in truth:
         assert res[gene_id] == truth[gene_id]
+
+
+def _mock_gene_id_abbrev_dict():
+    d = {'WormBase': 'WormBase',
+        'UniProtKB_to': 'UniProtKB',
+        'UniProtKB_from': 'UniProtKB_AC-ID',
+        'UniProtKB': 'UniProtKB',
+        'Ensembl': 'Ensembl'}
+    return d, d
+
+
+def test_handle_duplicates_uniprotkb_to_branch_picks_first_candidate(monkeypatch):
+    # when mapping *to* UniProtKB, handle_duplicates() should simply keep the first candidate
+    # (results are already pre-sorted by annotation score by format_annotations()) and must not
+    # attempt a reverse-mapping lookup at all
+    monkeypatch.setattr(io, '_get_id_abbreviation_dicts', _mock_gene_id_abbrev_dict)
+    translator = GeneIDTranslator('WormBase', 'UniProtKB', verbose=False)
+    assert translator.map_to == GeneIDTranslator.UNIPROTKB_TO
+
+    def fail_if_called(*args, **kwargs):
+        raise AssertionError('get_mapping_results should not be called on the UniProtKB_to branch')
+
+    monkeypatch.setattr(translator, 'get_mapping_results', fail_if_called)
+
+    output_dict = {}
+    duplicates = {'gene1': ['UniProtA', 'UniProtB', 'UniProtC']}
+    translator.handle_duplicates(output_dict, duplicates, session=Mock())
+
+    assert output_dict == {'gene1': 'UniProtA'}
+
+
+def test_handle_duplicates_else_branch_picks_highest_annotation_score(monkeypatch):
+    # when mapping to anything other than UniProtKB, ambiguous duplicates are resolved by
+    # reverse-mapping the candidates back to UniProtKB and picking the one with the highest
+    # Annotation score
+    monkeypatch.setattr(io, '_get_id_abbreviation_dicts', _mock_gene_id_abbrev_dict)
+    translator = GeneIDTranslator('UniProtKB', 'WormBase', verbose=False)
+    assert translator.map_from == GeneIDTranslator.UNIPROTKB_FROM
+    assert translator.map_to == 'WormBase'
+
+    rev_results = ['From\tEntry\tAnnotation',
+                  'WB_a\tid2\t50',
+                  'WB_b\tid2\t999',
+                  'WB_c\tid2\t700']
+    calls = []
+
+    def mock_get_mapping_results(self, map_to, map_from, ids, session):
+        calls.append((map_to, map_from, tuple(ids)))
+        assert map_to == GeneIDTranslator.UNIPROTKB_TO
+        assert map_from == 'WormBase'
+        assert set(ids) == {'WB_a', 'WB_b', 'WB_c'}
+        return rev_results
+
+    monkeypatch.setattr(GeneIDTranslator, 'get_mapping_results', mock_get_mapping_results)
+
+    output_dict = {'id1': 'WB1'}
+    duplicates = {'id2': ['WB_a', 'WB_b', 'WB_c']}
+    translator.handle_duplicates(output_dict, duplicates, session=Mock())
+
+    # 'WB_b' has the highest Annotation score (999) and wins; the lower-scoring candidates for
+    # the same gene ('WB_c', 'WB_a') must not overwrite it
+    assert output_dict == {'id1': 'WB1', 'id2': 'WB_b'}
+    assert len(calls) == 1
+
+
+def test_reformat_ids_strips_version_suffix_when_mapping_to_ensembl(monkeypatch):
+    monkeypatch.setattr(io, '_get_id_abbreviation_dicts', _mock_gene_id_abbrev_dict)
+    translator = GeneIDTranslator('UniProtKB', 'Ensembl', verbose=False)
+    assert translator.map_to == 'Ensembl'
+
+    output_dict = {'gene1': 'ENSG00000001.3', 'gene2': 'ENSG00000002'}
+    translator.reformat_ids(output_dict)
+
+    assert output_dict == {'gene1': 'ENSG00000001', 'gene2': 'ENSG00000002'}
+
+
+def test_reformat_ids_leaves_ids_unchanged_when_not_mapping_to_ensembl(monkeypatch):
+    monkeypatch.setattr(io, '_get_id_abbreviation_dicts', _mock_gene_id_abbrev_dict)
+    translator = GeneIDTranslator('UniProtKB', 'WormBase', verbose=False)
+    assert translator.map_to == 'WormBase'
+
+    output_dict = {'gene1': 'WBGene00000001.3'}
+    translator.reformat_ids(output_dict)
+
+    assert output_dict == {'gene1': 'WBGene00000001.3'}
+
+
+def test_find_best_gene_mapping_picks_best_result_and_swallows_http_error(monkeypatch):
+    # find_best_gene_mapping() is lru_cache'd - clear it so this test's mocked GeneIDTranslator
+    # isn't bypassed by (or doesn't leak into) another test's cached result
+    io.find_best_gene_mapping.cache_clear()
+    calls = []
+
+    class MockGeneIDTranslator:
+        def __init__(self, map_from, map_to, verbose=False):
+            self.map_from = map_from
+            self.map_to = map_to
+
+        def run(self, ids):
+            calls.append((self.map_from, self.map_to))
+            mapping = {
+                ('X', 'A'): {'gene1': 'a1'},
+                ('X', 'B'): {'gene1': 'b1', 'gene2': 'b2'},
+                ('Y', 'A'): {'gene1': 'a1', 'gene2': 'a2'},
+            }
+            key = (self.map_from, self.map_to)
+            if key == ('Y', 'B'):
+                raise requests.exceptions.HTTPError('simulated UniProt failure')
+            return GeneIDDict(mapping.get(key, {}))
+
+    monkeypatch.setattr(io, 'GeneIDTranslator', MockGeneIDTranslator)
+
+    try:
+        result_dict, best_from, best_to = io.find_best_gene_mapping(('gene1', 'gene2'), ('X', 'Y'), ('A', 'B'))
+    finally:
+        io.find_best_gene_mapping.cache_clear()
+
+    # ('X', 'B') and ('Y', 'A') are tied at 2 successfully-mapped genes; the key function breaks
+    # ties in favor of the map_from option that appears later in map_from_options ('Y' over 'X')
+    assert (best_from, best_to) == ('Y', 'A')
+    assert result_dict.mapping_dict == {'gene1': 'a1', 'gene2': 'a2'}
+    # ('Y', 'B') raises an HTTPError - it must be swallowed (returning an empty mapping) rather
+    # than propagating and crashing the whole best-mapping search
+    assert ('Y', 'B') in calls
 
 
 def test_get_todays_cache_dir():
@@ -1168,6 +1304,64 @@ def test_check_id_mapping_results_ready_persistent_400_raises(monkeypatch):
         with pytest.raises(requests.exceptions.HTTPError):
             GeneIDTranslator.check_id_mapping_results_ready(session, "123", 0.1)
         assert adapter.call_count == GeneIDTranslator.STATUS_POLL_MAX_RETRIES + 1
+
+
+def test_check_id_mapping_results_ready_uses_adaptive_backoff(monkeypatch):
+    # A UniProt idmapping job is usually ready within a fraction of a second (measured sub-second),
+    # so a flat multi-second poll interval spends most of its time asleep on a finished job. While
+    # the job is still RUNNING the wait must grow adaptively from a small initial interval, doubling
+    # up to the caller's interval as a cap, instead of sleeping the full interval on every poll.
+    sleeps = []
+    monkeypatch.setattr(io.time, 'sleep', lambda seconds: sleeps.append(seconds))
+    with requests_mock.Mocker() as m:
+        count = 0
+
+        def request_callback(request, context):
+            nonlocal count
+            count += 1
+            # four RUNNING polls, then results -> four adaptive sleeps
+            return {"jobStatus": "RUNNING"} if count < 5 else {"results": ['data']}
+
+        m.get("https://rest.uniprot.org/idmapping/status/123", json=request_callback)
+        ready = GeneIDTranslator.check_id_mapping_results_ready(requests.Session(), "123", 3.0)
+
+    assert ready
+    assert sleeps == [0.25, 0.5, 1.0, 2.0]
+
+
+def test_get_id_mapping_results_search_streams_uniprotkb_target():
+    # A ->UniProtKB mapping redirects to /idmapping/uniprotkb/results/{job}, which exposes a
+    # /results/stream/ endpoint that returns every row in one request. Use it instead of walking
+    # rel="next" pages serially; the parsed rows must be identical to the paginated result.
+    tr = object.__new__(GeneIDTranslator)
+    tr.verbose = False
+    link = 'https://rest.uniprot.org/idmapping/uniprotkb/results/JOB'
+    tsv = 'From\tEntry\tAnnotation\nWBGene1\tQ1\t5\n'
+    with requests_mock.Mocker() as m:
+        stream = m.get('https://rest.uniprot.org/idmapping/uniprotkb/results/stream/JOB', text=tsv)
+        paged = m.get('https://rest.uniprot.org/idmapping/uniprotkb/results/JOB', text=tsv,
+                      headers={'x-total-results': '1'})
+        results = tr.get_id_mapping_results_search(requests.Session(), link)
+    assert stream.called
+    assert not paged.called
+    assert results == ['From\tEntry\tAnnotation', 'WBGene1\tQ1\t5']
+
+
+def test_get_id_mapping_results_search_paginates_plain_target():
+    # The plain /idmapping/results/{job} path (non-UniProtKB targets) has no stream endpoint
+    # (its /results/stream/ variant 404s), so it must keep the cursor-paginated fetch.
+    tr = object.__new__(GeneIDTranslator)
+    tr.verbose = False
+    link = 'https://rest.uniprot.org/idmapping/results/JOB'
+    tsv = 'From\tTo\nP1\tWB1\n'
+    with requests_mock.Mocker() as m:
+        stream = m.get('https://rest.uniprot.org/idmapping/results/stream/JOB', status_code=404)
+        paged = m.get('https://rest.uniprot.org/idmapping/results/JOB', text=tsv,
+                      headers={'x-total-results': '1'})
+        results = tr.get_id_mapping_results_search(requests.Session(), link)
+    assert paged.called
+    assert not stream.called
+    assert results == ['From\tTo', 'P1\tWB1']
 
 
 # Test cases for the OrthologDict class

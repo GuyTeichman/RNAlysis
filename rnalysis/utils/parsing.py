@@ -459,14 +459,13 @@ def common_suffix(strings):
     """Find the common suffix among a list of strings."""
     if not strings:
         return ''
-    if len(strings) == 1:
-        return strings[0]
     s1 = min(strings)
     s2 = max(strings)
-    for i, c in enumerate(reversed(s1)):
-        if c != s2[-(i + 1)]:
+    max_overlap = min(len(s1), len(s2))
+    for i in range(max_overlap):
+        if s1[-(i + 1)] != s2[-(i + 1)]:
             return s1[len(s1) - i:]
-    return s1
+    return s1[len(s1) - max_overlap:]
 
 
 def remove_suffix(s: str, suffix: Union[str, List[str]]):
@@ -490,13 +489,16 @@ def generate_common_name(file_pairs):
 
     # Prepare output based on comparison
     initial_results = []
+    pair_lengths = []
     for s1, s2, lcs in lcs_list:
+        pair_lengths.append(len(s1) + len(s2))
         if len(lcs) > len(overall_lcs):
             initial_results.append(lcs)
         else:
             initial_results.append(s1 + s2)
-    # Find and trim common suffix from LCSs
-    lcs_only = [result for result in initial_results if len(result) <= len(s1 + s2)]
+    # Find and trim common suffix from LCSs (compare each result against its OWN pair's combined
+    # length, not the loop variables left over from the last iteration of the loop above)
+    lcs_only = [result for result, pair_length in zip(initial_results, pair_lengths) if len(result) <= pair_length]
     suffix = common_suffix(lcs_only)
     if suffix and len(lcs_only) > 1:
         trimmed_results = [
