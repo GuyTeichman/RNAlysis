@@ -1906,6 +1906,9 @@ class GeneIDTranslator:
     UNIPROTKB_TO = "UniProtKB_to"
     API_URL = "https://rest.uniprot.org"
     POLLING_INTERVAL = 3
+    # A job is usually ready within a fraction of a second, so start polling almost immediately and
+    # back off exponentially up to POLLING_INTERVAL, rather than sleeping the full interval up front.
+    INITIAL_POLLING_INTERVAL = 0.25
     REQUEST_DELAY_MILLIS = 250
     REQ_MAX_ENTRIES = 10
     RETRIES = RandomExpRetry(total=5, backoff_factor=0.25, status_forcelist=[500, 502, 503, 504])
@@ -2074,14 +2077,16 @@ class GeneIDTranslator:
 
     @staticmethod
     def check_id_mapping_results_ready(session, job_id: str, polling_interval: float, verbose: bool = True):
+        interval = min(GeneIDTranslator.INITIAL_POLLING_INTERVAL, polling_interval)
         while True:
             r = GeneIDTranslator._poll_mapping_status(session, job_id, verbose)
             j = r.json()
             if "jobStatus" in j:
                 if j["jobStatus"] in {"RUNNING", "NEW"}:
                     if verbose:
-                        print(f"Retrying in {polling_interval}s")
-                    time.sleep(polling_interval)
+                        print(f"Retrying in {interval}s")
+                    time.sleep(interval)
+                    interval = min(interval * 2, polling_interval)
                 else:
                     raise Exception(j["jobStatus"])
             else:
@@ -2123,6 +2128,11 @@ class GeneIDTranslator:
             return [line for line in response.text.split("\n") if line]
         return response.text
 
+    # Only the enriched id-mapping result namespaces (UniProtKB/UniRef/UniParc) expose a
+    # /results/stream/ endpoint; the plain /idmapping/results/ path returns 404 for stream, so it
+    # must stay paginated.
+    _STREAMABLE_RESULTS_PATH = re.compile(r'/idmapping/(uniprotkb|uniref|uniparc)/results/')
+
     def get_id_mapping_results_search(self, session: requests.Session, link):
         parsed = urlparse(link)
         query = parse_qs(parsed.query)
@@ -2130,6 +2140,17 @@ class GeneIDTranslator:
         query["format"] = "tsv"
         file_format = 'tsv'
         # file_format = query["format"][0] if "format" in query else "json"
+
+        if self._STREAMABLE_RESULTS_PATH.search(parsed.path):
+            # The stream endpoint returns every row in a single response (no cursor pagination),
+            # so fetch it directly instead of walking rel="next" pages one at a time.
+            stream_path = parsed.path.replace('/results/', '/results/stream/', 1)
+            stream_query = {key: val for key, val in query.items() if key != 'size'}
+            stream_url = parsed._replace(path=stream_path, query=urlencode(stream_query, doseq=True)).geturl()
+            r = session.get(stream_url)
+            r.raise_for_status()
+            return self.decode_results(r, file_format)
+
         if "size" in query:
             size = int(query["size"][0])
         else:
