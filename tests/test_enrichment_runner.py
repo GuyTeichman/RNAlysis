@@ -1015,6 +1015,112 @@ def test_go_enrichment_runner_translate_gene_ids(monkeypatch, mapping_dict, trut
     assert res == truth
 
 
+def test_go_enrichment_runner_translate_gene_ids_source_order_priority(monkeypatch):
+    # When the same gene id is mapped by more than one source, the first source in iteration
+    # order must win (the lookup loop breaks on first match). Parallelizing the per-source
+    # translation must not change this tie-breaking.
+    def fake_run(self, ids):
+        if 'only1' in ids:
+            return {'shared': 's1', 'only1': 'a1'}
+        return {'shared': 's2', 'only2': 'a2'}
+
+    monkeypatch.setattr(io.GeneIDTranslator, '__init__', lambda *args: None)
+    monkeypatch.setattr(io.GeneIDTranslator, 'run', fake_run)
+    source_to_gene_id_dict = {'source1': {'shared', 'only1'}, 'source2': {'shared', 'only2'}}
+    annotation_dict = {'GO1': {'shared', 'only1', 'only2'}}
+
+    runner = GOEnrichmentRunner.__new__(GOEnrichmentRunner)
+    runner.gene_id_type = 'target'
+    res = runner._translate_gene_ids(annotation_dict, source_to_gene_id_dict)
+    # 'shared' resolves through source1 ('s1'), not source2 ('s2')
+    assert res == {'GO1': {'s1', 'a1', 'a2'}}
+
+
+def test_go_enrichment_runner_translate_gene_ids_skips_invalid_dataset(monkeypatch):
+    # A source whose dataset is not a valid UniProt dataset is skipped with a warning; the
+    # remaining sources are still translated. This must survive parallelization (thread
+    # exceptions surface at result()).
+    def fake_run(self, ids):
+        if 'bad' in ids:
+            raise AssertionError("'source_bad' is not a valid Uniprot Dataset")
+        return {'good': 'good_translated'}
+
+    monkeypatch.setattr(io.GeneIDTranslator, '__init__', lambda *args: None)
+    monkeypatch.setattr(io.GeneIDTranslator, 'run', fake_run)
+    source_to_gene_id_dict = {'source_ok': {'good'}, 'source_bad': {'bad'}}
+    annotation_dict = {'GO1': {'good', 'bad'}}
+
+    runner = GOEnrichmentRunner.__new__(GOEnrichmentRunner)
+    runner.gene_id_type = 'target'
+    with pytest.warns(UserWarning, match='Failed to map gene IDs'):
+        res = runner._translate_gene_ids(annotation_dict, source_to_gene_id_dict)
+    assert res == {'GO1': {'good_translated'}}
+
+
+def test_go_enrichment_runner_translate_gene_ids_reraises_other_assertion(monkeypatch):
+    # An AssertionError that is not the 'invalid Uniprot Dataset' case must propagate, not be
+    # swallowed -- including when raised inside a worker thread.
+    def fake_run(self, ids):
+        raise AssertionError('some other problem')
+
+    monkeypatch.setattr(io.GeneIDTranslator, '__init__', lambda *args: None)
+    monkeypatch.setattr(io.GeneIDTranslator, 'run', fake_run)
+    source_to_gene_id_dict = {'source1': {'gene1'}}
+    annotation_dict = {'GO1': {'gene1'}}
+
+    runner = GOEnrichmentRunner.__new__(GOEnrichmentRunner)
+    runner.gene_id_type = 'target'
+    with pytest.raises(AssertionError, match='some other problem'):
+        runner._translate_gene_ids(annotation_dict, source_to_gene_id_dict)
+
+
+def test_go_enrichment_runner_init_overlaps_dag_fetch_with_organism_resolution(monkeypatch):
+    # The OBO DAG fetch and organism/id-type resolution are independent network work and must run
+    # concurrently during __init__. A Barrier(2) only releases when both callables are in flight on
+    # different threads; if they run sequentially, fetch_go_basic blocks first, get_taxon is never
+    # reached, and the barrier times out (BrokenBarrierError).
+    import threading
+    barrier = threading.Barrier(2, timeout=10)
+    sentinel_dag = object()
+
+    def fake_fetch_go_basic():
+        barrier.wait()
+        return sentinel_dag
+
+    def fake_get_taxon(*args, **kwargs):
+        barrier.wait()
+        return (6239, 'Caenorhabditis elegans'), 'WBGene'
+
+    monkeypatch.setattr(ontology, 'fetch_go_basic', fake_fetch_go_basic)
+    monkeypatch.setattr(io, 'get_taxon_and_id_type', fake_get_taxon)
+
+    e = GOEnrichmentRunner({'gene1'}, 'auto', 'auto', 0.05, 'classic', 'any', 'any', None, 'any', None, 'any',
+                           None, False, False, '', False, False, '', False, HypergeometricTest(), {'gene1', 'gene2'})
+    assert e.dag_tree is sentinel_dag
+    assert e.taxon_id == 6239
+
+
+def test_go_enrichment_runner_init_resolves_dag_not_future(monkeypatch):
+    # Whatever the concurrency, the fully-resolved DAG (not a Future) must land in self.dag_tree,
+    # fetched exactly once, and organism/id-type must be assigned from get_taxon_and_id_type.
+    calls = []
+    sentinel_dag = object()
+
+    def fake_fetch_go_basic():
+        calls.append(1)
+        return sentinel_dag
+
+    monkeypatch.setattr(ontology, 'fetch_go_basic', fake_fetch_go_basic)
+    monkeypatch.setattr(io, 'get_taxon_and_id_type',
+                        lambda *a, **k: ((6239, 'Caenorhabditis elegans'), 'WBGene'))
+
+    e = GOEnrichmentRunner({'gene1'}, 'auto', 'auto', 0.05, 'classic', 'any', 'any', None, 'any', None, 'any',
+                           None, False, False, '', False, False, '', False, HypergeometricTest(), {'gene1', 'gene2'})
+    assert e.dag_tree is sentinel_dag
+    assert calls == [1]
+    assert (e.taxon_id, e.organism, e.gene_id_type) == (6239, 'Caenorhabditis elegans', 'WBGene')
+
+
 @pytest.mark.parametrize('propagate_annotations', ['no', 'elim'])
 def test_go_enrichment_runner_get_query_key(propagate_annotations):
     runner = GOEnrichmentRunner.__new__(GOEnrichmentRunner)
