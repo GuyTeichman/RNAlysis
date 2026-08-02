@@ -3680,16 +3680,6 @@ class CountFilter(Filter):
             elif isinstance(group, (list, tuple, set)):
                 for item in group:
                     assert item in self.columns, f"Column '{item}' does not exist in the original table!"
-                if function == 'mean':
-                    averaged_df = averaged_df.with_columns(
-                        self.df.select(pl.col(group)).mean_horizontal().alias(new_name))
-                elif function == 'median':
-                    averaged_df = averaged_df.with_columns(
-                        self.df.select(pl.concat_list(pl.col(group)).list.median().alias(new_name)))
-                else:
-                    group_gmean = gmean(self.df.select(pl.col(group)).to_numpy(), axis=1)
-                    averaged_df = averaged_df.with_columns(pl.Series(new_name, group_gmean))
-
             else:
                 raise TypeError(f"'sample_list' cannot contain objects of type {type(group)}.")
 
@@ -3706,14 +3696,14 @@ class CountFilter(Filter):
                      for group, new_name in zip(sample_grouping, new_column_names)]
             return self.df.lazy().select(pl.first(), *exprs).collect()
 
-        # geometric_mean: per-group (uses a Python UDF rather than a native Polars expression)
+        # geometric_mean: per-group row-wise geometric mean via scipy (no native Polars expression for it)
         averaged_df = self.df.select(pl.first())
         for group, new_name in zip(sample_grouping, new_column_names):
             if isinstance(group, str):
                 averaged_df = averaged_df.with_columns(self.df[group].alias(new_name))
             else:
-                averaged_df = averaged_df.with_columns(
-                    self.df.select(pl.col(group).apply(lambda x: gmean(x)).alias(new_name)))
+                group_gmean = gmean(self.df.select(pl.col(group)).to_numpy(), axis=1)
+                averaged_df = averaged_df.with_columns(pl.Series(new_name, group_gmean))
 
         return averaged_df
 
