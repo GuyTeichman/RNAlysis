@@ -1912,13 +1912,15 @@ class GeneIDTranslator:
     REQUEST_DELAY_MILLIS = 250
     REQ_MAX_ENTRIES = 10
     RETRIES = RandomExpRetry(total=5, backoff_factor=0.25, status_forcelist=[500, 502, 503, 504])
-    # UniProt's idmapping *status* endpoint intermittently answers a valid jobId with a transient
-    # HTTP 400 (seen when the status is polled before the job is fully registered, or under heavy
+    # UniProt's idmapping *status* and *details* endpoints intermittently answer a valid jobId with a
+    # transient HTTP 400 (seen when a job is queried before it is fully registered, or under heavy
     # concurrent load such as many parallel CI jobs). 400 is deliberately absent from RETRIES'
-    # status_forcelist because a 400 usually means a genuinely bad request, so we retry it only
-    # here, and only a bounded number of times, with jittered exponential backoff.
-    STATUS_POLL_MAX_RETRIES = 5
+    # status_forcelist because a 400 usually means a genuinely bad request, so we retry it only for
+    # these job endpoints (see _get_job_json_with_retry), a bounded number of times, with jittered
+    # exponential backoff capped at STATUS_POLL_MAX_BACKOFF so the total window stays bounded (~30s).
+    STATUS_POLL_MAX_RETRIES = 7
     STATUS_POLL_BACKOFF = 0.5
+    STATUS_POLL_MAX_BACKOFF = 8
 
     def __init__(self, map_from: str, map_to: str = 'UniProtKB AC', verbose: bool = True,
                  session: Union[requests.Session, None] = None):
@@ -2032,8 +2034,8 @@ class GeneIDTranslator:
 
         job_id = self.submit_id_mapping(to_db, from_db, session, ids)
 
-        if self.check_id_mapping_results_ready(session, job_id, self.POLLING_INTERVAL):
-            link = self.get_id_mapping_results_link(session, job_id)
+        if self.check_id_mapping_results_ready(session, job_id, self.POLLING_INTERVAL, self.verbose):
+            link = self.get_id_mapping_results_link(session, job_id, self.verbose)
             results = self.get_id_mapping_results_search(session, link)
             return results
 
@@ -2053,27 +2055,35 @@ class GeneIDTranslator:
                 return match.group(1)
 
     @staticmethod
-    def _poll_mapping_status(session, job_id: str, verbose: bool = True):
-        """Fetch the idmapping job status, retrying transient HTTP 400s with jittered backoff.
+    def _get_job_json_with_retry(session, url: str, verbose: bool = True):
+        """GET a UniProt idmapping job endpoint, retrying transient HTTP 400s with jittered backoff.
 
-        A 400 here is (empirically) transient for a valid jobId, so retry it a bounded number of
-        times; any other error, or a 400 that never clears, is re-raised so genuine failures still
-        surface. The jitter also de-synchronizes many parallel callers that bounced together."""
-        url = f"{GeneIDTranslator.API_URL}/idmapping/status/{job_id}"
+        A 400 on these job endpoints is (empirically) transient for a valid jobId -- seen when a job
+        is queried before it is fully registered, or under heavy concurrent load -- so retry it a
+        bounded number of times, with a capped jittered exponential backoff (the jitter also
+        de-synchronizes many parallel callers that bounced together). Any other error, or a 400 that
+        never clears, is re-raised so genuine failures still surface."""
         for attempt in range(GeneIDTranslator.STATUS_POLL_MAX_RETRIES + 1):
             r = session.get(url)
             try:
                 r.raise_for_status()
             except requests.exceptions.HTTPError:
                 if r.status_code == 400 and attempt < GeneIDTranslator.STATUS_POLL_MAX_RETRIES:
-                    backoff = GeneIDTranslator.STATUS_POLL_BACKOFF * (2 ** attempt)
+                    backoff = min(GeneIDTranslator.STATUS_POLL_BACKOFF * (2 ** attempt),
+                                  GeneIDTranslator.STATUS_POLL_MAX_BACKOFF)
                     backoff *= 0.5 + 0.5 * random.random()  # jitter
                     if verbose:
-                        print(f"Transient error polling job status; retrying in {backoff:.1f}s")
+                        print(f"Transient HTTP 400 from UniProt idmapping ({url}); retrying in {backoff:.1f}s")
                     time.sleep(backoff)
                     continue
                 raise
             return r
+
+    @staticmethod
+    def _poll_mapping_status(session, job_id: str, verbose: bool = True):
+        """Fetch the idmapping job status, retrying transient HTTP 400s (see _get_job_json_with_retry)."""
+        url = f"{GeneIDTranslator.API_URL}/idmapping/status/{job_id}"
+        return GeneIDTranslator._get_job_json_with_retry(session, url, verbose)
 
     @staticmethod
     def check_id_mapping_results_ready(session, job_id: str, polling_interval: float, verbose: bool = True):
@@ -2114,10 +2124,9 @@ class GeneIDTranslator:
         return all_results
 
     @staticmethod
-    def get_id_mapping_results_link(session: requests.Session, job_id):
+    def get_id_mapping_results_link(session: requests.Session, job_id, verbose: bool = True):
         url = f"{GeneIDTranslator.API_URL}/idmapping/details/{job_id}"
-        r = session.get(url)
-        r.raise_for_status()
+        r = GeneIDTranslator._get_job_json_with_retry(session, url, verbose)
         return r.json()["redirectURL"]
 
     @staticmethod
