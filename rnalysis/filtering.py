@@ -36,6 +36,7 @@ from rnalysis.utils import (clustering, differential_expression, generic,
                             parsing, settings, validation)
 from rnalysis.utils.generic import readable_name
 from rnalysis.utils.param_typing import (BIOTYPE_ATTRIBUTE_NAMES, BIOTYPES,
+                                         GTF_ATTRIBUTE_NAMES,
                                          DEFAULT_ORGANISMS, GO_EVIDENCE_TYPES,
                                          GO_QUALIFIERS, K_CRITERIA,
                                          LEGAL_GENE_LENGTH_METHODS,
@@ -186,7 +187,7 @@ class Filter:
 
         """
         legal_operations = {'filter': 'Filtering', 'normalize': 'Normalization', 'sort': 'Sorting',
-                            'transform': 'Transformation', 'translate': 'Translation'}
+                            'transform': 'Transformation', 'translate': 'Translation', 'annotate': 'Annotation'}
         assert isinstance(inplace, bool), "'inplace' must be True or False!"
         assert isinstance(opposite, bool), "'opposite' must be True or False!"
         assert printout_operation.lower() in legal_operations, \
@@ -961,6 +962,95 @@ class Filter:
             parsing.data_to_set(self.df.select(pl.first())))
         new_df = self.df.filter(pl.first().is_in(gene_names))
         return self._inplace(new_df, opposite, inplace, suffix)
+
+    @readable_name('Filter by feature attribute (based on a GTF/GFF file)')
+    def filter_by_gtf_attribute(self, gtf_path: Union[str, Path],
+                                attribute: Union[Literal[GTF_ATTRIBUTE_NAMES], str] = 'gene_biotype',
+                                value: Union[str, List[str]] = 'protein_coding',
+                                feature_type: Literal['gene', 'transcript'] = 'gene',
+                                opposite: bool = False, inplace: bool = True):
+        """
+        Filters the features in the table by any attribute described in a GTF/GFF annotation file, \
+        keeping only features whose attribute matches one of the specified values \
+        (for example: keep only genes on a specific chromosome or strand, from a specific source, \
+        or of a specific biotype). This is a generalization of `filter_biotype_from_gtf` to any GTF/GFF attribute.
+
+        :param gtf_path: Path to your GTF/GFF annotation file. The file should match the type of \
+        gene names/IDs you use in your table.
+        :type gtf_path: str or Path
+        :param attribute: name of the attribute to filter by. Standard column-9 attributes (such as 'gene_biotype', \
+        'gene_name', or any custom key in your file) are supported, as well as the reserved names 'chromosome', \
+        'source' and 'strand', which are read from the fixed columns of the annotation file.
+        :type attribute: str (default='gene_biotype')
+        :param value: the attribute value/values which will NOT be filtered out. For example, to keep only the \
+        features on chromosomes 'chr1' and 'chr2', set attribute='chromosome' and value=['chr1', 'chr2'].
+        :type value: str or list of strings
+        :param feature_type: determines whether the features/rows in your data table describe \
+        individual genes or transcripts.
+        :type feature_type: 'gene' or 'transcript' (default='gene')
+        :type opposite: bool
+        :param opposite: If True, the output of the filtering will be the OPPOSITE of the specified \
+        (instead of filtering out X, the function will filter out anything BUT X). \
+        If False (default), the function will filter as expected.
+        :type inplace: bool (default=True)
+        :param inplace: If True (default), filtering will be applied to the current Filter object. If False, \
+        the function will return a new Filter instance and the current instance will not be affected.
+        :return: If 'inplace' is False, returns a new and filtered instance of the Filter object.
+        """
+        value = parsing.data_to_set(value)
+        assert validation.isinstanceiter(value, str), "value must be a string or a list of strings!"
+        assert Path(gtf_path).exists(), "the given gtf path does not exist!"
+        suffix = f"_{attribute}_{'_'.join(sorted(value))}"
+
+        ref_srs = self._get_ref_srs_from_gtf(gtf_path, attribute, feature_type)
+        # feature IDs which remain after filtering are those whose attribute value is kept AND that appear in the table
+        gene_names = parsing.data_to_set(ref_srs.filter(pl.last().is_in(value))).intersection(
+            parsing.data_to_set(self.df.select(pl.first())))
+        new_df = self.df.filter(pl.first().is_in(gene_names))
+        return self._inplace(new_df, opposite, inplace, suffix)
+
+    @readable_name('Annotate table with a feature attribute (from a GTF/GFF file)')
+    def annotate_from_gtf(self, gtf_path: Union[str, Path],
+                          attribute: Union[Literal[GTF_ATTRIBUTE_NAMES], str] = 'gene_biotype',
+                          feature_type: Literal['gene', 'transcript'] = 'gene',
+                          column_name: Union[str, None] = None,
+                          inplace: bool = True):
+        """
+        Adds a new column to the table, annotating each feature with the value of a GTF/GFF attribute \
+        (for example: the biotype, chromosome, strand, or source of each gene). Features that are not found \
+        in the annotation file are annotated with a missing value.
+
+        :param gtf_path: Path to your GTF/GFF annotation file. The file should match the type of \
+        gene names/IDs you use in your table.
+        :type gtf_path: str or Path
+        :param attribute: name of the attribute to annotate with. Standard column-9 attributes (such as \
+        'gene_biotype', 'gene_name', or any custom key in your file) are supported, as well as the reserved names \
+        'chromosome', 'source' and 'strand', which are read from the fixed columns of the annotation file.
+        :type attribute: str (default='gene_biotype')
+        :param feature_type: determines whether the features/rows in your data table describe \
+        individual genes or transcripts.
+        :type feature_type: 'gene' or 'transcript' (default='gene')
+        :param column_name: the name of the new annotation column. If not specified, the attribute name is used. \
+        If a column with this name already exists in the table, it will be overwritten.
+        :type column_name: str or None (default=None)
+        :type inplace: bool (default=True)
+        :param inplace: If True (default), the annotation column will be added to the current Filter object. \
+        If False, the function will return a new Filter instance and the current instance will not be affected.
+        :return: If 'inplace' is False, returns a new and annotated instance of the Filter object.
+        """
+        assert Path(gtf_path).exists(), "the given gtf path does not exist!"
+        column_name = column_name if column_name else attribute
+        feature_id_col = self.df.columns[0]  # the table's feature-id (index) column; capture before dropping anything
+        assert column_name != feature_id_col, \
+            f"column_name '{column_name}' collides with the table's feature-id column; choose a different name."
+
+        ref_srs = self._get_ref_srs_from_gtf(gtf_path, attribute, feature_type)  # 2 columns: [feature_id, attr_value]
+        mapping = ref_srs.rename({ref_srs.columns[0]: '__feature_id__', ref_srs.columns[1]: column_name})
+        # overwrite an existing (non-index) column of the same name, then left-join so unmapped features get a null
+        base = self.df.drop(column_name) if column_name in self.df.columns else self.df
+        new_df = base.join(mapping, left_on=feature_id_col, right_on='__feature_id__', how='left')
+        return self._inplace(new_df, opposite=False, inplace=inplace, suffix=f'_annotated_{column_name}',
+                             printout_operation='annotate')
 
     @readable_name('Filter by feature biotype (based on a reference table)')
     def filter_biotype_from_ref_table(self, biotype: Union[Literal[BIOTYPES], str, List[str]] = 'protein_coding',

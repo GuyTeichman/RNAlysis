@@ -565,6 +565,91 @@ def test_countfilter_filter_biotype_from_gtf_opposite():
                            opposite=True)
 
 
+# ----------------------------------------------------------------------------------------------------------------------
+# #154: generic filter/annotate by any GTF/GFF attribute -- column-9 attributes (biotype, ...) AND fixed columns
+# (chromosome/source/strand). counted_attributes.csv has GENE1-4 (present in the GTF/GFF) plus GENE5 (absent).
+# ----------------------------------------------------------------------------------------------------------------------
+_ATTR_GTF = 'tests/test_files/test_gtf_attributes.gtf'
+_ATTR_GFF3 = 'tests/test_files/test_gff3_attributes.gff3'
+_ATTR_COUNTS = 'tests/test_files/counted_attributes.csv'
+
+
+def test_filter_by_gtf_attribute_reproduces_biotype_special_case():
+    # filter_by_gtf_attribute on the biotype attribute must reproduce the dedicated filter_biotype_from_gtf.
+    gtf = 'tests/test_files/test_gtf_for_biotypes.gtf'
+    counts = CountFilter('tests/test_files/counted_biotype.csv')
+    generic = counts.filter_by_gtf_attribute(gtf, 'gene_biotype', 'protein_coding', inplace=False)
+    special = counts.filter_biotype_from_gtf(gtf, 'protein_coding', inplace=False)
+    assert np.all(generic.df.sort(pl.first()) == special.df.sort(pl.first()))
+
+
+@pytest.mark.parametrize('path', [_ATTR_GTF, _ATTR_GFF3])
+@pytest.mark.parametrize('attribute,value,truth', [
+    ('chromosome', 'chr2', {'GENE2', 'GENE4'}),
+    ('chromosome', ['chr1', 'chrX'], {'GENE1', 'GENE3'}),
+    ('strand', '+', {'GENE1', 'GENE3'}),
+    ('source', 'havana', {'GENE2', 'GENE4'}),
+    ('gene_biotype', 'protein_coding', {'GENE1', 'GENE3', 'GENE4'}),
+])
+def test_filter_by_gtf_attribute(path, attribute, value, truth):
+    counts = CountFilter(_ATTR_COUNTS)
+    res = counts.filter_by_gtf_attribute(path, attribute, value, inplace=False)
+    assert parsing.data_to_set(res.df.select(pl.first())) == truth
+
+
+def test_filter_by_gtf_attribute_opposite_includes_unmapped():
+    # opposite returns every table feature NOT kept, including GENE5 which is absent from the annotation file.
+    counts = CountFilter(_ATTR_COUNTS)
+    res = counts.filter_by_gtf_attribute(_ATTR_GTF, 'chromosome', 'chr2', opposite=True, inplace=False)
+    assert parsing.data_to_set(res.df.select(pl.first())) == {'GENE1', 'GENE3', 'GENE5'}
+
+
+def _annotation_mapping(filter_obj, column_name):
+    return dict(zip(filter_obj.df.select(pl.first()).to_series().to_list(), filter_obj.df[column_name].to_list()))
+
+
+@pytest.mark.parametrize('path', [_ATTR_GTF, _ATTR_GFF3])
+def test_annotate_from_gtf_biotype(path):
+    counts = CountFilter(_ATTR_COUNTS)
+    res = counts.annotate_from_gtf(path, 'gene_biotype', inplace=False)
+    assert 'gene_biotype' in res.df.columns
+    # numeric columns of the original table are preserved
+    assert {'cond1', 'cond2'}.issubset(set(res.df.columns))
+    assert _annotation_mapping(res, 'gene_biotype') == {
+        'GENE1': 'protein_coding', 'GENE2': 'lincRNA', 'GENE3': 'protein_coding',
+        'GENE4': 'protein_coding', 'GENE5': None}  # GENE5 is absent from the annotation -> null
+
+
+def test_annotate_from_gtf_fixed_column_custom_name():
+    counts = CountFilter(_ATTR_COUNTS)
+    res = counts.annotate_from_gtf(_ATTR_GTF, 'chromosome', column_name='chrom', inplace=False)
+    assert 'chrom' in res.df.columns
+    assert _annotation_mapping(res, 'chrom') == {
+        'GENE1': 'chr1', 'GENE2': 'chr2', 'GENE3': 'chrX', 'GENE4': 'chr2', 'GENE5': None}
+
+
+def test_annotate_from_gtf_inplace_default_column_name():
+    counts = CountFilter(_ATTR_COUNTS)
+    assert counts.annotate_from_gtf(_ATTR_GFF3, 'chromosome', inplace=True) is None
+    assert _annotation_mapping(counts, 'chromosome') == {
+        'GENE1': 'chr1', 'GENE2': 'chr2', 'GENE3': 'chrX', 'GENE4': 'chr2', 'GENE5': None}
+
+
+def test_annotate_from_gtf_overwrites_existing_column():
+    counts = CountFilter(_ATTR_COUNTS)
+    res = counts.annotate_from_gtf(_ATTR_GTF, 'chromosome', column_name='cond2', inplace=False)
+    assert res.df.columns.count('cond2') == 1  # overwritten, not duplicated
+    assert _annotation_mapping(res, 'cond2') == {
+        'GENE1': 'chr1', 'GENE2': 'chr2', 'GENE3': 'chrX', 'GENE4': 'chr2', 'GENE5': None}
+
+
+def test_annotate_from_gtf_rejects_feature_id_column_name():
+    # naming the annotation column after the table's feature-id (index) column must not silently drop the IDs
+    counts = Filter.from_dataframe(pl.DataFrame({'gene': ['GENE1', 'GENE2'], 'cond1': [1.0, 2.0]}), 'annot_test')
+    with pytest.raises(AssertionError):
+        counts.annotate_from_gtf(_ATTR_GTF, 'chromosome', column_name='gene')
+
+
 def test_filter_by_attribute(basic_deseqfilter):
     truth = io.load_table('tests/test_files/test_deseq_filter_by_attr1.csv').sort(pl.first())
     d_notinplace = basic_deseqfilter.filter_by_attribute('attribute1', ref=__attr_ref__, inplace=False)
