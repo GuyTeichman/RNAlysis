@@ -244,6 +244,14 @@ Contributors
 * `sandyl27 <https://github.com/sandyl27>`_
 * `clockgene <https://github.com/clockgene>`_
 * `NeuroRookie <https://github.com/NeuroRookie>`_
+* `deadpool-mjpatel4444 <https://github.com/deadpool-mjpatel4444>`_
+* `atiqur-rahman-pro <https://github.com/atiqur-rahman-pro>`_
+* `kocaemre <https://github.com/kocaemre>`_
+* `hadasgayer <https://github.com/hadasgayer>`_
+* `lntutor <https://github.com/lntutor>`_
+* `pollychen-lab <https://github.com/pollychen-lab>`_
+* `abhi-0203 <https://github.com/abhi-0203>`_
+* `shardool-patil <https://github.com/shardool-patil>`_
 
 .. contributors-list-end
 
