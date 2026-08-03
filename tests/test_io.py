@@ -1283,7 +1283,8 @@ def test_check_id_mapping_results_ready_retries_transient_400(monkeypatch):
 
 def test_check_id_mapping_results_ready_retries_up_to_the_bound_then_succeeds(monkeypatch):
     # A success on the very last allowed attempt must still be honoured (pins the retry bound from
-    # below: STATUS_POLL_MAX_RETRIES=5 retries -> 6 total attempts, the 6th here being the success).
+    # below: STATUS_POLL_MAX_RETRIES retries -> STATUS_POLL_MAX_RETRIES + 1 total attempts, the last
+    # one here being the success).
     monkeypatch.setattr(io.time, 'sleep', lambda *args, **kwargs: None)
     responses = [{'status_code': 400}] * GeneIDTranslator.STATUS_POLL_MAX_RETRIES + [{'json': {"results": ['x']}}]
     with requests_mock.Mocker() as m:
@@ -1327,6 +1328,49 @@ def test_check_id_mapping_results_ready_uses_adaptive_backoff(monkeypatch):
 
     assert ready
     assert sleeps == [0.25, 0.5, 1.0, 2.0]
+
+
+@pytest.mark.unit
+def test_get_id_mapping_results_link_retries_transient_400(monkeypatch):
+    # The /idmapping/details/ endpoint shares the same transient-400 failure mode as /status/
+    # (a valid jobId briefly 400s under load / before registration completes), so it must retry
+    # instead of hard-failing on the first 400 -- otherwise the whole mapping fails on a blip that
+    # lands on details/ instead of status/.
+    monkeypatch.setattr(io.time, 'sleep', lambda *args, **kwargs: None)
+    redirect = "https://rest.uniprot.org/idmapping/uniprotkb/results/123"
+    with requests_mock.Mocker() as m:
+        adapter = m.get("https://rest.uniprot.org/idmapping/details/123",
+                        [{'status_code': 400}, {'status_code': 400}, {'json': {"redirectURL": redirect}}])
+        link = GeneIDTranslator.get_id_mapping_results_link(requests.Session(), "123")
+        assert link == redirect
+        assert adapter.call_count == 3  # two 400s retried, then the success used
+
+
+@pytest.mark.unit
+def test_get_id_mapping_results_link_persistent_400_raises_bounded(monkeypatch):
+    # a details/ 400 that never clears must still surface after exactly the bounded number of
+    # attempts (no infinite loop), same contract as the status/ poll
+    monkeypatch.setattr(io.time, 'sleep', lambda *args, **kwargs: None)
+    with requests_mock.Mocker() as m:
+        adapter = m.get("https://rest.uniprot.org/idmapping/details/123", status_code=400)
+        with pytest.raises(requests.exceptions.HTTPError):
+            GeneIDTranslator.get_id_mapping_results_link(requests.Session(), "123")
+        assert adapter.call_count == GeneIDTranslator.STATUS_POLL_MAX_RETRIES + 1
+
+
+@pytest.mark.unit
+def test_idmapping_400_backoff_is_capped(monkeypatch):
+    # with the widened retry bound, an unclamped exponential backoff would schedule very long
+    # single sleeps (e.g. 16s, 32s) on a long 400 streak; every backoff must be capped so the
+    # total retry window stays bounded.
+    sleeps = []
+    monkeypatch.setattr(io.time, 'sleep', lambda seconds: sleeps.append(seconds))
+    with requests_mock.Mocker() as m:
+        m.get("https://rest.uniprot.org/idmapping/status/123", status_code=400)
+        with pytest.raises(requests.exceptions.HTTPError):
+            GeneIDTranslator.check_id_mapping_results_ready(requests.Session(), "123", 0.1)
+    assert sleeps  # retries actually happened
+    assert all(s <= GeneIDTranslator.STATUS_POLL_MAX_BACKOFF for s in sleeps)
 
 
 def test_get_id_mapping_results_search_streams_uniprotkb_target():
