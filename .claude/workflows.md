@@ -35,6 +35,9 @@ GUI dialog for free. Do it TDD.
    (and testing it in `test_gui_widgets.py`).
 5. **Refactor**, run the module's tests, update `HISTORY.rst`, and add the feature to
    `README.rst` if it's user-facing (per `CONTRIBUTING.rst`).
+6. **Screenshot the dialog** (if the change is visible in the GUI — new/renamed/retyped
+   parameter, new/edited `@readable_name`, edited `:param:` help). Rebuild the reflected dialog
+   from the API and attach it to the PR — see [Attach GUI screenshots to a PR](#attach-gui-screenshots-to-a-pr).
 
 ## Fix a bug
 
@@ -43,6 +46,27 @@ GUI dialog for free. Do it TDD.
 3. **Green:** fix it. **Refactor:** clean up. Run the relevant module's tests.
 4. If the fix changes any numerical/analysis output, that's a reproducibility event — make it
    intentional and note it in `HISTORY.rst`.
+
+## Make a performance change
+
+Use the `safe-optimization` skill for the full procedure; the recipe:
+
+1. **Profile first.** Don't guess at the hotspot — past guesses were wrong here (Box-Cox, not
+   PCA, dominated clustering/PCA time; set-intersections were *not* the GO-enrichment hotspot).
+2. **Baseline.** Pick representative inputs (realistic scale, real fixtures where possible) and
+   keep a reference to the pre-change implementation to compare against.
+3. **Optimize** the specific hotspot the profiler named.
+4. **Prove equality.** Compare old vs. new output with `packaging/bench_equal.py`
+   (`compare()`/`assert_equal`) — exact by default for NumPy arrays and Polars
+   `DataFrame`/`Series`. A `rtol`/`atol` tolerance is only for cases where the optimization
+   itself reorders floating-point operations (parallel reduction, a different BLAS path); using
+   one is a reproducibility event under rule 5 — justify it and note it in `HISTORY.rst`.
+5. **Benchmark and report the speedup** (`BenchmarkResult.speedup`, best-of-N) in the PR and, for
+   a user-visible change, in `HISTORY.rst`.
+6. Check the two known gotchas before shipping: a `numba` `@jit`'d function must seed its own RNG
+   *inside* the jitted code (seeding NumPy's global RNG outside it is a no-op); and any new
+   parallelism must respect the frozen-vs-source split (`FROZEN_ENV` restricts
+   `PARALLEL_BACKENDS` to `multiprocessing`/`sequential` in a PyInstaller build).
 
 ## Change code that touches an external web API (UniProt/Ensembl/PANTHER/KEGG/GO/…)
 
@@ -69,6 +93,32 @@ Highest-risk area (see context.md).
 Most functions need no GUI code. Genuinely GUI-only work (a new window, a new widget type, a
 report feature) goes in `gui/` and is tested in the matching `tests/test_gui_*.py`. Beware the
 known qtbot CI flakiness — write deterministic, well-scoped assertions.
+
+## Attach GUI screenshots to a PR
+
+**Required for any visible GUI change** (rule 9 in `CLAUDE.md`). Because the GUI is reflected from
+the API, a code diff doesn't *show* the visual change — so attach a screenshot of the affected
+dialog. The dialog can be rebuilt straight from the API, headlessly (no clicking through the app):
+
+```bash
+# in the dev env (PyQt6 installed); one or more dotted targets:
+python packaging/capture_gui_dialog.py filtering.CountFilter.filter_low_reads --out .gui_shots
+python packaging/capture_gui_dialog.py --help     # options: --exclude, --show-all, --offscreen
+```
+
+- **When:** a new/renamed/removed parameter, a changed type annotation, a new/edited
+  `@readable_name`, or edited `:param:` help text, on a public `Filter`/`FeatureSet`/`fastq`/
+  `enrichment` function. For a rename/retype, capture **before** (from `development`) **and after**.
+  **Skip** for behind-the-scenes changes with no visible dialog effect.
+- **Where:** publish PNGs to the **`assets` branch** under `pr-<N>/` (namespaced so parallel PRs
+  never collide), then link the raw URLs from the PR. Do the publish in a throwaway git worktree so
+  it never disturbs your working tree.
+- **Fidelity/limits:** faithful for the parameter form; does **not** capture window title bars or
+  display-level flows (loaded data, result plots, hover/menus) — those stay a human task.
+
+The `gui-screenshots` skill automates the full capture → publish → attach flow, including the
+assets-branch worktree recipe and the collision-safe push. On a headless Linux CI runner, wrap the
+capture in `xvfb-run` so fonts resolve (Qt's bare `offscreen` platform renders text as tofu).
 
 ## Regenerate documentation
 
@@ -117,9 +167,12 @@ contributor's. See the skill for why, and for the full post-release verification
    directly), and that the PR will **target `development`**.
 2. Relevant tests green locally; state clearly what you couldn't run (R / network / Qt).
 3. `HISTORY.rst` updated; `README.rst` updated if user-facing.
-4. Open the PR (`gh`). PR body ends with the Claude Code attribution footer.
-5. **Trigger an independent clean-context review of the diff** — the `code-review` skill or a
+4. **Visible GUI change? Attach dialog screenshot(s)** (rule 9) — see
+   [Attach GUI screenshots to a PR](#attach-gui-screenshots-to-a-pr). Note anything you couldn't
+   render (e.g. a display-level flow) and why.
+5. Open the PR (`gh`). PR body ends with the Claude Code attribution footer.
+6. **Trigger an independent clean-context review of the diff** — the `code-review` skill or a
    freshly spawned subagent that hasn't been part of writing the change. Address its findings
    before considering the work done.
-6. Commit messages end with the repo's required co-author + session trailers (the harness
+7. Commit messages end with the repo's required co-author + session trailers (the harness
    supplies these).
