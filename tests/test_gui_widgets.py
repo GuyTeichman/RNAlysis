@@ -585,8 +585,13 @@ def test_PathLineEdit_shows_full_text_when_focused(qtbot):
     widget.resize(120, widget.height())
     qtbot.wait(50)
 
-    widget.file_path.setFocus()
-    qtbot.wait(50)
+    # Deliver the FocusIn event directly through the widget's own eventFilter instead of
+    # relying on widget.file_path.setFocus() to actually win keyboard focus from the window
+    # system: on headless platforms (QT_QPA_PLATFORM=offscreen, notably Linux) setFocus() on
+    # a widget that was never shown/activated as a top-level does not reliably dispatch a
+    # FocusIn event, which made this test flaky depending on the OS. sendEvent() is
+    # synchronous and routes through the real eventFilter under test either way.
+    QtWidgets.QApplication.sendEvent(widget.file_path, QtGui.QFocusEvent(QtCore.QEvent.Type.FocusIn))
 
     assert widget.file_path.text() == long_path
     assert widget.text() == long_path
