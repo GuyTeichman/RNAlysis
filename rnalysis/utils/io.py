@@ -32,7 +32,7 @@ from io import StringIO
 from itertools import chain
 from pathlib import Path
 from sys import executable
-from typing import (List, Literal, NamedTuple,
+from typing import (List, Literal, NamedTuple, Optional,
                     Set, Tuple, Union, Callable, Iterable, Dict, Any)
 from urllib.parse import parse_qs, urlencode, urlparse
 
@@ -1297,9 +1297,22 @@ class PhylomeDBOrthologMapper:
         mapping_one2one = {}
         mapping_one2many = {}
 
-        taxon_map = self._get_taxon_map(self.map_from_organism, self.map_to_organism)
-        map_fwd, map_rev = self._get_id_conversion_maps()
         ids, translated_ids = self.translate_ids(ids)
+
+        # The PhylomeDB conversion table spans every species in the database, and the per-organism
+        # ortholog table is large too. Rather than materialize either in full, build only the slices
+        # we actually query: the forward map for our translated query IDs, the taxon map for the
+        # protids those resolve to, and the reverse map for the ortholog protids that come back.
+        map_fwd, _ = self._get_id_conversion_maps(needed_extids=set(translated_ids), needed_protids=set())
+        taxon_map = self._get_taxon_map(self.map_from_organism, self.map_to_organism,
+                                        needed_source_ids=set(map_fwd.values()))
+        needed_target_protids = set()
+        for to_id_conv, _score in taxon_map.values():
+            if isinstance(to_id_conv, pl.Series):
+                needed_target_protids.update(to_id_conv.to_list())
+            else:
+                needed_target_protids.add(to_id_conv)
+        _, map_rev = self._get_id_conversion_maps(needed_extids=set(), needed_protids=needed_target_protids)
 
         n_mapped = 0
         for from_id in tqdm(translated_ids, 'Mapping orthologs', unit='genes'):
@@ -1361,7 +1374,7 @@ class PhylomeDBOrthologMapper:
             {k: [this_v[0] for this_v in v] for k, v in mapping_one2many.items()})
 
     @staticmethod
-    def _get_taxon_map(taxon_id: int, target_id: int):
+    def _get_taxon_map(taxon_id: int, target_id: int, needed_source_ids: Optional[Set[str]] = None):
         cache_dir = get_todays_cache_dir()
         cache_file = cache_dir.joinpath(f'phylomedb_{taxon_id}to{target_id}.parquet')
         file_path = f"/metaphors/latest/orthologs/{taxon_id}.txt.gz"
@@ -1390,10 +1403,30 @@ class PhylomeDBOrthologMapper:
 
             # cache file locally
             save_table(df, cache_file)
-        return {a: (b, c) for (a, b, c) in df.select('protid1', 'protid2', 'CS').iter_rows()}
+        sub = df.select('protid1', 'protid2', 'CS')
+        # Restrict to the source protids we'll actually look up. Filtering keeps every row for a
+        # needed protid1 in order, so the last-wins collapse below is identical to the full map's.
+        if needed_source_ids is not None:
+            if len(needed_source_ids) == 0:
+                return {}
+            sub = sub.filter(pl.col('protid1').is_in(list(needed_source_ids)))
+        return {a: (b, c) for (a, b, c) in sub.iter_rows()}
 
     @staticmethod
-    def _get_id_conversion_maps() -> Tuple[dict, dict]:
+    def _get_id_conversion_maps(needed_extids: Optional[Set[str]] = None,
+                                needed_protids: Optional[Set[str]] = None) -> Tuple[dict, dict]:
+        """Build the external-ID <-> PhylomeDB-protid conversion maps.
+
+        The PhylomeDB ``id_conversion`` table covers *every* species in the database (millions of
+        rows). ``get_orthologs`` only ever looks up a handful of those keys, so passing
+        ``needed_extids`` / ``needed_protids`` restricts each returned map to just the requested
+        keys -- avoiding the cost of materializing the whole table into two Python dicts, which
+        dominated the runtime of this method.
+
+        ``None`` for either argument means "no filter" (the full map, preserved for backwards
+        compatibility); an empty set means "nothing needed" and returns an empty map without
+        scanning. A filtered map is identical to the corresponding entries of the full map.
+        """
         cache_dir = get_todays_cache_dir()
         cache_file = cache_dir.joinpath('phylomedb_id_conversion.parquet')
         file_path = "/metaphors/latest/id_conversion.txt.gz"
@@ -1421,9 +1454,49 @@ class PhylomeDBOrthologMapper:
                              columns=[0, 2], new_columns=['#extid', 'protid'], has_header=False, skip_rows=1)
             # cache file locally
             save_table(df, cache_file)
-        map_fwd = dict(df.select('#extid', 'protid').iter_rows())
-        map_rev = {v: k for k, v in map_fwd.items()}
+
+        # Fast path: no filtering requested -> reproduce the original whole-table maps exactly.
+        if needed_extids is None and needed_protids is None:
+            map_fwd = dict(df.select('#extid', 'protid').iter_rows())
+            map_rev = {v: k for k, v in map_fwd.items()}
+            return map_fwd, map_rev
+
+        map_fwd = PhylomeDBOrthologMapper._build_forward_map(df, needed_extids)
+        map_rev = PhylomeDBOrthologMapper._build_reverse_map(df, needed_protids)
         return map_fwd, map_rev
+
+    @staticmethod
+    def _build_forward_map(df: pl.DataFrame, needed_extids: Optional[Set[str]]) -> dict:
+        # extid -> protid, keeping the last protid seen per extid in row order (exactly like
+        # ``dict(df.iter_rows())``). Filtering first keeps every row for a needed extid, so the
+        # value chosen is identical to the full map's.
+        if needed_extids is not None:
+            if len(needed_extids) == 0:
+                return {}
+            df = df.filter(pl.col('#extid').is_in(list(needed_extids)))
+        sub = df.select('#extid', 'protid')
+        return dict(zip(sub['#extid'].to_list(), sub['protid'].to_list()))
+
+    @staticmethod
+    def _build_reverse_map(df: pl.DataFrame, needed_protids: Optional[Set[str]]) -> dict:
+        # protid -> extid, reproducing the original ``{v: k for k, v in map_fwd.items()}`` exactly:
+        #   1. collapse to the final protid per extid (last in row order), remembering each extid's
+        #      first-appearance position -- this is ``map_fwd``, in insertion order;
+        #   2. for each protid keep the extid with the largest first-appearance position, i.e. the
+        #      "last wins" of iterating ``map_fwd`` in that insertion order.
+        # The collapse runs vectorized in Polars and only the (small) filtered result is turned into
+        # a Python dict, so the whole table is never materialized as one.
+        if needed_protids is not None and len(needed_protids) == 0:
+            return {}
+        indexed = df.select('#extid', 'protid').with_row_index('__ord')
+        fwd = indexed.group_by('#extid').agg(
+            pl.col('protid').sort_by('__ord').last().alias('protid'),
+            pl.col('__ord').min().alias('__first'),
+        )
+        if needed_protids is not None:
+            fwd = fwd.filter(pl.col('protid').is_in(list(needed_protids)))
+        rev = fwd.group_by('protid').agg(pl.col('#extid').sort_by('__first').last().alias('#extid'))
+        return dict(zip(rev['protid'].to_list(), rev['#extid'].to_list()))
 
     @staticmethod
     def _connect():

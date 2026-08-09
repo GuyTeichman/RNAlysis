@@ -1853,6 +1853,120 @@ class TestPhylomeDBOrthologMapper:
             assert id_pattern.match(target), f"unexpected ortholog ID format: {target}"
 
 
+@pytest.mark.unit
+class TestPhylomeDBIdMapFiltering:
+    """Offline tests for the PhylomeDB ID-conversion / taxon-map filtering optimization.
+
+    The full PhylomeDB ``id_conversion`` table spans *every* species in the database (millions of
+    rows), and the original code materialized it into two whole-table Python dicts on every call.
+    ``get_orthologs`` only ever looks up a handful of those keys, so the maps are now built filtered
+    to the IDs actually needed. These tests pre-populate the daily cache with a synthetic table so
+    they exercise the map-building logic without touching the PhylomeDB FTP server, and the core
+    guarantee they enforce is *behavior preservation*: a filtered map returns exactly the entries
+    the full map would have for the requested keys.
+    """
+
+    # Adversarial fixture rows exercising both many-to-one directions:
+    #   * P3 has two external IDs (U3, U4) -> the reverse map must keep the last one (U4).
+    #   * U5 maps to two protids (P5 then P6) -> the forward map keeps the last (P6), and P5 must
+    #     therefore NOT appear in the reverse map (it was shadowed), matching the original
+    #     `{v: k for k, v in map_fwd.items()}` construction.
+    ID_ROWS = [
+        ('U1', 'P1'),
+        ('U2', 'P2'),
+        ('U3', 'P3'),
+        ('U4', 'P3'),
+        ('U5', 'P5'),
+        ('U5', 'P6'),
+    ]
+
+    @pytest.fixture
+    def cache_dir(self, tmp_path, monkeypatch):
+        monkeypatch.setattr(io, 'get_todays_cache_dir', lambda: tmp_path)
+        return tmp_path
+
+    @staticmethod
+    def _write_id_conversion(cache_dir, rows):
+        pl.DataFrame({'#extid': [r[0] for r in rows], 'protid': [r[1] for r in rows]}).write_parquet(
+            cache_dir.joinpath('phylomedb_id_conversion.parquet'))
+
+    @staticmethod
+    def _write_taxon_map(cache_dir, rows, taxon_id=1, target_id=2):
+        pl.DataFrame({'protid1': [r[0] for r in rows], 'protid2': [r[1] for r in rows],
+                      'CS': [r[2] for r in rows]}).write_parquet(
+            cache_dir.joinpath(f'phylomedb_{taxon_id}to{target_id}.parquet'))
+
+    def test_id_conversion_full_maps_unchanged(self, cache_dir):
+        self._write_id_conversion(cache_dir, self.ID_ROWS)
+        map_fwd, map_rev = PhylomeDBOrthologMapper._get_id_conversion_maps()
+        assert map_fwd == {'U1': 'P1', 'U2': 'P2', 'U3': 'P3', 'U4': 'P3', 'U5': 'P6'}
+        assert map_rev == {'P1': 'U1', 'P2': 'U2', 'P3': 'U4', 'P6': 'U5'}
+
+    def test_id_conversion_filtered_matches_full_subset(self, cache_dir):
+        self._write_id_conversion(cache_dir, self.ID_ROWS)
+        full_fwd, full_rev = PhylomeDBOrthologMapper._get_id_conversion_maps()
+
+        needed_extids = {'U1', 'U5'}
+        needed_protids = {'P3', 'P5', 'P6'}
+        map_fwd, map_rev = PhylomeDBOrthologMapper._get_id_conversion_maps(
+            needed_extids=needed_extids, needed_protids=needed_protids)
+
+        assert map_fwd == {k: full_fwd[k] for k in needed_extids if k in full_fwd}
+        assert map_rev == {k: full_rev[k] for k in needed_protids if k in full_rev}
+        # P5 was shadowed in the full reverse map (U5's final protid is P6), so it stays absent.
+        assert 'P5' not in map_rev
+
+    def test_id_conversion_empty_filters_short_circuit(self, cache_dir):
+        self._write_id_conversion(cache_dir, self.ID_ROWS)
+        map_fwd, map_rev = PhylomeDBOrthologMapper._get_id_conversion_maps(
+            needed_extids=set(), needed_protids=set())
+        assert map_fwd == {}
+        assert map_rev == {}
+
+    def test_taxon_map_full_unchanged(self, cache_dir):
+        # duplicate protid1 (Pf2) -> last-wins collapses to (Pt3, 0.8), matching the original dict-comp.
+        self._write_taxon_map(cache_dir, [('Pf1', 'Pt1', 0.9), ('Pf2', 'Pt2', 0.3), ('Pf2', 'Pt3', 0.8)])
+        taxon_map = PhylomeDBOrthologMapper._get_taxon_map(1, 2)
+        assert taxon_map == {'Pf1': ('Pt1', 0.9), 'Pf2': ('Pt3', 0.8)}
+
+    def test_taxon_map_filtered_matches_full_subset(self, cache_dir):
+        self._write_taxon_map(cache_dir, [
+            ('Pf1', 'Pt1', 0.9), ('Pf2', 'Pt2', 0.3), ('Pf2', 'Pt3', 0.8), ('Pf4', 'Pt4', 0.7)])
+        full = PhylomeDBOrthologMapper._get_taxon_map(1, 2)
+        needed = {'Pf1', 'Pf2'}
+        filtered = PhylomeDBOrthologMapper._get_taxon_map(1, 2, needed_source_ids=needed)
+        assert filtered == {k: full[k] for k in needed if k in full}
+
+    def test_taxon_map_empty_filter_short_circuits(self, cache_dir):
+        self._write_taxon_map(cache_dir, [('Pf1', 'Pt1', 0.9)])
+        assert PhylomeDBOrthologMapper._get_taxon_map(1, 2, needed_source_ids=set()) == {}
+
+    def test_get_orthologs_offline_end_to_end(self, cache_dir, monkeypatch):
+        # from-genes (Ufrom*) and the target orthologs (Uto*) all live in one id_conversion table.
+        self._write_id_conversion(cache_dir, [
+            ('Ufrom1', 'Pf1'), ('Ufrom2', 'Pf2'), ('Uto1', 'Pt1'), ('Uto2', 'Pt2')])
+        self._write_taxon_map(cache_dir, [('Pf1', 'Pt1', 0.9), ('Pf2', 'Pt2', 0.3)])
+
+        # Keep both external services (the species list in __init__, and UniProt in translate_ids)
+        # out of this offline test.
+        monkeypatch.setattr(PhylomeDBOrthologMapper, 'get_legal_species',
+                            staticmethod(lambda: pl.DataFrame({'taxid': [1, 2], 'name': ['a', 'b']})))
+        mapper = PhylomeDBOrthologMapper(map_to_organism=2, map_from_organism=1,
+                                         gene_id_type='UniProtKB AC/ID')
+        monkeypatch.setattr(mapper, 'translate_ids',
+                            lambda ids: (['geneA', 'geneB'], ['Ufrom1', 'Ufrom2']))
+
+        with warnings.catch_warnings():
+            warnings.simplefilter('ignore')  # geneB is filtered by CS threshold -> "mapped only N" warning
+            one2one, one2many = mapper.get_orthologs(
+                ('geneA', 'geneB'), non_unique_mode='first',
+                consistency_score_threshold=0.5, filter_consistency_score=True)
+
+        # geneA survives (CS 0.9 >= 0.5); geneB is dropped (CS 0.3 < 0.5).
+        assert one2one.mapping_dict == {'geneA': 'Uto1'}
+        assert one2many.mapping_dict == {'geneA': ['Uto1']}
+
+
 class TestOrthoInspectorOrthologMapper:
 
     # Define a fixture to create an instance of OrthoInspectorOrthologMapper for testing
