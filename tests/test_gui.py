@@ -1489,6 +1489,9 @@ def test_FilterTabPage_load_file(qtbot):
     qtbot, window = widget_setup(qtbot, FilterTabPage)
     assert window.is_empty()
     assert not window.basic_widgets['start_button'].isEnabled()
+    # regression test for #208: the confirm button should have a clear,
+    # outcome-oriented label instead of the ambiguous "Start"
+    assert window.basic_widgets['start_button'].text() == 'Open table'
 
     window.basic_widgets['file_path'].clear()
     qtbot.keyClicks(window.basic_widgets['file_path'].file_path, str(Path('tests/test_files/counted.csv').absolute()))
@@ -1944,7 +1947,10 @@ def test_FuncTypeStack_init(qtbot, pipeline_mode, exc_params):
 
 
 def test_CreatePipelineWindow_init(qtbot):
-    _, _ = widget_setup(qtbot, CreatePipelineWindow)
+    _, window = widget_setup(qtbot, CreatePipelineWindow)
+    # regression test for #208: the confirm button should have a clear,
+    # outcome-oriented label instead of the ambiguous "Start"
+    assert window.basic_widgets['start_button'].text() == 'Create Pipeline'
 
 
 def test_CreatePipelineWindow_from_pipeline(qtbot):

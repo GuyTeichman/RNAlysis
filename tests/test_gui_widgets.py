@@ -309,6 +309,25 @@ def test_get_val_from_widget_multiinput_types(qtbot, widget_class, default, exce
     assert get_val_from_widget(widget) == expected_val
 
 
+@pytest.mark.parametrize("widget_class,kwargs", [
+    (QMultiSpinBox, {}),
+    (QMultiDoubleSpinBox, {}),
+    (QMultiLineEdit, {}),
+    (QMultiStrIntLineEdit, {}),
+    (QMultiToggleSwitch, {}),
+    (MultiColorPicker, {}),
+    (QMultiPathLineEdit, {}),
+    (TwoLayerMultiLineEdit, {}),
+    (QMultiComboBox, {'items': ['option1', 'option2']}),
+])
+def test_QMultiInput_default_text(qtbot, widget_class, kwargs):
+    # regression test for #208: the default button text should be a clear,
+    # action-oriented label instead of the vague "Set input"/"Set Input"
+    qtbot, widget = widget_setup(qtbot, widget_class, label='label', **kwargs)
+    assert widget.text() == 'Choose values'
+    assert widget.text() not in ('Set input', 'Set Input')
+
+
 @pytest.mark.parametrize("widget_class", (QtWidgets.QWidget, QtWidgets.QDateTimeEdit))
 def test_get_val_from_widget_bad_widget(qtbot, widget_class):
     qtbot, widget = widget_setup(qtbot, widget_class)

@@ -2178,7 +2178,7 @@ class FilterTabPage(TabPage):
         self.basic_widgets['table_type_combo'].currentIndexChanged.connect(self.update_basic_ui)
         self.basic_widgets['table_type_combo'].setCurrentText('Other table')
 
-        self.basic_widgets['start_button'] = QtWidgets.QPushButton('Start')
+        self.basic_widgets['start_button'] = QtWidgets.QPushButton('Open table')
         self.basic_widgets['start_button'].clicked.connect(self.start)
         self.basic_widgets['start_button'].setEnabled(False)
 
@@ -2427,7 +2427,7 @@ class CreatePipelineWindow(gui_widgets.MinMaxDialog, FilterTabPage):
 
         self.basic_widgets['name_label'] = QtWidgets.QLabel('Name your Pipeline:')
 
-        self.basic_widgets['start_button'] = QtWidgets.QPushButton('Start')
+        self.basic_widgets['start_button'] = QtWidgets.QPushButton('Create Pipeline')
         self.basic_widgets['start_button'].clicked.connect(self.start)
 
         self.apply_button = QtWidgets.QPushButton('Add to Pipeline')
