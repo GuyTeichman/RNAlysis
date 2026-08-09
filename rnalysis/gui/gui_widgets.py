@@ -573,9 +573,11 @@ class ToggleSwitchCore(QtWidgets.QPushButton):
     def paintEvent(self, event):
         label = " True" if self.isChecked() else "False"
         if self.isChecked():
-            bg_color = QtGui.QColor('#72e5bf') if not self._hover else QtGui.QColor('#52c59f')
+            # accent teal for the "on" state - accessible for red-green colorblindness
+            bg_color = QtGui.QColor('#3cc7c0') if not self._hover else QtGui.QColor('#25a6a0')
         else:
-            bg_color = QtGui.QColor('#e96e3a') if not self._hover else QtGui.QColor('#c94e1a')
+            # neutral inactive gray for the "off" state - reads as "off", not "error"
+            bg_color = QtGui.QColor('#a8adb3') if not self._hover else QtGui.QColor('#8b9096')
 
         radius = int(self.RADIUS * (self.font().pointSize() / 10))
         width = int(self.WIDTH * (self.font().pointSize() / 10))
