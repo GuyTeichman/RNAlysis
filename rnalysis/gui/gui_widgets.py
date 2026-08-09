@@ -1130,6 +1130,7 @@ class PathLineEdit(QtWidgets.QWidget):
                  'is_file': 'is the current text pointing to an exisintg file',
                  'file_types': 'file types',
                  '_is_legal': 'is the current path legal',
+                 '_full_path': 'the full, unelided path - the value returned by text()',
                  'layout': 'layout'}
 
     def __init__(self, contents: str = 'auto', button_text: str = 'Load', is_file: bool = True,
@@ -1140,13 +1141,20 @@ class PathLineEdit(QtWidgets.QWidget):
         self.is_file = is_file
         self.file_types = file_types
         self._is_legal = False
+        self._full_path = ''
+
+        # let the field grow with the window instead of staying at its minimal width
+        self.setSizePolicy(QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Fixed)
+        self.file_path.setSizePolicy(QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Fixed)
 
         self.layout = QtWidgets.QGridLayout(self)
         self.setLayout(self.layout)
         self.layout.addWidget(self.open_button, 1, 0)
         self.layout.addWidget(self.file_path, 1, 1)
+        self.layout.setColumnStretch(1, 1)
 
-        self.file_path.textChanged.connect(self._check_legality)
+        self.file_path.textChanged.connect(self._on_internal_text_changed)
+        self.file_path.installEventFilter(self)
         if self.is_file:
             self.open_button.clicked.connect(self.choose_file)
         else:
@@ -1157,17 +1165,72 @@ class PathLineEdit(QtWidgets.QWidget):
                 contents = 'No file chosen'
             else:
                 contents = 'No folder chosen'
-        self.file_path.setText(contents)
+        self.setText(contents)
+
+    def eventFilter(self, obj, event):
+        if obj is self.file_path:
+            event_type = event.type()
+            if event_type == QtCore.QEvent.Type.FocusIn:
+                self._show_full_text()
+            elif event_type == QtCore.QEvent.Type.FocusOut:
+                self._show_elided_text()
+            elif event_type == QtCore.QEvent.Type.Resize and not self.file_path.hasFocus():
+                self._show_elided_text()
+        return super().eventFilter(obj, event)
+
+    def _on_internal_text_changed(self, text: str):
+        # a genuine edit (typing, or a programmatic QLineEdit.setText() bypassing our own
+        # setText()) - keep the stored full path in sync with what's actually displayed
+        self._full_path = text
+        self.file_path.setToolTip(self._full_path)
+        self.setToolTip(self._full_path)
+        self._check_legality()
+
+    def _elided_text(self) -> str:
+        text = self._full_path
+        metrics = self.file_path.fontMetrics()
+        available_width = self.file_path.width()
+        if available_width <= 0 or metrics.horizontalAdvance(text) <= available_width:
+            return text
+
+        filename = text.replace('\\', '/').rsplit('/', 1)[-1]
+        if filename and filename != text:
+            candidate = f'.../{filename}'
+            if metrics.horizontalAdvance(candidate) <= available_width:
+                return candidate
+            # even ".../<filename>" doesn't fit - fall back to eliding the filename itself,
+            # which (like ElideLeft) always keeps the tail of the string visible
+            return metrics.elidedText(candidate, QtCore.Qt.TextElideMode.ElideLeft, available_width)
+        return metrics.elidedText(text, QtCore.Qt.TextElideMode.ElideLeft, available_width)
+
+    def _show_full_text(self):
+        self.file_path.blockSignals(True)
+        self.file_path.setText(self._full_path)
+        self.file_path.blockSignals(False)
+
+    def _show_elided_text(self):
+        self.file_path.blockSignals(True)
+        self.file_path.setText(self._elided_text())
+        self.file_path.blockSignals(False)
+
+    def _refresh_display(self):
+        if self.file_path.hasFocus():
+            self._show_full_text()
+        else:
+            self._show_elided_text()
+        self.file_path.setToolTip(self._full_path)
+        self.setToolTip(self._full_path)
+        self._check_legality()
 
     def clear(self):
-        self.file_path.clear()
+        self.setText('')
 
     @property
     def is_legal(self):
         return self._is_legal
 
     def _check_legality(self):
-        current_path = self.file_path.text()
+        current_path = self._full_path
         if (self.is_file and validation.is_legal_file_path(current_path)) or (
             not self.is_file and validation.is_legal_dir_path(current_path)):
             self._is_legal = True
@@ -1198,18 +1261,19 @@ class PathLineEdit(QtWidgets.QWidget):
     def choose_file(self):
         filename, _ = QtWidgets.QFileDialog.getOpenFileName(self, "Choose a file", filter=self.file_types)
         if filename:
-            self.file_path.setText(filename)
+            self.setText(filename)
 
     def choose_folder(self):
         dirname = QtWidgets.QFileDialog.getExistingDirectory(self, "Choose a folder")
         if dirname:
-            self.file_path.setText(dirname)
+            self.setText(dirname)
 
     def text(self):
-        return self.file_path.text()
+        return self._full_path
 
     def setText(self, text: str):
-        return self.file_path.setText(text)
+        self._full_path = text
+        self._refresh_display()
 
 
 class StrIntLineEdit(QtWidgets.QLineEdit):

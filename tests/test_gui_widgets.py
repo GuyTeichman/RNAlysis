@@ -479,6 +479,101 @@ def test_PathLineEdit_choose_file_not_chosen(qtbot, monkeypatch):
     assert widget.text() == pth
 
 
+def test_PathLineEdit_tooltip_reflects_full_path(qtbot):
+    qtbot, widget = widget_setup(qtbot, PathLineEdit)
+    long_path = 'C:/Users/example_user/very/long/nested/directory/structure/elegans_developmental_stages.tsv'
+
+    widget.setText(long_path)
+
+    assert widget.toolTip() == long_path
+    assert widget.file_path.toolTip() == long_path
+
+
+def test_PathLineEdit_tooltip_updates_on_keyboard_edit(qtbot):
+    qtbot, widget = widget_setup(qtbot, PathLineEdit)
+    widget.clear()
+    qtbot.keyClicks(widget.file_path, 'tests/test_files/test_deseq.csv')
+
+    assert widget.toolTip() == 'tests/test_files/test_deseq.csv'
+    assert widget.file_path.toolTip() == 'tests/test_files/test_deseq.csv'
+
+
+@pytest.mark.parametrize('long_path', [
+    'C:/Users/example_user/very/long/nested/directory/structure/elegans_developmental_stages.tsv',
+    '/home/example_user/very/long/nested/directory/structure/elegans_developmental_stages.tsv',
+])
+def test_PathLineEdit_text_roundtrip_unchanged_for_long_paths(qtbot, long_path):
+    qtbot, widget = widget_setup(qtbot, PathLineEdit)
+
+    widget.setText(long_path)
+    assert widget.text() == long_path
+
+    # narrowing the widget (which drives elision of the *display*) must not affect the stored value
+    widget.resize(80, widget.height())
+    qtbot.wait(50)
+    assert widget.text() == long_path
+
+
+def test_PathLineEdit_folder_mode_text_roundtrip_unchanged(qtbot):
+    long_path = 'C:/Users/example_user/very/long/nested/directory/structure/some_output_folder'
+    qtbot, widget = widget_setup(qtbot, PathLineEdit, is_file=False)
+
+    widget.setText(long_path)
+    widget.resize(80, widget.height())
+    qtbot.wait(50)
+
+    assert widget.text() == long_path
+
+
+def test_PathLineEdit_elides_to_dotdotdot_filename_when_it_fits(qtbot):
+    long_path = 'C:/Users/example_user/very/long/nested/directory/structure/elegans_developmental_stages.tsv'
+    qtbot, widget = widget_setup(qtbot, PathLineEdit)
+
+    widget.setText(long_path)
+    widget.open_button.setFocus()
+    # wide enough to fit '.../elegans_developmental_stages.tsv' but not the full path
+    widget.resize(600, widget.height())
+    qtbot.wait(50)
+
+    displayed = widget.file_path.text()
+    assert displayed == '.../elegans_developmental_stages.tsv'
+    # the stored/returned value is never touched by elision
+    assert widget.text() == long_path
+
+
+def test_PathLineEdit_elides_display_when_narrow_and_unfocused(qtbot):
+    long_path = 'C:/Users/example_user/very/long/nested/directory/structure/elegans_developmental_stages.tsv'
+    qtbot, widget = widget_setup(qtbot, PathLineEdit)
+
+    widget.setText(long_path)
+    widget.open_button.setFocus()
+    widget.resize(300, widget.height())
+    qtbot.wait(50)
+
+    displayed = widget.file_path.text()
+    assert displayed != long_path
+    # even when there isn't room for the whole filename, the tail (end of the filename) is
+    # what remains visible - never the head of the path
+    assert displayed.endswith(long_path[-10:])
+    # the stored/returned value is never touched by elision
+    assert widget.text() == long_path
+
+
+def test_PathLineEdit_shows_full_text_when_focused(qtbot):
+    long_path = 'C:/Users/example_user/very/long/nested/directory/structure/elegans_developmental_stages.tsv'
+    qtbot, widget = widget_setup(qtbot, PathLineEdit)
+
+    widget.setText(long_path)
+    widget.resize(120, widget.height())
+    qtbot.wait(50)
+
+    widget.file_path.setFocus()
+    qtbot.wait(50)
+
+    assert widget.file_path.text() == long_path
+    assert widget.text() == long_path
+
+
 def test_MultipleChoiceList_select_all(qtbot):
     items = ['item1', 'item2', 'item3']
     qtbot, widget = widget_setup(qtbot, MultipleChoiceList, items)
