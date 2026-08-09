@@ -1035,14 +1035,121 @@ def test_RadioButtonBox_emit(qtbot):
     (param_typing.PositiveInt, 15, QtWidgets.QSpinBox),
     (param_typing.NonNegativeInt, 0, QtWidgets.QSpinBox),
     (param_typing.NegativeInt, -15, QtWidgets.QSpinBox),
-    (float, 3.14, QtWidgets.QDoubleSpinBox),
-    (param_typing.Fraction, 0.15, QtWidgets.QDoubleSpinBox),
+    (float, 3.14, AdaptiveDoubleSpinBox),
+    (param_typing.Fraction, 0.15, AdaptiveDoubleSpinBox),
     (Literal['a1', 'b1', 'c1'], 'b1', QtWidgets.QComboBox),
     (Union[str, float, None, bool], True, OptionalWidget),
     (Union[str, float, bool], 17, QtWidgets.QTextEdit)
 ])
 def test_param_to_widget_native_types(qtbot, param_type, default, expected_widget):
     _run_param_to_widget(qtbot, param_type, default, 'param_name', expected_widget)
+
+
+@pytest.mark.parametrize('value,expected_decimals,expected_step', [
+    (5, 3, 1.0),
+    (5.0, 3, 1.0),
+    (50.0, 3, 1.0),
+    (100.0, 3, 1.0),
+    (0, 3, 1.0),
+    (0.0, 3, 1.0),
+    (-5.0, 3, 1.0),
+    (3.14, 3, 0.1),
+    (2.5, 3, 0.1),
+    (0.5, 3, 0.1),
+    (0.15, 3, 0.1),
+    (-0.5, 3, 0.1),
+    (0.05, 4, 0.01),
+    (-0.05, 4, 0.01),
+    (0.001, 5, 0.001),
+])
+def test_float_spinbox_decimals_and_step(value, expected_decimals, expected_step):
+    decimals, step = float_spinbox_decimals_and_step(value)
+    assert decimals == expected_decimals
+    assert step == pytest.approx(expected_step)
+
+
+def test_adaptive_double_spinbox_trims_trailing_zeros(qtbot):
+    qtbot, widget = widget_setup(qtbot, AdaptiveDoubleSpinBox)
+    widget.setDecimals(3)
+    # integer-valued numbers display without a trailing '.000'
+    assert widget.textFromValue(5.0) == '5'
+    assert widget.textFromValue(50.0) == '50'
+    assert widget.textFromValue(0.0) == '0'
+    # fractional numbers keep only their significant decimals
+    assert widget.textFromValue(5.5) == '5.5'
+    assert widget.textFromValue(0.05) == '0.05'
+    assert widget.textFromValue(-0.5) == '-0.5'
+
+
+def test_param_to_widget_float_integer_default_is_magnitude_aware(qtbot):
+    param = NewParam(float, 5)
+    widget = param_to_widget(param, 'threshold')
+    widget.show()
+    qtbot.add_widget(widget)
+    assert isinstance(widget, QtWidgets.QDoubleSpinBox)
+    assert widget.singleStep() == pytest.approx(1.0)
+    # integer-valued default shows as '5', not '5.00'
+    assert widget.textFromValue(widget.value()) == '5'
+    # a fractional value is still reachable and displays with its decimals
+    assert widget.textFromValue(5.5) == '5.5'
+
+
+def test_param_to_widget_float_fractional_default_is_magnitude_aware(qtbot):
+    param = NewParam(float, 0.05)
+    widget = param_to_widget(param, 'x')
+    widget.show()
+    qtbot.add_widget(widget)
+    assert widget.singleStep() == pytest.approx(0.01)
+    assert widget.decimals() >= 3
+    assert widget.textFromValue(0.05) == '0.05'
+
+
+def test_param_to_widget_fraction_keeps_step_and_sensible_decimals(qtbot):
+    param = NewParam(param_typing.Fraction, 0.05)
+    widget = param_to_widget(param, 'alpha')
+    widget.show()
+    qtbot.add_widget(widget)
+    assert widget.minimum() == pytest.approx(0.0)
+    assert widget.maximum() == pytest.approx(1.0)
+    # the Fraction step is intentionally left at 0.05
+    assert widget.singleStep() == pytest.approx(0.05)
+    assert widget.decimals() >= 3
+    assert widget.textFromValue(0.05) == '0.05'
+    assert widget.textFromValue(1.0) == '1'
+
+
+@pytest.mark.parametrize('annotation,default,typed_value', [
+    (float, 5, 5.5),
+    (float, 5, 5.125),
+    (float, 5, 7.0),
+    (float, 5, 42.75),
+    (float, 0.05, 0.123),
+    (float, 0.001, 0.00042),
+    (param_typing.Fraction, 0.05, 0.001),
+    (param_typing.Fraction, 0.05, 0.375),
+])
+def test_float_widget_returns_exact_value(qtbot, annotation, default, typed_value):
+    # DISPLAY ONLY: the widget must return the exact float the user set, so values
+    # passed to the API are numerically identical (a hard reproducibility invariant).
+    param = NewParam(annotation, default)
+    widget = param_to_widget(param, 'p')
+    widget.show()
+    qtbot.add_widget(widget)
+    set_widget_value(widget, typed_value)
+    assert get_val_from_widget(widget) == typed_value
+
+
+def test_float_widget_returns_exact_typed_value(qtbot):
+    # a precise value typed by hand (finer than the old fixed 2 decimals) must be reachable
+    # and returned unchanged from the widget.
+    param = NewParam(float, 5)
+    widget = param_to_widget(param, 'threshold')
+    widget.show()
+    qtbot.add_widget(widget)
+    widget.clear()
+    qtbot.keyClicks(widget, '5.125')
+    widget.interpretText()
+    assert get_val_from_widget(widget) == 5.125
 
 
 @pytest.mark.parametrize('param_type,default,name,expected_widget', [
