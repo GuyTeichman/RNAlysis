@@ -1923,6 +1923,22 @@ class TestPhylomeDBIdMapFiltering:
         assert map_fwd == {}
         assert map_rev == {}
 
+    def test_id_conversion_mixed_filters_match_full(self, cache_dir):
+        # Exactly one side filtered: the None side must reproduce the full map (this exercises the
+        # map builders with needed=None, which get_orthologs itself never triggers).
+        self._write_id_conversion(cache_dir, self.ID_ROWS)
+        full_fwd, full_rev = PhylomeDBOrthologMapper._get_id_conversion_maps()
+
+        fwd, rev = PhylomeDBOrthologMapper._get_id_conversion_maps(needed_extids={'U1', 'U3'},
+                                                                   needed_protids=None)
+        assert fwd == {k: full_fwd[k] for k in {'U1', 'U3'}}
+        assert rev == full_rev
+
+        fwd, rev = PhylomeDBOrthologMapper._get_id_conversion_maps(needed_extids=None,
+                                                                   needed_protids={'P3'})
+        assert fwd == full_fwd
+        assert rev == {k: full_rev[k] for k in {'P3'}}
+
     def test_taxon_map_full_unchanged(self, cache_dir):
         # duplicate protid1 (Pf2) -> last-wins collapses to (Pt3, 0.8), matching the original dict-comp.
         self._write_taxon_map(cache_dir, [('Pf1', 'Pt1', 0.9), ('Pf2', 'Pt2', 0.3), ('Pf2', 'Pt3', 0.8)])
