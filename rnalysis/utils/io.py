@@ -1414,32 +1414,6 @@ class PhylomeDBOrthologMapper:
         return {a: (b, c) for (a, b, c) in sub.iter_rows()}
 
     @staticmethod
-    def _get_id_conversion_maps(needed_extids: Optional[Set[str]] = None,
-                                needed_protids: Optional[Set[str]] = None) -> Tuple[dict, dict]:
-        """Build the external-ID <-> PhylomeDB-protid conversion maps.
-
-        The PhylomeDB ``id_conversion`` table covers *every* species in the database (millions of
-        rows). ``get_orthologs`` only ever looks up a handful of those keys, so passing
-        ``needed_extids`` / ``needed_protids`` restricts each returned map to just the requested
-        keys -- avoiding the cost of materializing the whole table into two Python dicts, which
-        dominated the runtime of this method.
-
-        ``None`` for either argument means "no filter" (the full map, preserved for backwards
-        compatibility); an empty set means "nothing needed" and returns an empty map without
-        scanning. A filtered map is identical to the corresponding entries of the full map.
-        """
-        df = PhylomeDBOrthologMapper._load_id_conversion_table()
-
-        # Fast path: no filtering requested -> reproduce the original whole-table maps exactly.
-        if needed_extids is None and needed_protids is None:
-            map_fwd = dict(df.select('#extid', 'protid').iter_rows())
-            map_rev = {v: k for k, v in map_fwd.items()}
-            return map_fwd, map_rev
-
-        return (PhylomeDBOrthologMapper._build_forward_map(df, needed_extids),
-                PhylomeDBOrthologMapper._build_reverse_map(df, needed_protids))
-
-    @staticmethod
     def _load_id_conversion_table() -> pl.DataFrame:
         """Return PhylomeDB's external-ID <-> protid table, downloading and caching it if needed.
 
