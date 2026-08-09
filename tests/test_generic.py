@@ -224,6 +224,74 @@ def test_get_method_readable_name():
     assert get_method_readable_name(func2) == "readable name"
 
 
+def test_param_readable_names_decorator_sets_attribute():
+    mapping = {'trim_n': 'Trim ambiguous (N) bases', 'drop_columns': 'Columns to drop'}
+
+    @param_readable_names(mapping)
+    def func(trim_n=True, drop_columns=None):
+        return trim_n, drop_columns
+
+    assert func.readable_param_names == mapping
+    # the decorator must not alter the function's behavior
+    assert func(False, ['a']) == (False, ['a'])
+
+
+@pytest.mark.parametrize("param_name,expected", [
+    ('fastq_folder', 'FASTQ folder'),
+    ('three_prime_adapters', 'Three prime adapters'),
+    ('minimum_read_length', 'Minimum read length'),
+    ('power_transform', 'Power transform'),
+    ('drop_columns', 'Drop columns'),
+    ('trim_n', 'Trim n'),
+    ('single', 'Single'),
+    ('go_id', 'GO ID'),
+    ('kegg_pathways', 'KEGG pathways'),
+    ('gene_ids', 'Gene IDs'),
+    ('rna_type', 'RNA type'),
+    ('mrna_length', 'mRNA length'),
+    ('use_pca', 'Use PCA'),
+    ('fdr_level', 'FDR level'),
+    ('deseq2_normalization', 'DESeq2 normalization'),
+    ('sam_path', 'SAM path'),
+    ('bam_index', 'BAM index'),
+    ('fastq_to_sam', 'FASTQ to SAM'),
+    ('padj_threshold', 'padj threshold'),
+    ('gtf_file', 'GTF file'),
+    ('n_components', 'Number of components'),
+    ('', ''),
+])
+def test_get_param_readable_name_auto(param_name, expected):
+    assert get_param_readable_name(param_name) == expected
+
+
+def test_get_param_readable_name_override():
+    @param_readable_names({'trim_n': 'Trim ambiguous (N) bases'})
+    def func(trim_n=True, other_param=1):
+        pass
+
+    # overridden parameter uses the declared label
+    assert get_param_readable_name('trim_n', func) == 'Trim ambiguous (N) bases'
+    # non-overridden parameters fall back to auto-humanization
+    assert get_param_readable_name('other_param', func) == 'Other param'
+
+
+def test_get_param_readable_name_func_without_overrides():
+    def func(trim_n=True):
+        pass
+
+    # a function without a readable_param_names attribute auto-humanizes
+    assert get_param_readable_name('trim_n', func) == 'Trim n'
+    assert get_param_readable_name('trim_n', None) == 'Trim n'
+
+
+def test_get_param_readable_name_override_beats_special_name():
+    @param_readable_names({'n_components': 'Num comps'})
+    def func(n_components=2):
+        pass
+
+    assert get_param_readable_name('n_components', func) == 'Num comps'
+
+
 @pytest.mark.parametrize(
     "X, labels, expected_bic",
     [
