@@ -206,6 +206,87 @@ def test_get_val_from_widget_nonnative_types(qtbot, widget_class, keyboard_inter
     assert get_val_from_widget(widget) == expected_val
 
 
+def test_OptionalWidget_label_is_positive(qtbot):
+    qtbot, widget = widget_setup(qtbot, OptionalWidget, other=QtWidgets.QLineEdit())
+    assert widget.checkbox.text() == 'Set a value'
+
+
+def test_OptionalWidget_default_none_is_unchecked_and_disabled(qtbot):
+    qtbot, widget = widget_setup(qtbot, OptionalWidget, other=QtWidgets.QLineEdit(), default=None)
+    assert not widget.checkbox.isChecked()
+    assert not widget.other.isEnabled()
+    assert widget.value() is None
+
+
+def test_OptionalWidget_default_empty_is_checked_and_enabled(qtbot):
+    inner = QtWidgets.QLineEdit()
+    inner.setText('preset')
+    qtbot, widget = widget_setup(qtbot, OptionalWidget, other=inner)
+    assert widget.checkbox.isChecked()
+    assert widget.other.isEnabled()
+    assert widget.value() == 'preset'
+
+
+def test_OptionalWidget_checked_provides_value_unchecked_returns_none(qtbot):
+    inner = QtWidgets.QLineEdit()
+    inner.setText('abc')
+    qtbot, widget = widget_setup(qtbot, OptionalWidget, other=inner, default=None)
+    # start unchecked -> use default/None, inner disabled
+    assert not widget.other.isEnabled()
+    assert widget.value() is None
+    # check -> provide value, inner enabled
+    widget.checkbox.setChecked(True)
+    assert widget.other.isEnabled()
+    assert widget.value() == 'abc'
+    # uncheck -> back to None, inner disabled
+    widget.checkbox.setChecked(False)
+    assert not widget.other.isEnabled()
+    assert widget.value() is None
+
+
+def test_OptionalWidget_check_other_follows_checkbox(qtbot):
+    inner = QtWidgets.QLineEdit()
+    qtbot, widget = widget_setup(qtbot, OptionalWidget, other=inner, default=None)
+    widget.checkbox.setChecked(True)
+    widget.check_other()
+    assert widget.other.isEnabled()
+    widget.checkbox.setChecked(False)
+    widget.check_other()
+    assert not widget.other.isEnabled()
+
+
+@pytest.mark.parametrize('val', [None, 'text', ''])
+def test_OptionalWidget_setValue_value_roundtrip(qtbot, val):
+    qtbot, widget = widget_setup(qtbot, OptionalWidget, other=QtWidgets.QLineEdit())
+    widget.setValue(val)
+    assert widget.value() == val
+    if val is None:
+        assert not widget.checkbox.isChecked()
+        assert not widget.other.isEnabled()
+    else:
+        assert widget.checkbox.isChecked()
+        assert widget.other.isEnabled()
+
+
+@pytest.mark.parametrize('param_type,default,expected', [
+    (Union[str, None], None, None),
+    (Union[str, None], 'text', 'text'),
+    (Union[int, None], None, None),
+    (Union[int, None], 5, 5),
+    (Union[float, None], -0.5, -0.5),
+])
+def test_OptionalWidget_param_to_widget_value_matches_default(qtbot, param_type, default, expected):
+    param = NewParam(param_type, default)
+    widget = param_to_widget(param, 'name')
+    widget.show()
+    qtbot.add_widget(widget)
+    # returned value is identical to the serialized default (back-compat invariant)
+    assert widget.value() == expected
+    # None default -> unset (unchecked/disabled); concrete default -> set (checked/enabled)
+    assert widget.checkbox.isChecked() == (default is not None)
+    assert widget.other.isEnabled() == (default is not None)
+
+
 @pytest.mark.parametrize("widget_class,default,excepted_val_empty,expected_val,kwargs", [
     (QMultiSpinBox, [0, 2, 3], 0, [0, 2, 3], {}),
     (QMultiDoubleSpinBox, [0.1, 3.2, 5], 0.0, [0.1, 3.2, 5], {}),
