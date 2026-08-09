@@ -498,6 +498,16 @@ def test_PathLineEdit_choose_file_not_chosen(qtbot, monkeypatch):
     assert widget.text() == pth
 
 
+def test_mark_primary(qtbot):
+    # regression test for #208: marking a button primary should set the dynamic
+    # 'class'='primary' property used by the QPushButton[class="primary"] QSS rule
+    qtbot, widget = widget_setup(qtbot, QtWidgets.QPushButton, 'Load')
+    assert widget.property('class') != 'primary'
+
+    mark_primary(widget)
+    assert widget.property('class') == 'primary'
+
+
 def test_MultipleChoiceList_select_all(qtbot):
     items = ['item1', 'item2', 'item3']
     qtbot, widget = widget_setup(qtbot, MultipleChoiceList, items)

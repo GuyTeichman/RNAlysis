@@ -652,6 +652,7 @@ class FuncExternalWindow(gui_widgets.MinMaxDialog):
         self.param_widgets = {}
 
         self.start_button = QtWidgets.QPushButton(f'Start {self.func_name}')
+        gui_widgets.mark_primary(self.start_button)
         self.import_button = QtWidgets.QPushButton('Import parameters')
         self.export_button = QtWidgets.QPushButton('Export parameters')
         self.close_button = QtWidgets.QPushButton('Close')

@@ -2262,3 +2262,20 @@ def clear_layout(layout, exceptions: set = frozenset()):
         child = layout.takeAt(0)
         if child.widget() and child.widget() not in exceptions:
             child.widget().deleteLater()
+
+
+def mark_primary(button: QtWidgets.QAbstractButton):
+    """
+    Mark a button as the primary/main action of its window or screen, so it gets the
+    accented, filled "primary button" look defined by the ``QPushButton[class="primary"]``
+    rule in ``styles/parametric_style.qss``, instead of the default flat/secondary style.
+    There should be at most one primary button visible per window at a time.
+
+    :param button: the button to mark as primary
+    :type button: QtWidgets.QAbstractButton
+    """
+    button.setProperty('class', 'primary')
+    # dynamic properties used in a stylesheet selector require the style to be
+    # re-polished to take effect, since it isn't automatically re-evaluated on setProperty()
+    button.style().unpolish(button)
+    button.style().polish(button)

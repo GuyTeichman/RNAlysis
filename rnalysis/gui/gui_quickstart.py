@@ -30,7 +30,7 @@ class QuickStartWizard(QtWidgets.QWizard):
         "Generating Interactive Analysis Reports",)
 
     CONTENTS = (
-        "Choose a file from your computer, and click 'start' to load it into <i>RNAlysis</i>. ",
+        "Click 'Choose table' to select a file from your computer, and click 'Load' to import it into <i>RNAlysis</i>. ",
 
         "You will now be able to see an overview of your data, including the table's name, type, and dimensions. "
         "Click the 'View full table' button to see your table in its entirety. ",

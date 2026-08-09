@@ -335,6 +335,13 @@ def test_ApplyPipelineWindow_clear_all(qtbot, apply_table_pipeline_window):
 
 def test_KallistoIndexWindow_init(kallisto_index_window):
     _ = kallisto_index_window
+    # regression test for #208: external-tool windows' "Start <func>" button is this
+    # window's single primary action; the parameter import/export/close buttons
+    # (shared by all FuncExternalWindow subclasses) should stay secondary
+    assert kallisto_index_window.start_button.property('class') == 'primary'
+    assert kallisto_index_window.import_button.property('class') != 'primary'
+    assert kallisto_index_window.export_button.property('class') != 'primary'
+    assert kallisto_index_window.close_button.property('class') != 'primary'
 
 
 def test_KallistoSingleWindow_init(kallisto_single_window):
@@ -660,6 +667,8 @@ def test_ClicomWindow_start_analysis(qtbot, clicom_window):
 
 def test_EnrichmentWindow_init(enrichment_window):
     _ = enrichment_window
+    # regression test for #208: the "Run" button is this window's single primary action
+    assert enrichment_window.widgets['run_button'].property('class') == 'primary'
 
 
 @pytest.mark.parametrize('button_name,truth', [
@@ -1010,6 +1019,8 @@ def test_EnrichmentWindow_run_analysis_non_categorical(qtbot, enrichment_window,
 
 def test_SetOperationWindow_init(set_op_window):
     _ = set_op_window
+    # regression test for #208: the "Apply" button is this window's single primary action
+    assert set_op_window.widgets['apply_button'].property('class') == 'primary'
 
 
 @pytest.mark.parametrize('op_name,truth', [
@@ -1251,6 +1262,8 @@ def test_SetOperationWindow_apply_set_op_majority_vote(qtbot, set_op_window, thr
 
 def test_SetVisualizationWindow_init(set_vis_window):
     _ = set_vis_window
+    # regression test for #208: "Generate graph" is this window's single primary action
+    assert set_vis_window.widgets['generate_button'].property('class') == 'primary'
 
 
 @pytest.mark.parametrize('op_name,truth', [
@@ -1400,7 +1413,10 @@ def test_SetVisualizationWindow_generate_graph(qtbot, set_vis_window, monkeypatc
 
 
 def test_FilterTabPage_init(qtbot):
-    _, _ = widget_setup(qtbot, FilterTabPage)
+    _, window = widget_setup(qtbot, FilterTabPage)
+    # regression test for #208: the in-tab "Apply" button (defined once in the
+    # shared TabPage base class) is this tab's single primary action
+    assert window.apply_button.property('class') == 'primary'
 
 
 @pytest.mark.parametrize('outputs,exp_signals', [
@@ -1491,7 +1507,14 @@ def test_FilterTabPage_load_file(qtbot):
     assert not window.basic_widgets['start_button'].isEnabled()
     # regression test for #208: the confirm button should have a clear,
     # outcome-oriented label instead of the ambiguous "Start"
-    assert window.basic_widgets['start_button'].text() == 'Open table'
+    assert window.basic_widgets['start_button'].text() == 'Load'
+    # the file-picker button should read "Choose table" on this screen, not the
+    # generic PathLineEdit default ("Load"), so it doesn't collide with the confirm button
+    assert window.basic_widgets['file_path'].open_button.text() == 'Choose table'
+    # the confirm button is this screen's single primary action; the file-picker
+    # button (a preparatory/secondary action) should not be marked primary
+    assert window.basic_widgets['start_button'].property('class') == 'primary'
+    assert window.basic_widgets['file_path'].open_button.property('class') != 'primary'
 
     window.basic_widgets['file_path'].clear()
     qtbot.keyClicks(window.basic_widgets['file_path'].file_path, str(Path('tests/test_files/counted.csv').absolute()))
@@ -1951,6 +1974,12 @@ def test_CreatePipelineWindow_init(qtbot):
     # regression test for #208: the confirm button should have a clear,
     # outcome-oriented label instead of the ambiguous "Start"
     assert window.basic_widgets['start_button'].text() == 'Create Pipeline'
+    # both this window's main actions (the initial confirm, and the "Add to
+    # Pipeline" button that takes over once basic_group is hidden) are primary,
+    # since only one of the two is ever visible at a time
+    assert window.basic_widgets['start_button'].property('class') == 'primary'
+    assert window.apply_button.text() == 'Add to Pipeline'
+    assert window.apply_button.property('class') == 'primary'
 
 
 def test_CreatePipelineWindow_from_pipeline(qtbot):

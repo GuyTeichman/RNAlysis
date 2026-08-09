@@ -26,7 +26,7 @@ We will start by opening the *RNAlysis* GUI. Type the following command into the
 
     rnalysis-gui
 
-To load a table, in the main window, click on the "Load" button and choose a table's csv file from your computer.
+To load a table, in the main window, click on the "Choose table" button and choose a table's csv file from your computer.
 We will then use the drop-down menu to change our table type from "Other" to "Count matrix". This will allow us to later on use analysis methods that are dedicated to count matrix-style datasets.
 
 .. image:: /tutorial_screenshots/01a01_load_table.png
@@ -45,7 +45,7 @@ and for any table you can specify the names of specific columns that you want to
 
 .. image:: ../../rnalysis/gui/videos/table_types.webp
 
-Finally, we can click the "start" button to actually open our table on *RNAlysis*.
+Finally, we can click the "Load" button to actually open our table on *RNAlysis*.
 The window will now display a preview of our table, as well as a short summary of our table's content (table name, table type, number of rows and columns).
 
 
@@ -709,7 +709,7 @@ In the new window that opened, you can name the Pipeline, and choose the type of
 
 Pipelines for specific types of tables will allow you to use functions specific to that table type.
 If you're not sure what type of table to apply your Pipeline to, just choose "Other" - your Pipeline will then be applicable to any table type.
-After choosing a name and table type, click on the "Start" button to create the Pipeline.
+After choosing a name and table type, click on the "Create Pipeline" button.
 The window will now update to show a preview of the new (empty) Pipeline:
 
 .. image:: /tutorial_screenshots/02d03_pipeline.png

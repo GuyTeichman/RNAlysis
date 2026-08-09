@@ -155,6 +155,47 @@ font: bold;
 font-size: $FONTSIZEPLACEHOLDER*1;
 }
 
+/* Primary action buttons: the single main "go" action of a window/screen
+   (e.g. "Load", "Apply", "Create Pipeline", "Run", "Start <function>").
+   Marked in Python with btn.setProperty('class', 'primary') and re-polished.
+   Filled with the same accent teal used for ToggleSwitch's "on" state, so the
+   accent is consistent app-wide. The primary/secondary distinction is carried
+   by *both* color and fill (solid accent vs. the default flat/bordered look
+   of ordinary buttons) so it still reads under grayscale or color-blind
+   viewing, not by hue alone. Text is a near-black teal rather than white:
+   white-on-#3cc7c0 is only ~2.1:1 contrast (fails WCAG AA); the dark text
+   used here keeps contrast >= ~7:1 across the normal/hover/pressed fills
+   below. The fill colors are constant across the "base"/"light"/"dark" app
+   themes (this stylesheet is prepended to the qdarkstyle sheet, and the
+   attribute selector out-specifies qdarkstyle's plain QPushButton rules), so
+   primary buttons look the same regardless of theme while still sitting
+   correctly against each theme's background. */
+QPushButton[class="primary"] {
+background-color: #3cc7c0;
+color: #0b2e2b;
+border: 2px solid #25a6a0;
+border-radius: 4px;
+padding: 4px 14px;
+}
+
+QPushButton[class="primary"]:hover {
+background-color: #25a6a0;
+color: #0b2e2b;
+border: 2px solid #1c8d88;
+}
+
+QPushButton[class="primary"]:pressed {
+background-color: #1c8d88;
+color: #0b2e2b;
+border: 2px solid #157672;
+}
+
+QPushButton[class="primary"]:disabled {
+background-color: #a9d8d5;
+color: #5f7f7d;
+border: 2px solid #a9d8d5;
+}
+
 QToolButton {
 background-color: #cccccc;
 font: bold;
