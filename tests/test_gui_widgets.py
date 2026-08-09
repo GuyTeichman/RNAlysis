@@ -11,6 +11,20 @@ LEFT_CLICK = QtCore.Qt.MouseButton.LeftButton
 RIGHT_CLICK = QtCore.Qt.MouseButton.RightButton
 
 
+class TeardownTrackingLabel(QtWidgets.QLabel):
+    def __init__(self, text=''):
+        super().__init__(text)
+        self.teardown_calls = []
+
+    def setParent(self, parent):
+        self.teardown_calls.append(('setParent', parent))
+        super().setParent(parent)
+
+    def deleteLater(self):
+        self.teardown_calls.append(('deleteLater',))
+        super().deleteLater()
+
+
 def widget_setup(qtbot, widget_class, *args, **kwargs):
     widget = widget_class(*args, **kwargs)
     widget.show()
@@ -117,13 +131,17 @@ def test_MandatoryComboBox_disable(qtbot):
 def test_clear_layout(qtbot):
     qtbot, widget = widget_setup(qtbot, QtWidgets.QWidget)
     layout = QtWidgets.QGridLayout(widget)
-    layout.addWidget(QtWidgets.QSpinBox(), 0, 0)
-    layout.addWidget(QtWidgets.QLineEdit(), 1, 2)
-    layout.addWidget(QtWidgets.QLabel("test"), 3, 3)
+    tracked_child = TeardownTrackingLabel("test")
+    children = [QtWidgets.QSpinBox(), QtWidgets.QLineEdit(), tracked_child]
+    layout.addWidget(children[0], 0, 0)
+    layout.addWidget(children[1], 1, 2)
+    layout.addWidget(children[2], 3, 3)
 
     clear_layout(layout)
 
     assert layout.count() == 0
+    assert all(child.parentWidget() is None for child in children)
+    assert tracked_child.teardown_calls == [('setParent', None), ('deleteLater',)]
 
 
 class FilledComboBox(QtWidgets.QComboBox):

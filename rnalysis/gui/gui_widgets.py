@@ -2208,5 +2208,7 @@ def get_val_from_widget(widget):
 def clear_layout(layout, exceptions: set = frozenset()):
     while layout.count() > len(exceptions):
         child = layout.takeAt(0)
-        if child.widget() and child.widget() not in exceptions:
-            child.widget().deleteLater()
+        child_widget = child.widget()
+        if child_widget and child_widget not in exceptions:
+            child_widget.setParent(None)
+            child_widget.deleteLater()

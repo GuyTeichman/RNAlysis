@@ -14,6 +14,21 @@ from rnalysis.gui.gui import *
 LEFT_CLICK = QtCore.Qt.MouseButton.LeftButton
 RIGHT_CLICK = QtCore.Qt.MouseButton.RightButton
 
+
+class TeardownTrackingLabel(QtWidgets.QLabel):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.teardown_calls = []
+
+    def setParent(self, parent):
+        self.teardown_calls.append(('setParent', parent))
+        super().setParent(parent)
+
+    def deleteLater(self):
+        self.teardown_calls.append(('deleteLater',))
+        super().deleteLater()
+
+
 @pytest.fixture(autouse=True)
 def pytestqt_graceful_shutdown():
     yield
@@ -1077,6 +1092,19 @@ def test_SetOperationWindow_replacing_canvas_detaches_old_canvas(set_op_window):
     assert old_toolbar.parentWidget() is None
 
 
+def test_SetOperationWindow_replacing_help_link_detaches_old_widget(set_op_window):
+    set_op_window.widgets['radio_button_box'].radio_buttons['Union'].click()
+    old_help_link = TeardownTrackingLabel(set_op_window)
+    set_op_window.operations_grid.addWidget(old_help_link)
+    set_op_window.parameter_widgets['help_link'] = old_help_link
+
+    set_op_window.widgets['radio_button_box'].radio_buttons['Intersection'].click()
+
+    assert set_op_window.operations_grid.indexOf(old_help_link) == -1
+    assert old_help_link.parentWidget() is None
+    assert old_help_link.teardown_calls == [('setParent', None), ('deleteLater',)]
+
+
 @pytest.mark.parametrize('n_selected', [3, 4])
 def test_SetOperationWindow_primary_set_change(qtbot, set_op_window, n_selected):
     for i in range(n_selected):
@@ -1313,6 +1341,19 @@ def test_SetVisualizationWindow_replacing_canvas_detaches_old_canvas(set_vis_win
     # NOTE: the canvas classes shadow QWidget.parent() with a `self.parent` attribute, so query the
     # real Qt parent via parentWidget().
     assert old_canvas.parentWidget() is None
+
+
+def test_SetVisualizationWindow_replacing_help_link_detaches_old_widget(set_vis_window):
+    set_vis_window.widgets['radio_button_box'].radio_buttons['Venn Diagram'].click()
+    old_help_link = TeardownTrackingLabel(set_vis_window)
+    set_vis_window.visualization_grid.addWidget(old_help_link)
+    set_vis_window.parameter_widgets['help_link'] = old_help_link
+
+    set_vis_window.widgets['radio_button_box'].radio_buttons['UpSet Plot'].click()
+
+    assert set_vis_window.visualization_grid.indexOf(old_help_link) == -1
+    assert old_help_link.parentWidget() is None
+    assert old_help_link.teardown_calls == [('setParent', None), ('deleteLater',)]
 
 
 @pytest.mark.parametrize('op_name', [
