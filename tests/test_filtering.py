@@ -2558,3 +2558,157 @@ def test_histogram(column, bins, x_label, x_logscale, y_logscale, basic_deseqfil
     fig = basic_deseqfilter.histogram(column, bins, x_label, x_logscale, y_logscale)
     assert isinstance(fig, plt.Figure)
     plt.close(fig)
+
+
+# ---------------------------------------------------------------------------
+# infer_table_type: auto-detection of the most likely table type on load.
+# Returns one of the keys used by the GUI's FILTER_OBJ_TYPES combo.
+# Detection must be CONSERVATIVE (fall back to 'Other table' when unsure) and
+# must NEVER raise on malformed input.
+# ---------------------------------------------------------------------------
+COUNT_KEY = 'Count matrix'
+DE_KEY = 'Differential expression'
+FC_KEY = 'Fold change'
+OTHER_KEY = 'Other table'
+
+
+@pytest.mark.parametrize('fname,expected', [
+    # --- real count matrices (raw counts / normalized expression) ---
+    ('tests/test_files/counted.csv', COUNT_KEY),
+    ('tests/test_files/counted.tsv', COUNT_KEY),
+    ('tests/test_files/counted_6cols.csv', COUNT_KEY),
+    ('tests/test_files/big_counted.csv', COUNT_KEY),
+    ('tests/test_files/elegans_developmental_stages.tsv', COUNT_KEY),
+    # count matrix whose *filename* misleadingly says "fold_change" but content is counts:
+    ('tests/test_files/counted_fold_change.csv', COUNT_KEY),
+    # --- real differential-expression tables (DESeq2 + limma-voom) ---
+    ('tests/test_files/test_deseq.csv', DE_KEY),
+    ('tests/test_files/sample_deseq.csv', DE_KEY),
+    ('tests/test_files/test_deseq_with_nan.csv', DE_KEY),
+    ('tests/test_files/deseq2_tests/case1/DESeq2_replicate_rep2_vs_rep3_truth.csv', DE_KEY),
+    ('tests/test_files/limma_tests/case1/LimmaVoom_replicate_rep2_vs_rep3_truth.csv', DE_KEY),
+    ('tests/test_files/limma_tests/case2/LimmaVoom_condition_cond2_vs_cond1_truth.csv', DE_KEY),
+    # --- real fold-change tables (single fold-change column) ---
+    ('tests/test_files/fc_1.csv', FC_KEY),
+    ('tests/test_files/fc_2.csv', FC_KEY),
+    # --- generic / ambiguous tables -> Other ---
+    ('tests/test_files/biotype_ref_table_for_tests.csv', OTHER_KEY),  # single string column
+    ('tests/test_files/attribute_reference_table.csv', OTHER_KEY),  # single all-null attribute column
+    ('tests/test_files/attr_ref_table_for_tests.csv', OTHER_KEY),  # numeric attributes, has negatives
+    ('tests/test_files/attr_ref_table_for_non_categorical.csv', OTHER_KEY),  # numeric attributes, has negatives
+])
+def test_infer_table_type_fixtures(fname, expected):
+    assert infer_table_type(fname) == expected
+
+
+@pytest.mark.parametrize('fname', [
+    'tests/test_files/test_deseq.csv',
+    'tests/test_files/sample_deseq.csv',
+    'tests/test_files/deseq2_tests/case1/DESeq2_replicate_rep2_vs_rep3_truth.csv',
+    'tests/test_files/limma_tests/case1/LimmaVoom_replicate_rep2_vs_rep3_truth.csv',
+])
+def test_infer_table_type_de_never_detected_as_count(fname):
+    # A differential-expression table must NEVER be preselected as a count matrix.
+    assert infer_table_type(fname) != COUNT_KEY
+
+
+@pytest.mark.parametrize('fname', [
+    'tests/test_files/counted.csv',
+    'tests/test_files/counted_6cols.csv',
+    'tests/test_files/big_counted.csv',
+])
+def test_infer_table_type_count_never_detected_as_de(fname):
+    # A count matrix must NEVER be preselected as a differential-expression table.
+    assert infer_table_type(fname) != DE_KEY
+
+
+def test_infer_table_type_accepts_polars_frame():
+    df = pl.DataFrame({'gene': ['a', 'b', 'c'], 'cond1': [5, 10, 0], 'cond2': [3, 7, 22]})
+    assert infer_table_type(df=df) == COUNT_KEY
+
+
+def test_infer_table_type_frame_takes_precedence_over_fname():
+    de = pl.DataFrame({'gene': ['a', 'b'], 'log2FoldChange': [-1.0, 2.0], 'padj': [0.01, 0.2]})
+    # a count-matrix path is given, but the explicit frame is a DE table -> DE wins
+    assert infer_table_type(fname='tests/test_files/counted.csv', df=de) == DE_KEY
+
+
+@pytest.mark.parametrize('columns,expected', [
+    # DESeq2-style
+    (['log2FoldChange', 'padj'], DE_KEY),
+    (['baseMean', 'log2FoldChange', 'lfcSE', 'stat', 'pvalue', 'padj'], DE_KEY),
+    # limma-voom style
+    (['logFC', 'AveExpr', 't', 'P.Value', 'adj.P.Val', 'B'], DE_KEY),
+    # spaced/variant fold-change header still recognized alongside a p-value column
+    (['log2 fold change', 'pvalue'], DE_KEY),
+    # a lone log2fc column without a p-value column is NOT a DE table
+    (['log2FoldChange'], FC_KEY),  # single fold-change-like column -> fold change
+    # a lone p-value column without a fold-change column -> Other
+    (['padj'], OTHER_KEY),
+])
+def test_infer_table_type_de_and_fc_by_columns(columns, expected):
+    data = {'gene': ['g1', 'g2', 'g3']}
+    for i, col in enumerate(columns):
+        data[col] = [0.5 * (i + 1), -0.5 * (i + 1), 0.1 * (i + 1)]
+    df = pl.DataFrame(data)
+    assert infer_table_type(df=df) == expected
+
+
+def test_infer_table_type_single_fold_change_column():
+    df = pl.DataFrame({'gene': ['a', 'b', 'c'], 'Fold Change': [1.4, 2.6, 0.6]})
+    assert infer_table_type(df=df) == FC_KEY
+
+
+def test_infer_table_type_single_non_fold_numeric_column_is_other():
+    # a single numeric column that isn't fold-change-like is ambiguous -> Other
+    df = pl.DataFrame({'gene': ['a', 'b', 'c'], 'gene_length': [1200, 3400, 900]})
+    assert infer_table_type(df=df) == OTHER_KEY
+
+
+def test_infer_table_type_negative_numeric_matrix_is_other():
+    # multi-column numeric with negatives (e.g. attribute table / transformed data) -> Other
+    df = pl.DataFrame({'gene': ['a', 'b'], 'attr1': [-5, 3], 'attr2': [7, -2]})
+    assert infer_table_type(df=df) == OTHER_KEY
+
+
+def test_infer_table_type_binary_matrix_is_other():
+    # a purely presence/absence {0,1} numeric matrix is not count-like -> Other
+    df = pl.DataFrame({'gene': ['a', 'b', 'c'], 'attr1': [0, 1, 1], 'attr2': [1, 0, 1]})
+    assert infer_table_type(df=df) == OTHER_KEY
+
+
+def test_infer_table_type_non_numeric_junk_is_other():
+    df = pl.DataFrame({'gene': ['a', 'b'], 'x': ['foo', 'bar'], 'y': ['baz', 'qux']})
+    assert infer_table_type(df=df) == OTHER_KEY
+
+
+def test_infer_table_type_tiny_count_matrix():
+    df = pl.DataFrame({'gene': ['a'], 'cond1': [500], 'cond2': [300]})
+    assert infer_table_type(df=df) == COUNT_KEY
+
+
+def test_infer_table_type_all_null_numeric_column_is_other():
+    df = pl.DataFrame({'gene': ['a', 'b'], 'x': [None, None]}, schema={'gene': pl.Utf8, 'x': pl.Float64})
+    assert infer_table_type(df=df) == OTHER_KEY
+
+
+def test_infer_table_type_empty_frame_is_other():
+    assert infer_table_type(df=pl.DataFrame()) == OTHER_KEY
+
+
+def test_infer_table_type_index_only_frame_is_other():
+    df = pl.DataFrame({'gene': ['a', 'b', 'c']})
+    assert infer_table_type(df=df) == OTHER_KEY
+
+
+def test_infer_table_type_never_raises_on_bad_input():
+    # None inputs, nonexistent files, and garbage must all degrade to 'Other table'.
+    assert infer_table_type() == OTHER_KEY
+    assert infer_table_type(None, None) == OTHER_KEY
+    assert infer_table_type('tests/test_files/this_file_does_not_exist_12345.csv') == OTHER_KEY
+
+
+def test_infer_table_type_never_raises_on_malformed_file(tmp_path):
+    junk = tmp_path / 'junk.csv'
+    junk.write_bytes(b'\x00\x01\x02not,a,real\x00table\xff\xfe')
+    assert infer_table_type(str(junk)) == OTHER_KEY
