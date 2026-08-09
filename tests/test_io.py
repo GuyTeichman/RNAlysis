@@ -1929,6 +1929,99 @@ class TestPantherOrthologMapper:
             assert all(id_pattern.match(v) for v in values), f"unexpected paralog ID format(s): {values}"
 
 
+class _PantherIdentityTranslator:
+    """Stand-in for GeneIDTranslator so PantherOrthologMapper.translate_ids() needs no network."""
+
+    def __init__(self, *args, **kwargs):
+        pass
+
+    def run(self, ids):
+        return GeneIDDict({this_id: this_id for this_id in ids})
+
+
+def _panther_fake_session(json_side_effect):
+    """A session whose every .post() returns a 200 response with the given .json() side effect."""
+    resp = MagicMock()
+    resp.raise_for_status.return_value = None
+    resp.json.side_effect = json_side_effect
+    session = MagicMock()
+    session.post.return_value = resp
+    return session
+
+
+def _empty_body_error():
+    # what requests raises when the body of a 200 response is empty / not valid JSON
+    raise requests.exceptions.JSONDecodeError('Expecting value', '', 0)
+
+
+@pytest.mark.unit
+def test_panther_get_orthologs_degrades_gracefully_on_empty_response(monkeypatch):
+    # PantherDB intermittently answers with an empty HTTP 200 body (its urllib3 Retry only covers
+    # 5xx/connection errors, not a 200), so req.json() raises JSONDecodeError. The mapper must not
+    # crash the whole run -- it should retry and, if the body stays empty, degrade to an empty
+    # result (the same graceful skip it already does for a JSON response missing the mapping keys).
+    monkeypatch.setattr(io, 'GeneIDTranslator', _PantherIdentityTranslator)
+    monkeypatch.setattr(io.time, 'sleep', lambda *args, **kwargs: None)
+    fake_session = _panther_fake_session(_empty_body_error)
+    monkeypatch.setattr(io, 'get_session', lambda retries: fake_session)
+
+    mapper = PantherOrthologMapper(map_to_organism=9606, map_from_organism=6239,
+                                   gene_id_type='UniProtKB AC/ID')
+    one2one, one2many = mapper.get_orthologs(('G5EDF7', 'P34544'), 'first', True)
+
+    assert isinstance(one2one, OrthologDict) and isinstance(one2many, OrthologDict)
+    assert one2one.mapping_dict == {}
+    assert one2many.mapping_dict == {}
+    # each of the 2 genes was retried the configured number of times before giving up
+    assert fake_session.post.call_count == 2 * mapper.EMPTY_RESPONSE_RETRIES
+
+
+@pytest.mark.unit
+def test_panther_get_orthologs_retries_empty_response_then_succeeds(monkeypatch):
+    # a transient empty 200 on the first attempt should be retried, and the recovered response
+    # used -- so a momentary PantherDB hiccup doesn't silently drop a gene's orthologs.
+    monkeypatch.setattr(io, 'GeneIDTranslator', _PantherIdentityTranslator)
+    monkeypatch.setattr(io.time, 'sleep', lambda *args, **kwargs: None)
+
+    good_payload = {'search': {'mapping': {'mapped': [
+        {'id': 'x', 'target_gene': 'HUMAN|UniProtKB=P12345', 'ortholog': 'LDO'}]}}}
+    calls = {'n': 0}
+
+    def empty_then_good():
+        calls['n'] += 1
+        if calls['n'] == 1:
+            raise requests.exceptions.JSONDecodeError('Expecting value', '', 0)
+        return good_payload
+
+    fake_session = _panther_fake_session(empty_then_good)
+    monkeypatch.setattr(io, 'get_session', lambda retries: fake_session)
+
+    mapper = PantherOrthologMapper(map_to_organism=9606, map_from_organism=6239,
+                                   gene_id_type='UniProtKB AC/ID')
+    one2one, one2many = mapper.get_orthologs(('P34544',), 'first', True)
+
+    assert one2one.mapping_dict == {'P34544': 'P12345'}
+    assert one2many.mapping_dict == {'P34544': ['P12345']}
+    assert calls['n'] == 2  # failed once, retried once, then succeeded
+
+
+@pytest.mark.unit
+def test_panther_get_paralogs_degrades_gracefully_on_empty_response(monkeypatch):
+    # same resilience requirement as get_orthologs, for the paralog endpoint
+    monkeypatch.setattr(io, 'GeneIDTranslator', _PantherIdentityTranslator)
+    monkeypatch.setattr(io.time, 'sleep', lambda *args, **kwargs: None)
+    fake_session = _panther_fake_session(_empty_body_error)
+    monkeypatch.setattr(io, 'get_session', lambda retries: fake_session)
+
+    mapper = PantherOrthologMapper(map_to_organism=6239, map_from_organism=6239,
+                                   gene_id_type='UniProtKB AC/ID')
+    paralogs = mapper.get_paralogs(('G5EDF7', 'P34707'))
+
+    assert isinstance(paralogs, OrthologDict)
+    assert paralogs.mapping_dict == {}
+    assert fake_session.post.call_count == 2 * mapper.EMPTY_RESPONSE_RETRIES
+
+
 class TestEnsemblOrthologMapper:
 
     # Define a fixture to create an instance of EnsemblOrthologMapper for testing

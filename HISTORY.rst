@@ -37,6 +37,7 @@ Fixed
 * Fixed a crash in ``CountFilter.average_replicate_samples`` when ``function='median'``: it relied on ``DataFrame.median_horizontal``, which was removed in Polars 1.x. The row-wise median is now computed correctly.
 * Fixed a bug where automatic common-name generation (used by the "smart" paired-end sample-naming option in the FASTQ functions) could produce an incorrect name when input file pairs differed in length, because a filtering step reused a loop variable left over from the last pair instead of each pair's own values.
 * Fixed a crash (``IndexError``) in automatic common-name generation for inputs of uneven length.
+* Fixed a bug where mapping orthologs or paralogs through the PantherDB service could crash the whole analysis when PantherDB intermittently returned an empty response for a gene (an empty ``HTTP 200`` body, which its retry mechanism does not cover). Such requests are now retried, and if the response stays empty that single gene is skipped with a warning instead of aborting the entire mapping.
 
 
 4.2.0 (2026-05-30)

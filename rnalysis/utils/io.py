@@ -1793,11 +1793,42 @@ class PantherOrthologMapper:
     API_URL = 'https://www.pantherdb.org'
     RETRIES = RandomExpRetry(total=5, backoff_factor=0.25, status_forcelist=[500, 502, 503, 504])
     HEADERS = {'accept': 'application/json'}
+    # PantherDB intermittently answers a mapping request with an empty HTTP 200 body (its urllib3
+    # Retry only fires on 5xx/connection errors, not on a 200), which makes req.json() raise
+    # JSONDecodeError. Retry the request a few times before giving up on a gene.
+    EMPTY_RESPONSE_RETRIES = 3
+    EMPTY_RESPONSE_BACKOFF = 0.25
 
     def __init__(self, map_to_organism, map_from_organism='auto', gene_id_type='auto'):
         self.gene_id_type = gene_id_type
         self.map_from_organism = map_from_organism
         self.map_to_organism = map_to_organism
+
+    def _fetch_mapped(self, session: requests.Session, url: str, req_data: dict, headers: dict = None):
+        """POST to a PantherDB mapping endpoint and return its ``search.mapping.mapped`` payload.
+
+        Returns an empty list when the service answers with an empty/invalid body that stays empty
+        after ``EMPTY_RESPONSE_RETRIES`` attempts, so a single degraded response skips that one gene
+        instead of raising ``JSONDecodeError`` and aborting the whole ortholog/paralog mapping. A
+        valid JSON response that simply has no mapping for the gene also yields an empty list.
+        """
+        for attempt in range(self.EMPTY_RESPONSE_RETRIES):
+            req = session.post(url, headers=headers, params=req_data)
+            req.raise_for_status()
+            try:
+                payload = req.json()
+            except requests.exceptions.JSONDecodeError:
+                if attempt + 1 < self.EMPTY_RESPONSE_RETRIES:
+                    time.sleep(self.EMPTY_RESPONSE_BACKOFF * (attempt + 1))
+                    continue
+                warnings.warn(f"PantherDB returned an empty response for '{req_data.get('geneInputList')}' after "
+                              f"{self.EMPTY_RESPONSE_RETRIES} attempts; skipping this gene.")
+                break  # retries exhausted on an empty body -> fall through to the empty result below
+            try:
+                return payload['search']['mapping']['mapped']
+            except KeyError:
+                return []
+        return []
 
     def translate_ids(self, ids: Tuple[str, ...], session=None) -> Tuple[List[str], List[str]]:
         if self.gene_id_type == 'auto':
@@ -1822,10 +1853,8 @@ class PantherOrthologMapper:
             req_data = dict(geneInputList=from_id, organism=str(self.map_from_organism),
                             targetOrganism=str(self.map_to_organism),
                             orthologType='all' if filter_least_diverged else 'LDO')
-            req = session.post(url, headers=self.HEADERS, params=req_data)
-            req.raise_for_status()
+            req_output = self._fetch_mapped(session, url, req_data, headers=self.HEADERS)
             try:
-                req_output = req.json()['search']['mapping']['mapped']
                 for mapping in parsing.data_to_list(req_output):
                     if len(mapping) <= 1:
                         continue
@@ -1872,11 +1901,8 @@ class PantherOrthologMapper:
         n_mapped = 0
         for from_id in tqdm(translated_ids, 'Mapping paralogs', unit='genes'):
             req_data = dict(geneInputList=from_id, organism=str(self.map_from_organism), homologType='P')
-            req = session.post(url, params=req_data)
-            req.raise_for_status()
-
+            req_output = self._fetch_mapped(session, url, req_data)
             try:
-                req_output = req.json()['search']['mapping']['mapped']
                 for mapping in parsing.data_to_list(req_output):
                     if len(mapping) <= 1:
                         continue
@@ -1896,7 +1922,7 @@ class PantherOrthologMapper:
         _, mapping_one2many = translate_mappings(ids, translated_ids, {}, mapping_one2many)
 
         if n_mapped < len(translated_ids):
-            warnings.warn(f"Paralob mapping found for only {n_mapped} out of {len(translated_ids)} gene IDs.")
+            warnings.warn(f"Paralog mapping found for only {n_mapped} out of {len(translated_ids)} gene IDs.")
 
         return OrthologDict(mapping_one2many)
 
