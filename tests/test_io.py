@@ -9,12 +9,13 @@ from rnalysis.utils import io
 from rnalysis.utils.io import *
 from rnalysis.utils.io import _ensembl_lookup_post_request, _format_ids_iter
 from tests import (is_ensembl_available, is_phylomedb_available,
-                   is_uniprot_available, is_pantherdb_available)
+                   is_uniprot_available, is_pantherdb_available, is_orthoinspector_available)
 
 ENSEMBL_AVAILABLE = is_ensembl_available()
 UNIPROT_AVAILABLE = is_uniprot_available()
 PHYLOMEDB_AVAILABLE = is_phylomedb_available()
 PANTHERDB_AVAILABLE = is_pantherdb_available()
+ORTHOINSPECTOR_AVAILABLE = is_orthoinspector_available()
 
 
 class MockResponse(object):
@@ -1704,12 +1705,14 @@ class TestOrthoInspectorOrthologMapper:
         assert filename == 'orthoinspector_organism2_organism1.json'
 
     # Test the get_databases method
+    @pytest.mark.skipif(not ORTHOINSPECTOR_AVAILABLE, reason='OrthoInspector API is not available at the moment')
     def test_get_databases(self, ortholog_mapper):
         databases = ortholog_mapper.get_databases()
         assert isinstance(databases, frozenset)
         assert len(databases) >= 4  # the current number of OrthoInspector databases
 
     # Test the get_database_organisms method
+    @pytest.mark.skipif(not ORTHOINSPECTOR_AVAILABLE, reason='OrthoInspector API is not available at the moment')
     def test_get_database_organisms(self, ortholog_mapper):
         db_organisms = ortholog_mapper.get_database_organisms()
         assert isinstance(db_organisms, dict)
@@ -1722,6 +1725,7 @@ class TestOrthoInspectorOrthologMapper:
     # TestEnsemblOrthologMapper). OrthoInspector rebuilds its databases periodically, which can
     # change which accession is picked as "first"/"last"/"random" even though the mapper's own
     # logic hasn't changed, so we check structural invariants instead.
+    @pytest.mark.skipif(not ORTHOINSPECTOR_AVAILABLE, reason='OrthoInspector API is not available at the moment')
     @pytest.mark.parametrize('database,non_unique_mode', [
         ('auto', 'first'),
         ('Eukaryota2016', 'last'),
