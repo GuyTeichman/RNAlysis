@@ -83,14 +83,6 @@ jobs:
             # the culprit. No effect on runs where this env var is unset (e.g. local runs).
             PYTEST_CRASH_BREADCRUMB: ${{ github.workspace }}/pytest_last_test.txt
         steps:
-            -   name: Configure pagefile
-                if: runner.os == 'Windows'
-                uses: al-cheb/configure-pagefile-action@v1.5
-
-            -   name: Set up pagefile
-                if: runner.os == 'Windows'
-                run: |
-                    (Get-CimInstance Win32_PageFileUsage).AllocatedBaseSize
             -   name: Get repository
                 uses: actions/checkout@v7
                 with:
@@ -150,7 +142,9 @@ jobs:
                         r-libs-${{ runner.os }}-R4.4-
             -   name: Install homebrew on Linux
                 if: runner.os == 'Linux'
-                uses: Homebrew/actions/setup-homebrew@master
+                # Pinned to a commit SHA (tag 2026.07.10.1): the moving `@master` ref is deprecated
+                # and warned on every run ("the master branch sync will stop"). Dependabot bumps this.
+                uses: Homebrew/actions/setup-homebrew@1f8e202ffddf94def7f42f6fa3a482e821489f9c
             -   name: Install cURL on Linux
                 if: runner.os == 'Linux'
                 run: sudo apt-get install libcurl4-openssl-dev
