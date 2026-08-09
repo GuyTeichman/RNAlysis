@@ -4,6 +4,7 @@ import functools
 import inspect
 import json
 import threading
+from decimal import Decimal
 from functools import lru_cache
 from pathlib import Path
 from queue import Queue
@@ -1726,6 +1727,51 @@ class QMultiDoubleSpinBox(QMultiSpinBox):
         self.dialog_widgets['inputs'][-1].setSingleStep(self.step_size)
 
 
+def float_spinbox_decimals_and_step(value: float) -> Tuple[int, float]:
+    """Pick sensible display `decimals` and arrow `single_step` for a float spin box, given a
+    representative value (usually the parameter's default).
+
+    This is display polish only: the widget still returns the exact float the user sets, so the
+    values passed to the API are unchanged. `decimals` only caps the finest *typable* precision
+    (kept generous enough that legitimate values stay reachable), and `single_step` only sizes
+    the up/down arrows.
+
+    - Integer-valued magnitudes (e.g. a read-count threshold of ``5``) step by whole units.
+    - Fractional magnitudes get a finer step and enough decimals to show the value, with smaller
+      values getting more decimals.
+    """
+    v = abs(float(value))
+    if v == 0 or float(value).is_integer():
+        return 3, 1.0
+    if v >= 1:
+        return 3, 0.1
+    order = Decimal(str(v)).adjusted()  # order of magnitude of the first significant digit (< 0)
+    decimals = min(2 - order, 8)
+    step = 10.0 ** order
+    return decimals, step
+
+
+class AdaptiveDoubleSpinBox(QtWidgets.QDoubleSpinBox):
+    """A `QDoubleSpinBox` that trims trailing zeros from its display (shows ``5`` instead of
+    ``5.00`` and ``5.5`` instead of ``5.50``).
+
+    Display only: `value()` still returns the exact float that was set, and the configured
+    `decimals` still governs the finest typable precision, so values handed to the API are
+    unchanged.
+    """
+
+    def textFromValue(self, value: float) -> str:
+        text = super().textFromValue(value)
+        decimal_point = self.locale().decimalPoint()
+        if not isinstance(decimal_point, str):  # PyQt may hand back a QChar/int depending on version
+            decimal_point = chr(int(decimal_point))
+        if decimal_point in text:
+            text = text.rstrip('0')
+            if text.endswith(decimal_point):
+                text = text[:-len(decimal_point)]
+        return text
+
+
 class QMultiLineEdit(QMultiInput):
     CHILD_QWIDGET = QtWidgets.QLineEdit
 
@@ -2030,21 +2076,25 @@ def param_to_widget(param, name: str,
 
 
     elif param.annotation is float:
-        widget = QtWidgets.QDoubleSpinBox()
+        default = param.default if is_default else 0.0
+        decimals, step = float_spinbox_decimals_and_step(default)
+        widget = AdaptiveDoubleSpinBox()
+        widget.setDecimals(decimals)
         widget.setMinimum(float("-inf"))
         widget.setMaximum(float("inf"))
-        widget.setSingleStep(0.05)
-        default = param.default if is_default else 0.0
+        widget.setSingleStep(step)
         widget.setValue(default)
         for action in actions_to_connect:
             widget.valueChanged.connect(action)
 
     elif param.annotation == param_typing.Fraction:
-        widget = QtWidgets.QDoubleSpinBox()
+        default = param.default if is_default else 0.0
+        decimals, _ = float_spinbox_decimals_and_step(default)
+        widget = AdaptiveDoubleSpinBox()
+        widget.setDecimals(decimals)
         widget.setMinimum(0.0)
         widget.setMaximum(1.0)
-        widget.setSingleStep(0.05)
-        default = param.default if is_default else 0.0
+        widget.setSingleStep(0.05)  # the 0..1 fraction step is intentionally kept fine
         widget.setValue(default)
         for action in actions_to_connect:
             widget.valueChanged.connect(action)
