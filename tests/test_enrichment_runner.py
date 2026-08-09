@@ -51,11 +51,11 @@ def test_get_pval_asterisk(pval, alpha, expected):
 
 
 def test_calc_randomization_pval():
-    np.random.seed(42)
     hypergeom_pval = 0.2426153598589023
     avg_pval = 0
+    # average several independent (but reproducibly-seeded) permutation runs to reduce Monte-Carlo variance
     for i in range(5):
-        avg_pval += PermutationTest._calc_permutation_pval(1, 10000, 0.11, 10000, 500, 1000)
+        avg_pval += PermutationTest._calc_permutation_pval(1, 10000, 0.11, 10000, 500, 1000, i)
     avg_pval /= 5
     assert np.isclose(avg_pval, hypergeom_pval, atol=0.02)
 
@@ -410,7 +410,8 @@ def test_enrichment_runner_randomization_enrichment(monkeypatch, truth):
     gene_set_truth = {'WBGene00000019', 'WBGene00000041', 'WBGene00000106',
                       'WBGene00001133', 'WBGene00003915', 'WBGene00268195'}
 
-    def alt_calc_pval(self, log2fc: float, reps: int, obs_frac: float, bg_size: int, en_size: int, attr_size: int):
+    def alt_calc_pval(self, log2fc: float, reps: int, obs_frac: float, bg_size: int, en_size: int, attr_size: int,
+                      random_seed: int):
         assert reps == reps_truth
         assert en_size == len(gene_set_truth)
         assert log2fc == truth[4]
