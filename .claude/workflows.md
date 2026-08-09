@@ -46,14 +46,15 @@ GUI dialog for free. Do it TDD.
 
 ## Change code that touches an external web API (UniProt/Ensembl/PANTHER/KEGG/GO/…)
 
-Highest-risk area (see context.md).
+Highest-risk area (see context.md). Use the **`external-api-change`** skill for the full
+procedure, rationale, and CI-tier caveats — this is the condensed version.
 
 1. **Confirm current real behavior** of the service before coding — hit it live or use the
    `research` skill. Don't trust stale code or memory; these change often.
 2. Keep the `io.py` scaffolding: `tenacity` retries, `aiolimiter` rate limiting, and the
    response caches. Degrade gracefully; a dead service must not crash the app.
 3. Tests here can't depend on the live service — mock the responses. Capture a real current
-   response payload as a fixture in `tests/test_files/`.
+   response payload as a fixture in `tests/test_files/` with `packaging/snapshot_api_payload.py`.
 
 ## Add/modify differential expression or feature counting (R bridge)
 

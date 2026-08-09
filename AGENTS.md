@@ -106,7 +106,8 @@ migrated off Pandas in 4.0).
 ## A note on tool-specific instructions
 
 `CLAUDE.md` refers to Claude Code "skills" (`tdd`, `diagnosing-bugs`, `code-review`,
-`research`). Those are convenience shortcuts for one particular tool — but the *workflows they
-encode* apply to every agent: disciplined TDD, methodical debugging, a clean-context review of
-each diff, and verifying an external API's real current behavior before coding against it. Use
-whatever tooling you have to achieve the same outcomes.
+`research`, `external-api-change`). Those are convenience shortcuts for one particular tool — but
+the *workflows they encode* apply to every agent: disciplined TDD, methodical debugging, a
+clean-context review of each diff, verifying an external API's real current behavior before coding
+against it, and mocking external-service tests against a captured fixture rather than the live
+service. Use whatever tooling you have to achieve the same outcomes.
