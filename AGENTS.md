@@ -80,6 +80,14 @@ Hard invariants. Do not violate them without explicit sign-off from a maintainer
    in `CLAUDE.md`.
 8. **Independent review before done.** At PR time, have an agent or reviewer with clean context
    — not the one that wrote the change — review the diff, and address the findings.
+9. **Visible GUI changes ship with screenshots.** Because the GUI is reflected from the API, a
+   change to a public `Filter`/`FeatureSet`/`fastq`/`enrichment` function that is **visible in a
+   dialog** (a new/renamed/removed parameter, a changed type annotation, a new/edited
+   `@readable_name`, or edited `:param:` help text) must include a screenshot of the affected
+   dialog(s) on the PR — before/after for a renamed or retyped parameter. Generate them from the
+   API headlessly with `packaging/capture_gui_dialog.py` (run `--help` for usage); publish the PNGs
+   however your workflow links artifacts. Behind-the-scenes changes with no visible dialog effect
+   are exempt.
 
 ---
 
@@ -106,7 +114,15 @@ migrated off Pandas in 4.0).
 ## A note on tool-specific instructions
 
 `CLAUDE.md` refers to Claude Code "skills" (`tdd`, `diagnosing-bugs`, `code-review`,
-`research`). Those are convenience shortcuts for one particular tool — but the *workflows they
-encode* apply to every agent: disciplined TDD, methodical debugging, a clean-context review of
-each diff, and verifying an external API's real current behavior before coding against it. Use
-whatever tooling you have to achieve the same outcomes.
+`research`, `safe-optimization`). Those are convenience shortcuts for one particular tool — but
+the *workflows they encode* apply to every agent: disciplined TDD, methodical debugging, a
+clean-context review of each diff, verifying an external API's real current behavior before
+coding against it, and profiling-then-proving a performance change is safe (rule 5;
+`packaging/bench_equal.py` is the provider-neutral equality/benchmark engine). Use whatever
+tooling you have to achieve the same outcomes.
+`research`, `gui-screenshots`). Those are convenience shortcuts for one particular tool — but the
+*workflows they encode* apply to every agent: disciplined TDD, methodical debugging, a
+clean-context review of each diff, verifying an external API's real current behavior before coding
+against it, and attaching a dialog screenshot to any visible GUI change (rule 9;
+`packaging/capture_gui_dialog.py` is the provider-neutral engine). Use whatever tooling you have to
+achieve the same outcomes.

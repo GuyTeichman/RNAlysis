@@ -129,10 +129,15 @@ class PermutationTest(StatsTest):
 
     def run(self, attribute_name: str, annotation_set: Set[str], gene_set: Set[str], background_set: Set[str],
             annotation_set_unfiltered: Union[Set[str], None] = None):
-        np.random.seed(self.random_seed)
+        # The permutation loop runs inside a numba-jitted function with its own RNG. Seeding numpy
+        # from here (interpreted code) does NOT reach numba's generator, so the seed must be passed
+        # in and applied inside the jitted function to make results reproducible.
+        # random_seed=None means "non-deterministic": draw a fresh integer seed per call.
+        seed = self.random_seed if self.random_seed is not None else np.random.randint(0, 2 ** 31 - 1)
         bg_size, en_size, attr_size, en_attr_size, obs, exp, log2fc = self.get_hypergeometric_params(
             annotation_set, gene_set, background_set)
-        pval = self._calc_permutation_pval(log2fc, self.n_permutations, obs / en_size, bg_size, en_size, attr_size)
+        pval = self._calc_permutation_pval(log2fc, self.n_permutations, obs / en_size, bg_size, en_size, attr_size,
+                                           seed)
         if annotation_set_unfiltered is not None:
             _, _, _, _, obs, exp, log2fc = self.get_hypergeometric_params(annotation_set_unfiltered, gene_set,
                                                                           background_set)
@@ -140,8 +145,9 @@ class PermutationTest(StatsTest):
 
     @staticmethod
     @generic.numba.jit(nopython=True)
-    def _calc_permutation_pval(log2fc: float, reps: int, obs_frac: float, bg_size: int, en_size: int, attr_size: int
-                               ) -> float:  # pragma: no cover
+    def _calc_permutation_pval(log2fc: float, reps: int, obs_frac: float, bg_size: int, en_size: int, attr_size: int,
+                               random_seed: int) -> float:  # pragma: no cover
+        np.random.seed(random_seed)
         bg_array = np.empty(bg_size, dtype=generic.numba.bool_)
         bg_array[0:attr_size] = True
         bg_array[attr_size:] = False

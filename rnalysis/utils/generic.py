@@ -8,7 +8,7 @@ import warnings
 from datetime import datetime
 from functools import lru_cache
 from pathlib import Path
-from typing import Callable, Tuple, Union
+from typing import Callable, Dict, Tuple, Union
 
 import joblib
 import matplotlib.collections
@@ -49,6 +49,113 @@ def readable_name(name: str):
         return item
 
     return decorator
+
+
+def param_readable_names(names: Dict[str, str]):
+    """
+    Decorator that attaches human-readable display labels for specific parameters of a function.
+
+    The mapping is stored on the function's ``readable_param_names`` attribute (mirroring how
+    :func:`readable_name` sets ``readable_name``) and is used by :func:`get_param_readable_name`
+    to override the auto-humanized label for parameters that do not humanize well. This is
+    display-only: it never changes the actual parameter names used when calling the function.
+
+    :param names: mapping of raw (snake_case) parameter names to their human-readable labels.
+    :type names: dict of str to str
+    """
+
+    def decorator(item):
+        item.readable_param_names = names
+        return item
+
+    return decorator
+
+
+# Domain acronyms / tokens preserved verbatim when auto-humanizing parameter labels.
+# Keyed by the lowercase snake_case token; the value is the exact display form.
+PARAM_LABEL_ACRONYMS = {
+    'go': 'GO',
+    'kegg': 'KEGG',
+    'pca': 'PCA',
+    'fdr': 'FDR',
+    'id': 'ID',
+    'ids': 'IDs',
+    'rna': 'RNA',
+    'mrna': 'mRNA',
+    'dna': 'DNA',
+    'deseq2': 'DESeq2',
+    'sam': 'SAM',
+    'bam': 'BAM',
+    'fastq': 'FASTQ',
+    'gtf': 'GTF',
+    'gff': 'GFF',
+    'utr': 'UTR',
+    'cpm': 'CPM',
+    'tpm': 'TPM',
+    'rpkm': 'RPKM',
+    'fpkm': 'FPKM',
+    'padj': 'padj',
+    'clicom': 'CLICOM',
+    'hdbscan': 'HDBSCAN',
+    'umap': 'UMAP',
+    'ncbi': 'NCBI',
+    'url': 'URL',
+    'csv': 'CSV',
+}
+
+# Whole parameter-name overrides that auto-humanization handles poorly but which apply
+# regardless of the containing function (per-function overrides take precedence over these).
+PARAM_LABEL_SPECIAL_NAMES = {
+    'n_components': 'Number of components',
+}
+
+
+def _humanize_param_name(param_name: str) -> str:
+    words = []
+    first = True
+    for token in param_name.split('_'):
+        if token == '':
+            continue
+        lower = token.lower()
+        if lower in PARAM_LABEL_ACRONYMS:
+            words.append(PARAM_LABEL_ACRONYMS[lower])
+        elif first:
+            words.append(token.capitalize())
+        else:
+            words.append(lower)
+        first = False
+    if not words:
+        return param_name
+    return ' '.join(words)
+
+
+def get_param_readable_name(param_name: str, func: Union[Callable, None] = None) -> str:
+    """
+    Return a human-readable display label for a function parameter (display-only).
+
+    Resolution order:
+
+    1. a per-function override declared via :func:`param_readable_names`, if ``func`` is given
+       and declares a label for ``param_name``;
+    2. a global whole-name special case (:data:`PARAM_LABEL_SPECIAL_NAMES`);
+    3. auto-humanization: split on ``_``, sentence-case the words and join with spaces, while
+       preserving known domain acronyms (:data:`PARAM_LABEL_ACRONYMS`).
+
+    The raw ``param_name`` is never modified for use as an actual keyword argument; this only
+    affects what the GUI shows the user.
+
+    :param param_name: the raw (snake_case) parameter name from the function signature.
+    :type param_name: str
+    :param func: the function the parameter belongs to, used to look up per-function overrides.
+    :type func: callable or None
+    """
+    if func is not None:
+        overrides = getattr(func, 'readable_param_names', None)
+        if overrides is not None and param_name in overrides:
+            return overrides[param_name]
+    if param_name in PARAM_LABEL_SPECIAL_NAMES:
+        return PARAM_LABEL_SPECIAL_NAMES[param_name]
+    return _humanize_param_name(param_name)
 
 
 class TemporaryMatplotlibBackend:
