@@ -527,16 +527,34 @@ def test_PathLineEdit_folder_mode_text_roundtrip_unchanged(qtbot):
 
 def test_PathLineEdit_elides_to_dotdotdot_filename_when_it_fits(qtbot):
     long_path = 'C:/Users/example_user/very/long/nested/directory/structure/elegans_developmental_stages.tsv'
+    candidate = '.../elegans_developmental_stages.tsv'
     qtbot, widget = widget_setup(qtbot, PathLineEdit)
 
     widget.setText(long_path)
     widget.open_button.setFocus()
-    # wide enough to fit '.../elegans_developmental_stages.tsv' but not the full path
-    widget.resize(600, widget.height())
+
+    metrics = widget.file_path.fontMetrics()
+    candidate_width = metrics.horizontalAdvance(candidate)
+    full_width = metrics.horizontalAdvance(long_path)
+
+    # Measure, from the live layout, how much of the outer widget's width is consumed by
+    # the open button/margins/spacing before it reaches the inner QLineEdit. Deriving the
+    # target size this way (instead of a hardcoded magic width) keeps the test independent
+    # of font/DPI: whatever the current font metrics and layout overhead are, we compute
+    # exactly the width needed to fit '.../<filename>' but not the full path.
+    probe_width = full_width + 200
+    widget.resize(probe_width, widget.height())
+    qtbot.wait(50)
+    overhead = probe_width - widget.file_path.width()
+    assert overhead > 0
+
+    target_width = overhead + candidate_width + 20
+    assert target_width < overhead + full_width  # sanity check: still narrower than the full path needs
+    widget.resize(target_width, widget.height())
     qtbot.wait(50)
 
     displayed = widget.file_path.text()
-    assert displayed == '.../elegans_developmental_stages.tsv'
+    assert displayed == candidate
     # the stored/returned value is never touched by elision
     assert widget.text() == long_path
 
