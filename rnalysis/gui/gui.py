@@ -1997,6 +1997,7 @@ class FilterTabPage(TabPage):
                         'split_clicom': 'CLICOM (Ensemble)'}
     SUMMARY_FUNCS = {'describe', 'head', 'tail', 'biotypes_from_ref_table', 'biotypes_from_gtf', 'print_features'}
     GENERAL_FUNCS = {'concatenate', 'sort', 'sort_by_principal_component', 'transform', 'translate_gene_ids',
+                     'annotate_from_gtf',
                      'differential_expression_deseq2', 'differential_expression_deseq2_simplified', 'fold_change',
                      'average_replicate_samples', 'drop_columns',
                      'differential_expression_limma_voom', 'differential_expression_limma_voom_simplified',

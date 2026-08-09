@@ -33,6 +33,10 @@ _FEATURE_IDX, _START_IDX, _END_IDX, _ATTR_IDX = 2, 3, 4, 8
 # Ensembl-style GFF3 gives IDs an SO-term prefix (``ID=gene:ENSG1``, ``Parent=transcript:ENST1``). Strip it so the
 # emitted gene/transcript IDs match a user's count table (WormBase-style bare IDs have no colon and are untouched).
 _SO_PREFIX_RE = r'^[A-Za-z_]+:'
+# Reserved attribute names that read a fixed, tab-separated GTF/GFF column (0-based) instead of a column-9 key=value
+# pair. GTF and GFF3 share this column layout, so these are format-agnostic. Everything not listed here is looked up
+# as a column-9 attribute (:func:`_extract_gtf_attribute` / :func:`_extract_gff3_attribute`).
+_FIXED_COLUMN_INDICES = {'chromosome': 0, 'seqname': 0, 'seqid': 0, 'source': 1, 'strand': 6}
 
 
 def parse_gtf_attributes(attr_str: str):
@@ -85,6 +89,19 @@ def _extract_gff3_attribute(attr_col: pl.Expr, key: str) -> pl.Expr:
 def _strip_so_prefix(expr: pl.Expr) -> pl.Expr:
     """Strip a leading GFF3 SO-term ``type:`` prefix from an ID expression (``transcript:ENST1`` -> ``ENST1``)."""
     return expr.str.replace(_SO_PREFIX_RE, '')
+
+
+def _attr_value_expr(fields_col: pl.Expr, attribute: str, file_type: Literal['gtf', 'gff3']) -> pl.Expr:
+    """Polars expression yielding the requested attribute's value per line.
+
+    Reserved names (``chromosome``/``source``/``strand``) read a fixed tab-separated column of the annotation
+    line; anything else is looked up as a column-9 key=value attribute in the file's format. ``fields_col`` is
+    the ``List[str]`` column of a line's tab-separated fields (see :func:`_scan_annotation_lines`).
+    """
+    if attribute in _FIXED_COLUMN_INDICES:
+        return fields_col.list.get(_FIXED_COLUMN_INDICES[attribute])
+    extract = _extract_gtf_attribute if file_type == 'gtf' else _extract_gff3_attribute
+    return extract(fields_col.list.get(_ATTR_IDX), attribute)
 
 
 def _scan_annotation_lines(path: Union[str, Path]) -> pl.LazyFrame:
@@ -302,7 +319,7 @@ def _map_gene_to_attr_gtf(fields: pl.DataFrame, attribute: str, feature_type: st
     # extract everything the reduction below reads, one row per line, in file order
     rows = fields.lazy().with_columns(
         pl.col('_fields').list.get(_ATTR_IDX).alias('_attr')).select(
-        _extract_gtf_attribute(pl.col('_attr'), attribute).alias('attr_value'),
+        _attr_value_expr(pl.col('_fields'), attribute, 'gtf').alias('attr_value'),
         _extract_gtf_attribute(pl.col('_attr'), 'gene_id').alias('gene_id'),
         _extract_gtf_attribute(pl.col('_attr'), 'transcript_id').alias('transcript_id'),
         _extract_gtf_attribute(pl.col('_attr'), 'gene_version').alias('gene_version'),
@@ -318,8 +335,8 @@ def _map_gene_to_attr_gtf(fields: pl.DataFrame, attribute: str, feature_type: st
             continue
         feature_name = None
         if feature_type == 'gene':
-            if row['gene_id'] is None:
-                raise KeyError('gene_id')
+            if row['gene_id'] is None:  # a fixed-column value present on a line that carries no gene_id -> skip
+                continue
             feature_id = row['gene_id'].split('.')[0] if split_ids else row['gene_id']
             if use_version and row['gene_version'] is not None:  # #152 bug #2: tolerate a missing version suffix
                 feature_id += '.' + row['gene_version']
@@ -331,8 +348,8 @@ def _map_gene_to_attr_gtf(fields: pl.DataFrame, attribute: str, feature_type: st
                 else:
                     continue
         else:
-            if row['transcript_id'] is None:
-                raise KeyError('transcript_id')
+            if row['transcript_id'] is None:  # e.g. a gene row when reading a fixed column in transcript mode -> skip
+                continue
             feature_id = row['transcript_id'].split('.')[0] if split_ids else row['transcript_id']
             if use_version and row['transcript_version'] is not None:  # #152 bug #2
                 feature_id += '.' + row['transcript_version']
@@ -357,21 +374,20 @@ def _map_gene_to_attr_gff3(fields: pl.DataFrame, attribute: str, feature_type: s
     # In GFF3 the attribute lives on the feature it describes: gene-level attrs on 'gene' rows, transcript-level
     # attrs on transcript rows. The feature id is that row's own (prefix-stripped) ID. GFF3 has no *_version attrs.
     role_features = ('gene',) if feature_type == 'gene' else TRANSCRIPT_FEATURE_NAMES
-    rows = fields.lazy().select(
-        pl.col('_fields').list.get(_FEATURE_IDX).alias('feature'),
-        pl.col('_fields').list.get(_ATTR_IDX).alias('_attr'),
-    ).filter(pl.col('feature').is_in(role_features)).select(
-        _extract_gff3_attribute(pl.col('_attr'), attribute).alias('attr_value'),
-        _strip_so_prefix(_extract_gff3_attribute(pl.col('_attr'), 'ID')).alias('feature_id'),
-        _extract_gff3_attribute(pl.col('_attr'), 'Name').alias('name'),
+    attr_col = pl.col('_fields').list.get(_ATTR_IDX)
+    rows = fields.lazy().filter(
+        pl.col('_fields').list.get(_FEATURE_IDX).is_in(role_features)).select(
+        _attr_value_expr(pl.col('_fields'), attribute, 'gff3').alias('attr_value'),
+        _strip_so_prefix(_extract_gff3_attribute(attr_col, 'ID')).alias('feature_id'),
+        _extract_gff3_attribute(attr_col, 'Name').alias('name'),
     ).collect()
 
     mapping = {}
     for row in rows.iter_rows(named=True):
         if row['attr_value'] is None:
             continue
-        if row['feature_id'] is None:
-            raise KeyError('ID')
+        if row['feature_id'] is None:  # a role row lacking an ID (e.g. a fixed-column read) -> skip, mirroring the GTF path
+            continue
         feature_id = row['feature_id'].split('.')[0] if split_ids else row['feature_id']
         if use_name:
             if row['name'] is None:

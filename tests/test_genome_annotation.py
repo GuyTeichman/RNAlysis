@@ -485,3 +485,39 @@ def test_map_gene_to_attr_biotype_resolution_stays_within_feature_level(tmp_path
     # never the transcript's 'protein_coding'.
     assert map_gene_to_attr(_gene_type_with_transcript_biotype_gtf(tmp_path), 'gene_biotype', 'gene',
                             False, False, False) == {'G1': 'lincRNA'}
+
+
+# ----------------------------------------------------------------------------------------------------------------------
+# #154: fixed-column attribute reads. chromosome / source / strand are not column-9 key=value attributes -- they live in
+# the tab-separated columns (seqname/source/strand). map_gene_to_attr resolves these reserved names to those columns.
+# ----------------------------------------------------------------------------------------------------------------------
+ATTRIBUTES_GTF = 'tests/test_files/test_gtf_attributes.gtf'    # 4 genes across chr1/chr2/chrX, +/- strand, ensembl/havana
+ATTRIBUTES_GFF3 = 'tests/test_files/test_gff3_attributes.gff3'  # same content, with SO-term ID prefixes (gene:/transcript:)
+
+
+@pytest.mark.parametrize('attribute,truth', [
+    ('chromosome', {'GENE1': 'chr1', 'GENE2': 'chr2', 'GENE3': 'chrX', 'GENE4': 'chr2'}),
+    ('source', {'GENE1': 'ensembl', 'GENE2': 'havana', 'GENE3': 'ensembl', 'GENE4': 'havana'}),
+    ('strand', {'GENE1': '+', 'GENE2': '-', 'GENE3': '+', 'GENE4': '-'}),
+])
+def test_map_gene_to_attr_gtf_fixed_column_gene(attribute, truth):
+    assert map_gene_to_attr(ATTRIBUTES_GTF, attribute, 'gene', False, False, False) == truth
+
+
+@pytest.mark.parametrize('attribute,truth', [
+    ('chromosome', {'TX1': 'chr1', 'TX2': 'chr2', 'TX3': 'chrX', 'TX4': 'chr2'}),
+    ('strand', {'TX1': '+', 'TX2': '-', 'TX3': '+', 'TX4': '-'}),
+])
+def test_map_gene_to_attr_gtf_fixed_column_transcript(attribute, truth):
+    # Transcript mode must skip the gene rows (which carry a chromosome/strand but no transcript_id) rather than raise.
+    assert map_gene_to_attr(ATTRIBUTES_GTF, attribute, 'transcript', False, False, False) == truth
+
+
+@pytest.mark.parametrize('attribute,feature_type,truth', [
+    ('chromosome', 'gene', {'GENE1': 'chr1', 'GENE2': 'chr2', 'GENE3': 'chrX', 'GENE4': 'chr2'}),
+    ('source', 'gene', {'GENE1': 'ensembl', 'GENE2': 'havana', 'GENE3': 'ensembl', 'GENE4': 'havana'}),
+    ('strand', 'transcript', {'TX1': '+', 'TX2': '-', 'TX3': '+', 'TX4': '-'}),
+])
+def test_map_gene_to_attr_gff3_fixed_column(attribute, feature_type, truth):
+    # GFF3 IDs carry SO-term prefixes (gene:/transcript:); the fixed-column read still keys on the stripped IDs.
+    assert map_gene_to_attr(ATTRIBUTES_GFF3, attribute, feature_type, False, False, False) == truth

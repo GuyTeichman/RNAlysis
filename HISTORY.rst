@@ -5,6 +5,11 @@ History
 4.3.0 (unreleased)
 -------------------
 
+Added
+******
+* You can now filter a table by **any** attribute in a GTF/GFF annotation file, not just biotype (``Filter.filter_by_gtf_attribute``) — for example, keep only the genes on a particular chromosome or strand, from a particular annotation source, or of a particular biotype. The reserved attribute names ``chromosome``, ``source`` and ``strand`` read the corresponding columns of the annotation file, while any other name is looked up as a standard attribute (such as ``gene_biotype`` or ``gene_name``). Works with both GTF and GFF3 files.
+* You can now annotate a table with a feature attribute drawn from a GTF/GFF annotation file (``Filter.annotate_from_gtf``), adding a new column that labels each gene (or transcript) with, for example, its biotype, chromosome, strand, or source. Features that are absent from the annotation file are left blank. Works with both GTF and GFF3 files.
+
 Changed
 *******
 * Sped up GO and KEGG enrichment analysis. P-value computation is now memoized across the many ontology terms that share the same gene counts (typically over 90% of terms in a GO run), and the ``elim`` propagation method no longer deep-copies the full annotation set on every run. Enrichment results are unchanged; the hypergeometric test and ``elim`` propagation benefit the most (up to ~20× and ~2-9× faster respectively on large ontologies).

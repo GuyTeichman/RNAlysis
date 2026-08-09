@@ -1,0 +1,8 @@
+chr1	ensembl	gene	1000	2000	.	+	.	gene_id "GENE1"; gene_biotype "protein_coding";
+chr1	ensembl	transcript	1000	2000	.	+	.	gene_id "GENE1"; transcript_id "TX1"; transcript_biotype "protein_coding";
+chr2	havana	gene	3000	4000	.	-	.	gene_id "GENE2"; gene_biotype "lincRNA";
+chr2	havana	transcript	3000	4000	.	-	.	gene_id "GENE2"; transcript_id "TX2"; transcript_biotype "lincRNA";
+chrX	ensembl	gene	5000	6000	.	+	.	gene_id "GENE3"; gene_biotype "protein_coding";
+chrX	ensembl	transcript	5000	6000	.	+	.	gene_id "GENE3"; transcript_id "TX3"; transcript_biotype "protein_coding";
+chr2	havana	gene	7000	8000	.	-	.	gene_id "GENE4"; gene_biotype "protein_coding";
+chr2	havana	transcript	7000	8000	.	-	.	gene_id "GENE4"; transcript_id "TX4"; transcript_biotype "protein_coding";
