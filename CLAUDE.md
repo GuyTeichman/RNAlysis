@@ -199,4 +199,5 @@ CI (`.github/workflows/build_ci.yml`) runs on every PR across
 
 `tdd` (mandatory workflow), `diagnosing-bugs` (hard bugs / CI-only flakiness),
 `code-review` (the clean-context PR review), `research` (nailing down an external API's real
-current behavior before coding against it).
+current behavior before coding against it), `safe-optimization` (profile first, then prove a
+performance change is bit-identical before shipping it).

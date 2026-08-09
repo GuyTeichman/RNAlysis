@@ -44,6 +44,27 @@ GUI dialog for free. Do it TDD.
 4. If the fix changes any numerical/analysis output, that's a reproducibility event — make it
    intentional and note it in `HISTORY.rst`.
 
+## Make a performance change
+
+Use the `safe-optimization` skill for the full procedure; the recipe:
+
+1. **Profile first.** Don't guess at the hotspot — past guesses were wrong here (Box-Cox, not
+   PCA, dominated clustering/PCA time; set-intersections were *not* the GO-enrichment hotspot).
+2. **Baseline.** Pick representative inputs (realistic scale, real fixtures where possible) and
+   keep a reference to the pre-change implementation to compare against.
+3. **Optimize** the specific hotspot the profiler named.
+4. **Prove equality.** Compare old vs. new output with `packaging/bench_equal.py`
+   (`compare()`/`assert_equal`) — exact by default for NumPy arrays and Polars
+   `DataFrame`/`Series`. A `rtol`/`atol` tolerance is only for cases where the optimization
+   itself reorders floating-point operations (parallel reduction, a different BLAS path); using
+   one is a reproducibility event under rule 5 — justify it and note it in `HISTORY.rst`.
+5. **Benchmark and report the speedup** (`BenchmarkResult.speedup`, best-of-N) in the PR and, for
+   a user-visible change, in `HISTORY.rst`.
+6. Check the two known gotchas before shipping: a `numba` `@jit`'d function must seed its own RNG
+   *inside* the jitted code (seeding NumPy's global RNG outside it is a no-op); and any new
+   parallelism must respect the frozen-vs-source split (`FROZEN_ENV` restricts
+   `PARALLEL_BACKENDS` to `multiprocessing`/`sequential` in a PyInstaller build).
+
 ## Change code that touches an external web API (UniProt/Ensembl/PANTHER/KEGG/GO/…)
 
 Highest-risk area (see context.md).
