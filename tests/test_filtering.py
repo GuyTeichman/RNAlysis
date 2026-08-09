@@ -2712,3 +2712,40 @@ def test_infer_table_type_never_raises_on_malformed_file(tmp_path):
     junk = tmp_path / 'junk.csv'
     junk.write_bytes(b'\x00\x01\x02not,a,real\x00table\xff\xfe')
     assert infer_table_type(str(junk)) == OTHER_KEY
+
+
+def test_infer_table_type_fname_uses_lightweight_sampled_read(monkeypatch):
+    # The fname path must do a lightweight, row-limited read (header + small sample) rather than a full
+    # load of the whole file on the UI thread.
+    from rnalysis import filtering as filtering_mod
+    calls = []
+    real_load = filtering_mod.io.load_table
+
+    def spy(filename, *args, **kwargs):
+        calls.append(kwargs)
+        return real_load(filename, *args, **kwargs)
+
+    monkeypatch.setattr(filtering_mod.io, 'load_table', spy)
+    assert infer_table_type('tests/test_files/counted.csv') == COUNT_KEY
+    assert len(calls) == 1
+    assert filtering_mod._DETECT_SAMPLE_ROWS is not None
+    assert calls[0].get('nrows') == filtering_mod._DETECT_SAMPLE_ROWS
+
+
+def test_infer_table_type_sampling_limitation(tmp_path):
+    # Documented limitation: the Count-matrix value checks only see a sampled window of rows. A table that
+    # is non-negative within the sample but turns negative later is (acceptably) pre-selected as a count
+    # matrix -- still a user-overridable default, not a hard classification.
+    from rnalysis import filtering as filtering_mod
+    n = filtering_mod._DETECT_SAMPLE_ROWS
+    genes = [f'g{i}' for i in range(n + 50)]
+    cond1 = [5.0] * (n + 50)
+    cond2 = [3.0] * (n + 50)
+    cond2[n + 10] = -7.0  # a negative value that appears only AFTER the sampled window
+    full = pl.DataFrame({'gene': genes, 'cond1': cond1, 'cond2': cond2})
+    path = tmp_path / 'late_negative.csv'
+    full.write_csv(path)
+    # reading only the first n rows sees a non-negative matrix -> Count matrix
+    assert infer_table_type(str(path)) == COUNT_KEY
+    # the full in-memory frame sees the late negative -> Other (proving the above is a sampling effect)
+    assert infer_table_type(df=full) == OTHER_KEY

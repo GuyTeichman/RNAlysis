@@ -61,6 +61,10 @@ _DE_LOG2FC_NAMES = frozenset({'log2foldchange', 'logfc', 'log2fc'})
 _DE_PVAL_NAMES = frozenset({'padj', 'adj.p.val', 'pvalue', 'p.value', 'pval'})
 # a single-column fold-change table's data column.
 _FOLD_CHANGE_NAMES = frozenset({'foldchange', 'log2foldchange', 'logfc', 'log2fc', 'fc'})
+# how many rows to read from a file for detection. The type/fold-change signatures are name-based (header
+# only), and the count-matrix value checks are decided from this small sample -- so detection stays cheap on
+# the UI thread and never reads the whole file (the full read happens later, only when the table is loaded).
+_DETECT_SAMPLE_ROWS = 200
 
 
 def infer_table_type(fname: Union[str, Path, None] = None, df: Union[pl.DataFrame, pl.Series, None] = None) -> str:
@@ -70,6 +74,12 @@ def infer_table_type(fname: Union[str, Path, None] = None, df: Union[pl.DataFram
     'Other table' rather than risk a wrong (and silently limiting) classification that the user then has to undo. \
     This only influences the *pre-selected* type -- it never changes how a table is parsed or loaded -- and it \
     never raises: any error while reading or inspecting the data degrades to 'Other table'.
+
+    For speed, when reading from a file only the header and a small sample of rows are read (the full table is \
+    not loaded on the UI thread). The differential-expression and fold-change signatures are decided from the \
+    column names alone; the count-matrix checks use the sampled rows. As a consequence, a table that only turns \
+    non-count-like (e.g. contains a negative value) *below* the sampled rows may still be pre-selected as a \
+    count matrix -- an accepted, user-overridable limitation of the cheap read.
 
     :param fname: path of the table file to inspect. Ignored if ``df`` is provided.
     :type fname: str, pathlib.Path, or None (default=None)
@@ -83,7 +93,8 @@ def infer_table_type(fname: Union[str, Path, None] = None, df: Union[pl.DataFram
         if df is None:
             if fname is None:
                 return _TABLE_TYPE_OTHER
-            df = io.load_table(fname)
+            # lightweight, row-limited read: header + a small sample, never the whole file
+            df = io.load_table(fname, nrows=_DETECT_SAMPLE_ROWS)
         if isinstance(df, pl.Series):
             df = df.to_frame()
         if not isinstance(df, pl.DataFrame):
