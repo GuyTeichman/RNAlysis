@@ -1,4 +1,6 @@
+import random
 import re
+import warnings
 from unittest import mock
 from unittest.mock import Mock, MagicMock
 
@@ -1800,15 +1802,32 @@ class TestPhylomeDBOrthologMapper:
         species_cached = ortholog_mapper.get_legal_species()
         assert species.equals(species_cached)
 
-    # Test the _get_id_conversion_maps method
-    def test_get_id_conversion_map(self, ortholog_mapper):
-        map_fwd, map_rev = ortholog_mapper._get_id_conversion_maps()
-        assert isinstance(map_fwd, dict) and isinstance(map_rev, dict)
-        assert len(map_fwd) == len(map_rev)
+    # Live schema/contract check for the id_conversion table. get_orthologs no longer materializes
+    # this whole (~22M-row) table into Python dicts -- it loads the table once and builds only the
+    # ID slices it needs -- so this test just confirms the real download/parse still yields the
+    # expected columns, that the table gets cached (so subsequent calls skip the download), and that
+    # the production map builders round-trip a sample of real IDs. It deliberately does NOT build the
+    # whole-table maps (that used to make it one of the slowest tests in the suite); the exhaustive
+    # map-building logic is covered offline in TestPhylomeDBOrthologMapperOffline, and the real
+    # end-to-end path is covered by test_get_orthologs below.
+    def test_id_conversion_table_schema_and_sample(self, ortholog_mapper):
+        cache_file = get_todays_cache_dir().joinpath('phylomedb_id_conversion.parquet')
 
-        map_fwd_cache, map_rev_cache = ortholog_mapper._get_id_conversion_maps()
-        assert len(map_fwd_cache) == len(map_rev_cache)
-        assert len(map_fwd) == len(map_fwd_cache)
+        df = ortholog_mapper._load_id_conversion_table()
+        assert set(df.columns) == {'#extid', 'protid'} and df.height > 0
+        assert cache_file.exists()  # cached -> a subsequent load reads this parquet instead of the FTP
+
+        # Round-trip a sample of real rows through the production map builders (on a small slice, to
+        # avoid a full-table pass -- this checks the builders handle the real data's shape/types).
+        sample = df.head(5000)
+        extids = set(sample['#extid'].to_list()[:200])
+        protids = set(sample['protid'].to_list()[:200])
+        map_fwd = ortholog_mapper._build_forward_map(sample, extids)
+        map_rev = ortholog_mapper._build_reverse_map(sample, protids)
+        assert set(map_fwd.keys()) == extids  # every sampled extid exists in the slice
+        assert set(map_rev.keys()) <= protids
+        assert all(isinstance(k, str) and isinstance(v, str) for k, v in map_fwd.items())
+        assert all(isinstance(k, str) and isinstance(v, str) for k, v in map_rev.items())
 
     # NOTE ON DB-VERSION-DRIFT ROBUSTNESS: this test used to assert a frozen exact key order and
     # exact 'first'-mode UniProt accessions. PhylomeDB (METAPHORS) periodically rebuilds its
@@ -1854,31 +1873,89 @@ class TestPhylomeDBOrthologMapper:
 
 
 @pytest.mark.unit
-class TestPhylomeDBIdMapFiltering:
-    """Offline tests for the PhylomeDB ID-conversion / taxon-map filtering optimization.
+class TestPhylomeDBOrthologMapperOffline:
+    """Fast, network-free tests for PhylomeDBOrthologMapper's map-building and orchestration.
 
-    The full PhylomeDB ``id_conversion`` table spans *every* species in the database (millions of
-    rows), and the original code materialized it into two whole-table Python dicts on every call.
-    ``get_orthologs`` only ever looks up a handful of those keys, so the maps are now built filtered
-    to the IDs actually needed. These tests pre-populate the daily cache with a synthetic table so
-    they exercise the map-building logic without touching the PhylomeDB FTP server, and the core
-    guarantee they enforce is *behavior preservation*: a filtered map returns exactly the entries
-    the full map would have for the requested keys.
+    ``get_orthologs`` loads the (~22M-row) ``id_conversion`` table once and builds only the ID
+    slices it needs via ``_build_forward_map`` / ``_build_reverse_map``, and reads orthologs from a
+    taxon map filtered to the source protids it will actually look up. These tests exercise that
+    logic directly on small in-memory / cached synthetic tables (no FTP). The behavioural contract
+    they pin down is that a *filtered* map equals the *full* map restricted to the requested keys --
+    including the reverse map's tie-breaking -- verified against an independent reference
+    implementation of the original (pre-optimization) whole-table construction.
     """
 
-    # Adversarial fixture rows exercising both many-to-one directions:
-    #   * P3 has two external IDs (U3, U4) -> the reverse map must keep the last one (U4).
-    #   * U5 maps to two protids (P5 then P6) -> the forward map keeps the last (P6), and P5 must
-    #     therefore NOT appear in the reverse map (it was shadowed), matching the original
-    #     `{v: k for k, v in map_fwd.items()}` construction.
-    ID_ROWS = [
-        ('U1', 'P1'),
-        ('U2', 'P2'),
-        ('U3', 'P3'),
-        ('U4', 'P3'),
-        ('U5', 'P5'),
-        ('U5', 'P6'),
-    ]
+    # Adversarial rows exercising both many-to-one directions:
+    #   * P3 has two external IDs (U3, U4) -> the reverse map keeps the last one (U4).
+    #   * U5 maps to two protids (P5 then P6) -> the forward map keeps the last (P6), so P5 is
+    #     shadowed and must NOT appear in the reverse map.
+    ID_ROWS = [('U1', 'P1'), ('U2', 'P2'), ('U3', 'P3'), ('U4', 'P3'), ('U5', 'P5'), ('U5', 'P6')]
+
+    @staticmethod
+    def _reference_maps(rows):
+        """Independent oracle: the original whole-table construction get_orthologs used to do.
+
+        The map builders must reproduce these two dicts exactly (restricted to the requested keys).
+        Kept here now that the production code no longer contains this (slow) whole-table form.
+        """
+        df = pl.DataFrame({'#extid': [r[0] for r in rows], 'protid': [r[1] for r in rows]})
+        ref_fwd = dict(df.select('#extid', 'protid').iter_rows())  # last protid per extid
+        ref_rev = {v: k for k, v in ref_fwd.items()}  # last extid per protid (insertion order)
+        return df, ref_fwd, ref_rev
+
+    # ---- forward / reverse map builders (operate on an in-memory DataFrame, no cache) -----------
+
+    def test_forward_map_full(self):
+        df, ref_fwd, _ = self._reference_maps(self.ID_ROWS)
+        assert PhylomeDBOrthologMapper._build_forward_map(df, None) == ref_fwd
+
+    def test_reverse_map_full(self):
+        df, _, ref_rev = self._reference_maps(self.ID_ROWS)
+        assert PhylomeDBOrthologMapper._build_reverse_map(df, None) == ref_rev
+
+    def test_forward_map_filtered_matches_reference_subset(self):
+        df, ref_fwd, _ = self._reference_maps(self.ID_ROWS)
+        needed = {'U1', 'U5', 'absent'}
+        assert PhylomeDBOrthologMapper._build_forward_map(df, needed) == {
+            k: ref_fwd[k] for k in needed if k in ref_fwd}
+
+    def test_reverse_map_filtered_matches_reference_subset(self):
+        df, _, ref_rev = self._reference_maps(self.ID_ROWS)
+        needed = {'P3', 'P5', 'P6', 'absent'}
+        rev = PhylomeDBOrthologMapper._build_reverse_map(df, needed)
+        assert rev == {k: ref_rev[k] for k in needed if k in ref_rev}
+        assert 'P5' not in rev  # shadowed by U5 -> P6
+
+    def test_map_builders_empty_filter_short_circuit(self):
+        df, _, _ = self._reference_maps(self.ID_ROWS)
+        assert PhylomeDBOrthologMapper._build_forward_map(df, set()) == {}
+        assert PhylomeDBOrthologMapper._build_reverse_map(df, set()) == {}
+
+    def test_map_builders_equivalence_property(self):
+        # Randomized: the filtered builders equal the reference whole-table maps restricted to the
+        # requested keys, over adversarial data with heavy collisions in both directions (an extid
+        # mapping to several protids, and a protid with several extids).
+        alphabet = [f'U{i}' for i in range(7)]
+        prot_alphabet = [f'P{i}' for i in range(7)]
+        for seed in range(200):
+            rng = random.Random(seed)
+            rows = [(rng.choice(alphabet), rng.choice(prot_alphabet)) for _ in range(rng.randint(1, 40))]
+            df, ref_fwd, ref_rev = self._reference_maps(rows)
+            ne = set(rng.sample(alphabet, rng.randint(0, len(alphabet))))
+            npr = set(rng.sample(prot_alphabet, rng.randint(0, len(prot_alphabet))))
+            assert PhylomeDBOrthologMapper._build_forward_map(df, ne) == {
+                k: ref_fwd[k] for k in ne if k in ref_fwd}, (seed, rows, ne)
+            assert PhylomeDBOrthologMapper._build_reverse_map(df, npr) == {
+                k: ref_rev[k] for k in npr if k in ref_rev}, (seed, rows, npr)
+
+    def test_restrict_to_needed(self):
+        df = pl.DataFrame({'c': ['a', 'b', 'c']})
+        assert PhylomeDBOrthologMapper._restrict_to_needed(df, 'c', None) is df  # None -> unchanged
+        assert PhylomeDBOrthologMapper._restrict_to_needed(df, 'c', set()) is None  # empty -> short-circuit
+        out = PhylomeDBOrthologMapper._restrict_to_needed(df, 'c', {'a', 'c'})
+        assert set(out['c'].to_list()) == {'a', 'c'}
+
+    # ---- taxon map + id_conversion loading (read the daily cache) -------------------------------
 
     @pytest.fixture
     def cache_dir(self, tmp_path, monkeypatch):
@@ -1896,91 +1973,92 @@ class TestPhylomeDBIdMapFiltering:
                       'CS': [r[2] for r in rows]}).write_parquet(
             cache_dir.joinpath(f'phylomedb_{taxon_id}to{target_id}.parquet'))
 
-    def test_id_conversion_full_maps_unchanged(self, cache_dir):
+    def test_load_id_conversion_table_reads_cache(self, cache_dir):
         self._write_id_conversion(cache_dir, self.ID_ROWS)
-        map_fwd, map_rev = PhylomeDBOrthologMapper._get_id_conversion_maps()
-        assert map_fwd == {'U1': 'P1', 'U2': 'P2', 'U3': 'P3', 'U4': 'P3', 'U5': 'P6'}
-        assert map_rev == {'P1': 'U1', 'P2': 'U2', 'P3': 'U4', 'P6': 'U5'}
+        df = PhylomeDBOrthologMapper._load_id_conversion_table()
+        assert df.columns == ['#extid', 'protid'] and df.height == len(self.ID_ROWS)
 
-    def test_id_conversion_filtered_matches_full_subset(self, cache_dir):
-        self._write_id_conversion(cache_dir, self.ID_ROWS)
-        full_fwd, full_rev = PhylomeDBOrthologMapper._get_id_conversion_maps()
-
-        needed_extids = {'U1', 'U5'}
-        needed_protids = {'P3', 'P5', 'P6'}
-        map_fwd, map_rev = PhylomeDBOrthologMapper._get_id_conversion_maps(
-            needed_extids=needed_extids, needed_protids=needed_protids)
-
-        assert map_fwd == {k: full_fwd[k] for k in needed_extids if k in full_fwd}
-        assert map_rev == {k: full_rev[k] for k in needed_protids if k in full_rev}
-        # P5 was shadowed in the full reverse map (U5's final protid is P6), so it stays absent.
-        assert 'P5' not in map_rev
-
-    def test_id_conversion_empty_filters_short_circuit(self, cache_dir):
-        self._write_id_conversion(cache_dir, self.ID_ROWS)
-        map_fwd, map_rev = PhylomeDBOrthologMapper._get_id_conversion_maps(
-            needed_extids=set(), needed_protids=set())
-        assert map_fwd == {}
-        assert map_rev == {}
-
-    def test_id_conversion_mixed_filters_match_full(self, cache_dir):
-        # Exactly one side filtered: the None side must reproduce the full map (this exercises the
-        # map builders with needed=None, which get_orthologs itself never triggers).
-        self._write_id_conversion(cache_dir, self.ID_ROWS)
-        full_fwd, full_rev = PhylomeDBOrthologMapper._get_id_conversion_maps()
-
-        fwd, rev = PhylomeDBOrthologMapper._get_id_conversion_maps(needed_extids={'U1', 'U3'},
-                                                                   needed_protids=None)
-        assert fwd == {k: full_fwd[k] for k in {'U1', 'U3'}}
-        assert rev == full_rev
-
-        fwd, rev = PhylomeDBOrthologMapper._get_id_conversion_maps(needed_extids=None,
-                                                                   needed_protids={'P3'})
-        assert fwd == full_fwd
-        assert rev == {k: full_rev[k] for k in {'P3'}}
-
-    def test_taxon_map_full_unchanged(self, cache_dir):
-        # duplicate protid1 (Pf2) -> last-wins collapses to (Pt3, 0.8), matching the original dict-comp.
+    def test_taxon_map_full_last_wins(self, cache_dir):
+        # duplicate protid1 (Pf2) collapses last-wins to (Pt3, 0.8).
         self._write_taxon_map(cache_dir, [('Pf1', 'Pt1', 0.9), ('Pf2', 'Pt2', 0.3), ('Pf2', 'Pt3', 0.8)])
-        taxon_map = PhylomeDBOrthologMapper._get_taxon_map(1, 2)
-        assert taxon_map == {'Pf1': ('Pt1', 0.9), 'Pf2': ('Pt3', 0.8)}
+        assert PhylomeDBOrthologMapper._get_taxon_map(1, 2) == {'Pf1': ('Pt1', 0.9), 'Pf2': ('Pt3', 0.8)}
 
     def test_taxon_map_filtered_matches_full_subset(self, cache_dir):
         self._write_taxon_map(cache_dir, [
             ('Pf1', 'Pt1', 0.9), ('Pf2', 'Pt2', 0.3), ('Pf2', 'Pt3', 0.8), ('Pf4', 'Pt4', 0.7)])
         full = PhylomeDBOrthologMapper._get_taxon_map(1, 2)
         needed = {'Pf1', 'Pf2'}
-        filtered = PhylomeDBOrthologMapper._get_taxon_map(1, 2, needed_source_ids=needed)
-        assert filtered == {k: full[k] for k in needed if k in full}
+        assert PhylomeDBOrthologMapper._get_taxon_map(1, 2, needed_source_ids=needed) == {
+            k: full[k] for k in needed if k in full}
 
     def test_taxon_map_empty_filter_short_circuits(self, cache_dir):
         self._write_taxon_map(cache_dir, [('Pf1', 'Pt1', 0.9)])
         assert PhylomeDBOrthologMapper._get_taxon_map(1, 2, needed_source_ids=set()) == {}
 
-    def test_get_orthologs_offline_end_to_end(self, cache_dir, monkeypatch):
-        # from-genes (Ufrom*) and the target orthologs (Uto*) all live in one id_conversion table.
+    # ---- get_orthologs orchestration (cached tables + mocked external services) -----------------
+
+    def _offline_mapper(self, monkeypatch):
+        # Keep the species-list lookup (__init__) off the network; translate_ids is patched per test.
+        monkeypatch.setattr(PhylomeDBOrthologMapper, 'get_legal_species',
+                            staticmethod(lambda: pl.DataFrame({'taxid': [1, 2], 'name': ['a', 'b']})))
+        return PhylomeDBOrthologMapper(map_to_organism=2, map_from_organism=1,
+                                       gene_id_type='UniProtKB AC/ID')
+
+    def test_get_orthologs_maps_and_filters_by_score(self, cache_dir, monkeypatch):
+        # from-genes (Ufrom*) and the target orthologs (Uto*) share one id_conversion table.
         self._write_id_conversion(cache_dir, [
             ('Ufrom1', 'Pf1'), ('Ufrom2', 'Pf2'), ('Uto1', 'Pt1'), ('Uto2', 'Pt2')])
         self._write_taxon_map(cache_dir, [('Pf1', 'Pt1', 0.9), ('Pf2', 'Pt2', 0.3)])
-
-        # Keep both external services (the species list in __init__, and UniProt in translate_ids)
-        # out of this offline test.
-        monkeypatch.setattr(PhylomeDBOrthologMapper, 'get_legal_species',
-                            staticmethod(lambda: pl.DataFrame({'taxid': [1, 2], 'name': ['a', 'b']})))
-        mapper = PhylomeDBOrthologMapper(map_to_organism=2, map_from_organism=1,
-                                         gene_id_type='UniProtKB AC/ID')
+        mapper = self._offline_mapper(monkeypatch)
         monkeypatch.setattr(mapper, 'translate_ids',
                             lambda ids: (['geneA', 'geneB'], ['Ufrom1', 'Ufrom2']))
 
-        with warnings.catch_warnings():
-            warnings.simplefilter('ignore')  # geneB is filtered by CS threshold -> "mapped only N" warning
+        with pytest.warns(UserWarning, match='only 1 out of 2'):
             one2one, one2many = mapper.get_orthologs(
                 ('geneA', 'geneB'), non_unique_mode='first',
                 consistency_score_threshold=0.5, filter_consistency_score=True)
 
-        # geneA survives (CS 0.9 >= 0.5); geneB is dropped (CS 0.3 < 0.5).
+        # geneA survives (CS 0.9 >= 0.5); geneB is dropped (CS 0.3 < 0.5). Results are keyed by the
+        # original (pre-translation) gene IDs.
         assert one2one.mapping_dict == {'geneA': 'Uto1'}
         assert one2many.mapping_dict == {'geneA': ['Uto1']}
+
+    def test_get_orthologs_skips_unmappable_genes(self, cache_dir, monkeypatch):
+        # Exercises every "continue" path in the mapping loop:
+        #   gA: Ufrom1 -> Pf1 -> (taxon) Pt1 -> Uto1                 : maps
+        #   gB: Ufrom2 has no id_conversion row (not in map_fwd)     : skipped
+        #   gC: Ufrom3 -> Pf3, but Pf3 is not in the taxon map       : skipped
+        #   gD: Ufrom4 -> Pf4 -> (taxon) Ptx, Ptx has no reverse ID  : skipped
+        self._write_id_conversion(cache_dir, [
+            ('Ufrom1', 'Pf1'), ('Ufrom3', 'Pf3'), ('Ufrom4', 'Pf4'), ('Uto1', 'Pt1')])
+        self._write_taxon_map(cache_dir, [('Pf1', 'Pt1', 0.9), ('Pf4', 'Ptx', 0.9)])
+        mapper = self._offline_mapper(monkeypatch)
+        monkeypatch.setattr(mapper, 'translate_ids', lambda ids: (
+            ['gA', 'gB', 'gC', 'gD'], ['Ufrom1', 'Ufrom2', 'Ufrom3', 'Ufrom4']))
+
+        with warnings.catch_warnings():
+            warnings.simplefilter('ignore')
+            one2one, one2many = mapper.get_orthologs(
+                ('gA', 'gB', 'gC', 'gD'), non_unique_mode='first',
+                consistency_score_threshold=0.0, filter_consistency_score=True)
+
+        assert one2one.mapping_dict == {'gA': 'Uto1'}
+        assert set(one2many.mapping_dict.keys()) == {'gA'}
+
+    def test_get_orthologs_no_warning_when_all_mapped(self, cache_dir, monkeypatch):
+        self._write_id_conversion(cache_dir, [('Ufrom1', 'Pf1'), ('Uto1', 'Pt1')])
+        self._write_taxon_map(cache_dir, [('Pf1', 'Pt1', 0.9)])
+        mapper = self._offline_mapper(monkeypatch)
+        monkeypatch.setattr(mapper, 'translate_ids', lambda ids: (['geneA'], ['Ufrom1']))
+
+        with warnings.catch_warnings(record=True) as caught:
+            warnings.simplefilter('always')
+            one2one, _ = mapper.get_orthologs(
+                ('geneA',), non_unique_mode='first',
+                consistency_score_threshold=0.5, filter_consistency_score=True)
+
+        assert one2one.mapping_dict == {'geneA': 'Uto1'}
+        assert not [w for w in caught if 'Ortholog mapping found for only' in str(w.message)]
 
 
 class TestOrthoInspectorOrthologMapper:
