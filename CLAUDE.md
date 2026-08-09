@@ -56,6 +56,9 @@ Qt code for it. Three things drive that rendering:
 
 **Consequence:** a rename, a signature change, or a changed/loosened type annotation on a
 public API method silently changes the GUI. Treat any such change as *risky* (see rules below).
+And because you can't *see* that silent change in a code diff, **any change that is visible in a
+GUI dialog must ship with a screenshot on the PR** (rule 9) — rebuild the dialog straight from the
+API with `packaging/capture_gui_dialog.py` (the `gui-screenshots` skill wraps the full workflow).
 
 ---
 
@@ -123,6 +126,13 @@ Class hierarchy (public API): `Filter` → `CountFilter`, `DESeqFilter`, `FoldCh
    both run-from-source **and** frozen (PyInstaller). See multiprocessing gotcha below.
 8. **At PR time, an independent agent with clean context reviews the diff** before it's
    considered done (use the `code-review` skill or spawn a fresh subagent — not your own biased read).
+9. **Visible GUI changes ship with screenshots.** If a change is visible in a GUI dialog (a new/
+   renamed/removed parameter or changed annotation on a public `Filter`/`FeatureSet`/`fastq`/
+   `enrichment` function, a new/edited `@readable_name`, or edited `:param:` help text), the PR
+   must include a screenshot of the affected dialog(s) — before/after for a renamed or retyped
+   parameter. Generate them from the API with `packaging/capture_gui_dialog.py` and publish per the
+   `gui-screenshots` skill (PNGs go on the `assets` branch under `pr-<N>/`, linked from the PR).
+   Behind-the-scenes changes with no visible dialog effect are exempt.
 
 ---
 
@@ -199,4 +209,5 @@ CI (`.github/workflows/build_ci.yml`) runs on every PR across
 
 `tdd` (mandatory workflow), `diagnosing-bugs` (hard bugs / CI-only flakiness),
 `code-review` (the clean-context PR review), `research` (nailing down an external API's real
-current behavior before coding against it).
+current behavior before coding against it), `gui-screenshots` (capture the reflection-generated
+dialog for a changed GUI function and attach it to the PR — required for visible GUI changes, rule 9).
