@@ -1280,47 +1280,49 @@ class OptionalWidget(QtWidgets.QWidget):
     __slots__ = {'layout': 'layout',
                  'other': 'other widget',
                  'default': 'default value',
-                 'checkbox': 'disable checkbox'}
+                 'checkbox': 'set-value checkbox'}
 
     def __init__(self, other: QtWidgets.QWidget, default=EMPTY, parent=None):
         super().__init__(parent)
         self.layout = QtWidgets.QHBoxLayout(self)
         self.other = other
         self.default = default
-        self.checkbox = QtWidgets.QCheckBox('Disable this parameter?')
+        self.checkbox = QtWidgets.QCheckBox('Set a value')
         self.toggled = self.checkbox.toggled
 
         self.init_ui()
 
     def clear(self):
-        self.checkbox.setChecked(False)
+        self.checkbox.setChecked(True)
         try:
             self.other.clear()
         except AttributeError:
             pass
 
     def init_ui(self):
-        self.toggled.connect(self.other.setDisabled)
+        self.toggled.connect(self.other.setEnabled)
         self.layout.addWidget(self.checkbox)
         self.layout.addWidget(self.other)
-        if self.default is None:
-            self.checkbox.setChecked(True)
+        # checked = provide a value (inner enabled); unchecked = use default/None (inner disabled).
+        # A default of None means "leave unset"; any other default (incl. EMPTY) means "provide a value".
+        self.checkbox.setChecked(self.default is not None)
+        self.check_other()
 
     def check_other(self):
-        self.other.setDisabled(self.checkbox.isChecked())
+        self.other.setEnabled(self.checkbox.isChecked())
 
     def value(self):
         if self.checkbox.isChecked():
-            return None
-        return get_val_from_widget(self.other)
+            return get_val_from_widget(self.other)
+        return None
 
     def setValue(self, val):
         if val is None:
-            self.checkbox.setChecked(True)
+            self.checkbox.setChecked(False)
         else:
             try:
                 set_widget_value(self.other, val)
-                self.checkbox.setChecked(False)
+                self.checkbox.setChecked(True)
             except AttributeError:
                 raise ValueError(f'Unable to set default value of {type(self.other)} to {val}')
 
