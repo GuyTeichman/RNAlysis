@@ -602,6 +602,10 @@ class KEGGAnnotationIterator:
     PATHWAY_NAMES_CACHED_FILENAME = 'kegg_pathway_list.txt'
     COMPOUND_LIST_CACHED_FILENAME = 'kegg_compound_list.txt'
     GLYCAN_LIST_CACHED_FILENAME = 'kegg_glycan_list.txt'
+    # Accumulates {compound_id: display_name} for the life of the process, so plotting several
+    # pathways in one session fetches each compound at most once and never downloads KEGG's full
+    # ~30k-entry compound+glycan catalog. Compound names are stable, so no in-process expiry is needed.
+    _compound_name_cache: Dict[str, str] = {}
 
     def __init__(self, taxon_id: int, pathways: Union[str, List[str], Literal['all']] = 'all'):
         self.pathway_names = {}
@@ -664,6 +668,37 @@ class KEGGAnnotationIterator:
                 compounds[pathway_code] = main_name
 
         return compounds
+
+    @classmethod
+    def get_compound_names(cls, compound_ids: Iterable[str]) -> Dict[str, str]:
+        """Return ``{compound_id: display_name}`` for the given bare KEGG compound/glycan IDs
+        (e.g. ``'C00022'``, ``'G00022'``), fetching with a targeted ``list/<ids>`` request only the
+        IDs not already in the in-process cache. This replaces downloading KEGG's entire
+        compound+glycan catalog (``get_compounds``) just to name the handful of compound nodes in one
+        pathway. Parsing mirrors ``get_compounds`` exactly, so for any given ID the display name is
+        identical to the catalog's.
+        """
+        ids = sorted({cid for cid in compound_ids})
+        names = {}
+        missing = []
+        for cid in ids:
+            if cid in cls._compound_name_cache:
+                names[cid] = cls._compound_name_cache[cid]
+            else:
+                missing.append(cid)
+        if missing:
+            session = get_session(cls.RETRIES)
+            # KEGG's `list` accepts several entries per request (joined by '+'); chunk conservatively.
+            for chunk in parsing.partition_list(missing, 10):
+                data, _ = cls._kegg_request(session, 'list', ['+'.join(chunk)])
+                for line in data.split('\n'):
+                    split = line.split('\t')
+                    if len(split) == 2:
+                        compound_id, compound_names = split
+                        main_name = compound_names.split(';')[0]
+                        cls._compound_name_cache[compound_id] = main_name
+                        names[compound_id] = main_name
+        return names
 
     @staticmethod
     @functools.lru_cache(1024)
