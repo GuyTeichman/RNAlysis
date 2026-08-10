@@ -2,7 +2,7 @@
 History
 =======
 
-4.3.0 (unreleased)
+4.3.0 (2026-08-10)
 -------------------
 
 Added
@@ -51,7 +51,6 @@ Fixed
 * Fixed a bug where automatically detecting the organism or gene-ID type from a set of gene IDs (via Ensembl) failed with an ``HTTP 400`` error, because the request body sent to Ensembl was double-encoded. The request is now formatted correctly.
 * Fixed a bug where a malformed or unreachable external service (PantherDB, UniProt, Ensembl, or PhylomeDB) could crash RNAlysis on startup while it loaded the lists of supported organisms and gene-ID types. These lookups now degrade gracefully to an empty list with a warning, and their network requests use timeouts so a stalled service can't freeze startup.
 * GUI table caching now runs off the UI thread and is guaranteed to finish before a session is saved, a report is exported, or the cache is cleared. Previously the asynchronous write introduced in 4.2.0 was "fire-and-forget", which could race with those operations and produce incomplete cached files.
-* Fixed a crash in ``CountFilter.average_replicate_samples`` when ``function='median'``: it relied on ``DataFrame.median_horizontal``, which was removed in Polars 1.x. The row-wise median is now computed correctly.
 * Fixed a bug where automatic common-name generation (used by the "smart" paired-end sample-naming option in the FASTQ functions) could produce an incorrect name when input file pairs differed in length, because a filtering step reused a loop variable left over from the last pair instead of each pair's own values.
 * Fixed a crash (``IndexError``) in automatic common-name generation for inputs of uneven length.
 * Fixed a bug where mapping orthologs or paralogs through the PantherDB service could crash the whole analysis when PantherDB intermittently returned an empty response for a gene (an empty ``HTTP 200`` body, which its retry mechanism does not cover). Such requests are now retried, and if the response stays empty that single gene is skipped with a warning instead of aborting the entire mapping.
