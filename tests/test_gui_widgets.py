@@ -479,6 +479,124 @@ def test_PathLineEdit_choose_file_not_chosen(qtbot, monkeypatch):
     assert widget.text() == pth
 
 
+def test_PathLineEdit_tooltip_reflects_full_path(qtbot):
+    qtbot, widget = widget_setup(qtbot, PathLineEdit)
+    long_path = 'C:/Users/example_user/very/long/nested/directory/structure/elegans_developmental_stages.tsv'
+
+    widget.setText(long_path)
+
+    assert widget.toolTip() == long_path
+    assert widget.file_path.toolTip() == long_path
+
+
+def test_PathLineEdit_tooltip_updates_on_keyboard_edit(qtbot):
+    qtbot, widget = widget_setup(qtbot, PathLineEdit)
+    widget.clear()
+    qtbot.keyClicks(widget.file_path, 'tests/test_files/test_deseq.csv')
+
+    assert widget.toolTip() == 'tests/test_files/test_deseq.csv'
+    assert widget.file_path.toolTip() == 'tests/test_files/test_deseq.csv'
+
+
+@pytest.mark.parametrize('long_path', [
+    'C:/Users/example_user/very/long/nested/directory/structure/elegans_developmental_stages.tsv',
+    '/home/example_user/very/long/nested/directory/structure/elegans_developmental_stages.tsv',
+])
+def test_PathLineEdit_text_roundtrip_unchanged_for_long_paths(qtbot, long_path):
+    qtbot, widget = widget_setup(qtbot, PathLineEdit)
+
+    widget.setText(long_path)
+    assert widget.text() == long_path
+
+    # narrowing the widget (which drives elision of the *display*) must not affect the stored value
+    widget.resize(80, widget.height())
+    qtbot.wait(50)
+    assert widget.text() == long_path
+
+
+def test_PathLineEdit_folder_mode_text_roundtrip_unchanged(qtbot):
+    long_path = 'C:/Users/example_user/very/long/nested/directory/structure/some_output_folder'
+    qtbot, widget = widget_setup(qtbot, PathLineEdit, is_file=False)
+
+    widget.setText(long_path)
+    widget.resize(80, widget.height())
+    qtbot.wait(50)
+
+    assert widget.text() == long_path
+
+
+def test_PathLineEdit_elides_to_dotdotdot_filename_when_it_fits(qtbot):
+    long_path = 'C:/Users/example_user/very/long/nested/directory/structure/elegans_developmental_stages.tsv'
+    candidate = '.../elegans_developmental_stages.tsv'
+    qtbot, widget = widget_setup(qtbot, PathLineEdit)
+
+    widget.setText(long_path)
+    widget.open_button.setFocus()
+
+    metrics = widget.file_path.fontMetrics()
+    candidate_width = metrics.horizontalAdvance(candidate)
+    full_width = metrics.horizontalAdvance(long_path)
+
+    # Measure, from the live layout, how much of the outer widget's width is consumed by
+    # the open button/margins/spacing before it reaches the inner QLineEdit. Deriving the
+    # target size this way (instead of a hardcoded magic width) keeps the test independent
+    # of font/DPI: whatever the current font metrics and layout overhead are, we compute
+    # exactly the width needed to fit '.../<filename>' but not the full path.
+    probe_width = full_width + 200
+    widget.resize(probe_width, widget.height())
+    qtbot.wait(50)
+    overhead = probe_width - widget.file_path.width()
+    assert overhead > 0
+
+    target_width = overhead + candidate_width + 20
+    assert target_width < overhead + full_width  # sanity check: still narrower than the full path needs
+    widget.resize(target_width, widget.height())
+    qtbot.wait(50)
+
+    displayed = widget.file_path.text()
+    assert displayed == candidate
+    # the stored/returned value is never touched by elision
+    assert widget.text() == long_path
+
+
+def test_PathLineEdit_elides_display_when_narrow_and_unfocused(qtbot):
+    long_path = 'C:/Users/example_user/very/long/nested/directory/structure/elegans_developmental_stages.tsv'
+    qtbot, widget = widget_setup(qtbot, PathLineEdit)
+
+    widget.setText(long_path)
+    widget.open_button.setFocus()
+    widget.resize(300, widget.height())
+    qtbot.wait(50)
+
+    displayed = widget.file_path.text()
+    assert displayed != long_path
+    # even when there isn't room for the whole filename, the tail (end of the filename) is
+    # what remains visible - never the head of the path
+    assert displayed.endswith(long_path[-10:])
+    # the stored/returned value is never touched by elision
+    assert widget.text() == long_path
+
+
+def test_PathLineEdit_shows_full_text_when_focused(qtbot):
+    long_path = 'C:/Users/example_user/very/long/nested/directory/structure/elegans_developmental_stages.tsv'
+    qtbot, widget = widget_setup(qtbot, PathLineEdit)
+
+    widget.setText(long_path)
+    widget.resize(120, widget.height())
+    qtbot.wait(50)
+
+    # Deliver the FocusIn event directly through the widget's own eventFilter instead of
+    # relying on widget.file_path.setFocus() to actually win keyboard focus from the window
+    # system: on headless platforms (QT_QPA_PLATFORM=offscreen, notably Linux) setFocus() on
+    # a widget that was never shown/activated as a top-level does not reliably dispatch a
+    # FocusIn event, which made this test flaky depending on the OS. sendEvent() is
+    # synchronous and routes through the real eventFilter under test either way.
+    QtWidgets.QApplication.sendEvent(widget.file_path, QtGui.QFocusEvent(QtCore.QEvent.Type.FocusIn))
+
+    assert widget.file_path.text() == long_path
+    assert widget.text() == long_path
+
+
 def test_MultipleChoiceList_select_all(qtbot):
     items = ['item1', 'item2', 'item3']
     qtbot, widget = widget_setup(qtbot, MultipleChoiceList, items)

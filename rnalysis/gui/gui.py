@@ -2206,6 +2206,9 @@ class FilterTabPage(TabPage):
         self.basic_grid.addWidget(QtWidgets.QWidget(self), 4, 0, 1, 4)
         self.basic_grid.addWidget(QtWidgets.QWidget(self), 0, 4, 4, 1)
         self.basic_grid.setRowStretch(4, 1)
+        # give the extra horizontal space to the file path field (column 1) instead of the
+        # trailing padding column, so the field actually widens with the window
+        self.basic_grid.setColumnStretch(1, 1)
         self.basic_grid.setColumnStretch(4, 1)
 
     def _check_for_special_functions(self, is_selected: bool = True):
