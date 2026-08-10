@@ -1502,6 +1502,32 @@ def test_FilterTabPage_load_file(qtbot):
     assert window.get_table_type() == 'Count matrix'
 
 
+@pytest.mark.parametrize('path,expected_type', [
+    ('tests/test_files/counted.csv', 'Count matrix'),
+    ('tests/test_files/test_deseq.csv', 'Differential expression'),
+    ('tests/test_files/fc_1.csv', 'Fold change'),
+    ('tests/test_files/biotype_ref_table_for_tests.csv', 'Other table'),
+])
+def test_FilterTabPage_autodetect_table_type_on_load(qtbot, path, expected_type):
+    qtbot, window = widget_setup(qtbot, FilterTabPage)
+    # combo starts on the conservative default
+    assert window.basic_widgets['table_type_combo'].currentText() == 'Other table'
+    window.basic_widgets['file_path'].clear()
+    qtbot.keyClicks(window.basic_widgets['file_path'].file_path, str(Path(path).absolute()))
+    assert window.basic_widgets['table_type_combo'].currentText() == expected_type
+
+
+def test_FilterTabPage_autodetect_table_type_is_overridable(qtbot):
+    qtbot, window = widget_setup(qtbot, FilterTabPage)
+    window.basic_widgets['file_path'].clear()
+    qtbot.keyClicks(window.basic_widgets['file_path'].file_path,
+                    str(Path('tests/test_files/counted.csv').absolute()))
+    # auto-detected as a count matrix, but the user can still override the choice
+    assert window.basic_widgets['table_type_combo'].currentText() == 'Count matrix'
+    window.basic_widgets['table_type_combo'].setCurrentText('Other table')
+    assert window.basic_widgets['table_type_combo'].currentText() == 'Other table'
+
+
 def test_FilterTabPage_from_obj(qtbot):
     table_name = 'table name'
     qtbot, window = widget_setup(qtbot, FilterTabPage)

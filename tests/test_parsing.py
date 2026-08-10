@@ -225,6 +225,26 @@ def test_parse_gff3_attributes(attrs, expected):
     assert res == expected
 
 
+@pytest.mark.parametrize('input_string,expected', [
+    ('P34544', 'P34544'),  # standard 6-character accession, letter outside the O/P/Q range
+    ('Q27395', 'Q27395'),  # standard 6-character accession with an O/P/Q prefix
+    ('O17395', 'O17395'),  # standard 6-character accession with an O/P/Q prefix
+    ('A0A0K3AVL7', 'A0A0K3AVL7'),  # extended 10-character accession format
+    ('sp|P34544|GENE_HUMAN', 'P34544'),  # accession embedded in a UniProt FASTA header
+    ('UniProtKB:Q27395', 'Q27395'),  # accession embedded after a database prefix
+    ('P34544-2', 'P34544'),  # isoform suffix is not part of the match and is dropped
+    ('P34544.1', 'P34544'),  # version suffix is not part of the match and is dropped
+    ('P34544-2.3', 'P34544'),  # combined isoform + version suffix is dropped
+    ('not a uniprot id', None),  # no match anywhere in the string
+    ('', None),  # empty string
+    ('p34544', None),  # malformed: lowercase is not a valid accession (case-sensitive)
+    ('P3454', None),  # malformed: one character too short to be a valid accession
+    ('unicode text café P34544 café', 'P34544'),  # valid id surrounded by unicode text
+])
+def test_parse_uniprot_id(input_string, expected):
+    assert parse_uniprot_id(input_string) == expected
+
+
 @pytest.mark.parametrize('allow_unicode,string,expected', [
     (False, 'text', 'text'),
     (False, 'text with spaces', 'text-with-spaces'),
@@ -237,6 +257,73 @@ def test_parse_gff3_attributes(attrs, expected):
 def test_slugify(allow_unicode, string, expected):
     res = slugify(string, allow_unicode)
     assert res == expected
+
+
+@pytest.mark.parametrize('s1,s2,expected', [
+    ('hello_world', 'goodbye_world', '_world'),  # shared suffix is the longest common substring
+    ('abcdef', 'xabcdefy', 'abcdef'),  # one string fully contained within the other
+    ('abc', 'xyz', ''),  # no common substring at all
+    ('same', 'same', 'same'),  # identical strings: LCS is the whole string
+    ('', '', ''),  # both strings empty
+    ('', 'abc', ''),  # one string empty
+    ('cafe123', 'cafe456', 'cafe'),  # shared prefix
+    ('café123', 'café456', 'café'),  # unicode shared prefix
+])
+def test_longest_common_substring(s1, s2, expected):
+    assert longest_common_substring(s1, s2) == expected
+
+
+@pytest.mark.parametrize('strings,expected', [
+    ([], ''),  # empty input
+    (['hello'], 'hello'),  # single item: the whole string is returned as-is
+    (['file_A.txt', 'file_B.txt'], '.txt'),  # a real shared suffix
+    (['abc', 'abc', 'abc'], 'abc'),  # all-identical inputs: the whole string is the suffix
+    (['apple', 'banana'], ''),  # no common suffix
+    (['', ''], ''),  # all strings empty
+    (['a', 'ba', 'cba'], 'a'),  # strings of different lengths, suffix bounded by the shortest one
+    (['日本語abc', '中国語abc'], '語abc'),  # unicode suffix
+    (['ab', 'aab'], 'ab'),  # lexicographically-smaller string is longer than the larger one (issue #180)
+    (['aac', 'ab'], ''),  # same as above, but with no shared suffix at all
+])
+def test_common_suffix(strings, expected):
+    assert common_suffix(strings) == expected
+
+
+@pytest.mark.parametrize('s,suffix,expected', [
+    ('sample_trimmed', '_trimmed', 'sample'),  # single suffix given as a plain string
+    ('sample_trimmed', ['_sorted', '_trimmed'], 'sample'),  # suffix found within a list of candidates
+    ('sample', '_trimmed', 'sample'),  # no matching suffix: string is returned unchanged
+    ('sample_trimmed', ['med', '_trimmed'], 'sample'),  # longest matching suffix wins over a shorter one
+    ('sample_med', ['_trimmed', 'med'], 'sample_'),  # falls back to a shorter suffix when the longest doesn't match
+    ('sample', [], 'sample'),  # empty suffix list: string is returned unchanged
+    ('café_trimmed', '_trimmed', 'café'),  # unicode string
+    ('', '_trimmed', ''),  # empty string
+    ('_trimmed', '_trimmed', ''),  # the whole string is the suffix
+])
+def test_remove_suffix(s, suffix, expected):
+    assert remove_suffix(s, suffix) == expected
+
+
+@pytest.mark.parametrize('file_pairs,expected', [
+    ([], []),  # empty input
+    ([('sample1_R1', 'sample1_R2')], ['sample1_R']),  # single pair
+    ([('sample1_R1', 'sample1_R2'), ('sample2_R1', 'sample2_R2')], ['sample1', 'sample2']),  # two pairs
+    ([('ctrl1_R1', 'ctrl1_R2'), ('ctrl2_R1', 'ctrl2_R2'), ('treat1_R1', 'treat1_R2')],
+     ['ctrl', 'ctrl2_R', 'treat']),  # three pairs, uneven trimming across pairs
+    ([('abc', 'xyz')], ['abcxyz']),  # no common substring: names are concatenated
+    ([('same', 'same')], ['same']),  # all-identical inputs
+    ([('sample1_R1_trimmed', 'sample1_R2_trimmed')], ['sample1_R']),  # known suffixes are stripped first
+    ([('x_R1', 'x_R2'), ('x_R1', 'x_R2')], ['x_R1x_R2', 'x_R1x_R2']),  # duplicate pairs: trimming to empty is avoided
+    ([('café_R1', 'café_R2')], ['café_R']),  # unicode
+    # regression test for issue #181: a scope leak used the LAST pair's s1/s2 (from the loop
+    # variable) to filter every pair's result instead of each pair's own s1/s2. Since the last
+    # pair here is much shorter, the earlier (longer) pair's valid LCS result was wrongly
+    # excluded from the common-suffix computation, so the shared trailing "_R" was never trimmed.
+    ([('sampleA_long_name_R1', 'sampleA_long_name_R2'), ('sB_R1', 'sB_R2')],
+     ['sampleA_long_name', 'sB']),
+])
+def test_generate_common_name(file_pairs, expected):
+    assert generate_common_name(file_pairs) == expected
 
 
 @pytest.mark.parametrize('regex,repl,item,expected', [

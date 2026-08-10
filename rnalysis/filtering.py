@@ -36,6 +36,7 @@ from rnalysis.utils import (clustering, differential_expression, generic,
                             parsing, settings, validation)
 from rnalysis.utils.generic import readable_name
 from rnalysis.utils.param_typing import (BIOTYPE_ATTRIBUTE_NAMES, BIOTYPES,
+                                         GTF_ATTRIBUTE_NAMES,
                                          DEFAULT_ORGANISMS, GO_EVIDENCE_TYPES,
                                          GO_QUALIFIERS, K_CRITERIA,
                                          LEGAL_GENE_LENGTH_METHODS,
@@ -45,6 +46,95 @@ from rnalysis.utils.param_typing import (BIOTYPE_ATTRIBUTE_NAMES, BIOTYPES,
                                          PositiveInt, get_ensembl_taxons,
                                          get_gene_id_types, get_panther_taxons,
                                          get_phylomedb_taxons)
+
+# --- table-type auto-detection (drives the GUI "New table" default; Qt-free & never raises) ---
+# The returned keys match the GUI's FILTER_OBJ_TYPES combo box (see rnalysis/gui/gui.py).
+_TABLE_TYPE_COUNT = 'Count matrix'
+_TABLE_TYPE_DIFF_EXP = 'Differential expression'
+_TABLE_TYPE_FOLD_CHANGE = 'Fold change'
+_TABLE_TYPE_OTHER = 'Other table'
+
+# column-name signatures, compared case-insensitively with spaces collapsed.
+# log2(fold change): DESeq2 uses 'log2FoldChange', limma-voom uses 'logFC'.
+_DE_LOG2FC_NAMES = frozenset({'log2foldchange', 'logfc', 'log2fc'})
+# (adjusted) p-value: DESeq2 uses 'pvalue'/'padj', limma-voom uses 'P.Value'/'adj.P.Val'.
+_DE_PVAL_NAMES = frozenset({'padj', 'adj.p.val', 'pvalue', 'p.value', 'pval'})
+# a single-column fold-change table's data column.
+_FOLD_CHANGE_NAMES = frozenset({'foldchange', 'log2foldchange', 'logfc', 'log2fc', 'fc'})
+# how many rows to read from a file for detection. The type/fold-change signatures are name-based (header
+# only), and the count-matrix value checks are decided from this small sample -- so detection stays cheap on
+# the UI thread and never reads the whole file (the full read happens later, only when the table is loaded).
+_DETECT_SAMPLE_ROWS = 200
+
+
+def infer_table_type(fname: Union[str, Path, None] = None, df: Union[pl.DataFrame, pl.Series, None] = None) -> str:
+    """
+    Infer the most likely table type of a data file, to use as the pre-selected default on the GUI's \
+    "New table" screen. Detection is deliberately conservative: whenever the content is ambiguous it returns \
+    'Other table' rather than risk a wrong (and silently limiting) classification that the user then has to undo. \
+    This only influences the *pre-selected* type -- it never changes how a table is parsed or loaded -- and it \
+    never raises: any error while reading or inspecting the data degrades to 'Other table'.
+
+    For speed, when reading from a file only the header and a small sample of rows are read (the full table is \
+    not loaded on the UI thread). The differential-expression and fold-change signatures are decided from the \
+    column names alone; the count-matrix checks use the sampled rows. As a consequence, a table that only turns \
+    non-count-like (e.g. contains a negative value) *below* the sampled rows may still be pre-selected as a \
+    count matrix -- an accepted, user-overridable limitation of the cheap read.
+
+    :param fname: path of the table file to inspect. Ignored if ``df`` is provided.
+    :type fname: str, pathlib.Path, or None (default=None)
+    :param df: an already-loaded polars DataFrame/Series to inspect instead of reading ``fname``.
+    :type df: polars.DataFrame, polars.Series, or None (default=None)
+    :return: one of 'Count matrix', 'Differential expression', 'Fold change', or 'Other table' \
+    (the keys used by the GUI table-type combo box).
+    :rtype: str
+    """
+    try:
+        if df is None:
+            if fname is None:
+                return _TABLE_TYPE_OTHER
+            # lightweight, row-limited read: header + a small sample, never the whole file
+            df = io.load_table(fname, nrows=_DETECT_SAMPLE_ROWS)
+        if isinstance(df, pl.Series):
+            df = df.to_frame()
+        if not isinstance(df, pl.DataFrame):
+            return _TABLE_TYPE_OTHER
+        # the first column holds the gene IDs/index; everything else is data
+        if df.width < 2 or df.height < 1:
+            return _TABLE_TYPE_OTHER
+        data_cols = df.columns[1:]
+        collapsed = {col: str(col).strip().lower().replace(' ', '') for col in data_cols}
+
+        # 1. Differential expression: needs BOTH a log2(fold change) column and a p-value/adjusted-p-value
+        #    column (covers DESeq2: log2FoldChange + pvalue/padj, and limma-voom: logFC + P.Value/adj.P.Val).
+        has_log2fc = any(name in _DE_LOG2FC_NAMES for name in collapsed.values())
+        has_pval = any(name in _DE_PVAL_NAMES for name in collapsed.values())
+        if has_log2fc and has_pval:
+            return _TABLE_TYPE_DIFF_EXP
+
+        numeric_cols = [col for col in data_cols if df.schema[col].is_numeric()]
+
+        # 2. Fold change: a single numeric data column whose name looks like a fold change.
+        if len(data_cols) == 1:
+            col = data_cols[0]
+            if col in numeric_cols and collapsed[col] in _FOLD_CHANGE_NAMES:
+                return _TABLE_TYPE_FOLD_CHANGE
+            return _TABLE_TYPE_OTHER
+
+        # 3. Count matrix: >=2 data columns, ALL numeric, all values non-negative (counts/expression), with
+        #    at least one value >1. Requiring non-negativity keeps DESeq/limma tables (negative log2FC) and
+        #    numeric attribute tables (negative scores) out; requiring a value >1 rules out {0,1} presence/
+        #    absence attribute tables. Log-transformed count matrices (which contain negatives) fall back to
+        #    'Other' on purpose -- a safe, user-overridable miss rather than a wrong guess.
+        if len(numeric_cols) == len(data_cols):
+            minima = [v for v in (df[col].min() for col in numeric_cols) if v is not None]
+            maxima = [v for v in (df[col].max() for col in numeric_cols) if v is not None]
+            if minima and maxima and min(minima) >= 0 and max(maxima) > 1:
+                return _TABLE_TYPE_COUNT
+
+        return _TABLE_TYPE_OTHER
+    except Exception:
+        return _TABLE_TYPE_OTHER
 
 
 @readable_name('Generic table')
@@ -186,14 +276,20 @@ class Filter:
 
         """
         legal_operations = {'filter': 'Filtering', 'normalize': 'Normalization', 'sort': 'Sorting',
-                            'transform': 'Transformation', 'translate': 'Translation'}
+                            'transform': 'Transformation', 'translate': 'Translation', 'annotate': 'Annotation'}
         assert isinstance(inplace, bool), "'inplace' must be True or False!"
         assert isinstance(opposite, bool), "'opposite' must be True or False!"
         assert printout_operation.lower() in legal_operations, \
             f"Invalid input for variable 'printout_operation': {printout_operation}"
         # when user requests the opposite of a filter, return the Set Difference between the filtering result and self
         if opposite:
-            new_df = self.df.filter(~pl.first().is_in(new_df.select(pl.first()).to_series()))
+            # the opposite is self.df minus the kept rows; an anti-join (order-preserving via
+            # maintain_order='left') does this in one pass instead of the deprecated is_in anti-filter.
+            # Drop null-index rows first: the old ``~pl.first().is_in(...)`` filtered them out (is_in(null)
+            # is null -> excluded), so the opposite stays bit-identical even when the index has nulls.
+            new_df = self.df.lazy().filter(pl.first().is_not_null()).join(
+                new_df.lazy().select(pl.first()), on=self.df.columns[0], how='anti',
+                maintain_order='left').collect()
             suffix += 'opposite'
 
         # update filename with the suffix of the operation that was just performed
@@ -955,6 +1051,95 @@ class Filter:
             parsing.data_to_set(self.df.select(pl.first())))
         new_df = self.df.filter(pl.first().is_in(gene_names))
         return self._inplace(new_df, opposite, inplace, suffix)
+
+    @readable_name('Filter by feature attribute (based on a GTF/GFF file)')
+    def filter_by_gtf_attribute(self, gtf_path: Union[str, Path],
+                                attribute: Union[Literal[GTF_ATTRIBUTE_NAMES], str] = 'gene_biotype',
+                                value: Union[str, List[str]] = 'protein_coding',
+                                feature_type: Literal['gene', 'transcript'] = 'gene',
+                                opposite: bool = False, inplace: bool = True):
+        """
+        Filters the features in the table by any attribute described in a GTF/GFF annotation file, \
+        keeping only features whose attribute matches one of the specified values \
+        (for example: keep only genes on a specific chromosome or strand, from a specific source, \
+        or of a specific biotype). This is a generalization of `filter_biotype_from_gtf` to any GTF/GFF attribute.
+
+        :param gtf_path: Path to your GTF/GFF annotation file. The file should match the type of \
+        gene names/IDs you use in your table.
+        :type gtf_path: str or Path
+        :param attribute: name of the attribute to filter by. Standard column-9 attributes (such as 'gene_biotype', \
+        'gene_name', or any custom key in your file) are supported, as well as the reserved names 'chromosome', \
+        'source' and 'strand', which are read from the fixed columns of the annotation file.
+        :type attribute: str (default='gene_biotype')
+        :param value: the attribute value/values which will NOT be filtered out. For example, to keep only the \
+        features on chromosomes 'chr1' and 'chr2', set attribute='chromosome' and value=['chr1', 'chr2'].
+        :type value: str or list of strings
+        :param feature_type: determines whether the features/rows in your data table describe \
+        individual genes or transcripts.
+        :type feature_type: 'gene' or 'transcript' (default='gene')
+        :type opposite: bool
+        :param opposite: If True, the output of the filtering will be the OPPOSITE of the specified \
+        (instead of filtering out X, the function will filter out anything BUT X). \
+        If False (default), the function will filter as expected.
+        :type inplace: bool (default=True)
+        :param inplace: If True (default), filtering will be applied to the current Filter object. If False, \
+        the function will return a new Filter instance and the current instance will not be affected.
+        :return: If 'inplace' is False, returns a new and filtered instance of the Filter object.
+        """
+        value = parsing.data_to_set(value)
+        assert validation.isinstanceiter(value, str), "value must be a string or a list of strings!"
+        assert Path(gtf_path).exists(), "the given gtf path does not exist!"
+        suffix = f"_{attribute}_{'_'.join(sorted(value))}"
+
+        ref_srs = self._get_ref_srs_from_gtf(gtf_path, attribute, feature_type)
+        # feature IDs which remain after filtering are those whose attribute value is kept AND that appear in the table
+        gene_names = parsing.data_to_set(ref_srs.filter(pl.last().is_in(value))).intersection(
+            parsing.data_to_set(self.df.select(pl.first())))
+        new_df = self.df.filter(pl.first().is_in(gene_names))
+        return self._inplace(new_df, opposite, inplace, suffix)
+
+    @readable_name('Annotate table with a feature attribute (from a GTF/GFF file)')
+    def annotate_from_gtf(self, gtf_path: Union[str, Path],
+                          attribute: Union[Literal[GTF_ATTRIBUTE_NAMES], str] = 'gene_biotype',
+                          feature_type: Literal['gene', 'transcript'] = 'gene',
+                          column_name: Union[str, None] = None,
+                          inplace: bool = True):
+        """
+        Adds a new column to the table, annotating each feature with the value of a GTF/GFF attribute \
+        (for example: the biotype, chromosome, strand, or source of each gene). Features that are not found \
+        in the annotation file are annotated with a missing value.
+
+        :param gtf_path: Path to your GTF/GFF annotation file. The file should match the type of \
+        gene names/IDs you use in your table.
+        :type gtf_path: str or Path
+        :param attribute: name of the attribute to annotate with. Standard column-9 attributes (such as \
+        'gene_biotype', 'gene_name', or any custom key in your file) are supported, as well as the reserved names \
+        'chromosome', 'source' and 'strand', which are read from the fixed columns of the annotation file.
+        :type attribute: str (default='gene_biotype')
+        :param feature_type: determines whether the features/rows in your data table describe \
+        individual genes or transcripts.
+        :type feature_type: 'gene' or 'transcript' (default='gene')
+        :param column_name: the name of the new annotation column. If not specified, the attribute name is used. \
+        If a column with this name already exists in the table, it will be overwritten.
+        :type column_name: str or None (default=None)
+        :type inplace: bool (default=True)
+        :param inplace: If True (default), the annotation column will be added to the current Filter object. \
+        If False, the function will return a new Filter instance and the current instance will not be affected.
+        :return: If 'inplace' is False, returns a new and annotated instance of the Filter object.
+        """
+        assert Path(gtf_path).exists(), "the given gtf path does not exist!"
+        column_name = column_name if column_name else attribute
+        feature_id_col = self.df.columns[0]  # the table's feature-id (index) column; capture before dropping anything
+        assert column_name != feature_id_col, \
+            f"column_name '{column_name}' collides with the table's feature-id column; choose a different name."
+
+        ref_srs = self._get_ref_srs_from_gtf(gtf_path, attribute, feature_type)  # 2 columns: [feature_id, attr_value]
+        mapping = ref_srs.rename({ref_srs.columns[0]: '__feature_id__', ref_srs.columns[1]: column_name})
+        # overwrite an existing (non-index) column of the same name, then left-join so unmapped features get a null
+        base = self.df.drop(column_name) if column_name in self.df.columns else self.df
+        new_df = base.join(mapping, left_on=feature_id_col, right_on='__feature_id__', how='left')
+        return self._inplace(new_df, opposite=False, inplace=inplace, suffix=f'_annotated_{column_name}',
+                             printout_operation='annotate')
 
     @readable_name('Filter by feature biotype (based on a reference table)')
     def filter_biotype_from_ref_table(self, biotype: Union[Literal[BIOTYPES], str, List[str]] = 'protein_coding',
@@ -3513,9 +3698,12 @@ class CountFilter(Filter):
             assert den in self.columns, f"'{den}' is not a column in the CountFilter object!"
             assert den in numeric_cols, f"Invalid dtype for column '{den}': {self.df.dtypes[den]}"
 
-        fc_df = self.df.select(pl.first()).with_columns(
-            ((self.df.select(numerator).mean_horizontal() + 1) / (
-                self.df.select(denominator).mean_horizontal() + 1)).alias('Fold Change'))
+        # fuse the three eager scans of self.df (index column + numerator mean + denominator mean) into
+        # a single lazy plan collected once; pl.mean_horizontal over each column list is the row-wise mean
+        fc_df = self.df.lazy().select(
+            pl.first(),
+            ((pl.mean_horizontal(numerator) + 1) / (pl.mean_horizontal(denominator) + 1)).alias('Fold Change')
+        ).collect()
         new_fname = Path(f"{str(self.fname.parent)}/{self.fname.stem}'_fold_change_'"
                          f"{numer_name}_over_{denom_name}_{self.fname.suffix}")
 
@@ -3665,27 +3853,36 @@ class CountFilter(Filter):
                 f"The number of new column names {len(new_column_names)} " \
                 f"does not match the number of sample groups {len(sample_grouping)}!"
 
-        averaged_df = self.df.select(pl.first())
-
-        for group, new_name in zip(sample_grouping, new_column_names):
+        for group in sample_grouping:
             if isinstance(group, str):
                 assert group in self.columns, f"Column '{group}' does not exist in the original table!"
-                averaged_df = averaged_df.with_columns(self.df[group].alias(new_name))
             elif isinstance(group, (list, tuple, set)):
                 for item in group:
                     assert item in self.columns, f"Column '{item}' does not exist in the original table!"
-                if function == 'mean':
-                    averaged_df = averaged_df.with_columns(
-                        self.df.select(pl.col(group)).mean_horizontal().alias(new_name))
-                elif function == 'median':
-                    averaged_df = averaged_df.with_columns(
-                        self.df.select(pl.col(group)).median_horizontal().alias(new_name))
-                else:
-                    averaged_df = averaged_df.with_columns(
-                        self.df.select(pl.col(group).apply(lambda x: gmean(x)).alias(new_name)))
-
             else:
                 raise TypeError(f"'sample_list' cannot contain objects of type {type(group)}.")
+
+        if function in ('mean', 'median'):
+            # fuse into one lazy pass over self.df instead of one eager self.df.select per group: each
+            # multi-sample group becomes its row-wise mean/median, single-sample groups are copied through.
+            # (median also fixes a pre-existing crash: DataFrame.median_horizontal was removed in Polars 1.x)
+            def _agg(cols):
+                return pl.mean_horizontal(pl.col(cols)) if function == 'mean' \
+                    else pl.concat_list(pl.col(cols)).list.median()
+
+            exprs = [pl.col(group).alias(new_name) if isinstance(group, str)
+                     else _agg(group).alias(new_name)
+                     for group, new_name in zip(sample_grouping, new_column_names)]
+            return self.df.lazy().select(pl.first(), *exprs).collect()
+
+        # geometric_mean: per-group row-wise geometric mean via scipy (no native Polars expression for it)
+        averaged_df = self.df.select(pl.first())
+        for group, new_name in zip(sample_grouping, new_column_names):
+            if isinstance(group, str):
+                averaged_df = averaged_df.with_columns(self.df[group].alias(new_name))
+            else:
+                group_gmean = gmean(self.df.select(pl.col(group)).to_numpy(), axis=1)
+                averaged_df = averaged_df.with_columns(pl.Series(new_name, group_gmean))
 
         return averaged_df
 
@@ -3698,34 +3895,28 @@ class CountFilter(Filter):
 
     def _norm_scaling_factors(self, scaling_factors: pl.DataFrame):
         numeric_cols = self._numeric_columns
-        new_df = pl.DataFrame().lazy()
 
         if scaling_factors.shape[0] == 1:
             assert scaling_factors.shape[1] == len(numeric_cols), \
                 f"Number of scaling factors ({scaling_factors.shape[1]}) does not match " \
                 f"number of numeric columns in your data table ({len(numeric_cols)})!"
+            # one lazy pass over self.df instead of one eager self.df.select per column: divide each
+            # numeric column by its scalar factor and keep the non-numeric columns (e.g. the index) as-is
+            exprs = [pl.col(column).truediv(scaling_factors[column]) if column in numeric_cols else pl.col(column)
+                     for column in self.df.columns]
+            return self.df.lazy().select(exprs).collect()
 
-            for column in self.df.columns:
-                if column in numeric_cols:
-                    norm_factor = scaling_factors[column]
-                    new_df = new_df.with_columns((self.df.select(pl.col(column).truediv(norm_factor))))
-                else:
-                    new_df = new_df.with_columns(self.df[column].alias(column))
-        else:
-            assert scaling_factors.shape[0] >= self.shape[0] and scaling_factors.shape[1] == len(numeric_cols) + 1, \
-                f"Dimensions of scaling factors table ({scaling_factors.shape}) does not match the " \
-                f"dimensions of your data table ({(self.shape[0], len(numeric_cols))} - numeric columns only)!"
-            for column in self.df.columns:
-                if column in numeric_cols:
-                    merged = self.df.select(cs.first() | cs.by_name(column)).join(
-                        scaling_factors.select(cs.first() | cs.by_name(column)), left_on=self.df.columns[0],
-                        right_on=scaling_factors.columns[0], how='left')
-                    merged_div = merged.with_columns((pl.nth(-2).truediv(pl.nth(-1))).alias('div'))
-                    new_df = new_df.with_columns((merged_div.select(pl.col('div').alias(column))))
-                else:
-                    new_df = new_df.with_columns(self.df[column].alias(column))
-
-        return new_df.collect()
+        assert scaling_factors.shape[0] >= self.shape[0] and scaling_factors.shape[1] == len(numeric_cols) + 1, \
+            f"Dimensions of scaling factors table ({scaling_factors.shape}) does not match the " \
+            f"dimensions of your data table ({(self.shape[0], len(numeric_cols))} - numeric columns only)!"
+        # one order-preserving join on the index instead of one left-join per numeric column, then divide
+        # each numeric column by its matching per-gene scaling factor in a single lazy pass
+        merged = self.df.lazy().join(scaling_factors.lazy(), left_on=self.df.columns[0],
+                                     right_on=scaling_factors.columns[0], how='left',
+                                     maintain_order='left', suffix='__sf')
+        exprs = [pl.col(column).truediv(pl.col(f'{column}__sf')).alias(column) if column in numeric_cols
+                 else pl.col(column) for column in self.df.columns]
+        return merged.select(exprs).collect()
 
     @readable_name('Normalize to reads-per-million (RPM) - HTSeq-count output')
     def normalize_to_rpm_htseqcount(self, special_counter_fname: Union[str, Path], inplace: bool = True,
@@ -4361,9 +4552,10 @@ class CountFilter(Filter):
         """
         validation.validate_threshold(threshold)
         self._validate_is_normalized()
-        mask_expr = (pl.col(self._numeric_columns) >= threshold)
-        mask = self.df.select(pl.col(self._numeric_columns)).with_columns(mask_expr).sum_horizontal() >= n_samples
-        new_df = self.df.filter(mask)
+        # fuse into one lazy pass over self.df instead of two eager scans (build the count mask on a
+        # selected copy, then filter the full frame): count, per row, the numeric columns >= threshold
+        new_df = self.df.lazy().filter(
+            pl.sum_horizontal(pl.col(self._numeric_columns) >= threshold) >= n_samples).collect()
         suffix = f"_filt{threshold}reads{n_samples}samples"
         return self._inplace(new_df, opposite, inplace, suffix)
 
@@ -4395,8 +4587,10 @@ class CountFilter(Filter):
         """
         validation.validate_threshold(threshold)
         self._validate_is_normalized()
-        high_expr = self.df.filter(self.df.select(pl.col(self._numeric_columns)).max_horizontal() >= threshold)
-        low_expr = self.df.filter(self.df.select(pl.col(self._numeric_columns)).max_horizontal() < threshold)
+        # one lazy pass each instead of scanning self.df twice (max_horizontal on a selected copy, then
+        # filter the full frame)
+        high_expr = self.df.lazy().filter(pl.max_horizontal(pl.col(self._numeric_columns)) >= threshold).collect()
+        low_expr = self.df.lazy().filter(pl.max_horizontal(pl.col(self._numeric_columns)) < threshold).collect()
         return self._inplace(high_expr, opposite=False, inplace=False, suffix=f'_above{threshold}reads'), self._inplace(
             low_expr, opposite=False, inplace=False, suffix=f'_below{threshold}reads')
 
@@ -4428,7 +4622,8 @@ class CountFilter(Filter):
         validation.validate_threshold(threshold)
         self._validate_is_normalized()
 
-        new_df = self.df.filter(self.df.select(pl.col(self._numeric_columns)).sum_horizontal() >= threshold)
+        # one lazy pass instead of scanning self.df twice (sum_horizontal on a selected copy, then filter)
+        new_df = self.df.lazy().filter(pl.sum_horizontal(pl.col(self._numeric_columns)) >= threshold).collect()
         suffix = f"_filt{threshold}sum"
         return self._inplace(new_df, opposite, inplace, suffix)
 

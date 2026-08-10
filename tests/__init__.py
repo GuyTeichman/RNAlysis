@@ -97,6 +97,20 @@ def is_ensembl_available():
     return True
 
 
+def is_orthoinspector_available():
+    # OrthoInspector's per-database `orthologs` endpoints are the flaky part -- the `databases`/`species`
+    # endpoints can respond while these time out (the real-world outage this guard exists for). Probe the
+    # exact capability the live tests need, mirroring OrthoInspectorOrthologMapper's URL and timeout.
+    url = 'https://api.bigest-icube.fr/orthoinspector/Eukaryota2016/species/6239/orthologs/6238'
+    try:
+        req = requests.get(url, timeout=(10, 30))
+    except requests.exceptions.RequestException:
+        return False
+    if str(req.status_code)[0] in ['4', '5']:
+        return False
+    return True
+
+
 def is_phylomedb_available():
     try:
         host = socket.gethostbyname('ftp.phylomedb.org')

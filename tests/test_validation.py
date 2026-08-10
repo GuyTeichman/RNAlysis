@@ -280,3 +280,33 @@ def test_validate_genome_annotation_file(path, accept_gtf, accept_gff3, err_exp,
     else:
         res = validate_genome_annotation_file(path, accept_gtf, accept_gff3)
         assert res == truth
+
+
+_GTF_LINE = '1\tsrc\tgene\t1\t9\t.\t+\t.\tgene_id "G1"; gene_biotype "protein_coding";\n'
+_GFF3_LINE = '1\tsrc\tgene\t1\t9\t.\t+\t.\tID=gene:G1;biotype=protein_coding\n'
+
+
+@pytest.mark.parametrize('filename,content,truth', [
+    ('ann.gff', _GFF3_LINE, 'gff3'),        # .gff extension is now accepted
+    ('ann.gtf.gz', _GTF_LINE, 'gtf'),       # gzip-compressed GTF
+    ('ann.gff3.gz', _GFF3_LINE, 'gff3'),    # gzip-compressed GFF3
+    ('mislabeled.gtf', _GFF3_LINE, 'gff3'),  # content-sniff overrides the .gtf extension
+    ('mislabeled.gff3', _GTF_LINE, 'gtf'),   # ...and vice versa
+    ('no_ext_but_gtf_content', _GTF_LINE, 'gtf'),  # unknown extension, decided purely by content
+])
+def test_validate_genome_annotation_file_formats_and_sniffing(tmp_path, filename, content, truth):
+    import gzip
+    pth = tmp_path / filename
+    if filename.endswith('.gz'):
+        with gzip.open(pth, 'wt', encoding='utf-8', newline='\n') as fh:
+            fh.write(content)
+    else:
+        pth.write_text(content, encoding='utf-8', newline='\n')
+    assert validate_genome_annotation_file(pth) == truth
+
+
+def test_sniff_annotation_format_inconclusive(tmp_path):
+    # A file whose first data line can't be classified returns None (validate then falls back to the extension).
+    pth = tmp_path / 'weird.txt'
+    pth.write_text('not,a,real,annotation,line\n', encoding='utf-8', newline='\n')
+    assert sniff_annotation_format(pth) is None

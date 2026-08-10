@@ -30,6 +30,14 @@ GRAPHVIZ_FORMATS = ('pdf', 'png', 'svg', 'none')
 
 BIOTYPES = ('protein_coding', 'pseudogene', 'lincRNA', 'miRNA', 'ncRNA', 'piRNA', 'rRNA', 'snoRNA', 'snRNA', 'tRNA')
 BIOTYPE_ATTRIBUTE_NAMES = ('biotype', 'gene_biotype', 'transcript_biotype', 'gene_type', 'transcript_type')
+# Feature-type keywords (column 3) that denote a transcript, across GTF and GFF3 conventions. Used to identify
+# transcript rows when parsing annotation files (mRNA/primary_transcript are the GFF3/GTF equivalents of 'transcript').
+TRANSCRIPT_FEATURE_NAMES = ('transcript', 'mRNA', 'primary_transcript')
+# Attribute names suggested in the GUI for filtering/annotating a table from a GTF/GFF file. Free text is also
+# allowed (used as Union[Literal[GTF_ATTRIBUTE_NAMES], str]). 'chromosome'/'source'/'strand' are reserved names that
+# read the fixed GTF/GFF columns; everything else is looked up as a column-9 key=value attribute.
+GTF_ATTRIBUTE_NAMES = ('gene_biotype', 'transcript_biotype', 'biotype', 'gene_name', 'gene_id', 'transcript_id',
+                       'chromosome', 'source', 'strand')
 
 GO_ASPECTS = ('biological_process', 'cellular_component', 'molecular_function')
 GO_EVIDENCE_TYPES = ('experimental', 'phylogenetic', 'computational', 'author', 'curator', 'electronic')
