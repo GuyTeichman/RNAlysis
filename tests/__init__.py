@@ -68,20 +68,29 @@ def are_dir_trees_equal(dir1, dir2, compare_contents: bool = True, ignore: list 
 
 
 def is_pantherdb_available():
-    # Probe the param-free `supportedgenomes` endpoint that `io.get_legal_panther_taxons` already
-    # POSTs -- it returns HTTP 200 JSON when PantherDB is healthy. The old probe GET-ed the bare
-    # `.../ortholog/` parent, which 404s even on a perfectly healthy service (the real ortholog call
-    # POSTs `.../ortholog/matchortho` with query params), so this probe returned False on every run
-    # and the whole TestPantherOrthologMapper suite was permanently skipped. Catch RequestException
+    # Probe the exact capability the live TestPantherOrthologMapper suite needs: a real
+    # `ortholog/matchortho` query for a well-conserved gene (C. elegans G5EDF7 -> human) that a
+    # healthy PantherDB answers with a non-empty ortholog mapping. An earlier probe hit the param-
+    # free `supportedgenomes` endpoint, but PantherDB degrades unevenly -- it can answer that with
+    # HTTP 200 while the ortholog endpoint returns empty/invalid 200 bodies, so the suite ran and
+    # its `assert len(...) > 0` checks *failed* instead of *skipping*. Mirror the OrthoInspector
+    # probe: exercise the same endpoint the tests do and treat an empty/malformed mapping as
+    # "unavailable". The probe hits PantherDB raw (not via the mapper), so a genuine mapper
+    # regression still surfaces as a real test failure rather than a skip. Catch RequestException
     # (not just TimeoutError/HTTPError) so an unreachable service can't crash collection at import.
-    url = 'https://www.pantherdb.org/services/oai/pantherdb/supportedgenomes'
+    url = 'https://www.pantherdb.org/services/oai/pantherdb/ortholog/matchortho'
+    params = dict(geneInputList='G5EDF7', organism='6239', targetOrganism='9606', orthologType='all')
     try:
-        req = requests.post(url, timeout=(10, 30))
+        req = requests.post(url, params=params, headers={'accept': 'application/json'}, timeout=(10, 30))
     except requests.exceptions.RequestException:
         return False
     if str(req.status_code)[0] in ['4', '5']:
         return False
-    return True
+    try:
+        mapped = req.json()['search']['mapping']['mapped']
+    except (requests.exceptions.JSONDecodeError, KeyError, TypeError):
+        return False
+    return bool(mapped)
 
 
 def is_uniprot_available():
