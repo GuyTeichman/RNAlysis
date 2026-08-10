@@ -209,8 +209,10 @@ CI (`.github/workflows/build_ci.yml`) runs on every PR across
 
 `tdd` (mandatory workflow), `diagnosing-bugs` (hard bugs / CI-only flakiness),
 `code-review` (the clean-context PR review), `research` (nailing down an external API's real
-current behavior before coding against it), `gui-screenshots` (capture the reflection-generated
-dialog for a changed GUI function and attach it to the PR — required for visible GUI changes,
-rule 9), `safe-optimization` (profile first, then prove a performance change is bit-identical
-before shipping it), `release` (the maintainer-only version-bump/release checklist — see
-"Release (maintainer)" in `.claude/workflows.md`).
+current behavior before coding against it), `external-api-change` (the full procedure for
+fixing/changing code that talks to UniProt/Ensembl/PANTHER/PhylomeDB/OrthoInspector/KEGG/GO),
+`gui-screenshots` (capture the reflection-generated dialog for a changed GUI function and attach
+it to the PR — required for visible GUI changes, rule 9), `safe-optimization` (profile first,
+then prove a performance change is bit-identical before shipping it), `release` (the
+maintainer-only version-bump/release checklist — see "Release (maintainer)" in
+`.claude/workflows.md`).
