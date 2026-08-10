@@ -113,16 +113,12 @@ migrated off Pandas in 4.0).
 
 ## A note on tool-specific instructions
 
-`CLAUDE.md` refers to Claude Code "skills" (`tdd`, `diagnosing-bugs`, `code-review`,
-`research`, `safe-optimization`). Those are convenience shortcuts for one particular tool — but
-the *workflows they encode* apply to every agent: disciplined TDD, methodical debugging, a
-clean-context review of each diff, verifying an external API's real current behavior before
-coding against it, and profiling-then-proving a performance change is safe (rule 5;
-`packaging/bench_equal.py` is the provider-neutral equality/benchmark engine). Use whatever
-tooling you have to achieve the same outcomes.
-`research`, `gui-screenshots`). Those are convenience shortcuts for one particular tool — but the
-*workflows they encode* apply to every agent: disciplined TDD, methodical debugging, a
-clean-context review of each diff, verifying an external API's real current behavior before coding
-against it, and attaching a dialog screenshot to any visible GUI change (rule 9;
-`packaging/capture_gui_dialog.py` is the provider-neutral engine). Use whatever tooling you have to
-achieve the same outcomes.
+`CLAUDE.md` refers to Claude Code "skills" (`tdd`, `diagnosing-bugs`, `code-review`, `research`,
+`gui-screenshots`, `safe-optimization`, `release`). Those are convenience shortcuts for one
+particular tool — but the *workflows they encode* apply to every agent: disciplined TDD,
+methodical debugging, a clean-context review of each diff, verifying an external API's real
+current behavior before coding against it, attaching a dialog screenshot to any visible GUI
+change (rule 9; `packaging/capture_gui_dialog.py` is the provider-neutral engine),
+profiling-then-proving a performance change is safe (rule 5; `packaging/bench_equal.py` is the
+provider-neutral equality/benchmark engine), and (maintainer-only) the ordered
+version-bump/release checklist. Use whatever tooling you have to achieve the same outcomes.
