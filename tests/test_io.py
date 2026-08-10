@@ -1367,6 +1367,140 @@ def test_load_cached_gui_file(item, filename, load_as_obj, expected_output):
             os.remove(path)
 
 
+@pytest.fixture
+def gui_cache_writer():
+    """Register a fresh single-worker GUI cache-write queue for a test, then tear it down.
+
+    Mirrors how MainWindow owns the queue for the GUI's lifetime. Without a registered queue,
+    ``cache_gui_file`` writes synchronously instead (see the no-writer test below).
+    """
+    writer = io.GuiCacheWriteQueue()
+    io.set_active_gui_cache_writer(writer)
+    try:
+        yield writer
+    finally:
+        io.set_active_gui_cache_writer(None)
+        writer.shutdown(wait=True)
+
+
+def test_cache_gui_file_parquet_roundtrip_after_flush(gui_cache_writer):
+    filename = 'test_async_roundtrip.parquet'
+    df = pl.DataFrame({'a': [1, 2, 3], 'b': [4, 5, 6]})
+    path = Path(get_gui_cache_dir(), filename)
+    try:
+        cache_gui_file(df, filename)
+        flush_gui_cache_writes()
+        assert path.exists()
+        assert load_table(path).equals(df)
+        # the read path flushes on its own, so it must see the fully-written frame
+        assert load_cached_gui_file(filename).equals(df)
+    finally:
+        if path.exists():
+            path.unlink()
+
+
+def test_cache_gui_file_routes_to_registered_writer(gui_cache_writer):
+    filename = 'test_async_tracked.parquet'
+    df = pl.DataFrame({'a': [1, 2, 3]})
+    path = Path(get_gui_cache_dir(), filename)
+    try:
+        cache_gui_file(df, filename)
+        # a real handle is retained on the registered queue (not fire-and-forget), so it can be awaited
+        assert path in gui_cache_writer._futures
+        flush_gui_cache_writes()
+        assert path not in gui_cache_writer._futures
+    finally:
+        if path.exists():
+            path.unlink()
+
+
+def test_cache_gui_file_writes_synchronously_without_writer():
+    io.set_active_gui_cache_writer(None)  # no GUI running -> writes happen synchronously, no thread
+    filename = 'test_sync_write.parquet'
+    df = pl.DataFrame({'a': [1, 2, 3]})
+    path = Path(get_gui_cache_dir(), filename)
+    try:
+        cache_gui_file(df, filename)
+        assert path.exists()  # fully written before cache_gui_file returns; no flush needed
+        assert load_table(path).equals(df)
+        flush_gui_cache_writes()  # harmless no-op when no queue is registered
+    finally:
+        if path.exists():
+            path.unlink()
+
+
+def test_cache_gui_file_parquet_last_write_wins(gui_cache_writer):
+    filename = 'test_async_order.parquet'
+    path = Path(get_gui_cache_dir(), filename)
+    first = pl.DataFrame({'a': [1]})
+    second = pl.DataFrame({'a': [999]})
+    try:
+        cache_gui_file(first, filename)
+        cache_gui_file(second, filename)
+        flush_gui_cache_writes()
+        assert load_table(path).equals(second)
+    finally:
+        if path.exists():
+            path.unlink()
+
+
+def test_flush_gui_cache_writes_reraises_write_errors(gui_cache_writer):
+    df = pl.DataFrame({'a': [1, 2, 3]})
+    # parent directory does not exist -> the background sink raises, which must not be swallowed
+    bad_path = Path(get_gui_cache_dir(), 'no_such_subdir', 'x.parquet')
+    gui_cache_writer.submit(df, bad_path)
+    with pytest.raises(Exception):
+        flush_gui_cache_writes()
+
+
+def test_flush_surfaces_error_from_superseded_write(gui_cache_writer, monkeypatch):
+    # an earlier failed write to a path must still surface at the barrier even when a later write to
+    # the same path was queued before the flush (guards against dropping the superseded future).
+    path = Path(get_gui_cache_dir(), 'superseded.parquet')
+    calls = {'n': 0}
+
+    def flaky(item, file_path):
+        calls['n'] += 1
+        if calls['n'] == 1:
+            raise ValueError('first write failed')
+
+    monkeypatch.setattr(io, '_perform_cache_write', flaky)
+    gui_cache_writer.submit(pl.DataFrame({'a': [1]}), path)  # fails
+    gui_cache_writer.submit(pl.DataFrame({'a': [2]}), path)  # succeeds, same path
+    with pytest.raises(ValueError, match='first write failed'):
+        flush_gui_cache_writes()
+
+
+def test_clear_gui_cache_flushes_pending_writes(monkeypatch):
+    calls = []
+    monkeypatch.setattr(io, 'flush_gui_cache_writes', lambda *a, **k: calls.append((a, k)))
+    clear_gui_cache()
+    assert calls, "clear_gui_cache must flush pending writes before deleting the cache dir"
+
+
+def test_load_cached_gui_file_flushes_pending_writes(monkeypatch):
+    calls = []
+    monkeypatch.setattr(io, 'flush_gui_cache_writes', lambda *a, **k: calls.append((a, k)))
+    load_cached_gui_file('some_missing_file.parquet')
+    assert calls, "load_cached_gui_file must flush the pending write for the file before reading it"
+
+
+def test_save_session_flushes_before_moving_files(monkeypatch, tmp_path):
+    order = []
+    monkeypatch.setattr(io, 'flush_gui_cache_writes', lambda *a, **k: order.append('flush'))
+    mgr = GUISessionManager(tmp_path.joinpath('sess.rnal'))
+    monkeypatch.setattr(mgr, '_prepare_session_folder', lambda: None)
+    monkeypatch.setattr(mgr, '_save_report_files_to_session', lambda *a, **k: order.append('save_report_files'))
+    monkeypatch.setattr(mgr, '_create_session_data', lambda *a, **k: {})
+    monkeypatch.setattr(mgr, '_save_files_to_session', lambda *a, **k: order.append('save_files'))
+    monkeypatch.setattr(mgr, '_save_pipelines_to_session', lambda *a, **k: None)
+    monkeypatch.setattr(mgr, '_write_session_data_to_file', lambda *a, **k: None)
+    monkeypatch.setattr(mgr, '_archive_session_folder', lambda: None)
+    mgr.save_session([], [], {}, {})
+    assert order and order[0] == 'flush', "save_session must flush before moving/copying cache files"
+    assert 'save_files' in order
+
+
 def test_get_next_link():
     headers = {"Link": '<https://www.rest.uniprot.org/next-batch>; rel="next"'}
     result = GeneIDTranslator.get_next_link(headers)
