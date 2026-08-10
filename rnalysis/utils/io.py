@@ -599,7 +599,10 @@ class KEGGAnnotationIterator:
     URL = 'https://rest.kegg.jp/'
     RETRIES = RandomExpRetry(total=5, backoff_factor=0.25, status_forcelist=[500, 502, 503, 504])
     TAXON_TREE_CACHED_FILENAME = 'kegg_taxon_tree.json'
-    PATHWAY_NAMES_CACHED_FILENAME = 'kegg_pathway_list.txt'
+    # Per-organism: the pathway list is organism-specific, so its cache filename must include the
+    # organism code -- otherwise a second organism analyzed the same day loads the first's cached
+    # pathway list (the compound/glycan lists below are organism-agnostic and are cached as-is).
+    PATHWAY_NAMES_CACHED_FILENAME = 'kegg_pathway_list_{organism_code}.txt'
     COMPOUND_LIST_CACHED_FILENAME = 'kegg_compound_list.txt'
     GLYCAN_LIST_CACHED_FILENAME = 'kegg_glycan_list.txt'
     # Accumulates {compound_id: display_name} for the life of the process, so plotting several
@@ -714,7 +717,7 @@ class KEGGAnnotationIterator:
     def get_pathways(self) -> Tuple[Dict[str, str], int]:
         pathway_names = {}
         data, _ = self._kegg_request(self.session, 'list', ['pathway', self.organism_code],
-                                     self.PATHWAY_NAMES_CACHED_FILENAME)
+                                     self.PATHWAY_NAMES_CACHED_FILENAME.format(organism_code=self.organism_code))
         data = data.split('\n')
         for line in data:
             split = line.split('\t')
