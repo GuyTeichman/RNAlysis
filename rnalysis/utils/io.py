@@ -642,7 +642,9 @@ class KEGGAnnotationIterator:
         # span most of metabolism; they are conventionally excluded from pathway enrichment because a
         # ~thousand-gene "everything" term is not biologically specific and only inflates the
         # multiple-testing burden. Specific pathways use other number ranges (00xxx, 03xxx-05xxx, ...).
-        match = re.search(r'(\d+)$', pathway_id)
+        # Anchor to exactly 5 trailing digits (KEGG map numbers are always 5 digits) so an organism
+        # code that happens to end in a digit can't merge into the number and let a global map slip through.
+        match = re.search(r'(\d{5})$', pathway_id)
         return match is not None and 1100 <= int(match.group(1)) <= 1299
 
     @staticmethod
@@ -716,11 +718,12 @@ class KEGGAnnotationIterator:
             if len(split) != 2:
                 continue
             # Columns are 'path:<org><num>' and '<org>:<gene>'; identify the pathway column by its
-            # 'path:' prefix so we're robust to column order.
+            # 'path:' prefix so we're robust to column order. Strip both fields so a stray '\r' from
+            # CRLF line endings can't get appended to a gene ID (which would break gene-set equality).
             if split[0].startswith('path:'):
-                pathway_raw, gene = split[0], split[1]
+                pathway_raw, gene = split[0].strip(), split[1].strip()
             else:
-                pathway_raw, gene = split[1], split[0]
+                pathway_raw, gene = split[1].strip(), split[0].strip()
             pathway = pathway_raw.replace('path:', '')
             links.setdefault(pathway, set()).add(gene)
         return links

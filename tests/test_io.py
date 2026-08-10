@@ -1255,9 +1255,46 @@ def test_kegg_annotation_iterator_get_pathway_annotations(monkeypatch):
 @pytest.mark.parametrize('pathway_id,expected', [
     ('cel00010', False), ('cel00511', False), ('hsa04010', False), ('cel05010', False),
     ('cel01100', True), ('cel01200', True), ('cel01210', True), ('hsa01240', True),
-    ('path:cel01100', True), ('path:cel00010', False)])
+    ('path:cel01100', True), ('path:cel00010', False),
+    ('cel01099', False), ('cel01300', False),  # just outside the 01100-01299 range
+    ('ab101100', True), ('ab100010', False)])  # organism code ending in a digit must not leak
 def test_kegg_annotation_iterator_is_global_or_overview_map(pathway_id, expected):
     assert KEGGAnnotationIterator._is_global_or_overview_map(pathway_id) is expected
+
+
+def test_kegg_annotation_iterator_get_pathway_annotations_degrades_on_bad_input(monkeypatch):
+    # The link response is parsed defensively: blank/short/malformed lines are skipped, and a
+    # pathway listed in pathway_names but absent from the links is skipped (not crashed on).
+    body = ('\n'  # blank line
+            'path:cel00010\tcel:CELE_A\n'
+            'path:cel00010\tcel:CELE_B\n'
+            'just_one_column\n'  # malformed
+            'path:cel00052\tcel:CELE_C\n')
+
+    def mock_kegg_request(self, session, operation, arguments, cached_filename=None):
+        return body, False
+
+    monkeypatch.setattr(KEGGAnnotationIterator, '_kegg_request', mock_kegg_request)
+    kegg = KEGGAnnotationIterator.__new__(KEGGAnnotationIterator)
+    kegg.pathway_annotations = None
+    kegg.organism_code = 'cel'
+    kegg.session = get_session(kegg.RETRIES)
+    # cel00030 is in pathway_names but has no link -> must be skipped, not crash
+    kegg.pathway_names = {'cel00010': 'A', 'cel00052': 'B', 'cel00030': 'C'}
+    result = {key: ann for key, name, ann in kegg.get_pathway_annotations()}
+    assert result == {'cel00010': {'cel:CELE_A', 'cel:CELE_B'}, 'cel00052': {'cel:CELE_C'}}
+
+
+def test_kegg_annotation_iterator_get_pathway_annotations_empty_response(monkeypatch):
+    # An empty body must yield no annotations rather than raising.
+    monkeypatch.setattr(KEGGAnnotationIterator, '_kegg_request',
+                        lambda self, session, operation, arguments, cached_filename=None: ('', False))
+    kegg = KEGGAnnotationIterator.__new__(KEGGAnnotationIterator)
+    kegg.pathway_annotations = None
+    kegg.organism_code = 'cel'
+    kegg.session = get_session(kegg.RETRIES)
+    kegg.pathway_names = {'cel00010': 'A'}
+    assert list(kegg.get_pathway_annotations()) == []
 
 
 def test_kegg_annotation_iterator_get_pathways_excludes_global_overview_maps(monkeypatch):
