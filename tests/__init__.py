@@ -68,11 +68,18 @@ def are_dir_trees_equal(dir1, dir2, compare_contents: bool = True, ignore: list 
 
 
 def is_pantherdb_available():
+    # Probe the param-free `supportedgenomes` endpoint that `io.get_legal_panther_taxons` already
+    # POSTs -- it returns HTTP 200 JSON when PantherDB is healthy. The old probe GET-ed the bare
+    # `.../ortholog/` parent, which 404s even on a perfectly healthy service (the real ortholog call
+    # POSTs `.../ortholog/matchortho` with query params), so this probe returned False on every run
+    # and the whole TestPantherOrthologMapper suite was permanently skipped. Catch RequestException
+    # (not just TimeoutError/HTTPError) so an unreachable service can't crash collection at import.
+    url = 'https://www.pantherdb.org/services/oai/pantherdb/supportedgenomes'
     try:
-        req = requests.get('http://www.pantherdb.org/services/oai/pantherdb/ortholog/')
-    except (TimeoutError, requests.exceptions.HTTPError):
+        req = requests.post(url, timeout=(10, 30))
+    except requests.exceptions.RequestException:
         return False
-    if str(req.status_code)[0] in ['4','5']:
+    if str(req.status_code)[0] in ['4', '5']:
         return False
     return True
 
