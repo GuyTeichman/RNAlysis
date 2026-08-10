@@ -129,12 +129,32 @@ capture in `xvfb-run` so fonts resolve (Qt's bare `offscreen` platform renders t
 
 ## Release (maintainer)
 
-1. Ensure everything's committed, tests pass in CI, and `HISTORY.rst` has an entry.
-2. `bumpversion patch|minor|major` — updates the version string across `rnalysis/__init__.py`,
+Infrequent, maintainer-only, and partly irreversible (a pushed tag or PyPI upload can't be
+cleanly undone) — use the **`release` skill** (`.claude/skills/release/SKILL.md`) for the full
+ordered checklist; the summary here is just the shape of it:
+
+1. Ensure everything's committed, `development`'s CI is green, and `HISTORY.rst`'s newest section
+   has a real date (not `(unreleased)`) — the changelog generator's regex won't match otherwise.
+2. Merge `development` into `master` via PR (`master` only receives `development` at a release).
+3. `bumpversion patch|minor|major` — updates the version string across `rnalysis/__init__.py`,
    `setup.py`, `RNAlysis.spec`, the PyInstaller workflow, and `docs/source/conf.py` (per
-   `.bumpversion.cfg`; it commits, does not tag).
-3. Standalone builds come from `.github/workflows/pyinstaller.yml`; `packaging/` holds the
-   changelog + quick-start-video checksum helpers.
+   `.bumpversion.cfg`; it commits, does not tag), pushed directly to `master`.
+4. **Regenerate and commit the docs — required, not optional.** `docs/build/` is tracked in git
+   and is both the live site (GitHub Pages serves `/docs` on `master` directly, no build step) and
+   the app's in-GUI help target, so it must reflect the version/date just bumped. The commands
+   documented elsewhere for this (`make -C docs html`; the root `Makefile`'s `docs` target) are
+   stale for this layout — see the skill for the verified working command.
+5. Tag `V<version>` and push it — this triggers `.github/workflows/pyinstaller.yml`, which builds
+   the standalone macOS/Windows packages, runs `packaging/`'s changelog + quick-start-video
+   checksum helpers, and creates the GitHub Release.
+6. Publish to PyPI (`make dist && twine upload dist/*` — this step is manual, despite what
+   `CONTRIBUTING.rst` says), then merge `master` back into `development` so it doesn't drift.
+
+The `bumpversion` push, the docs-regen commit, and the Pyinstaller workflow's changelog/checksum
+auto-commit are the three narrow, deliberate exceptions to "never commit directly to `master`" —
+all three need the maintainer's own admin push access (`master`'s branch protection has
+`enforce_admins: false`), not just any contributor's. See the skill for why, and for the full
+post-release verification checklist.
 
 ---
 
