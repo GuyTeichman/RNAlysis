@@ -398,7 +398,7 @@ class GUISessionManager:
 
 
 def load_table(filename: Union[str, Path], drop_columns: Union[str, List[str]] = False,
-               squeeze=False, comment: str = None):
+               squeeze=False, comment: str = None, nrows: int = None):
     """
     Loads a CSV, TSV, or Parquet file into a Polars DataFrame.
 
@@ -412,6 +412,9 @@ def load_table(filename: Union[str, Path], drop_columns: Union[str, List[str]] =
     :type comment: str (optional)
     :param comment: Indicates remainder of line should not be parsed. \
     If found at the beginning of a line, the line will be ignored altogether. This parameter must be a single character.
+    :type nrows: int or None (default None)
+    :param nrows: if given, only the first ``nrows`` data rows are read (a lightweight partial read). \
+    The column names and order are identical to a full read. If None (default), the whole table is read.
     :return: a Polars DataFrame of the loaded file
     """
     assert isinstance(filename,
@@ -425,8 +428,10 @@ def load_table(filename: Union[str, Path], drop_columns: Union[str, List[str]] =
     kwargs = {}
     if comment is not None:
         kwargs['comment_prefix'] = comment
+    if nrows is not None:
+        kwargs['n_rows'] = nrows
     if filename.suffix.lower() == '.parquet':
-        df = pl.read_parquet(filename)
+        df = pl.read_parquet(filename, n_rows=nrows)
         # handle edge cases of parquet files that were exported from pandas DataFrames
         if '__index_level_0__' in df.columns:
             df = df.select(pl.col('__index_level_0__').alias('')).with_columns(

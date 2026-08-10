@@ -184,6 +184,25 @@ def test_load_csv_drop_columns():
         load_table('tests/test_files/counted.csv', drop_columns=['cond1', 'cond6'])
 
 
+def test_load_table_nrows_csv():
+    full = load_table('tests/test_files/counted.csv')
+    sample = load_table('tests/test_files/counted.csv', nrows=2)
+    # same columns/order as a full read, just fewer rows
+    assert list(sample.columns) == list(full.columns)
+    assert sample.shape[0] == 2
+    assert sample.equals(full.head(2))
+
+
+def test_load_table_nrows_parquet(tmp_path):
+    pth = tmp_path / 'sample.parquet'
+    pl.DataFrame({'': ['a', 'b', 'c', 'd'], 'cond1': [1, 2, 3, 4], 'cond2': [5, 6, 7, 8]}).write_parquet(pth)
+    full = load_table(pth)
+    sample = load_table(pth, nrows=2)
+    assert list(sample.columns) == list(full.columns)
+    assert sample.shape[0] == 2
+    assert sample.equals(full.head(2))
+
+
 def test_load_csv_with_comment(tmp_path):
     pth = tmp_path / 'commented.csv'
     pth.write_text('# this is a comment line\nidxcol,othercol\none,4\ntwo,5\nthree,6\n')
