@@ -1131,7 +1131,8 @@ def test_kegg_annotation_iterator_get_pathways(monkeypatch):
     def mock_kegg_request(self, session, operation, arguments, cached_filename=None):
         assert operation == 'list'
         assert arguments == ['pathway', organism_code]
-        assert cached_filename == KEGGAnnotationIterator.PATHWAY_NAMES_CACHED_FILENAME
+        # the pathway-list cache filename must be organism-specific
+        assert cached_filename == 'kegg_pathway_list_cel.txt'
 
         with open('tests/test_files/kegg_pathways.txt') as f:
             return f.read(), True
@@ -1142,6 +1143,33 @@ def test_kegg_annotation_iterator_get_pathways(monkeypatch):
     kegg.organism_code = organism_code
     kegg.session = get_session(kegg.RETRIES)
     assert kegg.get_pathways() == truth
+
+
+def test_kegg_annotation_iterator_get_pathways_cache_is_per_organism(monkeypatch, tmp_path):
+    # Regression for the cross-organism cache collision: two organisms analyzed the same day must
+    # not share a pathway-list cache file (otherwise the second loads the first's pathway list).
+    # We exercise the real _kegg_request caching against a temp cache dir, mocking only the network.
+    monkeypatch.setattr(io, 'get_todays_cache_dir', lambda: tmp_path)
+
+    def make_iter(organism_code, listing):
+        kegg = KEGGAnnotationIterator.__new__(KEGGAnnotationIterator)
+        kegg.organism_code = organism_code
+        session = MagicMock()
+        response = MagicMock()
+        response.ok = True
+        response.text = listing
+        session.get.return_value = response
+        kegg.session = session
+        return kegg
+
+    worm = make_iter('cel', 'cel00010\tGlycolysis - worm\n')
+    names_worm, _ = worm.get_pathways()
+    assert names_worm == {'cel00010': 'Glycolysis - worm'}
+
+    human = make_iter('hsa', 'hsa00010\tGlycolysis - human\n')
+    names_human, _ = human.get_pathways()
+    # if the cache filename weren't organism-specific, this would return the worm listing cached above
+    assert names_human == {'hsa00010': 'Glycolysis - human'}
 
 
 def test_kegg_annotation_iterator_get_compounds(monkeypatch):
