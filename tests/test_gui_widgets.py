@@ -814,10 +814,20 @@ def test_ToggleSwitch(qtbot):
 def test_ToggleSwitchCore(qtbot):
     qtbot, widget = widget_setup(qtbot, ToggleSwitchCore)
     assert not widget.isChecked()
-    qtbot.mouseClick(widget, LEFT_CLICK)
-    assert widget.isChecked()
-
+    # off/False state should still paint without error (neutral color, not pixel-testable)
     widget.paintEvent(QtGui.QPaintEvent(QtCore.QRect(0, 0, 1, 1)))
+
+    with qtbot.waitSignal(widget.stateChanged, timeout=1000) as blocker:
+        qtbot.mouseClick(widget, LEFT_CLICK)
+    assert widget.isChecked()
+    assert blocker.args == [True]
+    # on/True state should still paint without error (accent color, not pixel-testable)
+    widget.paintEvent(QtGui.QPaintEvent(QtCore.QRect(0, 0, 1, 1)))
+
+    with qtbot.waitSignal(widget.stateChanged, timeout=1000) as blocker:
+        qtbot.mouseClick(widget, LEFT_CLICK)
+    assert not widget.isChecked()
+    assert blocker.args == [False]
 
 
 def test_MultiChoiceListWithDelete_delete_all(qtbot, monkeypatch):

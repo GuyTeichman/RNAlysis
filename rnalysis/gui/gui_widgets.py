@@ -574,9 +574,16 @@ class ToggleSwitchCore(QtWidgets.QPushButton):
     def paintEvent(self, event):
         label = " True" if self.isChecked() else "False"
         if self.isChecked():
-            bg_color = QtGui.QColor('#72e5bf') if not self._hover else QtGui.QColor('#52c59f')
+            # warm gold for the "on" state - a highlight/active accent that harmonizes with the
+            # RNAlysis red/black logo without reading as an error or a warning. Paired with the
+            # neutral gray "off" state it stays off the red-green confusion axis (safe for
+            # red-green colorblindness); knob position and the "True"/"False" text remain the
+            # primary, redundant cues. Dark label text keeps WCAG AA contrast on the fill
+            # (~8.4:1 normal, ~6.3:1 hover).
+            bg_color = QtGui.QColor('#f2b134') if not self._hover else QtGui.QColor('#d6971f')
         else:
-            bg_color = QtGui.QColor('#e96e3a') if not self._hover else QtGui.QColor('#c94e1a')
+            # neutral inactive gray for the "off" state - reads as "off", not "error"
+            bg_color = QtGui.QColor('#a8adb3') if not self._hover else QtGui.QColor('#8b9096')
 
         radius = int(self.RADIUS * (self.font().pointSize() / 10))
         width = int(self.WIDTH * (self.font().pointSize() / 10))
