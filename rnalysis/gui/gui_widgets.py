@@ -573,17 +573,16 @@ class ToggleSwitchCore(QtWidgets.QPushButton):
     def paintEvent(self, event):
         label = " True" if self.isChecked() else "False"
         if self.isChecked():
-            # brand red for the "on" state - matches the RNAlysis logo palette. Paired with the
-            # neutral gray "off" state it stays off the red-green confusion axis, so it's still
-            # safe for red-green colorblindness (knob position and the "True"/"False" text remain
-            # the primary, redundant cues). Darkened from the logo red so white label text clears
-            # WCAG AA on the fill (~5.7:1 normal, ~7.7:1 hover).
-            bg_color = QtGui.QColor('#c81e24') if not self._hover else QtGui.QColor('#a5171c')
-            text_color = QtGui.QColor('#ffffff')
+            # warm gold for the "on" state - a highlight/active accent that harmonizes with the
+            # RNAlysis red/black logo without reading as an error or a warning. Paired with the
+            # neutral gray "off" state it stays off the red-green confusion axis (safe for
+            # red-green colorblindness); knob position and the "True"/"False" text remain the
+            # primary, redundant cues. Dark label text keeps WCAG AA contrast on the fill
+            # (~8.4:1 normal, ~6.3:1 hover).
+            bg_color = QtGui.QColor('#f2b134') if not self._hover else QtGui.QColor('#d6971f')
         else:
             # neutral inactive gray for the "off" state - reads as "off", not "error"
             bg_color = QtGui.QColor('#a8adb3') if not self._hover else QtGui.QColor('#8b9096')
-            text_color = QtGui.QColor('#222228')
 
         radius = int(self.RADIUS * (self.font().pointSize() / 10))
         width = int(self.WIDTH * (self.font().pointSize() / 10))
@@ -607,8 +606,6 @@ class ToggleSwitchCore(QtWidgets.QPushButton):
         if not self.isChecked():
             sw_rect.moveLeft(-width)
         painter.drawRoundedRect(sw_rect, radius, radius)
-        pen.setColor(text_color)
-        painter.setPen(pen)
         painter.drawText(sw_rect, QtCore.Qt.AlignmentFlag.AlignCenter, label)
 
 
