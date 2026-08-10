@@ -597,8 +597,6 @@ def get_session(retries: Retry):
 
 class KEGGAnnotationIterator:
     URL = 'https://rest.kegg.jp/'
-    REQUEST_DELAY_MILLIS = 250
-    REQ_MAX_ENTRIES = 10
     RETRIES = RandomExpRetry(total=5, backoff_factor=0.25, status_forcelist=[500, 502, 503, 504])
     TAXON_TREE_CACHED_FILENAME = 'kegg_taxon_tree.json'
     PATHWAY_NAMES_CACHED_FILENAME = 'kegg_pathway_list.txt'
@@ -637,9 +635,15 @@ class KEGGAnnotationIterator:
             cache_file(response.text, cached_filename)
         return response.text, is_cached
 
-    def _generate_cached_filename(self, pathways: Tuple[str, ...]) -> str:
-        fname = f'{self.taxon_id}' + ''.join(pathways).replace('path:', '') + '.json'
-        return fname
+    @staticmethod
+    def _is_global_or_overview_map(pathway_id: str) -> bool:
+        # KEGG's BRITE category "1.0 Global and overview maps" -- pathway map numbers 01100-01299
+        # (e.g. 01100 "Metabolic pathways", 01200 "Carbon metabolism"). These are superset maps that
+        # span most of metabolism; they are conventionally excluded from pathway enrichment because a
+        # ~thousand-gene "everything" term is not biologically specific and only inflates the
+        # multiple-testing burden. Specific pathways use other number ranges (00xxx, 03xxx-05xxx, ...).
+        match = re.search(r'(\d+)$', pathway_id)
+        return match is not None and 1100 <= int(match.group(1)) <= 1299
 
     @staticmethod
     def get_compounds() -> Dict[str, str]:
@@ -679,6 +683,8 @@ class KEGGAnnotationIterator:
             split = line.split('\t')
             if len(split) == 2:
                 pathway_code, pathway_name = split
+                if self._is_global_or_overview_map(pathway_code):
+                    continue  # skip KEGG global/overview maps (see _is_global_or_overview_map)
                 pathway_names[pathway_code] = pathway_name
 
         n_annotations = len(pathway_names)
@@ -692,6 +698,33 @@ class KEGGAnnotationIterator:
         cache_file(data, cached_filename)
         return ElementTree.parse(StringIO(data))
 
+    def _fetch_pathway_gene_links(self) -> Dict[str, Set[str]]:
+        """Return ``{pathway_id: {gene_id, ...}}`` for the organism in a single request.
+
+        KEGG's ``link/<org>/pathway`` endpoint returns every gene<->pathway association for the
+        organism as one compact two-column TSV. This replaces fetching a full flat-file record per
+        pathway (dozens of large requests, most of whose content -- names, references, compounds --
+        was discarded) with one small request. It is also more complete: the previous flat-file
+        parser silently dropped any pathway whose record had no ``COMPOUND`` section (e.g. several
+        glycan pathways), because it read genes only up to that section.
+        """
+        cached_filename = f'kegg_pathway_gene_links_{self.organism_code}.txt'
+        data, _ = self._kegg_request(self.session, 'link', [self.organism_code, 'pathway'], cached_filename)
+        links: Dict[str, Set[str]] = {}
+        for line in data.split('\n'):
+            split = line.split('\t')
+            if len(split) != 2:
+                continue
+            # Columns are 'path:<org><num>' and '<org>:<gene>'; identify the pathway column by its
+            # 'path:' prefix so we're robust to column order.
+            if split[0].startswith('path:'):
+                pathway_raw, gene = split[0], split[1]
+            else:
+                pathway_raw, gene = split[1], split[0]
+            pathway = pathway_raw.replace('path:', '')
+            links.setdefault(pathway, set()).add(gene)
+        return links
+
     def get_pathway_annotations(self):
         if self.pathway_annotations is not None:
             for pathway, annotations in self.pathway_annotations.items():
@@ -699,38 +732,13 @@ class KEGGAnnotationIterator:
                 yield pathway, name, annotations
         else:
             pathway_annotations = {}
-            partitioned_pathways = parsing.partition_list(list(self.pathway_names.keys()), self.REQ_MAX_ENTRIES)
-            for chunk in partitioned_pathways:
-                prev_time = time.time()
-                data, was_cached = self._kegg_request(self.session, 'get', '+'.join(chunk),
-                                                      self._generate_cached_filename(chunk))
-                entries = data.split('ENTRY')[1:]
-                for entry in entries:
-                    entry_split = entry.split('\n')
-                    pathway = entry_split[0].split()[0]
-                    if pathway not in chunk:
-                        print(f'Could not find pathway {pathway} in requested chunk: {chunk}')
-                    pathway_name = self.pathway_names[pathway]
-                    pathway_annotations[pathway] = set()
-                    genes_startline = 0
-                    genes_endline = 0
-                    for i, line in enumerate(entry_split):
-                        if line.startswith('GENE'):
-                            genes_startline = i
-                        elif line.startswith('COMPOUND'):
-                            genes_endline = i
-                            break
-                    for line_num in range(genes_startline, genes_endline):
-                        line = entry_split[line_num]
-                        if line.startswith('GENE'):
-                            line = line.replace('GENE', '', 1)
-                        gene_id = f"{self.organism_code}:{line.strip().split(' ')[0]}"
-                        pathway_annotations[pathway].add(gene_id)
-                        yield pathway, pathway_name, pathway_annotations[pathway]
-                if not was_cached:
-                    delay = max((self.REQUEST_DELAY_MILLIS / 1000) - (time.time() - prev_time), 0)
-                    time.sleep(delay)
-
+            links = self._fetch_pathway_gene_links()
+            for pathway in self.pathway_names:
+                genes = links.get(pathway)
+                if not genes:
+                    continue  # pathway with no genes for this organism -- nothing to annotate
+                pathway_annotations[pathway] = set(genes)
+                yield pathway, self.pathway_names[pathway], pathway_annotations[pathway]
             self.pathway_annotations = pathway_annotations
 
     def __iter__(self):

@@ -1,0 +1,16 @@
+path:cel00010	cel:CELE_F14B4.2
+path:cel00010	cel:CELE_Y87G2A.8
+path:cel00010	cel:CELE_C50F4.2
+path:cel00010	cel:CELE_Y71H10A.1
+path:cel00020	cel:CELE_T20G5.2
+path:cel00020	cel:CELE_B0365.1
+path:cel00020	cel:CELE_D1005.1
+path:cel00030	cel:CELE_Y87G2A.8
+path:cel00030	cel:CELE_B0035.5
+path:cel00040	cel:CELE_Y105E8B.9
+path:cel00040	cel:CELE_B0310.5
+path:cel00040	cel:CELE_T04H1.7
+path:cel00040	cel:CELE_T04H1.8
+path:cel00051	cel:CELE_C05C8.7
+path:cel00051	cel:CELE_ZK632.4
+path:cel00052	cel:CELE_C01B4.6
