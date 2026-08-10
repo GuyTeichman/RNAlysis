@@ -1692,6 +1692,15 @@ class OrthoInspectorOrthologMapper:
     # never sends a response body would hang RNAlysis indefinitely instead of raising a catchable
     # error and moving on to the next database.
     REQUEST_TIMEOUT = (10, 30)
+    # Databases that are listed and whose /species endpoint responds, but whose /orthologs endpoint
+    # never sends a response (verified to hang past a 90s read timeout -- a server-side problem, not
+    # our access: the identical request pattern works on other databases). Because 'auto' tries the
+    # largest database first and these tend to be large, hitting one wastes a full read timeout on a
+    # dead endpoint before the existing fallback moves on. We skip them during 'auto' selection.
+    # This is result-preserving: a database that never responds never contributes a mapping anyway.
+    # Revisit/remove an entry if OrthoInspector fixes the endpoint upstream (the integration tests in
+    # tests/test_io.py exercise the live service and will show when it recovers).
+    KNOWN_STALLING_DATABASES = frozenset({'Eukaryota2023'})
 
     def __init__(self, map_to_organism, map_from_organism, gene_id_type):
         self.gene_id_type = gene_id_type
@@ -1725,10 +1734,13 @@ class OrthoInspectorOrthologMapper:
             session = get_session(OrthoInspectorOrthologMapper.RETRIES)
         # get list of databases
         databases = OrthoInspectorOrthologMapper.get_databases(session)
-        db_organisms = {}
-        for i, database in enumerate(databases):
+
+        def _fetch_species(database: str):
+            # Each worker uses its own session: requests.Session is not guaranteed thread-safe, and
+            # the per-request cost is negligible next to the network round-trip we're overlapping.
+            worker_session = get_session(OrthoInspectorOrthologMapper.RETRIES)
             url = f'{OrthoInspectorOrthologMapper.API_URL}/{database}/species'
-            req = session.get(url, timeout=OrthoInspectorOrthologMapper.REQUEST_TIMEOUT)
+            req = worker_session.get(url, timeout=OrthoInspectorOrthologMapper.REQUEST_TIMEOUT)
             req.raise_for_status()
             try:
                 content = req.json()
@@ -1736,7 +1748,18 @@ class OrthoInspectorOrthologMapper:
                 clean_json_string = req.text.split('\n')[0]
                 content = json.loads(clean_json_string)
             assert content['meta']['status'] == 'success'
-            db_organisms[database] = frozenset({d['id'] for d in content['data']})
+            return database, frozenset({d['id'] for d in content['data']})
+
+        # Fetch every database's species list concurrently. These requests are independent and were
+        # previously issued one-at-a-time; a plain ThreadPoolExecutor (I/O-bound, frozen-safe) turns
+        # their total latency into ~max() instead of sum(). The result dict is identical to the
+        # sequential version (dict/frozenset equality is order-independent).
+        db_organisms = {}
+        databases = list(databases)
+        if databases:
+            with concurrent.futures.ThreadPoolExecutor(max_workers=min(len(databases), 8)) as executor:
+                for database, organisms in executor.map(_fetch_species, databases):
+                    db_organisms[database] = organisms
 
         return db_organisms
 
@@ -1752,6 +1775,10 @@ class OrthoInspectorOrthologMapper:
             valid_dbs = []
 
             for db in dbs_by_size:
+                if db in self.KNOWN_STALLING_DATABASES:
+                    # Skip databases whose /orthologs endpoint never responds (see the constant's
+                    # docstring). Trying them just burns a full read timeout before falling back.
+                    continue
                 if self.map_from_organism in database_organisms[db] and self.map_to_organism in database_organisms[db]:
                     valid_dbs.append(db)
             if len(valid_dbs) == 0:

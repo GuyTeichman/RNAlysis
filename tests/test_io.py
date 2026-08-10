@@ -2476,6 +2476,109 @@ class TestOrthoInspectorOrthologMapper:
         assert any('SmallDB' in url for url, _ in calls)
         assert one2one.mapping_dict == {'g1': 'o1'}
 
+    def test_known_stalling_databases_contains_eukaryota2023(self):
+        # Eukaryota2023's /species endpoint works but its /orthologs endpoint never responds
+        # (verified to hang past a 90s read timeout, server-side). Because 'auto' tries the largest
+        # database first, it hangs on Eukaryota2023 for the full read timeout before falling back.
+        # We skip it in auto-selection; this locks the constant so the reason is documented in code.
+        assert 'Eukaryota2023' in OrthoInspectorOrthologMapper.KNOWN_STALLING_DATABASES
+
+    def test_auto_selection_skips_known_stalling_databases(self, monkeypatch):
+        # In 'auto' mode the largest valid database is tried first. If that database is a known
+        # staller, we must skip it entirely (never issue the request) and use the next database --
+        # otherwise every 'auto' mapping wastes a full read timeout on a dead endpoint. This is
+        # result-preserving because the stalling database never returns anything anyway.
+        mapper = OrthoInspectorOrthologMapper(map_to_organism=2, map_from_organism=1,
+                                              gene_id_type='UniProtKB AC/ID')
+        # Eukaryota2023 is the LARGEST valid database and contains both organisms -- current code
+        # would try it first.
+        monkeypatch.setattr(OrthoInspectorOrthologMapper, 'get_database_organisms',
+                            staticmethod(lambda session=None: {'Eukaryota2023': {1, 2, 3, 4, 5, 6},
+                                                               'GoodDB': {1, 2}}))
+        monkeypatch.setattr(mapper, 'translate_ids', lambda ids, session=None: (['g1'], ['g1']))
+        monkeypatch.setattr(io, 'load_cached_file', lambda *a, **k: None)
+        monkeypatch.setattr(io, 'cache_file', lambda *a, **k: None)
+        monkeypatch.setattr(io, 'translate_mappings', lambda ids, translated, m1, m2: (m1, m2))
+
+        calls = []
+
+        def fake_get(url, **kwargs):
+            calls.append(url)
+            resp = MagicMock()
+            resp.raise_for_status.return_value = None
+            resp.json.return_value = {'data': [{'type': 'One-to-One', 'species': 2,
+                                                'inparalogs': ['g1'], 'orthologs': ['o1']}]}
+            return resp
+
+        fake_session = MagicMock()
+        fake_session.get.side_effect = fake_get
+        monkeypatch.setattr(io, 'get_session', lambda retries: fake_session)
+
+        one2one, one2many = mapper.get_orthologs(('g1',), 'first', 'auto')
+
+        assert calls, "no ortholog requests were made"
+        assert not any('Eukaryota2023' in url for url in calls), \
+            "the known-stalling database must never be requested in auto mode"
+        assert any('GoodDB' in url for url in calls)
+        assert one2one.mapping_dict == {'g1': 'o1'}
+
+    def test_get_database_organisms_returns_all_databases(self):
+        # Locks the (now concurrent) /species fan-out: every listed database must appear in the
+        # result mapped to the exact frozenset of organism ids its /species endpoint reports.
+        api = OrthoInspectorOrthologMapper.API_URL
+        with requests_mock.Mocker() as m:
+            m.get(f'{api}/databases', json={'data': ['DBone', 'DBtwo', 'DBthree']})
+            m.get(f'{api}/DBone/species',
+                  json={'meta': {'status': 'success'}, 'data': [{'id': 1}, {'id': 2}, {'id': 3}]})
+            m.get(f'{api}/DBtwo/species',
+                  json={'meta': {'status': 'success'}, 'data': [{'id': 2}, {'id': 4}]})
+            m.get(f'{api}/DBthree/species',
+                  json={'meta': {'status': 'success'}, 'data': [{'id': 5}]})
+            result = OrthoInspectorOrthologMapper.get_database_organisms()
+
+        assert result == {'DBone': frozenset({1, 2, 3}),
+                          'DBtwo': frozenset({2, 4}),
+                          'DBthree': frozenset({5})}
+
+    def test_get_database_organisms_empty_database_list(self):
+        # If OrthoInspector lists no databases, the concurrent fan-out must return {} rather than
+        # crash (ThreadPoolExecutor(max_workers=0) raises ValueError) -- the 'if databases' guard.
+        with requests_mock.Mocker() as m:
+            m.get(f'{OrthoInspectorOrthologMapper.API_URL}/databases', json={'data': []})
+            assert OrthoInspectorOrthologMapper.get_database_organisms() == {}
+
+    def test_explicitly_requested_stalling_database_is_not_skipped(self, monkeypatch):
+        # The skip applies to 'auto' selection only. If a user explicitly asks for a database that
+        # happens to be on the stall-list, we still honor the request (and let it fail on its own).
+        mapper = OrthoInspectorOrthologMapper(map_to_organism=2, map_from_organism=1,
+                                              gene_id_type='UniProtKB AC/ID')
+        stalling_db = next(iter(OrthoInspectorOrthologMapper.KNOWN_STALLING_DATABASES))
+        monkeypatch.setattr(OrthoInspectorOrthologMapper, 'get_databases',
+                            staticmethod(lambda session=None: frozenset({stalling_db, 'GoodDB'})))
+        monkeypatch.setattr(mapper, 'translate_ids', lambda ids, session=None: (['g1'], ['g1']))
+        monkeypatch.setattr(io, 'load_cached_file', lambda *a, **k: None)
+        monkeypatch.setattr(io, 'cache_file', lambda *a, **k: None)
+        monkeypatch.setattr(io, 'translate_mappings', lambda ids, translated, m1, m2: (m1, m2))
+
+        calls = []
+
+        def fake_get(url, **kwargs):
+            calls.append(url)
+            resp = MagicMock()
+            resp.raise_for_status.return_value = None
+            resp.json.return_value = {'data': [{'type': 'One-to-One', 'species': 2,
+                                                'inparalogs': ['g1'], 'orthologs': ['o1']}]}
+            return resp
+
+        fake_session = MagicMock()
+        fake_session.get.side_effect = fake_get
+        monkeypatch.setattr(io, 'get_session', lambda retries: fake_session)
+
+        mapper.get_orthologs(('g1',), 'first', stalling_db)
+
+        assert any(stalling_db in url and '/orthologs/' in url for url in calls), \
+            "an explicitly-requested database must still be queried even if it's on the stall-list"
+
 
 @pytest.mark.skipif(not PANTHERDB_AVAILABLE, reason='PantherDB not available')
 class TestPantherOrthologMapper:
