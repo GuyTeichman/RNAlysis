@@ -93,7 +93,7 @@ if __name__ == '__main__':
         tests_require=test_requirements,
         extras_require=extras_require,
         url="https://github.com/GuyTeichman/RNAlysis",
-        version="4.2.0",
+        version="4.3.0",
         zip_safe=False,
         entry_points={
             "console_scripts": [
