@@ -188,7 +188,7 @@ If you use the *HDBSCAN* clustering feature in your research, please cite::
 If you use the *XL-mHG* single-set enrichment test in your research, please cite::
 
     Eden, E., Lipson, D., Yogev, S., and Yakhini, Z. (2007).
-     Discovering Motifs in Ranked Lists of DNA Sequences. PLOS Comput. Biol. 3, e39.
+    Discovering Motifs in Ranked Lists of DNA Sequences. PLOS Comput. Biol. 3, e39.
     https://doi.org/10.1371/journal.pcbi.0030039
 
     Wagner, F. (2017). The XL-mHG test for gene set enrichment. ArXiv.
@@ -232,6 +232,8 @@ Development Lead
 Contributors
 *************
 
+.. contributors-list-start
+
 * Dror Cohen
 * Or Ganon
 * Netta Dunsky
@@ -242,6 +244,16 @@ Contributors
 * `sandyl27 <https://github.com/sandyl27>`_
 * `clockgene <https://github.com/clockgene>`_
 * `NeuroRookie <https://github.com/NeuroRookie>`_
+* `deadpool-mjpatel4444 <https://github.com/deadpool-mjpatel4444>`_
+* `atiqur-rahman-pro <https://github.com/atiqur-rahman-pro>`_
+* `kocaemre <https://github.com/kocaemre>`_
+* `hadasgayer <https://github.com/hadasgayer>`_
+* `lntutor <https://github.com/lntutor>`_
+* `pollychen-lab <https://github.com/pollychen-lab>`_
+* `abhi-0203 <https://github.com/abhi-0203>`_
+* `shardool-patil <https://github.com/shardool-patil>`_
+
+.. contributors-list-end
 
 ----
 

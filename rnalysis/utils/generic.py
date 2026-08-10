@@ -8,7 +8,7 @@ import warnings
 from datetime import datetime
 from functools import lru_cache
 from pathlib import Path
-from typing import Callable, Tuple, Union
+from typing import Callable, Dict, Tuple, Union
 
 import joblib
 import matplotlib.collections
@@ -23,7 +23,7 @@ from scipy.special import comb
 from sklearn.preprocessing import PowerTransformer, StandardScaler
 from tqdm.auto import tqdm
 
-from rnalysis import __version__
+from rnalysis import FROZEN_ENV, __version__
 
 try:
     import numba
@@ -49,6 +49,113 @@ def readable_name(name: str):
         return item
 
     return decorator
+
+
+def param_readable_names(names: Dict[str, str]):
+    """
+    Decorator that attaches human-readable display labels for specific parameters of a function.
+
+    The mapping is stored on the function's ``readable_param_names`` attribute (mirroring how
+    :func:`readable_name` sets ``readable_name``) and is used by :func:`get_param_readable_name`
+    to override the auto-humanized label for parameters that do not humanize well. This is
+    display-only: it never changes the actual parameter names used when calling the function.
+
+    :param names: mapping of raw (snake_case) parameter names to their human-readable labels.
+    :type names: dict of str to str
+    """
+
+    def decorator(item):
+        item.readable_param_names = names
+        return item
+
+    return decorator
+
+
+# Domain acronyms / tokens preserved verbatim when auto-humanizing parameter labels.
+# Keyed by the lowercase snake_case token; the value is the exact display form.
+PARAM_LABEL_ACRONYMS = {
+    'go': 'GO',
+    'kegg': 'KEGG',
+    'pca': 'PCA',
+    'fdr': 'FDR',
+    'id': 'ID',
+    'ids': 'IDs',
+    'rna': 'RNA',
+    'mrna': 'mRNA',
+    'dna': 'DNA',
+    'deseq2': 'DESeq2',
+    'sam': 'SAM',
+    'bam': 'BAM',
+    'fastq': 'FASTQ',
+    'gtf': 'GTF',
+    'gff': 'GFF',
+    'utr': 'UTR',
+    'cpm': 'CPM',
+    'tpm': 'TPM',
+    'rpkm': 'RPKM',
+    'fpkm': 'FPKM',
+    'padj': 'padj',
+    'clicom': 'CLICOM',
+    'hdbscan': 'HDBSCAN',
+    'umap': 'UMAP',
+    'ncbi': 'NCBI',
+    'url': 'URL',
+    'csv': 'CSV',
+}
+
+# Whole parameter-name overrides that auto-humanization handles poorly but which apply
+# regardless of the containing function (per-function overrides take precedence over these).
+PARAM_LABEL_SPECIAL_NAMES = {
+    'n_components': 'Number of components',
+}
+
+
+def _humanize_param_name(param_name: str) -> str:
+    words = []
+    first = True
+    for token in param_name.split('_'):
+        if token == '':
+            continue
+        lower = token.lower()
+        if lower in PARAM_LABEL_ACRONYMS:
+            words.append(PARAM_LABEL_ACRONYMS[lower])
+        elif first:
+            words.append(token.capitalize())
+        else:
+            words.append(lower)
+        first = False
+    if not words:
+        return param_name
+    return ' '.join(words)
+
+
+def get_param_readable_name(param_name: str, func: Union[Callable, None] = None) -> str:
+    """
+    Return a human-readable display label for a function parameter (display-only).
+
+    Resolution order:
+
+    1. a per-function override declared via :func:`param_readable_names`, if ``func`` is given
+       and declares a label for ``param_name``;
+    2. a global whole-name special case (:data:`PARAM_LABEL_SPECIAL_NAMES`);
+    3. auto-humanization: split on ``_``, sentence-case the words and join with spaces, while
+       preserving known domain acronyms (:data:`PARAM_LABEL_ACRONYMS`).
+
+    The raw ``param_name`` is never modified for use as an actual keyword argument; this only
+    affects what the GUI shows the user.
+
+    :param param_name: the raw (snake_case) parameter name from the function signature.
+    :type param_name: str
+    :param func: the function the parameter belongs to, used to look up per-function overrides.
+    :type func: callable or None
+    """
+    if func is not None:
+        overrides = getattr(func, 'readable_param_names', None)
+        if overrides is not None and param_name in overrides:
+            return overrides[param_name]
+    if param_name in PARAM_LABEL_SPECIAL_NAMES:
+        return PARAM_LABEL_SPECIAL_NAMES[param_name]
+    return _humanize_param_name(param_name)
 
 
 class TemporaryMatplotlibBackend:
@@ -88,23 +195,70 @@ class ProgressParallel(joblib.Parallel):
         self._pbar.refresh()
 
 
-def standard_box_cox(data: Union[np.ndarray, pl.DataFrame]) -> Union[np.ndarray, pl.DataFrame]:
-    """
+# The Box-Cox power transform fits one lambda per column via a separate optimization. When the data is
+# transposed so that genes are columns (as in the PCA/clustering paths), that is thousands of independent
+# optimizations run in a Python loop, which dominates the runtime of every clustering/PCA call. Splitting the
+# columns across workers is embarrassingly parallel; the result matches the single-process one up to
+# floating-point precision (~1e-15 on the real count-matrix fixture -- transforming a column-slice of a
+# C-contiguous matrix rather than the whole matrix can shift numpy's reduction blocking, far below anything
+# that affects PCA loadings or cluster assignments). Only pay the process-spawn cost when there are enough
+# columns to make it worthwhile.
+BOX_COX_PARALLEL_MIN_COLUMNS = 500
 
-    :param data:
-    :type data:
-    :return:
-    :rtype:
+
+def _box_cox_fit_transform(array: np.ndarray) -> np.ndarray:
+    # sklearn's PowerTransformer(box-cox) fits + applies a separate lambda to each column independently
+    # (and, with the default standardize=True, standardizes each column afterwards).
+    return PowerTransformer(method='box-cox').fit_transform(array + 1)
+
+
+def _parallel_box_cox(array: np.ndarray, backend: str, n_jobs: int) -> np.ndarray:
+    # split the columns into contiguous chunks, Box-Cox each chunk in its own worker, then reassemble in the
+    # original column order. Because every column is transformed independently, this equals the single-process
+    # result exactly.
+    n_columns = array.shape[1]
+    column_chunks = np.array_split(np.arange(n_columns), min(n_jobs, n_columns))
+    transformed_chunks = joblib.Parallel(n_jobs=len(column_chunks), backend=backend)(
+        joblib.delayed(_box_cox_fit_transform)(array[:, chunk]) for chunk in column_chunks)
+    return np.concatenate(transformed_chunks, axis=1)
+
+
+def standard_box_cox(data: Union[np.ndarray, pl.DataFrame],
+                     parallel_backend: str = 'sequential') -> Union[np.ndarray, pl.DataFrame]:
+    """
+    Apply a per-column Box-Cox power transform followed by standardization.
+
+    :param data: the data to transform (columns are transformed independently).
+    :type data: np.ndarray or pl.DataFrame
+    :param parallel_backend: joblib backend used to parallelize the per-column Box-Cox across columns. \
+    The default ('sequential') keeps the original single-process behavior; any other backend parallelizes \
+    once the number of columns reaches ``BOX_COX_PARALLEL_MIN_COLUMNS``. The result is identical either way \
+    up to floating-point precision.
+    :type parallel_backend: str (default='sequential')
     """
     if isinstance(data, pl.DataFrame):
         array = data.select(cs.numeric()).to_numpy()
     else:
         array = data
-    res_array = StandardScaler().fit_transform(PowerTransformer(method='box-cox').fit_transform(array + 1))
+    if parallel_backend not in (None, 'sequential') and array.shape[1] >= BOX_COX_PARALLEL_MIN_COLUMNS:
+        box_cox_array = _parallel_box_cox(array, backend=parallel_backend, n_jobs=joblib.cpu_count())
+    else:
+        box_cox_array = _box_cox_fit_transform(array)
+    res_array = StandardScaler().fit_transform(box_cox_array)
     if isinstance(data, pl.DataFrame):
         return data.select(~cs.numeric()).with_columns(
             pl.DataFrame(res_array, schema=data.select(cs.numeric()).columns))
     return res_array
+
+
+def box_cox_parallel_backend() -> str:
+    """Return a joblib backend suitable for parallelizing the Box-Cox transform in the current environment.
+
+    Frozen (PyInstaller) builds cannot use the ``loky`` backend, so they fall back to ``multiprocessing``
+    (see ``rnalysis.utils.param_typing.PARALLEL_BACKENDS``). This is only ever used from top-level, non-nested
+    call sites (the PCA methods), so ``multiprocessing``'s no-nested-children limitation does not apply.
+    """
+    return 'multiprocessing' if FROZEN_ENV else 'loky'
 
 
 def shift_to_baseline(data: Union[np.ndarray, pl.DataFrame], baseline: float = 0) -> Union[np.ndarray, pl.DataFrame]:
@@ -290,6 +444,8 @@ def sanitize_variable_name(name: str) -> str:
     :rtype: str
     """
     new_name = name.rstrip().replace(' ', '_')
+    if not new_name:
+        return new_name
     if new_name[0].isdigit():
         new_name = 'var_' + new_name
 

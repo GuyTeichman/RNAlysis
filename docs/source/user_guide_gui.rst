@@ -26,7 +26,7 @@ We will start by opening the *RNAlysis* GUI. Type the following command into the
 
     rnalysis-gui
 
-To load a table, in the main window, click on the "Load" button and choose a table's csv file from your computer.
+To load a table, in the main window, click on the "Choose table" button and choose a table's csv file from your computer.
 We will then use the drop-down menu to change our table type from "Other" to "Count matrix". This will allow us to later on use analysis methods that are dedicated to count matrix-style datasets.
 
 .. image:: /tutorial_screenshots/01a01_load_table.png
@@ -45,7 +45,7 @@ and for any table you can specify the names of specific columns that you want to
 
 .. image:: ../../rnalysis/gui/videos/table_types.webp
 
-Finally, we can click the "start" button to actually open our table on *RNAlysis*.
+Finally, we can click the "Load" button to actually open our table on *RNAlysis*.
 The window will now display a preview of our table, as well as a short summary of our table's content (table name, table type, number of rows and columns).
 
 
@@ -393,9 +393,11 @@ Normalizing count matrices
 
 * Relative Log Expression (RLE - 'normalize_rle'), used by default by R's DESeq2
 * Trimmed Mean of M-values (TMM - 'normalize_tmm'), used by default by R's edgeR
-* Quantile normalization, a generalization of Upper Quantile normalization (UQ - 'normalize_quantile'), used by default by R's Limma
-* Median of Ratios Normalization (MRN - 'normalize_mrn')
+* Quantile normalization, a generalization of Upper Quantile normalization (UQ - 'normalize_to_quantile'), used by default by R's Limma
+* Median of Ratios Normalization (MRN - 'normalize_median_of_ratios')
 * Reads Per Million (RPM - 'normalize_to_rpm')
+* Reads Per Kilobase Million (RPKM - 'normalize_to_rpkm')
+* Transcripts Per Million (TPM - 'normalize_to_tpm')
 
 To normalize a count matrix with one of these functions, click on the 'Normalize' button, pick one of the normalization functions from the drop-down menu, and click 'Apply'.
 
@@ -484,9 +486,9 @@ Finally, you can use a selection algorithm to estimate a good number of clusters
 
 To help in evaluating the result of these selection algorithms, *RNAlysis* will also plot a summary of their outcome:
 
-.. image:: /figures/ gap_statistic.png
+.. image:: /figures/gap_statistic.png
            :width: 60 %
-.. image:: /figures/ silhouette.png
+.. image:: /figures/silhouette.png
            :width: 30 %
 
 |
@@ -707,7 +709,7 @@ In the new window that opened, you can name the Pipeline, and choose the type of
 
 Pipelines for specific types of tables will allow you to use functions specific to that table type.
 If you're not sure what type of table to apply your Pipeline to, just choose "Other" - your Pipeline will then be applicable to any table type.
-After choosing a name and table type, click on the "Start" button to create the Pipeline.
+After choosing a name and table type, click on the "Create Pipeline" button.
 The window will now update to show a preview of the new (empty) Pipeline:
 
 .. image:: /tutorial_screenshots/02d03_pipeline.png
@@ -1066,7 +1068,7 @@ Gene Ontology terms have a somewhat hierarchical relationship that is defined as
 
 For example:
 
-        .. figure:: /figures/http://geneontology.org/assets/hexose-biosynthetic-process.png
+        .. figure:: http://geneontology.org/assets/hexose-biosynthetic-process.png
            :align:   center
            :scale: 35 %
 
@@ -1132,10 +1134,10 @@ If you don't specify plotting parameters, *RNAlysis* will generate an ontology g
 
 Enrichment analysis output
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Running enrichment analysis will calculate enrichment for each of the GO terms, and return a pandas DataFrame in the following format:
+Running enrichment analysis will calculate enrichment for each of the GO terms, and return a polars DataFrame in the following format:
 
 +-------------+------------------+--------------+-----+-------+----------------------+----------+----------+-------------+
-|             |       name       |    samples   | obs |   exp | log2_fold_enrichment |   pval   |   padj   | significant |
+|    GO ID    |       name       |    samples   | obs |   exp | log2_fold_enrichment |   pval   |   padj   | significant |
 +=============+==================+==============+=====+=======+======================+==========+==========+=============+
 |  GO:0001556 | oocyte maturation|    1327      | 451 | 319.52| 0.49722119558        | 0.0000999| 0.0000999| True        |
 +-------------+------------------+--------------+-----+-------+----------------------+----------+----------+-------------+
@@ -1214,7 +1216,7 @@ If you don't specify plotting parameters, *RNAlysis* will generate a horizontal 
 
 Enrichment analysis output
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Running enrichment analysis will calculate enrichment for each of the KEGG pathways, and return a pandas DataFrame in the following format:
+Running enrichment analysis will calculate enrichment for each of the KEGG pathways, and return a polars DataFrame in the following format:
 
 +-----------+-----------------------------------------------------------------+--------------+-----+-------+----------------------+----------+----------+-------------+
 |   KEGG ID |                              name                               |    samples   | obs |   exp | log2_fold_enrichment |   pval   |   padj   | significant |
@@ -1288,10 +1290,10 @@ When it is set as 'True', *RNAlysis* will return the Figure object it generated 
 
 Enrichment analysis output
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Running enrichment analysis will calculate enrichment for each of the specified attributes, and return a pandas DataFrame in the following format:
+Running enrichment analysis will calculate enrichment for each of the specified attributes, and return a polars DataFrame in the following format:
 
 +----------------+--------------+-----+-------+----------------------+----------+----------+-------------+
-|                |    samples   | obs |   exp | log2_fold_enrichment |   pval   |   padj   | significant |
+|      name      |    samples   | obs |   exp | log2_fold_enrichment |   pval   |   padj   | significant |
 +================+==============+=====+=======+======================+==========+==========+=============+
 |     attribute1 |    1327      | 451 | 319.52| 0.49722119558        | 0.0000999| 0.0000999| True        |
 +----------------+--------------+-----+-------+----------------------+----------+----------+-------------+
@@ -1360,10 +1362,10 @@ When it is set as 'True', *RNAlysis* will return the Figure object it generated 
 
 Non-Categorical Enrichment analysis output
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Running non-categorical enrichment analysis will calculate enrichment for each of the specified attributes, and return a pandas DataFrame in the following format:
+Running non-categorical enrichment analysis will calculate enrichment for each of the specified attributes, and return a polars DataFrame in the following format:
 
 +----------------+--------------+-------+--------+----------+----------+-------------+
-|                |    samples   |  obs  |  exp   |   pval   |   padj   | significant |
+|      name      |    samples   |  obs  |  exp   |   pval   |   padj   | significant |
 +================+==============+=======+========+==========+==========+=============+
 |     attribute1 |    1327      | 451   | 319.52 | 0.0000999| 0.0000999| True        |
 +----------------+--------------+-------+--------+----------+----------+-------------+

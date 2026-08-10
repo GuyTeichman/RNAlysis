@@ -661,6 +661,7 @@ class EnrichmentWindow(gui_widgets.MinMaxDialog):
 
         self.widgets['run_button'] = QtWidgets.QPushButton('Run')
         self.widgets['run_button'].clicked.connect(self.run_analysis)
+        gui_widgets.mark_primary(self.widgets['run_button'])
         self.widgets['run_button'].setVisible(False)
         self.scroll_layout.addWidget(self.widgets['run_button'])
 
@@ -795,9 +796,10 @@ class EnrichmentWindow(gui_widgets.MinMaxDialog):
         gui_widgets.clear_layout(self.plot_grid)
 
         i = 0
+        func = self.get_current_func()
         for name, (param, desc) in self.plot_signature.items():
             self.plot_widgets[name] = gui_widgets.param_to_widget(param, name)
-            label = QtWidgets.QLabel(f'{name}:', self.plot_widgets[name])
+            label = QtWidgets.QLabel(f'{generic.get_param_readable_name(name, func)}:', self.plot_widgets[name])
             label.setToolTip(desc)
             help_button = gui_widgets.HelpButton()
             self.plot_grid.addWidget(label, i, 0)
@@ -814,9 +816,10 @@ class EnrichmentWindow(gui_widgets.MinMaxDialog):
         gui_widgets.clear_layout(self.parameter_grid)
 
         i = 0
+        func = self.get_current_func()
         for name, (param, desc) in self.parameters_signature.items():
             self.parameter_widgets[name] = gui_widgets.param_to_widget(param, name)
-            label = QtWidgets.QLabel(f'{name}:', self.parameter_widgets[name])
+            label = QtWidgets.QLabel(f'{generic.get_param_readable_name(name, func)}:', self.parameter_widgets[name])
             label.setToolTip(desc)
             help_button = gui_widgets.HelpButton()
             self.parameter_grid.addWidget(help_button, i, 2)
@@ -848,10 +851,11 @@ class EnrichmentWindow(gui_widgets.MinMaxDialog):
         self.stats_grid.addWidget(self.stats_widgets['stats_radiobox'], 0, 0, 3, 2)
 
         i = 0
+        func = self.get_current_func()
         for name, (param, desc) in self.stats_signature.items():
             if name in self.STATISTICAL_TEST_ARGS[prev_test]:
                 self.stats_widgets[name] = gui_widgets.param_to_widget(param, name)
-                label = QtWidgets.QLabel(f'{name}:', self.stats_widgets[name])
+                label = QtWidgets.QLabel(f'{generic.get_param_readable_name(name, func)}:', self.stats_widgets[name])
                 label.setToolTip(desc)
                 help_button = gui_widgets.HelpButton()
                 self.stats_grid.addWidget(help_button, i, 4)
@@ -985,10 +989,15 @@ class SetOperationWindow(gui_widgets.MinMaxDialog):
             else:
                 canvas = gui_graphics.UpSetInteractiveCanvas(items, self)
         if 'canvas' in self.widgets:
-            self.widgets['canvas'].deleteLater()
-            self.widgets['toolbar'].deleteLater()
+            # detach the old canvas/toolbar from the layout and reparent them to None *before*
+            # scheduling deletion, so no queued paint/draw event can fire against a widget whose
+            # C++ object is being torn down (a source of flaky native crashes on teardown).
             self.operations_grid.removeWidget(self.widgets['canvas'])
             self.operations_grid.removeWidget(self.widgets['toolbar'])
+            self.widgets['canvas'].setParent(None)
+            self.widgets['toolbar'].setParent(None)
+            self.widgets['canvas'].deleteLater()
+            self.widgets['toolbar'].deleteLater()
 
         self.widgets['canvas'] = canvas
         self.widgets['toolbar'] = gui_graphics.CleanPlotToolBar(self.widgets['canvas'], self)
@@ -1086,6 +1095,7 @@ class SetOperationWindow(gui_widgets.MinMaxDialog):
 
         self.widgets['apply_button'] = QtWidgets.QPushButton('Apply')
         self.widgets['apply_button'].clicked.connect(self.apply_set_op)
+        gui_widgets.mark_primary(self.widgets['apply_button'])
         self.widgets['apply_button'].setEnabled(False)
         self.operations_grid.addWidget(self.widgets['apply_button'], 4, 0, 1, 6)
 
@@ -1118,12 +1128,14 @@ class SetOperationWindow(gui_widgets.MinMaxDialog):
 
         chosen_func_name = self.get_current_func_name()
         signature = generic.get_method_signature(chosen_func_name, filtering.Filter)
+        func = getattr(filtering.Filter, chosen_func_name, None)
         i = 0
         for name, param in signature.items():
             if name in self.EXCLUDED_PARAMS:
                 continue
             self.parameter_widgets[name] = gui_widgets.param_to_widget(param, name)
-            self.parameter_grid.addWidget(QtWidgets.QLabel(f'{name}:', self.parameter_widgets[name]), i, 0)
+            self.parameter_grid.addWidget(
+                QtWidgets.QLabel(f'{generic.get_param_readable_name(name, func)}:', self.parameter_widgets[name]), i, 0)
             self.parameter_grid.addWidget(self.parameter_widgets[name], i, 1)
             if chosen_func_name == 'majority_vote_intersection':
                 self.parameter_widgets[name].valueChanged.connect(self._majority_vote_intersection)
@@ -1286,6 +1298,7 @@ class SetVisualizationWindow(gui_widgets.MinMaxDialog):
 
         self.widgets['generate_button'] = QtWidgets.QPushButton('Generate graph')
         self.widgets['generate_button'].clicked.connect(self.generate_graph)
+        gui_widgets.mark_primary(self.widgets['generate_button'])
         self.widgets['generate_button'].setEnabled(False)
         self.visualization_grid.addWidget(self.widgets['generate_button'], 4, 0, 1, 5)
 
@@ -1316,8 +1329,12 @@ class SetVisualizationWindow(gui_widgets.MinMaxDialog):
             except Exception:
                 canvas = gui_graphics.EmptyCanvas("Invalid input; please change one or more of your parameters")
         if 'canvas' in self.widgets:
-            self.widgets['canvas'].deleteLater()
+            # detach the old canvas from the layout and reparent it to None *before* scheduling
+            # deletion, so no queued paint/draw event can fire against a widget whose C++ object is
+            # being torn down (a source of flaky native crashes on teardown).
             self.visualization_grid.removeWidget(self.widgets['canvas'])
+            self.widgets['canvas'].setParent(None)
+            self.widgets['canvas'].deleteLater()
 
         self.widgets['canvas'] = canvas
         self.visualization_grid.addWidget(self.widgets['canvas'], 0, 2, 4, 3)
@@ -1357,13 +1374,15 @@ class SetVisualizationWindow(gui_widgets.MinMaxDialog):
 
         chosen_func_name = self.get_current_func_name()
         signature = generic.get_method_signature(chosen_func_name, enrichment)
+        func = getattr(enrichment, chosen_func_name, None)
         i = 0
         for name, param in signature.items():
             if name in self.EXCLUDED_PARAMS:
                 continue
             self.parameter_widgets[name] = gui_widgets.param_to_widget(param, name,
                                                                        actions_to_connect=self.create_canvas)
-            self.parameter_grid.addWidget(QtWidgets.QLabel(f'{name}:', self.parameter_widgets[name]), i, 0)
+            self.parameter_grid.addWidget(
+                QtWidgets.QLabel(f'{generic.get_param_readable_name(name, func)}:', self.parameter_widgets[name]), i, 0)
             self.parameter_grid.addWidget(self.parameter_widgets[name], i, 1)
             i += 1
 
@@ -1474,6 +1493,7 @@ class TabPage(QtWidgets.QWidget):
         # initiate apply button
         self.apply_button = QtWidgets.QPushButton('Apply')
         self.apply_button.clicked.connect(self.apply_function)
+        gui_widgets.mark_primary(self.apply_button)
         self.layout.addWidget(self.apply_button)
         self.apply_button.setVisible(False)
 
@@ -1904,6 +1924,7 @@ class FuncTypeStack(QtWidgets.QWidget):
 
         signature = generic.get_method_signature(chosen_func_name, self.filter_obj)
         desc, param_desc = io.get_method_docstring(chosen_func_name, self.filter_obj)
+        func = getattr(self.filter_obj, chosen_func_name, None)
         self.func_combo.setToolTip(desc)
         self.func_help_button.set_param_help(self.get_function_readable_name(), desc)
 
@@ -1914,7 +1935,7 @@ class FuncTypeStack(QtWidgets.QWidget):
             self.parameter_widgets[name] = gui_widgets.param_to_widget(param, name, pipeline_mode=self.pipeline_mode)
             self.connect_widget(self.parameter_widgets[name])
 
-            label = QtWidgets.QLabel(f'{name}:', self.parameter_widgets[name])
+            label = QtWidgets.QLabel(f'{generic.get_param_readable_name(name, func)}:', self.parameter_widgets[name])
             if name in param_desc:
                 label.setToolTip(param_desc[name])
                 help_button = gui_widgets.HelpButton()
@@ -1988,6 +2009,7 @@ class FilterTabPage(TabPage):
                         'split_clicom': 'CLICOM (Ensemble)'}
     SUMMARY_FUNCS = {'describe', 'head', 'tail', 'biotypes_from_ref_table', 'biotypes_from_gtf', 'print_features'}
     GENERAL_FUNCS = {'concatenate', 'sort', 'sort_by_principal_component', 'transform', 'translate_gene_ids',
+                     'annotate_from_gtf',
                      'differential_expression_deseq2', 'differential_expression_deseq2_simplified', 'fold_change',
                      'average_replicate_samples', 'drop_columns',
                      'differential_expression_limma_voom', 'differential_expression_limma_voom_simplified',
@@ -2005,6 +2027,7 @@ class FilterTabPage(TabPage):
     def __init__(self, parent=None, undo_stack: QtGui.QUndoStack = None, tab_id: int = None):
         super().__init__(parent, undo_stack, tab_id)
         self.filter_obj = None
+        self._last_autodetected_path = None
 
         self.basic_group = QtWidgets.QGroupBox('Load a data table')
         self.basic_grid = QtWidgets.QGridLayout(self.basic_group)
@@ -2127,6 +2150,19 @@ class FilterTabPage(TabPage):
     def _change_start_button_state(self, is_legal: bool):
         self.basic_widgets['start_button'].setEnabled(is_legal)
 
+    def _autodetect_table_type(self, is_legal: bool):
+        # When a valid file is chosen, pre-select the most likely table type as a convenience default.
+        # This is fully overridable: the user can still pick any type from the combo afterwards.
+        if not is_legal:
+            return
+        file_path = self.basic_widgets['file_path'].text()
+        if file_path == self._last_autodetected_path:
+            return
+        self._last_autodetected_path = file_path
+        detected = filtering.infer_table_type(file_path)
+        if detected in FILTER_OBJ_TYPES:
+            self.basic_widgets['table_type_combo'].setCurrentText(detected)
+
     def update_basic_ui(self):
         # clear previous layout
         gui_widgets.clear_layout(self.basic_param_grid)
@@ -2135,13 +2171,14 @@ class FilterTabPage(TabPage):
         filter_obj_type = FILTER_OBJ_TYPES[self.basic_widgets['table_type_combo'].currentText()]
         signature = generic.get_method_signature(func_name, filter_obj_type)
         desc, param_desc = io.get_method_docstring(func_name, filter_obj_type)
+        func = getattr(filter_obj_type, func_name, None)
         self.basic_widgets['table_type_combo'].setToolTip(desc)
         i = 1
         for name, param in signature.items():
             if name in INIT_EXCLUDED_PARAMS:
                 continue
             self.basic_param_widgets[name] = gui_widgets.param_to_widget(param, name)
-            label = QtWidgets.QLabel(f'{name}:', self.basic_param_widgets[name])
+            label = QtWidgets.QLabel(f'{generic.get_param_readable_name(name, func)}:', self.basic_param_widgets[name])
             if name in param_desc:
                 label.setToolTip(param_desc[name])
                 help_button = gui_widgets.HelpButton()
@@ -2159,14 +2196,17 @@ class FilterTabPage(TabPage):
         self.basic_widgets['table_type_combo'].currentIndexChanged.connect(self.update_basic_ui)
         self.basic_widgets['table_type_combo'].setCurrentText('Other table')
 
-        self.basic_widgets['start_button'] = QtWidgets.QPushButton('Start')
+        self.basic_widgets['start_button'] = QtWidgets.QPushButton('Load')
         self.basic_widgets['start_button'].clicked.connect(self.start)
         self.basic_widgets['start_button'].setEnabled(False)
+        gui_widgets.mark_primary(self.basic_widgets['start_button'])
 
-        self.basic_widgets['file_path'] = gui_widgets.PathLineEdit(file_types="Data table "
-                                                                              "(*.csv;*.tsv;*.txt;*.parquet);;"
-                                                                              "All Files (*)")
+        self.basic_widgets['file_path'] = gui_widgets.PathLineEdit(button_text='Choose table',
+                                                                     file_types="Data table "
+                                                                                "(*.csv;*.tsv;*.txt;*.parquet);;"
+                                                                                "All Files (*)")
         self.basic_widgets['file_path'].textChanged.connect(self._change_start_button_state)
+        self.basic_widgets['file_path'].textChanged.connect(self._autodetect_table_type)
 
         self.basic_widgets['table_name'] = QtWidgets.QLineEdit()
 
@@ -2187,6 +2227,9 @@ class FilterTabPage(TabPage):
         self.basic_grid.addWidget(QtWidgets.QWidget(self), 4, 0, 1, 4)
         self.basic_grid.addWidget(QtWidgets.QWidget(self), 0, 4, 4, 1)
         self.basic_grid.setRowStretch(4, 1)
+        # give the extra horizontal space to the file path field (column 1) instead of the
+        # trailing padding column, so the field actually widens with the window
+        self.basic_grid.setColumnStretch(1, 1)
         self.basic_grid.setColumnStretch(4, 1)
 
     def _check_for_special_functions(self, is_selected: bool = True):
@@ -2408,11 +2451,17 @@ class CreatePipelineWindow(gui_widgets.MinMaxDialog, FilterTabPage):
 
         self.basic_widgets['name_label'] = QtWidgets.QLabel('Name your Pipeline:')
 
-        self.basic_widgets['start_button'] = QtWidgets.QPushButton('Start')
+        self.basic_widgets['start_button'] = QtWidgets.QPushButton('Create Pipeline')
         self.basic_widgets['start_button'].clicked.connect(self.start)
+        gui_widgets.mark_primary(self.basic_widgets['start_button'])
 
+        # overrides the base 'Apply' button (TabPage.__init__) with this window's own
+        # main commit action; the two are never visible at the same time (this one takes
+        # over once basic_group - and its "Create Pipeline" button - is hidden), so it gets
+        # the same primary styling
         self.apply_button = QtWidgets.QPushButton('Add to Pipeline')
         self.apply_button.clicked.connect(self.apply_function)
+        gui_widgets.mark_primary(self.apply_button)
         self.layout.insertWidget(2, self.apply_button)
         self.apply_button.setVisible(False)
 
@@ -2764,13 +2813,14 @@ class MultiOpenWindow(QtWidgets.QDialog):
         filter_obj_type = FILTER_OBJ_TYPES[self.table_types[file].currentText()]
         signature = generic.get_method_signature(func_name, filter_obj_type)
         desc, param_desc = io.get_method_docstring(func_name, filter_obj_type)
+        func = getattr(filter_obj_type, func_name, None)
         self.table_types[file].setToolTip(desc)
         i = 1
         for name, param in signature.items():
             if name in INIT_EXCLUDED_PARAMS:
                 continue
             self.kwargs_widgets[file][name] = gui_widgets.param_to_widget(param, name)
-            label = QtWidgets.QLabel(f'{name}:', self.kwargs_widgets[file][name])
+            label = QtWidgets.QLabel(f'{generic.get_param_readable_name(name, func)}:', self.kwargs_widgets[file][name])
             if name in param_desc:
                 label.setToolTip(param_desc[name])
                 help_button = gui_widgets.HelpButton()
@@ -3046,6 +3096,11 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def __init__(self, gather_stdout: bool = True):
         super().__init__()
+
+        # own the GUI cache-write queue for this window's lifetime so table caching streams off the UI
+        # thread; io falls back to synchronous writes whenever no window has registered a queue
+        self.gui_cache_writer = io.GuiCacheWriteQueue()
+        io.set_active_gui_cache_writer(self.gui_cache_writer)
 
         self._generate_report = False
         self.report = None
@@ -4410,6 +4465,35 @@ class MainWindow(QtWidgets.QMainWindow):
             return dialog.result()
         return None
 
+    def _shutdown_worker_threads(self):
+        """Stop the background QThreads cleanly so no QThread object is destroyed while its OS
+        thread is still running -- that teardown race is the flaky "Windows fatal exception:
+        access violation" seen in the e2e tier.
+
+        The STDOUT listener's ``run()`` blocks on ``queue_stdout.get()`` and never returns to its
+        event loop, so ``quit()`` alone can't stop it (and a bare ``wait()`` would hang forever).
+        Enqueue ``STOP_SIGNAL`` first to break that loop, then ``quit()`` + ``wait()``.
+
+        Both waits are unbounded on purpose. When the threads are idle (the common case, and every
+        e2e-test teardown) they return immediately. If a worker is still mid-run we wait for it to
+        finish rather than (a) abandon its thread -- the very crash this fixes -- or (b)
+        ``terminate()`` it, which Qt documents as unsafe (it can strand a held mutex/GIL and corrupt
+        state). A user who force-quits during a long job just kills the process, which the OS reclaims
+        without triggering the C++ "destroyed while running" crash.
+        """
+        listener = getattr(self, 'thread_stdout_queue_listener', None)
+        if listener is not None:
+            queue_stdout = getattr(self, 'queue_stdout', None)
+            receiver = getattr(self, 'stdout_receiver', None)
+            if queue_stdout is not None and receiver is not None:
+                queue_stdout.put(receiver.STOP_SIGNAL)
+            listener.quit()
+            listener.wait()
+        job_thread = getattr(self, 'job_thread', None)
+        if job_thread is not None:
+            job_thread.quit()
+            job_thread.wait()
+
     def closeEvent(self, event):  # pragma: no cover
 
         quit_msg = "Are you sure you want to close <i>RNAlysis</i>?\n" \
@@ -4421,17 +4505,14 @@ class MainWindow(QtWidgets.QMainWindow):
 
         if reply == QtWidgets.QMessageBox.StandardButton.Yes:
             plt.close('all')
-            # quit job and STDOUT listener threads
-            try:
-                self.job_thread.quit()
-            except AttributeError:
-                pass
-            try:
-                self.thread_stdout_queue_listener.quit()
-            except AttributeError:
-                pass
-            # clear cache
+            # stop background threads cleanly before the window (and its QThread members) are
+            # destroyed, so neither QThread object is torn down while its OS thread is still running.
+            self._shutdown_worker_threads()
+            # clear cache (this also flushes any pending background writes first)
             io.clear_gui_cache()
+            # stop this window's background cache-write queue now that the cache has been cleared
+            io.set_active_gui_cache_writer(None)
+            self.gui_cache_writer.shutdown(wait=True)
             # close all figures
 
             # close all external windows

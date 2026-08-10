@@ -30,6 +30,14 @@ GRAPHVIZ_FORMATS = ('pdf', 'png', 'svg', 'none')
 
 BIOTYPES = ('protein_coding', 'pseudogene', 'lincRNA', 'miRNA', 'ncRNA', 'piRNA', 'rRNA', 'snoRNA', 'snRNA', 'tRNA')
 BIOTYPE_ATTRIBUTE_NAMES = ('biotype', 'gene_biotype', 'transcript_biotype', 'gene_type', 'transcript_type')
+# Feature-type keywords (column 3) that denote a transcript, across GTF and GFF3 conventions. Used to identify
+# transcript rows when parsing annotation files (mRNA/primary_transcript are the GFF3/GTF equivalents of 'transcript').
+TRANSCRIPT_FEATURE_NAMES = ('transcript', 'mRNA', 'primary_transcript')
+# Attribute names suggested in the GUI for filtering/annotating a table from a GTF/GFF file. Free text is also
+# allowed (used as Union[Literal[GTF_ATTRIBUTE_NAMES], str]). 'chromosome'/'source'/'strand' are reserved names that
+# read the fixed GTF/GFF columns; everything else is looked up as a column-9 key=value attribute.
+GTF_ATTRIBUTE_NAMES = ('gene_biotype', 'transcript_biotype', 'biotype', 'gene_name', 'gene_id', 'transcript_id',
+                       'chromosome', 'source', 'strand')
 
 GO_ASPECTS = ('biological_process', 'cellular_component', 'molecular_function')
 GO_EVIDENCE_TYPES = ('experimental', 'phylogenetic', 'computational', 'author', 'curator', 'electronic')
@@ -79,11 +87,24 @@ def type_to_supertype(this_type):
     return this_type
 
 
+# Errors that mean "couldn't fetch or parse the remote list of legal values". These getters run at
+# import time to populate Literal[...] type annotations, so an uncaught error here crashes
+# `import rnalysis.filtering` for every user and every test-collection run — degrade to an empty tuple
+# plus a warning instead. RequestException covers connection/HTTP/timeout failures (the underlying
+# io.get_legal_* calls now pass a request timeout); ValueError covers JSON-decode errors from a
+# 200-with-garbage body; Key/Type/Index errors cover otherwise-parseable-but-unexpected shapes.
+# These getters are lru_cached, so a degraded empty result is intentionally pinned for the process:
+# the Literal[...] annotations are evaluated exactly once at import, and the warning tells the user to
+# restart RNAlysis to retry.
+_LEGAL_VALUE_FETCH_ERRORS = (requests.exceptions.RequestException, tenacity.RetryError,
+                             ValueError, KeyError, TypeError, IndexError)
+
+
 @functools.lru_cache(maxsize=2)
 def get_gene_id_types() -> typing.Tuple[str, ...]:
     try:
         gene_id_types = parsing.data_to_tuple(io.get_legal_gene_id_types()[0].keys())
-    except requests.exceptions.ConnectionError:
+    except _LEGAL_VALUE_FETCH_ERRORS:
         gene_id_types = tuple()
         warnings.warn('Failed to retrieve gene ID mapping data from UniProtKB. '
                       'Some features may not work as intended. '
@@ -96,7 +117,7 @@ def get_gene_id_types() -> typing.Tuple[str, ...]:
 def get_panther_taxons() -> typing.Tuple[str, ...]:
     try:
         taxons = io.get_legal_panther_taxons()
-    except (requests.exceptions.ConnectionError, requests.exceptions.HTTPError):
+    except _LEGAL_VALUE_FETCH_ERRORS:
         taxons = tuple()
         warnings.warn('Failed to retrieve legal taxons from PantherDB. '
                       'Some features may not work as intended. '
@@ -109,7 +130,7 @@ def get_panther_taxons() -> typing.Tuple[str, ...]:
 def get_phylomedb_taxons() -> typing.Tuple[str, ...]:
     try:
         taxons = io.get_legal_phylomedb_taxons()
-    except ftplib.all_errors:
+    except (*_LEGAL_VALUE_FETCH_ERRORS, *ftplib.all_errors):
         taxons = tuple()
         warnings.warn('Failed to retrieve legal taxons from PhylomeDB. '
                       'Some features may not work as intended. '
@@ -122,7 +143,7 @@ def get_phylomedb_taxons() -> typing.Tuple[str, ...]:
 def get_ensembl_taxons() -> typing.Tuple[str, ...]:
     try:
         taxons = parsing.data_to_tuple(io.get_legal_ensembl_taxons())
-    except (requests.exceptions.ConnectionError, tenacity.RetryError):
+    except _LEGAL_VALUE_FETCH_ERRORS:
         taxons = tuple()
         warnings.warn('Failed to retrieve legal taxons from Ensembl. '
                       'Some features may not work as intended. '

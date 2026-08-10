@@ -1,6 +1,8 @@
+import gzip
+import re
 import types
 from pathlib import Path
-from typing import Iterable, Tuple, Union
+from typing import Iterable, Optional, Tuple, Union
 
 import polars as pl
 import typing_extensions
@@ -213,21 +215,68 @@ def validate_hdbscan_parameters(min_cluster_size: int, metric: str, cluster_sele
     assert isinstance(metric, str), f"'metric' must be a string. Instead got {type(metric)}."
 
 
+#: annotation file extensions (a trailing ``.gz`` is stripped first) mapped to their format hint
+_ANNOTATION_EXT_HINTS = {'.gtf': 'gtf', '.gff': 'gff3', '.gff3': 'gff3'}
+
+
+def _annotation_extension_hint(pth: Union[str, Path]) -> Optional[str]:
+    """Map an annotation file's extension (ignoring a trailing ``.gz``) to 'gtf'/'gff3', or None if unrecognised."""
+    suffixes = [s.lower() for s in Path(pth).suffixes]
+    if suffixes and suffixes[-1] == '.gz':
+        suffixes = suffixes[:-1]
+    core_suffix = suffixes[-1] if suffixes else ''
+    return _ANNOTATION_EXT_HINTS.get(core_suffix)
+
+
+def sniff_annotation_format(pth: Union[str, Path]) -> Optional[str]:
+    """Content-sniff a genome-annotation file's format from its first data line's attribute column.
+
+    GTF attributes look like ``key "value";`` while GFF3 attributes look like ``key=value;``. Reads only the first
+    non-comment, non-blank line (gzip-aware), so it is cheap even on large files. Returns 'gtf', 'gff3', or None when
+    the format cannot be determined from the content (e.g. an empty file, or a first line with too few columns).
+    """
+    opener = gzip.open if str(pth).lower().endswith('.gz') else open
+    try:
+        with opener(pth, 'rt', encoding='utf-8', errors='replace') as fh:
+            for line in fh:
+                stripped = line.strip()
+                if not stripped or stripped.startswith('#'):
+                    continue
+                fields = line.rstrip('\n').split('\t')
+                if len(fields) < 9:
+                    return None
+                attributes = fields[8]
+                if re.search(r'^\s*\w+\s+"', attributes):  # key "value"
+                    return 'gtf'
+                if re.search(r'^\s*\w+=', attributes):  # key=value
+                    return 'gff3'
+                return None
+    except OSError:
+        return None
+    return None
+
+
 def validate_genome_annotation_file(pth: Union[str, Path], accept_gtf: bool = True, accept_gff3: bool = True) -> \
 typing_extensions.Literal['gtf', 'gff3']:
     """
     Makes sure that the given genome annotation file exists and is a supported type (GTF or GFF3), \
-    and returns a string representing the type of file ('gtf' or 'gff3')
+    and returns a string representing the type of file ('gtf' or 'gff3').
+
+    The format is determined by **content-sniffing** the file's first data line (``key "value";`` = GTF, \
+    ``key=value`` = GFF3), falling back to the file extension only when the content is inconclusive. Accepts \
+    ``.gtf``, ``.gff``, ``.gff3`` and their ``.gz``-compressed variants.
 
     :param pth: path to the genome annotation file
     :type pth: str or pathlib.Path
     :return: 'gtf' or 'gff3' (the format of the genome annotation file)
     """
     assert Path(pth).exists(), f"The provided gtf_path doesn't exist: {pth}"
-    if Path(pth).suffix.lower() == '.gtf' and accept_gtf:
-        file_type = 'gtf'
-    elif Path(pth).suffix.lower() == '.gff3' and accept_gff3:
-        file_type = 'gff3'
-    else:
-        raise ValueError(f"The supplied annotation file has an unsupported format: '{Path(pth).suffix.lower()}'")
+    file_type = sniff_annotation_format(pth) or _annotation_extension_hint(pth)
+    if file_type is None:
+        raise ValueError(f"The supplied annotation file has an unsupported format: '{Path(pth).name}'. "
+                         f"Expected a GTF or GFF3 file (optionally gzip-compressed).")
+    if file_type == 'gtf' and not accept_gtf:
+        raise ValueError(f"The supplied annotation file is a GTF file, but a GFF3 file is required: {Path(pth).name}")
+    if file_type == 'gff3' and not accept_gff3:
+        raise ValueError(f"The supplied annotation file is a GFF3 file, but a GTF file is required: {Path(pth).name}")
     return file_type

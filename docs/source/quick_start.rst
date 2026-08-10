@@ -11,7 +11,7 @@ Open the graphical user interface by running `rnalysis-gui` in your terminal or 
 
 Importing Data
 ==============
-Select a file from your computer and click 'Start' to import it into *RNAlysis*.
+Click 'Choose table' to select a file from your computer, then click 'Load' to import it into *RNAlysis*.
 
 .. image:: ../../rnalysis/gui/videos/load_table.webp
 

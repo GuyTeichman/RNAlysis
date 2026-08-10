@@ -427,6 +427,33 @@ def test_countfilter_pairplot_api(basic_countfilter, args, kwargs):
     plt.close('all')
 
 
+def test_countfilter_pairplot_shows_spearman_of_numeric_columns(basic_countfilter):
+    # Regression: pairplot annotated each cell with spearmanr of sample_df indexed by seaborn's
+    # numeric-only axis positions, but sample_df also contains the (non-numeric) gene-index column
+    # at position 0 -- so the first row/column's correlation was computed on the index column
+    # (garbage under old numpy, a hard crash under numpy 2.x). Each cell must show the Spearman
+    # correlation of *its own* pair of sample columns. We identify each cell's pair from its axis
+    # labels (which seaborn sets to the plotted column names) -- an independent path from the fix.
+    import re
+    from scipy.stats import spearmanr
+    fig = basic_countfilter.pairplot(show_corr=True, log2=False)
+    try:
+        checked = 0
+        for ax in fig.axes:
+            annotations = [t.get_text() for t in ax.texts if 'Spearman' in t.get_text()]
+            if not annotations:
+                continue
+            x_col, y_col = ax.get_xlabel(), ax.get_ylabel()
+            assert x_col and y_col and x_col != y_col  # a real off-diagonal sample pair, not the index
+            expected = f"{spearmanr(basic_countfilter.df[:, [x_col, y_col]])[0]:.2f}"
+            shown = re.search(r'Spearman.*?=\s*(-?\d+\.\d+)', annotations[0]).group(1)
+            assert shown == expected, f"cell ({y_col}, {x_col}): shown {shown} != expected {expected}"
+            checked += 1
+        assert checked >= 1  # at least one off-diagonal cell was actually verified
+    finally:
+        plt.close('all')
+
+
 @pytest.mark.parametrize('args,kwargs,xfail', [
     (tuple(), dict(), False),
     ((['cond1', 'cond2'],), dict(metric='euclidean', linkage='Ward'), False),
@@ -536,6 +563,91 @@ def test_countfilter_filter_biotype_from_gtf_opposite():
     h = CountFilter("tests/test_files/counted_biotype.csv")
     _filter_biotype_tester(h, truth_protein_coding=truth_no_pc, truth_pirna=truth_no_pirna, from_table=False,
                            opposite=True)
+
+
+# ----------------------------------------------------------------------------------------------------------------------
+# #154: generic filter/annotate by any GTF/GFF attribute -- column-9 attributes (biotype, ...) AND fixed columns
+# (chromosome/source/strand). counted_attributes.csv has GENE1-4 (present in the GTF/GFF) plus GENE5 (absent).
+# ----------------------------------------------------------------------------------------------------------------------
+_ATTR_GTF = 'tests/test_files/test_gtf_attributes.gtf'
+_ATTR_GFF3 = 'tests/test_files/test_gff3_attributes.gff3'
+_ATTR_COUNTS = 'tests/test_files/counted_attributes.csv'
+
+
+def test_filter_by_gtf_attribute_reproduces_biotype_special_case():
+    # filter_by_gtf_attribute on the biotype attribute must reproduce the dedicated filter_biotype_from_gtf.
+    gtf = 'tests/test_files/test_gtf_for_biotypes.gtf'
+    counts = CountFilter('tests/test_files/counted_biotype.csv')
+    generic = counts.filter_by_gtf_attribute(gtf, 'gene_biotype', 'protein_coding', inplace=False)
+    special = counts.filter_biotype_from_gtf(gtf, 'protein_coding', inplace=False)
+    assert np.all(generic.df.sort(pl.first()) == special.df.sort(pl.first()))
+
+
+@pytest.mark.parametrize('path', [_ATTR_GTF, _ATTR_GFF3])
+@pytest.mark.parametrize('attribute,value,truth', [
+    ('chromosome', 'chr2', {'GENE2', 'GENE4'}),
+    ('chromosome', ['chr1', 'chrX'], {'GENE1', 'GENE3'}),
+    ('strand', '+', {'GENE1', 'GENE3'}),
+    ('source', 'havana', {'GENE2', 'GENE4'}),
+    ('gene_biotype', 'protein_coding', {'GENE1', 'GENE3', 'GENE4'}),
+])
+def test_filter_by_gtf_attribute(path, attribute, value, truth):
+    counts = CountFilter(_ATTR_COUNTS)
+    res = counts.filter_by_gtf_attribute(path, attribute, value, inplace=False)
+    assert parsing.data_to_set(res.df.select(pl.first())) == truth
+
+
+def test_filter_by_gtf_attribute_opposite_includes_unmapped():
+    # opposite returns every table feature NOT kept, including GENE5 which is absent from the annotation file.
+    counts = CountFilter(_ATTR_COUNTS)
+    res = counts.filter_by_gtf_attribute(_ATTR_GTF, 'chromosome', 'chr2', opposite=True, inplace=False)
+    assert parsing.data_to_set(res.df.select(pl.first())) == {'GENE1', 'GENE3', 'GENE5'}
+
+
+def _annotation_mapping(filter_obj, column_name):
+    return dict(zip(filter_obj.df.select(pl.first()).to_series().to_list(), filter_obj.df[column_name].to_list()))
+
+
+@pytest.mark.parametrize('path', [_ATTR_GTF, _ATTR_GFF3])
+def test_annotate_from_gtf_biotype(path):
+    counts = CountFilter(_ATTR_COUNTS)
+    res = counts.annotate_from_gtf(path, 'gene_biotype', inplace=False)
+    assert 'gene_biotype' in res.df.columns
+    # numeric columns of the original table are preserved
+    assert {'cond1', 'cond2'}.issubset(set(res.df.columns))
+    assert _annotation_mapping(res, 'gene_biotype') == {
+        'GENE1': 'protein_coding', 'GENE2': 'lincRNA', 'GENE3': 'protein_coding',
+        'GENE4': 'protein_coding', 'GENE5': None}  # GENE5 is absent from the annotation -> null
+
+
+def test_annotate_from_gtf_fixed_column_custom_name():
+    counts = CountFilter(_ATTR_COUNTS)
+    res = counts.annotate_from_gtf(_ATTR_GTF, 'chromosome', column_name='chrom', inplace=False)
+    assert 'chrom' in res.df.columns
+    assert _annotation_mapping(res, 'chrom') == {
+        'GENE1': 'chr1', 'GENE2': 'chr2', 'GENE3': 'chrX', 'GENE4': 'chr2', 'GENE5': None}
+
+
+def test_annotate_from_gtf_inplace_default_column_name():
+    counts = CountFilter(_ATTR_COUNTS)
+    assert counts.annotate_from_gtf(_ATTR_GFF3, 'chromosome', inplace=True) is None
+    assert _annotation_mapping(counts, 'chromosome') == {
+        'GENE1': 'chr1', 'GENE2': 'chr2', 'GENE3': 'chrX', 'GENE4': 'chr2', 'GENE5': None}
+
+
+def test_annotate_from_gtf_overwrites_existing_column():
+    counts = CountFilter(_ATTR_COUNTS)
+    res = counts.annotate_from_gtf(_ATTR_GTF, 'chromosome', column_name='cond2', inplace=False)
+    assert res.df.columns.count('cond2') == 1  # overwritten, not duplicated
+    assert _annotation_mapping(res, 'cond2') == {
+        'GENE1': 'chr1', 'GENE2': 'chr2', 'GENE3': 'chrX', 'GENE4': 'chr2', 'GENE5': None}
+
+
+def test_annotate_from_gtf_rejects_feature_id_column_name():
+    # naming the annotation column after the table's feature-id (index) column must not silently drop the IDs
+    counts = Filter.from_dataframe(pl.DataFrame({'gene': ['GENE1', 'GENE2'], 'cond1': [1.0, 2.0]}), 'annot_test')
+    with pytest.raises(AssertionError):
+        counts.annotate_from_gtf(_ATTR_GTF, 'chromosome', column_name='gene')
 
 
 def test_filter_by_attribute(basic_deseqfilter):
@@ -1601,11 +1713,18 @@ def test_pipeline_apply_to_multiple_splits(basic_countfilter):
 
 
 def test_pipeline_apply_to_filter_normalize_split_plot(big_countfilter):
+    # Note: n=17500 (instead of a smaller value) is deliberately chosen so that filter_top_n
+    # leaves only ~2500 of the ~20000 rows before the clustering/plotting steps. This is a
+    # self-consistency check (Pipeline.apply_to vs. the same calls made manually) with no
+    # comparison to a committed truth file, so shrinking the data flowing through the slow
+    # clustering steps (split_hdbscan, clustergram, split_kmedoids) is safe as long as it still
+    # produces multiple non-trivial clusters, which it does (verified to leave >=2 clusters of
+    # size >= 7, so split_kmedoids(n_clusters=[2, 7]) remains valid on each).
     scaling_factor_path = 'tests/test_files/big_scaling_factors.csv'
     pl_c = Pipeline('CountFilter')
     pl_c.add_function(CountFilter.normalize_with_scaling_factors, scaling_factor_path)
     pl_c.add_function('biotypes_from_ref_table', ref=__biotype_ref__)
-    pl_c.add_function(CountFilter.filter_top_n, by='cond3rep1', n=1500, opposite=True)
+    pl_c.add_function(CountFilter.filter_top_n, by='cond3rep1', n=17500, opposite=True)
     pl_c.add_function(CountFilter.split_hdbscan, min_cluster_size=40, return_probabilities=True)
     pl_c.add_function(CountFilter.filter_low_reads, threshold=10)
     pl_c.add_function(CountFilter.clustergram)
@@ -1618,7 +1737,7 @@ def test_pipeline_apply_to_filter_normalize_split_plot(big_countfilter):
     c_dict = dict()
     c.normalize_with_scaling_factors(scaling_factor_path)
     c_dict['biotypes_from_ref_table_1'] = c.biotypes_from_ref_table(ref=__biotype_ref__)
-    c_res = c.filter_top_n(by='cond3rep1', n=1500, opposite=True, inplace=False)
+    c_res = c.filter_top_n(by='cond3rep1', n=17500, opposite=True, inplace=False)
     c_res, prob = c_res.split_hdbscan(min_cluster_size=40, return_probabilities=True)
     c_dict['split_hdbscan_1'] = prob
     for obj in c_res:
@@ -1656,7 +1775,12 @@ def test_pipeline_apply_to_filter_normalize_split_plot(big_countfilter):
 
 
 def test_gap_statistic_api(clustering_countfilter):
-    res = clustering_countfilter.split_kmeans(n_clusters='gap')
+    # The gap statistic evaluates every candidate k from 2 up to max_n_clusters_estimate (default
+    # 'auto' -> 20 here), fitting KMeans on 10 reference datasets per k. The assertion below only
+    # checks the return type, not a specific k or a truth file, so capping max_n_clusters_estimate
+    # at 5 (still >1, so the multi-k search code path is still exercised) cuts the number of KMeans
+    # fits substantially while testing the same behavior.
+    res = clustering_countfilter.split_kmeans(n_clusters='gap', max_n_clusters_estimate=5)
     assert isinstance(res, tuple)
 
 
@@ -1713,7 +1837,14 @@ def test_split_hdbscan_api(clustering_countfilter):
 
 
 def test_split_clicom_api(clustering_countfilter):
-    c = clustering_countfilter
+    # split_clicom's cluster-similarity-matrix step scales roughly with the square of the number
+    # of features, and this test only checks structural correctness of the split (no comparison to
+    # a committed truth file), so we shrink the working data to the first 300 (of 1345) features to
+    # keep the same code path (all 3 clustering methods, multi-value parameter combos, and the
+    # power_transform=(False, True) branch) while running much faster. 300 rows is still comfortably
+    # more than the largest n_clusters/min_cluster_size used below.
+    c = CountFilter.from_dataframe(clustering_countfilter.df.head(300), clustering_countfilter.fname,
+                                   clustering_countfilter.is_normalized, suppress_warnings=True)
     res = c.split_clicom({'method': 'hdbscan', 'min_cluster_size': [75, 40], 'metric': ['ys1', 'spearman']},
                          {'method': 'hierarchical', 'n_clusters': [7], 'metric': ['euclidean', 'jackknife'],
                           'linkage': ['average', 'ward']},
@@ -1832,6 +1963,25 @@ def test_avg_subsamples(sample_list, truth_path, basic_countfilter):
     assert np.all(res.columns == truth.columns)
     assert np.all(res.select(pl.first()).equals(truth.select(pl.first())))
     assert np.isclose(res.drop(cs.first()), truth.drop(cs.first()), atol=0, rtol=0.001).all()
+
+
+@pytest.mark.parametrize('function', ['mean', 'median', 'geometric_mean'])
+def test_avg_subsamples_functions(function, basic_countfilter):
+    sample_list = [['cond1', 'cond2'], ['cond3', 'cond4']]
+    res = basic_countfilter._avg_subsamples(sample_list, function=function, new_column_names='auto')
+
+    src = basic_countfilter.df
+    numeric = res.drop(cs.first()).to_numpy()
+    for i, group in enumerate(sample_list):
+        group_vals = src.select(group).to_numpy()
+        if function == 'mean':
+            expected = group_vals.mean(axis=1)
+        elif function == 'median':
+            expected = np.median(group_vals, axis=1)
+        else:
+            with np.errstate(divide='ignore'):  # rows containing a zero -> geometric mean 0
+                expected = np.exp(np.log(group_vals).mean(axis=1))  # geometric mean, row-wise
+        assert np.allclose(numeric[:, i], expected, rtol=1e-6)
 
 
 @pytest.mark.parametrize('input_file,expected_triplicates',
@@ -2344,7 +2494,14 @@ def test_map_orthologs_orthoinspector(mock_mapper, non_unique_mode, remove_unmap
     (3, True, True)
 ])
 def test_sort_by_principal_component(clustering_countfilter, component, ascending, power_transform):
-    c = clustering_countfilter
+    # sort_by_principal_component(power_transform=True) runs a separate Box-Cox optimization per gene
+    # (the data is transposed before the power transform), so its cost scales ~linearly with the
+    # number of genes. This test only checks structural/self-consistency properties (isinstance,
+    # inequality/equality between calls, and raised AssertionErrors) rather than a committed truth
+    # file, so shrinking the working data to the first 300 (of 1345) genes keeps the same code path
+    # while cutting the power_transform=True cases from ~25-30s each to a few seconds.
+    c = CountFilter.from_dataframe(clustering_countfilter.df.head(300), clustering_countfilter.fname,
+                                   clustering_countfilter.is_normalized, suppress_warnings=True)
     c_sorted = c.sort_by_principal_component(component, ascending=ascending, power_transform=power_transform,
                                              inplace=False)
     assert isinstance(c_sorted, CountFilter)
@@ -2401,3 +2558,194 @@ def test_histogram(column, bins, x_label, x_logscale, y_logscale, basic_deseqfil
     fig = basic_deseqfilter.histogram(column, bins, x_label, x_logscale, y_logscale)
     assert isinstance(fig, plt.Figure)
     plt.close(fig)
+
+
+# ---------------------------------------------------------------------------
+# infer_table_type: auto-detection of the most likely table type on load.
+# Returns one of the keys used by the GUI's FILTER_OBJ_TYPES combo.
+# Detection must be CONSERVATIVE (fall back to 'Other table' when unsure) and
+# must NEVER raise on malformed input.
+# ---------------------------------------------------------------------------
+COUNT_KEY = 'Count matrix'
+DE_KEY = 'Differential expression'
+FC_KEY = 'Fold change'
+OTHER_KEY = 'Other table'
+
+
+@pytest.mark.parametrize('fname,expected', [
+    # --- real count matrices (raw counts / normalized expression) ---
+    ('tests/test_files/counted.csv', COUNT_KEY),
+    ('tests/test_files/counted.tsv', COUNT_KEY),
+    ('tests/test_files/counted_6cols.csv', COUNT_KEY),
+    ('tests/test_files/big_counted.csv', COUNT_KEY),
+    ('tests/test_files/elegans_developmental_stages.tsv', COUNT_KEY),
+    # count matrix whose *filename* misleadingly says "fold_change" but content is counts:
+    ('tests/test_files/counted_fold_change.csv', COUNT_KEY),
+    # --- real differential-expression tables (DESeq2 + limma-voom) ---
+    ('tests/test_files/test_deseq.csv', DE_KEY),
+    ('tests/test_files/sample_deseq.csv', DE_KEY),
+    ('tests/test_files/test_deseq_with_nan.csv', DE_KEY),
+    ('tests/test_files/deseq2_tests/case1/DESeq2_replicate_rep2_vs_rep3_truth.csv', DE_KEY),
+    ('tests/test_files/limma_tests/case1/LimmaVoom_replicate_rep2_vs_rep3_truth.csv', DE_KEY),
+    ('tests/test_files/limma_tests/case2/LimmaVoom_condition_cond2_vs_cond1_truth.csv', DE_KEY),
+    # --- real fold-change tables (single fold-change column) ---
+    ('tests/test_files/fc_1.csv', FC_KEY),
+    ('tests/test_files/fc_2.csv', FC_KEY),
+    # --- generic / ambiguous tables -> Other ---
+    ('tests/test_files/biotype_ref_table_for_tests.csv', OTHER_KEY),  # single string column
+    ('tests/test_files/attribute_reference_table.csv', OTHER_KEY),  # single all-null attribute column
+    ('tests/test_files/attr_ref_table_for_tests.csv', OTHER_KEY),  # numeric attributes, has negatives
+    ('tests/test_files/attr_ref_table_for_non_categorical.csv', OTHER_KEY),  # numeric attributes, has negatives
+])
+def test_infer_table_type_fixtures(fname, expected):
+    assert infer_table_type(fname) == expected
+
+
+@pytest.mark.parametrize('fname', [
+    'tests/test_files/test_deseq.csv',
+    'tests/test_files/sample_deseq.csv',
+    'tests/test_files/deseq2_tests/case1/DESeq2_replicate_rep2_vs_rep3_truth.csv',
+    'tests/test_files/limma_tests/case1/LimmaVoom_replicate_rep2_vs_rep3_truth.csv',
+])
+def test_infer_table_type_de_never_detected_as_count(fname):
+    # A differential-expression table must NEVER be preselected as a count matrix.
+    assert infer_table_type(fname) != COUNT_KEY
+
+
+@pytest.mark.parametrize('fname', [
+    'tests/test_files/counted.csv',
+    'tests/test_files/counted_6cols.csv',
+    'tests/test_files/big_counted.csv',
+])
+def test_infer_table_type_count_never_detected_as_de(fname):
+    # A count matrix must NEVER be preselected as a differential-expression table.
+    assert infer_table_type(fname) != DE_KEY
+
+
+def test_infer_table_type_accepts_polars_frame():
+    df = pl.DataFrame({'gene': ['a', 'b', 'c'], 'cond1': [5, 10, 0], 'cond2': [3, 7, 22]})
+    assert infer_table_type(df=df) == COUNT_KEY
+
+
+def test_infer_table_type_frame_takes_precedence_over_fname():
+    de = pl.DataFrame({'gene': ['a', 'b'], 'log2FoldChange': [-1.0, 2.0], 'padj': [0.01, 0.2]})
+    # a count-matrix path is given, but the explicit frame is a DE table -> DE wins
+    assert infer_table_type(fname='tests/test_files/counted.csv', df=de) == DE_KEY
+
+
+@pytest.mark.parametrize('columns,expected', [
+    # DESeq2-style
+    (['log2FoldChange', 'padj'], DE_KEY),
+    (['baseMean', 'log2FoldChange', 'lfcSE', 'stat', 'pvalue', 'padj'], DE_KEY),
+    # limma-voom style
+    (['logFC', 'AveExpr', 't', 'P.Value', 'adj.P.Val', 'B'], DE_KEY),
+    # spaced/variant fold-change header still recognized alongside a p-value column
+    (['log2 fold change', 'pvalue'], DE_KEY),
+    # a lone log2fc column without a p-value column is NOT a DE table
+    (['log2FoldChange'], FC_KEY),  # single fold-change-like column -> fold change
+    # a lone p-value column without a fold-change column -> Other
+    (['padj'], OTHER_KEY),
+])
+def test_infer_table_type_de_and_fc_by_columns(columns, expected):
+    data = {'gene': ['g1', 'g2', 'g3']}
+    for i, col in enumerate(columns):
+        data[col] = [0.5 * (i + 1), -0.5 * (i + 1), 0.1 * (i + 1)]
+    df = pl.DataFrame(data)
+    assert infer_table_type(df=df) == expected
+
+
+def test_infer_table_type_single_fold_change_column():
+    df = pl.DataFrame({'gene': ['a', 'b', 'c'], 'Fold Change': [1.4, 2.6, 0.6]})
+    assert infer_table_type(df=df) == FC_KEY
+
+
+def test_infer_table_type_single_non_fold_numeric_column_is_other():
+    # a single numeric column that isn't fold-change-like is ambiguous -> Other
+    df = pl.DataFrame({'gene': ['a', 'b', 'c'], 'gene_length': [1200, 3400, 900]})
+    assert infer_table_type(df=df) == OTHER_KEY
+
+
+def test_infer_table_type_negative_numeric_matrix_is_other():
+    # multi-column numeric with negatives (e.g. attribute table / transformed data) -> Other
+    df = pl.DataFrame({'gene': ['a', 'b'], 'attr1': [-5, 3], 'attr2': [7, -2]})
+    assert infer_table_type(df=df) == OTHER_KEY
+
+
+def test_infer_table_type_binary_matrix_is_other():
+    # a purely presence/absence {0,1} numeric matrix is not count-like -> Other
+    df = pl.DataFrame({'gene': ['a', 'b', 'c'], 'attr1': [0, 1, 1], 'attr2': [1, 0, 1]})
+    assert infer_table_type(df=df) == OTHER_KEY
+
+
+def test_infer_table_type_non_numeric_junk_is_other():
+    df = pl.DataFrame({'gene': ['a', 'b'], 'x': ['foo', 'bar'], 'y': ['baz', 'qux']})
+    assert infer_table_type(df=df) == OTHER_KEY
+
+
+def test_infer_table_type_tiny_count_matrix():
+    df = pl.DataFrame({'gene': ['a'], 'cond1': [500], 'cond2': [300]})
+    assert infer_table_type(df=df) == COUNT_KEY
+
+
+def test_infer_table_type_all_null_numeric_column_is_other():
+    df = pl.DataFrame({'gene': ['a', 'b'], 'x': [None, None]}, schema={'gene': pl.Utf8, 'x': pl.Float64})
+    assert infer_table_type(df=df) == OTHER_KEY
+
+
+def test_infer_table_type_empty_frame_is_other():
+    assert infer_table_type(df=pl.DataFrame()) == OTHER_KEY
+
+
+def test_infer_table_type_index_only_frame_is_other():
+    df = pl.DataFrame({'gene': ['a', 'b', 'c']})
+    assert infer_table_type(df=df) == OTHER_KEY
+
+
+def test_infer_table_type_never_raises_on_bad_input():
+    # None inputs, nonexistent files, and garbage must all degrade to 'Other table'.
+    assert infer_table_type() == OTHER_KEY
+    assert infer_table_type(None, None) == OTHER_KEY
+    assert infer_table_type('tests/test_files/this_file_does_not_exist_12345.csv') == OTHER_KEY
+
+
+def test_infer_table_type_never_raises_on_malformed_file(tmp_path):
+    junk = tmp_path / 'junk.csv'
+    junk.write_bytes(b'\x00\x01\x02not,a,real\x00table\xff\xfe')
+    assert infer_table_type(str(junk)) == OTHER_KEY
+
+
+def test_infer_table_type_fname_uses_lightweight_sampled_read(monkeypatch):
+    # The fname path must do a lightweight, row-limited read (header + small sample) rather than a full
+    # load of the whole file on the UI thread.
+    from rnalysis import filtering as filtering_mod
+    calls = []
+    real_load = filtering_mod.io.load_table
+
+    def spy(filename, *args, **kwargs):
+        calls.append(kwargs)
+        return real_load(filename, *args, **kwargs)
+
+    monkeypatch.setattr(filtering_mod.io, 'load_table', spy)
+    assert infer_table_type('tests/test_files/counted.csv') == COUNT_KEY
+    assert len(calls) == 1
+    assert filtering_mod._DETECT_SAMPLE_ROWS is not None
+    assert calls[0].get('nrows') == filtering_mod._DETECT_SAMPLE_ROWS
+
+
+def test_infer_table_type_sampling_limitation(tmp_path):
+    # Documented limitation: the Count-matrix value checks only see a sampled window of rows. A table that
+    # is non-negative within the sample but turns negative later is (acceptably) pre-selected as a count
+    # matrix -- still a user-overridable default, not a hard classification.
+    from rnalysis import filtering as filtering_mod
+    n = filtering_mod._DETECT_SAMPLE_ROWS
+    genes = [f'g{i}' for i in range(n + 50)]
+    cond1 = [5.0] * (n + 50)
+    cond2 = [3.0] * (n + 50)
+    cond2[n + 10] = -7.0  # a negative value that appears only AFTER the sampled window
+    full = pl.DataFrame({'gene': genes, 'cond1': cond1, 'cond2': cond2})
+    path = tmp_path / 'late_negative.csv'
+    full.write_csv(path)
+    # reading only the first n rows sees a non-negative matrix -> Count matrix
+    assert infer_table_type(str(path)) == COUNT_KEY
+    # the full in-memory frame sees the late negative -> Other (proving the above is a sampling effect)
+    assert infer_table_type(df=full) == OTHER_KEY

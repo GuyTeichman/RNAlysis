@@ -275,12 +275,14 @@ def enrichment_window(qtbot, available_objects):
 def set_op_window(qtbot, four_available_objects_and_empty):
     qtbot, window = widget_setup(qtbot, SetOperationWindow, four_available_objects_and_empty)
     yield window
+    window.close()
 
 
 @pytest.fixture
 def set_vis_window(qtbot, four_available_objects_and_empty):
     qtbot, window = widget_setup(qtbot, SetVisualizationWindow, four_available_objects_and_empty)
     yield window
+    window.close()
 
 
 multi_open_window_files = ['tests/counted.csv', 'tests/test_deseq.csv', 'tests/counted.tsv']
@@ -333,6 +335,13 @@ def test_ApplyPipelineWindow_clear_all(qtbot, apply_table_pipeline_window):
 
 def test_KallistoIndexWindow_init(kallisto_index_window):
     _ = kallisto_index_window
+    # regression test for #208: external-tool windows' "Start <func>" button is this
+    # window's single primary action; the parameter import/export/close buttons
+    # (shared by all FuncExternalWindow subclasses) should stay secondary
+    assert kallisto_index_window.start_button.property('class') == 'primary'
+    assert kallisto_index_window.import_button.property('class') != 'primary'
+    assert kallisto_index_window.export_button.property('class') != 'primary'
+    assert kallisto_index_window.close_button.property('class') != 'primary'
 
 
 def test_KallistoSingleWindow_init(kallisto_single_window):
@@ -658,6 +667,8 @@ def test_ClicomWindow_start_analysis(qtbot, clicom_window):
 
 def test_EnrichmentWindow_init(enrichment_window):
     _ = enrichment_window
+    # regression test for #208: the "Run" button is this window's single primary action
+    assert enrichment_window.widgets['run_button'].property('class') == 'primary'
 
 
 @pytest.mark.parametrize('button_name,truth', [
@@ -1008,6 +1019,8 @@ def test_EnrichmentWindow_run_analysis_non_categorical(qtbot, enrichment_window,
 
 def test_SetOperationWindow_init(set_op_window):
     _ = set_op_window
+    # regression test for #208: the "Apply" button is this window's single primary action
+    assert set_op_window.widgets['apply_button'].property('class') == 'primary'
 
 
 @pytest.mark.parametrize('op_name,truth', [
@@ -1052,6 +1065,27 @@ def test_SetOperationWindow_canvas_types(set_op_window):
 
     set_op_window.widgets['set_list'].clear_all_button.click()
     assert isinstance(set_op_window.widgets['canvas'], gui_graphics.EmptyCanvas)
+
+
+def test_SetOperationWindow_replacing_canvas_detaches_old_canvas(set_op_window):
+    # replacing the canvas must fully detach the old canvas (and toolbar) from the layout AND
+    # reparent them to None *before* scheduling deletion. Otherwise a queued paint/draw event can
+    # fire against a widget whose C++ object is being torn down -> native crash (segfault) later on.
+    set_op_window.widgets['set_list'].list_items[0].setSelected(True)
+    set_op_window.widgets['set_list'].list_items[1].setSelected(True)
+    old_canvas = set_op_window.widgets['canvas']
+    old_toolbar = set_op_window.widgets['toolbar']
+    assert isinstance(old_canvas, gui_graphics.VennInteractiveCanvas)
+
+    set_op_window.widgets['set_list'].list_items[2].setSelected(True)
+
+    assert set_op_window.widgets['canvas'] is not old_canvas
+    assert set_op_window.operations_grid.indexOf(old_canvas) == -1
+    assert set_op_window.operations_grid.indexOf(old_toolbar) == -1
+    # NOTE: the canvas classes shadow QWidget.parent() with a `self.parent` attribute, so query the
+    # real Qt parent via parentWidget().
+    assert old_canvas.parentWidget() is None
+    assert old_toolbar.parentWidget() is None
 
 
 @pytest.mark.parametrize('n_selected', [3, 4])
@@ -1228,6 +1262,8 @@ def test_SetOperationWindow_apply_set_op_majority_vote(qtbot, set_op_window, thr
 
 def test_SetVisualizationWindow_init(set_vis_window):
     _ = set_vis_window
+    # regression test for #208: "Generate graph" is this window's single primary action
+    assert set_vis_window.widgets['generate_button'].property('class') == 'primary'
 
 
 @pytest.mark.parametrize('op_name,truth', [
@@ -1271,6 +1307,25 @@ def test_SetVisualizationWindow_canvas_types(qtbot, set_vis_window, is_func_sele
 
     set_vis_window.widgets['set_list'].clear_all_button.click()
     assert isinstance(set_vis_window.widgets['canvas'], gui_graphics.EmptyCanvas)
+
+
+def test_SetVisualizationWindow_replacing_canvas_detaches_old_canvas(set_vis_window):
+    # replacing the preview canvas must fully detach the old canvas from the layout AND reparent it
+    # to None *before* scheduling deletion. Otherwise a queued paint/draw event can fire against a
+    # widget whose C++ object is being torn down -> native crash (segfault) later on.
+    set_vis_window.widgets['radio_button_box'].radio_buttons['Venn Diagram'].click()
+    set_vis_window.widgets['set_list'].list_items[0].setSelected(True)
+    set_vis_window.widgets['set_list'].list_items[1].setSelected(True)
+    old_canvas = set_vis_window.widgets['canvas']
+    assert isinstance(old_canvas, gui_graphics.BasePreviewCanvas)
+
+    set_vis_window.widgets['set_list'].list_items[2].setSelected(True)
+
+    assert set_vis_window.widgets['canvas'] is not old_canvas
+    assert set_vis_window.visualization_grid.indexOf(old_canvas) == -1
+    # NOTE: the canvas classes shadow QWidget.parent() with a `self.parent` attribute, so query the
+    # real Qt parent via parentWidget().
+    assert old_canvas.parentWidget() is None
 
 
 @pytest.mark.parametrize('op_name', [
@@ -1358,7 +1413,10 @@ def test_SetVisualizationWindow_generate_graph(qtbot, set_vis_window, monkeypatc
 
 
 def test_FilterTabPage_init(qtbot):
-    _, _ = widget_setup(qtbot, FilterTabPage)
+    _, window = widget_setup(qtbot, FilterTabPage)
+    # regression test for #208: the in-tab "Apply" button (defined once in the
+    # shared TabPage base class) is this tab's single primary action
+    assert window.apply_button.property('class') == 'primary'
 
 
 @pytest.mark.parametrize('outputs,exp_signals', [
@@ -1447,6 +1505,16 @@ def test_FilterTabPage_load_file(qtbot):
     qtbot, window = widget_setup(qtbot, FilterTabPage)
     assert window.is_empty()
     assert not window.basic_widgets['start_button'].isEnabled()
+    # regression test for #208: the confirm button should have a clear,
+    # outcome-oriented label instead of the ambiguous "Start"
+    assert window.basic_widgets['start_button'].text() == 'Load'
+    # the file-picker button should read "Choose table" on this screen, not the
+    # generic PathLineEdit default ("Load"), so it doesn't collide with the confirm button
+    assert window.basic_widgets['file_path'].open_button.text() == 'Choose table'
+    # the confirm button is this screen's single primary action; the file-picker
+    # button (a preparatory/secondary action) should not be marked primary
+    assert window.basic_widgets['start_button'].property('class') == 'primary'
+    assert window.basic_widgets['file_path'].open_button.property('class') != 'primary'
 
     window.basic_widgets['file_path'].clear()
     qtbot.keyClicks(window.basic_widgets['file_path'].file_path, str(Path('tests/test_files/counted.csv').absolute()))
@@ -1458,6 +1526,32 @@ def test_FilterTabPage_load_file(qtbot):
     assert window.obj_type() == filtering.CountFilter
     assert window.name == 'counted'
     assert window.get_table_type() == 'Count matrix'
+
+
+@pytest.mark.parametrize('path,expected_type', [
+    ('tests/test_files/counted.csv', 'Count matrix'),
+    ('tests/test_files/test_deseq.csv', 'Differential expression'),
+    ('tests/test_files/fc_1.csv', 'Fold change'),
+    ('tests/test_files/biotype_ref_table_for_tests.csv', 'Other table'),
+])
+def test_FilterTabPage_autodetect_table_type_on_load(qtbot, path, expected_type):
+    qtbot, window = widget_setup(qtbot, FilterTabPage)
+    # combo starts on the conservative default
+    assert window.basic_widgets['table_type_combo'].currentText() == 'Other table'
+    window.basic_widgets['file_path'].clear()
+    qtbot.keyClicks(window.basic_widgets['file_path'].file_path, str(Path(path).absolute()))
+    assert window.basic_widgets['table_type_combo'].currentText() == expected_type
+
+
+def test_FilterTabPage_autodetect_table_type_is_overridable(qtbot):
+    qtbot, window = widget_setup(qtbot, FilterTabPage)
+    window.basic_widgets['file_path'].clear()
+    qtbot.keyClicks(window.basic_widgets['file_path'].file_path,
+                    str(Path('tests/test_files/counted.csv').absolute()))
+    # auto-detected as a count matrix, but the user can still override the choice
+    assert window.basic_widgets['table_type_combo'].currentText() == 'Count matrix'
+    window.basic_widgets['table_type_combo'].setCurrentText('Other table')
+    assert window.basic_widgets['table_type_combo'].currentText() == 'Other table'
 
 
 def test_FilterTabPage_from_obj(qtbot):
@@ -1902,7 +1996,16 @@ def test_FuncTypeStack_init(qtbot, pipeline_mode, exc_params):
 
 
 def test_CreatePipelineWindow_init(qtbot):
-    _, _ = widget_setup(qtbot, CreatePipelineWindow)
+    _, window = widget_setup(qtbot, CreatePipelineWindow)
+    # regression test for #208: the confirm button should have a clear,
+    # outcome-oriented label instead of the ambiguous "Start"
+    assert window.basic_widgets['start_button'].text() == 'Create Pipeline'
+    # both this window's main actions (the initial confirm, and the "Add to
+    # Pipeline" button that takes over once basic_group is hidden) are primary,
+    # since only one of the two is ever visible at a time
+    assert window.basic_widgets['start_button'].property('class') == 'primary'
+    assert window.apply_button.text() == 'Add to Pipeline'
+    assert window.apply_button.property('class') == 'primary'
 
 
 def test_CreatePipelineWindow_from_pipeline(qtbot):
@@ -2239,6 +2342,48 @@ def test_ReactiveTabWidget_right_click(qtbot, tab_widget, monkeypatch):
 
 def test_MainWindow_init(main_window):
     _ = main_window
+
+
+def test_MainWindow_shutdown_worker_threads_stops_threads(main_window):
+    """closeEvent must leave no QThread running: quit()+wait() so neither QThread object is
+    destroyed while its OS thread is still running (the flaky Windows access-violation crash)."""
+    # the STDOUT listener thread is started at construction (gather_stdout=True)
+    assert main_window.thread_stdout_queue_listener.isRunning()
+
+    main_window._shutdown_worker_threads()
+
+    # wait() inside the helper guarantees the OS threads have finished before it returns
+    assert not main_window.thread_stdout_queue_listener.isRunning()
+    assert not main_window.job_thread.isRunning()
+
+
+def test_MainWindow_shutdown_worker_threads_waits_for_running_job(main_window, qtbot):
+    """A worker still running at close must be waited for (not abandoned -> the crash this fixes).
+    Proven by the job's side effect completing and the thread stopping after the helper returns."""
+    import time
+
+    finished = []
+
+    class _BlockingWorker(QtCore.QObject):
+        # mirrors the real setup: a worker moved to the job thread, run() wired to started, so the
+        # body executes *in* that thread (as opposed to a bare function, which queues to the caller)
+        @QtCore.pyqtSlot()
+        def run(self):
+            time.sleep(0.2)
+            finished.append(True)
+
+    thread = QtCore.QThread()
+    worker = _BlockingWorker()
+    worker.moveToThread(thread)
+    thread.started.connect(worker.run)
+    main_window.job_thread = thread
+    thread.start()
+    qtbot.waitUntil(thread.isRunning, timeout=2000)
+
+    main_window._shutdown_worker_threads()
+
+    assert finished == [True]           # the in-flight job ran to completion -> we actually waited
+    assert not thread.isRunning()
 
 
 def test_MainWindow_add_new_tab(main_window):

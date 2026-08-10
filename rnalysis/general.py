@@ -126,7 +126,7 @@ def set_biotype_ref_table_path(path: str = None):
     Biotype Reference Table path set as: my_biotype_reference_table_path
     """
     if path is None:
-        path = input("Please write the new Attribute Reference Table Path:\n")
+        path = input("Please write the new Biotype Reference Table Path:\n")
     settings.update_settings_file(path, __biotype_file_key__)
     print(f'Biotype Reference Table path set as: {path}')
 
@@ -148,8 +148,8 @@ def print_settings_file():
 
 def save_to_csv(df: Union[pl.DataFrame, Filter], filename: str):
     """
-    save a pandas DataFrame or Filter object to csv.
-    :type df: Filter object or pandas DataFrame
+    save a polars DataFrame or Filter object to csv.
+    :type df: Filter object or polars DataFrame
     :param df: object to be saved
     :type filename: str
     :param filename: name for the saved file. Specify full path to control the directory where the file will be saved.

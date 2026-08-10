@@ -206,6 +206,87 @@ def test_get_val_from_widget_nonnative_types(qtbot, widget_class, keyboard_inter
     assert get_val_from_widget(widget) == expected_val
 
 
+def test_OptionalWidget_label_is_positive(qtbot):
+    qtbot, widget = widget_setup(qtbot, OptionalWidget, other=QtWidgets.QLineEdit())
+    assert widget.checkbox.text() == 'Set a value'
+
+
+def test_OptionalWidget_default_none_is_unchecked_and_disabled(qtbot):
+    qtbot, widget = widget_setup(qtbot, OptionalWidget, other=QtWidgets.QLineEdit(), default=None)
+    assert not widget.checkbox.isChecked()
+    assert not widget.other.isEnabled()
+    assert widget.value() is None
+
+
+def test_OptionalWidget_default_empty_is_checked_and_enabled(qtbot):
+    inner = QtWidgets.QLineEdit()
+    inner.setText('preset')
+    qtbot, widget = widget_setup(qtbot, OptionalWidget, other=inner)
+    assert widget.checkbox.isChecked()
+    assert widget.other.isEnabled()
+    assert widget.value() == 'preset'
+
+
+def test_OptionalWidget_checked_provides_value_unchecked_returns_none(qtbot):
+    inner = QtWidgets.QLineEdit()
+    inner.setText('abc')
+    qtbot, widget = widget_setup(qtbot, OptionalWidget, other=inner, default=None)
+    # start unchecked -> use default/None, inner disabled
+    assert not widget.other.isEnabled()
+    assert widget.value() is None
+    # check -> provide value, inner enabled
+    widget.checkbox.setChecked(True)
+    assert widget.other.isEnabled()
+    assert widget.value() == 'abc'
+    # uncheck -> back to None, inner disabled
+    widget.checkbox.setChecked(False)
+    assert not widget.other.isEnabled()
+    assert widget.value() is None
+
+
+def test_OptionalWidget_check_other_follows_checkbox(qtbot):
+    inner = QtWidgets.QLineEdit()
+    qtbot, widget = widget_setup(qtbot, OptionalWidget, other=inner, default=None)
+    widget.checkbox.setChecked(True)
+    widget.check_other()
+    assert widget.other.isEnabled()
+    widget.checkbox.setChecked(False)
+    widget.check_other()
+    assert not widget.other.isEnabled()
+
+
+@pytest.mark.parametrize('val', [None, 'text', ''])
+def test_OptionalWidget_setValue_value_roundtrip(qtbot, val):
+    qtbot, widget = widget_setup(qtbot, OptionalWidget, other=QtWidgets.QLineEdit())
+    widget.setValue(val)
+    assert widget.value() == val
+    if val is None:
+        assert not widget.checkbox.isChecked()
+        assert not widget.other.isEnabled()
+    else:
+        assert widget.checkbox.isChecked()
+        assert widget.other.isEnabled()
+
+
+@pytest.mark.parametrize('param_type,default,expected', [
+    (Union[str, None], None, None),
+    (Union[str, None], 'text', 'text'),
+    (Union[int, None], None, None),
+    (Union[int, None], 5, 5),
+    (Union[float, None], -0.5, -0.5),
+])
+def test_OptionalWidget_param_to_widget_value_matches_default(qtbot, param_type, default, expected):
+    param = NewParam(param_type, default)
+    widget = param_to_widget(param, 'name')
+    widget.show()
+    qtbot.add_widget(widget)
+    # returned value is identical to the serialized default (back-compat invariant)
+    assert widget.value() == expected
+    # None default -> unset (unchecked/disabled); concrete default -> set (checked/enabled)
+    assert widget.checkbox.isChecked() == (default is not None)
+    assert widget.other.isEnabled() == (default is not None)
+
+
 @pytest.mark.parametrize("widget_class,default,excepted_val_empty,expected_val,kwargs", [
     (QMultiSpinBox, [0, 2, 3], 0, [0, 2, 3], {}),
     (QMultiDoubleSpinBox, [0.1, 3.2, 5], 0.0, [0.1, 3.2, 5], {}),
@@ -226,6 +307,25 @@ def test_get_val_from_widget_multiinput_types(qtbot, widget_class, default, exce
 
     widget.setValue(default)
     assert get_val_from_widget(widget) == expected_val
+
+
+@pytest.mark.parametrize("widget_class,kwargs", [
+    (QMultiSpinBox, {}),
+    (QMultiDoubleSpinBox, {}),
+    (QMultiLineEdit, {}),
+    (QMultiStrIntLineEdit, {}),
+    (QMultiToggleSwitch, {}),
+    (MultiColorPicker, {}),
+    (QMultiPathLineEdit, {}),
+    (TwoLayerMultiLineEdit, {}),
+    (QMultiComboBox, {'items': ['option1', 'option2']}),
+])
+def test_QMultiInput_default_text(qtbot, widget_class, kwargs):
+    # regression test for #208: the default button text should be a clear,
+    # action-oriented label instead of the vague "Set input"/"Set Input"
+    qtbot, widget = widget_setup(qtbot, widget_class, label='label', **kwargs)
+    assert widget.text() == 'Choose values'
+    assert widget.text() not in ('Set input', 'Set Input')
 
 
 @pytest.mark.parametrize("widget_class", (QtWidgets.QWidget, QtWidgets.QDateTimeEdit))
@@ -396,6 +496,132 @@ def test_PathLineEdit_choose_file_not_chosen(qtbot, monkeypatch):
     qtbot.mouseClick(widget.open_button, LEFT_CLICK)
 
     assert widget.text() == pth
+
+
+def test_mark_primary(qtbot):
+    # regression test for #208: marking a button primary should set the dynamic
+    # 'class'='primary' property used by the QPushButton[class="primary"] QSS rule
+    qtbot, widget = widget_setup(qtbot, QtWidgets.QPushButton, 'Load')
+    assert widget.property('class') != 'primary'
+
+    mark_primary(widget)
+    assert widget.property('class') == 'primary'
+def test_PathLineEdit_tooltip_reflects_full_path(qtbot):
+    qtbot, widget = widget_setup(qtbot, PathLineEdit)
+    long_path = 'C:/Users/example_user/very/long/nested/directory/structure/elegans_developmental_stages.tsv'
+
+    widget.setText(long_path)
+
+    assert widget.toolTip() == long_path
+    assert widget.file_path.toolTip() == long_path
+
+
+def test_PathLineEdit_tooltip_updates_on_keyboard_edit(qtbot):
+    qtbot, widget = widget_setup(qtbot, PathLineEdit)
+    widget.clear()
+    qtbot.keyClicks(widget.file_path, 'tests/test_files/test_deseq.csv')
+
+    assert widget.toolTip() == 'tests/test_files/test_deseq.csv'
+    assert widget.file_path.toolTip() == 'tests/test_files/test_deseq.csv'
+
+
+@pytest.mark.parametrize('long_path', [
+    'C:/Users/example_user/very/long/nested/directory/structure/elegans_developmental_stages.tsv',
+    '/home/example_user/very/long/nested/directory/structure/elegans_developmental_stages.tsv',
+])
+def test_PathLineEdit_text_roundtrip_unchanged_for_long_paths(qtbot, long_path):
+    qtbot, widget = widget_setup(qtbot, PathLineEdit)
+
+    widget.setText(long_path)
+    assert widget.text() == long_path
+
+    # narrowing the widget (which drives elision of the *display*) must not affect the stored value
+    widget.resize(80, widget.height())
+    qtbot.wait(50)
+    assert widget.text() == long_path
+
+
+def test_PathLineEdit_folder_mode_text_roundtrip_unchanged(qtbot):
+    long_path = 'C:/Users/example_user/very/long/nested/directory/structure/some_output_folder'
+    qtbot, widget = widget_setup(qtbot, PathLineEdit, is_file=False)
+
+    widget.setText(long_path)
+    widget.resize(80, widget.height())
+    qtbot.wait(50)
+
+    assert widget.text() == long_path
+
+
+def test_PathLineEdit_elides_to_dotdotdot_filename_when_it_fits(qtbot):
+    long_path = 'C:/Users/example_user/very/long/nested/directory/structure/elegans_developmental_stages.tsv'
+    candidate = '.../elegans_developmental_stages.tsv'
+    qtbot, widget = widget_setup(qtbot, PathLineEdit)
+
+    widget.setText(long_path)
+    widget.open_button.setFocus()
+
+    metrics = widget.file_path.fontMetrics()
+    candidate_width = metrics.horizontalAdvance(candidate)
+    full_width = metrics.horizontalAdvance(long_path)
+
+    # Measure, from the live layout, how much of the outer widget's width is consumed by
+    # the open button/margins/spacing before it reaches the inner QLineEdit. Deriving the
+    # target size this way (instead of a hardcoded magic width) keeps the test independent
+    # of font/DPI: whatever the current font metrics and layout overhead are, we compute
+    # exactly the width needed to fit '.../<filename>' but not the full path.
+    probe_width = full_width + 200
+    widget.resize(probe_width, widget.height())
+    qtbot.wait(50)
+    overhead = probe_width - widget.file_path.width()
+    assert overhead > 0
+
+    target_width = overhead + candidate_width + 20
+    assert target_width < overhead + full_width  # sanity check: still narrower than the full path needs
+    widget.resize(target_width, widget.height())
+    qtbot.wait(50)
+
+    displayed = widget.file_path.text()
+    assert displayed == candidate
+    # the stored/returned value is never touched by elision
+    assert widget.text() == long_path
+
+
+def test_PathLineEdit_elides_display_when_narrow_and_unfocused(qtbot):
+    long_path = 'C:/Users/example_user/very/long/nested/directory/structure/elegans_developmental_stages.tsv'
+    qtbot, widget = widget_setup(qtbot, PathLineEdit)
+
+    widget.setText(long_path)
+    widget.open_button.setFocus()
+    widget.resize(300, widget.height())
+    qtbot.wait(50)
+
+    displayed = widget.file_path.text()
+    assert displayed != long_path
+    # even when there isn't room for the whole filename, the tail (end of the filename) is
+    # what remains visible - never the head of the path
+    assert displayed.endswith(long_path[-10:])
+    # the stored/returned value is never touched by elision
+    assert widget.text() == long_path
+
+
+def test_PathLineEdit_shows_full_text_when_focused(qtbot):
+    long_path = 'C:/Users/example_user/very/long/nested/directory/structure/elegans_developmental_stages.tsv'
+    qtbot, widget = widget_setup(qtbot, PathLineEdit)
+
+    widget.setText(long_path)
+    widget.resize(120, widget.height())
+    qtbot.wait(50)
+
+    # Deliver the FocusIn event directly through the widget's own eventFilter instead of
+    # relying on widget.file_path.setFocus() to actually win keyboard focus from the window
+    # system: on headless platforms (QT_QPA_PLATFORM=offscreen, notably Linux) setFocus() on
+    # a widget that was never shown/activated as a top-level does not reliably dispatch a
+    # FocusIn event, which made this test flaky depending on the OS. sendEvent() is
+    # synchronous and routes through the real eventFilter under test either way.
+    QtWidgets.QApplication.sendEvent(widget.file_path, QtGui.QFocusEvent(QtCore.QEvent.Type.FocusIn))
+
+    assert widget.file_path.text() == long_path
+    assert widget.text() == long_path
 
 
 def test_MultipleChoiceList_select_all(qtbot):
@@ -615,10 +841,20 @@ def test_ToggleSwitch(qtbot):
 def test_ToggleSwitchCore(qtbot):
     qtbot, widget = widget_setup(qtbot, ToggleSwitchCore)
     assert not widget.isChecked()
-    qtbot.mouseClick(widget, LEFT_CLICK)
-    assert widget.isChecked()
-
+    # off/False state should still paint without error (neutral color, not pixel-testable)
     widget.paintEvent(QtGui.QPaintEvent(QtCore.QRect(0, 0, 1, 1)))
+
+    with qtbot.waitSignal(widget.stateChanged, timeout=1000) as blocker:
+        qtbot.mouseClick(widget, LEFT_CLICK)
+    assert widget.isChecked()
+    assert blocker.args == [True]
+    # on/True state should still paint without error (accent color, not pixel-testable)
+    widget.paintEvent(QtGui.QPaintEvent(QtCore.QRect(0, 0, 1, 1)))
+
+    with qtbot.waitSignal(widget.stateChanged, timeout=1000) as blocker:
+        qtbot.mouseClick(widget, LEFT_CLICK)
+    assert not widget.isChecked()
+    assert blocker.args == [False]
 
 
 def test_MultiChoiceListWithDelete_delete_all(qtbot, monkeypatch):
@@ -954,14 +1190,121 @@ def test_RadioButtonBox_emit(qtbot):
     (param_typing.PositiveInt, 15, QtWidgets.QSpinBox),
     (param_typing.NonNegativeInt, 0, QtWidgets.QSpinBox),
     (param_typing.NegativeInt, -15, QtWidgets.QSpinBox),
-    (float, 3.14, QtWidgets.QDoubleSpinBox),
-    (param_typing.Fraction, 0.15, QtWidgets.QDoubleSpinBox),
+    (float, 3.14, AdaptiveDoubleSpinBox),
+    (param_typing.Fraction, 0.15, AdaptiveDoubleSpinBox),
     (Literal['a1', 'b1', 'c1'], 'b1', QtWidgets.QComboBox),
     (Union[str, float, None, bool], True, OptionalWidget),
     (Union[str, float, bool], 17, QtWidgets.QTextEdit)
 ])
 def test_param_to_widget_native_types(qtbot, param_type, default, expected_widget):
     _run_param_to_widget(qtbot, param_type, default, 'param_name', expected_widget)
+
+
+@pytest.mark.parametrize('value,expected_decimals,expected_step', [
+    (5, 3, 1.0),
+    (5.0, 3, 1.0),
+    (50.0, 3, 1.0),
+    (100.0, 3, 1.0),
+    (0, 3, 1.0),
+    (0.0, 3, 1.0),
+    (-5.0, 3, 1.0),
+    (3.14, 3, 0.1),
+    (2.5, 3, 0.1),
+    (0.5, 3, 0.1),
+    (0.15, 3, 0.1),
+    (-0.5, 3, 0.1),
+    (0.05, 4, 0.01),
+    (-0.05, 4, 0.01),
+    (0.001, 5, 0.001),
+])
+def test_float_spinbox_decimals_and_step(value, expected_decimals, expected_step):
+    decimals, step = float_spinbox_decimals_and_step(value)
+    assert decimals == expected_decimals
+    assert step == pytest.approx(expected_step)
+
+
+def test_adaptive_double_spinbox_trims_trailing_zeros(qtbot):
+    qtbot, widget = widget_setup(qtbot, AdaptiveDoubleSpinBox)
+    widget.setDecimals(3)
+    # integer-valued numbers display without a trailing '.000'
+    assert widget.textFromValue(5.0) == '5'
+    assert widget.textFromValue(50.0) == '50'
+    assert widget.textFromValue(0.0) == '0'
+    # fractional numbers keep only their significant decimals
+    assert widget.textFromValue(5.5) == '5.5'
+    assert widget.textFromValue(0.05) == '0.05'
+    assert widget.textFromValue(-0.5) == '-0.5'
+
+
+def test_param_to_widget_float_integer_default_is_magnitude_aware(qtbot):
+    param = NewParam(float, 5)
+    widget = param_to_widget(param, 'threshold')
+    widget.show()
+    qtbot.add_widget(widget)
+    assert isinstance(widget, QtWidgets.QDoubleSpinBox)
+    assert widget.singleStep() == pytest.approx(1.0)
+    # integer-valued default shows as '5', not '5.00'
+    assert widget.textFromValue(widget.value()) == '5'
+    # a fractional value is still reachable and displays with its decimals
+    assert widget.textFromValue(5.5) == '5.5'
+
+
+def test_param_to_widget_float_fractional_default_is_magnitude_aware(qtbot):
+    param = NewParam(float, 0.05)
+    widget = param_to_widget(param, 'x')
+    widget.show()
+    qtbot.add_widget(widget)
+    assert widget.singleStep() == pytest.approx(0.01)
+    assert widget.decimals() >= 3
+    assert widget.textFromValue(0.05) == '0.05'
+
+
+def test_param_to_widget_fraction_keeps_step_and_sensible_decimals(qtbot):
+    param = NewParam(param_typing.Fraction, 0.05)
+    widget = param_to_widget(param, 'alpha')
+    widget.show()
+    qtbot.add_widget(widget)
+    assert widget.minimum() == pytest.approx(0.0)
+    assert widget.maximum() == pytest.approx(1.0)
+    # the Fraction step is intentionally left at 0.05
+    assert widget.singleStep() == pytest.approx(0.05)
+    assert widget.decimals() >= 3
+    assert widget.textFromValue(0.05) == '0.05'
+    assert widget.textFromValue(1.0) == '1'
+
+
+@pytest.mark.parametrize('annotation,default,typed_value', [
+    (float, 5, 5.5),
+    (float, 5, 5.125),
+    (float, 5, 7.0),
+    (float, 5, 42.75),
+    (float, 0.05, 0.123),
+    (float, 0.001, 0.00042),
+    (param_typing.Fraction, 0.05, 0.001),
+    (param_typing.Fraction, 0.05, 0.375),
+])
+def test_float_widget_returns_exact_value(qtbot, annotation, default, typed_value):
+    # DISPLAY ONLY: the widget must return the exact float the user set, so values
+    # passed to the API are numerically identical (a hard reproducibility invariant).
+    param = NewParam(annotation, default)
+    widget = param_to_widget(param, 'p')
+    widget.show()
+    qtbot.add_widget(widget)
+    set_widget_value(widget, typed_value)
+    assert get_val_from_widget(widget) == typed_value
+
+
+def test_float_widget_returns_exact_typed_value(qtbot):
+    # a precise value typed by hand (finer than the old fixed 2 decimals) must be reachable
+    # and returned unchanged from the widget.
+    param = NewParam(float, 5)
+    widget = param_to_widget(param, 'threshold')
+    widget.show()
+    qtbot.add_widget(widget)
+    widget.clear()
+    qtbot.keyClicks(widget, '5.125')
+    widget.interpretText()
+    assert get_val_from_widget(widget) == 5.125
 
 
 @pytest.mark.parametrize('param_type,default,name,expected_widget', [
@@ -1490,3 +1833,24 @@ class TestLRTPickerGroup:
 
         widget.inputs[1].factor.setCurrentText('covariate1+covariate1^2')
         assert widget.get_comparison_values() == ['condition', 'poly(covariate1, degree = 2)']
+
+
+def test_ThreadStdOutStreamTextQueueReceiver_run_stops_on_sentinel(qtbot):
+    """run() blocks on queue.get(); enqueueing STOP_SIGNAL must break the loop so the thread ends.
+
+    Regression guard for the flaky e2e native crash: if the listener loop can't be stopped, a
+    quit()+wait() teardown would hang, and skipping wait() (the old behaviour) lets the QThread be
+    destroyed while its OS thread is still running -> "Windows fatal exception: access violation".
+    """
+    import threading
+
+    q = Queue()
+    receiver = ThreadStdOutStreamTextQueueReceiver(q)
+    thread = threading.Thread(target=receiver.run, daemon=True)
+    thread.start()
+
+    q.put('ordinary console output')      # a normal item -> loop keeps going
+    q.put(receiver.STOP_SIGNAL)           # sentinel -> loop must return
+    thread.join(timeout=5)
+
+    assert not thread.is_alive()

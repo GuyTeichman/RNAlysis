@@ -155,6 +155,48 @@ font: bold;
 font-size: $FONTSIZEPLACEHOLDER*1;
 }
 
+/* Primary action buttons: the single main "go" action of a window/screen
+   (e.g. "Load", "Apply", "Create Pipeline", "Run", "Start <function>").
+   Marked in Python with btn.setProperty('class', 'primary') and re-polished.
+   Filled with a warm gold - a highlight/active accent that harmonizes with the
+   RNAlysis red/black logo without reading as an error or a warning, the same
+   accent used for ToggleSwitch's "on" state, so the accent is consistent
+   app-wide. The primary/secondary distinction is carried by *both* color and
+   fill (solid accent vs. the default flat/bordered look of ordinary buttons) so
+   it still reads under grayscale or color-blind viewing, not by hue alone. Gold
+   is light, so the label text is near-black rather than white: text-on-#f2b134
+   is ~8.4:1 (>= AA), staying ~6.3:1 / ~4.6:1 on the hover/pressed fills below.
+   The fill colors are constant across the "base"/"light"/"dark" app themes (this
+   stylesheet is prepended to the qdarkstyle sheet, and the attribute selector
+   out-specifies qdarkstyle's plain QPushButton rules), so primary buttons look
+   the same regardless of theme while still sitting correctly against each theme's
+   background. */
+QPushButton[class="primary"] {
+background-color: #f2b134;
+color: #222228;
+border: 2px solid #d6971f;
+border-radius: 4px;
+padding: 4px 14px;
+}
+
+QPushButton[class="primary"]:hover {
+background-color: #d6971f;
+color: #222228;
+border: 2px solid #b87f14;
+}
+
+QPushButton[class="primary"]:pressed {
+background-color: #b87f14;
+color: #222228;
+border: 2px solid #9c6b0f;
+}
+
+QPushButton[class="primary"]:disabled {
+background-color: #ecd9a6;
+color: #9a8a5f;
+border: 2px solid #ecd9a6;
+}
+
 QToolButton {
 background-color: #cccccc;
 font: bold;

@@ -1,5 +1,6 @@
 import copy
 from collections import namedtuple
+from copy import deepcopy
 
 import matplotlib
 import pytest
@@ -50,11 +51,11 @@ def test_get_pval_asterisk(pval, alpha, expected):
 
 
 def test_calc_randomization_pval():
-    np.random.seed(42)
     hypergeom_pval = 0.2426153598589023
     avg_pval = 0
+    # average several independent (but reproducibly-seeded) permutation runs to reduce Monte-Carlo variance
     for i in range(5):
-        avg_pval += PermutationTest._calc_permutation_pval(1, 10000, 0.11, 10000, 500, 1000)
+        avg_pval += PermutationTest._calc_permutation_pval(1, 10000, 0.11, 10000, 500, 1000, i)
     avg_pval /= 5
     assert np.isclose(avg_pval, hypergeom_pval, atol=0.02)
 
@@ -236,6 +237,84 @@ def test_elim_pvals(monkeypatch):
     _compare_go_result_dfs(res, truth)
 
 
+def test_go_elim_serial_keeps_original_annotations_pristine():
+    # elim mutates a COPY of the annotations; the original self.annotations must stay
+    # untouched, because elim reads it back as the 'unfiltered' reference set for every
+    # term. This guards the annotation-copy in _calculate_enrichment_serial against
+    # accidental aliasing (which would silently corrupt the elim reference sets).
+    annotations = _df_to_dict(io.load_table('tests/test_files/goa_table.csv'), null_mode=False)
+    gene_set = {'gene1', 'gene2', 'gene5', 'gene12', 'gene13', 'gene17', 'gene19', 'gene25', 'gene27', 'gene28'}
+    background = {f'gene{i + 1}' for i in range(30)}
+    with open('tests/test_files/obo_for_go_tests.obo', 'r') as f:
+        dag_tree = ontology.DAGTree(f, ['is_a'])
+
+    e = GOEnrichmentRunner.__new__(GOEnrichmentRunner)
+    e.dag_tree = dag_tree
+    e.annotations = annotations
+    e.attributes = list(annotations.keys())
+    e.attributes_set = set(e.attributes)
+    e.gene_set = gene_set
+    e.background_set = background
+    e.single_set = False
+    e.ranked_genes = None
+    e.stats_test = HypergeometricTest()
+    e.propagate_annotations = 'elim'
+    e.alpha = 0.2  # low enough that some terms are marked significant and mutate the copy
+    e.parallel_backend = 'sequential'
+    e.mutable_annotations = tuple()
+
+    expected = deepcopy(annotations)
+    e._calculate_enrichment_serial()
+
+    assert e.annotations == expected, "elim mutated the original annotations (should mutate only its copy)"
+    assert e.mutable_annotations[0] is not e.annotations
+    assert all(e.mutable_annotations[0][go_id] is not e.annotations[go_id] for go_id in e.annotations), \
+        "elim's working copy shares set objects with the original annotations"
+
+
+def test_go_elim_parallel_uses_independent_annotation_copies(monkeypatch):
+    # the parallel elim path builds one working-copy dict per namespace; each gene set must be an
+    # independent copy so that per-term difference_update on the copy cannot corrupt the original
+    # self.annotations (read back as the 'unfiltered' reference). Guards the parallel copy site.
+    # _go_elim_pvalues_parallel is stubbed so the copy is inspected without running joblib.
+    annotations = _df_to_dict(io.load_table('tests/test_files/goa_table.csv'), null_mode=False)
+    with open('tests/test_files/obo_for_go_tests.obo', 'r') as f:
+        dag_tree = ontology.DAGTree(f, ['is_a'])
+
+    captured = {}
+
+    def capture(self, progress_bar_desc=''):
+        captured['mutable'] = self.mutable_annotations
+        return {}
+
+    monkeypatch.setattr(GOEnrichmentRunner, '_go_elim_pvalues_parallel', capture)
+
+    e = GOEnrichmentRunner.__new__(GOEnrichmentRunner)
+    e.dag_tree = dag_tree
+    e.annotations = annotations
+    e.attributes = list(annotations.keys())
+    e.attributes_set = set(e.attributes)
+    e.propagate_annotations = 'elim'
+    e.parallel_backend = 'loky'  # only reached inside the (stubbed) parallel method
+    e._calculate_enrichment_parallel()
+
+    for namespace_copy in captured['mutable']:
+        for go_id, genes in namespace_copy.items():
+            assert genes == e.annotations[go_id]
+            assert genes is not e.annotations[go_id], \
+                "parallel elim working copy shares set objects with the original annotations"
+
+    # concretely: mutating a copy must leave the original untouched
+    for namespace_copy in captured['mutable']:
+        for go_id, genes in namespace_copy.items():
+            if genes:
+                before = set(e.annotations[go_id])
+                genes.pop()
+                assert e.annotations[go_id] == before, \
+                    "mutating the parallel elim copy changed the original annotations"
+                return
+
+
 def test_weight_pvals(monkeypatch):
     goa_df = io.load_table('tests/test_files/goa_table.csv')
     gene_set = {'gene1', 'gene2', 'gene5', 'gene12', 'gene13', 'gene17', 'gene19', 'gene25', 'gene27', 'gene28'}
@@ -331,7 +410,8 @@ def test_enrichment_runner_randomization_enrichment(monkeypatch, truth):
     gene_set_truth = {'WBGene00000019', 'WBGene00000041', 'WBGene00000106',
                       'WBGene00001133', 'WBGene00003915', 'WBGene00268195'}
 
-    def alt_calc_pval(self, log2fc: float, reps: int, obs_frac: float, bg_size: int, en_size: int, attr_size: int):
+    def alt_calc_pval(self, log2fc: float, reps: int, obs_frac: float, bg_size: int, en_size: int, attr_size: int,
+                      random_seed: int):
         assert reps == reps_truth
         assert en_size == len(gene_set_truth)
         assert log2fc == truth[4]
@@ -401,8 +481,8 @@ def test_enrichment_runner_update_gene_set_single_list(monkeypatch):
 
 
 @pytest.mark.parametrize('exclude_unannotated', [True, False])
-@pytest.mark.parametrize('save_csv,', [True, False])
-@pytest.mark.parametrize('return_nonsignificant,', [True, False])
+@pytest.mark.parametrize('save_csv', [True, False])
+@pytest.mark.parametrize('return_nonsignificant', [True, False])
 @pytest.mark.parametrize('fname', ['fname', None])
 @pytest.mark.parametrize(
     'single_list,genes,pval_func,background_set',
@@ -815,6 +895,36 @@ def test_go_enrichment_runner_run(monkeypatch):
     assert runner.taxon_id == 'taxon_id'
 
 
+def test_enrichment_runner_run_no_stats_test_returns_tuple():
+    # Regression: run() short-circuits to an empty result when no valid statistical test is set, but
+    # every caller in enrichment.py does `results, plotter = runner.run()`. Returning a bare DataFrame
+    # there raised "ValueError: not enough values to unpack (expected 2, got 0)". run() must always
+    # return a (results, plotter) tuple, and the plotter must not crash when asked for a figure.
+    runner = EnrichmentRunner({'WBGene00000041'}, 'all', 0.05, __attr_ref__, True, False, '', False,
+                              'test_set', 'sequential', None)
+    results, plotter = runner.run()
+    assert isinstance(results, pl.DataFrame)
+    assert results.is_empty()
+    assert isinstance(plotter, EnrichmentPlotter)
+    assert plotter.run() is not None  # an empty figure, not an exception
+    plt.close('all')
+
+
+def test_enrichment_runner_run_empty_gene_set_returns_tuple():
+    # Same contract for the other short-circuit: when the enrichment gene set becomes empty (e.g. a web
+    # service maps 0 genes to the target ID type, or every gene is filtered out), run() must still
+    # return (empty_df, plotter) rather than a bare DataFrame that crashes the caller's unpacking.
+    runner = EnrichmentRunner({'not_in_background'}, 'all', 0.05, __attr_ref__, True, False, '', False,
+                              'test_set', 'sequential', HypergeometricTest(), {'WBGene00000041'}, False)
+    with pytest.warns(UserWarning, match='enrichment set is empty'):
+        results, plotter = runner.run()
+    assert isinstance(results, pl.DataFrame)
+    assert results.is_empty()
+    assert isinstance(plotter, EnrichmentPlotter)
+    assert plotter.run() is not None
+    plt.close('all')
+
+
 def test_go_enrichment_runner_fetch_annotations(monkeypatch):
     monkeypatch.setattr(GOEnrichmentRunner, '_get_query_key', lambda self: 'the_query_key')
     monkeypatch.setattr(GOEnrichmentRunner, '_generate_annotation_dict', lambda self: 'goa_df')
@@ -904,6 +1014,112 @@ def test_go_enrichment_runner_translate_gene_ids(monkeypatch, mapping_dict, trut
 
     res = runner._translate_gene_ids(sparse_annotation_dict, source_to_gene_id_dict)
     assert res == truth
+
+
+def test_go_enrichment_runner_translate_gene_ids_source_order_priority(monkeypatch):
+    # When the same gene id is mapped by more than one source, the first source in iteration
+    # order must win (the lookup loop breaks on first match). Parallelizing the per-source
+    # translation must not change this tie-breaking.
+    def fake_run(self, ids):
+        if 'only1' in ids:
+            return {'shared': 's1', 'only1': 'a1'}
+        return {'shared': 's2', 'only2': 'a2'}
+
+    monkeypatch.setattr(io.GeneIDTranslator, '__init__', lambda *args: None)
+    monkeypatch.setattr(io.GeneIDTranslator, 'run', fake_run)
+    source_to_gene_id_dict = {'source1': {'shared', 'only1'}, 'source2': {'shared', 'only2'}}
+    annotation_dict = {'GO1': {'shared', 'only1', 'only2'}}
+
+    runner = GOEnrichmentRunner.__new__(GOEnrichmentRunner)
+    runner.gene_id_type = 'target'
+    res = runner._translate_gene_ids(annotation_dict, source_to_gene_id_dict)
+    # 'shared' resolves through source1 ('s1'), not source2 ('s2')
+    assert res == {'GO1': {'s1', 'a1', 'a2'}}
+
+
+def test_go_enrichment_runner_translate_gene_ids_skips_invalid_dataset(monkeypatch):
+    # A source whose dataset is not a valid UniProt dataset is skipped with a warning; the
+    # remaining sources are still translated. This must survive parallelization (thread
+    # exceptions surface at result()).
+    def fake_run(self, ids):
+        if 'bad' in ids:
+            raise AssertionError("'source_bad' is not a valid Uniprot Dataset")
+        return {'good': 'good_translated'}
+
+    monkeypatch.setattr(io.GeneIDTranslator, '__init__', lambda *args: None)
+    monkeypatch.setattr(io.GeneIDTranslator, 'run', fake_run)
+    source_to_gene_id_dict = {'source_ok': {'good'}, 'source_bad': {'bad'}}
+    annotation_dict = {'GO1': {'good', 'bad'}}
+
+    runner = GOEnrichmentRunner.__new__(GOEnrichmentRunner)
+    runner.gene_id_type = 'target'
+    with pytest.warns(UserWarning, match='Failed to map gene IDs'):
+        res = runner._translate_gene_ids(annotation_dict, source_to_gene_id_dict)
+    assert res == {'GO1': {'good_translated'}}
+
+
+def test_go_enrichment_runner_translate_gene_ids_reraises_other_assertion(monkeypatch):
+    # An AssertionError that is not the 'invalid Uniprot Dataset' case must propagate, not be
+    # swallowed -- including when raised inside a worker thread.
+    def fake_run(self, ids):
+        raise AssertionError('some other problem')
+
+    monkeypatch.setattr(io.GeneIDTranslator, '__init__', lambda *args: None)
+    monkeypatch.setattr(io.GeneIDTranslator, 'run', fake_run)
+    source_to_gene_id_dict = {'source1': {'gene1'}}
+    annotation_dict = {'GO1': {'gene1'}}
+
+    runner = GOEnrichmentRunner.__new__(GOEnrichmentRunner)
+    runner.gene_id_type = 'target'
+    with pytest.raises(AssertionError, match='some other problem'):
+        runner._translate_gene_ids(annotation_dict, source_to_gene_id_dict)
+
+
+def test_go_enrichment_runner_init_overlaps_dag_fetch_with_organism_resolution(monkeypatch):
+    # The OBO DAG fetch and organism/id-type resolution are independent network work and must run
+    # concurrently during __init__. A Barrier(2) only releases when both callables are in flight on
+    # different threads; if they run sequentially, fetch_go_basic blocks first, get_taxon is never
+    # reached, and the barrier times out (BrokenBarrierError).
+    import threading
+    barrier = threading.Barrier(2, timeout=10)
+    sentinel_dag = object()
+
+    def fake_fetch_go_basic():
+        barrier.wait()
+        return sentinel_dag
+
+    def fake_get_taxon(*args, **kwargs):
+        barrier.wait()
+        return (6239, 'Caenorhabditis elegans'), 'WBGene'
+
+    monkeypatch.setattr(ontology, 'fetch_go_basic', fake_fetch_go_basic)
+    monkeypatch.setattr(io, 'get_taxon_and_id_type', fake_get_taxon)
+
+    e = GOEnrichmentRunner({'gene1'}, 'auto', 'auto', 0.05, 'classic', 'any', 'any', None, 'any', None, 'any',
+                           None, False, False, '', False, False, '', False, HypergeometricTest(), {'gene1', 'gene2'})
+    assert e.dag_tree is sentinel_dag
+    assert e.taxon_id == 6239
+
+
+def test_go_enrichment_runner_init_resolves_dag_not_future(monkeypatch):
+    # Whatever the concurrency, the fully-resolved DAG (not a Future) must land in self.dag_tree,
+    # fetched exactly once, and organism/id-type must be assigned from get_taxon_and_id_type.
+    calls = []
+    sentinel_dag = object()
+
+    def fake_fetch_go_basic():
+        calls.append(1)
+        return sentinel_dag
+
+    monkeypatch.setattr(ontology, 'fetch_go_basic', fake_fetch_go_basic)
+    monkeypatch.setattr(io, 'get_taxon_and_id_type',
+                        lambda *a, **k: ((6239, 'Caenorhabditis elegans'), 'WBGene'))
+
+    e = GOEnrichmentRunner({'gene1'}, 'auto', 'auto', 0.05, 'classic', 'any', 'any', None, 'any', None, 'any',
+                           None, False, False, '', False, False, '', False, HypergeometricTest(), {'gene1', 'gene2'})
+    assert e.dag_tree is sentinel_dag
+    assert calls == [1]
+    assert (e.taxon_id, e.organism, e.gene_id_type) == (6239, 'Caenorhabditis elegans', 'WBGene')
 
 
 @pytest.mark.parametrize('propagate_annotations', ['no', 'elim'])

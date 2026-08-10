@@ -11,7 +11,7 @@ Glossary - programmatic interface
       An object that stores your tabular data and its filename.
       You can apply filtering/normalizing functions to your data using the Filter object.
       Each type of Filter object supports different data structures and offers different utilities.
-      For more details, see :term:`Filter`, :term:'CountFilter', :term:`DESeqFilter' and :term:`FoldChangeFilter'.
+      For more details, see :term:`Filter`, :term:`CountFilter`, :term:`DESeqFilter` and :term:`FoldChangeFilter`.
 
    Filter
       The most basic type of :term:`Filter object`.
@@ -37,10 +37,10 @@ Glossary - programmatic interface
 
    Attribute Reference Table
       A `csv` table that contains user-defined information ('attributes', such as 'genes expressed in intestine', 'epigenetic genes' or 'genes that have paralogs')
-      abut genes/genomic features.
+      about genes/genomic features.
       Every row in the file is a gene/genomic feature, and every column is an attribute.
       You can define such table to be your default Attribute Reference Table using the function `general.set_attr_ref_table_path()`.
-      The attributes in the table can be used both to filter your data with functions like `Filter.filter_by_attribute',
+      The attributes in the table can be used both to filter your data with functions like `Filter.filter_by_attribute`,
       and to perform enrichment analysis with various functions from the `enrichment` module.
 
    Biotype Reference Table
@@ -51,7 +51,7 @@ Glossary - programmatic interface
 
    FeatureSet
       A container for a set of gene/feature IDs. A FeatureSet can optionally be named.
-      Using the Enrichmemt module, you can run various enrichment analyses on FeatureSet objects.
+      Using the Enrichment module, you can run various enrichment analyses on FeatureSet objects.
 
    RankedSet
       A subtype of :term:`FeatureSet` that, instead of storing an unsorted set of gene/feature IDs,

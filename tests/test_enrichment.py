@@ -198,41 +198,27 @@ def test_biotypes_from_gtf():
     assert df.equals(truth)
 
 
-def test_enrichment_randomization_reliability(protein_coding_set):
+def test_enrichment_randomization_reproducibility(protein_coding_set):
+    # A given random_seed must make the randomization test fully reproducible: running it twice
+    # with the same seed must yield bit-identical results (p-values and everything derived from
+    # them). Different seeds must give different p-values (the seed is actually wired up).
     genes = {'WBGene00000041', 'WBGene00002074', 'WBGene00000019', 'WBGene00000105', 'WBGene00000106', 'WBGene00199484',
              'WBGene00001436', 'WBGene00000137', 'WBGene00001996', 'WBGene00014208'}
     attrs = ['attribute1', 'attribute2', 'attribute4']
     en = FeatureSet(gene_set=genes, set_name='test_set')
-    random_seed = 0
 
-    for i in range(2):
-        res1 = en.user_defined_enrichment(protein_coding_set, attrs, statistical_test='randomization',
-                                          attr_ref_path=__attr_ref__,
-                                          randomization_reps=15000, random_seed=random_seed,
-                                          parallel_backend='sequential')
-        res2 = en.user_defined_enrichment(protein_coding_set, attrs, statistical_test='randomization',
-                                          attr_ref_path=__attr_ref__,
-                                          randomization_reps=15000, random_seed=random_seed + 1,
-                                          parallel_backend='sequential')
-        res3 = en.user_defined_enrichment(protein_coding_set, attrs, statistical_test='randomization',
-                                          attr_ref_path=__attr_ref__,
-                                          randomization_reps=15000, random_seed=random_seed + 2,
-                                          parallel_backend='sequential')
-        random_seed += 3
+    def run(seed):
+        res = en.user_defined_enrichment(protein_coding_set, attrs, statistical_test='randomization',
+                                         attr_ref_path=__attr_ref__, randomization_reps=1000,
+                                         random_seed=seed, parallel_backend='sequential')
         plt.close('all')
-        exact_cols = ['samples', 'obs', 'exp', 'log2_fold_enrichment']
-        assert res1.select(pl.col(exact_cols)).equals(res2.select(pl.col(exact_cols)))
-        for randcol in ['pval', 'padj']:
-            try:
-                assert np.allclose(res1[randcol], res2[randcol], atol=4 * 10 ** -4, rtol=0.25)
-                assert np.allclose(res2[randcol], res3[randcol], atol=4 * 10 ** -4, rtol=0.25)
-                assert np.allclose(res2[randcol], res1[randcol], atol=4 * 10 ** -4, rtol=0.25)
-                assert np.allclose(res3[randcol], res2[randcol], atol=4 * 10 ** -4, rtol=0.25)
-            except AssertionError as e:
-                print(res1)
-                print(res2)
-                print(res3)
-                raise e
+        return res
+
+    for seed in (0, 42):
+        # same seed -> bit-identical results
+        assert run(seed).equals(run(seed))
+    # a different seed actually changes the sampled p-values (seed is not a no-op)
+    assert not np.array_equal(run(0)['pval'], run(1)['pval'])
 
 
 def _enrichment_validity(res, truth):
@@ -259,34 +245,23 @@ def test_enrichment_randomization_validity(all_genes_set):
     _enrichment_validity(res, truth)
 
 
-def test_enrichment_randomization_parallel_reliability(protein_coding_set):
+@pytest.mark.parametrize('parallel_backend', ['loky', 'multiprocessing', 'threading'])
+def test_enrichment_randomization_parallel_reproducibility(protein_coding_set, parallel_backend):
+    # For a fixed random_seed, every parallel backend must produce bit-identical results to the
+    # sequential reference: parallelism must not perturb the seeded randomization test.
     genes = {'WBGene00000041', 'WBGene00002074', 'WBGene00000019', 'WBGene00000105', 'WBGene00000106', 'WBGene00199484',
              'WBGene00001436', 'WBGene00000137', 'WBGene00001996', 'WBGene00014208'}
     attrs = ['attribute1', 'attribute2', 'attribute4']
     en = FeatureSet(gene_set=genes, set_name='test_set')
-    random_seed = 0
 
-    for i in range(2):
-        res1 = en.user_defined_enrichment(protein_coding_set, attrs, statistical_test='randomization',
-                                          attr_ref_path=__attr_ref__,
-                                          randomization_reps=5000, random_seed=random_seed, parallel_backend='loky')
-        res2 = en.user_defined_enrichment(protein_coding_set, attrs, statistical_test='randomization',
-                                          attr_ref_path=__attr_ref__,
-                                          randomization_reps=5000, random_seed=random_seed + 1,
-                                          parallel_backend='multiprocessing')
-        res3 = en.user_defined_enrichment(protein_coding_set, attrs, statistical_test='randomization',
-                                          attr_ref_path=__attr_ref__,
-                                          randomization_reps=5000, random_seed=random_seed + 2,
-                                          parallel_backend='threading')
-        random_seed += 3
+    def run(backend):
+        res = en.user_defined_enrichment(protein_coding_set, attrs, statistical_test='randomization',
+                                         attr_ref_path=__attr_ref__, randomization_reps=1000,
+                                         random_seed=0, parallel_backend=backend)
         plt.close('all')
-        exact_cols = ['samples', 'obs', 'exp', 'log2_fold_enrichment']
-        assert res1.select(pl.col(exact_cols)).equals(res2.select(pl.col(exact_cols)))
-        for randcol in ['pval']:
-            assert np.allclose(res1[randcol], res2[randcol], atol=4 * 10 ** -4, rtol=0.25)
-            assert np.allclose(res2[randcol], res3[randcol], atol=4 * 10 ** -4, rtol=0.25)
-            assert np.allclose(res2[randcol], res1[randcol], atol=4 * 10 ** -4, rtol=0.25)
-            assert np.allclose(res3[randcol], res2[randcol], atol=4 * 10 ** -4, rtol=0.25)
+        return res
+
+    assert run(parallel_backend).equals(run('sequential'))
 
 
 def test_enrichment_parallel_validity(all_genes_set):

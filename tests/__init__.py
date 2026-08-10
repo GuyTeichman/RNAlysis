@@ -68,13 +68,29 @@ def are_dir_trees_equal(dir1, dir2, compare_contents: bool = True, ignore: list 
 
 
 def is_pantherdb_available():
+    # Probe the exact capability the live TestPantherOrthologMapper suite needs: a real
+    # `ortholog/matchortho` query for a well-conserved gene (C. elegans G5EDF7 -> human) that a
+    # healthy PantherDB answers with a non-empty ortholog mapping. An earlier probe hit the param-
+    # free `supportedgenomes` endpoint, but PantherDB degrades unevenly -- it can answer that with
+    # HTTP 200 while the ortholog endpoint returns empty/invalid 200 bodies, so the suite ran and
+    # its `assert len(...) > 0` checks *failed* instead of *skipping*. Mirror the OrthoInspector
+    # probe: exercise the same endpoint the tests do and treat an empty/malformed mapping as
+    # "unavailable". The probe hits PantherDB raw (not via the mapper), so a genuine mapper
+    # regression still surfaces as a real test failure rather than a skip. Catch RequestException
+    # (not just TimeoutError/HTTPError) so an unreachable service can't crash collection at import.
+    url = 'https://www.pantherdb.org/services/oai/pantherdb/ortholog/matchortho'
+    params = dict(geneInputList='G5EDF7', organism='6239', targetOrganism='9606', orthologType='all')
     try:
-        req = requests.get('http://www.pantherdb.org/services/oai/pantherdb/ortholog/')
-    except (TimeoutError, requests.exceptions.HTTPError):
+        req = requests.post(url, params=params, headers={'accept': 'application/json'}, timeout=(10, 30))
+    except requests.exceptions.RequestException:
         return False
-    if str(req.status_code)[0] in ['4','5']:
+    if str(req.status_code)[0] in ['4', '5']:
         return False
-    return True
+    try:
+        mapped = req.json()['search']['mapping']['mapped']
+    except (requests.exceptions.JSONDecodeError, KeyError, TypeError):
+        return False
+    return bool(mapped)
 
 
 def is_uniprot_available():
@@ -93,6 +109,20 @@ def is_ensembl_available():
     except TimeoutError:
         return False
     if str(req.status_code)[0] == '5':
+        return False
+    return True
+
+
+def is_orthoinspector_available():
+    # OrthoInspector's per-database `orthologs` endpoints are the flaky part -- the `databases`/`species`
+    # endpoints can respond while these time out (the real-world outage this guard exists for). Probe the
+    # exact capability the live tests need, mirroring OrthoInspectorOrthologMapper's URL and timeout.
+    url = 'https://api.bigest-icube.fr/orthoinspector/Eukaryota2016/species/6239/orthologs/6238'
+    try:
+        req = requests.get(url, timeout=(10, 30))
+    except requests.exceptions.RequestException:
+        return False
+    if str(req.status_code)[0] in ['4', '5']:
         return False
     return True
 

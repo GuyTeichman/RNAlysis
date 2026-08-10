@@ -652,6 +652,7 @@ class FuncExternalWindow(gui_widgets.MinMaxDialog):
         self.param_widgets = {}
 
         self.start_button = QtWidgets.QPushButton(f'Start {self.func_name}')
+        gui_widgets.mark_primary(self.start_button)
         self.import_button = QtWidgets.QPushButton('Import parameters')
         self.export_button = QtWidgets.QPushButton('Export parameters')
         self.close_button = QtWidgets.QPushButton('Close')
@@ -697,7 +698,7 @@ class FuncExternalWindow(gui_widgets.MinMaxDialog):
             self.param_widgets[name] = gui_widgets.param_to_widget(param, name)
             self.connect_widget(self.param_widgets[name])
 
-            label = QtWidgets.QLabel(f'{name}:', self.param_widgets[name])
+            label = QtWidgets.QLabel(f'{generic.get_param_readable_name(name, self.func)}:', self.param_widgets[name])
             label.setToolTip(this_desc)
             help_button = gui_widgets.HelpButton()
             self.param_grid.addWidget(help_button, i, 2)

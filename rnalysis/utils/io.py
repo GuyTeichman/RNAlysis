@@ -23,6 +23,7 @@ import subprocess
 import threading
 import time
 import typing
+import uuid
 import warnings
 from collections import OrderedDict
 from datetime import date, datetime
@@ -31,7 +32,7 @@ from io import StringIO
 from itertools import chain
 from pathlib import Path
 from sys import executable
-from typing import (List, Literal, NamedTuple,
+from typing import (List, Literal, NamedTuple, Optional,
                     Set, Tuple, Union, Callable, Iterable, Dict, Any)
 from urllib.parse import parse_qs, urlencode, urlparse
 
@@ -172,7 +173,94 @@ def clear_cache():
     clear_directory(cache_dir)
 
 
+def _perform_cache_write(item: Union[pl.DataFrame, pl.Series], file_path: Path):
+    """Stream a table to the GUI cache as parquet. Runs on the cache writer's background thread."""
+    if isinstance(item, pl.Series):
+        item = item.to_frame()
+    item.lazy().sink_parquet(file_path)
+
+
+class GuiCacheWriteQueue:
+    """Serializes GUI-cache table writes onto a single background thread so the UI never blocks on disk
+    I/O, while :meth:`flush` gives consumers a completion barrier before they read, move, or delete a
+    cached file.
+
+    The single worker is deliberate and is *not* about parallelism: it makes submission order equal
+    on-disk order (so the last write to a given filename wins) and bounds us to one Polars sink at a
+    time, so cache writes never oversubscribe Polars' own thread pool. This is a serialization queue.
+
+    The GUI owns one instance for its lifetime -- ``MainWindow`` creates it, registers it via
+    :func:`set_active_gui_cache_writer`, and shuts it down on close. When no instance is registered
+    (scripting, CLI, tests) cache writes happen synchronously instead; see :func:`cache_gui_file`.
+    """
+
+    def __init__(self):
+        self._executor = concurrent.futures.ThreadPoolExecutor(max_workers=1,
+                                                               thread_name_prefix='rnalysis-gui-cache')
+        self._futures = {}  # path -> list of not-yet-flushed write futures
+        self._lock = threading.Lock()
+
+    def submit(self, item: Union[pl.DataFrame, pl.Series],
+               file_path: Union[str, Path]) -> concurrent.futures.Future:
+        file_path = Path(file_path)
+        future = self._executor.submit(_perform_cache_write, item, file_path)
+        with self._lock:
+            # keep every pending write to this path (not just the latest) so no write error is dropped
+            self._futures.setdefault(file_path, []).append(future)
+        return future
+
+    def flush(self, file_path: Union[str, Path, None] = None):
+        """Block until pending write(s) finish -- all of them, or only those for ``file_path`` --
+        re-raising the first background write error instead of letting it vanish."""
+        with self._lock:
+            if file_path is None:
+                batches = list(self._futures.values())
+                self._futures.clear()
+            else:
+                batches = [self._futures.pop(Path(file_path), [])]
+        error = None
+        for futures in batches:
+            for future in futures:
+                try:
+                    future.result()
+                except Exception as e:  # surface the first background write error to the caller
+                    error = error or e
+        if error is not None:
+            raise error
+
+    def shutdown(self, wait: bool = True):
+        self._executor.shutdown(wait=wait)
+
+
+# The GUI registers its queue here for its lifetime; None means "no GUI" -> synchronous cache writes.
+# Only ever set/cleared from the main (UI) thread, so a plain module attribute needs no locking.
+_active_gui_cache_writer: Union[GuiCacheWriteQueue, None] = None
+
+
+def set_active_gui_cache_writer(writer: Union[GuiCacheWriteQueue, None]):
+    """Register (or clear, with ``None``) the queue that streams GUI-cache writes off the UI thread.
+
+    ``MainWindow`` sets this at startup and clears it on close, marrying the background writer to the
+    GUI's lifetime. While it is ``None`` (scripting/CLI/tests) cache writes are performed synchronously.
+    """
+    global _active_gui_cache_writer
+    _active_gui_cache_writer = writer
+
+
+def flush_gui_cache_writes(file_path: Union[str, Path, None] = None):
+    """Block until pending GUI-cache table writes finish (all of them, or only ``file_path``).
+
+    Call this before reading, moving, or deleting cached files so background writes are guaranteed to
+    be complete on disk; it re-raises any error raised by a background write. When no GUI cache writer
+    is registered (nothing was written in the background), this is a no-op.
+    """
+    writer = _active_gui_cache_writer
+    if writer is not None:
+        writer.flush(file_path)
+
+
 def clear_gui_cache():
+    flush_gui_cache_writes()  # let in-flight writes finish before the cache dir is deleted
     directory = get_gui_cache_dir()
     clear_directory(directory, skip_ok=True)
 
@@ -191,6 +279,7 @@ def load_cached_gui_file(filename: Union[str, Path], load_as_obj: bool = True) -
     """
     directory = get_gui_cache_dir()
     file_path = directory.joinpath(filename)
+    flush_gui_cache_writes(file_path)  # ensure any pending async write to this file has completed
     if file_path.exists():
         if file_path.suffix in {'.csv', '.tsv', '.parquet'} and load_as_obj:
             return load_table(file_path)
@@ -215,15 +304,13 @@ def cache_gui_file(item: Union[pl.DataFrame, set, str], filename: str):
     file_path = directory.joinpath(filename)
 
     if isinstance(item, (pl.DataFrame, pl.Series)):
-        # Check if we can optimize via a Polars streaming sink
         if file_path.suffix.lower() == '.parquet':
-            if isinstance(item, pl.Series):
-                item = item.to_frame()
-            query = item.lazy().sink_parquet(file_path, lazy=True)
-            try:
-                pl.collect_all_async([query])
-            except RuntimeError:
-                pl.collect_all([query])
+            writer = _active_gui_cache_writer
+            if writer is not None:
+                # stream the write off the UI thread; consumers flush_gui_cache_writes() before reading
+                writer.submit(item, file_path)
+            else:
+                _perform_cache_write(item, file_path)  # no GUI running: write synchronously
         else:
             save_table(item, file_path)
 
@@ -278,6 +365,7 @@ class GUISessionManager:
 
     def save_session(self, file_data: List[FileData], pipeline_data: List[PipelineData],
                      report: dict, report_file_paths: Dict[str, Path]):
+        flush_gui_cache_writes()  # cache files must be fully written before they are moved/copied
         self._prepare_session_folder()
         self._save_report_files_to_session(report_file_paths)
         session_data = self._create_session_data(file_data, pipeline_data, report, report_file_paths)
@@ -397,7 +485,7 @@ class GUISessionManager:
 
 
 def load_table(filename: Union[str, Path], drop_columns: Union[str, List[str]] = False,
-               squeeze=False, comment: str = None):
+               squeeze=False, comment: str = None, nrows: int = None):
     """
     Loads a CSV, TSV, or Parquet file into a Polars DataFrame.
 
@@ -411,6 +499,9 @@ def load_table(filename: Union[str, Path], drop_columns: Union[str, List[str]] =
     :type comment: str (optional)
     :param comment: Indicates remainder of line should not be parsed. \
     If found at the beginning of a line, the line will be ignored altogether. This parameter must be a single character.
+    :type nrows: int or None (default None)
+    :param nrows: if given, only the first ``nrows`` data rows are read (a lightweight partial read). \
+    The column names and order are identical to a full read. If None (default), the whole table is read.
     :return: a Polars DataFrame of the loaded file
     """
     assert isinstance(filename,
@@ -423,9 +514,11 @@ def load_table(filename: Union[str, Path], drop_columns: Union[str, List[str]] =
 
     kwargs = {}
     if comment is not None:
-        kwargs['comment_char'] = comment
+        kwargs['comment_prefix'] = comment
+    if nrows is not None:
+        kwargs['n_rows'] = nrows
     if filename.suffix.lower() == '.parquet':
-        df = pl.read_parquet(filename)
+        df = pl.read_parquet(filename, n_rows=nrows)
         # handle edge cases of parquet files that were exported from pandas DataFrames
         if '__index_level_0__' in df.columns:
             df = df.select(pl.col('__index_level_0__').alias('')).with_columns(
@@ -504,11 +597,12 @@ def get_session(retries: Retry):
 
 class KEGGAnnotationIterator:
     URL = 'https://rest.kegg.jp/'
-    REQUEST_DELAY_MILLIS = 250
-    REQ_MAX_ENTRIES = 10
     RETRIES = RandomExpRetry(total=5, backoff_factor=0.25, status_forcelist=[500, 502, 503, 504])
     TAXON_TREE_CACHED_FILENAME = 'kegg_taxon_tree.json'
-    PATHWAY_NAMES_CACHED_FILENAME = 'kegg_pathway_list.txt'
+    # Per-organism: the pathway list is organism-specific, so its cache filename must include the
+    # organism code -- otherwise a second organism analyzed the same day loads the first's cached
+    # pathway list (the compound/glycan lists below are organism-agnostic and are cached as-is).
+    PATHWAY_NAMES_CACHED_FILENAME = 'kegg_pathway_list_{organism_code}.txt'
     COMPOUND_LIST_CACHED_FILENAME = 'kegg_compound_list.txt'
     GLYCAN_LIST_CACHED_FILENAME = 'kegg_glycan_list.txt'
 
@@ -544,9 +638,17 @@ class KEGGAnnotationIterator:
             cache_file(response.text, cached_filename)
         return response.text, is_cached
 
-    def _generate_cached_filename(self, pathways: Tuple[str, ...]) -> str:
-        fname = f'{self.taxon_id}' + ''.join(pathways).replace('path:', '') + '.json'
-        return fname
+    @staticmethod
+    def _is_global_or_overview_map(pathway_id: str) -> bool:
+        # KEGG's BRITE category "1.0 Global and overview maps" -- pathway map numbers 01100-01299
+        # (e.g. 01100 "Metabolic pathways", 01200 "Carbon metabolism"). These are superset maps that
+        # span most of metabolism; they are conventionally excluded from pathway enrichment because a
+        # ~thousand-gene "everything" term is not biologically specific and only inflates the
+        # multiple-testing burden. Specific pathways use other number ranges (00xxx, 03xxx-05xxx, ...).
+        # Anchor to exactly 5 trailing digits (KEGG map numbers are always 5 digits) so an organism
+        # code that happens to end in a digit can't merge into the number and let a global map slip through.
+        match = re.search(r'(\d{5})$', pathway_id)
+        return match is not None and 1100 <= int(match.group(1)) <= 1299
 
     @staticmethod
     def get_compounds() -> Dict[str, str]:
@@ -580,12 +682,14 @@ class KEGGAnnotationIterator:
     def get_pathways(self) -> Tuple[Dict[str, str], int]:
         pathway_names = {}
         data, _ = self._kegg_request(self.session, 'list', ['pathway', self.organism_code],
-                                     self.PATHWAY_NAMES_CACHED_FILENAME)
+                                     self.PATHWAY_NAMES_CACHED_FILENAME.format(organism_code=self.organism_code))
         data = data.split('\n')
         for line in data:
             split = line.split('\t')
             if len(split) == 2:
                 pathway_code, pathway_name = split
+                if self._is_global_or_overview_map(pathway_code):
+                    continue  # skip KEGG global/overview maps (see _is_global_or_overview_map)
                 pathway_names[pathway_code] = pathway_name
 
         n_annotations = len(pathway_names)
@@ -599,6 +703,34 @@ class KEGGAnnotationIterator:
         cache_file(data, cached_filename)
         return ElementTree.parse(StringIO(data))
 
+    def _fetch_pathway_gene_links(self) -> Dict[str, Set[str]]:
+        """Return ``{pathway_id: {gene_id, ...}}`` for the organism in a single request.
+
+        KEGG's ``link/<org>/pathway`` endpoint returns every gene<->pathway association for the
+        organism as one compact two-column TSV. This replaces fetching a full flat-file record per
+        pathway (dozens of large requests, most of whose content -- names, references, compounds --
+        was discarded) with one small request. It is also more complete: the previous flat-file
+        parser silently dropped any pathway whose record had no ``COMPOUND`` section (e.g. several
+        glycan pathways), because it read genes only up to that section.
+        """
+        cached_filename = f'kegg_pathway_gene_links_{self.organism_code}.txt'
+        data, _ = self._kegg_request(self.session, 'link', [self.organism_code, 'pathway'], cached_filename)
+        links: Dict[str, Set[str]] = {}
+        for line in data.split('\n'):
+            split = line.split('\t')
+            if len(split) != 2:
+                continue
+            # Columns are 'path:<org><num>' and '<org>:<gene>'; identify the pathway column by its
+            # 'path:' prefix so we're robust to column order. Strip both fields so a stray '\r' from
+            # CRLF line endings can't get appended to a gene ID (which would break gene-set equality).
+            if split[0].startswith('path:'):
+                pathway_raw, gene = split[0].strip(), split[1].strip()
+            else:
+                pathway_raw, gene = split[1].strip(), split[0].strip()
+            pathway = pathway_raw.replace('path:', '')
+            links.setdefault(pathway, set()).add(gene)
+        return links
+
     def get_pathway_annotations(self):
         if self.pathway_annotations is not None:
             for pathway, annotations in self.pathway_annotations.items():
@@ -606,38 +738,13 @@ class KEGGAnnotationIterator:
                 yield pathway, name, annotations
         else:
             pathway_annotations = {}
-            partitioned_pathways = parsing.partition_list(list(self.pathway_names.keys()), self.REQ_MAX_ENTRIES)
-            for chunk in partitioned_pathways:
-                prev_time = time.time()
-                data, was_cached = self._kegg_request(self.session, 'get', '+'.join(chunk),
-                                                      self._generate_cached_filename(chunk))
-                entries = data.split('ENTRY')[1:]
-                for entry in entries:
-                    entry_split = entry.split('\n')
-                    pathway = entry_split[0].split()[0]
-                    if pathway not in chunk:
-                        print(f'Could not find pathway {pathway} in requested chunk: {chunk}')
-                    pathway_name = self.pathway_names[pathway]
-                    pathway_annotations[pathway] = set()
-                    genes_startline = 0
-                    genes_endline = 0
-                    for i, line in enumerate(entry_split):
-                        if line.startswith('GENE'):
-                            genes_startline = i
-                        elif line.startswith('COMPOUND'):
-                            genes_endline = i
-                            break
-                    for line_num in range(genes_startline, genes_endline):
-                        line = entry_split[line_num]
-                        if line.startswith('GENE'):
-                            line = line.replace('GENE', '', 1)
-                        gene_id = f"{self.organism_code}:{line.strip().split(' ')[0]}"
-                        pathway_annotations[pathway].add(gene_id)
-                        yield pathway, pathway_name, pathway_annotations[pathway]
-                if not was_cached:
-                    delay = max((self.REQUEST_DELAY_MILLIS / 1000) - (time.time() - prev_time), 0)
-                    time.sleep(delay)
-
+            links = self._fetch_pathway_gene_links()
+            for pathway in self.pathway_names:
+                genes = links.get(pathway)
+                if not genes:
+                    continue  # pathway with no genes for this organism -- nothing to annotate
+                pathway_annotations[pathway] = set(genes)
+                yield pathway, self.pathway_names[pathway], pathway_annotations[pathway]
             self.pathway_annotations = pathway_annotations
 
     def __iter__(self):
@@ -946,8 +1053,10 @@ def _ensembl_lookup_post_request(gene_ids: Tuple[str, ...]) -> Dict[str, Dict[st
     output = {}
     client = EnsemblRestClient()
     for chunk in tqdm(data_chunks, desc='Submitting jobs...', unit='jobs'):
-        data = {"ids": parsing.data_to_list(chunk)}
-        client.queue_action(req_type, endpoint, params=repr(data).replace("'", '"'))
+        # Pass the body as a dict; the client sends it via aiohttp's json= (which serializes it once).
+        # Passing a pre-serialized JSON string here double-encodes it into a quoted literal that
+        # Ensembl rejects with a 400 Bad Request.
+        client.queue_action(req_type, endpoint, params={"ids": parsing.data_to_list(chunk)})
 
     with tqdm('Finding the best-matching species...', total=client.queue.qsize() + 1) as pbar:
         pbar.update()
@@ -1263,6 +1372,10 @@ def translate_mappings(ids: list, translated_ids: list, mapping_one2one: dict,
 
 class PhylomeDBOrthologMapper:
     URL = 'ftp.phylomedb.org'
+    # Socket timeout (seconds) for the FTP control + data connections. get_legal_species() runs at
+    # import time (it populates a Literal[...] annotation), so without a timeout a stalled FTP server
+    # would freeze `import rnalysis.filtering` indefinitely.
+    FTP_TIMEOUT = 30
 
     def __init__(self, map_to_organism, map_from_organism='auto', gene_id_type='auto'):
         legal_species = self.get_legal_species()
@@ -1290,9 +1403,24 @@ class PhylomeDBOrthologMapper:
         mapping_one2one = {}
         mapping_one2many = {}
 
-        taxon_map = self._get_taxon_map(self.map_from_organism, self.map_to_organism)
-        map_fwd, map_rev = self._get_id_conversion_maps()
         ids, translated_ids = self.translate_ids(ids)
+
+        # The PhylomeDB conversion table spans every species in the database, and the per-organism
+        # ortholog table is large too. Rather than materialize either in full, load the conversion
+        # table once and build only the slices we actually query: the forward map for our translated
+        # query IDs, the taxon map for the protids those resolve to, and the reverse map for the
+        # ortholog protids that come back.
+        conv_table = self._load_id_conversion_table()
+        map_fwd = self._build_forward_map(conv_table, set(translated_ids))
+        taxon_map = self._get_taxon_map(self.map_from_organism, self.map_to_organism,
+                                        needed_source_ids=set(map_fwd.values()))
+        needed_target_protids = set()
+        for to_id_conv, _score in taxon_map.values():
+            if isinstance(to_id_conv, pl.Series):
+                needed_target_protids.update(to_id_conv.to_list())
+            else:
+                needed_target_protids.add(to_id_conv)
+        map_rev = self._build_reverse_map(conv_table, needed_target_protids)
 
         n_mapped = 0
         for from_id in tqdm(translated_ids, 'Mapping orthologs', unit='genes'):
@@ -1354,7 +1482,7 @@ class PhylomeDBOrthologMapper:
             {k: [this_v[0] for this_v in v] for k, v in mapping_one2many.items()})
 
     @staticmethod
-    def _get_taxon_map(taxon_id: int, target_id: int):
+    def _get_taxon_map(taxon_id: int, target_id: int, needed_source_ids: Optional[Set[str]] = None):
         cache_dir = get_todays_cache_dir()
         cache_file = cache_dir.joinpath(f'phylomedb_{taxon_id}to{target_id}.parquet')
         file_path = f"/metaphors/latest/orthologs/{taxon_id}.txt.gz"
@@ -1383,44 +1511,98 @@ class PhylomeDBOrthologMapper:
 
             # cache file locally
             save_table(df, cache_file)
-        return {a: (b, c) for (a, b, c) in df.select('protid1', 'protid2', 'CS').iter_rows()}
+        # Restrict to the source protids we'll actually look up (the last-wins collapse below stays
+        # identical to the full map's -- see _restrict_to_needed).
+        sub = PhylomeDBOrthologMapper._restrict_to_needed(
+            df.select('protid1', 'protid2', 'CS'), 'protid1', needed_source_ids)
+        if sub is None:
+            return {}
+        return {a: (b, c) for (a, b, c) in sub.iter_rows()}
 
     @staticmethod
-    def _get_id_conversion_maps() -> Tuple[dict, dict]:
+    def _load_id_conversion_table() -> pl.DataFrame:
+        """Return PhylomeDB's external-ID <-> protid table, downloading and caching it if needed.
+
+        This is the database-wide ``id_conversion`` table (every species, millions of rows). It is
+        loaded once per mapping and shared by both the forward and reverse map builders so a single
+        ``get_orthologs`` call doesn't read the multi-million-row parquet twice.
+        """
         cache_dir = get_todays_cache_dir()
         cache_file = cache_dir.joinpath('phylomedb_id_conversion.parquet')
+        if cache_file.exists():
+            return pl.read_parquet(cache_file)
+
         file_path = "/metaphors/latest/id_conversion.txt.gz"
         local_zip_file = cache_dir.joinpath("id_conversion.txt.gz")
+        ftp = PhylomeDBOrthologMapper._connect()
+        # Download the file
+        with open(local_zip_file, 'wb') as fp:
+            ftp.retrbinary('RETR ' + file_path, fp.write)
+        ftp.quit()
 
-        if cache_file.exists():
-            df = pl.read_parquet(cache_file)
-        else:
-            ftp = PhylomeDBOrthologMapper._connect()
-            # Download the file
-            with open(local_zip_file, 'wb') as fp:
-                ftp.retrbinary('RETR ' + file_path, fp.write)
-            ftp.quit()
+        # Unzip the file
+        with gzip.open(local_zip_file, 'rb') as f_in:
+            with open(cache_file.with_suffix('.txt'), 'wb') as f_out:
+                shutil.copyfileobj(f_in, f_out)
 
-            # Unzip the file
-            with gzip.open(local_zip_file, 'rb') as f_in:
-                with open(cache_file.with_suffix('.txt'), 'wb') as f_out:
-                    shutil.copyfileobj(f_in, f_out)
+        # Remove the zipped file
+        os.remove(local_zip_file)
 
-            # Remove the zipped file
-            os.remove(local_zip_file)
+        df = pl.read_csv(cache_file.with_suffix('.txt'), separator='\t',
+                         columns=[0, 2], new_columns=['#extid', 'protid'], has_header=False, skip_rows=1)
+        # cache file locally
+        save_table(df, cache_file)
+        return df
 
-            # Load into pandas dataframe
-            df = pl.read_csv(cache_file.with_suffix('.txt'), separator='\t',
-                             columns=[0, 2], new_columns=['#extid', 'protid'], has_header=False, skip_rows=1)
-            # cache file locally
-            save_table(df, cache_file)
-        map_fwd = dict(df.select('#extid', 'protid').iter_rows())
-        map_rev = {v: k for k, v in map_fwd.items()}
-        return map_fwd, map_rev
+    @staticmethod
+    def _restrict_to_needed(df: pl.DataFrame, column: str, needed: Optional[Set[str]]) -> Optional[pl.DataFrame]:
+        """Filter ``df`` to the rows whose ``column`` value is in ``needed``.
+
+        ``None`` means "no restriction" (return ``df`` unchanged); an empty set means "nothing
+        needed" and returns ``None`` so the caller can short-circuit to an empty result. Filtering
+        preserves row order, so any downstream last-wins collapse is identical to the unfiltered
+        result restricted to the requested keys.
+        """
+        if needed is None:
+            return df
+        if len(needed) == 0:
+            return None
+        return df.filter(pl.col(column).is_in(list(needed)))
+
+    @staticmethod
+    def _build_forward_map(df: pl.DataFrame, needed_extids: Optional[Set[str]]) -> dict:
+        # extid -> protid, keeping the last protid seen per extid in row order (exactly like
+        # ``dict(df.iter_rows())``); restricting to the needed extids first leaves that choice
+        # unchanged because every row for a kept extid is retained.
+        sub = PhylomeDBOrthologMapper._restrict_to_needed(df.select('#extid', 'protid'), '#extid', needed_extids)
+        if sub is None:
+            return {}
+        return dict(zip(sub['#extid'].to_list(), sub['protid'].to_list()))
+
+    @staticmethod
+    def _build_reverse_map(df: pl.DataFrame, needed_protids: Optional[Set[str]]) -> dict:
+        # protid -> extid, reproducing the original ``{v: k for k, v in map_fwd.items()}`` exactly:
+        #   1. collapse to the final protid per extid (last in row order), remembering each extid's
+        #      first-appearance position -- this is ``map_fwd``, in insertion order;
+        #   2. for each protid keep the extid with the largest first-appearance position, i.e. the
+        #      "last wins" of iterating ``map_fwd`` in that insertion order.
+        # The collapse runs vectorized in Polars and only the (small) filtered result is turned into
+        # a Python dict, so the whole table is never materialized as one. The empty-set case is
+        # short-circuited up front to skip the whole-table collapse entirely.
+        if needed_protids is not None and len(needed_protids) == 0:
+            return {}
+        indexed = df.select('#extid', 'protid').with_row_index('__ord')
+        fwd = indexed.group_by('#extid').agg(
+            pl.col('protid').sort_by('__ord').last().alias('protid'),
+            pl.col('__ord').min().alias('__first'),
+        )
+        fwd = PhylomeDBOrthologMapper._restrict_to_needed(fwd, 'protid', needed_protids)
+        rev = fwd.group_by('protid').agg(pl.col('#extid').sort_by('__first').last().alias('#extid'))
+        return dict(zip(rev['protid'].to_list(), rev['#extid'].to_list()))
 
     @staticmethod
     def _connect():
-        ftp = ftplib.FTP(PhylomeDBOrthologMapper.URL)
+        ftp = ftplib.FTP(PhylomeDBOrthologMapper.URL, timeout=PhylomeDBOrthologMapper.FTP_TIMEOUT)
         ftp.login()
         ftp.cwd('/metaphors/latest')
         return ftp
@@ -1460,9 +1642,33 @@ class PhylomeDBOrthologMapper:
 
 
 class OrthoInspectorOrthologMapper:
-    API_URL = 'https://lbgi.fr/api/orthoinspector'
-    RETRIES = RandomExpRetry(total=3, backoff_factor=2, status_forcelist=[404, 500, 502, 503, 504])
+    # Canonical OrthoInspector API host. The former host, https://lbgi.fr/api/orthoinspector, now
+    # 301-redirects here; we point at the redirect target directly to avoid the extra round-trip and
+    # the dependency on the old host. If OrthoInspector relocates again, update this URL (the
+    # integration tests in tests/test_io.py will catch a stale host).
+    API_URL = 'https://api.bigest-icube.fr/orthoinspector'
+    # read=0: don't retry read timeouts (retries on connection errors and the retryable status
+    # codes below are still enabled). When an endpoint accepts the connection but stalls without
+    # sending a body (a real OrthoInspector failure mode for large databases, e.g. Eukaryota2023),
+    # retrying the *same* request just wastes another timeout — so we let it fail fast. This is
+    # deliberately class-wide: for get_orthologs the recovery is to fall back to a *different*
+    # database (see the loop below), and for get_databases/get_database_organisms a stalled read
+    # wouldn't be helped by a read-retry either.
+    RETRIES = RandomExpRetry(total=3, read=0, backoff_factor=2, status_forcelist=[404, 500, 502, 503, 504])
     HEADERS = {'accept': 'application/json'}
+    # (connect, read) timeout in seconds. Without this, a server that accepts the connection but
+    # never sends a response body would hang RNAlysis indefinitely instead of raising a catchable
+    # error and moving on to the next database.
+    REQUEST_TIMEOUT = (10, 30)
+    # Databases that are listed and whose /species endpoint responds, but whose /orthologs endpoint
+    # never sends a response (verified to hang past a 90s read timeout -- a server-side problem, not
+    # our access: the identical request pattern works on other databases). Because 'auto' tries the
+    # largest database first and these tend to be large, hitting one wastes a full read timeout on a
+    # dead endpoint before the existing fallback moves on. We skip them during 'auto' selection.
+    # This is result-preserving: a database that never responds never contributes a mapping anyway.
+    # Revisit/remove an entry if OrthoInspector fixes the endpoint upstream (the integration tests in
+    # tests/test_io.py exercise the live service and will show when it recovers).
+    KNOWN_STALLING_DATABASES = frozenset({'Eukaryota2023'})
 
     def __init__(self, map_to_organism, map_from_organism, gene_id_type):
         self.gene_id_type = gene_id_type
@@ -1485,7 +1691,7 @@ class OrthoInspectorOrthologMapper:
         if session is None:
             session = get_session(OrthoInspectorOrthologMapper.RETRIES)
         url = f'{OrthoInspectorOrthologMapper.API_URL}/databases'
-        req = session.get(url)
+        req = session.get(url, timeout=OrthoInspectorOrthologMapper.REQUEST_TIMEOUT)
         req.raise_for_status()
         databases = frozenset(req.json()['data'])
         return databases
@@ -1496,10 +1702,13 @@ class OrthoInspectorOrthologMapper:
             session = get_session(OrthoInspectorOrthologMapper.RETRIES)
         # get list of databases
         databases = OrthoInspectorOrthologMapper.get_databases(session)
-        db_organisms = {}
-        for i, database in enumerate(databases):
+
+        def _fetch_species(database: str):
+            # Each worker uses its own session: requests.Session is not guaranteed thread-safe, and
+            # the per-request cost is negligible next to the network round-trip we're overlapping.
+            worker_session = get_session(OrthoInspectorOrthologMapper.RETRIES)
             url = f'{OrthoInspectorOrthologMapper.API_URL}/{database}/species'
-            req = session.get(url)
+            req = worker_session.get(url, timeout=OrthoInspectorOrthologMapper.REQUEST_TIMEOUT)
             req.raise_for_status()
             try:
                 content = req.json()
@@ -1507,7 +1716,18 @@ class OrthoInspectorOrthologMapper:
                 clean_json_string = req.text.split('\n')[0]
                 content = json.loads(clean_json_string)
             assert content['meta']['status'] == 'success'
-            db_organisms[database] = frozenset({d['id'] for d in content['data']})
+            return database, frozenset({d['id'] for d in content['data']})
+
+        # Fetch every database's species list concurrently. These requests are independent and were
+        # previously issued one-at-a-time; a plain ThreadPoolExecutor (I/O-bound, frozen-safe) turns
+        # their total latency into ~max() instead of sum(). The result dict is identical to the
+        # sequential version (dict/frozenset equality is order-independent).
+        db_organisms = {}
+        databases = list(databases)
+        if databases:
+            with concurrent.futures.ThreadPoolExecutor(max_workers=min(len(databases), 8)) as executor:
+                for database, organisms in executor.map(_fetch_species, databases):
+                    db_organisms[database] = organisms
 
         return db_organisms
 
@@ -1523,6 +1743,10 @@ class OrthoInspectorOrthologMapper:
             valid_dbs = []
 
             for db in dbs_by_size:
+                if db in self.KNOWN_STALLING_DATABASES:
+                    # Skip databases whose /orthologs endpoint never responds (see the constant's
+                    # docstring). Trying them just burns a full read timeout before falling back.
+                    continue
                 if self.map_from_organism in database_organisms[db] and self.map_to_organism in database_organisms[db]:
                     valid_dbs.append(db)
             if len(valid_dbs) == 0:
@@ -1545,7 +1769,7 @@ class OrthoInspectorOrthologMapper:
             for database in valid_dbs:
                 url = f'{self.API_URL}/{database}/species/{self.map_from_organism}/orthologs/{self.map_to_organism}'
                 try:
-                    req = session.get(url)
+                    req = session.get(url, timeout=self.REQUEST_TIMEOUT)
                     req.raise_for_status()
                     try:
                         content = req.json()['data']
@@ -1636,43 +1860,79 @@ class EnsemblOrthologMapper:
 
         return ids, translated_ids
 
+    @staticmethod
+    def _homology_cache_filename(species_name: str, gene_id: str, target_taxon, homology_type: str) -> str:
+        # One cache entry per (species, gene, target taxon, homology type). Hashed so gene IDs containing
+        # filesystem-unfriendly characters still yield a valid, collision-resistant filename.
+        key = f'{species_name}|{target_taxon}|{homology_type}|{gene_id}'
+        digest = hashlib.sha256(key.encode('utf-8')).hexdigest()[:32]
+        return f'ensembl_homology_{digest}.json'
+
+    def _fetch_homologies(self, translated_ids: List[str], species_name: str,
+                          homology_type: str) -> Dict[str, list]:
+        """Return ``{gene_id: homologies}`` for the requested homology type ('orthologues'/'paralogues').
+
+        Each gene's homologies are read from the daily disk cache when available; only the cache-missing
+        genes are actually requested from Ensembl. This means re-running the same query (or the
+        parametrized non_unique_mode variants) doesn't re-hit Ensembl and multiply the request load.
+        """
+        homologies_by_gene = {}
+        client = EnsemblRestClient()
+        queued_ids = []
+        for gene_id in translated_ids:
+            cached = load_cached_file(
+                self._homology_cache_filename(species_name, gene_id, self.map_to_organism, homology_type))
+            if cached is not None:
+                homologies_by_gene[gene_id] = json.loads(cached)
+            else:
+                queued_ids.append(gene_id)
+                client.queue_action('get', f'{self.ENDPOINT}{species_name}/{gene_id}',
+                                    params=dict(target_taxon=self.map_to_organism, type=homology_type,
+                                                sequence='none', cigar_line=0))
+
+        if queued_ids:
+            with tqdm(f'Mapping {homology_type}...', total=len(queued_ids) + 1) as pbar:
+                pbar.update()
+                # EnsemblRestClient.run() (asyncio.gather) preserves request order, so the Nth response
+                # matches the Nth queued gene. Key results and the cache entry by the *requested* gene ID
+                # rather than the ID Ensembl echoes back (which may be normalized, e.g. version-suffixed):
+                # this keeps the cache-miss and cache-hit paths consistent, so a repeat query is actually
+                # served from the cache and reproduces the first run exactly.
+                for gene_id, json_res in zip(queued_ids, client.run()):
+                    gene_homologies = json_res['data'][0]['homologies']
+                    cache_file(json.dumps(gene_homologies),
+                               self._homology_cache_filename(species_name, gene_id, self.map_to_organism,
+                                                             homology_type))
+                    homologies_by_gene[gene_id] = gene_homologies
+                    pbar.update()
+        return homologies_by_gene
+
     def get_paralogs(self, ids: Tuple[str, ...], filter_percent_identity: bool = True):
         ids, translated_ids = self.translate_ids(ids)
-        client = EnsemblRestClient()
-        mapping_one2many = {}
         species_name = self.get_species_name()
+        mapping_one2many = {}
 
-        for gene_id in tqdm(translated_ids, 'Submitting requests', unit='requests'):
-            client.queue_action('get', f'{self.ENDPOINT}{species_name}/{gene_id}',
-                                params=dict(target_taxon=self.map_to_organism, type='paralogues',
-                                            sequence='none', cigar_line=0))
+        homologies_by_gene = self._fetch_homologies(translated_ids, species_name, 'paralogues')
+        for this_id, homologies in homologies_by_gene.items():
+            if len(homologies) == 0:
+                continue
 
-        with tqdm('Mapping paralogs...', total=client.queue.qsize() + 1) as pbar:
-            pbar.update()
-            for json_res in client.run():
-                req_output = json_res['data'][0]
-                if len(req_output['homologies']) == 0:
-                    continue
+            if filter_percent_identity:
+                max_score = 0
+                best_match = None
+                matches = []
+                for homology in homologies:
+                    current_score = homology['source']['perc_id']
+                    if current_score > max_score:
+                        max_score = current_score
+                        best_match = homology['target']['id']
+                        matches = [best_match]
+                    elif current_score == max_score:
+                        matches.append(homology['target']['id'])
 
-                this_id = req_output['id']
-
-                if filter_percent_identity:
-                    max_score = 0
-                    best_match = None
-                    matches = []
-                    for homology in req_output['homologies']:
-                        current_score = homology['source']['perc_id']
-                        if current_score > max_score:
-                            max_score = current_score
-                            best_match = homology['target']['id']
-                            matches = [best_match]
-                        elif current_score == max_score:
-                            matches.append(homology['target']['id'])
-
-                    mapping_one2many[this_id] = best_match
-                else:
-                    mapping_one2many[this_id] = [homology['target']['id'] for homology in req_output['homologies']]
-                pbar.update()
+                mapping_one2many[this_id] = best_match
+            else:
+                mapping_one2many[this_id] = [homology['target']['id'] for homology in homologies]
 
         _, mapping_one2many = translate_mappings(ids, translated_ids, {}, mapping_one2many)
 
@@ -1686,51 +1946,41 @@ class EnsemblOrthologMapper:
         Tuple[OrthologDict, OrthologDict]:
         ids, translated_ids = self.translate_ids(ids)
         species_name = self.get_species_name()
-        client = EnsemblRestClient()
         mapping_one2one = {}
         mapping_one2many = {}
 
-        for gene_id in tqdm(translated_ids, 'Submitting requests', unit='requests'):
-            client.queue_action('get', f'{self.ENDPOINT}{species_name}/{gene_id}',
-                                params=dict(target_taxon=self.map_to_organism, type='orthologues',
-                                            sequence='none', cigar_line=0))
+        homologies_by_gene = self._fetch_homologies(translated_ids, species_name, 'orthologues')
+        for this_id, homologies in homologies_by_gene.items():
+            if len(homologies) == 0:
+                continue
 
-        with tqdm('Mapping orthologs...', total=client.queue.qsize() + 1) as pbar:
-            pbar.update()
-            for json_res in client.run():
-                req_output = json_res['data'][0]
-                if len(req_output['homologies']) == 0:
-                    continue
+            mapping_one2many[this_id] = [(homology['target']['id'], homology['source']['perc_id']) for homology in
+                                         homologies]
 
-                this_id = req_output['id']
-                mapping_one2many[this_id] = [(homology['target']['id'], homology['source']['perc_id']) for homology in
-                                             req_output['homologies']]
+            if filter_percent_identity:
+                max_score = 0
+                best_match = None
+                matches = []
+                for homology in homologies:
+                    current_score = homology['source']['perc_id']
+                    if current_score > max_score:
+                        max_score = current_score
+                        best_match = homology['target']['id']
+                        matches = [best_match]
+                    elif current_score == max_score:
+                        matches.append(homology['target']['id'])
 
-                if filter_percent_identity:
-                    max_score = 0
-                    best_match = None
-                    matches = []
-                    for homology in req_output['homologies']:
-                        current_score = homology['source']['perc_id']
-                        if current_score > max_score:
-                            max_score = current_score
-                            best_match = homology['target']['id']
-                            matches = [best_match]
-                        elif current_score == max_score:
-                            matches.append(homology['target']['id'])
-
-                    if len(matches) > 1:
-                        if non_unique_mode == 'first':
-                            mapping_one2one[this_id] = matches[0]
-                        elif non_unique_mode == 'last':
-                            mapping_one2one[this_id] = matches[-1]
-                        elif non_unique_mode == 'random':
-                            mapping_one2one[this_id] = random.choice(matches)
-                    else:
-                        mapping_one2one[this_id] = best_match
+                if len(matches) > 1:
+                    if non_unique_mode == 'first':
+                        mapping_one2one[this_id] = matches[0]
+                    elif non_unique_mode == 'last':
+                        mapping_one2one[this_id] = matches[-1]
+                    elif non_unique_mode == 'random':
+                        mapping_one2one[this_id] = random.choice(matches)
                 else:
-                    mapping_one2one[this_id] = req_output['homologies'][0]['target']['id']
-                pbar.update()
+                    mapping_one2one[this_id] = best_match
+            else:
+                mapping_one2one[this_id] = homologies[0]['target']['id']
 
         mapping_one2one, mapping_one2many = translate_mappings(ids, translated_ids, mapping_one2one, mapping_one2many)
 
@@ -1743,14 +1993,45 @@ class EnsemblOrthologMapper:
 
 
 class PantherOrthologMapper:
-    API_URL = 'http://www.pantherdb.org'
+    API_URL = 'https://www.pantherdb.org'
     RETRIES = RandomExpRetry(total=5, backoff_factor=0.25, status_forcelist=[500, 502, 503, 504])
     HEADERS = {'accept': 'application/json'}
+    # PantherDB intermittently answers a mapping request with an empty HTTP 200 body (its urllib3
+    # Retry only fires on 5xx/connection errors, not on a 200), which makes req.json() raise
+    # JSONDecodeError. Retry the request a few times before giving up on a gene.
+    EMPTY_RESPONSE_RETRIES = 3
+    EMPTY_RESPONSE_BACKOFF = 0.25
 
     def __init__(self, map_to_organism, map_from_organism='auto', gene_id_type='auto'):
         self.gene_id_type = gene_id_type
         self.map_from_organism = map_from_organism
         self.map_to_organism = map_to_organism
+
+    def _fetch_mapped(self, session: requests.Session, url: str, req_data: dict, headers: dict = None):
+        """POST to a PantherDB mapping endpoint and return its ``search.mapping.mapped`` payload.
+
+        Returns an empty list when the service answers with an empty/invalid body that stays empty
+        after ``EMPTY_RESPONSE_RETRIES`` attempts, so a single degraded response skips that one gene
+        instead of raising ``JSONDecodeError`` and aborting the whole ortholog/paralog mapping. A
+        valid JSON response that simply has no mapping for the gene also yields an empty list.
+        """
+        for attempt in range(self.EMPTY_RESPONSE_RETRIES):
+            req = session.post(url, headers=headers, params=req_data)
+            req.raise_for_status()
+            try:
+                payload = req.json()
+            except requests.exceptions.JSONDecodeError:
+                if attempt + 1 < self.EMPTY_RESPONSE_RETRIES:
+                    time.sleep(self.EMPTY_RESPONSE_BACKOFF * (attempt + 1))
+                    continue
+                warnings.warn(f"PantherDB returned an empty response for '{req_data.get('geneInputList')}' after "
+                              f"{self.EMPTY_RESPONSE_RETRIES} attempts; skipping this gene.")
+                break  # retries exhausted on an empty body -> fall through to the empty result below
+            try:
+                return payload['search']['mapping']['mapped']
+            except KeyError:
+                return []
+        return []
 
     def translate_ids(self, ids: Tuple[str, ...], session=None) -> Tuple[List[str], List[str]]:
         if self.gene_id_type == 'auto':
@@ -1775,10 +2056,8 @@ class PantherOrthologMapper:
             req_data = dict(geneInputList=from_id, organism=str(self.map_from_organism),
                             targetOrganism=str(self.map_to_organism),
                             orthologType='all' if filter_least_diverged else 'LDO')
-            req = session.post(url, headers=self.HEADERS, params=req_data)
-            req.raise_for_status()
+            req_output = self._fetch_mapped(session, url, req_data, headers=self.HEADERS)
             try:
-                req_output = req.json()['search']['mapping']['mapped']
                 for mapping in parsing.data_to_list(req_output):
                     if len(mapping) <= 1:
                         continue
@@ -1825,11 +2104,8 @@ class PantherOrthologMapper:
         n_mapped = 0
         for from_id in tqdm(translated_ids, 'Mapping paralogs', unit='genes'):
             req_data = dict(geneInputList=from_id, organism=str(self.map_from_organism), homologType='P')
-            req = session.post(url, params=req_data)
-            req.raise_for_status()
-
+            req_output = self._fetch_mapped(session, url, req_data)
             try:
-                req_output = req.json()['search']['mapping']['mapped']
                 for mapping in parsing.data_to_list(req_output):
                     if len(mapping) <= 1:
                         continue
@@ -1849,9 +2125,51 @@ class PantherOrthologMapper:
         _, mapping_one2many = translate_mappings(ids, translated_ids, {}, mapping_one2many)
 
         if n_mapped < len(translated_ids):
-            warnings.warn(f"Paralob mapping found for only {n_mapped} out of {len(translated_ids)} gene IDs.")
+            warnings.warn(f"Paralog mapping found for only {n_mapped} out of {len(translated_ids)} gene IDs.")
 
         return OrthologDict(mapping_one2many)
+
+
+# Per-gene UniProt translation cache (issue #185). Parsed mapping rows are cached under the daily
+# cache dir (so they rotate/expire with everything else in get_todays_cache_dir()), in an append-only
+# set of Parquet fragments -- one directory per (from_db, to_db). Each write drops a new, uniquely
+# named fragment (temp file + atomic rename), so concurrent writers -- the <=5 GeneIDTranslator.run
+# calls within one run, plus separate processes/app instances -- never corrupt or clobber each other:
+# lock-free, and safe on network/cluster filesystems (no byte-range locks). Reads scan the whole
+# directory and dedup. This lets a subset/overlap re-run reuse already-mapped genes and only query
+# UniProt for the cache-miss ids.
+TRANSLATION_CACHE_SCHEMA = {'From': pl.Utf8, 'To': pl.Utf8, 'annotation_score': pl.Float64}
+
+
+def _translation_cache_dir(from_db: str, to_db: str) -> Path:
+    # Hash the (from_db, to_db) pair into the directory name: db identifiers such as 'UniProtKB AC/ID'
+    # contain filesystem-unfriendly characters, and hashing yields a valid, collision-resistant name.
+    digest = hashlib.sha256(f'{from_db}|{to_db}'.encode('utf-8')).hexdigest()[:32]
+    return get_todays_cache_dir().joinpath('gene_id_translation', digest)
+
+
+def _write_translation_cache_fragment(from_db: str, to_db: str, rows: pl.DataFrame):
+    cache_dir = _translation_cache_dir(from_db, to_db)
+    cache_dir.mkdir(parents=True, exist_ok=True)
+    # Write to a temp name, then atomically rename into place, so a reader never sees a half-written
+    # fragment and two writers never touch the same file.
+    name = uuid.uuid4().hex
+    tmp_path = cache_dir.joinpath(f'.{name}.parquet.tmp')
+    final_path = cache_dir.joinpath(f'{name}.parquet')
+    rows.write_parquet(tmp_path)
+    os.replace(tmp_path, final_path)
+
+
+def _read_translation_cache(from_db: str, to_db: str) -> pl.LazyFrame:
+    cache_dir = _translation_cache_dir(from_db, to_db)
+    fragments = sorted(cache_dir.glob('*.parquet')) if cache_dir.exists() else []
+    if not fragments:
+        return pl.DataFrame(schema=TRANSLATION_CACHE_SCHEMA).lazy()
+    # Dedup identical rows that concurrent writers may have written into separate fragments.
+    # maintain_order=True keeps the read deterministic (fragments are scanned in sorted name order):
+    # resolution can be row-order-sensitive for mapping directions with no annotation score, so an
+    # unordered unique() could otherwise make a subset/overlap re-run pick a different mapping.
+    return pl.scan_parquet(fragments).unique(maintain_order=True)
 
 
 class GeneIDTranslator:
@@ -1859,9 +2177,21 @@ class GeneIDTranslator:
     UNIPROTKB_TO = "UniProtKB_to"
     API_URL = "https://rest.uniprot.org"
     POLLING_INTERVAL = 3
+    # A job is usually ready within a fraction of a second, so start polling almost immediately and
+    # back off exponentially up to POLLING_INTERVAL, rather than sleeping the full interval up front.
+    INITIAL_POLLING_INTERVAL = 0.25
     REQUEST_DELAY_MILLIS = 250
     REQ_MAX_ENTRIES = 10
     RETRIES = RandomExpRetry(total=5, backoff_factor=0.25, status_forcelist=[500, 502, 503, 504])
+    # UniProt's idmapping *status* and *details* endpoints intermittently answer a valid jobId with a
+    # transient HTTP 400 (seen when a job is queried before it is fully registered, or under heavy
+    # concurrent load such as many parallel CI jobs). 400 is deliberately absent from RETRIES'
+    # status_forcelist because a 400 usually means a genuinely bad request, so we retry it only for
+    # these job endpoints (see _get_job_json_with_retry), a bounded number of times, with jittered
+    # exponential backoff capped at STATUS_POLL_MAX_BACKOFF so the total window stays bounded (~30s).
+    STATUS_POLL_MAX_RETRIES = 7
+    STATUS_POLL_BACKOFF = 0.5
+    STATUS_POLL_MAX_BACKOFF = 8
 
     def __init__(self, map_from: str, map_to: str = 'UniProtKB AC', verbose: bool = True,
                  session: Union[requests.Session, None] = None):
@@ -1950,7 +2280,7 @@ class GeneIDTranslator:
             session = self.session
             results = self.get_mapping_results(self.map_to, self.map_from, ids, session)
 
-            if results is None or len(results) <= 1:
+            if results is None:
                 if self.verbose:
                     warnings.warn("No entries were mapped successfully.")
                 return GeneIDDict({})
@@ -1968,17 +2298,70 @@ class GeneIDTranslator:
         self.reformat_ids(output_dict)
         return GeneIDDict(output_dict)
 
-    def get_mapping_results(self, map_to: str, map_from: str, ids: Tuple[str, ...], session: requests.Session):
+    def get_mapping_results(self, map_to: str, map_from: str, ids: Tuple[str, ...],
+                            session: requests.Session) -> Union[pl.LazyFrame, None]:
+        """Map ``ids`` from ``map_from`` to ``map_to``, returning a fixed-schema LazyFrame
+        (``From``/``To``/``annotation_score``) of the candidate mappings, or ``None`` when nothing was
+        mapped.
+
+        Backed by the per-gene disk cache: ids already translated today are served from the cache and
+        only the cache-miss ids are sent to UniProt in a single job. The *raw candidate rows* are
+        cached (not the resolved mapping), and resolution runs over the union of cached + freshly
+        fetched rows, so a subset/overlap re-run reproduces a full fetch exactly."""
         id_dict_to, id_dict_from = self.id_dicts
         to_db = id_dict_to[map_to]
         from_db = id_dict_from[map_from]
 
+        ids = list(ids)
+        try:
+            cached = _read_translation_cache(from_db, to_db).collect()
+        except Exception as err:  # a corrupt/unreadable cache must never break translation
+            if self.verbose:
+                warnings.warn(f"Could not read the gene-ID translation cache ({err}); fetching from UniProt.")
+            cached = pl.DataFrame(schema=TRANSLATION_CACHE_SCHEMA)
+        cached_ids = set(cached['From'].to_list())
+        miss_ids = [gene_id for gene_id in dict.fromkeys(ids) if gene_id not in cached_ids]
+
+        if miss_ids:
+            fresh = self._fetch_mapping_results(to_db, from_db, tuple(miss_ids), session)
+            fresh_rows = fresh.collect() if fresh is not None else pl.DataFrame(schema=TRANSLATION_CACHE_SCHEMA)
+            # Record a negative marker for every miss id UniProt returned nothing for, so a later
+            # subset re-run doesn't re-query the unmappable ids forever.
+            mapped = set(fresh_rows['From'].to_list())
+            negatives = [gene_id for gene_id in miss_ids if gene_id not in mapped]
+            new_rows = fresh_rows
+            if negatives:
+                new_rows = pl.concat([fresh_rows, pl.DataFrame(
+                    {'From': negatives, 'To': [None] * len(negatives),
+                     'annotation_score': [None] * len(negatives)}, schema=TRANSLATION_CACHE_SCHEMA)])
+            if new_rows.height > 0:
+                try:
+                    _write_translation_cache_fragment(from_db, to_db, new_rows)
+                except Exception as err:  # a failed write (disk full, permission) is non-fatal
+                    if self.verbose:
+                        warnings.warn(f"Could not write to the gene-ID translation cache ({err}).")
+            cached = pl.concat([cached, new_rows])
+
+        # Resolve over the requested ids' positive candidate rows (negatives are cache-only markers).
+        requested = cached.filter(pl.col('From').is_in(set(ids)) & pl.col('To').is_not_null())
+        if requested.height == 0:
+            return None
+        return requested.lazy()
+
+    def _fetch_mapping_results(self, to_db: str, from_db: str, ids: Tuple[str, ...],
+                               session: requests.Session) -> Union[pl.LazyFrame, None]:
+        """Submit a single UniProt id-mapping job for ``ids`` and return its results as a fixed-schema
+        LazyFrame (``From``/``To``/``annotation_score``), or ``None`` when nothing usable came back
+        (job not ready, or only a header row / empty response)."""
         job_id = self.submit_id_mapping(to_db, from_db, session, ids)
 
-        if self.check_id_mapping_results_ready(session, job_id, self.POLLING_INTERVAL):
-            link = self.get_id_mapping_results_link(session, job_id)
+        if self.check_id_mapping_results_ready(session, job_id, self.POLLING_INTERVAL, self.verbose):
+            link = self.get_id_mapping_results_link(session, job_id, self.verbose)
             results = self.get_id_mapping_results_search(session, link)
-            return results
+            if results is None or len(results) <= 1:
+                return None
+            return self._parse_id_mapping_tsv(results)
+        return None
 
     @staticmethod
     def submit_id_mapping(to_db: str, from_db: str, session: requests.Session, ids: Tuple[str, ...]):
@@ -1996,16 +2379,48 @@ class GeneIDTranslator:
                 return match.group(1)
 
     @staticmethod
+    def _get_job_json_with_retry(session, url: str, verbose: bool = True):
+        """GET a UniProt idmapping job endpoint, retrying transient HTTP 400s with jittered backoff.
+
+        A 400 on these job endpoints is (empirically) transient for a valid jobId -- seen when a job
+        is queried before it is fully registered, or under heavy concurrent load -- so retry it a
+        bounded number of times, with a capped jittered exponential backoff (the jitter also
+        de-synchronizes many parallel callers that bounced together). Any other error, or a 400 that
+        never clears, is re-raised so genuine failures still surface."""
+        for attempt in range(GeneIDTranslator.STATUS_POLL_MAX_RETRIES + 1):
+            r = session.get(url)
+            try:
+                r.raise_for_status()
+            except requests.exceptions.HTTPError:
+                if r.status_code == 400 and attempt < GeneIDTranslator.STATUS_POLL_MAX_RETRIES:
+                    backoff = min(GeneIDTranslator.STATUS_POLL_BACKOFF * (2 ** attempt),
+                                  GeneIDTranslator.STATUS_POLL_MAX_BACKOFF)
+                    backoff *= 0.5 + 0.5 * random.random()  # jitter
+                    if verbose:
+                        print(f"Transient HTTP 400 from UniProt idmapping ({url}); retrying in {backoff:.1f}s")
+                    time.sleep(backoff)
+                    continue
+                raise
+            return r
+
+    @staticmethod
+    def _poll_mapping_status(session, job_id: str, verbose: bool = True):
+        """Fetch the idmapping job status, retrying transient HTTP 400s (see _get_job_json_with_retry)."""
+        url = f"{GeneIDTranslator.API_URL}/idmapping/status/{job_id}"
+        return GeneIDTranslator._get_job_json_with_retry(session, url, verbose)
+
+    @staticmethod
     def check_id_mapping_results_ready(session, job_id: str, polling_interval: float, verbose: bool = True):
+        interval = min(GeneIDTranslator.INITIAL_POLLING_INTERVAL, polling_interval)
         while True:
-            r = session.get(f"{GeneIDTranslator.API_URL}/idmapping/status/{job_id}")
-            r.raise_for_status()
+            r = GeneIDTranslator._poll_mapping_status(session, job_id, verbose)
             j = r.json()
             if "jobStatus" in j:
                 if j["jobStatus"] in {"RUNNING", "NEW"}:
                     if verbose:
-                        print(f"Retrying in {polling_interval}s")
-                    time.sleep(polling_interval)
+                        print(f"Retrying in {interval}s")
+                    time.sleep(interval)
+                    interval = min(interval * 2, polling_interval)
                 else:
                     raise Exception(j["jobStatus"])
             else:
@@ -2033,10 +2448,9 @@ class GeneIDTranslator:
         return all_results
 
     @staticmethod
-    def get_id_mapping_results_link(session: requests.Session, job_id):
+    def get_id_mapping_results_link(session: requests.Session, job_id, verbose: bool = True):
         url = f"{GeneIDTranslator.API_URL}/idmapping/details/{job_id}"
-        r = session.get(url)
-        r.raise_for_status()
+        r = GeneIDTranslator._get_job_json_with_retry(session, url, verbose)
         return r.json()["redirectURL"]
 
     @staticmethod
@@ -2047,6 +2461,11 @@ class GeneIDTranslator:
             return [line for line in response.text.split("\n") if line]
         return response.text
 
+    # The UniProtKB id-mapping result namespace exposes a /results/stream/ endpoint (verified live);
+    # the plain /idmapping/results/ path returns 404 for stream, so it must stay paginated. Every
+    # annotation-score mapping targets UniProtKB, so only that namespace is streamed here.
+    _STREAMABLE_RESULTS_PATH = re.compile(r'/idmapping/uniprotkb/results/')
+
     def get_id_mapping_results_search(self, session: requests.Session, link):
         parsed = urlparse(link)
         query = parse_qs(parsed.query)
@@ -2054,6 +2473,17 @@ class GeneIDTranslator:
         query["format"] = "tsv"
         file_format = 'tsv'
         # file_format = query["format"][0] if "format" in query else "json"
+
+        if self._STREAMABLE_RESULTS_PATH.search(parsed.path):
+            # The stream endpoint returns every row in a single response (no cursor pagination),
+            # so fetch it directly instead of walking rel="next" pages one at a time.
+            stream_path = parsed.path.replace('/results/', '/results/stream/', 1)
+            stream_query = {key: val for key, val in query.items() if key != 'size'}
+            stream_url = parsed._replace(path=stream_path, query=urlencode(stream_query, doseq=True)).geturl()
+            r = session.get(stream_url)
+            r.raise_for_status()
+            return self.decode_results(r, file_format)
+
         if "size" in query:
             size = int(query["size"][0])
         else:
@@ -2084,16 +2514,49 @@ class GeneIDTranslator:
         print(f"Fetched: {n} / {total}")
 
     @staticmethod
-    def format_annotations(results):
-        df = pl.read_csv(StringIO('\n'.join(results)), separator='\t')
-        # sort annotations by decreasing annotation score, so that the most relevant annotations are at the top
+    def _parse_id_mapping_tsv(results) -> pl.LazyFrame:
+        """Parse UniProt's idmapping TSV into a fixed-schema frame: ``From``/``To`` (both Utf8) and a
+        Float64 ``annotation_score``.
+
+        This is the single TSV-to-frame boundary so that the resolution code (``format_annotations`` /
+        ``handle_duplicates``) and the per-gene translation cache share one predefined schema. The
+        accession column UniProt names ``Entry`` (or ``To`` in some directions) becomes ``To``; the
+        ``Annotation`` column becomes ``annotation_score`` as Float64 (scores can be fractional, and
+        an empty score is read as 0). When the mapping direction returns no ``Annotation`` column,
+        ``annotation_score`` is an all-null Float64 column so downstream can skip score-sorting.
+        Rows are neither sorted nor deduplicated here -- that stays in ``format_annotations``.
+        """
+        # infer_schema_length=0 -> read every column as Utf8, so numeric-looking gene IDs (e.g. Entrez
+        # GeneIDs) are not silently coerced to integers.
+        df = pl.read_csv(StringIO('\n'.join(results)), separator='\t', infer_schema_length=0)
+        to_col = next(col for col in df.columns if col not in ('From', 'Annotation'))
         if 'Annotation' in df.columns:
-            if df['Annotation'].dtype not in pl.FLOAT_DTYPES:
-                df = df.lazy().with_columns(
-                    Annotation=pl.col('Annotation').replace('', '0', return_dtype=pl.datatypes.Int16))
-            else:
-                df = df.lazy()
-            df = df.sort('Annotation', descending=True).drop('Annotation').collect()
+            annotation_score = pl.col('Annotation').replace('', '0').cast(pl.Float64)
+        else:
+            annotation_score = pl.lit(None, dtype=pl.Float64)
+        return df.lazy().select(
+            From=pl.col('From').cast(pl.Utf8),
+            To=pl.col(to_col).cast(pl.Utf8),
+            annotation_score=annotation_score,
+        )
+
+    @staticmethod
+    def _sort_by_annotation_score(frame):
+        # Sort by descending annotation score, breaking ties on the target id, so equal-score
+        # duplicates resolve deterministically and don't depend on the order UniProt returned the rows
+        # (paginated vs. streamed) or on the non-stable single-key sort. Shared by the forward and
+        # reverse resolution paths so this reproducibility-critical tiebreak lives in one place.
+        # Works on both eager DataFrames and LazyFrames.
+        return frame.sort(['annotation_score', 'To'], descending=[True, False])
+
+    @staticmethod
+    def format_annotations(results: pl.LazyFrame):
+        df = results.collect()
+        # Rank the most relevant annotations first. When the mapping direction carries no annotation
+        # score (all-null), keep the input row order (there's nothing to rank by).
+        if not df['annotation_score'].is_null().all():
+            df = GeneIDTranslator._sort_by_annotation_score(df)
+        df = df.select('From', 'To')
         output_dict = {}
         duplicates = {}
 
@@ -2120,15 +2583,15 @@ class GeneIDTranslator:
                 ids_to_rev_map = parsing.flatten(parsing.data_to_list(duplicates.values()))
 
                 rev_results = self.get_mapping_results(self.UNIPROTKB_TO, self.map_to, ids_to_rev_map, session)
-                # TODO: if job fails?
-                rev_df = pl.read_csv(StringIO('\n'.join(rev_results)), separator='\t').lazy().with_columns(
-                    pl.col('Annotation').cast(pl.Float64)).sort('Annotation', descending=True).drop(
-                    'Annotation').collect()
                 duplicates_chosen = {}
-                for match_from_rev, match_to_rev in rev_df.iter_rows():
-                    if match_to_rev not in output_dict:
-                        output_dict[match_to_rev] = match_from_rev
-                        duplicates_chosen[match_to_rev] = match_from_rev
+                if rev_results is not None:
+                    # Rank by annotation score (ties broken by target id) so the cross-gene claiming
+                    # below is deterministic and independent of the row order UniProt returned.
+                    rev_df = self._sort_by_annotation_score(rev_results).select('From', 'To').collect()
+                    for match_from_rev, match_to_rev in rev_df.iter_rows():
+                        if match_to_rev not in output_dict:
+                            output_dict[match_to_rev] = match_from_rev
+                            duplicates_chosen[match_to_rev] = match_from_rev
             if self.verbose:
                 warnings.warn(f"Duplicate mappings were found for {len(duplicates)} genes.  The following mapping "
                               f"was chosen for them based on their annotation score: {duplicates_chosen}")
@@ -2199,13 +2662,22 @@ def find_best_gene_mapping(ids: Tuple[str, ...], map_from_options: Union[Tuple[s
     return parsed_results[sorted_keys[0]]
 
 
+# Connect/read timeout (seconds) for the small "legal values" metadata fetches below. These run at
+# import time to populate GUI dropdowns / type annotations, so a hung request would freeze startup.
+LEGAL_VALUES_REQUEST_TIMEOUT = (10, 30)
+
+
 @functools.lru_cache(maxsize=2)
 def get_legal_panther_taxons():
-    URL = 'http://www.pantherdb.org/services/oai/pantherdb/supportedgenomes'
-    req = requests.post(URL)
+    URL = 'https://www.pantherdb.org/services/oai/pantherdb/supportedgenomes'
+    req = requests.post(URL, timeout=LEGAL_VALUES_REQUEST_TIMEOUT)
     req.raise_for_status()
-    entries = json.loads(req.text)['search']['output']['genomes']['genome']
-    taxons = tuple(sorted(d['long_name'] for d in entries))
+    genomes = req.json()['search']['output']['genomes']['genome']
+    # PantherDB returns a single genome dict (not a list) when only one genome is present; normalize
+    # to a list the way the ortholog endpoints already do, and skip any entry lacking a long_name.
+    entries = parsing.data_to_list(genomes)
+    taxons = tuple(sorted(entry['long_name'] for entry in entries
+                          if isinstance(entry, dict) and 'long_name' in entry))
     return taxons
 
 
@@ -2240,7 +2712,7 @@ def get_legal_gene_id_types():
     abbrev_dict_to = {}
     abbrev_dict_from = {}
 
-    req = requests.get(URL)
+    req = requests.get(URL, timeout=LEGAL_VALUES_REQUEST_TIMEOUT)
     req.raise_for_status()
     entries = json.loads(req.text)['groups']
     entries_filtered = []

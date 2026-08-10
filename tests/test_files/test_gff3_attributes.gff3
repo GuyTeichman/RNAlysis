@@ -1,0 +1,9 @@
+##gff-version 3
+chr1	ensembl	gene	1000	2000	.	+	.	ID=gene:GENE1;biotype=protein_coding;Name=nameA
+chr1	ensembl	mRNA	1000	2000	.	+	.	ID=transcript:TX1;Parent=gene:GENE1;biotype=protein_coding;Name=txA
+chr2	havana	gene	3000	4000	.	-	.	ID=gene:GENE2;biotype=lincRNA;Name=nameB
+chr2	havana	mRNA	3000	4000	.	-	.	ID=transcript:TX2;Parent=gene:GENE2;biotype=lincRNA;Name=txB
+chrX	ensembl	gene	5000	6000	.	+	.	ID=gene:GENE3;biotype=protein_coding;Name=nameC
+chrX	ensembl	mRNA	5000	6000	.	+	.	ID=transcript:TX3;Parent=gene:GENE3;biotype=protein_coding;Name=txC
+chr2	havana	gene	7000	8000	.	-	.	ID=gene:GENE4;biotype=protein_coding;Name=nameD
+chr2	havana	mRNA	7000	8000	.	-	.	ID=transcript:TX4;Parent=gene:GENE4;biotype=protein_coding;Name=txD

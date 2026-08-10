@@ -1,21 +1,28 @@
-pip
-bump2version
-wheel
-flake8
-coverage
-Sphinx
-twine
-coveralls
-py
-pytest
-pytest-runner
-sphinx_rtd_theme
-pytest-qt
-pytest-xvfb
-typing_extensions
-pyinstaller
-pyinstaller-hooks-contrib
-rst-to-myst
-requests-mock
-pytest-randomly
-pytest-mock
+# Development / CI dependencies.
+# Each entry has an upper bound on the next major version to avoid surprise breakage from major
+# releases (e.g. the pytest 9 change that started rejecting a trailing comma in parametrize argnames
+# and broke test collection). Floors are kept low so contributors aren't forced to upgrade.
+# Loosen or tighten these as needed; bump the caps deliberately when adopting a new major.
+pip>=24
+bump2version>=1,<2
+wheel>=0.43,<1
+flake8>=7,<8
+ruff>=0.16,<1  # formatter + import sorting; exact hook version is pinned in .pre-commit-config.yaml
+pre-commit>=4,<5  # runs the hooks defined in .pre-commit-config.yaml
+coverage>=7.7,<8
+Sphinx>=7,<9
+twine>=6,<8
+coveralls>=4,<5
+py>=1.11,<2
+pytest>=8,<10
+pytest-runner>=6,<7
+sphinx_rtd_theme>=2,<4
+pytest-qt>=4.4,<5
+pytest-xvfb>=3,<4
+typing_extensions>=4.12
+pyinstaller>=6,<7
+pyinstaller-hooks-contrib>=2024
+rst-to-myst>=0.4,<0.5
+requests-mock>=1.12,<2
+pytest-randomly>=3.15,<5
+pytest-mock>=3.14,<4

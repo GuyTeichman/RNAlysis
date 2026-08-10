@@ -4,6 +4,7 @@ import functools
 import inspect
 import json
 import threading
+from decimal import Decimal
 from functools import lru_cache
 from pathlib import Path
 from queue import Queue
@@ -573,9 +574,16 @@ class ToggleSwitchCore(QtWidgets.QPushButton):
     def paintEvent(self, event):
         label = " True" if self.isChecked() else "False"
         if self.isChecked():
-            bg_color = QtGui.QColor('#72e5bf') if not self._hover else QtGui.QColor('#52c59f')
+            # warm gold for the "on" state - a highlight/active accent that harmonizes with the
+            # RNAlysis red/black logo without reading as an error or a warning. Paired with the
+            # neutral gray "off" state it stays off the red-green confusion axis (safe for
+            # red-green colorblindness); knob position and the "True"/"False" text remain the
+            # primary, redundant cues. Dark label text keeps WCAG AA contrast on the fill
+            # (~8.4:1 normal, ~6.3:1 hover).
+            bg_color = QtGui.QColor('#f2b134') if not self._hover else QtGui.QColor('#d6971f')
         else:
-            bg_color = QtGui.QColor('#e96e3a') if not self._hover else QtGui.QColor('#c94e1a')
+            # neutral inactive gray for the "off" state - reads as "off", not "error"
+            bg_color = QtGui.QColor('#a8adb3') if not self._hover else QtGui.QColor('#8b9096')
 
         radius = int(self.RADIUS * (self.font().pointSize() / 10))
         width = int(self.WIDTH * (self.font().pointSize() / 10))
@@ -1130,6 +1138,7 @@ class PathLineEdit(QtWidgets.QWidget):
                  'is_file': 'is the current text pointing to an exisintg file',
                  'file_types': 'file types',
                  '_is_legal': 'is the current path legal',
+                 '_full_path': 'the full, unelided path - the value returned by text()',
                  'layout': 'layout'}
 
     def __init__(self, contents: str = 'auto', button_text: str = 'Load', is_file: bool = True,
@@ -1140,13 +1149,20 @@ class PathLineEdit(QtWidgets.QWidget):
         self.is_file = is_file
         self.file_types = file_types
         self._is_legal = False
+        self._full_path = ''
+
+        # let the field grow with the window instead of staying at its minimal width
+        self.setSizePolicy(QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Fixed)
+        self.file_path.setSizePolicy(QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Fixed)
 
         self.layout = QtWidgets.QGridLayout(self)
         self.setLayout(self.layout)
         self.layout.addWidget(self.open_button, 1, 0)
         self.layout.addWidget(self.file_path, 1, 1)
+        self.layout.setColumnStretch(1, 1)
 
-        self.file_path.textChanged.connect(self._check_legality)
+        self.file_path.textChanged.connect(self._on_internal_text_changed)
+        self.file_path.installEventFilter(self)
         if self.is_file:
             self.open_button.clicked.connect(self.choose_file)
         else:
@@ -1157,17 +1173,72 @@ class PathLineEdit(QtWidgets.QWidget):
                 contents = 'No file chosen'
             else:
                 contents = 'No folder chosen'
-        self.file_path.setText(contents)
+        self.setText(contents)
+
+    def eventFilter(self, obj, event):
+        if obj is self.file_path:
+            event_type = event.type()
+            if event_type == QtCore.QEvent.Type.FocusIn:
+                self._show_full_text()
+            elif event_type == QtCore.QEvent.Type.FocusOut:
+                self._show_elided_text()
+            elif event_type == QtCore.QEvent.Type.Resize and not self.file_path.hasFocus():
+                self._show_elided_text()
+        return super().eventFilter(obj, event)
+
+    def _on_internal_text_changed(self, text: str):
+        # a genuine edit (typing, or a programmatic QLineEdit.setText() bypassing our own
+        # setText()) - keep the stored full path in sync with what's actually displayed
+        self._full_path = text
+        self.file_path.setToolTip(self._full_path)
+        self.setToolTip(self._full_path)
+        self._check_legality()
+
+    def _elided_text(self) -> str:
+        text = self._full_path
+        metrics = self.file_path.fontMetrics()
+        available_width = self.file_path.width()
+        if available_width <= 0 or metrics.horizontalAdvance(text) <= available_width:
+            return text
+
+        filename = text.replace('\\', '/').rsplit('/', 1)[-1]
+        if filename and filename != text:
+            candidate = f'.../{filename}'
+            if metrics.horizontalAdvance(candidate) <= available_width:
+                return candidate
+            # even ".../<filename>" doesn't fit - fall back to eliding the filename itself,
+            # which (like ElideLeft) always keeps the tail of the string visible
+            return metrics.elidedText(candidate, QtCore.Qt.TextElideMode.ElideLeft, available_width)
+        return metrics.elidedText(text, QtCore.Qt.TextElideMode.ElideLeft, available_width)
+
+    def _show_full_text(self):
+        self.file_path.blockSignals(True)
+        self.file_path.setText(self._full_path)
+        self.file_path.blockSignals(False)
+
+    def _show_elided_text(self):
+        self.file_path.blockSignals(True)
+        self.file_path.setText(self._elided_text())
+        self.file_path.blockSignals(False)
+
+    def _refresh_display(self):
+        if self.file_path.hasFocus():
+            self._show_full_text()
+        else:
+            self._show_elided_text()
+        self.file_path.setToolTip(self._full_path)
+        self.setToolTip(self._full_path)
+        self._check_legality()
 
     def clear(self):
-        self.file_path.clear()
+        self.setText('')
 
     @property
     def is_legal(self):
         return self._is_legal
 
     def _check_legality(self):
-        current_path = self.file_path.text()
+        current_path = self._full_path
         if (self.is_file and validation.is_legal_file_path(current_path)) or (
             not self.is_file and validation.is_legal_dir_path(current_path)):
             self._is_legal = True
@@ -1198,18 +1269,19 @@ class PathLineEdit(QtWidgets.QWidget):
     def choose_file(self):
         filename, _ = QtWidgets.QFileDialog.getOpenFileName(self, "Choose a file", filter=self.file_types)
         if filename:
-            self.file_path.setText(filename)
+            self.setText(filename)
 
     def choose_folder(self):
         dirname = QtWidgets.QFileDialog.getExistingDirectory(self, "Choose a folder")
         if dirname:
-            self.file_path.setText(dirname)
+            self.setText(dirname)
 
     def text(self):
-        return self.file_path.text()
+        return self._full_path
 
     def setText(self, text: str):
-        return self.file_path.setText(text)
+        self._full_path = text
+        self._refresh_display()
 
 
 class StrIntLineEdit(QtWidgets.QLineEdit):
@@ -1280,47 +1352,49 @@ class OptionalWidget(QtWidgets.QWidget):
     __slots__ = {'layout': 'layout',
                  'other': 'other widget',
                  'default': 'default value',
-                 'checkbox': 'disable checkbox'}
+                 'checkbox': 'set-value checkbox'}
 
     def __init__(self, other: QtWidgets.QWidget, default=EMPTY, parent=None):
         super().__init__(parent)
         self.layout = QtWidgets.QHBoxLayout(self)
         self.other = other
         self.default = default
-        self.checkbox = QtWidgets.QCheckBox('Disable this parameter?')
+        self.checkbox = QtWidgets.QCheckBox('Set a value')
         self.toggled = self.checkbox.toggled
 
         self.init_ui()
 
     def clear(self):
-        self.checkbox.setChecked(False)
+        self.checkbox.setChecked(True)
         try:
             self.other.clear()
         except AttributeError:
             pass
 
     def init_ui(self):
-        self.toggled.connect(self.other.setDisabled)
+        self.toggled.connect(self.other.setEnabled)
         self.layout.addWidget(self.checkbox)
         self.layout.addWidget(self.other)
-        if self.default is None:
-            self.checkbox.setChecked(True)
+        # checked = provide a value (inner enabled); unchecked = use default/None (inner disabled).
+        # A default of None means "leave unset"; any other default (incl. EMPTY) means "provide a value".
+        self.checkbox.setChecked(self.default is not None)
+        self.check_other()
 
     def check_other(self):
-        self.other.setDisabled(self.checkbox.isChecked())
+        self.other.setEnabled(self.checkbox.isChecked())
 
     def value(self):
         if self.checkbox.isChecked():
-            return None
-        return get_val_from_widget(self.other)
+            return get_val_from_widget(self.other)
+        return None
 
     def setValue(self, val):
         if val is None:
-            self.checkbox.setChecked(True)
+            self.checkbox.setChecked(False)
         else:
             try:
                 set_widget_value(self.other, val)
-                self.checkbox.setChecked(False)
+                self.checkbox.setChecked(True)
             except AttributeError:
                 raise ValueError(f'Unable to set default value of {type(self.other)} to {val}')
 
@@ -1594,7 +1668,7 @@ class QMultiInput(QtWidgets.QPushButton):
                  'dialog_started': 'stores whether the dialog was already started >=1 times',
                  'dialog_layout': 'layout of the dialog window'}
 
-    def __init__(self, label: str = '', text='Set input', parent=None):
+    def __init__(self, label: str = '', text='Choose values', parent=None):
         super().__init__(text, parent)
         self.label = label
         self.dialog_widgets = {}
@@ -1689,7 +1763,7 @@ class QMultiSpinBox(QMultiInput):
                  'maximum': 'maximum value for spinboxes'}
     CHILD_QWIDGET = QtWidgets.QSpinBox
 
-    def __init__(self, label: str = '', text='Set input', parent=None, minimum=-2147483648, maximum=2147483647):
+    def __init__(self, label: str = '', text='Choose values', parent=None, minimum=-2147483648, maximum=2147483647):
         self.minimum = minimum
         self.maximum = maximum
         super().__init__(label, text, parent)
@@ -1712,7 +1786,7 @@ class QMultiDoubleSpinBox(QMultiSpinBox):
                  'step_size': 'default step size of spinboxes'}
     CHILD_QWIDGET = QtWidgets.QDoubleSpinBox
 
-    def __init__(self, label: str = '', text='Set input', parent=None, minimum=float("-inf"), maximum=float("inf"),
+    def __init__(self, label: str = '', text='Choose values', parent=None, minimum=float("-inf"), maximum=float("inf"),
                  step_size: float = 0.05):
         self.minimum = minimum
         self.maximum = maximum
@@ -1724,6 +1798,51 @@ class QMultiDoubleSpinBox(QMultiSpinBox):
         self.dialog_widgets['inputs'][-1].setMinimum(self.minimum)
         self.dialog_widgets['inputs'][-1].setMaximum(self.maximum)
         self.dialog_widgets['inputs'][-1].setSingleStep(self.step_size)
+
+
+def float_spinbox_decimals_and_step(value: float) -> Tuple[int, float]:
+    """Pick sensible display `decimals` and arrow `single_step` for a float spin box, given a
+    representative value (usually the parameter's default).
+
+    This is display polish only: the widget still returns the exact float the user sets, so the
+    values passed to the API are unchanged. `decimals` only caps the finest *typable* precision
+    (kept generous enough that legitimate values stay reachable), and `single_step` only sizes
+    the up/down arrows.
+
+    - Integer-valued magnitudes (e.g. a read-count threshold of ``5``) step by whole units.
+    - Fractional magnitudes get a finer step and enough decimals to show the value, with smaller
+      values getting more decimals.
+    """
+    v = abs(float(value))
+    if v == 0 or float(value).is_integer():
+        return 3, 1.0
+    if v >= 1:
+        return 3, 0.1
+    order = Decimal(str(v)).adjusted()  # order of magnitude of the first significant digit (< 0)
+    decimals = min(2 - order, 8)
+    step = 10.0 ** order
+    return decimals, step
+
+
+class AdaptiveDoubleSpinBox(QtWidgets.QDoubleSpinBox):
+    """A `QDoubleSpinBox` that trims trailing zeros from its display (shows ``5`` instead of
+    ``5.00`` and ``5.5`` instead of ``5.50``).
+
+    Display only: `value()` still returns the exact float that was set, and the configured
+    `decimals` still governs the finest typable precision, so values handed to the API are
+    unchanged.
+    """
+
+    def textFromValue(self, value: float) -> str:
+        text = super().textFromValue(value)
+        decimal_point = self.locale().decimalPoint()
+        if not isinstance(decimal_point, str):  # PyQt may hand back a QChar/int depending on version
+            decimal_point = chr(int(decimal_point))
+        if decimal_point in text:
+            text = text.rstrip('0')
+            if text.endswith(decimal_point):
+                text = text[:-len(decimal_point)]
+        return text
 
 
 class QMultiLineEdit(QMultiInput):
@@ -1745,7 +1864,7 @@ class QMultiLineEdit(QMultiInput):
 class QMultiPathLineEdit(QMultiLineEdit):
     CHILD_QWIDGET = PathLineEdit
 
-    def __init__(self, is_file: bool = True, label: str = '', text='Set input', parent=None):
+    def __init__(self, is_file: bool = True, label: str = '', text='Choose values', parent=None):
         self.is_file = is_file
         super().__init__(label, text, parent)
 
@@ -1776,7 +1895,7 @@ class QMultiComboBox(QMultiInput):
     CHILD_QWIDGET = QtWidgets.QComboBox
     __slots__ = {'items': 'combo box items'}
 
-    def __init__(self, label: str, text: str = 'Set Input', parent=None, items=()):
+    def __init__(self, label: str, text: str = 'Choose values', parent=None, items=()):
         self.items = items
         super().__init__(label, text, parent)
 
@@ -1804,6 +1923,9 @@ class QMultiToggleSwitch(QMultiInput):
 class ThreadStdOutStreamTextQueueReceiver(QtCore.QObject):
     queue_stdout_element_received_signal = QtCore.pyqtSignal(str)
     __slots__ = {'queue': 'queue'}
+    #: Sentinel put on the queue to break run()'s blocking loop so the listener thread can end.
+    #: Compared by identity, so it can never collide with a real (string) stdout item.
+    STOP_SIGNAL = object()
 
     def __init__(self, q: Queue, *args, **kwargs):
         QtCore.QObject.__init__(self, *args, **kwargs)
@@ -1814,6 +1936,8 @@ class ThreadStdOutStreamTextQueueReceiver(QtCore.QObject):
         self.queue_stdout_element_received_signal.emit('Welcome to RNAlysis!\n')
         while True:
             text = self.queue.get()
+            if text is self.STOP_SIGNAL:  # graceful shutdown (see MainWindow._shutdown_worker_threads)
+                break
             self.queue_stdout_element_received_signal.emit(text)
 
 
@@ -2025,21 +2149,25 @@ def param_to_widget(param, name: str,
 
 
     elif param.annotation is float:
-        widget = QtWidgets.QDoubleSpinBox()
+        default = param.default if is_default else 0.0
+        decimals, step = float_spinbox_decimals_and_step(default)
+        widget = AdaptiveDoubleSpinBox()
+        widget.setDecimals(decimals)
         widget.setMinimum(float("-inf"))
         widget.setMaximum(float("inf"))
-        widget.setSingleStep(0.05)
-        default = param.default if is_default else 0.0
+        widget.setSingleStep(step)
         widget.setValue(default)
         for action in actions_to_connect:
             widget.valueChanged.connect(action)
 
     elif param.annotation == param_typing.Fraction:
-        widget = QtWidgets.QDoubleSpinBox()
+        default = param.default if is_default else 0.0
+        decimals, _ = float_spinbox_decimals_and_step(default)
+        widget = AdaptiveDoubleSpinBox()
+        widget.setDecimals(decimals)
         widget.setMinimum(0.0)
         widget.setMaximum(1.0)
-        widget.setSingleStep(0.05)
-        default = param.default if is_default else 0.0
+        widget.setSingleStep(0.05)  # the 0..1 fraction step is intentionally kept fine
         widget.setValue(default)
         for action in actions_to_connect:
             widget.valueChanged.connect(action)
@@ -2205,3 +2333,20 @@ def clear_layout(layout, exceptions: set = frozenset()):
         child = layout.takeAt(0)
         if child.widget() and child.widget() not in exceptions:
             child.widget().deleteLater()
+
+
+def mark_primary(button: QtWidgets.QAbstractButton):
+    """
+    Mark a button as the primary/main action of its window or screen, so it gets the
+    accented, filled "primary button" look defined by the ``QPushButton[class="primary"]``
+    rule in ``styles/parametric_style.qss``, instead of the default flat/secondary style.
+    There should be at most one primary button visible per window at a time.
+
+    :param button: the button to mark as primary
+    :type button: QtWidgets.QAbstractButton
+    """
+    button.setProperty('class', 'primary')
+    # dynamic properties used in a stylesheet selector require the style to be
+    # re-polished to take effect, since it isn't automatically re-evaluated on setProperty()
+    button.style().unpolish(button)
+    button.style().polish(button)

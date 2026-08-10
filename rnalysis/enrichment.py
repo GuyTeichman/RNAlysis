@@ -908,7 +908,7 @@ class FeatureSet(set):
         In most cases parallel processing will lead to shorter computation time, but does not affect the results of \
         the analysis otherwise.
         :rtype: pl.DataFrame (default) or Tuple[pl.DataFrame, matplotlib.figure.Figure]
-        :return: a pandas DataFrame with GO terms as rows/index; \
+        :return: a polars DataFrame with GO terms in the first column; \
         and a matplotlib Figure, if 'return_figure' is set to True.
 
         .. figure:: /figures/ontology_graph.png
@@ -1035,7 +1035,7 @@ class FeatureSet(set):
         In most cases parallel processing will lead to shorter computation time, but does not affect the results of \
         the analysis otherwise.
         :rtype: pl.DataFrame (default) or Tuple[pl.DataFrame, matplotlib.figure.Figure]
-        :return: a pandas DataFrame with the indicated pathway names as rows/index; \
+        :return: a polars DataFrame with the indicated pathway names in the first column; \
         and a matplotlib Figure, if 'return_figure' is set to True.
 
 
@@ -1153,7 +1153,7 @@ class FeatureSet(set):
         In most cases parallel processing will lead to shorter computation time, but does not affect the results of \
         the analysis otherwise.
         :rtype: pl.DataFrame (default) or Tuple[pl.DataFrame, matplotlib.figure.Figure]
-        :return: a pandas DataFrame with the indicated attribute names as rows/index; \
+        :return: a polars DataFrame with the indicated attribute names in the first column; \
         and a matplotlib Figure, if 'return_figure' is set to True.
 
         .. figure:: /figures/plot_enrichment_results.png
@@ -1238,7 +1238,7 @@ class FeatureSet(set):
         :type return_fig: bool (default=False)
         :param return_fig: if True, returns a matplotlib Figure object in addition to the results DataFrame.
         :rtype: pl.DataFrame (default) or Tuple[pl.DataFrame, matplotlib.figure.Figure]
-        :return: a pandas DataFrame with the indicated attribute names as rows/index; \
+        :return: a polars DataFrame with the indicated attribute names in the first column; \
         and a matplotlib Figure, if 'return_figure' is set to True.
 
 
@@ -1284,12 +1284,18 @@ class FeatureSet(set):
             >>> from rnalysis import enrichment, filtering
             >>> d = filtering.Filter("tests/test_files/test_deseq.csv")
             >>> en = enrichment.FeatureSet(d)
-            >>> en.biotypes(ref='tests/biotype_ref_table_for_tests.csv')
-                            gene
-            biotype
-            protein_coding    26
-            pseudogene         1
-            unknown            1
+            >>> en.biotypes_from_ref_table(ref='tests/test_files/biotype_ref_table_for_tests.csv')
+            Biotype Reference Table used: tests/test_files/biotype_ref_table_for_tests.csv
+            shape: (3, 2)
+            ┌────────────────┬───────┐
+            │ biotype        ┆ count │
+            │ ---            ┆ ---   │
+            │ str            ┆ u32   │
+            ╞════════════════╪═══════╡
+            │ protein_coding ┆ 26    │
+            │ pseudogene     ┆ 1     │
+            │ unknown        ┆ 1     │
+            └────────────────┴───────┘
 
         """
 
@@ -1317,8 +1323,8 @@ class FeatureSet(set):
         :param long_format:if True, returns a short-form DataFrame, which states the biotypes \
         in the Filter object and their count. Otherwise, returns a long-form DataFrame,
         which also provides descriptive statistics of each column per biotype.
-        :rtype: pandas.DataFrame
-        :returns: a pandas DataFrame showing the number of values belonging to each biotype, \
+        :rtype: pl.DataFrame
+        :returns: a polars DataFrame showing the number of values belonging to each biotype, \
         as well as additional descriptive statistics of format=='long'.
         """
         filter_obj = self._convert_to_filter_obj()
@@ -1556,7 +1562,7 @@ class RankedSet(FeatureSet):
         In most cases parallel processing will lead to shorter computation time, but does not affect the results of \
         the analysis otherwise.
         :rtype: pl.DataFrame (default) or Tuple[pl.DataFrame, matplotlib.figure.Figure]
-        :return: a pandas DataFrame with the indicated attribute names as rows/index; \
+        :return: a polars DataFrame with the indicated attribute names in the first column; \
         and a matplotlib Figure, if 'return_figure' is set to True.
 
         .. figure:: /figures/ontology_graph_singlelist.png
@@ -1691,7 +1697,7 @@ class RankedSet(FeatureSet):
         In most cases parallel processing will lead to shorter computation time, but does not affect the results of \
         the analysis otherwise.
         :rtype: pl.DataFrame (default) or Tuple[pl.DataFrame, matplotlib.figure.Figure]
-        :return: a pandas DataFrame with the indicated attribute names as rows/index; \
+        :return: a polars DataFrame with the indicated attribute names in the first column; \
         and a matplotlib Figure, if 'return_figure' is set to True.
 
         .. figure:: /figures/pathway_graph_singlelist.png
@@ -1801,7 +1807,7 @@ class RankedSet(FeatureSet):
         In most cases parallel processing will lead to shorter computation time, but does not affect the results of \
         the analysis otherwise.
         :rtype: pl.DataFrame (default) or Tuple[pl.DataFrame, matplotlib.figure.Figure]
-        :return: a pandas DataFrame with the indicated attribute names as rows/index; \
+        :return: a polars DataFrame with the indicated attribute names in the first column; \
         and a matplotlib Figure, if 'return_figure' is set to True.
 
         .. figure:: /figures/plot_enrichment_results_single_set.png
