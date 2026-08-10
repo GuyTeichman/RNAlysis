@@ -22,7 +22,7 @@ from tqdm.auto import tqdm
 from rnalysis import filtering
 from rnalysis.utils import (feature_counting, generic, genome_annotation,
                             installs, io, parsing, validation)
-from rnalysis.utils.generic import readable_name
+from rnalysis.utils.generic import param_readable_names, readable_name
 from rnalysis.utils.param_typing import (LEGAL_ALIGNMENT_SUFFIXES,
                                          LEGAL_BOWTIE2_MODES,
                                          LEGAL_BOWTIE2_PRESETS,
@@ -2041,6 +2041,7 @@ def _sum_transcripts_to_genes(tpm: pl.DataFrame, counts: pl.DataFrame, gtf_path:
 
 @_func_type('single')
 @readable_name('CutAdapt (single-end reads)')
+@param_readable_names({'trim_n': 'Trim ambiguous (N) bases'})
 def trim_adapters_single_end(fastq_folder: Union[str, Path], output_folder: Union[str, Path],
                              three_prime_adapters: Union[None, str, List[str]],
                              five_prime_adapters: Union[None, str, List[str]] = None,
@@ -2158,6 +2159,7 @@ def trim_adapters_single_end(fastq_folder: Union[str, Path], output_folder: Unio
 
 @_func_type('paired')
 @readable_name('CutAdapt (paired-end reads)')
+@param_readable_names({'trim_n': 'Trim ambiguous (N) bases'})
 def trim_adapters_paired_end(r1_files: List[Union[str, Path]], r2_files: List[Union[str, Path]],
                              output_folder: Union[str, Path],
                              three_prime_adapters_r1: Union[None, str, List[str]],

@@ -479,6 +479,124 @@ def test_PathLineEdit_choose_file_not_chosen(qtbot, monkeypatch):
     assert widget.text() == pth
 
 
+def test_PathLineEdit_tooltip_reflects_full_path(qtbot):
+    qtbot, widget = widget_setup(qtbot, PathLineEdit)
+    long_path = 'C:/Users/example_user/very/long/nested/directory/structure/elegans_developmental_stages.tsv'
+
+    widget.setText(long_path)
+
+    assert widget.toolTip() == long_path
+    assert widget.file_path.toolTip() == long_path
+
+
+def test_PathLineEdit_tooltip_updates_on_keyboard_edit(qtbot):
+    qtbot, widget = widget_setup(qtbot, PathLineEdit)
+    widget.clear()
+    qtbot.keyClicks(widget.file_path, 'tests/test_files/test_deseq.csv')
+
+    assert widget.toolTip() == 'tests/test_files/test_deseq.csv'
+    assert widget.file_path.toolTip() == 'tests/test_files/test_deseq.csv'
+
+
+@pytest.mark.parametrize('long_path', [
+    'C:/Users/example_user/very/long/nested/directory/structure/elegans_developmental_stages.tsv',
+    '/home/example_user/very/long/nested/directory/structure/elegans_developmental_stages.tsv',
+])
+def test_PathLineEdit_text_roundtrip_unchanged_for_long_paths(qtbot, long_path):
+    qtbot, widget = widget_setup(qtbot, PathLineEdit)
+
+    widget.setText(long_path)
+    assert widget.text() == long_path
+
+    # narrowing the widget (which drives elision of the *display*) must not affect the stored value
+    widget.resize(80, widget.height())
+    qtbot.wait(50)
+    assert widget.text() == long_path
+
+
+def test_PathLineEdit_folder_mode_text_roundtrip_unchanged(qtbot):
+    long_path = 'C:/Users/example_user/very/long/nested/directory/structure/some_output_folder'
+    qtbot, widget = widget_setup(qtbot, PathLineEdit, is_file=False)
+
+    widget.setText(long_path)
+    widget.resize(80, widget.height())
+    qtbot.wait(50)
+
+    assert widget.text() == long_path
+
+
+def test_PathLineEdit_elides_to_dotdotdot_filename_when_it_fits(qtbot):
+    long_path = 'C:/Users/example_user/very/long/nested/directory/structure/elegans_developmental_stages.tsv'
+    candidate = '.../elegans_developmental_stages.tsv'
+    qtbot, widget = widget_setup(qtbot, PathLineEdit)
+
+    widget.setText(long_path)
+    widget.open_button.setFocus()
+
+    metrics = widget.file_path.fontMetrics()
+    candidate_width = metrics.horizontalAdvance(candidate)
+    full_width = metrics.horizontalAdvance(long_path)
+
+    # Measure, from the live layout, how much of the outer widget's width is consumed by
+    # the open button/margins/spacing before it reaches the inner QLineEdit. Deriving the
+    # target size this way (instead of a hardcoded magic width) keeps the test independent
+    # of font/DPI: whatever the current font metrics and layout overhead are, we compute
+    # exactly the width needed to fit '.../<filename>' but not the full path.
+    probe_width = full_width + 200
+    widget.resize(probe_width, widget.height())
+    qtbot.wait(50)
+    overhead = probe_width - widget.file_path.width()
+    assert overhead > 0
+
+    target_width = overhead + candidate_width + 20
+    assert target_width < overhead + full_width  # sanity check: still narrower than the full path needs
+    widget.resize(target_width, widget.height())
+    qtbot.wait(50)
+
+    displayed = widget.file_path.text()
+    assert displayed == candidate
+    # the stored/returned value is never touched by elision
+    assert widget.text() == long_path
+
+
+def test_PathLineEdit_elides_display_when_narrow_and_unfocused(qtbot):
+    long_path = 'C:/Users/example_user/very/long/nested/directory/structure/elegans_developmental_stages.tsv'
+    qtbot, widget = widget_setup(qtbot, PathLineEdit)
+
+    widget.setText(long_path)
+    widget.open_button.setFocus()
+    widget.resize(300, widget.height())
+    qtbot.wait(50)
+
+    displayed = widget.file_path.text()
+    assert displayed != long_path
+    # even when there isn't room for the whole filename, the tail (end of the filename) is
+    # what remains visible - never the head of the path
+    assert displayed.endswith(long_path[-10:])
+    # the stored/returned value is never touched by elision
+    assert widget.text() == long_path
+
+
+def test_PathLineEdit_shows_full_text_when_focused(qtbot):
+    long_path = 'C:/Users/example_user/very/long/nested/directory/structure/elegans_developmental_stages.tsv'
+    qtbot, widget = widget_setup(qtbot, PathLineEdit)
+
+    widget.setText(long_path)
+    widget.resize(120, widget.height())
+    qtbot.wait(50)
+
+    # Deliver the FocusIn event directly through the widget's own eventFilter instead of
+    # relying on widget.file_path.setFocus() to actually win keyboard focus from the window
+    # system: on headless platforms (QT_QPA_PLATFORM=offscreen, notably Linux) setFocus() on
+    # a widget that was never shown/activated as a top-level does not reliably dispatch a
+    # FocusIn event, which made this test flaky depending on the OS. sendEvent() is
+    # synchronous and routes through the real eventFilter under test either way.
+    QtWidgets.QApplication.sendEvent(widget.file_path, QtGui.QFocusEvent(QtCore.QEvent.Type.FocusIn))
+
+    assert widget.file_path.text() == long_path
+    assert widget.text() == long_path
+
+
 def test_MultipleChoiceList_select_all(qtbot):
     items = ['item1', 'item2', 'item3']
     qtbot, widget = widget_setup(qtbot, MultipleChoiceList, items)
@@ -1035,14 +1153,121 @@ def test_RadioButtonBox_emit(qtbot):
     (param_typing.PositiveInt, 15, QtWidgets.QSpinBox),
     (param_typing.NonNegativeInt, 0, QtWidgets.QSpinBox),
     (param_typing.NegativeInt, -15, QtWidgets.QSpinBox),
-    (float, 3.14, QtWidgets.QDoubleSpinBox),
-    (param_typing.Fraction, 0.15, QtWidgets.QDoubleSpinBox),
+    (float, 3.14, AdaptiveDoubleSpinBox),
+    (param_typing.Fraction, 0.15, AdaptiveDoubleSpinBox),
     (Literal['a1', 'b1', 'c1'], 'b1', QtWidgets.QComboBox),
     (Union[str, float, None, bool], True, OptionalWidget),
     (Union[str, float, bool], 17, QtWidgets.QTextEdit)
 ])
 def test_param_to_widget_native_types(qtbot, param_type, default, expected_widget):
     _run_param_to_widget(qtbot, param_type, default, 'param_name', expected_widget)
+
+
+@pytest.mark.parametrize('value,expected_decimals,expected_step', [
+    (5, 3, 1.0),
+    (5.0, 3, 1.0),
+    (50.0, 3, 1.0),
+    (100.0, 3, 1.0),
+    (0, 3, 1.0),
+    (0.0, 3, 1.0),
+    (-5.0, 3, 1.0),
+    (3.14, 3, 0.1),
+    (2.5, 3, 0.1),
+    (0.5, 3, 0.1),
+    (0.15, 3, 0.1),
+    (-0.5, 3, 0.1),
+    (0.05, 4, 0.01),
+    (-0.05, 4, 0.01),
+    (0.001, 5, 0.001),
+])
+def test_float_spinbox_decimals_and_step(value, expected_decimals, expected_step):
+    decimals, step = float_spinbox_decimals_and_step(value)
+    assert decimals == expected_decimals
+    assert step == pytest.approx(expected_step)
+
+
+def test_adaptive_double_spinbox_trims_trailing_zeros(qtbot):
+    qtbot, widget = widget_setup(qtbot, AdaptiveDoubleSpinBox)
+    widget.setDecimals(3)
+    # integer-valued numbers display without a trailing '.000'
+    assert widget.textFromValue(5.0) == '5'
+    assert widget.textFromValue(50.0) == '50'
+    assert widget.textFromValue(0.0) == '0'
+    # fractional numbers keep only their significant decimals
+    assert widget.textFromValue(5.5) == '5.5'
+    assert widget.textFromValue(0.05) == '0.05'
+    assert widget.textFromValue(-0.5) == '-0.5'
+
+
+def test_param_to_widget_float_integer_default_is_magnitude_aware(qtbot):
+    param = NewParam(float, 5)
+    widget = param_to_widget(param, 'threshold')
+    widget.show()
+    qtbot.add_widget(widget)
+    assert isinstance(widget, QtWidgets.QDoubleSpinBox)
+    assert widget.singleStep() == pytest.approx(1.0)
+    # integer-valued default shows as '5', not '5.00'
+    assert widget.textFromValue(widget.value()) == '5'
+    # a fractional value is still reachable and displays with its decimals
+    assert widget.textFromValue(5.5) == '5.5'
+
+
+def test_param_to_widget_float_fractional_default_is_magnitude_aware(qtbot):
+    param = NewParam(float, 0.05)
+    widget = param_to_widget(param, 'x')
+    widget.show()
+    qtbot.add_widget(widget)
+    assert widget.singleStep() == pytest.approx(0.01)
+    assert widget.decimals() >= 3
+    assert widget.textFromValue(0.05) == '0.05'
+
+
+def test_param_to_widget_fraction_keeps_step_and_sensible_decimals(qtbot):
+    param = NewParam(param_typing.Fraction, 0.05)
+    widget = param_to_widget(param, 'alpha')
+    widget.show()
+    qtbot.add_widget(widget)
+    assert widget.minimum() == pytest.approx(0.0)
+    assert widget.maximum() == pytest.approx(1.0)
+    # the Fraction step is intentionally left at 0.05
+    assert widget.singleStep() == pytest.approx(0.05)
+    assert widget.decimals() >= 3
+    assert widget.textFromValue(0.05) == '0.05'
+    assert widget.textFromValue(1.0) == '1'
+
+
+@pytest.mark.parametrize('annotation,default,typed_value', [
+    (float, 5, 5.5),
+    (float, 5, 5.125),
+    (float, 5, 7.0),
+    (float, 5, 42.75),
+    (float, 0.05, 0.123),
+    (float, 0.001, 0.00042),
+    (param_typing.Fraction, 0.05, 0.001),
+    (param_typing.Fraction, 0.05, 0.375),
+])
+def test_float_widget_returns_exact_value(qtbot, annotation, default, typed_value):
+    # DISPLAY ONLY: the widget must return the exact float the user set, so values
+    # passed to the API are numerically identical (a hard reproducibility invariant).
+    param = NewParam(annotation, default)
+    widget = param_to_widget(param, 'p')
+    widget.show()
+    qtbot.add_widget(widget)
+    set_widget_value(widget, typed_value)
+    assert get_val_from_widget(widget) == typed_value
+
+
+def test_float_widget_returns_exact_typed_value(qtbot):
+    # a precise value typed by hand (finer than the old fixed 2 decimals) must be reachable
+    # and returned unchanged from the widget.
+    param = NewParam(float, 5)
+    widget = param_to_widget(param, 'threshold')
+    widget.show()
+    qtbot.add_widget(widget)
+    widget.clear()
+    qtbot.keyClicks(widget, '5.125')
+    widget.interpretText()
+    assert get_val_from_widget(widget) == 5.125
 
 
 @pytest.mark.parametrize('param_type,default,name,expected_widget', [

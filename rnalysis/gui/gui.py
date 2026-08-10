@@ -795,9 +795,10 @@ class EnrichmentWindow(gui_widgets.MinMaxDialog):
         gui_widgets.clear_layout(self.plot_grid)
 
         i = 0
+        func = self.get_current_func()
         for name, (param, desc) in self.plot_signature.items():
             self.plot_widgets[name] = gui_widgets.param_to_widget(param, name)
-            label = QtWidgets.QLabel(f'{name}:', self.plot_widgets[name])
+            label = QtWidgets.QLabel(f'{generic.get_param_readable_name(name, func)}:', self.plot_widgets[name])
             label.setToolTip(desc)
             help_button = gui_widgets.HelpButton()
             self.plot_grid.addWidget(label, i, 0)
@@ -814,9 +815,10 @@ class EnrichmentWindow(gui_widgets.MinMaxDialog):
         gui_widgets.clear_layout(self.parameter_grid)
 
         i = 0
+        func = self.get_current_func()
         for name, (param, desc) in self.parameters_signature.items():
             self.parameter_widgets[name] = gui_widgets.param_to_widget(param, name)
-            label = QtWidgets.QLabel(f'{name}:', self.parameter_widgets[name])
+            label = QtWidgets.QLabel(f'{generic.get_param_readable_name(name, func)}:', self.parameter_widgets[name])
             label.setToolTip(desc)
             help_button = gui_widgets.HelpButton()
             self.parameter_grid.addWidget(help_button, i, 2)
@@ -848,10 +850,11 @@ class EnrichmentWindow(gui_widgets.MinMaxDialog):
         self.stats_grid.addWidget(self.stats_widgets['stats_radiobox'], 0, 0, 3, 2)
 
         i = 0
+        func = self.get_current_func()
         for name, (param, desc) in self.stats_signature.items():
             if name in self.STATISTICAL_TEST_ARGS[prev_test]:
                 self.stats_widgets[name] = gui_widgets.param_to_widget(param, name)
-                label = QtWidgets.QLabel(f'{name}:', self.stats_widgets[name])
+                label = QtWidgets.QLabel(f'{generic.get_param_readable_name(name, func)}:', self.stats_widgets[name])
                 label.setToolTip(desc)
                 help_button = gui_widgets.HelpButton()
                 self.stats_grid.addWidget(help_button, i, 4)
@@ -1123,12 +1126,14 @@ class SetOperationWindow(gui_widgets.MinMaxDialog):
 
         chosen_func_name = self.get_current_func_name()
         signature = generic.get_method_signature(chosen_func_name, filtering.Filter)
+        func = getattr(filtering.Filter, chosen_func_name, None)
         i = 0
         for name, param in signature.items():
             if name in self.EXCLUDED_PARAMS:
                 continue
             self.parameter_widgets[name] = gui_widgets.param_to_widget(param, name)
-            self.parameter_grid.addWidget(QtWidgets.QLabel(f'{name}:', self.parameter_widgets[name]), i, 0)
+            self.parameter_grid.addWidget(
+                QtWidgets.QLabel(f'{generic.get_param_readable_name(name, func)}:', self.parameter_widgets[name]), i, 0)
             self.parameter_grid.addWidget(self.parameter_widgets[name], i, 1)
             if chosen_func_name == 'majority_vote_intersection':
                 self.parameter_widgets[name].valueChanged.connect(self._majority_vote_intersection)
@@ -1366,13 +1371,15 @@ class SetVisualizationWindow(gui_widgets.MinMaxDialog):
 
         chosen_func_name = self.get_current_func_name()
         signature = generic.get_method_signature(chosen_func_name, enrichment)
+        func = getattr(enrichment, chosen_func_name, None)
         i = 0
         for name, param in signature.items():
             if name in self.EXCLUDED_PARAMS:
                 continue
             self.parameter_widgets[name] = gui_widgets.param_to_widget(param, name,
                                                                        actions_to_connect=self.create_canvas)
-            self.parameter_grid.addWidget(QtWidgets.QLabel(f'{name}:', self.parameter_widgets[name]), i, 0)
+            self.parameter_grid.addWidget(
+                QtWidgets.QLabel(f'{generic.get_param_readable_name(name, func)}:', self.parameter_widgets[name]), i, 0)
             self.parameter_grid.addWidget(self.parameter_widgets[name], i, 1)
             i += 1
 
@@ -1913,6 +1920,7 @@ class FuncTypeStack(QtWidgets.QWidget):
 
         signature = generic.get_method_signature(chosen_func_name, self.filter_obj)
         desc, param_desc = io.get_method_docstring(chosen_func_name, self.filter_obj)
+        func = getattr(self.filter_obj, chosen_func_name, None)
         self.func_combo.setToolTip(desc)
         self.func_help_button.set_param_help(self.get_function_readable_name(), desc)
 
@@ -1923,7 +1931,7 @@ class FuncTypeStack(QtWidgets.QWidget):
             self.parameter_widgets[name] = gui_widgets.param_to_widget(param, name, pipeline_mode=self.pipeline_mode)
             self.connect_widget(self.parameter_widgets[name])
 
-            label = QtWidgets.QLabel(f'{name}:', self.parameter_widgets[name])
+            label = QtWidgets.QLabel(f'{generic.get_param_readable_name(name, func)}:', self.parameter_widgets[name])
             if name in param_desc:
                 label.setToolTip(param_desc[name])
                 help_button = gui_widgets.HelpButton()
@@ -2015,6 +2023,7 @@ class FilterTabPage(TabPage):
     def __init__(self, parent=None, undo_stack: QtGui.QUndoStack = None, tab_id: int = None):
         super().__init__(parent, undo_stack, tab_id)
         self.filter_obj = None
+        self._last_autodetected_path = None
 
         self.basic_group = QtWidgets.QGroupBox('Load a data table')
         self.basic_grid = QtWidgets.QGridLayout(self.basic_group)
@@ -2137,6 +2146,19 @@ class FilterTabPage(TabPage):
     def _change_start_button_state(self, is_legal: bool):
         self.basic_widgets['start_button'].setEnabled(is_legal)
 
+    def _autodetect_table_type(self, is_legal: bool):
+        # When a valid file is chosen, pre-select the most likely table type as a convenience default.
+        # This is fully overridable: the user can still pick any type from the combo afterwards.
+        if not is_legal:
+            return
+        file_path = self.basic_widgets['file_path'].text()
+        if file_path == self._last_autodetected_path:
+            return
+        self._last_autodetected_path = file_path
+        detected = filtering.infer_table_type(file_path)
+        if detected in FILTER_OBJ_TYPES:
+            self.basic_widgets['table_type_combo'].setCurrentText(detected)
+
     def update_basic_ui(self):
         # clear previous layout
         gui_widgets.clear_layout(self.basic_param_grid)
@@ -2145,13 +2167,14 @@ class FilterTabPage(TabPage):
         filter_obj_type = FILTER_OBJ_TYPES[self.basic_widgets['table_type_combo'].currentText()]
         signature = generic.get_method_signature(func_name, filter_obj_type)
         desc, param_desc = io.get_method_docstring(func_name, filter_obj_type)
+        func = getattr(filter_obj_type, func_name, None)
         self.basic_widgets['table_type_combo'].setToolTip(desc)
         i = 1
         for name, param in signature.items():
             if name in INIT_EXCLUDED_PARAMS:
                 continue
             self.basic_param_widgets[name] = gui_widgets.param_to_widget(param, name)
-            label = QtWidgets.QLabel(f'{name}:', self.basic_param_widgets[name])
+            label = QtWidgets.QLabel(f'{generic.get_param_readable_name(name, func)}:', self.basic_param_widgets[name])
             if name in param_desc:
                 label.setToolTip(param_desc[name])
                 help_button = gui_widgets.HelpButton()
@@ -2177,6 +2200,7 @@ class FilterTabPage(TabPage):
                                                                               "(*.csv;*.tsv;*.txt;*.parquet);;"
                                                                               "All Files (*)")
         self.basic_widgets['file_path'].textChanged.connect(self._change_start_button_state)
+        self.basic_widgets['file_path'].textChanged.connect(self._autodetect_table_type)
 
         self.basic_widgets['table_name'] = QtWidgets.QLineEdit()
 
@@ -2197,6 +2221,9 @@ class FilterTabPage(TabPage):
         self.basic_grid.addWidget(QtWidgets.QWidget(self), 4, 0, 1, 4)
         self.basic_grid.addWidget(QtWidgets.QWidget(self), 0, 4, 4, 1)
         self.basic_grid.setRowStretch(4, 1)
+        # give the extra horizontal space to the file path field (column 1) instead of the
+        # trailing padding column, so the field actually widens with the window
+        self.basic_grid.setColumnStretch(1, 1)
         self.basic_grid.setColumnStretch(4, 1)
 
     def _check_for_special_functions(self, is_selected: bool = True):
@@ -2774,13 +2801,14 @@ class MultiOpenWindow(QtWidgets.QDialog):
         filter_obj_type = FILTER_OBJ_TYPES[self.table_types[file].currentText()]
         signature = generic.get_method_signature(func_name, filter_obj_type)
         desc, param_desc = io.get_method_docstring(func_name, filter_obj_type)
+        func = getattr(filter_obj_type, func_name, None)
         self.table_types[file].setToolTip(desc)
         i = 1
         for name, param in signature.items():
             if name in INIT_EXCLUDED_PARAMS:
                 continue
             self.kwargs_widgets[file][name] = gui_widgets.param_to_widget(param, name)
-            label = QtWidgets.QLabel(f'{name}:', self.kwargs_widgets[file][name])
+            label = QtWidgets.QLabel(f'{generic.get_param_readable_name(name, func)}:', self.kwargs_widgets[file][name])
             if name in param_desc:
                 label.setToolTip(param_desc[name])
                 help_button = gui_widgets.HelpButton()

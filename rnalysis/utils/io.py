@@ -32,7 +32,7 @@ from io import StringIO
 from itertools import chain
 from pathlib import Path
 from sys import executable
-from typing import (List, Literal, NamedTuple,
+from typing import (List, Literal, NamedTuple, Optional,
                     Set, Tuple, Union, Callable, Iterable, Dict, Any)
 from urllib.parse import parse_qs, urlencode, urlparse
 
@@ -398,7 +398,7 @@ class GUISessionManager:
 
 
 def load_table(filename: Union[str, Path], drop_columns: Union[str, List[str]] = False,
-               squeeze=False, comment: str = None):
+               squeeze=False, comment: str = None, nrows: int = None):
     """
     Loads a CSV, TSV, or Parquet file into a Polars DataFrame.
 
@@ -412,6 +412,9 @@ def load_table(filename: Union[str, Path], drop_columns: Union[str, List[str]] =
     :type comment: str (optional)
     :param comment: Indicates remainder of line should not be parsed. \
     If found at the beginning of a line, the line will be ignored altogether. This parameter must be a single character.
+    :type nrows: int or None (default None)
+    :param nrows: if given, only the first ``nrows`` data rows are read (a lightweight partial read). \
+    The column names and order are identical to a full read. If None (default), the whole table is read.
     :return: a Polars DataFrame of the loaded file
     """
     assert isinstance(filename,
@@ -425,8 +428,10 @@ def load_table(filename: Union[str, Path], drop_columns: Union[str, List[str]] =
     kwargs = {}
     if comment is not None:
         kwargs['comment_prefix'] = comment
+    if nrows is not None:
+        kwargs['n_rows'] = nrows
     if filename.suffix.lower() == '.parquet':
-        df = pl.read_parquet(filename)
+        df = pl.read_parquet(filename, n_rows=nrows)
         # handle edge cases of parquet files that were exported from pandas DataFrames
         if '__index_level_0__' in df.columns:
             df = df.select(pl.col('__index_level_0__').alias('')).with_columns(
@@ -1297,9 +1302,24 @@ class PhylomeDBOrthologMapper:
         mapping_one2one = {}
         mapping_one2many = {}
 
-        taxon_map = self._get_taxon_map(self.map_from_organism, self.map_to_organism)
-        map_fwd, map_rev = self._get_id_conversion_maps()
         ids, translated_ids = self.translate_ids(ids)
+
+        # The PhylomeDB conversion table spans every species in the database, and the per-organism
+        # ortholog table is large too. Rather than materialize either in full, load the conversion
+        # table once and build only the slices we actually query: the forward map for our translated
+        # query IDs, the taxon map for the protids those resolve to, and the reverse map for the
+        # ortholog protids that come back.
+        conv_table = self._load_id_conversion_table()
+        map_fwd = self._build_forward_map(conv_table, set(translated_ids))
+        taxon_map = self._get_taxon_map(self.map_from_organism, self.map_to_organism,
+                                        needed_source_ids=set(map_fwd.values()))
+        needed_target_protids = set()
+        for to_id_conv, _score in taxon_map.values():
+            if isinstance(to_id_conv, pl.Series):
+                needed_target_protids.update(to_id_conv.to_list())
+            else:
+                needed_target_protids.add(to_id_conv)
+        map_rev = self._build_reverse_map(conv_table, needed_target_protids)
 
         n_mapped = 0
         for from_id in tqdm(translated_ids, 'Mapping orthologs', unit='genes'):
@@ -1361,7 +1381,7 @@ class PhylomeDBOrthologMapper:
             {k: [this_v[0] for this_v in v] for k, v in mapping_one2many.items()})
 
     @staticmethod
-    def _get_taxon_map(taxon_id: int, target_id: int):
+    def _get_taxon_map(taxon_id: int, target_id: int, needed_source_ids: Optional[Set[str]] = None):
         cache_dir = get_todays_cache_dir()
         cache_file = cache_dir.joinpath(f'phylomedb_{taxon_id}to{target_id}.parquet')
         file_path = f"/metaphors/latest/orthologs/{taxon_id}.txt.gz"
@@ -1390,40 +1410,94 @@ class PhylomeDBOrthologMapper:
 
             # cache file locally
             save_table(df, cache_file)
-        return {a: (b, c) for (a, b, c) in df.select('protid1', 'protid2', 'CS').iter_rows()}
+        # Restrict to the source protids we'll actually look up (the last-wins collapse below stays
+        # identical to the full map's -- see _restrict_to_needed).
+        sub = PhylomeDBOrthologMapper._restrict_to_needed(
+            df.select('protid1', 'protid2', 'CS'), 'protid1', needed_source_ids)
+        if sub is None:
+            return {}
+        return {a: (b, c) for (a, b, c) in sub.iter_rows()}
 
     @staticmethod
-    def _get_id_conversion_maps() -> Tuple[dict, dict]:
+    def _load_id_conversion_table() -> pl.DataFrame:
+        """Return PhylomeDB's external-ID <-> protid table, downloading and caching it if needed.
+
+        This is the database-wide ``id_conversion`` table (every species, millions of rows). It is
+        loaded once per mapping and shared by both the forward and reverse map builders so a single
+        ``get_orthologs`` call doesn't read the multi-million-row parquet twice.
+        """
         cache_dir = get_todays_cache_dir()
         cache_file = cache_dir.joinpath('phylomedb_id_conversion.parquet')
+        if cache_file.exists():
+            return pl.read_parquet(cache_file)
+
         file_path = "/metaphors/latest/id_conversion.txt.gz"
         local_zip_file = cache_dir.joinpath("id_conversion.txt.gz")
+        ftp = PhylomeDBOrthologMapper._connect()
+        # Download the file
+        with open(local_zip_file, 'wb') as fp:
+            ftp.retrbinary('RETR ' + file_path, fp.write)
+        ftp.quit()
 
-        if cache_file.exists():
-            df = pl.read_parquet(cache_file)
-        else:
-            ftp = PhylomeDBOrthologMapper._connect()
-            # Download the file
-            with open(local_zip_file, 'wb') as fp:
-                ftp.retrbinary('RETR ' + file_path, fp.write)
-            ftp.quit()
+        # Unzip the file
+        with gzip.open(local_zip_file, 'rb') as f_in:
+            with open(cache_file.with_suffix('.txt'), 'wb') as f_out:
+                shutil.copyfileobj(f_in, f_out)
 
-            # Unzip the file
-            with gzip.open(local_zip_file, 'rb') as f_in:
-                with open(cache_file.with_suffix('.txt'), 'wb') as f_out:
-                    shutil.copyfileobj(f_in, f_out)
+        # Remove the zipped file
+        os.remove(local_zip_file)
 
-            # Remove the zipped file
-            os.remove(local_zip_file)
+        df = pl.read_csv(cache_file.with_suffix('.txt'), separator='\t',
+                         columns=[0, 2], new_columns=['#extid', 'protid'], has_header=False, skip_rows=1)
+        # cache file locally
+        save_table(df, cache_file)
+        return df
 
-            # Load into pandas dataframe
-            df = pl.read_csv(cache_file.with_suffix('.txt'), separator='\t',
-                             columns=[0, 2], new_columns=['#extid', 'protid'], has_header=False, skip_rows=1)
-            # cache file locally
-            save_table(df, cache_file)
-        map_fwd = dict(df.select('#extid', 'protid').iter_rows())
-        map_rev = {v: k for k, v in map_fwd.items()}
-        return map_fwd, map_rev
+    @staticmethod
+    def _restrict_to_needed(df: pl.DataFrame, column: str, needed: Optional[Set[str]]) -> Optional[pl.DataFrame]:
+        """Filter ``df`` to the rows whose ``column`` value is in ``needed``.
+
+        ``None`` means "no restriction" (return ``df`` unchanged); an empty set means "nothing
+        needed" and returns ``None`` so the caller can short-circuit to an empty result. Filtering
+        preserves row order, so any downstream last-wins collapse is identical to the unfiltered
+        result restricted to the requested keys.
+        """
+        if needed is None:
+            return df
+        if len(needed) == 0:
+            return None
+        return df.filter(pl.col(column).is_in(list(needed)))
+
+    @staticmethod
+    def _build_forward_map(df: pl.DataFrame, needed_extids: Optional[Set[str]]) -> dict:
+        # extid -> protid, keeping the last protid seen per extid in row order (exactly like
+        # ``dict(df.iter_rows())``); restricting to the needed extids first leaves that choice
+        # unchanged because every row for a kept extid is retained.
+        sub = PhylomeDBOrthologMapper._restrict_to_needed(df.select('#extid', 'protid'), '#extid', needed_extids)
+        if sub is None:
+            return {}
+        return dict(zip(sub['#extid'].to_list(), sub['protid'].to_list()))
+
+    @staticmethod
+    def _build_reverse_map(df: pl.DataFrame, needed_protids: Optional[Set[str]]) -> dict:
+        # protid -> extid, reproducing the original ``{v: k for k, v in map_fwd.items()}`` exactly:
+        #   1. collapse to the final protid per extid (last in row order), remembering each extid's
+        #      first-appearance position -- this is ``map_fwd``, in insertion order;
+        #   2. for each protid keep the extid with the largest first-appearance position, i.e. the
+        #      "last wins" of iterating ``map_fwd`` in that insertion order.
+        # The collapse runs vectorized in Polars and only the (small) filtered result is turned into
+        # a Python dict, so the whole table is never materialized as one. The empty-set case is
+        # short-circuited up front to skip the whole-table collapse entirely.
+        if needed_protids is not None and len(needed_protids) == 0:
+            return {}
+        indexed = df.select('#extid', 'protid').with_row_index('__ord')
+        fwd = indexed.group_by('#extid').agg(
+            pl.col('protid').sort_by('__ord').last().alias('protid'),
+            pl.col('__ord').min().alias('__first'),
+        )
+        fwd = PhylomeDBOrthologMapper._restrict_to_needed(fwd, 'protid', needed_protids)
+        rev = fwd.group_by('protid').agg(pl.col('#extid').sort_by('__first').last().alias('#extid'))
+        return dict(zip(rev['protid'].to_list(), rev['#extid'].to_list()))
 
     @staticmethod
     def _connect():
