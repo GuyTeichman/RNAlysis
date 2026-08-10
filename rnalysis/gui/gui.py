@@ -2027,6 +2027,7 @@ class FilterTabPage(TabPage):
     def __init__(self, parent=None, undo_stack: QtGui.QUndoStack = None, tab_id: int = None):
         super().__init__(parent, undo_stack, tab_id)
         self.filter_obj = None
+        self._last_autodetected_path = None
 
         self.basic_group = QtWidgets.QGroupBox('Load a data table')
         self.basic_grid = QtWidgets.QGridLayout(self.basic_group)
@@ -2149,6 +2150,19 @@ class FilterTabPage(TabPage):
     def _change_start_button_state(self, is_legal: bool):
         self.basic_widgets['start_button'].setEnabled(is_legal)
 
+    def _autodetect_table_type(self, is_legal: bool):
+        # When a valid file is chosen, pre-select the most likely table type as a convenience default.
+        # This is fully overridable: the user can still pick any type from the combo afterwards.
+        if not is_legal:
+            return
+        file_path = self.basic_widgets['file_path'].text()
+        if file_path == self._last_autodetected_path:
+            return
+        self._last_autodetected_path = file_path
+        detected = filtering.infer_table_type(file_path)
+        if detected in FILTER_OBJ_TYPES:
+            self.basic_widgets['table_type_combo'].setCurrentText(detected)
+
     def update_basic_ui(self):
         # clear previous layout
         gui_widgets.clear_layout(self.basic_param_grid)
@@ -2192,6 +2206,7 @@ class FilterTabPage(TabPage):
                                                                                 "(*.csv;*.tsv;*.txt;*.parquet);;"
                                                                                 "All Files (*)")
         self.basic_widgets['file_path'].textChanged.connect(self._change_start_button_state)
+        self.basic_widgets['file_path'].textChanged.connect(self._autodetect_table_type)
 
         self.basic_widgets['table_name'] = QtWidgets.QLineEdit()
 
@@ -2212,6 +2227,9 @@ class FilterTabPage(TabPage):
         self.basic_grid.addWidget(QtWidgets.QWidget(self), 4, 0, 1, 4)
         self.basic_grid.addWidget(QtWidgets.QWidget(self), 0, 4, 4, 1)
         self.basic_grid.setRowStretch(4, 1)
+        # give the extra horizontal space to the file path field (column 1) instead of the
+        # trailing padding column, so the field actually widens with the window
+        self.basic_grid.setColumnStretch(1, 1)
         self.basic_grid.setColumnStretch(4, 1)
 
     def _check_for_special_functions(self, is_selected: bool = True):

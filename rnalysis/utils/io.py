@@ -398,7 +398,7 @@ class GUISessionManager:
 
 
 def load_table(filename: Union[str, Path], drop_columns: Union[str, List[str]] = False,
-               squeeze=False, comment: str = None):
+               squeeze=False, comment: str = None, nrows: int = None):
     """
     Loads a CSV, TSV, or Parquet file into a Polars DataFrame.
 
@@ -412,6 +412,9 @@ def load_table(filename: Union[str, Path], drop_columns: Union[str, List[str]] =
     :type comment: str (optional)
     :param comment: Indicates remainder of line should not be parsed. \
     If found at the beginning of a line, the line will be ignored altogether. This parameter must be a single character.
+    :type nrows: int or None (default None)
+    :param nrows: if given, only the first ``nrows`` data rows are read (a lightweight partial read). \
+    The column names and order are identical to a full read. If None (default), the whole table is read.
     :return: a Polars DataFrame of the loaded file
     """
     assert isinstance(filename,
@@ -425,8 +428,10 @@ def load_table(filename: Union[str, Path], drop_columns: Union[str, List[str]] =
     kwargs = {}
     if comment is not None:
         kwargs['comment_prefix'] = comment
+    if nrows is not None:
+        kwargs['n_rows'] = nrows
     if filename.suffix.lower() == '.parquet':
-        df = pl.read_parquet(filename)
+        df = pl.read_parquet(filename, n_rows=nrows)
         # handle edge cases of parquet files that were exported from pandas DataFrames
         if '__index_level_0__' in df.columns:
             df = df.select(pl.col('__index_level_0__').alias('')).with_columns(
@@ -1412,32 +1417,6 @@ class PhylomeDBOrthologMapper:
         if sub is None:
             return {}
         return {a: (b, c) for (a, b, c) in sub.iter_rows()}
-
-    @staticmethod
-    def _get_id_conversion_maps(needed_extids: Optional[Set[str]] = None,
-                                needed_protids: Optional[Set[str]] = None) -> Tuple[dict, dict]:
-        """Build the external-ID <-> PhylomeDB-protid conversion maps.
-
-        The PhylomeDB ``id_conversion`` table covers *every* species in the database (millions of
-        rows). ``get_orthologs`` only ever looks up a handful of those keys, so passing
-        ``needed_extids`` / ``needed_protids`` restricts each returned map to just the requested
-        keys -- avoiding the cost of materializing the whole table into two Python dicts, which
-        dominated the runtime of this method.
-
-        ``None`` for either argument means "no filter" (the full map, preserved for backwards
-        compatibility); an empty set means "nothing needed" and returns an empty map without
-        scanning. A filtered map is identical to the corresponding entries of the full map.
-        """
-        df = PhylomeDBOrthologMapper._load_id_conversion_table()
-
-        # Fast path: no filtering requested -> reproduce the original whole-table maps exactly.
-        if needed_extids is None and needed_protids is None:
-            map_fwd = dict(df.select('#extid', 'protid').iter_rows())
-            map_rev = {v: k for k, v in map_fwd.items()}
-            return map_fwd, map_rev
-
-        return (PhylomeDBOrthologMapper._build_forward_map(df, needed_extids),
-                PhylomeDBOrthologMapper._build_reverse_map(df, needed_protids))
 
     @staticmethod
     def _load_id_conversion_table() -> pl.DataFrame:
