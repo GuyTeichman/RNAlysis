@@ -2711,6 +2711,54 @@ class TestPantherOrthologMapper:
             assert all(id_pattern.match(v) for v in values), f"unexpected paralog ID format(s): {values}"
 
 
+class TestIsPantherdbAvailableProbe:
+    """``is_pantherdb_available()`` gates the live ``TestPantherOrthologMapper`` suite, so it must
+    reflect the capability those tests exercise -- an ``ortholog/matchortho`` query that returns
+    orthologs. A healthy ``supportedgenomes`` response is not enough: PantherDB can answer that
+    while its ortholog endpoint returns empty 200 bodies, which made the suite *fail* (its
+    ``assert len(...) > 0`` checks) instead of *skip*. The probe hits PantherDB raw (not via the
+    mapper), so a genuine mapper regression still surfaces as a real failure."""
+
+    @staticmethod
+    def _resp(status_code=200, payload=None, empty_body=False):
+        resp = MagicMock()
+        resp.status_code = status_code
+        if empty_body:
+            resp.json.side_effect = requests.exceptions.JSONDecodeError('Expecting value', '', 0)
+        else:
+            resp.json.return_value = payload
+        return resp
+
+    def test_available_when_ortholog_mapping_nonempty(self, monkeypatch):
+        payload = {'search': {'mapping': {'mapped': [{'target_gene': 'HUMAN|HGNC=1|UniProtKB=P12345'}]}}}
+        monkeypatch.setattr(requests, 'post', lambda *a, **k: self._resp(200, payload))
+        assert is_pantherdb_available() is True
+
+    def test_unavailable_when_ortholog_mapping_empty(self, monkeypatch):
+        # HTTP 200 but no orthologs mapped -- the degraded state that used to fail the live tests.
+        monkeypatch.setattr(requests, 'post', lambda *a, **k: self._resp(200, {'search': {'mapping': {'mapped': []}}}))
+        assert is_pantherdb_available() is False
+
+    def test_unavailable_on_malformed_payload(self, monkeypatch):
+        monkeypatch.setattr(requests, 'post', lambda *a, **k: self._resp(200, {'search': {}}))
+        assert is_pantherdb_available() is False
+
+    def test_unavailable_on_empty_body(self, monkeypatch):
+        monkeypatch.setattr(requests, 'post', lambda *a, **k: self._resp(200, empty_body=True))
+        assert is_pantherdb_available() is False
+
+    def test_unavailable_on_server_error(self, monkeypatch):
+        monkeypatch.setattr(requests, 'post', lambda *a, **k: self._resp(503))
+        assert is_pantherdb_available() is False
+
+    def test_unavailable_on_connection_error(self, monkeypatch):
+        def boom(*a, **k):
+            raise requests.exceptions.ConnectionError('service down')
+
+        monkeypatch.setattr(requests, 'post', boom)
+        assert is_pantherdb_available() is False
+
+
 class _PantherIdentityTranslator:
     """Stand-in for GeneIDTranslator so PantherOrthologMapper.translate_ids() needs no network."""
 
