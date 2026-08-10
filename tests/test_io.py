@@ -1207,6 +1207,34 @@ def test_kegg_annotation_iterator_get_compounds(monkeypatch):
     assert sorted(reqs_made) == ['compound', 'glycan']
 
 
+def test_kegg_annotation_iterator_get_compound_names(monkeypatch):
+    KEGGAnnotationIterator._compound_name_cache.clear()
+    responses = {'C00022': 'C00022\tPyruvate; Pyruvic acid; 2-Oxopropanoate',
+                 'C00036': 'C00036\tOxaloacetate; Oxalacetic acid',
+                 'G00022': 'G00022\t(GlcNAc)7 (Man)3 (Asn)1'}
+    requested = []
+
+    def mock_kegg_request(session, operation, arguments, cached_filename=None):
+        assert operation == 'list'
+        ids = arguments[0].split('+')
+        requested.extend(ids)
+        return '\n'.join(responses[i] for i in ids), False
+
+    monkeypatch.setattr(KEGGAnnotationIterator, '_kegg_request', mock_kegg_request)
+
+    # only the main (first) name is kept, and only the requested ids are fetched -- not the whole catalog
+    res = KEGGAnnotationIterator.get_compound_names(['G00022', 'C00022', 'C00036'])
+    assert res == {'C00022': 'Pyruvate', 'C00036': 'Oxaloacetate', 'G00022': '(GlcNAc)7 (Man)3 (Asn)1'}
+    assert sorted(requested) == ['C00022', 'C00036', 'G00022']
+
+    # accumulating cache: a later call for already-seen ids issues no new request
+    requested.clear()
+    res2 = KEGGAnnotationIterator.get_compound_names(['C00022', 'C00036'])
+    assert res2 == {'C00022': 'Pyruvate', 'C00036': 'Oxaloacetate'}
+    assert requested == []
+    KEGGAnnotationIterator._compound_name_cache.clear()
+
+
 def are_xml_elements_equal(e1, e2):
     if e1.tag != e2.tag: return False
     if e1.text != e2.text: return False
@@ -1260,20 +1288,17 @@ def test_kegg_annotation_iterator_get_pathway_annotations(monkeypatch):
              'cel00051': ['Fructose and mannose metabolism - Caenorhabditis elegans (nematode)',
                           {'cel:CELE_C05C8.7', 'cel:CELE_ZK632.4'}],
              'cel00052': ['Galactose metabolism - Caenorhabditis elegans (nematode)', {'cel:CELE_C01B4.6'}]}
-    args_truth = ['cel00010+cel00020+cel00030', 'cel00040+cel00051+cel00052']
 
-    def mock_kegg_request(self, session, operation, arguments, fname):
-        assert operation == 'get'
-        assert arguments == args_truth[0] or arguments == args_truth[1]
-        if arguments == args_truth[0]:
-            pth = 'tests/test_files/kegg_annotation_1of2.txt'
-        else:
-            pth = 'tests/test_files/kegg_annotation_2of2.txt'
-        with open(pth) as f:
+    # Annotations are now fetched with a single 'link/<org>/pathway' request instead of a full
+    # flat-file 'get' per pathway-chunk. The mock returns the compact 2-column TSV that endpoint
+    # produces, and the parsed pathway->gene mapping must match the truth above.
+    def mock_kegg_request(self, session, operation, arguments, cached_filename=None):
+        assert operation == 'link'
+        assert arguments == ['cel', 'pathway']
+        with open('tests/test_files/kegg_pathway_gene_links.txt') as f:
             return f.read(), False
 
     monkeypatch.setattr(KEGGAnnotationIterator, '_kegg_request', mock_kegg_request)
-    monkeypatch.setattr(KEGGAnnotationIterator, 'REQ_MAX_ENTRIES', 3)
     kegg = KEGGAnnotationIterator.__new__(KEGGAnnotationIterator)
     kegg.pathway_annotations = None
     kegg.taxon_id = 6239
@@ -1281,6 +1306,74 @@ def test_kegg_annotation_iterator_get_pathway_annotations(monkeypatch):
     kegg.session = get_session(kegg.RETRIES)
     kegg.pathway_names = PATHWAY_NAMES_TRUTH
     assert {key: [name, ann] for key, name, ann in kegg.get_pathway_annotations()} == truth
+
+
+@pytest.mark.parametrize('pathway_id,expected', [
+    ('cel00010', False), ('cel00511', False), ('hsa04010', False), ('cel05010', False),
+    ('cel01100', True), ('cel01200', True), ('cel01210', True), ('hsa01240', True),
+    ('path:cel01100', True), ('path:cel00010', False),
+    ('cel01099', False), ('cel01300', False),  # just outside the 01100-01299 range
+    ('ab101100', True), ('ab100010', False)])  # organism code ending in a digit must not leak
+def test_kegg_annotation_iterator_is_global_or_overview_map(pathway_id, expected):
+    assert KEGGAnnotationIterator._is_global_or_overview_map(pathway_id) is expected
+
+
+def test_kegg_annotation_iterator_get_pathway_annotations_degrades_on_bad_input(monkeypatch):
+    # The link response is parsed defensively: blank/short/malformed lines are skipped, and a
+    # pathway listed in pathway_names but absent from the links is skipped (not crashed on).
+    body = ('\n'  # blank line
+            'path:cel00010\tcel:CELE_A\n'
+            'path:cel00010\tcel:CELE_B\n'
+            'just_one_column\n'  # malformed
+            'path:cel00052\tcel:CELE_C\n')
+
+    def mock_kegg_request(self, session, operation, arguments, cached_filename=None):
+        return body, False
+
+    monkeypatch.setattr(KEGGAnnotationIterator, '_kegg_request', mock_kegg_request)
+    kegg = KEGGAnnotationIterator.__new__(KEGGAnnotationIterator)
+    kegg.pathway_annotations = None
+    kegg.organism_code = 'cel'
+    kegg.session = get_session(kegg.RETRIES)
+    # cel00030 is in pathway_names but has no link -> must be skipped, not crash
+    kegg.pathway_names = {'cel00010': 'A', 'cel00052': 'B', 'cel00030': 'C'}
+    result = {key: ann for key, name, ann in kegg.get_pathway_annotations()}
+    assert result == {'cel00010': {'cel:CELE_A', 'cel:CELE_B'}, 'cel00052': {'cel:CELE_C'}}
+
+
+def test_kegg_annotation_iterator_get_pathway_annotations_empty_response(monkeypatch):
+    # An empty body must yield no annotations rather than raising.
+    monkeypatch.setattr(KEGGAnnotationIterator, '_kegg_request',
+                        lambda self, session, operation, arguments, cached_filename=None: ('', False))
+    kegg = KEGGAnnotationIterator.__new__(KEGGAnnotationIterator)
+    kegg.pathway_annotations = None
+    kegg.organism_code = 'cel'
+    kegg.session = get_session(kegg.RETRIES)
+    kegg.pathway_names = {'cel00010': 'A'}
+    assert list(kegg.get_pathway_annotations()) == []
+
+
+def test_kegg_annotation_iterator_get_pathways_excludes_global_overview_maps(monkeypatch):
+    # get_pathways must drop KEGG's global/overview maps (01100-01299) -- a ~thousand-gene
+    # "Metabolic pathways" term is not a specific enrichment result and only inflates FDR.
+    listing = ('cel00010\tGlycolysis / Gluconeogenesis\n'
+               'cel01100\tMetabolic pathways\n'
+               'cel00052\tGalactose metabolism\n'
+               'cel01200\tCarbon metabolism\n')
+
+    def mock_kegg_request(self, session, operation, arguments, cached_filename=None):
+        assert operation == 'list'
+        assert arguments == ['pathway', 'cel']
+        return listing, True
+
+    monkeypatch.setattr(KEGGAnnotationIterator, '_kegg_request', mock_kegg_request)
+    kegg = KEGGAnnotationIterator.__new__(KEGGAnnotationIterator)
+    kegg.organism_code = 'cel'
+    kegg.session = get_session(kegg.RETRIES)
+    pathway_names, n_annotations = kegg.get_pathways()
+    assert pathway_names == {'cel00010': 'Glycolysis / Gluconeogenesis',
+                             'cel00052': 'Galactose metabolism'}
+    assert n_annotations == 2
 
 
 def test_kegg_annotation_iterator_get_pathway_annotations_cached():
@@ -2410,6 +2503,109 @@ class TestOrthoInspectorOrthologMapper:
         assert any('BigDB' in url for url, _ in calls)
         assert any('SmallDB' in url for url, _ in calls)
         assert one2one.mapping_dict == {'g1': 'o1'}
+
+    def test_known_stalling_databases_contains_eukaryota2023(self):
+        # Eukaryota2023's /species endpoint works but its /orthologs endpoint never responds
+        # (verified to hang past a 90s read timeout, server-side). Because 'auto' tries the largest
+        # database first, it hangs on Eukaryota2023 for the full read timeout before falling back.
+        # We skip it in auto-selection; this locks the constant so the reason is documented in code.
+        assert 'Eukaryota2023' in OrthoInspectorOrthologMapper.KNOWN_STALLING_DATABASES
+
+    def test_auto_selection_skips_known_stalling_databases(self, monkeypatch):
+        # In 'auto' mode the largest valid database is tried first. If that database is a known
+        # staller, we must skip it entirely (never issue the request) and use the next database --
+        # otherwise every 'auto' mapping wastes a full read timeout on a dead endpoint. This is
+        # result-preserving because the stalling database never returns anything anyway.
+        mapper = OrthoInspectorOrthologMapper(map_to_organism=2, map_from_organism=1,
+                                              gene_id_type='UniProtKB AC/ID')
+        # Eukaryota2023 is the LARGEST valid database and contains both organisms -- current code
+        # would try it first.
+        monkeypatch.setattr(OrthoInspectorOrthologMapper, 'get_database_organisms',
+                            staticmethod(lambda session=None: {'Eukaryota2023': {1, 2, 3, 4, 5, 6},
+                                                               'GoodDB': {1, 2}}))
+        monkeypatch.setattr(mapper, 'translate_ids', lambda ids, session=None: (['g1'], ['g1']))
+        monkeypatch.setattr(io, 'load_cached_file', lambda *a, **k: None)
+        monkeypatch.setattr(io, 'cache_file', lambda *a, **k: None)
+        monkeypatch.setattr(io, 'translate_mappings', lambda ids, translated, m1, m2: (m1, m2))
+
+        calls = []
+
+        def fake_get(url, **kwargs):
+            calls.append(url)
+            resp = MagicMock()
+            resp.raise_for_status.return_value = None
+            resp.json.return_value = {'data': [{'type': 'One-to-One', 'species': 2,
+                                                'inparalogs': ['g1'], 'orthologs': ['o1']}]}
+            return resp
+
+        fake_session = MagicMock()
+        fake_session.get.side_effect = fake_get
+        monkeypatch.setattr(io, 'get_session', lambda retries: fake_session)
+
+        one2one, one2many = mapper.get_orthologs(('g1',), 'first', 'auto')
+
+        assert calls, "no ortholog requests were made"
+        assert not any('Eukaryota2023' in url for url in calls), \
+            "the known-stalling database must never be requested in auto mode"
+        assert any('GoodDB' in url for url in calls)
+        assert one2one.mapping_dict == {'g1': 'o1'}
+
+    def test_get_database_organisms_returns_all_databases(self):
+        # Locks the (now concurrent) /species fan-out: every listed database must appear in the
+        # result mapped to the exact frozenset of organism ids its /species endpoint reports.
+        api = OrthoInspectorOrthologMapper.API_URL
+        with requests_mock.Mocker() as m:
+            m.get(f'{api}/databases', json={'data': ['DBone', 'DBtwo', 'DBthree']})
+            m.get(f'{api}/DBone/species',
+                  json={'meta': {'status': 'success'}, 'data': [{'id': 1}, {'id': 2}, {'id': 3}]})
+            m.get(f'{api}/DBtwo/species',
+                  json={'meta': {'status': 'success'}, 'data': [{'id': 2}, {'id': 4}]})
+            m.get(f'{api}/DBthree/species',
+                  json={'meta': {'status': 'success'}, 'data': [{'id': 5}]})
+            result = OrthoInspectorOrthologMapper.get_database_organisms()
+
+        assert result == {'DBone': frozenset({1, 2, 3}),
+                          'DBtwo': frozenset({2, 4}),
+                          'DBthree': frozenset({5})}
+
+    def test_get_database_organisms_empty_database_list(self):
+        # If OrthoInspector lists no databases, the concurrent fan-out must return {} rather than
+        # crash (ThreadPoolExecutor(max_workers=0) raises ValueError) -- the 'if databases' guard.
+        with requests_mock.Mocker() as m:
+            m.get(f'{OrthoInspectorOrthologMapper.API_URL}/databases', json={'data': []})
+            assert OrthoInspectorOrthologMapper.get_database_organisms() == {}
+
+    def test_explicitly_requested_stalling_database_is_not_skipped(self, monkeypatch):
+        # The skip applies to 'auto' selection only. If a user explicitly asks for a database that
+        # happens to be on the stall-list, we still honor the request (and let it fail on its own).
+        mapper = OrthoInspectorOrthologMapper(map_to_organism=2, map_from_organism=1,
+                                              gene_id_type='UniProtKB AC/ID')
+        stalling_db = next(iter(OrthoInspectorOrthologMapper.KNOWN_STALLING_DATABASES))
+        monkeypatch.setattr(OrthoInspectorOrthologMapper, 'get_databases',
+                            staticmethod(lambda session=None: frozenset({stalling_db, 'GoodDB'})))
+        monkeypatch.setattr(mapper, 'translate_ids', lambda ids, session=None: (['g1'], ['g1']))
+        monkeypatch.setattr(io, 'load_cached_file', lambda *a, **k: None)
+        monkeypatch.setattr(io, 'cache_file', lambda *a, **k: None)
+        monkeypatch.setattr(io, 'translate_mappings', lambda ids, translated, m1, m2: (m1, m2))
+
+        calls = []
+
+        def fake_get(url, **kwargs):
+            calls.append(url)
+            resp = MagicMock()
+            resp.raise_for_status.return_value = None
+            resp.json.return_value = {'data': [{'type': 'One-to-One', 'species': 2,
+                                                'inparalogs': ['g1'], 'orthologs': ['o1']}]}
+            return resp
+
+        fake_session = MagicMock()
+        fake_session.get.side_effect = fake_get
+        monkeypatch.setattr(io, 'get_session', lambda retries: fake_session)
+
+        mapper.get_orthologs(('g1',), 'first', stalling_db)
+
+        assert any(stalling_db in url and '/orthologs/' in url for url in calls), \
+            "an explicitly-requested database must still be queried even if it's on the stall-list"
 
 
 @pytest.mark.skipif(not PANTHERDB_AVAILABLE, reason='PantherDB not available')

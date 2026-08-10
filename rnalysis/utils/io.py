@@ -597,8 +597,6 @@ def get_session(retries: Retry):
 
 class KEGGAnnotationIterator:
     URL = 'https://rest.kegg.jp/'
-    REQUEST_DELAY_MILLIS = 250
-    REQ_MAX_ENTRIES = 10
     RETRIES = RandomExpRetry(total=5, backoff_factor=0.25, status_forcelist=[500, 502, 503, 504])
     TAXON_TREE_CACHED_FILENAME = 'kegg_taxon_tree.json'
     # Per-organism: the pathway list is organism-specific, so its cache filename must include the
@@ -607,6 +605,10 @@ class KEGGAnnotationIterator:
     PATHWAY_NAMES_CACHED_FILENAME = 'kegg_pathway_list_{organism_code}.txt'
     COMPOUND_LIST_CACHED_FILENAME = 'kegg_compound_list.txt'
     GLYCAN_LIST_CACHED_FILENAME = 'kegg_glycan_list.txt'
+    # Accumulates {compound_id: display_name} for the life of the process, so plotting several
+    # pathways in one session fetches each compound at most once and never downloads KEGG's full
+    # ~30k-entry compound+glycan catalog. Compound names are stable, so no in-process expiry is needed.
+    _compound_name_cache: Dict[str, str] = {}
 
     def __init__(self, taxon_id: int, pathways: Union[str, List[str], Literal['all']] = 'all'):
         self.pathway_names = {}
@@ -640,9 +642,17 @@ class KEGGAnnotationIterator:
             cache_file(response.text, cached_filename)
         return response.text, is_cached
 
-    def _generate_cached_filename(self, pathways: Tuple[str, ...]) -> str:
-        fname = f'{self.taxon_id}' + ''.join(pathways).replace('path:', '') + '.json'
-        return fname
+    @staticmethod
+    def _is_global_or_overview_map(pathway_id: str) -> bool:
+        # KEGG's BRITE category "1.0 Global and overview maps" -- pathway map numbers 01100-01299
+        # (e.g. 01100 "Metabolic pathways", 01200 "Carbon metabolism"). These are superset maps that
+        # span most of metabolism; they are conventionally excluded from pathway enrichment because a
+        # ~thousand-gene "everything" term is not biologically specific and only inflates the
+        # multiple-testing burden. Specific pathways use other number ranges (00xxx, 03xxx-05xxx, ...).
+        # Anchor to exactly 5 trailing digits (KEGG map numbers are always 5 digits) so an organism
+        # code that happens to end in a digit can't merge into the number and let a global map slip through.
+        match = re.search(r'(\d{5})$', pathway_id)
+        return match is not None and 1100 <= int(match.group(1)) <= 1299
 
     @staticmethod
     def get_compounds() -> Dict[str, str]:
@@ -661,6 +671,37 @@ class KEGGAnnotationIterator:
                 compounds[pathway_code] = main_name
 
         return compounds
+
+    @classmethod
+    def get_compound_names(cls, compound_ids: Iterable[str]) -> Dict[str, str]:
+        """Return ``{compound_id: display_name}`` for the given bare KEGG compound/glycan IDs
+        (e.g. ``'C00022'``, ``'G00022'``), fetching with a targeted ``list/<ids>`` request only the
+        IDs not already in the in-process cache. This replaces downloading KEGG's entire
+        compound+glycan catalog (``get_compounds``) just to name the handful of compound nodes in one
+        pathway. Parsing mirrors ``get_compounds`` exactly, so for any given ID the display name is
+        identical to the catalog's.
+        """
+        ids = sorted({cid for cid in compound_ids})
+        names = {}
+        missing = []
+        for cid in ids:
+            if cid in cls._compound_name_cache:
+                names[cid] = cls._compound_name_cache[cid]
+            else:
+                missing.append(cid)
+        if missing:
+            session = get_session(cls.RETRIES)
+            # KEGG's `list` accepts several entries per request (joined by '+'); chunk conservatively.
+            for chunk in parsing.partition_list(missing, 10):
+                data, _ = cls._kegg_request(session, 'list', ['+'.join(chunk)])
+                for line in data.split('\n'):
+                    split = line.split('\t')
+                    if len(split) == 2:
+                        compound_id, compound_names = split
+                        main_name = compound_names.split(';')[0]
+                        cls._compound_name_cache[compound_id] = main_name
+                        names[compound_id] = main_name
+        return names
 
     @staticmethod
     @functools.lru_cache(1024)
@@ -682,6 +723,8 @@ class KEGGAnnotationIterator:
             split = line.split('\t')
             if len(split) == 2:
                 pathway_code, pathway_name = split
+                if self._is_global_or_overview_map(pathway_code):
+                    continue  # skip KEGG global/overview maps (see _is_global_or_overview_map)
                 pathway_names[pathway_code] = pathway_name
 
         n_annotations = len(pathway_names)
@@ -695,6 +738,34 @@ class KEGGAnnotationIterator:
         cache_file(data, cached_filename)
         return ElementTree.parse(StringIO(data))
 
+    def _fetch_pathway_gene_links(self) -> Dict[str, Set[str]]:
+        """Return ``{pathway_id: {gene_id, ...}}`` for the organism in a single request.
+
+        KEGG's ``link/<org>/pathway`` endpoint returns every gene<->pathway association for the
+        organism as one compact two-column TSV. This replaces fetching a full flat-file record per
+        pathway (dozens of large requests, most of whose content -- names, references, compounds --
+        was discarded) with one small request. It is also more complete: the previous flat-file
+        parser silently dropped any pathway whose record had no ``COMPOUND`` section (e.g. several
+        glycan pathways), because it read genes only up to that section.
+        """
+        cached_filename = f'kegg_pathway_gene_links_{self.organism_code}.txt'
+        data, _ = self._kegg_request(self.session, 'link', [self.organism_code, 'pathway'], cached_filename)
+        links: Dict[str, Set[str]] = {}
+        for line in data.split('\n'):
+            split = line.split('\t')
+            if len(split) != 2:
+                continue
+            # Columns are 'path:<org><num>' and '<org>:<gene>'; identify the pathway column by its
+            # 'path:' prefix so we're robust to column order. Strip both fields so a stray '\r' from
+            # CRLF line endings can't get appended to a gene ID (which would break gene-set equality).
+            if split[0].startswith('path:'):
+                pathway_raw, gene = split[0].strip(), split[1].strip()
+            else:
+                pathway_raw, gene = split[1].strip(), split[0].strip()
+            pathway = pathway_raw.replace('path:', '')
+            links.setdefault(pathway, set()).add(gene)
+        return links
+
     def get_pathway_annotations(self):
         if self.pathway_annotations is not None:
             for pathway, annotations in self.pathway_annotations.items():
@@ -702,38 +773,13 @@ class KEGGAnnotationIterator:
                 yield pathway, name, annotations
         else:
             pathway_annotations = {}
-            partitioned_pathways = parsing.partition_list(list(self.pathway_names.keys()), self.REQ_MAX_ENTRIES)
-            for chunk in partitioned_pathways:
-                prev_time = time.time()
-                data, was_cached = self._kegg_request(self.session, 'get', '+'.join(chunk),
-                                                      self._generate_cached_filename(chunk))
-                entries = data.split('ENTRY')[1:]
-                for entry in entries:
-                    entry_split = entry.split('\n')
-                    pathway = entry_split[0].split()[0]
-                    if pathway not in chunk:
-                        print(f'Could not find pathway {pathway} in requested chunk: {chunk}')
-                    pathway_name = self.pathway_names[pathway]
-                    pathway_annotations[pathway] = set()
-                    genes_startline = 0
-                    genes_endline = 0
-                    for i, line in enumerate(entry_split):
-                        if line.startswith('GENE'):
-                            genes_startline = i
-                        elif line.startswith('COMPOUND'):
-                            genes_endline = i
-                            break
-                    for line_num in range(genes_startline, genes_endline):
-                        line = entry_split[line_num]
-                        if line.startswith('GENE'):
-                            line = line.replace('GENE', '', 1)
-                        gene_id = f"{self.organism_code}:{line.strip().split(' ')[0]}"
-                        pathway_annotations[pathway].add(gene_id)
-                        yield pathway, pathway_name, pathway_annotations[pathway]
-                if not was_cached:
-                    delay = max((self.REQUEST_DELAY_MILLIS / 1000) - (time.time() - prev_time), 0)
-                    time.sleep(delay)
-
+            links = self._fetch_pathway_gene_links()
+            for pathway in self.pathway_names:
+                genes = links.get(pathway)
+                if not genes:
+                    continue  # pathway with no genes for this organism -- nothing to annotate
+                pathway_annotations[pathway] = set(genes)
+                yield pathway, self.pathway_names[pathway], pathway_annotations[pathway]
             self.pathway_annotations = pathway_annotations
 
     def __iter__(self):
@@ -1649,6 +1695,15 @@ class OrthoInspectorOrthologMapper:
     # never sends a response body would hang RNAlysis indefinitely instead of raising a catchable
     # error and moving on to the next database.
     REQUEST_TIMEOUT = (10, 30)
+    # Databases that are listed and whose /species endpoint responds, but whose /orthologs endpoint
+    # never sends a response (verified to hang past a 90s read timeout -- a server-side problem, not
+    # our access: the identical request pattern works on other databases). Because 'auto' tries the
+    # largest database first and these tend to be large, hitting one wastes a full read timeout on a
+    # dead endpoint before the existing fallback moves on. We skip them during 'auto' selection.
+    # This is result-preserving: a database that never responds never contributes a mapping anyway.
+    # Revisit/remove an entry if OrthoInspector fixes the endpoint upstream (the integration tests in
+    # tests/test_io.py exercise the live service and will show when it recovers).
+    KNOWN_STALLING_DATABASES = frozenset({'Eukaryota2023'})
 
     def __init__(self, map_to_organism, map_from_organism, gene_id_type):
         self.gene_id_type = gene_id_type
@@ -1682,10 +1737,13 @@ class OrthoInspectorOrthologMapper:
             session = get_session(OrthoInspectorOrthologMapper.RETRIES)
         # get list of databases
         databases = OrthoInspectorOrthologMapper.get_databases(session)
-        db_organisms = {}
-        for i, database in enumerate(databases):
+
+        def _fetch_species(database: str):
+            # Each worker uses its own session: requests.Session is not guaranteed thread-safe, and
+            # the per-request cost is negligible next to the network round-trip we're overlapping.
+            worker_session = get_session(OrthoInspectorOrthologMapper.RETRIES)
             url = f'{OrthoInspectorOrthologMapper.API_URL}/{database}/species'
-            req = session.get(url, timeout=OrthoInspectorOrthologMapper.REQUEST_TIMEOUT)
+            req = worker_session.get(url, timeout=OrthoInspectorOrthologMapper.REQUEST_TIMEOUT)
             req.raise_for_status()
             try:
                 content = req.json()
@@ -1693,7 +1751,18 @@ class OrthoInspectorOrthologMapper:
                 clean_json_string = req.text.split('\n')[0]
                 content = json.loads(clean_json_string)
             assert content['meta']['status'] == 'success'
-            db_organisms[database] = frozenset({d['id'] for d in content['data']})
+            return database, frozenset({d['id'] for d in content['data']})
+
+        # Fetch every database's species list concurrently. These requests are independent and were
+        # previously issued one-at-a-time; a plain ThreadPoolExecutor (I/O-bound, frozen-safe) turns
+        # their total latency into ~max() instead of sum(). The result dict is identical to the
+        # sequential version (dict/frozenset equality is order-independent).
+        db_organisms = {}
+        databases = list(databases)
+        if databases:
+            with concurrent.futures.ThreadPoolExecutor(max_workers=min(len(databases), 8)) as executor:
+                for database, organisms in executor.map(_fetch_species, databases):
+                    db_organisms[database] = organisms
 
         return db_organisms
 
@@ -1709,6 +1778,10 @@ class OrthoInspectorOrthologMapper:
             valid_dbs = []
 
             for db in dbs_by_size:
+                if db in self.KNOWN_STALLING_DATABASES:
+                    # Skip databases whose /orthologs endpoint never responds (see the constant's
+                    # docstring). Trying them just burns a full read timeout before falling back.
+                    continue
                 if self.map_from_organism in database_organisms[db] and self.map_to_organism in database_organisms[db]:
                     valid_dbs.append(db)
             if len(valid_dbs) == 0:
