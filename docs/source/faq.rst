@@ -26,6 +26,7 @@ Try one of the following methods to solve your problem:
         pip install RNAlysis[reports]
         pip install RNAlysis[single-set]
         pip install RNAlysis[randomization]
+        pip install RNAlysis[reports]
 
    See the next FAQ items to solve issues with a specific extended feature.
 3. Make sure your version of Python is supported by *RNAlysis*. Currently, any Python version between 3.10-3.14 should work.
