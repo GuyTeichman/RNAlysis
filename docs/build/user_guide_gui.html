@@ -1,25 +1,23 @@
+
+
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" data-content_root="./">
 <head>
-  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>User guide - graphical interface &mdash; RNAlysis 4.2.0 documentation</title>
-      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=80d5e7a1" />
-      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=19f00094" />
+  <title>User guide - graphical interface &mdash; RNAlysis 4.3.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
 
   
     <link rel="shortcut icon" href="_static/favicon.ico"/>
-  <!--[if lt IE 9]>
-    <script src="_static/js/html5shiv.min.js"></script>
-  <![endif]-->
-  
-        <script src="_static/jquery.js?v=5d32c60e"></script>
-        <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-        <script src="_static/documentation_options.js?v=d0ae6d56"></script>
-        <script src="_static/doctools.js?v=9a2dae69"></script>
-        <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
-        <script src="_static/copybutton.js?v=5b738548"></script>
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=a17b270f"></script>
+      <script src="_static/doctools.js?v=9a2dae69"></script>
+      <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="_static/copybutton.js?v=5b738548"></script>
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -207,7 +205,7 @@ In this section we will look into the general principles of working with data ta
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">rnalysis</span><span class="o">-</span><span class="n">gui</span>
 </pre></div>
 </div>
-<p>To load a table, in the main window, click on the “Load” button and choose a table’s csv file from your computer.
+<p>To load a table, in the main window, click on the “Choose table” button and choose a table’s csv file from your computer.
 We will then use the drop-down menu to change our table type from “Other” to “Count matrix”. This will allow us to later on use analysis methods that are dedicated to count matrix-style datasets.</p>
 <a class="reference internal image-reference" href="_images/01a01_load_table.png"><img alt="Loading a table into *RNAlysis* - choose the table type" src="_images/01a01_load_table.png" style="width: 600px;" /></a>
 <p>Once we picked a table type, a new option will appear, allowing us to specify whether our table was pre-normalized.
@@ -216,7 +214,7 @@ This is not a mandatory step, but if we don’t do it, <em>RNAlysis</em> will wa
 <p>Different types of tables offer different types of options. For example, when loading differential expression tables, you can specify the names of the columns containing log2FolcChange values and adjusted p-values;
 and for any table you can specify the names of specific columns that you want to drop from the table.</p>
 <img alt="_images/table_types.webp" src="_images/table_types.webp" />
-<p>Finally, we can click the “start” button to actually open our table on <em>RNAlysis</em>.
+<p>Finally, we can click the “Load” button to actually open our table on <em>RNAlysis</em>.
 The window will now display a preview of our table, as well as a short summary of our table’s content (table name, table type, number of rows and columns).</p>
 </section>
 <section id="loading-multiple-tables-into-rnalysis">
@@ -622,9 +620,11 @@ If you’re loading a count matrix that was already normalized, make sure to set
 <ul class="simple">
 <li><p>Relative Log Expression (RLE - ‘normalize_rle’), used by default by R’s DESeq2</p></li>
 <li><p>Trimmed Mean of M-values (TMM - ‘normalize_tmm’), used by default by R’s edgeR</p></li>
-<li><p>Quantile normalization, a generalization of Upper Quantile normalization (UQ - ‘normalize_quantile’), used by default by R’s Limma</p></li>
-<li><p>Median of Ratios Normalization (MRN - ‘normalize_mrn’)</p></li>
+<li><p>Quantile normalization, a generalization of Upper Quantile normalization (UQ - ‘normalize_to_quantile’), used by default by R’s Limma</p></li>
+<li><p>Median of Ratios Normalization (MRN - ‘normalize_median_of_ratios’)</p></li>
 <li><p>Reads Per Million (RPM - ‘normalize_to_rpm’)</p></li>
+<li><p>Reads Per Kilobase Million (RPKM - ‘normalize_to_rpkm’)</p></li>
+<li><p>Transcripts Per Million (TPM - ‘normalize_to_tpm’)</p></li>
 </ul>
 <p>To normalize a count matrix with one of these functions, click on the ‘Normalize’ button, pick one of the normalization functions from the drop-down menu, and click ‘Apply’.</p>
 <p>To normalize a count matrix with user-generated scaling factors, you would need a separate <cite>csv</cite> table with the scaling factor for each sample:</p>
@@ -929,7 +929,7 @@ Pipelines make your workflow easier to read and understand, help you avoid repet
 <a class="reference internal image-reference" href="_images/02d02_pipeline.png"><img alt="Create Pipeline - choose table type" src="_images/02d02_pipeline.png" style="width: 600px;" /></a>
 <p>Pipelines for specific types of tables will allow you to use functions specific to that table type.
 If you’re not sure what type of table to apply your Pipeline to, just choose “Other” - your Pipeline will then be applicable to any table type.
-After choosing a name and table type, click on the “Start” button to create the Pipeline.
+After choosing a name and table type, click on the “Create Pipeline” button.
 The window will now update to show a preview of the new (empty) Pipeline:</p>
 <a class="reference internal image-reference" href="_images/02d03_pipeline.png"><img alt="Create Pipeline - preview" src="_images/02d03_pipeline.png" style="width: 600px;" /></a>
 <p>At this point, you can start adding functions to the Pipeline.
@@ -1157,7 +1157,7 @@ Annotations with the <em>NOT</em> qualifier are usually ignored during enrichmen
 <p>For example:</p>
 <blockquote>
 <div><figure class="align-center" id="id50">
-<a class="reference internal image-reference" href="/figures/http://geneontology.org/assets/hexose-biosynthetic-process.png"><img alt="/figures/http://geneontology.org/assets/hexose-biosynthetic-process.png" src="/figures/http://geneontology.org/assets/hexose-biosynthetic-process.png" /></a>
+<a class="reference internal image-reference" href="http://geneontology.org/assets/hexose-biosynthetic-process.png"><img alt="http://geneontology.org/assets/hexose-biosynthetic-process.png" src="http://geneontology.org/assets/hexose-biosynthetic-process.png" /></a>
 <figcaption>
 <p><span class="caption-text">taken from the Gene Ontology Consortium site</span><a class="headerlink" href="#id50" title="Link to this image"></a></p>
 </figcaption>
@@ -1218,10 +1218,10 @@ You can decide which propagation method to use by specifying the <cite>propagati
 </section>
 <section id="enrichment-analysis-output">
 <h5>Enrichment analysis output<a class="headerlink" href="#enrichment-analysis-output" title="Link to this heading"></a></h5>
-<p>Running enrichment analysis will calculate enrichment for each of the GO terms, and return a pandas DataFrame in the following format:</p>
+<p>Running enrichment analysis will calculate enrichment for each of the GO terms, and return a polars DataFrame in the following format:</p>
 <table class="docutils align-default">
 <thead>
-<tr class="row-odd"><th class="head"></th>
+<tr class="row-odd"><th class="head"><p>GO ID</p></th>
 <th class="head"><p>name</p></th>
 <th class="head"><p>samples</p></th>
 <th class="head"><p>obs</p></th>
@@ -1317,7 +1317,7 @@ If you choose to use a randomization test, you can specify the number of randomi
 </section>
 <section id="id25">
 <h5>Enrichment analysis output<a class="headerlink" href="#id25" title="Link to this heading"></a></h5>
-<p>Running enrichment analysis will calculate enrichment for each of the KEGG pathways, and return a pandas DataFrame in the following format:</p>
+<p>Running enrichment analysis will calculate enrichment for each of the KEGG pathways, and return a polars DataFrame in the following format:</p>
 <table class="docutils align-default">
 <thead>
 <tr class="row-odd"><th class="head"><p>KEGG ID</p></th>
@@ -1413,10 +1413,10 @@ When it is set as ‘True’, <em>RNAlysis</em> will return the Figure object it
 </section>
 <section id="id32">
 <h5>Enrichment analysis output<a class="headerlink" href="#id32" title="Link to this heading"></a></h5>
-<p>Running enrichment analysis will calculate enrichment for each of the specified attributes, and return a pandas DataFrame in the following format:</p>
+<p>Running enrichment analysis will calculate enrichment for each of the specified attributes, and return a polars DataFrame in the following format:</p>
 <table class="docutils align-default">
 <thead>
-<tr class="row-odd"><th class="head"></th>
+<tr class="row-odd"><th class="head"><p>name</p></th>
 <th class="head"><p>samples</p></th>
 <th class="head"><p>obs</p></th>
 <th class="head"><p>exp</p></th>
@@ -1503,10 +1503,10 @@ When it is set as ‘True’, <em>RNAlysis</em> will return the Figure object it
 </section>
 <section id="non-categorical-enrichment-analysis-output">
 <h5>Non-Categorical Enrichment analysis output<a class="headerlink" href="#non-categorical-enrichment-analysis-output" title="Link to this heading"></a></h5>
-<p>Running non-categorical enrichment analysis will calculate enrichment for each of the specified attributes, and return a pandas DataFrame in the following format:</p>
+<p>Running non-categorical enrichment analysis will calculate enrichment for each of the specified attributes, and return a polars DataFrame in the following format:</p>
 <table class="docutils align-default">
 <thead>
-<tr class="row-odd"><th class="head"></th>
+<tr class="row-odd"><th class="head"><p>name</p></th>
 <th class="head"><p>samples</p></th>
 <th class="head"><p>obs</p></th>
 <th class="head"><p>exp</p></th>
@@ -1731,7 +1731,7 @@ User-annotated biotypes should be defined in a <a class="reference internal" hre
   <hr/>
 
   <div role="contentinfo">
-    <p>&#169; Copyright 2024, Guy Teichman.</p>
+    <p>&#169; Copyright 2024–2026, Guy Teichman.</p>
   </div>
 
   Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a

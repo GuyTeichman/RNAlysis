@@ -1,4 +1,4 @@
-﻿rnalysis.filtering.CountFilter
+rnalysis.filtering.CountFilter
 ==============================
 
 .. currentmodule:: rnalysis.filtering
@@ -16,6 +16,7 @@
 .. autosummary::
     :toctree: .
     
+    CountFilter.annotate_from_gtf
     CountFilter.average_replicate_samples
     CountFilter.biotypes_from_gtf
     CountFilter.biotypes_from_ref_table
@@ -34,6 +35,7 @@
     CountFilter.filter_biotype_from_ref_table
     CountFilter.filter_by_attribute
     CountFilter.filter_by_go_annotations
+    CountFilter.filter_by_gtf_attribute
     CountFilter.filter_by_kegg_annotations
     CountFilter.filter_by_row_name
     CountFilter.filter_by_row_sum

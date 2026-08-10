@@ -1,4 +1,4 @@
-﻿rnalysis.filtering.FoldChangeFilter
+rnalysis.filtering.FoldChangeFilter
 ===================================
 
 .. currentmodule:: rnalysis.filtering
@@ -16,6 +16,7 @@
 .. autosummary::
     :toctree: .
     
+    FoldChangeFilter.annotate_from_gtf
     FoldChangeFilter.biotypes_from_gtf
     FoldChangeFilter.biotypes_from_ref_table
     FoldChangeFilter.concatenate
@@ -27,6 +28,7 @@
     FoldChangeFilter.filter_biotype_from_ref_table
     FoldChangeFilter.filter_by_attribute
     FoldChangeFilter.filter_by_go_annotations
+    FoldChangeFilter.filter_by_gtf_attribute
     FoldChangeFilter.filter_by_kegg_annotations
     FoldChangeFilter.filter_by_row_name
     FoldChangeFilter.filter_duplicate_ids

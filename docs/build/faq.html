@@ -1,25 +1,23 @@
+
+
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" data-content_root="./">
 <head>
-  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Frequently asked questions &mdash; RNAlysis 4.2.0 documentation</title>
-      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=80d5e7a1" />
-      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=19f00094" />
+  <title>Frequently asked questions &mdash; RNAlysis 4.3.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
 
   
     <link rel="shortcut icon" href="_static/favicon.ico"/>
-  <!--[if lt IE 9]>
-    <script src="_static/js/html5shiv.min.js"></script>
-  <![endif]-->
-  
-        <script src="_static/jquery.js?v=5d32c60e"></script>
-        <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-        <script src="_static/documentation_options.js?v=d0ae6d56"></script>
-        <script src="_static/doctools.js?v=9a2dae69"></script>
-        <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
-        <script src="_static/copybutton.js?v=5b738548"></script>
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=a17b270f"></script>
+      <script src="_static/doctools.js?v=9a2dae69"></script>
+      <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="_static/copybutton.js?v=5b738548"></script>
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -157,17 +155,17 @@
 </div>
 <p>If that worked, your system might have trouble installing one of the extended features of <em>RNAlysis</em>.
 Now you can find out which feature is causing issues by installing them one by one, by running the following commands one after the other:</p>
-<blockquote>
-<div><div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pip</span> <span class="n">install</span> <span class="n">RNAlysis</span><span class="p">[</span><span class="n">fastq</span><span class="p">]</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pip</span> <span class="n">install</span> <span class="n">RNAlysis</span><span class="p">[</span><span class="n">fastq</span><span class="p">]</span>
 <span class="n">pip</span> <span class="n">install</span> <span class="n">RNAlysis</span><span class="p">[</span><span class="n">hdbscan</span><span class="p">]</span>
+<span class="n">pip</span> <span class="n">install</span> <span class="n">RNAlysis</span><span class="p">[</span><span class="n">reports</span><span class="p">]</span>
 <span class="n">pip</span> <span class="n">install</span> <span class="n">RNAlysis</span><span class="p">[</span><span class="n">single</span><span class="o">-</span><span class="nb">set</span><span class="p">]</span>
 <span class="n">pip</span> <span class="n">install</span> <span class="n">RNAlysis</span><span class="p">[</span><span class="n">randomization</span><span class="p">]</span>
+<span class="n">pip</span> <span class="n">install</span> <span class="n">RNAlysis</span><span class="p">[</span><span class="n">reports</span><span class="p">]</span>
 </pre></div>
 </div>
-</div></blockquote>
 <p>See the next FAQ items to solve issues with a specific extended feature.</p>
 </li>
-<li><p>Make sure your version of Python is supported by <em>RNAlysis</em>. Currently, any Python version between 3.7-3.10 should work, but 3.8 would probably work best.</p></li>
+<li><p>Make sure your version of Python is supported by <em>RNAlysis</em>. Currently, any Python version between 3.10-3.14 should work.</p></li>
 <li><p>Try <a class="reference external" href="https://towardsdatascience.com/virtual-environments-104c62d48c54?gi=40d0a7444922">creating a new Python environment</a> for <em>RNAlysis</em>, or <a class="reference external" href="http://docs.python-guide.org/en/latest/starting/installation/">re-installing Python</a>.</p></li>
 </ol>
 <p>If you are still having trouble installing <em>RNAlysis</em>, please submit a <a class="reference external" href="https://github.com/GuyTeichman/RNAlysis/issues">bug report</a> or <a class="reference external" href="mailto:guyteichman&#37;&#52;&#48;gmail&#46;com">contact me</a>.</p>
@@ -192,7 +190,7 @@ You can then install HDBSCAN via anaconda and <em>RNAlysis</em> via pip, like so
 <p>The randomization module makes heavy use of the Python package <cite>numba</cite> for performance, but that unfortunately means that installation can cause issues, particularly on computers running Windows.
 To successfully install <cite>numba</cite>, try one of the following solutions:</p>
 <ol class="arabic simple">
-<li><p>Make sure your Python version is supported by <em>RNAlysis</em>. Currently <em>RNAlysis</em> supports Python versions 3.7-3.10, but version 3.8 usually works best.</p></li>
+<li><p>Make sure your Python version is supported by <em>RNAlysis</em>. Currently <em>RNAlysis</em> supports Python versions 3.10-3.14.</p></li>
 <li><p>Try <a class="reference external" href="https://towardsdatascience.com/virtual-environments-104c62d48c54?gi=40d0a7444922">creating a new Python environment</a> for <em>RNAlysis</em>, or <a class="reference external" href="http://docs.python-guide.org/en/latest/starting/installation/">re-installing Python</a>.</p></li>
 </ol>
 <p>3. Instead of installing Python normally, try installing the <a class="reference external" href="https://www.edureka.co/blog/python-anaconda-tutorial/">Anaconda or Miniconda</a> Python distribution.
@@ -221,7 +219,7 @@ On a Windows computer, it would look something like this:</p>
 </pre></div>
 </div>
 <p>On a MacOS computer, it would look something like this:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">/</span><span class="n">Users</span><span class="o">/&lt;</span><span class="n">user</span><span class="o">&gt;&gt;/</span><span class="n">Library</span><span class="o">/</span><span class="n">Application</span> <span class="n">Support</span><span class="o">/</span><span class="n">RNAlyisis</span><span class="o">/</span><span class="n">videos</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">/</span><span class="n">Users</span><span class="o">/&lt;</span><span class="n">user</span><span class="o">&gt;/</span><span class="n">Library</span><span class="o">/</span><span class="n">Application</span> <span class="n">Support</span><span class="o">/</span><span class="n">RNAlysis</span><span class="o">/</span><span class="n">videos</span>
 </pre></div>
 </div>
 </li>
@@ -256,7 +254,7 @@ On a Windows computer, it would look something like this:</p>
 </pre></div>
 </div>
 <p>On a MacOS computer, it would look something like this:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">/</span><span class="n">Users</span><span class="o">/&lt;</span><span class="n">user</span><span class="o">&gt;&gt;/</span><span class="n">Library</span><span class="o">/</span><span class="n">Application</span> <span class="n">Support</span><span class="o">/</span><span class="n">RNAlyisis</span><span class="o">/</span><span class="n">videos</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">/</span><span class="n">Users</span><span class="o">/&lt;</span><span class="n">user</span><span class="o">&gt;/</span><span class="n">Library</span><span class="o">/</span><span class="n">Application</span> <span class="n">Support</span><span class="o">/</span><span class="n">RNAlysis</span><span class="o">/</span><span class="n">videos</span>
 </pre></div>
 </div>
 </li>
@@ -266,8 +264,6 @@ On a Windows computer, it would look something like this:</p>
 </pre></div>
 </div>
 </li>
-</ol>
-<ol class="arabic simple" start="5">
 <li><p>If all of these approaches failed, you can always browse the <a class="reference external" href="https://guyteichman.github.io/RNAlysis/build/quick_start.html">online version</a> of the quick-start guide.</p></li>
 </ol>
 </section>
@@ -325,7 +321,7 @@ To use those specialized functions, you need to specify the type of your table w
 <p>By default, <em>RNAlysis</em> attempts to run performance-intensive tasks such as clustering and enrichment in parallel processing mode, in order to save time.
 However, some systems or setups don’t support parallel processing very well, and can lead to tasks that never finish running successfully.
 If after waiting a few minutes nothing changes, restart <em>RNAlysis</em>, and then re-run the function in sequential mode.
-The running mode can be changed via the <cite>parallel_backend</cite> parameter of the function, or by setting the <cite>parallel</cite> parameter to False.</p>
+The running mode can be changed via the <cite>parallel_backend</cite> parameter of the function — set it to <cite>‘sequential’</cite> to run the task in a single process.</p>
 </section>
 <section id="i-ran-into-a-problem-that-is-not-specified-here-what-can-i-do">
 <h3>I ran into a problem that is not specified here. What can I do?<a class="headerlink" href="#i-ran-into-a-problem-that-is-not-specified-here-what-can-i-do" title="Link to this heading"></a></h3>
@@ -403,7 +399,7 @@ However, you can achieve similar levels of reproducibility by sharing your <em>R
   <hr/>
 
   <div role="contentinfo">
-    <p>&#169; Copyright 2024, Guy Teichman.</p>
+    <p>&#169; Copyright 2024–2026, Guy Teichman.</p>
   </div>
 
   Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a

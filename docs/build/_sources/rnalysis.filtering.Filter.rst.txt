@@ -1,4 +1,4 @@
-﻿rnalysis.filtering.Filter
+rnalysis.filtering.Filter
 =========================
 
 .. currentmodule:: rnalysis.filtering
@@ -16,6 +16,7 @@
 .. autosummary::
     :toctree: .
     
+    Filter.annotate_from_gtf
     Filter.biotypes_from_gtf
     Filter.biotypes_from_ref_table
     Filter.concatenate
@@ -26,6 +27,7 @@
     Filter.filter_biotype_from_ref_table
     Filter.filter_by_attribute
     Filter.filter_by_go_annotations
+    Filter.filter_by_gtf_attribute
     Filter.filter_by_kegg_annotations
     Filter.filter_by_row_name
     Filter.filter_duplicate_ids

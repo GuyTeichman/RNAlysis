@@ -1,4 +1,4 @@
-﻿rnalysis.enrichment.RankedSet
+rnalysis.enrichment.RankedSet
 =============================
 
 .. currentmodule:: rnalysis.enrichment

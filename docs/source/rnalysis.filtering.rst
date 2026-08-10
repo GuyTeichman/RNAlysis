@@ -21,3 +21,12 @@
 
 
 
+
+.. rubric:: Functions
+
+.. autosummary::
+    :toctree: .
+    
+    infer_table_type
+    
+

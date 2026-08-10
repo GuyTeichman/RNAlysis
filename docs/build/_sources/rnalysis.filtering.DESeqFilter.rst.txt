@@ -1,4 +1,4 @@
-﻿rnalysis.filtering.DESeqFilter
+rnalysis.filtering.DESeqFilter
 ==============================
 
 .. currentmodule:: rnalysis.filtering
@@ -16,6 +16,7 @@
 .. autosummary::
     :toctree: .
     
+    DESeqFilter.annotate_from_gtf
     DESeqFilter.biotypes_from_gtf
     DESeqFilter.biotypes_from_ref_table
     DESeqFilter.concatenate
@@ -27,6 +28,7 @@
     DESeqFilter.filter_biotype_from_ref_table
     DESeqFilter.filter_by_attribute
     DESeqFilter.filter_by_go_annotations
+    DESeqFilter.filter_by_gtf_attribute
     DESeqFilter.filter_by_kegg_annotations
     DESeqFilter.filter_by_row_name
     DESeqFilter.filter_duplicate_ids

@@ -1,4 +1,4 @@
-﻿rnalysis.enrichment.FeatureSet
+rnalysis.enrichment.FeatureSet
 ==============================
 
 .. currentmodule:: rnalysis.enrichment

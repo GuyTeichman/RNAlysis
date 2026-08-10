@@ -1,29 +1,27 @@
+
+
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" data-content_root="./">
 <head>
-  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>rnalysis.filtering.FoldChangeFilter &mdash; RNAlysis 4.2.0 documentation</title>
-      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=80d5e7a1" />
-      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=19f00094" />
+  <title>rnalysis.filtering.FoldChangeFilter &mdash; RNAlysis 4.3.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
 
   
     <link rel="shortcut icon" href="_static/favicon.ico"/>
-  <!--[if lt IE 9]>
-    <script src="_static/js/html5shiv.min.js"></script>
-  <![endif]-->
-  
-        <script src="_static/jquery.js?v=5d32c60e"></script>
-        <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-        <script src="_static/documentation_options.js?v=d0ae6d56"></script>
-        <script src="_static/doctools.js?v=9a2dae69"></script>
-        <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
-        <script src="_static/copybutton.js?v=5b738548"></script>
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=a17b270f"></script>
+      <script src="_static/doctools.js?v=9a2dae69"></script>
+      <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="_static/copybutton.js?v=5b738548"></script>
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="rnalysis.filtering.FoldChangeFilter.biotypes_from_gtf" href="rnalysis.filtering.FoldChangeFilter.biotypes_from_gtf.html" />
+    <link rel="next" title="rnalysis.filtering.FoldChangeFilter.annotate_from_gtf" href="rnalysis.filtering.FoldChangeFilter.annotate_from_gtf.html" />
     <link rel="prev" title="rnalysis.filtering.Filter.union" href="rnalysis.filtering.Filter.union.html" /> 
 </head>
 
@@ -86,6 +84,7 @@
 <li class="toctree-l4"><a class="reference internal" href="#rnalysis.filtering.FoldChangeFilter.__init__"><code class="docutils literal notranslate"><span class="pre">FoldChangeFilter.__init__()</span></code></a></li>
 </ul>
 </li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.annotate_from_gtf.html">rnalysis.filtering.FoldChangeFilter.annotate_from_gtf</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.biotypes_from_gtf.html">rnalysis.filtering.FoldChangeFilter.biotypes_from_gtf</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.biotypes_from_ref_table.html">rnalysis.filtering.FoldChangeFilter.biotypes_from_ref_table</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.concatenate.html">rnalysis.filtering.FoldChangeFilter.concatenate</a></li>
@@ -97,6 +96,7 @@
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.filter_biotype_from_ref_table.html">rnalysis.filtering.FoldChangeFilter.filter_biotype_from_ref_table</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.filter_by_attribute.html">rnalysis.filtering.FoldChangeFilter.filter_by_attribute</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.filter_by_go_annotations.html">rnalysis.filtering.FoldChangeFilter.filter_by_go_annotations</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.filter_by_gtf_attribute.html">rnalysis.filtering.FoldChangeFilter.filter_by_gtf_attribute</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.filter_by_kegg_annotations.html">rnalysis.filtering.FoldChangeFilter.filter_by_kegg_annotations</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.filter_by_row_name.html">rnalysis.filtering.FoldChangeFilter.filter_by_row_name</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.filter_duplicate_ids.html">rnalysis.filtering.FoldChangeFilter.filter_duplicate_ids</a></li>
@@ -134,6 +134,7 @@
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="rnalysis.filtering.Pipeline.html">rnalysis.filtering.Pipeline</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rnalysis.filtering.infer_table_type.html">rnalysis.filtering.infer_table_type</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="rnalysis.enrichment.html">rnalysis.enrichment</a></li>
@@ -181,7 +182,7 @@
 </dl>
 <p><strong>Attributes</strong></p>
 <dl class="simple">
-<dt>df: pandas Series</dt><dd><p>A Series that contains the fold change values.         The Series is modified upon usage of filter operations.</p>
+<dt>df: polars DataFrame</dt><dd><p>A DataFrame containing the gene names and their fold change values.         The DataFrame is modified upon usage of filter operations.</p>
 </dd>
 <dt>shape: tuple (rows, columns)</dt><dd><p>The dimensions of df.</p>
 </dd>
@@ -218,38 +219,44 @@
 
 <table class="autosummary longtable docutils align-default">
 <tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.biotypes_from_gtf.html#rnalysis.filtering.FoldChangeFilter.biotypes_from_gtf" title="rnalysis.filtering.FoldChangeFilter.biotypes_from_gtf"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FoldChangeFilter.biotypes_from_gtf</span></code></a>(gtf_path)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.annotate_from_gtf.html#rnalysis.filtering.FoldChangeFilter.annotate_from_gtf" title="rnalysis.filtering.FoldChangeFilter.annotate_from_gtf"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FoldChangeFilter.annotate_from_gtf</span></code></a>(gtf_path)</p></td>
+<td><p>Adds a new column to the table, annotating each feature with the value of a GTF/GFF attribute         (for example: the biotype, chromosome, strand, or source of each gene).</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.biotypes_from_gtf.html#rnalysis.filtering.FoldChangeFilter.biotypes_from_gtf" title="rnalysis.filtering.FoldChangeFilter.biotypes_from_gtf"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FoldChangeFilter.biotypes_from_gtf</span></code></a>(gtf_path)</p></td>
 <td><p>Returns a DataFrame describing the biotypes in the table and their count.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.biotypes_from_ref_table.html#rnalysis.filtering.FoldChangeFilter.biotypes_from_ref_table" title="rnalysis.filtering.FoldChangeFilter.biotypes_from_ref_table"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FoldChangeFilter.biotypes_from_ref_table</span></code></a>([...])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.biotypes_from_ref_table.html#rnalysis.filtering.FoldChangeFilter.biotypes_from_ref_table" title="rnalysis.filtering.FoldChangeFilter.biotypes_from_ref_table"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FoldChangeFilter.biotypes_from_ref_table</span></code></a>([...])</p></td>
 <td><p>Returns a DataFrame describing the biotypes in the table and their count.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.concatenate.html#rnalysis.filtering.FoldChangeFilter.concatenate" title="rnalysis.filtering.FoldChangeFilter.concatenate"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FoldChangeFilter.concatenate</span></code></a>(other)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.concatenate.html#rnalysis.filtering.FoldChangeFilter.concatenate" title="rnalysis.filtering.FoldChangeFilter.concatenate"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FoldChangeFilter.concatenate</span></code></a>(other)</p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.describe.html#rnalysis.filtering.FoldChangeFilter.describe" title="rnalysis.filtering.FoldChangeFilter.describe"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FoldChangeFilter.describe</span></code></a>([percentiles])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.describe.html#rnalysis.filtering.FoldChangeFilter.describe" title="rnalysis.filtering.FoldChangeFilter.describe"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FoldChangeFilter.describe</span></code></a>([percentiles])</p></td>
 <td><p>Generate descriptive statistics that summarize the central tendency, dispersion and shape         of the dataset's distribution, excluding NaN values.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.difference.html#rnalysis.filtering.FoldChangeFilter.difference" title="rnalysis.filtering.FoldChangeFilter.difference"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FoldChangeFilter.difference</span></code></a>(*others[, ...])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.difference.html#rnalysis.filtering.FoldChangeFilter.difference" title="rnalysis.filtering.FoldChangeFilter.difference"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FoldChangeFilter.difference</span></code></a>(*others[, ...])</p></td>
 <td><p>Keep only the features that exist in the first Filter object/set but NOT in the others.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.drop_columns.html#rnalysis.filtering.FoldChangeFilter.drop_columns" title="rnalysis.filtering.FoldChangeFilter.drop_columns"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FoldChangeFilter.drop_columns</span></code></a>(columns[, inplace])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.drop_columns.html#rnalysis.filtering.FoldChangeFilter.drop_columns" title="rnalysis.filtering.FoldChangeFilter.drop_columns"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FoldChangeFilter.drop_columns</span></code></a>(columns[, inplace])</p></td>
 <td><p>Drop specific columns from the table.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.filter_abs_log2_fold_change.html#rnalysis.filtering.FoldChangeFilter.filter_abs_log2_fold_change" title="rnalysis.filtering.FoldChangeFilter.filter_abs_log2_fold_change"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FoldChangeFilter.filter_abs_log2_fold_change</span></code></a>([...])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.filter_abs_log2_fold_change.html#rnalysis.filtering.FoldChangeFilter.filter_abs_log2_fold_change" title="rnalysis.filtering.FoldChangeFilter.filter_abs_log2_fold_change"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FoldChangeFilter.filter_abs_log2_fold_change</span></code></a>([...])</p></td>
 <td><p>Filters out all features whose absolute log2 fold change is below the indicated threshold.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.filter_biotype_from_gtf.html#rnalysis.filtering.FoldChangeFilter.filter_biotype_from_gtf" title="rnalysis.filtering.FoldChangeFilter.filter_biotype_from_gtf"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FoldChangeFilter.filter_biotype_from_gtf</span></code></a>(...)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.filter_biotype_from_gtf.html#rnalysis.filtering.FoldChangeFilter.filter_biotype_from_gtf" title="rnalysis.filtering.FoldChangeFilter.filter_biotype_from_gtf"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FoldChangeFilter.filter_biotype_from_gtf</span></code></a>(...)</p></td>
 <td><p>Filters out all features that do not match the indicated biotype/biotypes         (for example: 'protein_coding', 'ncRNA', etc).</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.filter_biotype_from_ref_table.html#rnalysis.filtering.FoldChangeFilter.filter_biotype_from_ref_table" title="rnalysis.filtering.FoldChangeFilter.filter_biotype_from_ref_table"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FoldChangeFilter.filter_biotype_from_ref_table</span></code></a>([...])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.filter_biotype_from_ref_table.html#rnalysis.filtering.FoldChangeFilter.filter_biotype_from_ref_table" title="rnalysis.filtering.FoldChangeFilter.filter_biotype_from_ref_table"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FoldChangeFilter.filter_biotype_from_ref_table</span></code></a>([...])</p></td>
 <td><p>Filters out all features that do not match the indicated biotype/biotypes         (for example: 'protein_coding', 'ncRNA', etc).</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.filter_by_attribute.html#rnalysis.filtering.FoldChangeFilter.filter_by_attribute" title="rnalysis.filtering.FoldChangeFilter.filter_by_attribute"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FoldChangeFilter.filter_by_attribute</span></code></a>([...])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.filter_by_attribute.html#rnalysis.filtering.FoldChangeFilter.filter_by_attribute" title="rnalysis.filtering.FoldChangeFilter.filter_by_attribute"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FoldChangeFilter.filter_by_attribute</span></code></a>([...])</p></td>
 <td><p>Filters features according to user-defined attributes from an Attribute Reference Table.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.filter_by_go_annotations.html#rnalysis.filtering.FoldChangeFilter.filter_by_go_annotations" title="rnalysis.filtering.FoldChangeFilter.filter_by_go_annotations"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FoldChangeFilter.filter_by_go_annotations</span></code></a>(go_ids)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.filter_by_go_annotations.html#rnalysis.filtering.FoldChangeFilter.filter_by_go_annotations" title="rnalysis.filtering.FoldChangeFilter.filter_by_go_annotations"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FoldChangeFilter.filter_by_go_annotations</span></code></a>(go_ids)</p></td>
 <td><p>Filters genes according to GO annotations, keeping only genes that are annotated with a specific GO term.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.filter_by_gtf_attribute.html#rnalysis.filtering.FoldChangeFilter.filter_by_gtf_attribute" title="rnalysis.filtering.FoldChangeFilter.filter_by_gtf_attribute"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FoldChangeFilter.filter_by_gtf_attribute</span></code></a>(...)</p></td>
+<td><p>Filters the features in the table by any attribute described in a GTF/GFF annotation file,         keeping only features whose attribute matches one of the specified values         (for example: keep only genes on a specific chromosome or strand, from a specific source,         or of a specific biotype).</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.filter_by_kegg_annotations.html#rnalysis.filtering.FoldChangeFilter.filter_by_kegg_annotations" title="rnalysis.filtering.FoldChangeFilter.filter_by_kegg_annotations"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FoldChangeFilter.filter_by_kegg_annotations</span></code></a>(...)</p></td>
 <td><p>Filters genes according to KEGG pathways, keeping only genes that belong to specific KEGG pathway.</p></td>
@@ -362,13 +369,13 @@
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
         <a href="rnalysis.filtering.Filter.union.html" class="btn btn-neutral float-left" title="rnalysis.filtering.Filter.union" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="rnalysis.filtering.FoldChangeFilter.biotypes_from_gtf.html" class="btn btn-neutral float-right" title="rnalysis.filtering.FoldChangeFilter.biotypes_from_gtf" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="rnalysis.filtering.FoldChangeFilter.annotate_from_gtf.html" class="btn btn-neutral float-right" title="rnalysis.filtering.FoldChangeFilter.annotate_from_gtf" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>
 
   <div role="contentinfo">
-    <p>&#169; Copyright 2024, Guy Teichman.</p>
+    <p>&#169; Copyright 2024–2026, Guy Teichman.</p>
   </div>
 
   Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a

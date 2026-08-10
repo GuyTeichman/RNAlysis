@@ -1,25 +1,23 @@
+
+
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" data-content_root="./">
 <head>
-  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Glossary - programmatic interface &mdash; RNAlysis 4.2.0 documentation</title>
-      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=80d5e7a1" />
-      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=19f00094" />
+  <title>Glossary - programmatic interface &mdash; RNAlysis 4.3.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
 
   
     <link rel="shortcut icon" href="_static/favicon.ico"/>
-  <!--[if lt IE 9]>
-    <script src="_static/js/html5shiv.min.js"></script>
-  <![endif]-->
-  
-        <script src="_static/jquery.js?v=5d32c60e"></script>
-        <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-        <script src="_static/documentation_options.js?v=d0ae6d56"></script>
-        <script src="_static/doctools.js?v=9a2dae69"></script>
-        <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
-        <script src="_static/copybutton.js?v=5b738548"></script>
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=a17b270f"></script>
+      <script src="_static/doctools.js?v=9a2dae69"></script>
+      <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="_static/copybutton.js?v=5b738548"></script>
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -115,11 +113,11 @@
 <span id="glossary"></span><h1>Glossary - programmatic interface<a class="headerlink" href="#glossary-programmatic-interface" title="Link to this heading"></a></h1>
 <dl class="simple glossary">
 <dt id="term-Attribute-Reference-Table">Attribute Reference Table<a class="headerlink" href="#term-Attribute-Reference-Table" title="Link to this term"></a></dt><dd><p>A <cite>csv</cite> table that contains user-defined information (‘attributes’, such as ‘genes expressed in intestine’, ‘epigenetic genes’ or ‘genes that have paralogs’)
-abut genes/genomic features.
+about genes/genomic features.
 Every row in the file is a gene/genomic feature, and every column is an attribute.
 You can define such table to be your default Attribute Reference Table using the function <cite>general.set_attr_ref_table_path()</cite>.
-The attributes in the table can be used both to filter your data with functions like <cite>Filter.filter_by_attribute’,
-and to perform enrichment analysis with various functions from the `enrichment</cite> module.</p>
+The attributes in the table can be used both to filter your data with functions like <cite>Filter.filter_by_attribute</cite>,
+and to perform enrichment analysis with various functions from the <cite>enrichment</cite> module.</p>
 </dd>
 <dt id="term-Biotype-Reference-Table">Biotype Reference Table<a class="headerlink" href="#term-Biotype-Reference-Table" title="Link to this term"></a></dt><dd><p>A <cite>csv</cite> table that contains information about the biotype (protein coding, pseudogene, lncRNA, etc…) of genomic features.
 You can define such table to be your default Biotype Reference Table using the function <cite>general.set_biotype_ref_table_path()</cite>.
@@ -133,7 +131,7 @@ and every column represents a condition or replicate.</p>
 See the user guide for more details.</p>
 </dd>
 <dt id="term-FeatureSet">FeatureSet<a class="headerlink" href="#term-FeatureSet" title="Link to this term"></a></dt><dd><p>A container for a set of gene/feature IDs. A FeatureSet can optionally be named.
-Using the Enrichmemt module, you can run various enrichment analyses on FeatureSet objects.</p>
+Using the Enrichment module, you can run various enrichment analyses on FeatureSet objects.</p>
 </dd>
 <dt id="term-Filter">Filter<a class="headerlink" href="#term-Filter" title="Link to this term"></a></dt><dd><p>The most basic type of <a class="reference internal" href="#term-Filter-object"><span class="xref std std-term">Filter object</span></a>.
 Can support any form of tabular data, and contains only the basic filtering functions.</p>
@@ -141,7 +139,7 @@ Can support any form of tabular data, and contains only the basic filtering func
 <dt id="term-Filter-object">Filter object<a class="headerlink" href="#term-Filter-object" title="Link to this term"></a></dt><dt id="term-Filter-objects">Filter objects<a class="headerlink" href="#term-Filter-objects" title="Link to this term"></a></dt><dd><p>An object that stores your tabular data and its filename.
 You can apply filtering/normalizing functions to your data using the Filter object.
 Each type of Filter object supports different data structures and offers different utilities.
-For more details, see <a class="reference internal" href="#term-Filter"><span class="xref std std-term">Filter</span></a>, :term:’CountFilter’, :term:<a href="#id1"><span class="problematic" id="id2">`</span></a>DESeqFilter’ and :term:<a href="#id3"><span class="problematic" id="id4">`</span></a>FoldChangeFilter’.</p>
+For more details, see <a class="reference internal" href="#term-Filter"><span class="xref std std-term">Filter</span></a>, <a class="reference internal" href="#term-CountFilter"><span class="xref std std-term">CountFilter</span></a>, <a class="reference internal" href="#term-DESeqFilter"><span class="xref std std-term">DESeqFilter</span></a> and <a class="reference internal" href="#term-FoldChangeFilter"><span class="xref std std-term">FoldChangeFilter</span></a>.</p>
 </dd>
 <dt id="term-FoldChangeFilter">FoldChangeFilter<a class="headerlink" href="#term-FoldChangeFilter" title="Link to this term"></a></dt><dd><p>A <a class="reference internal" href="#term-Filter-object"><span class="xref std std-term">Filter object</span></a> that supports fold change values, where each row represents a gene or genomic feature,
 and the <strong>only</strong> other column contains fold-change values between two conditions.
@@ -170,7 +168,7 @@ on RankedSet objects.</p>
   <hr/>
 
   <div role="contentinfo">
-    <p>&#169; Copyright 2024, Guy Teichman.</p>
+    <p>&#169; Copyright 2024–2026, Guy Teichman.</p>
   </div>
 
   Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a

@@ -1,25 +1,23 @@
+
+
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" data-content_root="./">
 <head>
-  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>A-to-Z tutorial - example analysis &mdash; RNAlysis 4.2.0 documentation</title>
-      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=80d5e7a1" />
-      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=19f00094" />
+  <title>A-to-Z tutorial - example analysis &mdash; RNAlysis 4.3.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
 
   
     <link rel="shortcut icon" href="_static/favicon.ico"/>
-  <!--[if lt IE 9]>
-    <script src="_static/js/html5shiv.min.js"></script>
-  <![endif]-->
-  
-        <script src="_static/jquery.js?v=5d32c60e"></script>
-        <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-        <script src="_static/documentation_options.js?v=d0ae6d56"></script>
-        <script src="_static/doctools.js?v=9a2dae69"></script>
-        <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
-        <script src="_static/copybutton.js?v=5b738548"></script>
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=a17b270f"></script>
+      <script src="_static/doctools.js?v=9a2dae69"></script>
+      <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="_static/copybutton.js?v=5b738548"></script>
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -190,13 +188,13 @@ You can find the table I created <a class="reference external" href="https://raw
 This feature is not mandatory, but is highly recommended. You can read more about it in this <a class="reference external" href="https://guyteichman.github.io/RNAlysis/build/user_guide_gui.html#rnalysis-interactive-analysis-reports">User Guide section</a>.
 For this sample analysis, we will enable report generation.</p>
 <a class="reference internal image-reference" href="_images/01a00_enable_report_gen.png"><img alt="Enable automatic report generation" src="_images/01a00_enable_report_gen.png" style="width: 600px;" /></a>
-<p>We can now load the dataset: in the main window, click on the “Load” button and choose the table’s file from your computer.
+<p>We can now load the dataset: in the main window, click on the “Choose table” button and choose the table’s file from your computer.
 We will then use the drop-down menu to change our table type from “Other” to “Count matrix”. This will allow us to later on use analysis methods that are dedicated to count matrix-style datasets.</p>
 <a class="reference internal image-reference" href="_images/01a01_load_table.png"><img alt="Loading a table into *RNAlysis* - choose the table type" src="_images/01a01_load_table.png" style="width: 600px;" /></a>
 <p>Once we picked a table type, a new option will appear, allowing us to specify whether our table was pre-normalized. We will set this option to “True”, since our dataset was already normalized to Fragments Per Kilobase Million (FPKM).
 This is not a mandatory step, but if we don’t do it, <em>RNAlysis</em> will warn us whenever we run analyses that expect normalized values.</p>
 <a class="reference internal image-reference" href="_images/01a02_load_table.png"><img alt="Loading a table into *RNAlysis* - set the table as pre-normalized" src="_images/01a02_load_table.png" style="width: 600px;" /></a>
-<p>Finally, we can click the “start” button to actually open our table on <em>RNAlysis</em>.
+<p>Finally, we can click the “Load” button to actually open our table on <em>RNAlysis</em>.
 The window will now display a preview of our table, as well as a short summary of our table’s content (table name, table type, number of rows and columns).</p>
 <p>At the bottom of the window we can also see a log box - this is where <em>RNAlysis</em> will display notes and warnings regarding our analysis.</p>
 <a class="reference internal image-reference" href="_images/01b01_view_table.png"><img alt="Preview the loaded table" src="_images/01b01_view_table.png" style="width: 600px;" /></a>
@@ -274,7 +272,7 @@ Pair-plots displays the pairwise relationships between samples, or experimental 
 For example, the gene <em>oma-1</em> (gene ID <strong>WBGene00003864</strong>) should be expressed almost exclusively in the two-cell stage of embryonic development, and we expect the gene <em>skn-1</em> (gene ID <strong>WBGene00004804</strong>) to show a fairly consistent expression level across development.
 Let’s go to the “Visualize” tab to plot the expression of these genes over the developmental stages.</p>
 <p>The <cite>features</cite> parameter will let us choose which genomic features we want to plot expression for. Since we can decide to add as many genes as we would like to this graph, <em>RNAlysis</em> will give us the option to choose how many genes to input.
-To start, click on the “Set input” button next to the <cite>features</cite> parameter:</p>
+To start, click on the “Choose values” button next to the <cite>features</cite> parameter:</p>
 <a class="reference internal image-reference" href="_images/01f01_plot_expression.png"><img alt="Choose genes to plot" src="_images/01f01_plot_expression.png" style="width: 600px;" /></a>
 <p>In the pop-up window that opens, you can use the “Add field” and “Remove field” buttons to choose how many genes to plot the expression of.
 Then, in each field, enter the gene ID of a gene you want to visualize. When you’re done, click on the “Done” button.</p>
@@ -522,7 +520,7 @@ To begin, let’s open the “FASTQ” menu in <em>RNAlysis</em>, and under “A
 <a class="reference internal image-reference" href="_images/02a02_cutadapt.png"><img alt="adapter trimming - set input and output folders" src="_images/02a02_cutadapt.png" style="width: 600px;" /></a>
 <p>The input folder can contain any number of raw FASTQ files, and <em>RNAlysis</em> will trim them one by one and save the trimmed output files in the output folder.</p>
 <p>Next, let’s set the adapter sequence we want to trim. The adapter used on these samples is the three-prime Illumina TruSeq adapter, with the sequence “AGATCGGAAGAGCACACGTCTGAACTCCAGTCA”.
-Let’s click on the “Set input” button of the <cite>three_prime_adapters</cite> parameter:</p>
+Let’s click on the “Choose values” button of the <cite>three_prime_adapters</cite> parameter:</p>
 <a class="reference internal image-reference" href="_images/02a03_cutadapt.png"><img alt="adapter trimming - set input for adapter sequence" src="_images/02a03_cutadapt.png" style="width: 600px;" /></a>
 <p>This will open a dialog box, where we can enter the sequence of our adapter:</p>
 <a class="reference internal image-reference" href="_images/02a04_cutadapt.png"><img alt="adapter trimming - set adapter sequence" src="_images/02a04_cutadapt.png" style="width: 600px;" /></a>
@@ -675,7 +673,7 @@ Therefore, we will instead create a customized Pipeline containing all of those 
 <a class="reference internal image-reference" href="_images/02d01_pipeline.png"><img alt="Pipeline menu - new Pipeline" src="_images/02d01_pipeline.png" style="width: 600px;" /></a>
 <p>In the new window that opened, we can name our Pipeline, and choose the type of table we want to apply the Pipeline to. Let’s select “differential expression” from the drop-down menu:</p>
 <a class="reference internal image-reference" href="_images/02d02_pipeline.png"><img alt="Create Pipeline - choose table type" src="_images/02d02_pipeline.png" style="width: 600px;" /></a>
-<p>After choosing a name and table type, we can click on the “Start” button.
+<p>After choosing a name and table type, we can click on the “Create Pipeline” button.
 The window will now update to show a preview of our new (empty) Pipeline:</p>
 <a class="reference internal image-reference" href="_images/02d03_pipeline.png"><img alt="Create Pipeline - preview" src="_images/02d03_pipeline.png" style="width: 600px;" /></a>
 <p>At this point, we can start adding functions to the Pipeline.
@@ -885,7 +883,7 @@ If you still have questions about using <em>RNAlysis</em>, feel free to drop the
   <hr/>
 
   <div role="contentinfo">
-    <p>&#169; Copyright 2024, Guy Teichman.</p>
+    <p>&#169; Copyright 2024–2026, Guy Teichman.</p>
   </div>
 
   Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
