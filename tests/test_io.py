@@ -1207,34 +1207,6 @@ def test_kegg_annotation_iterator_get_compounds(monkeypatch):
     assert sorted(reqs_made) == ['compound', 'glycan']
 
 
-def test_kegg_annotation_iterator_get_compound_names(monkeypatch):
-    KEGGAnnotationIterator._compound_name_cache.clear()
-    responses = {'C00022': 'C00022\tPyruvate; Pyruvic acid; 2-Oxopropanoate',
-                 'C00036': 'C00036\tOxaloacetate; Oxalacetic acid',
-                 'G00022': 'G00022\t(GlcNAc)7 (Man)3 (Asn)1'}
-    requested = []
-
-    def mock_kegg_request(session, operation, arguments, cached_filename=None):
-        assert operation == 'list'
-        ids = arguments[0].split('+')
-        requested.extend(ids)
-        return '\n'.join(responses[i] for i in ids), False
-
-    monkeypatch.setattr(KEGGAnnotationIterator, '_kegg_request', mock_kegg_request)
-
-    # only the main (first) name is kept, and only the requested ids are fetched -- not the whole catalog
-    res = KEGGAnnotationIterator.get_compound_names(['G00022', 'C00022', 'C00036'])
-    assert res == {'C00022': 'Pyruvate', 'C00036': 'Oxaloacetate', 'G00022': '(GlcNAc)7 (Man)3 (Asn)1'}
-    assert sorted(requested) == ['C00022', 'C00036', 'G00022']
-
-    # accumulating cache: a later call for already-seen ids issues no new request
-    requested.clear()
-    res2 = KEGGAnnotationIterator.get_compound_names(['C00022', 'C00036'])
-    assert res2 == {'C00022': 'Pyruvate', 'C00036': 'Oxaloacetate'}
-    assert requested == []
-    KEGGAnnotationIterator._compound_name_cache.clear()
-
-
 def are_xml_elements_equal(e1, e2):
     if e1.tag != e2.tag: return False
     if e1.text != e2.text: return False

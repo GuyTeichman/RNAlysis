@@ -727,24 +727,10 @@ class DAGTree:
         return fig
 
 
-def _extract_kgml_compound_ids(kgml_tree: ElementTree) -> Set[str]:
-    """Bare KEGG compound/glycan IDs (e.g. 'C00022', 'G00022') referenced by the compound nodes of a
-    KGML tree -- exactly the keys ``KEGGPathway.parse_pathway`` looks up in its compounds dict."""
-    ids = set()
-    for element in kgml_tree.getroot():
-        if element.tag == 'entry' and element.get('type') == 'compound':
-            ids.update(re.findall(r'(?:cpd|gl):([0-9a-zA-Z_]+)', element.get('name', '')))
-    return ids
-
-
 @lru_cache(maxsize=128)
 def fetch_kegg_pathway(pathway_id: str, gene_id_translator: Union[io.GeneIDDict, None] = None) -> KEGGPathway:
     kgml_tree = io.KEGGAnnotationIterator.get_pathway_kgml(pathway_id)
-    # Fetch names for only the compounds this pathway references, instead of downloading KEGG's entire
-    # ~30k-entry compound+glycan catalog. The resulting compounds dict is identical (for these IDs) to
-    # the catalog's, so the rendered pathway is unchanged.
-    compound_ids = _extract_kgml_compound_ids(kgml_tree)
-    compounds = io.KEGGAnnotationIterator.get_compound_names(compound_ids) if compound_ids else {}
+    compounds = io.KEGGAnnotationIterator.get_compounds()
     return KEGGPathway(kgml_tree, compounds, gene_id_translator)
 
 

@@ -1,40 +1,8 @@
 import matplotlib
 
-from rnalysis.utils import io
 from rnalysis.utils.ontology import *
 
 matplotlib.use('Agg')
-
-
-def test_fetch_kegg_pathway_fetches_only_pathway_compounds(monkeypatch):
-    # fetch_kegg_pathway must name only the compounds this pathway references (targeted fetch),
-    # never download KEGG's whole compound+glycan catalog via get_compounds().
-    fetch_kegg_pathway.cache_clear()
-    tree = ElementTree.parse('tests/test_files/test_kgml_compounds.xml')
-    monkeypatch.setattr(io.KEGGAnnotationIterator, 'get_pathway_kgml', lambda pathway_id: tree)
-
-    captured = {}
-
-    def mock_get_compound_names(cls, compound_ids):
-        captured['ids'] = set(compound_ids)
-        return {cid: f'name_{cid}' for cid in compound_ids}
-
-    monkeypatch.setattr(io.KEGGAnnotationIterator, 'get_compound_names', classmethod(mock_get_compound_names))
-
-    def _forbid_full_catalog():
-        raise AssertionError('fetch_kegg_pathway must not download the full compound catalog')
-
-    monkeypatch.setattr(io.KEGGAnnotationIterator, 'get_compounds', staticmethod(_forbid_full_catalog))
-
-    pathway = fetch_kegg_pathway('cel00020', None)
-
-    # exactly the compound/glycan ids referenced by the pathway's compound nodes (both ids of the
-    # two-id entry, plus the glycan) -- and nothing else
-    assert captured['ids'] == {'C00022', 'C00036', 'C00024', 'G00022'}
-    assert isinstance(pathway, KEGGPathway)
-    assert pathway.compounds == {'C00022': 'name_C00022', 'C00036': 'name_C00036',
-                                 'C00024': 'name_C00024', 'G00022': 'name_G00022'}
-    fetch_kegg_pathway.cache_clear()
 
 
 def test_render_graphviz_plot(monkeypatch):
