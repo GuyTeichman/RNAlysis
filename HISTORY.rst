@@ -2,6 +2,13 @@
 History
 =======
 
+4.3.1 (unreleased)
+-------------------
+
+Fixed
+******
+* Fixed a crash (``ValueError: Input X contains NaN``) in the PCA functions (``pca``, ``sort_by_principal_component``, ``split_by_principal_components``) and in the power-transform clustering methods when the data contained a near-constant, high-magnitude feature measured across very few samples. The per-feature Box-Cox power transform could overflow to non-finite values on such a feature; RNAlysis now detects this and standardizes the affected feature *without* the power transform (emitting a warning) instead of crashing. Results for all other data are unchanged.
+
 4.3.0 (2026-08-10)
 -------------------
 

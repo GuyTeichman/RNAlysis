@@ -84,6 +84,27 @@ def test_standard_box_cox_default_is_sequential(monkeypatch):
     assert np.array_equal(standard_box_cox(array), reference)
 
 
+@pytest.mark.parametrize('parallel_backend', ['sequential', 'threading'])
+def test_standard_box_cox_survives_boxcox_overflow(parallel_backend, monkeypatch):
+    # A near-constant, high-magnitude column with very few samples drives the per-column Box-Cox MLE
+    # lambda to an extreme value whose transform overflows float64 -> non-finite output. That used to
+    # crash PCA/clustering downstream (sklearn: "Input X contains NaN"). Such a column must be handled
+    # gracefully (standardized without the power transform), while well-behaved columns stay untouched.
+    monkeypatch.setattr(generic, 'BOX_COX_PARALLEL_MIN_COLUMNS', 2)
+    overflow_col = np.array([8482.73, 8459.93, 8423.67, 8288.78])  # the real GFP-like offender
+    good = np.array([[10.0, 3.0], [50.0, 90.0], [200.0, 40.0], [1000.0, 7.0]])
+    array = np.column_stack([good[:, 0], overflow_col, good[:, 1]])
+
+    res = standard_box_cox(array, parallel_backend=parallel_backend)
+    assert res.shape == array.shape
+    assert np.isfinite(res).all(), 'the power transform must not leak NaN/inf that crash PCA'
+
+    # the well-behaved columns must be identical to their own Box-Cox+standardize result -- the
+    # overflow fallback only touches the offending column.
+    good_ref = StandardScaler().fit_transform(PowerTransformer(method='box-cox').fit_transform(good + 1))
+    assert np.allclose(res[:, [0, 2]], good_ref, rtol=0, atol=1e-10)
+
+
 def test_color_generator():
     gen = color_generator()
     preset_colors = ['tab:blue', 'tab:red', 'tab:green', 'tab:orange', 'tab:purple', 'tab:brown', 'tab:pink',

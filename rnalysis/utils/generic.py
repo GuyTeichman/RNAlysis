@@ -244,6 +244,17 @@ def standard_box_cox(data: Union[np.ndarray, pl.DataFrame],
         box_cox_array = _parallel_box_cox(array, backend=parallel_backend, n_jobs=joblib.cpu_count())
     else:
         box_cox_array = _box_cox_fit_transform(array)
+    # A near-constant, high-magnitude column with very few samples can drive the per-column Box-Cox
+    # MLE lambda so high that the transform overflows float64, yielding non-finite values that later
+    # crash PCA/clustering ("Input X contains NaN"). Fall back to the raw values for any such column
+    # (i.e. standardize it without the power transform, as power_transform=False would) so a single
+    # unstable column no longer poisons the whole transform. Well-behaved columns are untouched.
+    unstable_columns = ~np.isfinite(box_cox_array).all(axis=0)
+    if unstable_columns.any():
+        box_cox_array[:, unstable_columns] = array[:, unstable_columns]
+        warnings.warn(f"The power transform produced non-finite values for {int(unstable_columns.sum())} "
+                      f"column(s) (e.g. a near-constant column with extreme values); these columns were "
+                      f"standardized without the power transform instead.")
     res_array = StandardScaler().fit_transform(box_cox_array)
     if isinstance(data, pl.DataFrame):
         return data.select(~cs.numeric()).with_columns(
