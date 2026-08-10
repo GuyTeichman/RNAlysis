@@ -309,6 +309,25 @@ def test_get_val_from_widget_multiinput_types(qtbot, widget_class, default, exce
     assert get_val_from_widget(widget) == expected_val
 
 
+@pytest.mark.parametrize("widget_class,kwargs", [
+    (QMultiSpinBox, {}),
+    (QMultiDoubleSpinBox, {}),
+    (QMultiLineEdit, {}),
+    (QMultiStrIntLineEdit, {}),
+    (QMultiToggleSwitch, {}),
+    (MultiColorPicker, {}),
+    (QMultiPathLineEdit, {}),
+    (TwoLayerMultiLineEdit, {}),
+    (QMultiComboBox, {'items': ['option1', 'option2']}),
+])
+def test_QMultiInput_default_text(qtbot, widget_class, kwargs):
+    # regression test for #208: the default button text should be a clear,
+    # action-oriented label instead of the vague "Set input"/"Set Input"
+    qtbot, widget = widget_setup(qtbot, widget_class, label='label', **kwargs)
+    assert widget.text() == 'Choose values'
+    assert widget.text() not in ('Set input', 'Set Input')
+
+
 @pytest.mark.parametrize("widget_class", (QtWidgets.QWidget, QtWidgets.QDateTimeEdit))
 def test_get_val_from_widget_bad_widget(qtbot, widget_class):
     qtbot, widget = widget_setup(qtbot, widget_class)
@@ -479,6 +498,14 @@ def test_PathLineEdit_choose_file_not_chosen(qtbot, monkeypatch):
     assert widget.text() == pth
 
 
+def test_mark_primary(qtbot):
+    # regression test for #208: marking a button primary should set the dynamic
+    # 'class'='primary' property used by the QPushButton[class="primary"] QSS rule
+    qtbot, widget = widget_setup(qtbot, QtWidgets.QPushButton, 'Load')
+    assert widget.property('class') != 'primary'
+
+    mark_primary(widget)
+    assert widget.property('class') == 'primary'
 def test_PathLineEdit_tooltip_reflects_full_path(qtbot):
     qtbot, widget = widget_setup(qtbot, PathLineEdit)
     long_path = 'C:/Users/example_user/very/long/nested/directory/structure/elegans_developmental_stages.tsv'

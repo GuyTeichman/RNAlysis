@@ -1668,7 +1668,7 @@ class QMultiInput(QtWidgets.QPushButton):
                  'dialog_started': 'stores whether the dialog was already started >=1 times',
                  'dialog_layout': 'layout of the dialog window'}
 
-    def __init__(self, label: str = '', text='Set input', parent=None):
+    def __init__(self, label: str = '', text='Choose values', parent=None):
         super().__init__(text, parent)
         self.label = label
         self.dialog_widgets = {}
@@ -1763,7 +1763,7 @@ class QMultiSpinBox(QMultiInput):
                  'maximum': 'maximum value for spinboxes'}
     CHILD_QWIDGET = QtWidgets.QSpinBox
 
-    def __init__(self, label: str = '', text='Set input', parent=None, minimum=-2147483648, maximum=2147483647):
+    def __init__(self, label: str = '', text='Choose values', parent=None, minimum=-2147483648, maximum=2147483647):
         self.minimum = minimum
         self.maximum = maximum
         super().__init__(label, text, parent)
@@ -1786,7 +1786,7 @@ class QMultiDoubleSpinBox(QMultiSpinBox):
                  'step_size': 'default step size of spinboxes'}
     CHILD_QWIDGET = QtWidgets.QDoubleSpinBox
 
-    def __init__(self, label: str = '', text='Set input', parent=None, minimum=float("-inf"), maximum=float("inf"),
+    def __init__(self, label: str = '', text='Choose values', parent=None, minimum=float("-inf"), maximum=float("inf"),
                  step_size: float = 0.05):
         self.minimum = minimum
         self.maximum = maximum
@@ -1864,7 +1864,7 @@ class QMultiLineEdit(QMultiInput):
 class QMultiPathLineEdit(QMultiLineEdit):
     CHILD_QWIDGET = PathLineEdit
 
-    def __init__(self, is_file: bool = True, label: str = '', text='Set input', parent=None):
+    def __init__(self, is_file: bool = True, label: str = '', text='Choose values', parent=None):
         self.is_file = is_file
         super().__init__(label, text, parent)
 
@@ -1895,7 +1895,7 @@ class QMultiComboBox(QMultiInput):
     CHILD_QWIDGET = QtWidgets.QComboBox
     __slots__ = {'items': 'combo box items'}
 
-    def __init__(self, label: str, text: str = 'Set Input', parent=None, items=()):
+    def __init__(self, label: str, text: str = 'Choose values', parent=None, items=()):
         self.items = items
         super().__init__(label, text, parent)
 
@@ -2333,3 +2333,20 @@ def clear_layout(layout, exceptions: set = frozenset()):
         child = layout.takeAt(0)
         if child.widget() and child.widget() not in exceptions:
             child.widget().deleteLater()
+
+
+def mark_primary(button: QtWidgets.QAbstractButton):
+    """
+    Mark a button as the primary/main action of its window or screen, so it gets the
+    accented, filled "primary button" look defined by the ``QPushButton[class="primary"]``
+    rule in ``styles/parametric_style.qss``, instead of the default flat/secondary style.
+    There should be at most one primary button visible per window at a time.
+
+    :param button: the button to mark as primary
+    :type button: QtWidgets.QAbstractButton
+    """
+    button.setProperty('class', 'primary')
+    # dynamic properties used in a stylesheet selector require the style to be
+    # re-polished to take effect, since it isn't automatically re-evaluated on setProperty()
+    button.style().unpolish(button)
+    button.style().polish(button)

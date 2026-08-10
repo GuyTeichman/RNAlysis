@@ -38,7 +38,7 @@ For this sample analysis, we will enable report generation.
   :width: 600
   :alt: Enable automatic report generation
 
-We can now load the dataset: in the main window, click on the "Load" button and choose the table's file from your computer.
+We can now load the dataset: in the main window, click on the "Choose table" button and choose the table's file from your computer.
 We will then use the drop-down menu to change our table type from "Other" to "Count matrix". This will allow us to later on use analysis methods that are dedicated to count matrix-style datasets.
 
 .. image:: /tutorial_screenshots/01a01_load_table.png
@@ -52,7 +52,7 @@ This is not a mandatory step, but if we don't do it, *RNAlysis* will warn us whe
   :width: 600
   :alt: Loading a table into *RNAlysis* - set the table as pre-normalized
 
-Finally, we can click the "start" button to actually open our table on *RNAlysis*.
+Finally, we can click the "Load" button to actually open our table on *RNAlysis*.
 The window will now display a preview of our table, as well as a short summary of our table's content (table name, table type, number of rows and columns).
 
 At the bottom of the window we can also see a log box - this is where *RNAlysis* will display notes and warnings regarding our analysis.
@@ -190,7 +190,7 @@ For example, the gene *oma-1* (gene ID **WBGene00003864**) should be expressed a
 Let's go to the "Visualize" tab to plot the expression of these genes over the developmental stages.
 
 The `features` parameter will let us choose which genomic features we want to plot expression for. Since we can decide to add as many genes as we would like to this graph, *RNAlysis* will give us the option to choose how many genes to input.
-To start, click on the "Set input" button next to the `features` parameter:
+To start, click on the "Choose values" button next to the `features` parameter:
 
 .. image:: /tutorial_screenshots/01f01_plot_expression.png
   :width: 600
@@ -586,7 +586,7 @@ In the new window that opened, we can choose the folder that contains our raw FA
 The input folder can contain any number of raw FASTQ files, and *RNAlysis* will trim them one by one and save the trimmed output files in the output folder.
 
 Next, let's set the adapter sequence we want to trim. The adapter used on these samples is the three-prime Illumina TruSeq adapter, with the sequence "AGATCGGAAGAGCACACGTCTGAACTCCAGTCA".
-Let's click on the "Set input" button of the `three_prime_adapters` parameter:
+Let's click on the "Choose values" button of the `three_prime_adapters` parameter:
 
 .. image:: /tutorial_screenshots/02a03_cutadapt.png
   :width: 600
@@ -857,7 +857,7 @@ In the new window that opened, we can name our Pipeline, and choose the type of 
   :width: 600
   :alt: Create Pipeline - choose table type
 
-After choosing a name and table type, we can click on the "Start" button.
+After choosing a name and table type, we can click on the "Create Pipeline" button.
 The window will now update to show a preview of our new (empty) Pipeline:
 
 .. image:: /tutorial_screenshots/02d03_pipeline.png

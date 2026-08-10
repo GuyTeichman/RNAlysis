@@ -661,6 +661,7 @@ class EnrichmentWindow(gui_widgets.MinMaxDialog):
 
         self.widgets['run_button'] = QtWidgets.QPushButton('Run')
         self.widgets['run_button'].clicked.connect(self.run_analysis)
+        gui_widgets.mark_primary(self.widgets['run_button'])
         self.widgets['run_button'].setVisible(False)
         self.scroll_layout.addWidget(self.widgets['run_button'])
 
@@ -1094,6 +1095,7 @@ class SetOperationWindow(gui_widgets.MinMaxDialog):
 
         self.widgets['apply_button'] = QtWidgets.QPushButton('Apply')
         self.widgets['apply_button'].clicked.connect(self.apply_set_op)
+        gui_widgets.mark_primary(self.widgets['apply_button'])
         self.widgets['apply_button'].setEnabled(False)
         self.operations_grid.addWidget(self.widgets['apply_button'], 4, 0, 1, 6)
 
@@ -1296,6 +1298,7 @@ class SetVisualizationWindow(gui_widgets.MinMaxDialog):
 
         self.widgets['generate_button'] = QtWidgets.QPushButton('Generate graph')
         self.widgets['generate_button'].clicked.connect(self.generate_graph)
+        gui_widgets.mark_primary(self.widgets['generate_button'])
         self.widgets['generate_button'].setEnabled(False)
         self.visualization_grid.addWidget(self.widgets['generate_button'], 4, 0, 1, 5)
 
@@ -1490,6 +1493,7 @@ class TabPage(QtWidgets.QWidget):
         # initiate apply button
         self.apply_button = QtWidgets.QPushButton('Apply')
         self.apply_button.clicked.connect(self.apply_function)
+        gui_widgets.mark_primary(self.apply_button)
         self.layout.addWidget(self.apply_button)
         self.apply_button.setVisible(False)
 
@@ -2192,13 +2196,15 @@ class FilterTabPage(TabPage):
         self.basic_widgets['table_type_combo'].currentIndexChanged.connect(self.update_basic_ui)
         self.basic_widgets['table_type_combo'].setCurrentText('Other table')
 
-        self.basic_widgets['start_button'] = QtWidgets.QPushButton('Start')
+        self.basic_widgets['start_button'] = QtWidgets.QPushButton('Load')
         self.basic_widgets['start_button'].clicked.connect(self.start)
         self.basic_widgets['start_button'].setEnabled(False)
+        gui_widgets.mark_primary(self.basic_widgets['start_button'])
 
-        self.basic_widgets['file_path'] = gui_widgets.PathLineEdit(file_types="Data table "
-                                                                              "(*.csv;*.tsv;*.txt;*.parquet);;"
-                                                                              "All Files (*)")
+        self.basic_widgets['file_path'] = gui_widgets.PathLineEdit(button_text='Choose table',
+                                                                     file_types="Data table "
+                                                                                "(*.csv;*.tsv;*.txt;*.parquet);;"
+                                                                                "All Files (*)")
         self.basic_widgets['file_path'].textChanged.connect(self._change_start_button_state)
         self.basic_widgets['file_path'].textChanged.connect(self._autodetect_table_type)
 
@@ -2445,11 +2451,17 @@ class CreatePipelineWindow(gui_widgets.MinMaxDialog, FilterTabPage):
 
         self.basic_widgets['name_label'] = QtWidgets.QLabel('Name your Pipeline:')
 
-        self.basic_widgets['start_button'] = QtWidgets.QPushButton('Start')
+        self.basic_widgets['start_button'] = QtWidgets.QPushButton('Create Pipeline')
         self.basic_widgets['start_button'].clicked.connect(self.start)
+        gui_widgets.mark_primary(self.basic_widgets['start_button'])
 
+        # overrides the base 'Apply' button (TabPage.__init__) with this window's own
+        # main commit action; the two are never visible at the same time (this one takes
+        # over once basic_group - and its "Create Pipeline" button - is hidden), so it gets
+        # the same primary styling
         self.apply_button = QtWidgets.QPushButton('Add to Pipeline')
         self.apply_button.clicked.connect(self.apply_function)
+        gui_widgets.mark_primary(self.apply_button)
         self.layout.insertWidget(2, self.apply_button)
         self.apply_button.setVisible(False)
 
