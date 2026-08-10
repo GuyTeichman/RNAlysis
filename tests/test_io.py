@@ -1232,20 +1232,17 @@ def test_kegg_annotation_iterator_get_pathway_annotations(monkeypatch):
              'cel00051': ['Fructose and mannose metabolism - Caenorhabditis elegans (nematode)',
                           {'cel:CELE_C05C8.7', 'cel:CELE_ZK632.4'}],
              'cel00052': ['Galactose metabolism - Caenorhabditis elegans (nematode)', {'cel:CELE_C01B4.6'}]}
-    args_truth = ['cel00010+cel00020+cel00030', 'cel00040+cel00051+cel00052']
 
-    def mock_kegg_request(self, session, operation, arguments, fname):
-        assert operation == 'get'
-        assert arguments == args_truth[0] or arguments == args_truth[1]
-        if arguments == args_truth[0]:
-            pth = 'tests/test_files/kegg_annotation_1of2.txt'
-        else:
-            pth = 'tests/test_files/kegg_annotation_2of2.txt'
-        with open(pth) as f:
+    # Annotations are now fetched with a single 'link/<org>/pathway' request instead of a full
+    # flat-file 'get' per pathway-chunk. The mock returns the compact 2-column TSV that endpoint
+    # produces, and the parsed pathway->gene mapping must match the truth above.
+    def mock_kegg_request(self, session, operation, arguments, cached_filename=None):
+        assert operation == 'link'
+        assert arguments == ['cel', 'pathway']
+        with open('tests/test_files/kegg_pathway_gene_links.txt') as f:
             return f.read(), False
 
     monkeypatch.setattr(KEGGAnnotationIterator, '_kegg_request', mock_kegg_request)
-    monkeypatch.setattr(KEGGAnnotationIterator, 'REQ_MAX_ENTRIES', 3)
     kegg = KEGGAnnotationIterator.__new__(KEGGAnnotationIterator)
     kegg.pathway_annotations = None
     kegg.taxon_id = 6239
@@ -1253,6 +1250,37 @@ def test_kegg_annotation_iterator_get_pathway_annotations(monkeypatch):
     kegg.session = get_session(kegg.RETRIES)
     kegg.pathway_names = PATHWAY_NAMES_TRUTH
     assert {key: [name, ann] for key, name, ann in kegg.get_pathway_annotations()} == truth
+
+
+@pytest.mark.parametrize('pathway_id,expected', [
+    ('cel00010', False), ('cel00511', False), ('hsa04010', False), ('cel05010', False),
+    ('cel01100', True), ('cel01200', True), ('cel01210', True), ('hsa01240', True),
+    ('path:cel01100', True), ('path:cel00010', False)])
+def test_kegg_annotation_iterator_is_global_or_overview_map(pathway_id, expected):
+    assert KEGGAnnotationIterator._is_global_or_overview_map(pathway_id) is expected
+
+
+def test_kegg_annotation_iterator_get_pathways_excludes_global_overview_maps(monkeypatch):
+    # get_pathways must drop KEGG's global/overview maps (01100-01299) -- a ~thousand-gene
+    # "Metabolic pathways" term is not a specific enrichment result and only inflates FDR.
+    listing = ('cel00010\tGlycolysis / Gluconeogenesis\n'
+               'cel01100\tMetabolic pathways\n'
+               'cel00052\tGalactose metabolism\n'
+               'cel01200\tCarbon metabolism\n')
+
+    def mock_kegg_request(self, session, operation, arguments, cached_filename=None):
+        assert operation == 'list'
+        assert arguments == ['pathway', 'cel']
+        return listing, True
+
+    monkeypatch.setattr(KEGGAnnotationIterator, '_kegg_request', mock_kegg_request)
+    kegg = KEGGAnnotationIterator.__new__(KEGGAnnotationIterator)
+    kegg.organism_code = 'cel'
+    kegg.session = get_session(kegg.RETRIES)
+    pathway_names, n_annotations = kegg.get_pathways()
+    assert pathway_names == {'cel00010': 'Glycolysis / Gluconeogenesis',
+                             'cel00052': 'Galactose metabolism'}
+    assert n_annotations == 2
 
 
 def test_kegg_annotation_iterator_get_pathway_annotations_cached():
