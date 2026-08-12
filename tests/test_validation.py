@@ -246,7 +246,9 @@ def test_validate_threshold(threshold, expected_to_pass):
     ('tests/test_files/test_deseq.csv', True),
     ('test_deseq.csv', False),
     ('tests/test_files', False),
-    ('tests/test_files/test_gene_set.txt', True)
+    ('tests/test_files/test_gene_set.txt', True),
+    (None, False),
+    (Path('tests/test_files/test_deseq.csv'), True),
 ])
 def test_is_legal_file_path(path, is_legal_truth):
     assert is_legal_file_path(path) == is_legal_truth
@@ -256,7 +258,8 @@ def test_is_legal_file_path(path, is_legal_truth):
     ('tests', True),
     ('test_deseq.csv', False),
     ('tests/test_files/test_count_from_folder', True),
-    ('tests/test_files/fake_dir', False)
+    ('tests/test_files/fake_dir', False),
+    (None, False),
 ])
 def test_is_legal_dir_path(path, is_legal_truth):
     assert is_legal_dir_path(path) == is_legal_truth

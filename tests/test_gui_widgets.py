@@ -458,6 +458,14 @@ def test_PathLineEdit_text(qtbot):
     assert widget.text() == 'test456'
 
 
+def test_PathLineEdit_setText_none_does_not_crash(qtbot):
+    # a None value (e.g. a settings.yaml key stored as null) must not crash the widget
+    qtbot, widget = widget_setup(qtbot, PathLineEdit)
+    widget.setText(None)
+    assert widget.text() == ''
+    assert not widget.is_legal
+
+
 def test_PathLineEdit_choose_file(qtbot, monkeypatch):
     pth = 'path/to/a/file'
 

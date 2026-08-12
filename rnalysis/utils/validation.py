@@ -1,4 +1,5 @@
 import gzip
+import os
 import re
 import types
 from pathlib import Path
@@ -9,11 +10,15 @@ import typing_extensions
 
 
 def is_legal_file_path(file_path: str):
+    if not isinstance(file_path, (str, os.PathLike)):
+        return False
     pth = Path(file_path)
     return pth.exists() and pth.is_file()
 
 
 def is_legal_dir_path(dir_path: str):
+    if not isinstance(dir_path, (str, os.PathLike)):
+        return False
     pth = Path(dir_path)
     return pth.exists() and pth.is_dir()
 

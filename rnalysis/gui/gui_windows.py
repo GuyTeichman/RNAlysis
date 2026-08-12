@@ -374,10 +374,12 @@ class SettingsWindow(gui_widgets.MinMaxDialog):
             if item.text() in current_dbs:
                 item.setCheckState(QtCore.Qt.CheckState.Checked)
 
-        attr_ref_path = settings.get_attr_ref_path('predefined') if settings.is_setting_in_file(
-            settings.__attr_file_key__) else 'No file chosen'
-        biotype_ref_path = settings.get_biotype_ref_path('predefined') if settings.is_setting_in_file(
-            settings.__biotype_file_key__) else 'No file chosen'
+        # read the stored reference-table paths directly rather than via get_*_ref_path(),
+        # which prints a misleading "Reference Table used: None" line when the key is present
+        # but null; a missing key and a null value are both shown as an unset setting
+        stored_settings = settings.load_settings_file()
+        attr_ref_path = stored_settings.get(settings.__attr_file_key__) or 'No file chosen'
+        biotype_ref_path = stored_settings.get(settings.__biotype_file_key__) or 'No file chosen'
 
         self.tables_widgets['attr_ref_path'].setText(attr_ref_path)
         self.tables_widgets['biotype_ref_path'].setText(biotype_ref_path)
