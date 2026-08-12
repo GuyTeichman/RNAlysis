@@ -8598,7 +8598,7 @@ Filtered 26 features, leaving 2 of the original 28 features. Filtered inplace.</
 
 <dl class="py method">
 <dt class="sig sig-object py">
-<span class="sig-name descname"><span class="pre">add</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span></dt>
+<span class="sig-name descname"><span class="pre">add</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">object</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">/</span></span></em><span class="sig-paren">)</span></dt>
 <dd><p>Add an element to a set.</p>
 <p>This has no effect if the element is already present.</p>
 </dd></dl>
@@ -8706,13 +8706,13 @@ which also provides descriptive statistics of each column per biotype.
 
 <dl class="py method">
 <dt class="sig sig-object py">
-<span class="sig-name descname"><span class="pre">difference_update</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span></dt>
-<dd><p>Remove all elements of another set from this set.</p>
+<span class="sig-name descname"><span class="pre">difference_update</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">others</span></span></em><span class="sig-paren">)</span></dt>
+<dd><p>Update the set, removing elements found in others.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py">
-<span class="sig-name descname"><span class="pre">discard</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span></dt>
+<span class="sig-name descname"><span class="pre">discard</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">object</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">/</span></span></em><span class="sig-paren">)</span></dt>
 <dd><p>Remove an element from a set if it is a member.</p>
 <p>Unlike set.remove(), the discard() method does not raise
 an exception when an element is missing from the set.</p>
@@ -8985,26 +8985,26 @@ an exception when an element is missing from the set.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py">
-<span class="sig-name descname"><span class="pre">intersection_update</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span></dt>
-<dd><p>Update a set with the intersection of itself and another.</p>
+<span class="sig-name descname"><span class="pre">intersection_update</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">others</span></span></em><span class="sig-paren">)</span></dt>
+<dd><p>Update the set, keeping only elements found in it and all others.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py">
-<span class="sig-name descname"><span class="pre">isdisjoint</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span></dt>
+<span class="sig-name descname"><span class="pre">isdisjoint</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">other</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">/</span></span></em><span class="sig-paren">)</span></dt>
 <dd><p>Return True if two sets have a null intersection.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py">
 <span class="sig-name descname"><span class="pre">issubset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">other</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">/</span></span></em><span class="sig-paren">)</span></dt>
-<dd><p>Test whether every element in the set is in other.</p>
+<dd><p>Report whether another set contains this set.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py">
 <span class="sig-name descname"><span class="pre">issuperset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">other</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">/</span></span></em><span class="sig-paren">)</span></dt>
-<dd><p>Test whether every element in other is in the set.</p>
+<dd><p>Report whether this set contains another set.</p>
 </dd></dl>
 
 <dl class="py method">
@@ -9226,13 +9226,13 @@ an exception when an element is missing from the set.</p>
 <dl class="py method">
 <dt class="sig sig-object py">
 <span class="sig-name descname"><span class="pre">pop</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span></dt>
-<dd><p>Remove and return an arbitrary set element.
-Raises KeyError if the set is empty.</p>
+<dd><p>Remove and return an arbitrary set element.</p>
+<p>Raises KeyError if the set is empty.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py">
-<span class="sig-name descname"><span class="pre">remove</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span></dt>
+<span class="sig-name descname"><span class="pre">remove</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">object</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">/</span></span></em><span class="sig-paren">)</span></dt>
 <dd><p>Remove an element from a set; it must be a member.</p>
 <p>If the element is not a member, raise a KeyError.</p>
 </dd></dl>
@@ -9284,8 +9284,8 @@ Raises KeyError if the set is empty.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py">
-<span class="sig-name descname"><span class="pre">symmetric_difference_update</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span></dt>
-<dd><p>Update a set with the symmetric difference of itself and another.</p>
+<span class="sig-name descname"><span class="pre">symmetric_difference_update</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">other</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">/</span></span></em><span class="sig-paren">)</span></dt>
+<dd><p>Update the set, keeping only elements found in either set, but not in both.</p>
 </dd></dl>
 
 <dl class="py method">
@@ -9339,8 +9339,8 @@ Raises KeyError if the set is empty.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py">
-<span class="sig-name descname"><span class="pre">update</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span></dt>
-<dd><p>Update a set with the union of itself and others.</p>
+<span class="sig-name descname"><span class="pre">update</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">others</span></span></em><span class="sig-paren">)</span></dt>
+<dd><p>Update the set, adding elements from all others.</p>
 </dd></dl>
 
 <dl class="py method">
@@ -9416,7 +9416,7 @@ Raises KeyError if the set is empty.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py">
-<span class="sig-name descname"><span class="pre">add</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span></dt>
+<span class="sig-name descname"><span class="pre">add</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">object</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">/</span></span></em><span class="sig-paren">)</span></dt>
 <dd><p>Add an element to a set.</p>
 <p>This has no effect if the element is already present.</p>
 </dd></dl>
@@ -9524,13 +9524,13 @@ which also provides descriptive statistics of each column per biotype.
 
 <dl class="py method">
 <dt class="sig sig-object py">
-<span class="sig-name descname"><span class="pre">difference_update</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span></dt>
-<dd><p>Remove all elements of another set from this set.</p>
+<span class="sig-name descname"><span class="pre">difference_update</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">others</span></span></em><span class="sig-paren">)</span></dt>
+<dd><p>Update the set, removing elements found in others.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py">
-<span class="sig-name descname"><span class="pre">discard</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span></dt>
+<span class="sig-name descname"><span class="pre">discard</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">object</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">/</span></span></em><span class="sig-paren">)</span></dt>
 <dd><p>Remove an element from a set if it is a member.</p>
 <p>Unlike set.remove(), the discard() method does not raise
 an exception when an element is missing from the set.</p>
@@ -9802,26 +9802,26 @@ an exception when an element is missing from the set.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py">
-<span class="sig-name descname"><span class="pre">intersection_update</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span></dt>
-<dd><p>Update a set with the intersection of itself and another.</p>
+<span class="sig-name descname"><span class="pre">intersection_update</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">others</span></span></em><span class="sig-paren">)</span></dt>
+<dd><p>Update the set, keeping only elements found in it and all others.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py">
-<span class="sig-name descname"><span class="pre">isdisjoint</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span></dt>
+<span class="sig-name descname"><span class="pre">isdisjoint</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">other</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">/</span></span></em><span class="sig-paren">)</span></dt>
 <dd><p>Return True if two sets have a null intersection.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py">
 <span class="sig-name descname"><span class="pre">issubset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">other</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">/</span></span></em><span class="sig-paren">)</span></dt>
-<dd><p>Test whether every element in the set is in other.</p>
+<dd><p>Report whether another set contains this set.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py">
 <span class="sig-name descname"><span class="pre">issuperset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">other</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">/</span></span></em><span class="sig-paren">)</span></dt>
-<dd><p>Test whether every element in other is in the set.</p>
+<dd><p>Report whether this set contains another set.</p>
 </dd></dl>
 
 <dl class="py method">
@@ -10043,8 +10043,8 @@ an exception when an element is missing from the set.</p>
 <dl class="py method">
 <dt class="sig sig-object py">
 <span class="sig-name descname"><span class="pre">pop</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span></dt>
-<dd><p>Remove and return an arbitrary set element.
-Raises KeyError if the set is empty.</p>
+<dd><p>Remove and return an arbitrary set element.</p>
+<p>Raises KeyError if the set is empty.</p>
 </dd></dl>
 
 <dl class="py attribute">
@@ -10055,7 +10055,7 @@ Raises KeyError if the set is empty.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py">
-<span class="sig-name descname"><span class="pre">remove</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span></dt>
+<span class="sig-name descname"><span class="pre">remove</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">object</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">/</span></span></em><span class="sig-paren">)</span></dt>
 <dd><p>Remove an element from a set; it must be a member.</p>
 <p>If the element is not a member, raise a KeyError.</p>
 </dd></dl>
@@ -10277,8 +10277,8 @@ Raises KeyError if the set is empty.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py">
-<span class="sig-name descname"><span class="pre">symmetric_difference_update</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span></dt>
-<dd><p>Update a set with the symmetric difference of itself and another.</p>
+<span class="sig-name descname"><span class="pre">symmetric_difference_update</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">other</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">/</span></span></em><span class="sig-paren">)</span></dt>
+<dd><p>Update the set, keeping only elements found in either set, but not in both.</p>
 </dd></dl>
 
 <dl class="py method">
@@ -10332,8 +10332,8 @@ Raises KeyError if the set is empty.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py">
-<span class="sig-name descname"><span class="pre">update</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span></dt>
-<dd><p>Update a set with the union of itself and others.</p>
+<span class="sig-name descname"><span class="pre">update</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">others</span></span></em><span class="sig-paren">)</span></dt>
+<dd><p>Update the set, adding elements from all others.</p>
 </dd></dl>
 
 <dl class="py method">

@@ -195,7 +195,7 @@
 
 <table class="autosummary longtable docutils align-default">
 <tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.enrichment.FeatureSet.add.html#rnalysis.enrichment.FeatureSet.add" title="rnalysis.enrichment.FeatureSet.add"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FeatureSet.add</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.enrichment.FeatureSet.add.html#rnalysis.enrichment.FeatureSet.add" title="rnalysis.enrichment.FeatureSet.add"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FeatureSet.add</span></code></a>(object, /)</p></td>
 <td><p>Add an element to a set.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="rnalysis.enrichment.FeatureSet.biotypes_from_gtf.html#rnalysis.enrichment.FeatureSet.biotypes_from_gtf" title="rnalysis.enrichment.FeatureSet.biotypes_from_gtf"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FeatureSet.biotypes_from_gtf</span></code></a>(gtf_path[, ...])</p></td>
@@ -207,19 +207,19 @@
 <tr class="row-even"><td><p><a class="reference internal" href="rnalysis.enrichment.FeatureSet.change_set_name.html#rnalysis.enrichment.FeatureSet.change_set_name" title="rnalysis.enrichment.FeatureSet.change_set_name"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FeatureSet.change_set_name</span></code></a>(new_name)</p></td>
 <td><p>Change the 'set_name' of a FeatureSet to a new name.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.enrichment.FeatureSet.clear.html#rnalysis.enrichment.FeatureSet.clear" title="rnalysis.enrichment.FeatureSet.clear"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FeatureSet.clear</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.enrichment.FeatureSet.clear.html#rnalysis.enrichment.FeatureSet.clear" title="rnalysis.enrichment.FeatureSet.clear"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FeatureSet.clear</span></code></a>()</p></td>
 <td><p>Remove all elements from this set.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.enrichment.FeatureSet.copy.html#rnalysis.enrichment.FeatureSet.copy" title="rnalysis.enrichment.FeatureSet.copy"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FeatureSet.copy</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.enrichment.FeatureSet.copy.html#rnalysis.enrichment.FeatureSet.copy" title="rnalysis.enrichment.FeatureSet.copy"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FeatureSet.copy</span></code></a>()</p></td>
 <td><p>Return a shallow copy of a set.</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.enrichment.FeatureSet.difference.html#rnalysis.enrichment.FeatureSet.difference" title="rnalysis.enrichment.FeatureSet.difference"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FeatureSet.difference</span></code></a>(*others)</p></td>
 <td><p>Calculates the set difference of the indices from multiple FeatureSet objects         (the indices that appear in the first FeatureSet object but NOT in the other objects).</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.enrichment.FeatureSet.difference_update.html#rnalysis.enrichment.FeatureSet.difference_update" title="rnalysis.enrichment.FeatureSet.difference_update"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FeatureSet.difference_update</span></code></a></p></td>
-<td><p>Remove all elements of another set from this set.</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.enrichment.FeatureSet.difference_update.html#rnalysis.enrichment.FeatureSet.difference_update" title="rnalysis.enrichment.FeatureSet.difference_update"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FeatureSet.difference_update</span></code></a>(*others)</p></td>
+<td><p>Update the set, removing elements found in others.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.enrichment.FeatureSet.discard.html#rnalysis.enrichment.FeatureSet.discard" title="rnalysis.enrichment.FeatureSet.discard"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FeatureSet.discard</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.enrichment.FeatureSet.discard.html#rnalysis.enrichment.FeatureSet.discard" title="rnalysis.enrichment.FeatureSet.discard"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FeatureSet.discard</span></code></a>(object, /)</p></td>
 <td><p>Remove an element from a set if it is a member.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="rnalysis.enrichment.FeatureSet.filter_biotype_from_gtf.html#rnalysis.enrichment.FeatureSet.filter_biotype_from_gtf" title="rnalysis.enrichment.FeatureSet.filter_biotype_from_gtf"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FeatureSet.filter_biotype_from_gtf</span></code></a>(gtf_path)</p></td>
@@ -249,17 +249,17 @@
 <tr class="row-even"><td><p><a class="reference internal" href="rnalysis.enrichment.FeatureSet.intersection.html#rnalysis.enrichment.FeatureSet.intersection" title="rnalysis.enrichment.FeatureSet.intersection"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FeatureSet.intersection</span></code></a>(*others)</p></td>
 <td><p>Calculates the set intersection of the indices from multiple FeatureSet objects         (the indices that exist in ALL of the FeatureSet objects).</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.enrichment.FeatureSet.intersection_update.html#rnalysis.enrichment.FeatureSet.intersection_update" title="rnalysis.enrichment.FeatureSet.intersection_update"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FeatureSet.intersection_update</span></code></a></p></td>
-<td><p>Update a set with the intersection of itself and another.</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.enrichment.FeatureSet.intersection_update.html#rnalysis.enrichment.FeatureSet.intersection_update" title="rnalysis.enrichment.FeatureSet.intersection_update"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FeatureSet.intersection_update</span></code></a>(*others)</p></td>
+<td><p>Update the set, keeping only elements found in it and all others.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.enrichment.FeatureSet.isdisjoint.html#rnalysis.enrichment.FeatureSet.isdisjoint" title="rnalysis.enrichment.FeatureSet.isdisjoint"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FeatureSet.isdisjoint</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.enrichment.FeatureSet.isdisjoint.html#rnalysis.enrichment.FeatureSet.isdisjoint" title="rnalysis.enrichment.FeatureSet.isdisjoint"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FeatureSet.isdisjoint</span></code></a>(other, /)</p></td>
 <td><p>Return True if two sets have a null intersection.</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.enrichment.FeatureSet.issubset.html#rnalysis.enrichment.FeatureSet.issubset" title="rnalysis.enrichment.FeatureSet.issubset"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FeatureSet.issubset</span></code></a>(other, /)</p></td>
-<td><p>Test whether every element in the set is in other.</p></td>
+<td><p>Report whether another set contains this set.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="rnalysis.enrichment.FeatureSet.issuperset.html#rnalysis.enrichment.FeatureSet.issuperset" title="rnalysis.enrichment.FeatureSet.issuperset"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FeatureSet.issuperset</span></code></a>(other, /)</p></td>
-<td><p>Test whether every element in other is in the set.</p></td>
+<td><p>Report whether this set contains another set.</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.enrichment.FeatureSet.kegg_enrichment.html#rnalysis.enrichment.FeatureSet.kegg_enrichment" title="rnalysis.enrichment.FeatureSet.kegg_enrichment"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FeatureSet.kegg_enrichment</span></code></a>(background_genes)</p></td>
 <td><p>Calculates enrichment and depletion of the FeatureSet for Kyoto Encyclopedia of Genes and Genomes (KEGG)         curated pathways against a background set.</p></td>
@@ -279,10 +279,10 @@
 <tr class="row-even"><td><p><a class="reference internal" href="rnalysis.enrichment.FeatureSet.non_categorical_enrichment.html#rnalysis.enrichment.FeatureSet.non_categorical_enrichment" title="rnalysis.enrichment.FeatureSet.non_categorical_enrichment"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FeatureSet.non_categorical_enrichment</span></code></a>(...[, ...])</p></td>
 <td><p>Calculates enrichment and depletion of the FeatureSet for user-defined non-categorical attributes         against a background set using either a one-sample T-test or Sign test.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.enrichment.FeatureSet.pop.html#rnalysis.enrichment.FeatureSet.pop" title="rnalysis.enrichment.FeatureSet.pop"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FeatureSet.pop</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.enrichment.FeatureSet.pop.html#rnalysis.enrichment.FeatureSet.pop" title="rnalysis.enrichment.FeatureSet.pop"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FeatureSet.pop</span></code></a>()</p></td>
 <td><p>Remove and return an arbitrary set element.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.enrichment.FeatureSet.remove.html#rnalysis.enrichment.FeatureSet.remove" title="rnalysis.enrichment.FeatureSet.remove"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FeatureSet.remove</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.enrichment.FeatureSet.remove.html#rnalysis.enrichment.FeatureSet.remove" title="rnalysis.enrichment.FeatureSet.remove"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FeatureSet.remove</span></code></a>(object, /)</p></td>
 <td><p>Remove an element from a set; it must be a member.</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.enrichment.FeatureSet.save_txt.html#rnalysis.enrichment.FeatureSet.save_txt" title="rnalysis.enrichment.FeatureSet.save_txt"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FeatureSet.save_txt</span></code></a>(fname)</p></td>
@@ -291,8 +291,8 @@
 <tr class="row-even"><td><p><a class="reference internal" href="rnalysis.enrichment.FeatureSet.symmetric_difference.html#rnalysis.enrichment.FeatureSet.symmetric_difference" title="rnalysis.enrichment.FeatureSet.symmetric_difference"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FeatureSet.symmetric_difference</span></code></a>(other)</p></td>
 <td><p>Calculates the set symmetric difference of the indices from two FeatureSet objects         (the indices that appear in EXACTLY ONE of the FeatureSet objects, and not both/neither).</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.enrichment.FeatureSet.symmetric_difference_update.html#rnalysis.enrichment.FeatureSet.symmetric_difference_update" title="rnalysis.enrichment.FeatureSet.symmetric_difference_update"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FeatureSet.symmetric_difference_update</span></code></a></p></td>
-<td><p>Update a set with the symmetric difference of itself and another.</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.enrichment.FeatureSet.symmetric_difference_update.html#rnalysis.enrichment.FeatureSet.symmetric_difference_update" title="rnalysis.enrichment.FeatureSet.symmetric_difference_update"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FeatureSet.symmetric_difference_update</span></code></a>(other, /)</p></td>
+<td><p>Update the set, keeping only elements found in either set, but not in both.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="rnalysis.enrichment.FeatureSet.translate_gene_ids.html#rnalysis.enrichment.FeatureSet.translate_gene_ids" title="rnalysis.enrichment.FeatureSet.translate_gene_ids"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FeatureSet.translate_gene_ids</span></code></a>(translate_to)</p></td>
 <td><p>Translates gene names/IDs from one type to another.</p></td>
@@ -300,8 +300,8 @@
 <tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.enrichment.FeatureSet.union.html#rnalysis.enrichment.FeatureSet.union" title="rnalysis.enrichment.FeatureSet.union"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FeatureSet.union</span></code></a>(*others)</p></td>
 <td><p>Calculates the set union of the indices from multiple FeatureSet objects         (the indices that exist in at least one of the FeatureSet objects).</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.enrichment.FeatureSet.update.html#rnalysis.enrichment.FeatureSet.update" title="rnalysis.enrichment.FeatureSet.update"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FeatureSet.update</span></code></a></p></td>
-<td><p>Update a set with the union of itself and others.</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.enrichment.FeatureSet.update.html#rnalysis.enrichment.FeatureSet.update" title="rnalysis.enrichment.FeatureSet.update"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FeatureSet.update</span></code></a>(*others)</p></td>
+<td><p>Update the set, adding elements from all others.</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.enrichment.FeatureSet.user_defined_enrichment.html#rnalysis.enrichment.FeatureSet.user_defined_enrichment" title="rnalysis.enrichment.FeatureSet.user_defined_enrichment"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FeatureSet.user_defined_enrichment</span></code></a>(...[, ...])</p></td>
 <td><p>Calculates enrichment and depletion of the FeatureSet for user-defined attributes against a background set.</p></td>

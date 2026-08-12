@@ -71,7 +71,7 @@
 <p class="caption" role="heading"><span class="caption-text">Change history:</span></p>
 <ul class="current">
 <li class="toctree-l1 current"><a class="current reference internal" href="#">History</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#id1">4.3.0 (2026-08-10)</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#id1">4.3.0 (2026-08-13)</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#added">Added</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#changed">Changed</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#fixed">Fixed</a></li>
@@ -321,7 +321,7 @@
   <section id="history">
 <h1>History<a class="headerlink" href="#history" title="Link to this heading"></a></h1>
 <section id="id1">
-<h2>4.3.0 (2026-08-10)<a class="headerlink" href="#id1" title="Link to this heading"></a></h2>
+<h2>4.3.0 (2026-08-13)<a class="headerlink" href="#id1" title="Link to this heading"></a></h2>
 <section id="added">
 <h3>Added<a class="headerlink" href="#added" title="Link to this heading"></a></h3>
 <ul class="simple">
@@ -377,6 +377,7 @@
 <li><p>Fixed a crash (<code class="docutils literal notranslate"><span class="pre">IndexError</span></code>) in automatic common-name generation for inputs of uneven length.</p></li>
 <li><p>Fixed a bug where mapping orthologs or paralogs through the PantherDB service could crash the whole analysis when PantherDB intermittently returned an empty response for a gene (an empty <code class="docutils literal notranslate"><span class="pre">HTTP</span> <span class="pre">200</span></code> body, which its retry mechanism does not cover). Such requests are now retried, and if the response stays empty that single gene is skipped with a warning instead of aborting the entire mapping.</p></li>
 <li><p>Fixed a bug where the <code class="docutils literal notranslate"><span class="pre">random_seed</span></code> parameter had no effect on the randomization (permutation) enrichment test, so its p-values were not reproducible even when a seed was set. The seed was applied to NumPy’s random generator, but the permutation sampling runs under numba’s separate generator, which was never seeded; the seed is now applied where the sampling actually happens. As a result, a given <code class="docutils literal notranslate"><span class="pre">random_seed</span></code> now reproduces the same randomization p-values exactly — and identically across all parallel backends (sequential, multiprocessing, loky, threading). Randomization p-values for a given seed are now deterministic; because they were previously non-deterministic, no earlier analysis could have relied on specific values.</p></li>
+<li><p>Fixed a crash on startup that prevented the application from opening for users whose <code class="docutils literal notranslate"><span class="pre">settings.yaml</span></code> held a stored Attribute or Biotype Reference Table path of <code class="docutils literal notranslate"><span class="pre">null</span></code> (for example after a previously-set reference table had been cleared). The Settings window, which is built during startup, fed that <code class="docutils literal notranslate"><span class="pre">None</span></code> value into a file-path field and raised a <code class="docutils literal notranslate"><span class="pre">TypeError</span></code>. Such a value is now treated the same as “No file chosen”, and the underlying path-legality helpers no longer error when given <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p></li>
 </ul>
 </section>
 </section>
