@@ -374,10 +374,14 @@ class SettingsWindow(gui_widgets.MinMaxDialog):
             if item.text() in current_dbs:
                 item.setCheckState(QtCore.Qt.CheckState.Checked)
 
+        # the key may be present in the settings file but hold a null value - treat that the
+        # same as an unset setting instead of feeding None into the path widget
         attr_ref_path = settings.get_attr_ref_path('predefined') if settings.is_setting_in_file(
-            settings.__attr_file_key__) else 'No file chosen'
+            settings.__attr_file_key__) else None
         biotype_ref_path = settings.get_biotype_ref_path('predefined') if settings.is_setting_in_file(
-            settings.__biotype_file_key__) else 'No file chosen'
+            settings.__biotype_file_key__) else None
+        attr_ref_path = attr_ref_path or 'No file chosen'
+        biotype_ref_path = biotype_ref_path or 'No file chosen'
 
         self.tables_widgets['attr_ref_path'].setText(attr_ref_path)
         self.tables_widgets['biotype_ref_path'].setText(biotype_ref_path)

@@ -185,6 +185,20 @@ def test_SettingsWindow_init(qtbot, use_temp_settings_file):
     qtbot, dialog = widget_setup(qtbot, SettingsWindow)
 
 
+def test_SettingsWindow_init_with_null_ref_paths(qtbot, use_temp_settings_file):
+    # a settings.yaml that contains `attribute_reference_table: null` (the key is present
+    # but its value is None) must still load - it crashed startup in 4.3.0 (back-compat)
+    settings.update_settings_file(None, settings.__attr_file_key__)
+    settings.update_settings_file(None, settings.__biotype_file_key__)
+
+    qtbot, dialog = widget_setup(qtbot, SettingsWindow)
+
+    assert dialog.tables_widgets['attr_ref_path'].text() == 'No file chosen'
+    assert dialog.tables_widgets['biotype_ref_path'].text() == 'No file chosen'
+    assert not dialog.tables_widgets['attr_ref_path'].is_legal
+    assert not dialog.tables_widgets['biotype_ref_path'].is_legal
+
+
 def test_SettingsWindow_get_defaults(qtbot, use_temp_settings_file):
     font_truth = 'Arial'
     font_size_truth = '16'
