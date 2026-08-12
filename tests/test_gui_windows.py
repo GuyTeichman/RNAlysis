@@ -185,14 +185,16 @@ def test_SettingsWindow_init(qtbot, use_temp_settings_file):
     qtbot, dialog = widget_setup(qtbot, SettingsWindow)
 
 
-def test_SettingsWindow_init_with_null_ref_paths(qtbot, use_temp_settings_file):
-    # a settings.yaml that contains `attribute_reference_table: null` (the key is present
-    # but its value is None) must still load - it crashed startup in 4.3.0 (back-compat)
+def test_SettingsWindow_init_with_null_ref_paths(qtbot, capsys, use_temp_settings_file):
+    # a settings.yaml where a reference-table key is present but null (`attribute_reference_table: null`)
+    # must still load - feeding that None into the path widget crashed startup (back-compat)
     settings.update_settings_file(None, settings.__attr_file_key__)
     settings.update_settings_file(None, settings.__biotype_file_key__)
 
     qtbot, dialog = widget_setup(qtbot, SettingsWindow)
 
+    # a null value is shown as an unset setting, without the misleading "used: None" log line
+    assert 'Reference Table used: None' not in capsys.readouterr().out
     assert dialog.tables_widgets['attr_ref_path'].text() == 'No file chosen'
     assert dialog.tables_widgets['biotype_ref_path'].text() == 'No file chosen'
     assert not dialog.tables_widgets['attr_ref_path'].is_legal
