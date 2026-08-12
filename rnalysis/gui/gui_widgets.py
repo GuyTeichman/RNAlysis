@@ -1279,8 +1279,10 @@ class PathLineEdit(QtWidgets.QWidget):
     def text(self):
         return self._full_path
 
-    def setText(self, text: str):
-        self._full_path = text
+    def setText(self, text: Union[str, None]):
+        # keep _full_path a str even if handed None (e.g. a settings key stored as null),
+        # so text() and the display/legality logic never choke on a NoneType
+        self._full_path = '' if text is None else text
         self._refresh_display()
 
 
