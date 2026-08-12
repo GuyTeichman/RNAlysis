@@ -4773,9 +4773,13 @@ def customwarn(message, category, filename, lineno, file=None, line=None):  # pr
 async def run():  # pragma: no cover
     warnings.showwarning = customwarn
     # close built-in splash screen in frozen app version of RNAlysis
-    if '_PYIBoot_SPLASH' in os.environ and importlib.util.find_spec("pyi_splash"):
-        import pyi_splash
-        pyi_splash.close()
+    if '_PYIBoot_SPLASH' in os.environ:
+        try:
+            import pyi_splash
+        except ImportError:
+            pass
+        else:
+            pyi_splash.close()
     lockfile = QtCore.QLockFile(QtCore.QDir.tempPath() + '/RNAlysis.lock')
     if lockfile.tryLock(100):
         show_app = True
