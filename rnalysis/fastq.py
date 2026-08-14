@@ -20,6 +20,7 @@ import polars.selectors as cs
 from tqdm.auto import tqdm
 
 from rnalysis import filtering
+from rnalysis.exceptions import InvalidTypeError, InvalidValueError
 from rnalysis.utils import (feature_counting, generic, genome_annotation,
                             installs, io, parsing, validation)
 from rnalysis.utils.generic import param_readable_names, readable_name
@@ -92,9 +93,11 @@ class _FASTQPipeline(generic.GenericPipeline, abc.ABC):
             thismodule = sys.modules[__name__]
             func = getattr(thismodule, func)
 
-        assert self._is_paired_end_func(func, self.is_paired_end) == self.is_paired_end, \
-            f"{'paired' * (not self.is_paired_end) + 'single' * self.is_paired_end}-end function " \
-            f"cannot be added to {'single' * (not self.is_paired_end) + 'paired' * self.is_paired_end}-end Pipeline!"
+        if self._is_paired_end_func(func, self.is_paired_end) != self.is_paired_end:
+            raise InvalidValueError(
+                f"{'paired' * (not self.is_paired_end) + 'single' * self.is_paired_end}-end function "
+                f"cannot be added to "
+                f"{'single' * (not self.is_paired_end) + 'paired' * self.is_paired_end}-end Pipeline!")
 
         super().add_function(func, *args, **kwargs)
 
@@ -121,8 +124,10 @@ class SingleEndPipeline(_FASTQPipeline):
         output_folder = Path(output_folder)
         return_values = []
 
-        assert input_folder.exists() and input_folder.is_dir(), "input_folder does not exist!"
-        assert output_folder.exists() and output_folder.is_dir(), "output_folder does not exist!"
+        if not (input_folder.exists() and input_folder.is_dir()):
+            raise InvalidValueError("input_folder does not exist!")
+        if not (output_folder.exists() and output_folder.is_dir()):
+            raise InvalidValueError("output_folder does not exist!")
 
         current_in_dir = input_folder
         for i, (func, (args, kwargs)) in enumerate(zip(self.functions, self.params)):
@@ -171,7 +176,8 @@ class PairedEndPipeline(_FASTQPipeline):
         output_folder = Path(output_folder)
         return_values = []
 
-        assert output_folder.exists() and output_folder.is_dir(), "output_folder does not exist!"
+        if not (output_folder.exists() and output_folder.is_dir()):
+            raise InvalidValueError("output_folder does not exist!")
 
         current_r1, current_r2 = r1_files, r2_files
         current_in_dir = output_folder.joinpath('00_input')
@@ -272,8 +278,10 @@ def create_bam_index(input_folder: Union[str, Path], output_folder: Union[str, P
     script_name = 'BuildBamIndex'
     input_folder = Path(input_folder)
     output_folder = Path(output_folder)
-    assert input_folder.exists() and input_folder.is_dir(), "input_folder does not exist!"
-    assert output_folder.exists() and output_folder.is_dir(), "output_folder does not exist!"
+    if not (input_folder.exists() and input_folder.is_dir()):
+        raise InvalidValueError("input_folder does not exist!")
+    if not (output_folder.exists() and output_folder.is_dir()):
+        raise InvalidValueError("output_folder does not exist!")
 
     base_call = _generate_picard_basecall(script_name, picard_installation_folder)
     legal_samples = _get_legal_samples(input_folder, 'alignment')
@@ -326,16 +334,19 @@ def sam_to_fastq_single(input_folder: Union[str, Path], output_folder: Union[str
     """
     input_folder = Path(input_folder)
     output_folder = Path(output_folder)
-    assert input_folder.exists() and input_folder.is_dir(), "input_folder does not exist!"
-    assert output_folder.exists() and output_folder.is_dir(), "output_folder does not exist!"
+    if not (input_folder.exists() and input_folder.is_dir()):
+        raise InvalidValueError("input_folder does not exist!")
+    if not (output_folder.exists() and output_folder.is_dir()):
+        raise InvalidValueError("output_folder does not exist!")
 
     base_call, script_name = _parse_sam2fastq_misc_args(picard_installation_folder, re_reverse_reads,
                                                         include_non_primary_alignments, quality_trim)
     calls = []
 
     legal_samples = _get_legal_samples(input_folder, 'alignment')
-    assert (new_sample_names == 'auto') or (len(new_sample_names) == len(legal_samples)), \
-        f'Number of samples ({len(legal_samples)}) does not match number of sample names ({len(new_sample_names)})!'
+    if not ((new_sample_names == 'auto') or (len(new_sample_names) == len(legal_samples))):
+        raise InvalidValueError(f'Number of samples ({len(legal_samples)}) does not match number of '
+                                f'sample names ({len(new_sample_names)})!')
 
     for i, sam_file in enumerate(sorted(legal_samples)):
         this_call = base_call.copy()
@@ -387,8 +398,10 @@ def sam_to_fastq_paired(input_folder: Union[str, Path], output_folder: Union[str
     """
     input_folder = Path(input_folder)
     output_folder = Path(output_folder)
-    assert input_folder.exists() and input_folder.is_dir(), "input_folder does not exist!"
-    assert output_folder.exists() and output_folder.is_dir(), "output_folder does not exist!"
+    if not (input_folder.exists() and input_folder.is_dir()):
+        raise InvalidValueError("input_folder does not exist!")
+    if not (output_folder.exists() and output_folder.is_dir()):
+        raise InvalidValueError("output_folder does not exist!")
 
     base_call, script_name = _parse_sam2fastq_misc_args(picard_installation_folder, re_reverse_reads,
                                                         include_non_primary_alignments, quality_trim)
@@ -396,8 +409,9 @@ def sam_to_fastq_paired(input_folder: Union[str, Path], output_folder: Union[str
     calls = []
 
     legal_samples = _get_legal_samples(input_folder, 'alignment')
-    assert (new_sample_names == 'auto') or (len(new_sample_names) == len(legal_samples)), \
-        f'Number of samples ({len(legal_samples)}) does not match number of sample names ({len(new_sample_names)})!'
+    if not ((new_sample_names == 'auto') or (len(new_sample_names) == len(legal_samples))):
+        raise InvalidValueError(f'Number of samples ({len(legal_samples)}) does not match number of '
+                                f'sample names ({len(new_sample_names)})!')
 
     r1_out = []
     r2_out = []
@@ -470,15 +484,18 @@ def fastq_to_sam_single(input_folder: Union[str, Path], output_folder: Union[str
     """
     input_folder = Path(input_folder)
     output_folder = Path(output_folder)
-    assert input_folder.exists() and input_folder.is_dir(), "input_folder does not exist!"
-    assert output_folder.exists() and output_folder.is_dir(), "output_folder does not exist!"
+    if not (input_folder.exists() and input_folder.is_dir()):
+        raise InvalidValueError("input_folder does not exist!")
+    if not (output_folder.exists() and output_folder.is_dir()):
+        raise InvalidValueError("output_folder does not exist!")
 
     base_call, script_name = _parse_fastq2sam_misc_args(picard_installation_folder, quality_score_type)
     calls = []
 
     legal_samples = _get_legal_samples(input_folder)
-    assert (new_sample_names == 'auto') or (len(new_sample_names) == len(legal_samples)), \
-        f'Number of samples ({len(legal_samples)}) does not match number of sample names ({len(new_sample_names)})!'
+    if not ((new_sample_names == 'auto') or (len(new_sample_names) == len(legal_samples))):
+        raise InvalidValueError(f'Number of samples ({len(legal_samples)}) does not match number of '
+                                f'sample names ({len(new_sample_names)})!')
 
     for i, fastq_file in enumerate(sorted(legal_samples)):
         this_call = base_call.copy()
@@ -520,7 +537,8 @@ def fastq_to_sam_paired(r1_files: List[str], r2_files: List[str], output_folder:
     :rtype: list of str
     """
     output_folder = Path(output_folder)
-    assert output_folder.exists() and output_folder.is_dir(), "output_folder does not exist!"
+    if not (output_folder.exists() and output_folder.is_dir()):
+        raise InvalidValueError("output_folder does not exist!")
 
     base_call, script_name = _parse_fastq2sam_misc_args(picard_installation_folder, quality_score_type)
 
@@ -574,8 +592,10 @@ def validate_sam(input_folder: Union[str, Path], output_folder: Union[str, Path]
     script_name = 'ValidateSamFile'
     input_folder = Path(input_folder)
     output_folder = Path(output_folder)
-    assert input_folder.exists() and input_folder.is_dir(), "input_folder does not exist!"
-    assert output_folder.exists() and output_folder.is_dir(), "output_folder does not exist!"
+    if not (input_folder.exists() and input_folder.is_dir()):
+        raise InvalidValueError("input_folder does not exist!")
+    if not (output_folder.exists() and output_folder.is_dir()):
+        raise InvalidValueError("output_folder does not exist!")
 
     base_call = _generate_picard_basecall(script_name, picard_installation_folder)
     base_call.append(f"MODE={'VERBOSE' if verbose else 'SUMMARY'}")
@@ -622,8 +642,10 @@ def sort_sam(input_folder: Union[str, Path], output_folder: Union[str, Path],
     script_name = 'SortSam'
     input_folder = Path(input_folder)
     output_folder = Path(output_folder)
-    assert input_folder.exists() and input_folder.is_dir(), "input_folder does not exist!"
-    assert output_folder.exists() and output_folder.is_dir(), "output_folder does not exist!"
+    if not (input_folder.exists() and input_folder.is_dir()):
+        raise InvalidValueError("input_folder does not exist!")
+    if not (output_folder.exists() and output_folder.is_dir()):
+        raise InvalidValueError("output_folder does not exist!")
 
     base_call = _generate_picard_basecall(script_name, picard_installation_folder)
 
@@ -636,8 +658,9 @@ def sort_sam(input_folder: Union[str, Path], output_folder: Union[str, Path],
     else:
         raise ValueError(f"Sort order '{sort_order}' is not supported by Picard.")
     legal_samples = _get_legal_samples(input_folder, 'alignment')
-    assert (new_sample_names == 'auto') or (len(new_sample_names) == len(legal_samples)), \
-        f'Number of samples ({len(legal_samples)}) does not match number of sample names ({len(new_sample_names)})!'
+    if not ((new_sample_names == 'auto') or (len(new_sample_names) == len(legal_samples))):
+        raise InvalidValueError(f'Number of samples ({len(legal_samples)}) does not match number of '
+                                f'sample names ({len(new_sample_names)})!')
 
     calls = []
     for i, sam_file in enumerate(sorted(legal_samples)):
@@ -700,8 +723,10 @@ def find_duplicates(input_folder: Union[str, Path], output_folder: Union[str, Pa
 
     input_folder = Path(input_folder)
     output_folder = Path(output_folder)
-    assert input_folder.exists() and input_folder.is_dir(), "input_folder does not exist!"
-    assert output_folder.exists() and output_folder.is_dir(), "output_folder does not exist!"
+    if not (input_folder.exists() and input_folder.is_dir()):
+        raise InvalidValueError("input_folder does not exist!")
+    if not (output_folder.exists() and output_folder.is_dir()):
+        raise InvalidValueError("output_folder does not exist!")
 
     base_call = _generate_picard_basecall(script_name, picard_installation_folder)
 
@@ -729,8 +754,9 @@ def find_duplicates(input_folder: Union[str, Path], output_folder: Union[str, Pa
 
     calls = []
     legal_samples = _get_legal_samples(input_folder, 'alignment')
-    assert (new_sample_names == 'auto') or (len(new_sample_names) == len(legal_samples)), \
-        f'Number of samples ({len(legal_samples)}) does not match number of sample names ({len(new_sample_names)})!'
+    if not ((new_sample_names == 'auto') or (len(new_sample_names) == len(legal_samples))):
+        raise InvalidValueError(f'Number of samples ({len(legal_samples)}) does not match number of '
+                                f'sample names ({len(new_sample_names)})!')
 
     for i, sam_file in enumerate(sorted(legal_samples)):
         this_call = base_call.copy()
@@ -775,14 +801,17 @@ def convert_sam_format(input_folder: Union[str, Path], output_folder: Union[str,
 
     input_folder = Path(input_folder)
     output_folder = Path(output_folder)
-    assert input_folder.exists() and input_folder.is_dir(), "input_folder does not exist!"
-    assert output_folder.exists() and output_folder.is_dir(), "output_folder does not exist!"
+    if not (input_folder.exists() and input_folder.is_dir()):
+        raise InvalidValueError("input_folder does not exist!")
+    if not (output_folder.exists() and output_folder.is_dir()):
+        raise InvalidValueError("output_folder does not exist!")
 
     base_call = _generate_picard_basecall(script_name, picard_installation_folder)
 
     legal_samples = _get_legal_samples(input_folder, 'alignment')
-    assert (new_sample_names == 'auto') or (len(new_sample_names) == len(legal_samples)), \
-        f'Number of samples ({len(legal_samples)}) does not match number of sample names ({len(new_sample_names)})!'
+    if not ((new_sample_names == 'auto') or (len(new_sample_names) == len(legal_samples))):
+        raise InvalidValueError(f'Number of samples ({len(legal_samples)}) does not match number of '
+                                f'sample names ({len(new_sample_names)})!')
 
     calls = []
     for i, sam_file in enumerate(sorted(legal_samples)):
@@ -876,7 +905,8 @@ def featurecounts_single_end(input_folder: Union[str, Path], output_folder: Unio
     :rtype: (filtering.CountFilter, pl.DataFrame, pl.DataFrame)
     """
     output_folder = Path(output_folder)
-    assert output_folder.exists(), 'Output folder does not exist!'
+    if not output_folder.exists():
+        raise InvalidValueError('Output folder does not exist!')
     kwargs = _parse_featurecounts_misc_args(input_folder, output_folder, gtf_file, gtf_feature_type, gtf_attr_name,
                                             stranded, min_mapping_quality, count_multi_mapping_reads,
                                             count_multi_overlapping_reads, ignore_secondary, count_fractionally,
@@ -982,7 +1012,8 @@ def featurecounts_paired_end(input_folder: Union[str, Path], output_folder: Unio
     :rtype: (filtering.CountFilter, pl.DataFrame, pl.DataFrame)
     """
     output_folder = Path(output_folder)
-    assert output_folder.exists(), 'Output folder does not exist!'
+    if not output_folder.exists():
+        raise InvalidValueError('Output folder does not exist!')
 
     kwargs = _parse_featurecounts_misc_args(input_folder, output_folder, gtf_file, gtf_feature_type, gtf_attr_name,
                                             stranded, min_mapping_quality, count_multi_mapping_reads,
@@ -1007,20 +1038,24 @@ def _parse_featurecounts_misc_args(input_folder: Union[str, Path], output_folder
                                    report_read_assignment: Union[Literal['bam', 'sam', 'core'], None],
                                    threads: PositiveInt):
     strand_dict = {'no': 0, 'forward': 1, 'reverse': 2}
-    assert stranded in strand_dict, f"Invalid value for 'stranded': '{stranded}'."
+    if stranded not in strand_dict:
+        raise InvalidValueError(f"Invalid value for 'stranded': '{stranded}'.")
     read_assignment_formats = {'bam': 'BAM', 'sam': 'SAM', 'core': 'CORE', None: None}
-    assert report_read_assignment in read_assignment_formats, \
-        f"Invalid value for 'report_read_asignment': {report_read_assignment}"
+    if report_read_assignment not in read_assignment_formats:
+        raise InvalidValueError(f"Invalid value for 'report_read_asignment': {report_read_assignment}")
 
     gtf_file = Path(gtf_file)
-    assert gtf_file.exists() and gtf_file.is_file(), "'gtf_file' does not exist!"
+    if not (gtf_file.exists() and gtf_file.is_file()):
+        raise InvalidValueError("'gtf_file' does not exist!")
 
     input_folder = Path(input_folder)
-    assert input_folder.exists() and input_folder.is_dir(), "input_folder does not exist!"
+    if not (input_folder.exists() and input_folder.is_dir()):
+        raise InvalidValueError("input_folder does not exist!")
     files = []
     for item in _get_legal_samples(input_folder, 'alignment'):
         files.append(item.as_posix())
-    assert len(files) > 0, f"No legal input files were find in input_folder '{input_folder.as_posix()}'!"
+    if not (len(files) > 0):
+        raise InvalidValueError(f"No legal input files were find in input_folder '{input_folder.as_posix()}'!")
 
     kwargs = {'files': files, 'annot.ext': gtf_file.as_posix(),
               'isGTFAnnotationFile': gtf_file.suffix.lower() != '.saf',
@@ -1040,8 +1075,9 @@ def _featurecounts_get_sample_names(files: list, new_sample_names):
         new_sample_names = [Path(fname).stem for fname in files]
     else:
         new_sample_names = parsing.data_to_list(new_sample_names)
-        assert len(new_sample_names) == len(files), f"The number of samples {len(files)} does not match the number of " \
-                                                    f"new sample names ({len(new_sample_names)})!"
+        if len(new_sample_names) != len(files):
+            raise InvalidValueError(f"The number of samples {len(files)} does not match the number of "
+                                    f"new sample names ({len(new_sample_names)})!")
     return new_sample_names
 
 
@@ -1113,24 +1149,33 @@ def bowtie2_create_index(genome_fastas: List[Union[str, Path]], output_folder: U
     call = io.generate_base_call(command, bowtie2_installation_folder, shell=True, args=['--wrapper', 'basic-0'])
 
     if random_seed is not None:
-        assert isinstance(random_seed, int) and random_seed >= 0, "'random_seed' must be an integer >=0 !"
+        if not isinstance(random_seed, int):
+            raise InvalidTypeError("'random_seed' must be an integer >=0 !")
+        if not (random_seed >= 0):
+            raise InvalidValueError("'random_seed' must be an integer >=0 !")
         call.extend(['--seed', str(random_seed)])
 
-    assert isinstance(threads, int) and threads > 0, "'threads' must be an integer >0 !"
+    if not isinstance(threads, int):
+        raise InvalidTypeError("'threads' must be an integer >0 !")
+    if not (threads > 0):
+        raise InvalidValueError("'threads' must be an integer >0 !")
     call.extend(['--threads', str(threads)])
 
     genome_fastas = [Path(pth) for pth in parsing.data_to_list(genome_fastas)]
     for fasta in genome_fastas:
-        assert fasta.exists(), f"the FASTA file '{fasta.as_posix()}' does not exist!"
+        if not fasta.exists():
+            raise InvalidValueError(f"the FASTA file '{fasta.as_posix()}' does not exist!")
     call.append(','.join([parsing.quote_path(fasta) for fasta in genome_fastas]))
 
     output_folder = Path(output_folder)
-    assert output_folder.exists(), "output_folder does not exist!"
+    if not output_folder.exists():
+        raise InvalidValueError("output_folder does not exist!")
 
     if index_name == 'auto':
         index_name = parsing.remove_suffixes(genome_fastas[0]).stem
     else:
-        assert isinstance(index_name, str), f"'index_name' must be a string, instead got {type(index_name)}."
+        if not isinstance(index_name, str):
+            raise InvalidTypeError(f"'index_name' must be a string, instead got {type(index_name)}.")
     call.append(parsing.quote_path(output_folder.joinpath(index_name)))
 
     print(f"Running command: \n{' '.join(call)}")
@@ -1143,7 +1188,8 @@ def bowtie2_create_index(genome_fastas: List[Union[str, Path]], output_folder: U
 def _get_legal_samples(in_dir: Union[str, Path], file_type: Literal['sequence', 'alignment'] = 'sequence') -> List[
     Path]:
     in_dir = Path(in_dir)
-    assert in_dir.exists(), "'fastq_folder' does not exist!"
+    if not in_dir.exists():
+        raise InvalidValueError("'fastq_folder' does not exist!")
 
     if file_type == 'sequence':
         legal_suffixes = LEGAL_FASTQ_SUFFIXES
@@ -1278,20 +1324,24 @@ def shortstack_align_smallrna(fastq_folder: Union[str, Path], output_folder: Uni
     available_multimap_modes = {'fractional': 'f', 'unique': 'u', 'random': 'r'}
 
     output_folder = Path(output_folder)
-    assert output_folder.exists(), "supplied 'output_folder' does not exist!"
+    if not output_folder.exists():
+        raise InvalidValueError("supplied 'output_folder' does not exist!")
 
     call = io.generate_base_call('ShortStack', shortstack_installation_folder, shell=True)
 
     genome_fasta = Path(genome_fasta)
-    assert genome_fasta.exists(), f"file 'genome_fasta' at {genome_fasta.as_posix()} does not exist!"
+    if not genome_fasta.exists():
+        raise InvalidValueError(f"file 'genome_fasta' at {genome_fasta.as_posix()} does not exist!")
     call.extend(['--genomefile', genome_fasta.as_posix()])
 
-    assert multimap_mode in available_multimap_modes, f"Illegal value for 'multimap_mode': '{multimap_mode}'"
+    if multimap_mode not in available_multimap_modes:
+        raise InvalidValueError(f"Illegal value for 'multimap_mode': '{multimap_mode}'")
     call.extend(['--mmap', available_multimap_modes[multimap_mode]])
 
     if trim_adapter is not None:
         if trim_adapter == 'auto':
-            assert isinstance(autotrim_key, str), f"'autotrim_key' must be a string, instead got {type(autotrim_key)}!"
+            if not isinstance(autotrim_key, str):
+                raise InvalidTypeError(f"'autotrim_key' must be a string, instead got {type(autotrim_key)}!")
             call.extend(['--autotrim', '--autotrim_key', autotrim_key])
         elif isinstance(trim_adapter, str):
             call.extend(['--adapter', trim_adapter])
@@ -1305,21 +1355,23 @@ def shortstack_align_smallrna(fastq_folder: Union[str, Path], output_folder: Uni
         call.append('--show_secondaries')
 
     if loci_file is not None:
-        assert locus is None, "Cannot specify both 'loci_file' and 'locus'!"
+        if locus is not None:
+            raise InvalidValueError("Cannot specify both 'loci_file' and 'locus'!")
         loci_file = Path(loci_file)
-        assert loci_file.exists() and loci_file.is_file(), \
-            f"File 'loci_file' at {loci_file.as_posix()} does not exist!"
+        if not (loci_file.exists() and loci_file.is_file()):
+            raise InvalidValueError(f"File 'loci_file' at {loci_file.as_posix()} does not exist!")
         call.extend(['--locifile', loci_file.as_posix()])
 
     if locus is not None:
-        assert isinstance(locus, str), f"'locus' must be a string, instead got {type(locus)}!"
+        if not isinstance(locus, str):
+            raise InvalidTypeError(f"'locus' must be a string, instead got {type(locus)}!")
         call.extend(['--locus', locus])
 
     if search_microrna == 'known-rnas':
         if known_rnas is not None:
             known_rnas = Path(known_rnas)
-            assert known_rnas.exists() and known_rnas.is_file(), \
-                f"File 'known_rnas' at {known_rnas.as_posix()} does not exist!"
+            if not (known_rnas.exists() and known_rnas.is_file()):
+                raise InvalidValueError(f"File 'known_rnas' at {known_rnas.as_posix()} does not exist!")
             call.extend(['--known_miRNAs', known_rnas.as_posix()])
     else:
         if known_rnas is not None:
@@ -1332,30 +1384,48 @@ def shortstack_align_smallrna(fastq_folder: Union[str, Path], output_folder: Uni
         else:
             raise TypeError(f"Invalid type for 'search_microrna': {type(search_microrna)}. ")
 
-    assert isinstance(dicer_min_length, int) and dicer_min_length > 0, "'dicer_min_length' must be a positive integer!"
-    assert isinstance(dicer_max_length, int) and dicer_max_length > 0, "'dicer_max_length' must be a positive integer!"
-    assert dicer_min_length <= dicer_max_length, "'dicer_min_length' must be <= 'dicer_max_length'!"
+    if not isinstance(dicer_min_length, int):
+        raise InvalidTypeError("'dicer_min_length' must be a positive integer!")
+    if not (dicer_min_length > 0):
+        raise InvalidValueError("'dicer_min_length' must be a positive integer!")
+    if not isinstance(dicer_max_length, int):
+        raise InvalidTypeError("'dicer_max_length' must be a positive integer!")
+    if not (dicer_max_length > 0):
+        raise InvalidValueError("'dicer_max_length' must be a positive integer!")
+    if not (dicer_min_length <= dicer_max_length):
+        raise InvalidValueError("'dicer_min_length' must be <= 'dicer_max_length'!")
     call.extend(['--dicermin', str(dicer_min_length)])
     call.extend(['--dicermax', str(dicer_max_length)])
 
-    assert isinstance(strand_cutoff,
-                      float) and 0.5 < strand_cutoff < 1, \
-        "'strand_cutoff' must be a fraction beetween 0.5 and 1 (non-inclusive)!"
+    if not isinstance(strand_cutoff, float):
+        raise InvalidTypeError("'strand_cutoff' must be a fraction beetween 0.5 and 1 (non-inclusive)!")
+    if not (0.5 < strand_cutoff < 1):
+        raise InvalidValueError("'strand_cutoff' must be a fraction beetween 0.5 and 1 (non-inclusive)!")
     call.extend(['--strand_cutoff', str(strand_cutoff)])
 
-    assert isinstance(min_coverage, (int, float)) and min_coverage > 0, "'min_coverage' must be a positive number!"
+    if not isinstance(min_coverage, (int, float)):
+        raise InvalidTypeError("'min_coverage' must be a positive number!")
+    if not (min_coverage > 0):
+        raise InvalidValueError("'min_coverage' must be a positive number!")
     call.extend(['--mincov', str(min_coverage)])
 
-    assert isinstance(pad, int) and pad > 0, "'pad' must be a positive integer!"
+    if not isinstance(pad, int):
+        raise InvalidTypeError("'pad' must be a positive integer!")
+    if not (pad > 0):
+        raise InvalidValueError("'pad' must be a positive integer!")
     call.extend(['--pad', str(pad)])
 
-    assert isinstance(threads, int) and threads >= 0, "'threads' must be a non-negative int!"
+    if not isinstance(threads, int):
+        raise InvalidTypeError("'threads' must be a non-negative int!")
+    if not (threads >= 0):
+        raise InvalidValueError("'threads' must be a non-negative int!")
     call.extend(['--threads', str(threads)])
 
     legal_samples = _get_legal_samples(fastq_folder)
 
-    assert (new_sample_names == 'auto') or (len(new_sample_names) == len(legal_samples)), \
-        f'Number of samples ({len(legal_samples)}) does not match number of sample names ({len(new_sample_names)})!'
+    if not ((new_sample_names == 'auto') or (len(new_sample_names) == len(legal_samples))):
+        raise InvalidValueError(f'Number of samples ({len(legal_samples)}) does not match number of '
+                                f'sample names ({len(new_sample_names)})!')
 
     calls = []
     for i, item in enumerate(sorted(legal_samples)):
@@ -1442,8 +1512,9 @@ def bowtie2_align_single_end(fastq_folder: Union[str, Path], output_folder: Unio
 
     legal_samples = _get_legal_samples(fastq_folder)
 
-    assert (new_sample_names == 'auto') or (len(new_sample_names) == len(legal_samples)), \
-        f'Number of samples ({len(legal_samples)}) does not match number of sample names ({len(new_sample_names)})!'
+    if not ((new_sample_names == 'auto') or (len(new_sample_names) == len(legal_samples))):
+        raise InvalidValueError(f'Number of samples ({len(legal_samples)}) does not match number of '
+                                f'sample names ({len(new_sample_names)})!')
 
     calls = []
     for i, item in enumerate(sorted(legal_samples)):
@@ -1547,15 +1618,21 @@ def bowtie2_align_paired_end(r1_files: List[str], r2_files: List[str], output_fo
     call = _parse_bowtie2_misc_args(output_folder, index_file, bowtie2_installation_folder, mode, settings_preset,
                                     ignore_qualities, quality_score_type, random_seed, threads)
 
-    assert len(r1_files) == len(r2_files), f"Got an uneven number of R1 and R2 files: " \
-                                           f"{len(r1_files)} and {len(r2_files)} respectively"
-    assert (new_sample_names in ['auto', 'smart']) or (len(new_sample_names) == len(r1_files)), \
-        f'Number of samples ({len(r1_files)}) does not match number of sample names ({len(new_sample_names)})!'
+    if len(r1_files) != len(r2_files):
+        raise InvalidValueError(f"Got an uneven number of R1 and R2 files: "
+                                f"{len(r1_files)} and {len(r2_files)} respectively")
+    if not ((new_sample_names in ['auto', 'smart']) or (len(new_sample_names) == len(r1_files))):
+        raise InvalidValueError(
+            f'Number of samples ({len(r1_files)}) does not match number of sample names ({len(new_sample_names)})!')
 
-    assert isinstance(min_fragment_length, int) and min_fragment_length >= 0, \
-        "'min_fragment_len' must be a non-negative int!"
-    assert isinstance(max_fragment_length, int) and max_fragment_length >= 0, \
-        "'max_fragment_len' must be a non-negative int!"
+    if not isinstance(min_fragment_length, int):
+        raise InvalidTypeError("'min_fragment_len' must be a non-negative int!")
+    if not (min_fragment_length >= 0):
+        raise InvalidValueError("'min_fragment_len' must be a non-negative int!")
+    if not isinstance(max_fragment_length, int):
+        raise InvalidTypeError("'max_fragment_len' must be a non-negative int!")
+    if not (max_fragment_length >= 0):
+        raise InvalidValueError("'max_fragment_len' must be a non-negative int!")
     call.extend(['-I', str(min_fragment_length)])
     call.extend(['-X', str(max_fragment_length)])
 
@@ -1608,24 +1685,33 @@ def _parse_bowtie2_misc_args(output_folder, index_file: str, bowtie2_installatio
                              random_seed: NonNegativeInt, threads: PositiveInt):
     output_folder = Path(output_folder)
     index_file = parsing.remove_suffixes(Path(index_file))
-    assert output_folder.exists(), "supplied 'output_folder' does not exist!"
+    if not output_folder.exists():
+        raise InvalidValueError("supplied 'output_folder' does not exist!")
 
     call = io.generate_base_call('bowtie2', bowtie2_installation_folder, shell=True)
 
-    assert mode in LEGAL_BOWTIE2_MODES, f"Invalid value for 'mode': '{mode}'."
+    if mode not in LEGAL_BOWTIE2_MODES:
+        raise InvalidValueError(f"Invalid value for 'mode': '{mode}'.")
     call.append(f'--{mode}')
-    assert settings_preset in LEGAL_BOWTIE2_PRESETS, f"Invalid value for 'settings_preset': '{settings_preset}'."
+    if settings_preset not in LEGAL_BOWTIE2_PRESETS:
+        raise InvalidValueError(f"Invalid value for 'settings_preset': '{settings_preset}'.")
     call.append(f'--{settings_preset}')
-    assert quality_score_type in LEGAL_QUAL_SCORE_TYPES, \
-        f"Invalid value for 'quality_score_type': '{quality_score_type}'."
+    if quality_score_type not in LEGAL_QUAL_SCORE_TYPES:
+        raise InvalidValueError(f"Invalid value for 'quality_score_type': '{quality_score_type}'.")
     call.append(f'--{quality_score_type}')
 
     if ignore_qualities:
         call.append('--ignore-quals')
 
-    assert isinstance(random_seed, int) and random_seed >= 0, "'random_seed' must be a non-negative int!"
+    if not isinstance(random_seed, int):
+        raise InvalidTypeError("'random_seed' must be a non-negative int!")
+    if not (random_seed >= 0):
+        raise InvalidValueError("'random_seed' must be a non-negative int!")
     call.extend(['--seed', str(random_seed)])
-    assert isinstance(threads, int) and threads >= 0, "'threads' must be a non-negative int!"
+    if not isinstance(threads, int):
+        raise InvalidTypeError("'threads' must be a non-negative int!")
+    if not (threads >= 0):
+        raise InvalidValueError("'threads' must be a non-negative int!")
     call.extend(['--threads', str(threads)])
 
     call.extend(['-x', parsing.quote_path(index_file)])
@@ -1655,14 +1741,17 @@ def kallisto_create_index(transcriptome_fasta: Union[str, Path],
     :param make_unique: if True, replace repeated target names with unique names.
     :type make_unique: bool (default=False)
     """
-    assert isinstance(kmer_length, int), f"parameter 'kmer_length' must be an integer. Instead, got {type(kmer_length)}"
-    assert 0 < kmer_length <= 31 and kmer_length % 2 == 1, "'kmer_length' must be an odd integer between 1 and 31"
+    if not isinstance(kmer_length, int):
+        raise InvalidTypeError(f"parameter 'kmer_length' must be an integer. Instead, got {type(kmer_length)}")
+    if not (0 < kmer_length <= 31 and kmer_length % 2 == 1):
+        raise InvalidValueError("'kmer_length' must be an odd integer between 1 and 31")
 
     call = io.generate_base_call('kallisto', kallisto_installation_folder, 'version')
     call.append('index')
 
     transcriptome_fasta = Path(transcriptome_fasta)
-    assert transcriptome_fasta.exists(), 'the transcriptome FASTA file does not exist!'
+    if not transcriptome_fasta.exists():
+        raise InvalidValueError('the transcriptome FASTA file does not exist!')
 
     index_filename = parsing.remove_suffixes(transcriptome_fasta).with_suffix('.idx').as_posix()
     call.extend(['-i', index_filename])
@@ -1781,8 +1870,9 @@ def kallisto_quantify_single_end(fastq_folder: Union[str, Path], output_folder: 
 
     legal_samples = _get_legal_samples(fastq_folder)
 
-    assert (new_sample_names == 'auto') or (len(new_sample_names) == len(legal_samples)), \
-        f'Number of samples ({len(legal_samples)}) does not match number of sample names ({len(new_sample_names)})!'
+    if not ((new_sample_names == 'auto') or (len(new_sample_names) == len(legal_samples))):
+        raise InvalidValueError(f'Number of samples ({len(legal_samples)}) does not match number of '
+                                f'sample names ({len(new_sample_names)})!')
 
     if new_sample_names == 'auto':
         new_sample_names = [parsing.remove_suffixes(item).stem for item in legal_samples]
@@ -1884,10 +1974,12 @@ def kallisto_quantify_paired_end(r1_files: List[str], r2_files: List[str], outpu
     """
     if new_sample_names not in ['auto', 'smart']:
         new_sample_names = parsing.data_to_list(new_sample_names)
-    assert len(r1_files) == len(r2_files), f"Got an uneven number of R1 and R2 files: " \
-                                           f"{len(r1_files)} and {len(r2_files)} respectively"
-    assert (new_sample_names in ['auto', 'smart']) or (len(new_sample_names) == len(r1_files)), \
-        f'Number of samples ({len(r1_files)}) does not match number of sample names ({len(new_sample_names)})!'
+    if len(r1_files) != len(r2_files):
+        raise InvalidValueError(f"Got an uneven number of R1 and R2 files: "
+                                f"{len(r1_files)} and {len(r2_files)} respectively")
+    if not ((new_sample_names in ['auto', 'smart']) or (len(new_sample_names) == len(r1_files))):
+        raise InvalidValueError(
+            f'Number of samples ({len(r1_files)}) does not match number of sample names ({len(new_sample_names)})!')
 
     # handle legacy arguments
     learn_bias = legacy_args.get('learn_bias', False)
@@ -1950,10 +2042,14 @@ def _parse_kallisto_misc_args(output_folder, index_file: str, kallisto_installat
 
     output_folder = Path(output_folder)
     index_file = Path(index_file)
-    assert output_folder.exists(), "supplied 'output_folder' does not exist!"
-    assert index_file.exists(), "supplied 'index_file' does not exist!"
-    assert isinstance(stranded, str) and stranded.lower() in ["no", "forward", "reverse"], \
-        f"invalid value for parameter 'stranded': {stranded}"
+    if not output_folder.exists():
+        raise InvalidValueError("supplied 'output_folder' does not exist!")
+    if not index_file.exists():
+        raise InvalidValueError("supplied 'index_file' does not exist!")
+    if not isinstance(stranded, str):
+        raise InvalidTypeError(f"invalid value for parameter 'stranded': {stranded}")
+    if stranded.lower() not in ["no", "forward", "reverse"]:
+        raise InvalidValueError(f"invalid value for parameter 'stranded': {stranded}")
 
     call = io.generate_base_call('kallisto', kallisto_installation_folder, 'version')
     call.append('quant')
@@ -1972,8 +2068,10 @@ def _parse_kallisto_misc_args(output_folder, index_file: str, kallisto_installat
         call.append("--rf-stranded")
 
     if bootstrap_samples is not None:
-        assert isinstance(bootstrap_samples,
-                          int) and bootstrap_samples >= 0, "'bootstrap_samples' must be a non-negative integer!"
+        if not isinstance(bootstrap_samples, int):
+            raise InvalidTypeError("'bootstrap_samples' must be a non-negative integer!")
+        if not (bootstrap_samples >= 0):
+            raise InvalidValueError("'bootstrap_samples' must be a non-negative integer!")
         call.extend(['-b', str(bootstrap_samples)])
 
     call.extend(["-o", output_folder.as_posix()])
@@ -2116,7 +2214,8 @@ def trim_adapters_single_end(fastq_folder: Union[str, Path], output_folder: Unio
                                      ['--adapter', '--front', '--anywhere']):
         if adapter_group is not None:
             for adapter in parsing.data_to_list(adapter_group):
-                assert isinstance(adapter, str), f"The following adapter is invalid: {adapter}"
+                if not isinstance(adapter, str):
+                    raise InvalidTypeError(f"The following adapter is invalid: {adapter}")
                 call.extend([prefix, adapter])
 
     call.extend(_parse_cutadapt_misc_args(quality_trimming, trim_n, minimum_read_length, maximum_read_length,
@@ -2124,8 +2223,9 @@ def trim_adapters_single_end(fastq_folder: Union[str, Path], output_folder: Unio
                                           parallel))
 
     legal_samples = _get_legal_samples(fastq_folder)
-    assert (new_sample_names == 'auto') or (len(new_sample_names) == len(legal_samples)), \
-        f'Number of samples ({len(legal_samples)}) does not match number of sample names ({len(new_sample_names)})!'
+    if not ((new_sample_names == 'auto') or (len(new_sample_names) == len(legal_samples))):
+        raise InvalidValueError(f'Number of samples ({len(legal_samples)}) does not match number of '
+                                f'sample names ({len(new_sample_names)})!')
 
     calls = []
     for i, item in enumerate(legal_samples):
@@ -2251,10 +2351,12 @@ def trim_adapters_paired_end(r1_files: List[Union[str, Path]], r2_files: List[Un
                       "If you want to use the adapter trimming feature, "
                       "please install python package 'cutadapt' and try again. ")
         return
-    assert len(r1_files) == len(r2_files), f"Got an uneven number of R1 and R2 files: " \
-                                           f"{len(r1_files)} and {len(r2_files)} respectively"
-    assert (new_sample_names == 'auto') or (len(new_sample_names) == len(r1_files)), \
-        f'Number of samples ({len(r1_files)}) does not match number of sample names ({len(new_sample_names)})!'
+    if len(r1_files) != len(r2_files):
+        raise InvalidValueError(f"Got an uneven number of R1 and R2 files: "
+                                f"{len(r1_files)} and {len(r2_files)} respectively")
+    if not ((new_sample_names == 'auto') or (len(new_sample_names) == len(r1_files))):
+        raise InvalidValueError(
+            f'Number of samples ({len(r1_files)}) does not match number of sample names ({len(new_sample_names)})!')
 
     try:
         call = io.generate_base_call('cutadapt', 'auto')
@@ -2270,12 +2372,14 @@ def trim_adapters_paired_end(r1_files: List[Union[str, Path]], r2_files: List[Un
 
         if r1_group is not None:
             for adapter in parsing.data_to_list(r1_group):
-                assert isinstance(adapter, str), f"The following R1 adapter is invalid: {adapter}"
+                if not isinstance(adapter, str):
+                    raise InvalidTypeError(f"The following R1 adapter is invalid: {adapter}")
                 call.extend([prefix, adapter])
 
         if r2_group is not None:
             for adapter in parsing.data_to_list(r2_group):
-                assert isinstance(adapter, str), f"The following R2 adapter is invalid: {adapter}"
+                if not isinstance(adapter, str):
+                    raise InvalidTypeError(f"The following R2 adapter is invalid: {adapter}")
                 call.extend([prefix.upper(), adapter])
 
     call.extend(_parse_cutadapt_misc_args(quality_trimming, trim_n, minimum_read_length, maximum_read_length,
@@ -2333,18 +2437,21 @@ def _parse_cutadapt_misc_args(quality_trimming: Union[int, None], trim_n: bool,
                               allow_indels: bool, parallel: bool) -> List[str]:
     call = []
     if quality_trimming is not None:
-        assert isinstance(quality_trimming, int), f"'quality_trimming' must be an integer. " \
-                                                  f"Instead, got type {type(quality_trimming)}"
+        if not isinstance(quality_trimming, int):
+            raise InvalidTypeError(f"'quality_trimming' must be an integer. "
+                                   f"Instead, got type {type(quality_trimming)}")
         call.extend(['--quality-cutoff', str(quality_trimming)])
 
     if minimum_read_length is not None:
-        assert isinstance(minimum_read_length, int), f"'minimum_read_length' must be an integer. " \
-                                                     f"Instead, got type {type(minimum_read_length)}"
+        if not isinstance(minimum_read_length, int):
+            raise InvalidTypeError(f"'minimum_read_length' must be an integer. "
+                                   f"Instead, got type {type(minimum_read_length)}")
         call.extend(['--minimum-length', str(minimum_read_length)])
 
     if maximum_read_length is not None:
-        assert isinstance(maximum_read_length, int), f"'maximum_read_length' must be an integer. " \
-                                                     f"Instead, got type {type(maximum_read_length)}"
+        if not isinstance(maximum_read_length, int):
+            raise InvalidTypeError(f"'maximum_read_length' must be an integer. "
+                                   f"Instead, got type {type(maximum_read_length)}")
         call.extend(['--maximum-length', str(maximum_read_length)])
     if trim_n:
         call.append('--trim-n')

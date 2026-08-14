@@ -19,6 +19,7 @@ from mpl_toolkits.axes_grid1 import make_axes_locatable
 from scipy.stats import fisher_exact, hypergeom, ttest_1samp
 from tqdm.auto import tqdm
 
+from rnalysis.exceptions import InternalError, InvalidTypeError, InvalidValueError
 from rnalysis.utils import (generic, io, ontology, param_typing, parsing,
                             settings, validation)
 from rnalysis.utils.param_typing import GRAPHVIZ_FORMATS, PARALLEL_BACKENDS
@@ -112,7 +113,8 @@ class StatsTest(abc.ABC):
 class TTest(StatsTest):
     def run(self, attribute_name: str, annotation_dict: Dict[str, float], gene_set: Set[str], background_set: Set[str],
             annotation_set_unfiltered=None):
-        assert annotation_set_unfiltered is None
+        if annotation_set_unfiltered is not None:
+            raise InternalError
         obs_values = [annotation_dict[gene] for gene in gene_set]
         exp = np.nanmean([annotation_dict[gene] for gene in background_set])
         obs = np.mean(obs_values)
@@ -126,7 +128,8 @@ class TTest(StatsTest):
 class SignTest(StatsTest):
     def run(self, attribute_name: str, annotation_dict: Dict[str, float], gene_set: Set[str], background_set: Set[str],
             annotation_set_unfiltered=None):
-        assert annotation_set_unfiltered is None
+        if annotation_set_unfiltered is not None:
+            raise InternalError
         obs_values = [annotation_dict[gene] for gene in gene_set]
         exp = np.nanmedian([annotation_dict[gene] for gene in background_set])
         obs = np.median(obs_values)
@@ -244,7 +247,8 @@ class XlmhgTest(StatsTest):
 
     def run(self, attribute_name: str, annotation_set: Set[str], gene_set: List[str], background_set: Set[str] = None,
             annotation_set_unfiltered: Union[Set[str], None] = None):
-        assert background_set is None
+        if background_set is not None:
+            raise InternalError
         if not HAS_XLMHG:
             warnings.warn("Package 'xlmhglite' is not installed. \n"
                           "If you want to run single-set enrichment analysis, "
@@ -351,15 +355,19 @@ class BarPlotter(EnrichmentPlotter):
                  plot_style: Literal['bar', 'lollipop'] = 'bar', plot_horizontal: bool = True,
                  show_expected: bool = False, center_bars: bool = True):
         super().__init__(results)
-        assert en_score_col in results.columns, f"Column '{en_score_col}' not found in the results DataFrame."
+        if en_score_col not in results.columns:
+            raise InternalError(f"Column '{en_score_col}' not found in the results DataFrame.")
         self.en_score_col = en_score_col
-        assert plot_style in ['bar', 'lollipop'], \
-            f"'plot_style' must be 'bar' or 'lollipop', instead got '{self.plot_style}'."
+        if plot_style not in ['bar', 'lollipop']:
+            raise InvalidValueError(f"'plot_style' must be 'bar' or 'lollipop', instead got '{self.plot_style}'.")
 
         if n_bars == 'all':
             n_bars = len(self.results)
         else:
-            assert isinstance(n_bars, int) and n_bars >= 0, f"Invalid value for 'n_bars': {n_bars}."
+            if not isinstance(n_bars, int):
+                raise InvalidTypeError(f"Invalid value for 'n_bars': {n_bars}.")
+            if n_bars < 0:
+                raise InvalidValueError(f"Invalid value for 'n_bars': {n_bars}.")
 
         self.n_bars = n_bars
         self.ylabel = ylabel
@@ -540,8 +548,8 @@ class HistogramPlotter(EnrichmentPlotter):
                  plot_style: str, parametric_test: bool):
         super().__init__(results)
 
-        assert all([attr in annotations for attr in
-                    attributes]), f"Attributes {attributes} not found in annotations DataFrame."
+        if not all([attr in annotations for attr in attributes]):
+            raise InternalError(f"Attributes {attributes} not found in annotations DataFrame.")
 
         self.alpha = alpha
         self.annotations = annotations
@@ -631,7 +639,8 @@ class KEGGPlotter(EnrichmentPlotter):
                  gene_id_map: io.GeneIDDict, pathway_graphs_format: Literal[param_typing.GRAPHVIZ_FORMATS],
                  single_set: bool, ylabel: str = "$\\log_2$(Fold Enrichment)"):
         super().__init__(results)
-        assert en_score_col in results.columns, f"Column '{en_score_col}' not found in the results DataFrame."
+        if en_score_col not in results.columns:
+            raise InternalError(f"Column '{en_score_col}' not found in the results DataFrame.")
         self.en_score_col = en_score_col
         self.gene_set = gene_set
         self.gene_id_map = gene_id_map
@@ -668,7 +677,8 @@ class GODagPlotter(EnrichmentPlotter):
                  title: str, ylabel: str = "$\\log_2$(Fold Enrichment)", dpi: int = 300,
                  graph_format: Literal[param_typing.GRAPHVIZ_FORMATS] = 'none'):
         super().__init__(results)
-        assert en_score_col in results.columns, f"Column '{en_score_col}' not found in the results DataFrame."
+        if en_score_col not in results.columns:
+            raise InternalError(f"Column '{en_score_col}' not found in the results DataFrame.")
         self.en_score_col = en_score_col
         self.dag_tree = dag_tree
         self.go_aspects = ('biological_process', 'cellular_component', 'molecular_function') if (
@@ -753,7 +763,8 @@ class EnrichmentRunner:
             if fname is None:
                 self.fname = input("Please insert the full name and path to save the file to")
             else:
-                assert isinstance(fname, (str, Path))
+                if not isinstance(fname, (str, Path)):
+                    raise InvalidTypeError
                 self.fname = str(fname)
         self.plot_horizontal = plot_horizontal
         self.plot_style = plot_style
@@ -767,12 +778,15 @@ class EnrichmentRunner:
         self.annotated_genes = None
         self.single_set = single_set
         if self.single_set:
-            assert background_set is None, "Enrichment in single_set mode does not accept a 'background_set' argument."
-            assert isinstance(genes, np.ndarray), f"Invalid type for argument 'genes' in single_set mode: " \
-                                                  f"expected np.ndarray, instead got '{type(genes)}'."
+            if background_set is not None:
+                raise InvalidValueError(
+                    "Enrichment in single_set mode does not accept a 'background_set' argument.")
+            if not isinstance(genes, np.ndarray):
+                raise InvalidTypeError(f"Invalid type for argument 'genes' in single_set mode: "
+                                       f"expected np.ndarray, instead got '{type(genes)}'.")
 
-            assert isinstance(stats_test, XlmhgTest), \
-                f"Invalid enrichment function for single_set mode: '{stats_test}'."
+            if not isinstance(stats_test, XlmhgTest):
+                raise InvalidTypeError(f"Invalid enrichment function for single_set mode: '{stats_test}'.")
 
             self.background_set = None
             self.en_score_col = 'log2_enrichment_score'
@@ -919,15 +933,20 @@ class EnrichmentRunner:
 
     @staticmethod
     def _validate_attributes(attribute_list: list, all_attrs: Collection):
-        assert isinstance(attribute_list, list), f"Invalid type for 'attribute_list': {type(attribute_list)}."
+        if not isinstance(attribute_list, list):
+            raise InvalidTypeError(f"Invalid type for 'attribute_list': {type(attribute_list)}.")
         all_attrs = parsing.data_to_set(all_attrs)
         for attr in attribute_list:
             if type(attr) in {int}:
-                assert attr >= 0, f"Error in attribute number {attr}: index must be non-negative!"
-                assert attr < len(all_attrs), f"Attribute index {attr} out of range."
+                if attr < 0:
+                    raise InvalidValueError(f"Error in attribute number {attr}: index must be non-negative!")
+                if attr >= len(all_attrs):
+                    raise InvalidValueError(f"Attribute index {attr} out of range.")
             else:
-                assert isinstance(attr, str), f"Invalid type of attribute {attr}: {type(attr)}"
-                assert attr in all_attrs, f"Attribute {attr} does not appear in the Attribute Refernce Table."
+                if not isinstance(attr, str):
+                    raise InvalidTypeError(f"Invalid type of attribute {attr}: {type(attr)}")
+                if attr not in all_attrs:
+                    raise InvalidValueError(f"Attribute {attr} does not appear in the Attribute Refernce Table.")
 
     def filter_annotations(self):
         self.annotations = {attr: self.annotations[attr] for attr in self.attributes}
@@ -948,7 +967,8 @@ class EnrichmentRunner:
         gene_set = self.ranked_genes if self.single_set else self.gene_set
         result = []
         for attribute in tqdm(self.attributes, desc="Calculating enrichment", unit='attributes'):
-            assert isinstance(attribute, str), f"Error in attribute {attribute}: attributes must be strings!"
+            if not isinstance(attribute, str):
+                raise InternalError(f"Error in attribute {attribute}: attributes must be strings!")
             this_res = self.stats_test.run(attribute, self.annotations[attribute], gene_set, self.background_set)
             result.append(this_res)
         return result
@@ -999,10 +1019,14 @@ class NonCategoricalEnrichmentRunner(EnrichmentRunner):
                  plot_log_scale: bool, plot_style: Literal['interleaved', 'overlap'],
                  n_bins: int, set_name: str, parallel_backend: Literal[PARALLEL_BACKENDS], parametric_test: bool):
 
-        assert isinstance(plot_log_scale, bool), f"Invalid type for 'plot_log_scale': '{plot_log_scale}'."
-        assert plot_style in {'interleaved', 'overlap'}, f"Invalid value for 'plot_style': '{plot_style}'."
-        assert isinstance(n_bins,
-                          int) and n_bins > 0, f"'n_bins' must be a positive integer. Instead got {type(n_bins)}."
+        if not isinstance(plot_log_scale, bool):
+            raise InvalidTypeError(f"Invalid type for 'plot_log_scale': '{plot_log_scale}'.")
+        if plot_style not in {'interleaved', 'overlap'}:
+            raise InvalidValueError(f"Invalid value for 'plot_style': '{plot_style}'.")
+        if not isinstance(n_bins, int):
+            raise InvalidTypeError(f"'n_bins' must be a positive integer. Instead got {type(n_bins)}.")
+        if n_bins <= 0:
+            raise InvalidValueError(f"'n_bins' must be a positive integer. Instead got {type(n_bins)}.")
 
         stats_test = TTest() if parametric_test else SignTest()
         super().__init__(genes, attributes, alpha, attr_ref_path, True, save_csv, fname, True, set_name,
@@ -1117,8 +1141,9 @@ class KEGGEnrichmentRunner(EnrichmentRunner):
         annotation_dict = {}
         pathway_name_dict = {}
         annotation_iter = self._get_annotation_iterator()
-        assert annotation_iter.n_annotations > 0, "No KEGG annotations were found for the given parameters. " \
-                                                  "Please try again with a different set of parameters. "
+        if annotation_iter.n_annotations <= 0:
+            raise InvalidValueError("No KEGG annotations were found for the given parameters. "
+                                    "Please try again with a different set of parameters. ")
         for pathway_id, pathway_name, annotations in tqdm(annotation_iter, desc=desc,
                                                           total=annotation_iter.n_annotations, unit=' annotations'):
             pathway_name_dict[pathway_id] = pathway_name
@@ -1247,8 +1272,9 @@ class GOEnrichmentRunner(EnrichmentRunner):
         annotation_dict = {}
         source_to_gene_id_dict = {}
         annotation_iter = self._get_annotation_iterator()
-        assert annotation_iter.n_annotations > 0, "No GO annotations were found for the given parameters. " \
-                                                  "Please try again with a different set of parameters. "
+        if annotation_iter.n_annotations <= 0:
+            raise InvalidValueError("No GO annotations were found for the given parameters. "
+                                    "Please try again with a different set of parameters. ")
         for annotation in tqdm(annotation_iter, desc=desc, total=annotation_iter.n_annotations, unit=' annotations'):
             # extract gene_id, go_id, source from the annotation. skip annotations that don't appear in the GO DAG
 
@@ -1315,7 +1341,7 @@ class GOEnrichmentRunner(EnrichmentRunner):
             for source in sources:
                 try:
                     translators.append(futures[source].result())
-                except AssertionError as e:
+                except InvalidValueError as e:
                     if 'not a valid Uniprot Dataset' in "".join(e.args):
                         warnings.warn(f"Failed to map gene IDs for {len(source_to_gene_id_dict[source])} annotations "
                                       f"from dataset '{source}'.")
@@ -1467,7 +1493,8 @@ class GOEnrichmentRunner(EnrichmentRunner):
 
     def _parallel_over_grouping(self, func, grouping: Iterable, annotation_indices: Iterable[int],
                                 max_nbytes: Union[str, None] = '1M', progress_bar_desc: str = '') -> dict:
-        assert validation.is_method_of_class(func, type(self))
+        if not validation.is_method_of_class(func, type(self)):
+            raise InternalError
         result_dicts = generic.ProgressParallel(desc=progress_bar_desc, n_jobs=-1, max_nbytes=max_nbytes,
                                                 backend=self.parallel_backend)(
             joblib.delayed(func)(group, ind) for group, ind in zip(grouping, annotation_indices))

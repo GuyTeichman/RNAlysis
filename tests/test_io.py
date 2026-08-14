@@ -7,6 +7,7 @@ from unittest.mock import Mock, MagicMock
 import pytest
 import requests_mock
 
+from rnalysis.exceptions import InvalidTypeError
 from rnalysis.utils import io
 from rnalysis.utils.io import *
 from rnalysis.utils.io import _ensembl_lookup_post_request, _format_ids_iter
@@ -58,7 +59,7 @@ class AsyncMockResponse(MockResponse):
 
 def test_load_csv_bad_input():
     invalid_input = 2349
-    with pytest.raises(AssertionError):
+    with pytest.raises(InvalidTypeError):
         load_table(invalid_input)
 
 

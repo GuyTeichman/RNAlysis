@@ -24,6 +24,7 @@ from scipy.special import comb
 from tqdm.auto import tqdm
 
 from rnalysis import FROZEN_ENV, __version__
+from rnalysis.exceptions import InvalidTypeError, InvalidValueError
 
 # scikit-learn costs ~1s to import and is only needed once a transform actually runs, so it is loaded
 # lazily (SPEC 1 / https://scientific-python.org/specs/spec-0001/). Nothing may touch an attribute of
@@ -572,7 +573,8 @@ class GenericPipeline(abc.ABC):
             Removed function filter_missing_values with parameters [] from the pipeline.
 
         """
-        assert len(self.functions) > 0 and len(self.params) > 0, "Pipeline is empty, no functions to remove!"
+        if not (len(self.functions) > 0 and len(self.params) > 0):
+            raise InvalidValueError("Pipeline is empty, no functions to remove!")
         func = self.functions.pop(-1)
         args, kwargs = self.params.pop(-1)
         print(
@@ -654,16 +656,19 @@ class GenericPipeline(abc.ABC):
         return f"{func.__name__}({self._param_string(args, kwargs)})"
 
     def add_function(self, func: types.FunctionType, *args, **kwargs):
-        assert isinstance(func, types.FunctionType), f"'func' must be a function, is {type(func)} instead."
+        if not isinstance(func, types.FunctionType):
+            raise InvalidTypeError(f"'func' must be a function, is {type(func)} instead.")
 
         self.functions.append(func)
         self.params.append((args, kwargs))
         print(f"Added function '{self._func_signature(func, args, kwargs)}' to the pipeline.")
 
     def _validate_pipeline(self):
-        assert len(self.functions) > 0 and len(self.params) > 0, "Cannot apply an empty pipeline!"
-        assert len(self.functions) == len(self.params), "Cannot apply Pipeline: " \
-                                                        "length of 'functions' different from length of 'params'!"
+        if not (len(self.functions) > 0 and len(self.params) > 0):
+            raise InvalidValueError("Cannot apply an empty pipeline!")
+        if len(self.functions) != len(self.params):
+            raise InvalidValueError("Cannot apply Pipeline: "
+                                    "length of 'functions' different from length of 'params'!")
 
     @abc.abstractmethod
     def apply_to(self, *args, **kwargs):

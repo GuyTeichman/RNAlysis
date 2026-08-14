@@ -16,6 +16,7 @@ import polars.selectors as cs
 from grid_strategy import strategies
 from tqdm.auto import tqdm
 
+from rnalysis.exceptions import (InternalError, InvalidTypeError, InvalidValueError, RNAlysisInputError)
 from rnalysis.utils import generic, parsing, validation
 
 # scikit-learn costs ~1s to import and is only needed once a clustering run actually starts, so it is
@@ -101,17 +102,19 @@ class BinaryFormatClusters:
 
     @staticmethod
     def _validate_clustering_solutions(clustering_solutions: List[np.ndarray]):
-        assert isinstance(clustering_solutions, list), \
-            f"'clustering_solutions' must be a list; instead got {type(clustering_solutions)}"
-        assert len(clustering_solutions) > 0, "'clustering_solutions' must contain at least one clustering solution"
-        assert validation.isinstanceiter(clustering_solutions, np.ndarray), \
-            "'clustering_solutions' must exclusively contain numpy arrays"
+        if not isinstance(clustering_solutions, list):
+            raise InternalError(f"'clustering_solutions' must be a list; instead got {type(clustering_solutions)}")
+        if len(clustering_solutions) == 0:
+            raise InternalError("'clustering_solutions' must contain at least one clustering solution")
+        if not validation.isinstanceiter(clustering_solutions, np.ndarray):
+            raise InternalError("'clustering_solutions' must exclusively contain numpy arrays")
         for solution in clustering_solutions:
             # in each clustering solution, every feature must be included in one cluster at most
             # clustering algorithms such as HDBSCAN can classify some features as 'noise',
             # and therefore we accept features that are included in 0 clusters.
-            assert np.all(solution.sum(axis=0) <= 1), \
-                'each feature must be included in one cluster at most per clustering solution'
+            if not np.all(solution.sum(axis=0) <= 1):
+                raise InternalError(
+                    'each feature must be included in one cluster at most per clustering solution')
 
     def __copy__(self):
         new_obj = type(self)(None)
@@ -136,9 +139,12 @@ class BinaryFormatClusters:
         return len(self.clustering_solutions)
 
     def __getitem__(self, item: int):
-        assert isinstance(item, int)
-        assert item >= 0
-        assert item < self.n_clusters
+        if not isinstance(item, int):
+            raise InternalError
+        if item < 0:
+            raise InternalError
+        if item >= self.n_clusters:
+            raise InternalError
 
         current_ind = 0
         for line_idx, line in enumerate(self.len_index):
@@ -315,7 +321,8 @@ class CLICOM:
         return filtered_clusters
 
     def feature_cluster_similarity(self, feature: int, cluster: Set[int]):
-        assert not self.cluster_wise_cliques
+        if self.cluster_wise_cliques:
+            raise InternalError
         # the similarity between a features and a cluster is the mean similarity to every feature in the cluster
         # (equivalent to average linkage criterion)
         return np.mean([self.adj_mat[feature, i] for i in cluster])
@@ -440,9 +447,12 @@ class KMedoidsIter:
 
     def __init__(self, n_clusters: int, metric: str = 'euclidean', max_iter: int = 300,
                  n_init: int = 10, random_state: int = None):
-        assert isinstance(n_init, int), f"'n_init' must be an integer, is {type(n_init)} instead."
-        assert isinstance(metric, str), f"'metric' must be a string, is {type(metric)} instead."
-        assert n_init > 0, f"'n_init' must be a positive integer. Input {n_init} is invalid. "
+        if not isinstance(n_init, int):
+            raise InvalidTypeError(f"'n_init' must be an integer, is {type(n_init)} instead.")
+        if not isinstance(metric, str):
+            raise InvalidTypeError(f"'metric' must be a string, is {type(metric)} instead.")
+        if n_init <= 0:
+            raise InvalidValueError(f"'n_init' must be a positive integer. Input {n_init} is invalid. ")
         self.n_clusters = n_clusters
         self.metric = metric
         self.n_init = n_init
@@ -496,10 +506,11 @@ class ClusteringRunner(abc.ABC):
 
     def __init__(self, data: pl.DataFrame, power_transform: bool, metric: str = None,
                  plot_style: str = 'none', split_plots: bool = False, parallel_backend='loky'):
-        assert plot_style.lower() in {'all', 'std_bar', 'std_area', 'none'}, \
-            f"Invalid value for 'plot_style': '{plot_style}'. " \
-            f"'plot_style' must be 'all', 'std_bar', 'std_area' or 'none'. "
-        assert isinstance(split_plots, bool), f"'split_plots' must be of type bool, instead got {type(split_plots)}"
+        if plot_style.lower() not in {'all', 'std_bar', 'std_area', 'none'}:
+            raise InvalidValueError(f"Invalid value for 'plot_style': '{plot_style}'. "
+                                    f"'plot_style' must be 'all', 'std_bar', 'std_area' or 'none'. ")
+        if not isinstance(split_plots, bool):
+            raise InvalidTypeError(f"'split_plots' must be of type bool, instead got {type(split_plots)}")
 
         self.clusterer_class: type
         self.clusterer_kwargs: dict
@@ -739,9 +750,10 @@ class ClusteringRunnerWithNClusters(ClusteringRunner, abc.ABC):
         # make sure all values of n_clusters are in valid range
         n_clusters, n_clusters_copy = itertools.tee(n_clusters)
         n_clusters = parsing.data_to_list(n_clusters)
-        assert np.all([isinstance(item, int) and 2 <= item <= self.data.shape[0] for item in n_clusters_copy]), \
-            f"Invalid value for n_clusters: '{n_clusters}'. n_clusters must be 'gap', 'silhouette', " \
-            f"or an integer/Iterable of integers in range 2 <= n_clusters <= n_features."
+        if not np.all([isinstance(item, int) and 2 <= item <= self.data.shape[0] for item in n_clusters_copy]):
+            raise InvalidValueError(f"Invalid value for n_clusters: '{n_clusters}'. n_clusters must be 'gap', "
+                                    f"'silhouette', or an integer/Iterable of integers in range "
+                                    f"2 <= n_clusters <= n_features.")
         return n_clusters
 
     def gap_statistic(self, random_seed: int = None, n_refs: int = 10) -> int:
@@ -885,7 +897,8 @@ class ClusteringRunnerWithNClusters(ClusteringRunner, abc.ABC):
 
     @staticmethod
     def _plot_k_criterion_res(best_n_clusters: int, n_clusters_range: list, scores: list, method: str) -> plt.Figure:
-        assert method in ClusteringRunnerWithNClusters.N_CLUSTERS_METHODS
+        if method not in ClusteringRunnerWithNClusters.N_CLUSTERS_METHODS:
+            raise InternalError
         fig = plt.figure(figsize=(7, 9))
         ax = fig.add_subplot(111)
         ax.plot(n_clusters_range, scores, '--o', color='r')
@@ -920,9 +933,16 @@ class KMeansRunner(ClusteringRunnerWithNClusters):
     def __init__(self, data, power_transform: bool, n_clusters: Union[int, List[int], str],
                  max_n_clusters_estimate: Union[int, str] = 'auto', random_seed: int = None, n_init: int = 3,
                  max_iter: int = 300, plot_style: str = 'none', split_plots: bool = False, parallel_backend='loky'):
-        assert isinstance(random_seed, int) or random_seed is None
-        assert isinstance(n_init, int) and n_init >= 1
-        assert isinstance(max_iter, int) and max_iter >= 1
+        if not (isinstance(random_seed, int) or random_seed is None):
+            raise InvalidTypeError
+        if not isinstance(n_init, int):
+            raise InvalidTypeError
+        if n_init < 1:
+            raise InvalidValueError
+        if not isinstance(max_iter, int):
+            raise InvalidTypeError
+        if max_iter < 1:
+            raise InvalidValueError
         self.random_seed = random_seed
         self.n_init = n_init
         self.max_iter = max_iter
@@ -961,10 +981,18 @@ class KMedoidsRunner(ClusteringRunnerWithNClusters):
                  max_n_clusters_estimate: Union[int, str] = 'auto', metric: str = 'euclidean',
                  random_seed: int = None, n_init: int = 3, max_iter: int = 300, plot_style: str = 'none',
                  split_plots: bool = False, parallel_backend='loky'):
-        assert isinstance(random_seed, int) or random_seed is None
-        assert isinstance(n_init, int) and n_init >= 1
-        assert isinstance(max_iter, int) and max_iter >= 1
-        assert isinstance(metric, str)
+        if not (isinstance(random_seed, int) or random_seed is None):
+            raise InvalidTypeError
+        if not isinstance(n_init, int):
+            raise InvalidTypeError
+        if n_init < 1:
+            raise InvalidValueError
+        if not isinstance(max_iter, int):
+            raise InvalidTypeError
+        if max_iter < 1:
+            raise InvalidValueError
+        if not isinstance(metric, str):
+            raise InvalidTypeError
 
         self.random_seed = random_seed
         self.n_init = n_init
@@ -1004,13 +1032,17 @@ class HierarchicalRunner(ClusteringRunnerWithNClusters):
                  max_n_clusters_estimate: Union[int, str] = 'auto', metric: str = 'euclidean',
                  linkage: str = 'average', distance_threshold: float = None, plot_style: str = 'none',
                  split_plots: bool = False, parallel_backend='loky'):
-        assert isinstance(linkage, str), f"'linkage' must be of type str, instead got {type(linkage)}."
-        assert isinstance(metric, str), f"'metric' must be of type str, instead got {type(metric)}."
-        assert linkage.lower() in {'ward', 'complete', 'average',
-                                   'single'}, f"Invalid linkage method '{linkage.lower()}'."
-        assert isinstance(distance_threshold, (int, float)) or distance_threshold is None
+        if not isinstance(linkage, str):
+            raise InvalidTypeError(f"'linkage' must be of type str, instead got {type(linkage)}.")
+        if not isinstance(metric, str):
+            raise InvalidTypeError(f"'metric' must be of type str, instead got {type(metric)}.")
+        if linkage.lower() not in {'ward', 'complete', 'average', 'single'}:
+            raise InvalidValueError(f"Invalid linkage method '{linkage.lower()}'.")
+        if not (isinstance(distance_threshold, (int, float)) or distance_threshold is None):
+            raise InvalidTypeError
         if linkage.lower() == 'ward':
-            assert metric.lower() == 'euclidean', "metric must be 'euclidean' if linkage is 'ward'."
+            if metric.lower() != 'euclidean':
+                raise InvalidValueError("metric must be 'euclidean' if linkage is 'ward'.")
 
         self.linkage = linkage.lower()
         self.distance_threshold = distance_threshold
@@ -1083,11 +1115,22 @@ class HDBSCANRunner(ClusteringRunner):
         if not HAS_HDBSCAN:
             self.parallel_backend = parallel_backend
             return
-        assert isinstance(metric, str)
-        assert isinstance(min_cluster_size, int) and min_cluster_size > 1
-        assert min_samples is None or (isinstance(min_samples, int) and min_samples >= 1)
-        assert isinstance(cluster_selection_epsilon, (int, float))
-        assert isinstance(cluster_selection_method, str) and cluster_selection_method.lower() in {'eom', 'leaf'}
+        if not isinstance(metric, str):
+            raise InvalidTypeError
+        if not isinstance(min_cluster_size, int):
+            raise InvalidTypeError
+        if min_cluster_size <= 1:
+            raise InvalidValueError
+        if not (min_samples is None or isinstance(min_samples, int)):
+            raise InvalidTypeError
+        if not (min_samples is None or min_samples >= 1):
+            raise InvalidValueError
+        if not isinstance(cluster_selection_epsilon, (int, float)):
+            raise InvalidTypeError
+        if not isinstance(cluster_selection_method, str):
+            raise InvalidTypeError
+        if cluster_selection_method.lower() not in {'eom', 'leaf'}:
+            raise InvalidValueError
 
         self.min_cluster_size = min_cluster_size
         self.min_samples = min_samples
@@ -1215,10 +1258,13 @@ class CLICOMRunner(ClusteringRunner):
     def find_valid_clustering_setups(self) -> list:
         valid_setups = []
         for d in self.parameter_dicts:
-            assert isinstance(d, dict)
-            assert 'method' in d, \
-                f"Each parameter_dict must contain a 'method' field. Failed to find 'method' field in: {d}"
-            assert d['method'].lower() in self.algorithm_mapper, f"Unknown clustering method '{d['method']}'."
+            if not isinstance(d, dict):
+                raise InvalidTypeError
+            if 'method' not in d:
+                raise InvalidValueError(
+                    f"Each parameter_dict must contain a 'method' field. Failed to find 'method' field in: {d}")
+            if d['method'].lower() not in self.algorithm_mapper:
+                raise InvalidValueError(f"Unknown clustering method '{d['method']}'.")
             runner_class = self.algorithm_mapper[d['method'].lower()]
             params = d.copy()
             params.pop('method')
@@ -1231,7 +1277,7 @@ class CLICOMRunner(ClusteringRunner):
                     try:
                         runner_class(*args, **kwargs)
                         valid_setups.append((runner_class, args, kwargs))
-                    except AssertionError:
+                    except RNAlysisInputError:
                         continue
 
         return valid_setups

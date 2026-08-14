@@ -51,6 +51,7 @@ from requests.adapters import HTTPAdapter, Retry
 from tqdm import tqdm
 
 from rnalysis import __version__
+from rnalysis.exceptions import InternalError, InvalidTypeError, InvalidValueError
 from rnalysis.utils import parsing, validation
 
 
@@ -317,7 +318,8 @@ def cache_gui_file(item: Union[pl.DataFrame, set, str], filename: str):
     elif isinstance(item, set):
         save_gene_set(item, file_path)
     elif isinstance(item, Path) and item.suffix in ('.R', '.log'):
-        assert item.exists(), f"File '{item}' flagged for caching does not exist!"
+        if not item.exists():
+            raise InternalError(f"File '{item}' flagged for caching does not exist!")
         shutil.copy(item, file_path)
     elif isinstance(item, str):
         with open(file_path, 'w') as f:
@@ -455,7 +457,8 @@ class GUISessionManager:
         filenames = session_data['metadata'].get('tab_order', list(session_data['files'].keys()))
         for file_name in filenames:
             file_path = session_dir.joinpath(file_name)
-            assert file_path.exists() and file_path.is_file()
+            if not (file_path.exists() and file_path.is_file()):
+                raise InternalError
             if len(session_data['files'][file_name]) == 3:  # support for legacy session files
                 item_name, item_type, item_property = session_data['files'][file_name]
                 item_id = None
@@ -473,7 +476,8 @@ class GUISessionManager:
 
         for pipeline_filename, pipeline_name in session_data['pipelines'].items():
             pipeline_path = session_dir.joinpath(pipeline_filename)
-            assert pipeline_path.exists() and pipeline_path.is_file()
+            if not (pipeline_path.exists() and pipeline_path.is_file()):
+                raise InternalError
             pipeline_data.append(PipelineData(name=pipeline_name, content=pipeline_path.read_text()))
         # handle report files, if any by copying them to the cache directory
         cache_dir = get_gui_cache_dir()
@@ -504,13 +508,14 @@ def load_table(filename: Union[str, Path], drop_columns: Union[str, List[str]] =
     The column names and order are identical to a full read. If None (default), the whole table is read.
     :return: a Polars DataFrame of the loaded file
     """
-    assert isinstance(filename,
-                      (str, Path)), f"Filename must be of type str or pathlib.Path, is instead {type(filename)}."
+    if not isinstance(filename, (str, Path)):
+        raise InvalidTypeError(f"Filename must be of type str or pathlib.Path, is instead {type(filename)}.")
     filename = Path(filename)
-    assert filename.exists() and filename.is_file(), f"File '{filename.as_posix()}' does not exist!"
-    assert filename.suffix.lower() in {'.csv', '.tsv', '.txt', '.parquet'}, \
-        f"RNAlysis cannot load files of type '{filename.suffix}'. " \
-        f"Please convert your file to a .csv, .tsv, .txt, or .parquet file and try again."
+    if not (filename.exists() and filename.is_file()):
+        raise InvalidValueError(f"File '{filename.as_posix()}' does not exist!")
+    if filename.suffix.lower() not in {'.csv', '.tsv', '.txt', '.parquet'}:
+        raise InvalidValueError(f"RNAlysis cannot load files of type '{filename.suffix}'. "
+                                f"Please convert your file to a .csv, .tsv, .txt, or .parquet file and try again.")
 
     kwargs = {}
     if comment is not None:
@@ -551,9 +556,9 @@ def load_table(filename: Union[str, Path], drop_columns: Union[str, List[str]] =
         df = df.with_columns([pl.col(col).replace("", None) for col in string_cols])
         if drop_columns:
             drop_columns_lst = parsing.data_to_list(drop_columns)
-            assert validation.isinstanceiter(drop_columns_lst,
-                                             str), f"'drop_columns' must be str, list of str, or False; " \
-                                                   f"is instead {type(drop_columns)}."
+            if not validation.isinstanceiter(drop_columns_lst, str):
+                raise InvalidTypeError(f"'drop_columns' must be str, list of str, or False; "
+                                       f"is instead {type(drop_columns)}.")
             for col in drop_columns_lst:
                 col_stripped = col.strip()
                 if col_stripped in df.columns:
@@ -577,7 +582,8 @@ def save_table(df: pl.DataFrame, filename: Union[str, Path], postfix: str = None
     if postfix is None:
         postfix = ''
     else:
-        assert isinstance(postfix, str), "'postfix' must be either str or None!"
+        if not isinstance(postfix, str):
+            raise InvalidTypeError("'postfix' must be either str or None!")
     new_fname = os.path.join(fname.parent.absolute(), f"{fname.stem}{postfix}{fname.suffix}")
     if fname.suffix.lower() == '.parquet':
         if isinstance(df, pl.Series):
@@ -615,7 +621,8 @@ class KEGGAnnotationIterator:
             self.pathway_names, self.n_annotations = self.get_pathways()
         else:
             pathways = parsing.data_to_list(pathways)
-            assert len(pathways) > 0, "No KEGG pathway IDs were given!"
+            if len(pathways) == 0:
+                raise InvalidValueError("No KEGG pathway IDs were given!")
             self.pathway_names = {pathway: None for pathway in pathways}
             self.n_annotations = len(self.pathway_names)
         self.pathway_annotations = None
@@ -881,15 +888,18 @@ class GOlrAnnotationIterator:
         """
         Validate the type and legality of the user's inputs.
         """
-        assert isinstance(self.taxon_id, int), f"'taxon_id' must be an integer. Instead got type {type(self.taxon_id)}."
-        assert isinstance(self.iter_size, int), \
-            f"'iter_size' must be an integer. Instead got type {type(self.iter_size)}."
-        assert self.iter_size > 0, f"Invalid value for 'iter_size': {self.iter_size}."
+        if not isinstance(self.taxon_id, int):
+            raise InvalidTypeError(f"'taxon_id' must be an integer. Instead got type {type(self.taxon_id)}.")
+        if not isinstance(self.iter_size, int):
+            raise InvalidTypeError(f"'iter_size' must be an integer. Instead got type {type(self.iter_size)}.")
+        if self.iter_size <= 0:
+            raise InvalidValueError(f"Invalid value for 'iter_size': {self.iter_size}.")
         for field, legals in zip((self.aspects, chain(self.evidence_types, self.excluded_evidence_types),
                                   chain(self.qualifiers, self.excluded_qualifiers)),
                                  (self.LEGAL_ASPECTS, self.LEGAL_EVIDENCES, self.LEGAL_QUALIFIERS)):
             for item in field:
-                assert item in legals, f"Illegal item {item}. Legal items are {legals}."
+                if item not in legals:
+                    raise InvalidValueError(f"Illegal item {item}. Legal items are {legals}.")
 
     def _golr_request(self, params: dict, cached_filename: Union[str, None] = None) -> str:
         """
@@ -1379,10 +1389,10 @@ class PhylomeDBOrthologMapper:
 
     def __init__(self, map_to_organism, map_from_organism='auto', gene_id_type='auto'):
         legal_species = self.get_legal_species()
-        assert map_from_organism in legal_species[
-            legal_species.columns[0]], f"organism with taxon id {map_from_organism} is not supported by PhylomeDB. "
-        assert map_to_organism in legal_species[
-            legal_species.columns[0]], f"organism with taxon id {map_to_organism} is not supported by PhylomeDB. "
+        if map_from_organism not in legal_species[legal_species.columns[0]]:
+            raise InvalidValueError(f"organism with taxon id {map_from_organism} is not supported by PhylomeDB. ")
+        if map_to_organism not in legal_species[legal_species.columns[0]]:
+            raise InvalidValueError(f"organism with taxon id {map_to_organism} is not supported by PhylomeDB. ")
         self.gene_id_type = gene_id_type
         self.map_from_organism = map_from_organism
         self.map_to_organism = map_to_organism
@@ -1715,7 +1725,8 @@ class OrthoInspectorOrthologMapper:
             except requests.exceptions.JSONDecodeError:
                 clean_json_string = req.text.split('\n')[0]
                 content = json.loads(clean_json_string)
-            assert content['meta']['status'] == 'success'
+            if content['meta']['status'] != 'success':
+                raise InternalError
             return database, frozenset({d['id'] for d in content['data']})
 
         # Fetch every database's species list concurrently. These requests are independent and were
@@ -1755,7 +1766,8 @@ class OrthoInspectorOrthologMapper:
 
         else:
             databases = self.get_databases()
-            assert database in databases, f"Invalid database: {database}. Valid databases are: {databases}."
+            if database not in databases:
+                raise InvalidValueError(f"Invalid database: {database}. Valid databases are: {databases}.")
             valid_dbs = [database]
 
         mapping_one2one = {}
@@ -2777,7 +2789,8 @@ def save_gene_set(gene_set: set, path):
 
 
 def calculate_checksum(filename: Union[str, Path]):  # pragma: no cover
-    assert Path(filename).exists(), f"file '{filename}' does not exist!"
+    if not Path(filename).exists():
+        raise InternalError(f"file '{filename}' does not exist!")
     with open(filename, 'rb') as file_to_check:
         # read contents of the file
         data = file_to_check.read()
@@ -2863,8 +2876,8 @@ def run_r_script(script_path: Union[str, Path], r_installation_folder: Union[str
     else:
         prefix = f'{Path(r_installation_folder).as_posix()}/bin/Rscript'
     script_path = Path(script_path).as_posix()
-    assert Path(script_path).exists() and Path(
-        script_path).is_file(), f"Could not find the requested R script: {script_path}"
+    if not (Path(script_path).exists() and Path(script_path).is_file()):
+        raise InternalError(f"Could not find the requested R script: {script_path}")
 
     try:
         return_code, _ = run_subprocess([prefix, "--help"], False, False)
@@ -2993,8 +3006,9 @@ def generate_base_call(command: str, installation_folder: Union[str, Path, Liter
 
     try:
         exit_code, stderr = run_subprocess(call + [version_command], shell=shell)
-        assert exit_code == 0 or (len(stderr) >= 1 and 'Version' in stderr[0]), \
-            f"call to {call[0]} exited with exit status {exit_code}: \n'{''.join(stderr)}'"
+        if not (exit_code == 0 or (len(stderr) >= 1 and 'Version' in stderr[0])):
+            raise InvalidValueError(
+                f"call to {call[0]} exited with exit status {exit_code}: \n'{''.join(stderr)}'")
     except FileNotFoundError:
         raise FileNotFoundError(f"RNAlysis could not find '{command}'. "
                                 'Please ensure that your installation folder is correct, or add it to PATH. ')

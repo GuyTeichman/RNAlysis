@@ -7,6 +7,7 @@ import pytest
 import yaml
 
 from rnalysis import __version__
+from rnalysis.exceptions import InvalidTypeError, InvalidValueError, RNAlysisInputError
 from rnalysis.filtering import *
 from tests import __attr_ref__, __biotype_ref__
 
@@ -354,7 +355,7 @@ class TestFilterConcatenate:
         non_filter_obj = "not a Filter object"
 
         # Assert that concatenating with a non-Filter object raises an AssertionError
-        with pytest.raises(AssertionError):
+        with pytest.raises(InvalidTypeError):
             self.filter1.concatenate(non_filter_obj)
 
     def test_concatenate_with_different_columns(self):
@@ -363,7 +364,7 @@ class TestFilterConcatenate:
         filter3 = Filter.from_dataframe(df3, 'filter3.csv')
 
         # Assert that concatenating Filter objects with different columns raises an AssertionError
-        with pytest.raises(AssertionError):
+        with pytest.raises(InvalidValueError):
             self.filter1.concatenate(filter3)
 
     def test_concatenate_with_overlapping_indices(self):
@@ -372,7 +373,7 @@ class TestFilterConcatenate:
         filter4 = Filter.from_dataframe(df4, 'filter4.csv')
 
         # Assert that concatenating Filter objects with overlapping indices raises an AssertionError
-        with pytest.raises(AssertionError):
+        with pytest.raises(InvalidValueError):
             self.filter1.concatenate(filter4)
 
 
@@ -466,7 +467,7 @@ def test_countfilter_pairplot_shows_spearman_of_numeric_columns(basic_countfilte
 def test_countfilter_clustergram_api(basic_countfilter, args, kwargs, xfail):
     try:
         if xfail:
-            with pytest.raises(AssertionError):
+            with pytest.raises(RNAlysisInputError):
                 basic_countfilter.clustergram(*args, **kwargs)
         else:
             basic_countfilter.clustergram(*args, **kwargs)
@@ -503,7 +504,7 @@ def test_countfilter_pca_api(kwargs, xfail, basic_countfilter):
     basic_countfilter.filter_low_reads(1)
     try:
         if xfail:
-            with pytest.raises(AssertionError):
+            with pytest.raises(RNAlysisInputError):
                 basic_countfilter.pca(**kwargs)
 
         else:
@@ -646,7 +647,7 @@ def test_annotate_from_gtf_overwrites_existing_column():
 def test_annotate_from_gtf_rejects_feature_id_column_name():
     # naming the annotation column after the table's feature-id (index) column must not silently drop the IDs
     counts = Filter.from_dataframe(pl.DataFrame({'gene': ['GENE1', 'GENE2'], 'cond1': [1.0, 2.0]}), 'annot_test')
-    with pytest.raises(AssertionError):
+    with pytest.raises(InvalidValueError):
         counts.annotate_from_gtf(_ATTR_GTF, 'chromosome', column_name='gene')
 
 
@@ -697,7 +698,7 @@ def test_filter_by_attribute_intersection():
 
 def test_filter_by_attribute_invalid_mode():
     h = CountFilter('tests/test_files/counted_filter_by_bigtable.csv')
-    with pytest.raises(AssertionError):
+    with pytest.raises(InvalidValueError):
         h.filter_by_attribute(['attribute1', 'attribute2'], mode='difference',
                               ref=__attr_ref__)
 
@@ -729,15 +730,15 @@ def test_split_by_attribute_only_one_attribute(basic_deseqfilter):
     assert np.all(
         newobj[0].df.sort(pl.first()) == basic_deseqfilter.filter_by_attribute('attribute1', ref=__attr_ref__,
                                                                                inplace=False).df.sort(pl.first()))
-    with pytest.raises(AssertionError):
+    with pytest.raises(InvalidTypeError):
         basic_deseqfilter.split_by_attribute('attribute1', ref=__attr_ref__)
 
 
 def test_split_by_attribute_faulty_attributes(basic_filter):
-    with pytest.raises(AssertionError):
+    with pytest.raises(InvalidTypeError):
         basic_filter.split_by_attribute(['attribute1', ['attribute2', 'attribute3']],
                                         ref=__attr_ref__)
-    with pytest.raises(AssertionError):
+    with pytest.raises(InvalidTypeError):
         basic_filter.split_by_attribute(['attribute1', 2], ref=__attr_ref__)
 
 
@@ -790,9 +791,9 @@ def test_filter_top_n_descending_text():
 
 def test_filter_top_n_nonexisting_column(basic_deseqfilter):
     colname = 'somecol'
-    with pytest.raises(AssertionError):
+    with pytest.raises(InvalidValueError):
         basic_deseqfilter.filter_top_n(colname, 5)
-    with pytest.raises(AssertionError):
+    with pytest.raises(InvalidValueError):
         basic_deseqfilter.filter_top_n([basic_deseqfilter.df.columns[0], colname])
     assert colname not in basic_deseqfilter.df.columns
 
@@ -955,12 +956,12 @@ def test_set_ops_multiple_variable_types():
 
 
 def test_countfilter_rpm_negative_threshold(basic_countfilter):
-    with pytest.raises(AssertionError):
+    with pytest.raises(InvalidValueError):
         basic_countfilter.filter_low_reads(threshold=-3)
 
 
 def test_countfilter_threshold_invalid(basic_countfilter):
-    with pytest.raises(AssertionError):
+    with pytest.raises(InvalidTypeError):
         basic_countfilter.filter_low_reads("5")
 
 
@@ -986,11 +987,11 @@ def test_filter_percentile():
 
 def test_filter_percentile_bad_input():
     h = DESeqFilter(r'tests/test_files/test_deseq_percentile.csv')
-    with pytest.raises(AssertionError):
+    with pytest.raises(InvalidValueError):
         h.filter_percentile(-0.2, 'pvalue')
-    with pytest.raises(AssertionError):
+    with pytest.raises(InvalidValueError):
         h.filter_percentile(1.1, 'baseMean')
-    with pytest.raises(AssertionError):
+    with pytest.raises(InvalidTypeError):
         h.filter_percentile('0.5', 'log2FoldChange')
 
 
@@ -1215,7 +1216,7 @@ def test_number_filters_eq(basic_countfilter, args):
     ('cond2', 'equals', '55')
 ])
 def test_number_filters_invalid_input(basic_countfilter, args):
-    with pytest.raises(AssertionError):
+    with pytest.raises(RNAlysisInputError):
         basic_countfilter.number_filters(*args)
 
 
@@ -1265,7 +1266,7 @@ def test_text_filters_ew():
     ('cond2', 'equals', 55)
 ])
 def test_text_filters_invalid_input(basic_countfilter, args):
-    with pytest.raises(AssertionError):
+    with pytest.raises(RNAlysisInputError):
         basic_countfilter.text_filters(*args)
 
 
@@ -1419,9 +1420,9 @@ def test_filter_missing_values_invalid_type():
 
 def test_filter_missing_values_nonexistent_column():
     f = Filter('tests/test_files/test_deseq_with_nan.csv')
-    with pytest.raises(AssertionError):
+    with pytest.raises(InvalidValueError):
         f.filter_missing_values('pval')
-    with pytest.raises(AssertionError):
+    with pytest.raises(InvalidValueError):
         f.filter_missing_values(['padj', 'pval'])
 
 
@@ -1494,13 +1495,13 @@ def test_pipeline_remove_last_function():
 
 def test_pipeline_remove_last_from_empty_pipeline():
     pl = Pipeline()
-    with pytest.raises(AssertionError):
+    with pytest.raises(InvalidValueError):
         pl.remove_last_function()
 
 
 def test_pipeline_apply_empty_pipeline(basic_deseqfilter):
     pl = Pipeline()
-    with pytest.raises(AssertionError):
+    with pytest.raises(InvalidValueError):
         pl.apply_to(basic_deseqfilter)
 
 
@@ -1555,12 +1556,12 @@ def test_pipeline_apply_to_with_multiple_functions():
 def test_pipeline_apply_to_invalid_object(basic_countfilter):
     pl = Pipeline('deseqfilter')
     pl.add_function(DESeqFilter.filter_significant, alpha=10 ** -70)
-    with pytest.raises(AssertionError):
+    with pytest.raises(InvalidTypeError):
         pl.apply_to(basic_countfilter)
 
 
 def test_pipeline_init_invalid_filter_type():
-    with pytest.raises(AssertionError):
+    with pytest.raises(RNAlysisInputError):
         Pipeline(filter_type='otherFilter')
 
     class otherFilter:
@@ -1568,26 +1569,26 @@ def test_pipeline_init_invalid_filter_type():
             self.value = 'value'
             self.othervalue = 'othervalue'
 
-    with pytest.raises(AssertionError):
+    with pytest.raises(RNAlysisInputError):
         Pipeline(filter_type=otherFilter)
-    with pytest.raises(AssertionError):
+    with pytest.raises(RNAlysisInputError):
         Pipeline(filter_type=max)
-    with pytest.raises(AssertionError):
+    with pytest.raises(RNAlysisInputError):
         Pipeline(filter_type=5)
 
 
 def test_pipeline_add_function_out_of_module():
     pl = Pipeline()
-    with pytest.raises(AssertionError):
+    with pytest.raises(InvalidValueError):
         pl.add_function(len)
 
-    with pytest.raises(AssertionError):
+    with pytest.raises(InvalidValueError):
         pl.add_function(np.sort, arg='val')
 
 
 def test_pipeline_add_function_invalid_type():
     pl = Pipeline()
-    with pytest.raises(AssertionError):
+    with pytest.raises(InvalidValueError):
         pl.add_function('string', arg='val')
 
 
@@ -1595,7 +1596,7 @@ def test_pipeline_add_function_mismatch_filter_type():
     pl_deseq = Pipeline('DESeqFilter')
     pl_deseq.add_function(CountFilter.filter_biotype_from_ref_table, biotype='protein_coding',
                           ref=__biotype_ref__)
-    with pytest.raises(AssertionError):
+    with pytest.raises(InvalidValueError):
         pl_deseq.add_function(CountFilter.filter_low_reads, threshold=5)
 
 
@@ -1684,7 +1685,7 @@ def test_pipeline_apply_to_with_split_function_inplace_raise_error(basic_deseqfi
     pl.add_function('filter_missing_values')
     pl.add_function(DESeqFilter.filter_significant, 0.05, opposite=True)
     pl.add_function(DESeqFilter.split_fold_change_direction)
-    with pytest.raises(AssertionError):
+    with pytest.raises(InvalidValueError):
         pl.apply_to(basic_deseqfilter, inplace=True)
 
 
@@ -1816,9 +1817,9 @@ def test_split_hierarchical_api(clustering_countfilter):
     assert isinstance(res3, tuple)
     _test_correct_clustering_split(c, res3)
 
-    with pytest.raises(AssertionError):
+    with pytest.raises(InvalidValueError):
         c.split_hierarchical(5, metric='badinput')
-    with pytest.raises(AssertionError):
+    with pytest.raises(InvalidValueError):
         c.split_hierarchical(4, linkage='badinput')
 
 
@@ -1830,9 +1831,9 @@ def test_split_hdbscan_api(clustering_countfilter):
     assert isinstance(res2, list)
     assert isinstance(res2[0], tuple)
     assert isinstance(res2[1], np.ndarray)
-    with pytest.raises(AssertionError):
+    with pytest.raises(InvalidValueError):
         c.split_hdbscan(min_cluster_size=1)
-    with pytest.raises(AssertionError):
+    with pytest.raises(InvalidValueError):
         c.split_hdbscan(c.shape[0] + 1)
 
 
@@ -2510,9 +2511,9 @@ def test_sort_by_principal_component(clustering_countfilter, component, ascendin
     c.sort_by_principal_component(component, ascending=ascending, power_transform=power_transform)
     assert c.df.equals(c_sorted.df)
 
-    with pytest.raises(AssertionError):
+    with pytest.raises(InvalidValueError):
         c.sort_by_principal_component(0)
-    with pytest.raises(AssertionError):
+    with pytest.raises(InvalidValueError):
         c.sort_by_principal_component(c.shape[0] + 1)
 
 

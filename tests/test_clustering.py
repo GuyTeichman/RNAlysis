@@ -6,6 +6,7 @@ import pytest
 from kmedoids import KMedoids
 from sklearn.cluster import KMeans
 
+from rnalysis.exceptions import InternalError, InvalidValueError
 from rnalysis.utils import clustering
 from rnalysis.utils.clustering import *
 
@@ -95,7 +96,7 @@ def test_parse_n_clusters(basic_counted_df, monkeypatch, args, expected):
     (False, [3, 5, 1], 20)
 ])
 def test_parse_n_clusters_invalid_values(basic_counted_df, args: tuple):
-    with pytest.raises(AssertionError):
+    with pytest.raises(InvalidValueError):
         _ = ClusteringRunnerWithNClusters(basic_counted_df, *args)
 
 
@@ -479,13 +480,13 @@ def test_binary_format_clusters_validate_clustering_solutions(valid_clustering_s
                                                               invalid_clustering_solutions):
     BinaryFormatClusters._validate_clustering_solutions(valid_clustering_solutions)
     BinaryFormatClusters._validate_clustering_solutions(valid_clustering_solutions_with_noise)
-    with pytest.raises(AssertionError):
+    with pytest.raises(InternalError):
         BinaryFormatClusters._validate_clustering_solutions(invalid_clustering_solutions)
-    with pytest.raises(AssertionError):
+    with pytest.raises(InternalError):
         BinaryFormatClusters._validate_clustering_solutions(tuple(valid_clustering_solutions))
-    with pytest.raises(AssertionError):
+    with pytest.raises(InternalError):
         BinaryFormatClusters._validate_clustering_solutions([])
-    with pytest.raises(AssertionError):
+    with pytest.raises(InternalError):
         BinaryFormatClusters._validate_clustering_solutions(valid_clustering_solutions + [[0, 0, 0]])
 
 
@@ -662,7 +663,7 @@ def test_clicom_feature_cluster_similarity(feature, cluster, expected):
     assert clusterer.feature_cluster_similarity(feature, cluster) == expected
 
     clusterer.cluster_wise_cliques = True
-    with pytest.raises(AssertionError):
+    with pytest.raises(InternalError):
         _ = clusterer.feature_cluster_similarity(feature, cluster)
 
 

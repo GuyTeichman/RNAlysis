@@ -1,5 +1,6 @@
 import pytest
 
+from rnalysis.exceptions import InternalError
 from rnalysis.utils.parsing import *
 from rnalysis.utils.parsing import _parse_r_arg
 
@@ -135,7 +136,7 @@ def test_partition_list(lst, chunk_size, truth):
                                             ([1, 2, 3], 1.0),
                                             ((i for i in range(3)), 2)])
 def test_partition_list_invalid_input(lst, chunk_size):
-    with pytest.raises(AssertionError):
+    with pytest.raises(InternalError):
         _ = partition_list(lst, chunk_size)
 
 

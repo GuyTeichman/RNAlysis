@@ -10,6 +10,7 @@ from urllib.request import urlopen
 
 import tenacity
 
+from rnalysis.exceptions import InternalError
 from rnalysis.utils import io
 
 try:
@@ -118,8 +119,8 @@ def install_limma(r_installation_folder: Union[str, Path, Literal['auto']] = 'au
     script_path = Path(__file__).parent.parent.joinpath('data_files/r_templates/limma_install.R')
     try:
         io.run_r_script(script_path, r_installation_folder)
-    except AssertionError:
-        raise AssertionError("Failed to install limma. "
+    except InternalError:
+        raise InternalError("Failed to install limma. "
                              "Please make sure you have write permission to R's library folder, "
                              "or try to install limma manually.")
 
@@ -128,8 +129,8 @@ def install_deseq2(r_installation_folder: Union[str, Path, Literal['auto']] = 'a
     script_path = Path(__file__).parent.parent.joinpath('data_files/r_templates/deseq2_install.R')
     try:
         io.run_r_script(script_path, r_installation_folder)
-    except AssertionError:
-        raise AssertionError("Failed to install DESeq2. "
+    except InternalError:
+        raise InternalError("Failed to install DESeq2. "
                              "Please make sure you have write permission to R's library folder, "
                              "or try to install DESeq2 manually.")
 
@@ -138,7 +139,7 @@ def install_rsubread(r_installation_folder: Union[str, Path, Literal['auto']] = 
     script_path = Path(__file__).parent.parent.joinpath('data_files/r_templates/rsubread_install.R')
     try:
         io.run_r_script(script_path, r_installation_folder)
-    except AssertionError:
-        raise AssertionError("Failed to install RSubread. "
+    except InternalError:
+        raise InternalError("Failed to install RSubread. "
                              "Please make sure you have write permission to R's library folder, "
                              "or try to install RSubread manually.")
