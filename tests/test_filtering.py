@@ -7,8 +7,7 @@ import pytest
 import yaml
 
 from rnalysis import __version__
-from rnalysis.exceptions import (InternalError, InvalidTypeError, InvalidValueError, RNAlysisError,
-                                 RNAlysisInputError)
+from rnalysis.exceptions import InvalidTypeError, InvalidValueError, RNAlysisInputError
 from rnalysis.filtering import *
 from tests import __attr_ref__, __biotype_ref__
 

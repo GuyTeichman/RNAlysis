@@ -2,7 +2,7 @@ from collections import namedtuple
 
 import pytest
 
-from rnalysis.exceptions import (InternalError, InvalidTypeError, InvalidValueError, RNAlysisInputError)
+from rnalysis.exceptions import InternalError, InvalidValueError
 from rnalysis.utils import clustering
 from rnalysis.utils.clustering import *
 

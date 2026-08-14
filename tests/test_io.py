@@ -7,7 +7,7 @@ from unittest.mock import Mock, MagicMock
 import pytest
 import requests_mock
 
-from rnalysis.exceptions import InvalidTypeError, InvalidValueError, RNAlysisInputError
+from rnalysis.exceptions import InvalidTypeError
 from rnalysis.utils import io
 from rnalysis.utils.io import *
 from rnalysis.utils.io import _ensembl_lookup_post_request, _format_ids_iter

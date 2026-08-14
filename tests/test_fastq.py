@@ -8,7 +8,7 @@ import yaml
 from polars.testing import assert_frame_equal
 
 from rnalysis import __version__, fastq
-from rnalysis.exceptions import InvalidTypeError, InvalidValueError, RNAlysisInputError
+from rnalysis.exceptions import InvalidTypeError, InvalidValueError
 from rnalysis.fastq import *
 from rnalysis.utils import io
 from tests import are_dir_trees_equal, unlink_tree

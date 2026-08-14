@@ -4,7 +4,7 @@ from unittest.mock import Mock, patch
 import pytest
 import statsmodels.stats.multitest as multitest
 
-from rnalysis.exceptions import InvalidTypeError, InvalidValueError, RNAlysisInputError
+from rnalysis.exceptions import InvalidTypeError
 from rnalysis.enrichment import *
 from rnalysis.enrichment import _fetch_sets
 from tests import (__attr_ref__, __biotype_ref__, is_ensembl_available,

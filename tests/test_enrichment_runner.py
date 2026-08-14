@@ -7,7 +7,7 @@ import pytest
 from polars.testing import assert_frame_equal
 
 from rnalysis import filtering
-from rnalysis.exceptions import InvalidTypeError, InvalidValueError, RNAlysisInputError
+from rnalysis.exceptions import InvalidValueError, RNAlysisInputError
 from rnalysis.utils import enrichment_runner
 from rnalysis.utils.enrichment_runner import *
 from rnalysis.utils.io import *
