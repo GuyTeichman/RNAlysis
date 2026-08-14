@@ -699,6 +699,24 @@ def test_enrichment_runner_correct_multiple_comparisons():
         res.sort(pl.col('padj', 'colName')).select(compared_cols))
 
 
+@pytest.mark.parametrize('bad_style', ['barr', 'Lollipop', '', 5, None])
+def test_bar_plotter_rejects_invalid_plot_style(bad_style):
+    # the error message used to interpolate self.plot_style, which is not assigned yet (and the class
+    # uses __slots__), so an invalid plot_style crashed with AttributeError instead of validating
+    results = pl.DataFrame({'colName': ['a'], 'score': [1.0]})
+    with pytest.raises(InvalidValueError) as err:
+        BarPlotter(results, 'score', 'all', 0.05, 'ylabel', 'title', plot_style=bad_style)
+    assert str(bad_style) in str(err.value)
+    assert "must be 'bar' or 'lollipop'" in str(err.value)
+
+
+@pytest.mark.parametrize('good_style', ['bar', 'lollipop'])
+def test_bar_plotter_accepts_legal_plot_style(good_style):
+    results = pl.DataFrame({'colName': ['a'], 'score': [1.0]})
+    plotter = BarPlotter(results, 'score', 'all', 0.05, 'ylabel', 'title', plot_style=good_style)
+    assert plotter.plot_style == good_style
+
+
 @pytest.mark.parametrize('single_list', [True, False])
 def test_enrichment_runner_plot_results(monkeypatch, single_list):
     def validate_params(self):

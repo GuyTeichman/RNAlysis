@@ -359,7 +359,7 @@ class BarPlotter(EnrichmentPlotter):
             raise InternalError(f"Column '{en_score_col}' not found in the results DataFrame.")
         self.en_score_col = en_score_col
         if plot_style not in ['bar', 'lollipop']:
-            raise InvalidValueError(f"'plot_style' must be 'bar' or 'lollipop', instead got '{self.plot_style}'.")
+            raise InvalidValueError(f"'plot_style' must be 'bar' or 'lollipop', instead got '{plot_style}'.")
 
         if n_bars == 'all':
             n_bars = len(self.results)
