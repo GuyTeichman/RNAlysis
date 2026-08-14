@@ -6,13 +6,22 @@ from typing import Literal, Union
 import rst_to_myst
 
 
-def get_change_log_for(version: Union[str, Literal['latest']] = 'latest'):
+def get_change_log_for(version: Union[str, Literal['latest']] = 'latest',
+                       history_path: Union[str, Path, None] = None):
     regex_pattern = r'(\d+\.\d+\.\d+)\s+\(\d{4}-\d{2}-\d{2}\)\s*-+\s*'
-    with open(Path(__file__).parent.parent.joinpath('HISTORY.rst')) as hfile:
+    if history_path is None:
+        history_path = Path(__file__).parent.parent.joinpath('HISTORY.rst')
+    with open(history_path) as hfile:
         text = hfile.read()
 
     versions = re.findall(regex_pattern, text)
     if version == 'latest':
+        # guard: 'latest' must never silently fall back to the previous version because the
+        # newest section is still undated (e.g. "4.3.0 (unreleased)")
+        newest = re.search(r'(\d+\.\d+\.\d+)\s+\(([^)\n]*)\)\s*\n-+', text)
+        if newest is not None and re.fullmatch(r'\d{4}-\d{2}-\d{2}', newest.group(2)) is None:
+            raise ValueError(f"The top HISTORY.rst section ('{newest.group(1)} ({newest.group(2)})') is "
+                             f"unreleased/undated -- date it before generating the changelog.")
         version = versions[0]
 
     if version not in versions:
