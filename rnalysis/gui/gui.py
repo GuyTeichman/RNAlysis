@@ -23,6 +23,7 @@ import yaml
 from PyQt6 import QtCore, QtGui, QtWidgets
 
 from rnalysis import __version__, enrichment, fastq, filtering
+from rnalysis.exceptions import InvalidValueError
 from rnalysis.gui import (gui_graphics, gui_quickstart, gui_style, gui_widgets,
                           gui_windows)
 from rnalysis.utils import (clustering, generic, io, parsing, settings,
@@ -2589,7 +2590,7 @@ class CreatePipelineWindow(gui_widgets.MinMaxDialog, FilterTabPage):
         try:
             self.pipeline.remove_last_function()
             self.update_pipeline_preview()
-        except AssertionError:
+        except InvalidValueError:
             err = QtWidgets.QMessageBox(self)
             err.setWindowTitle('Pipeline is already empty!')
             err.setText('Cannot remove functions from the Pipeline - it is already empty!')
