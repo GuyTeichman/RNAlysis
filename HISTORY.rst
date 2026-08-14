@@ -2,13 +2,6 @@
 History
 =======
 
-4.3.1 (unreleased)
--------------------
-
-Changed
-*******
-* Starting RNAlysis, and importing the Python API, is now faster and no longer requires an internet connection. The lists of supported organisms and gene-ID types that fill the drop-down menus of the ortholog-mapping, paralog-finding and gene-ID translation functions were previously fetched from UniProtKB, PantherDB, Ensembl and PhylomeDB every time RNAlysis started — four live web requests on the first startup of each day, and close to a second of waiting even when they were already cached. They are now read from a list packaged with RNAlysis and refreshed with every release. On an offline or firewalled computer (a compute cluster, a locked-down lab PC) these menus are now fully populated instead of empty, and the available values are identical on every machine running the same version of RNAlysis, instead of depending on the day the services were contacted. Actual analyses — gene-ID translation, ortholog and paralog mapping, and enrichment analysis — still query these services live, exactly as before, so results are unchanged. An organism or ID type that a service added after the release can still be typed into these fields by hand, as before.
-
 4.3.0 (2026-08-13)
 -------------------
 
@@ -40,6 +33,7 @@ Changed
 * Several ``filtering.CountFilter``/``Filter`` operations now run in a single fused Polars pass instead of scanning the table multiple times: the count-based filters (``filter_low_reads``, ``split_by_reads``, ``filter_by_row_sum``), all per-sample and per-gene normalizations, ``fold_change``, replicate averaging (``average_replicate_samples``), and the ``opposite=True`` path of every filter. Results are bit-for-bit identical, verified by a new eager-vs-lazy equivalence test suite.
 * On the "New table" screen, RNAlysis now auto-detects the most likely table type from the chosen file and pre-selects it in the table-type menu (count matrix, differential expression, or fold change), instead of always defaulting to "Other table". The detection is conservative — when the content is ambiguous it falls back to "Other table" rather than guess wrong — and it only sets the default; you can still change the table type manually. This only affects the pre-selected type, not how tables are actually loaded.
 * In the graphical interface, numeric input boxes for decimal (``float``) parameters now adapt to the magnitude of the value: an integer-valued default such as a read-count threshold of ``5`` is shown as ``5`` (rather than ``5.00``) and steps by whole units, while small fractional parameters keep a finer step and more decimals. This is a display-only change — the exact value you enter is still passed to the analysis unchanged, and arbitrary precise values can still be typed.
+* Starting RNAlysis, and importing the Python API, is now faster and no longer requires an internet connection. The lists of supported organisms and gene-ID types that fill the drop-down menus of the ortholog-mapping, paralog-finding and gene-ID translation functions were previously fetched from UniProtKB, PantherDB, Ensembl and PhylomeDB every time RNAlysis started — four live web requests on the first startup of each day, and close to a second of waiting even when they were already cached. They are now read from a list packaged with RNAlysis and refreshed with every release. On an offline or firewalled computer (a compute cluster, a locked-down lab PC) these menus are now fully populated instead of empty, and the available values are identical on every machine running the same version of RNAlysis, instead of depending on the day the services were contacted. Actual analyses — gene-ID translation, ortholog and paralog mapping, and enrichment analysis — still query these services live, exactly as before, so results are unchanged. An organism or ID type that a service added after the release can still be typed into these fields by hand, as before.
 
 Fixed
 ******
