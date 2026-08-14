@@ -149,13 +149,11 @@ def test_packaged_snapshot_is_shipped_and_well_formed():
         assert all(isinstance(value, str) for value in vocabulary['values'])
 
 
-@pytest.mark.parametrize('key', ['gene_id_types', 'panther_taxons', 'ensembl_taxons'])
+@pytest.mark.parametrize('key', list(GETTERS.values()))
 def test_packaged_snapshot_is_populated(key):
-    # A regeneration that ran while a service was down would empty a GUI dropdown for a whole
-    # release - fail loudly here rather than shipping it.
-    # 'phylomedb_taxons' is deliberately absent from this list: io.get_legal_phylomedb_taxons
-    # currently yields nothing (it iterates a polars DataFrame instead of its 'name' column), so the
-    # snapshot faithfully records the empty list that live code produces today.
+    # A regeneration that ran while a service was down (or against a parser that no longer matches
+    # the service's format, as in issue #263) would empty a GUI dropdown for a whole release - fail
+    # loudly here rather than shipping it.
     assert len(load_packaged_snapshot()['vocabularies'][key]['values']) > 10
 
 
