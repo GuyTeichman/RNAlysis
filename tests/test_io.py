@@ -1647,18 +1647,22 @@ def test_save_and_load_session_round_trip(tmp_path):
     pipeline_data = [PipelineData(name='My Pipeline',
                                   content='filter_type: countfilter\nfunctions: []\nparams: []\n')]
 
-    GUISessionManager(target).save_session(file_data, pipeline_data, {'nodes': {}}, {'3': report_file})
-    loaded_files, loaded_pipelines, report = GUISessionManager(target).load_session()
+    try:
+        GUISessionManager(target).save_session(file_data, pipeline_data, {'nodes': {}}, {'3': report_file})
+        loaded_files, loaded_pipelines, report = GUISessionManager(target).load_session()
 
-    assert [file.filename for file in loaded_files] == ['roundtrip_table.parquet']
-    assert loaded_files[0].item_name == 'my table'
-    assert loaded_files[0].item_type == 'CountFilter'
-    assert loaded_files[0].item_id == 3
-    assert loaded_files[0].obj.equals(table)
-    assert loaded_pipelines == pipeline_data
-    assert report == {'nodes': {}}
-    assert get_gui_cache_dir().joinpath(report_file).read_text() == 'report item contents'
-    assert [pth.name for pth in tmp_path.iterdir()] == ['roundtrip.rnal']
+        assert [file.filename for file in loaded_files] == ['roundtrip_table.parquet']
+        assert loaded_files[0].item_name == 'my table'
+        assert loaded_files[0].item_type == 'CountFilter'
+        assert loaded_files[0].item_id == 3
+        assert loaded_files[0].obj.equals(table)
+        assert loaded_pipelines == pipeline_data
+        assert report == {'nodes': {}}
+        assert get_gui_cache_dir().joinpath(report_file).read_text() == 'report item contents'
+        assert [pth.name for pth in tmp_path.iterdir()] == ['roundtrip.rnal']
+    finally:
+        get_gui_cache_dir().joinpath(report_file).unlink(missing_ok=True)
+        get_gui_cache_dir().joinpath('roundtrip_table.parquet').unlink(missing_ok=True)
 
 
 def test_save_and_load_session_with_a_relative_path(monkeypatch, tmp_path):
