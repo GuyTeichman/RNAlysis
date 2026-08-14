@@ -1,6 +1,10 @@
 from collections import namedtuple
 
 import pytest
+# kmedoids/scikit-learn are imported lazily by rnalysis.utils.clustering (see tests/test_imports.py),
+# so the star-import below no longer re-exports them -- the tests import them directly instead.
+from kmedoids import KMedoids
+from sklearn.cluster import KMeans
 
 from rnalysis.exceptions import InternalError, InvalidValueError
 from rnalysis.utils import clustering

@@ -1,34 +1,71 @@
 import abc
 import contextvars
 import functools
+import importlib.util
 import itertools
 import warnings
 from typing import Callable, List, Set, Tuple, Union
 
 import joblib
+import lazy_loader as lazy
 import matplotlib.pyplot as plt
 import numpy as np
 import pairwisedist as pwdist
 import polars as pl
 import polars.selectors as cs
-import sklearn.metrics.pairwise as sklearn_pairwise
 from grid_strategy import strategies
-from kmedoids import KMedoids
-from sklearn.cluster import AgglomerativeClustering, KMeans
-from sklearn.decomposition import PCA
-from sklearn.metrics import (calinski_harabasz_score, davies_bouldin_score,
-                             pairwise_distances, silhouette_score)
 from tqdm.auto import tqdm
 
 from rnalysis.exceptions import (InternalError, InvalidTypeError, InvalidValueError, RNAlysisInputError)
 from rnalysis.utils import generic, parsing, validation
 
-try:
-    import hdbscan
+# scikit-learn costs ~1s to import and is only needed once a clustering run actually starts, so it is
+# loaded lazily (SPEC 1 / https://scientific-python.org/specs/spec-0001/). `kmedoids` and `hdbscan`
+# get the same treatment because they import scikit-learn themselves. Nothing may touch an attribute
+# of these proxies at import time -- doing so imports the package and defeats the whole point, which
+# is why the class attributes below go through `_lazy_class_attribute`. Guarded by
+# tests/test_imports.py.
+_sklearn = lazy.load('sklearn')
+_kmedoids = lazy.load('kmedoids')
 
-    HAS_HDBSCAN = True
-except ImportError:
-    HAS_HDBSCAN = False
+# hdbscan is optional, so its availability is probed *without* executing it -- importing it here
+# would drag scikit-learn back in for everyone who installed the optional extra.
+HAS_HDBSCAN = importlib.util.find_spec('hdbscan') is not None
+hdbscan = lazy.load('hdbscan') if HAS_HDBSCAN else None
+
+
+class _lazy_class_attribute:
+    """A class attribute whose value is only computed the first time it is read.
+
+    Lets a class declare an attribute that comes out of a lazily-imported package (e.g.
+    ``sklearn.cluster.KMeans``) without importing that package while the class body executes.
+    """
+
+    _UNSET = object()
+
+    def __init__(self, factory: Callable):
+        self._factory = factory
+        self._value = self._UNSET
+
+    def __get__(self, instance, owner=None):
+        if self._value is self._UNSET:
+            self._value = self._factory()
+        return self._value
+
+
+# thin wrappers so ``ClusteringRunnerWithNClusters.N_CLUSTERS_METHODS`` can name sklearn's scoring
+# functions without importing sklearn while the class body executes
+def _silhouette_score(*args, **kwargs):
+    return _sklearn.metrics.silhouette_score(*args, **kwargs)
+
+
+def _calinski_harabasz_score(*args, **kwargs):
+    return _sklearn.metrics.calinski_harabasz_score(*args, **kwargs)
+
+
+def _davies_bouldin_score(*args, **kwargs):
+    return _sklearn.metrics.davies_bouldin_score(*args, **kwargs)
+
 
 # Run-scoped memoization of the (expensive) Box-Cox/standardize transform. CLICOM builds many clustering
 # setups that share the same replicate-column subset and power_transform flag, and each fresh runner would
@@ -421,8 +458,8 @@ class KMedoidsIter:
         self.n_init = n_init
         self.max_iter = max_iter
         self.random_state = random_state
-        self.clusterer = KMedoids(n_clusters=self.n_clusters, metric=self.metric,
-                                  max_iter=self.max_iter, random_state=random_state)
+        self.clusterer = _kmedoids.KMedoids(n_clusters=self.n_clusters, metric=self.metric,
+                                            max_iter=self.max_iter, random_state=random_state)
         self.inertia_ = None
         self.cluster_centers_ = None
         self.medoid_indices_ = None
@@ -440,11 +477,11 @@ class KMedoidsIter:
         for i in range(self.n_init):
             if self.random_state is not None:
                 clusterers.append(
-                    KMedoids(n_clusters=self.n_clusters, metric=self.metric, max_iter=self.max_iter,
-                             random_state=self.random_state + i).fit(x))
+                    _kmedoids.KMedoids(n_clusters=self.n_clusters, metric=self.metric, max_iter=self.max_iter,
+                                       random_state=self.random_state + i).fit(x))
             else:
-                clusterers.append(KMedoids(n_clusters=self.n_clusters, metric=self.metric,
-                                           max_iter=self.max_iter).fit(x))
+                clusterers.append(_kmedoids.KMedoids(n_clusters=self.n_clusters, metric=self.metric,
+                                                     max_iter=self.max_iter).fit(x))
             inertias[i] = clusterers[i].inertia_
         best_clusterer = clusterers[int(np.argmax(inertias))]
         self.clusterer = best_clusterer
@@ -561,7 +598,7 @@ class ClusteringRunner(abc.ABC):
     def _pca_plot(self, n_clusters: int, data: pl.DataFrame, labels: np.ndarray, title: str) -> plt.Figure:
         data_standardized = generic.standardize(data)
         n_components = 2
-        pca_obj = PCA(n_components=n_components)
+        pca_obj = _sklearn.decomposition.PCA(n_components=n_components)
         pcomps = pca_obj.fit_transform(data_standardized)
 
         columns = [f'Principal component {i + 1}' for i in range(n_components)]
@@ -674,16 +711,16 @@ class ClusteringRunnerWithNClusters(ClusteringRunner, abc.ABC):
     N_CLUSTERS_METHODS = {
         'silhouette': {
             'name': 'Silhouette',
-            'func': silhouette_score,
+            'func': _silhouette_score,
             'maximize': True,
             'range': (-1, 1)},
         'calinski_harabasz': {
             'name': 'Calinski-Harabasz',
-            'func': calinski_harabasz_score,
+            'func': _calinski_harabasz_score,
             'maximize': True},
         'davies_bouldin': {
             'name': 'Davies-Bouldin',
-            'func': davies_bouldin_score,
+            'func': _davies_bouldin_score,
             'maximize': False},
         'bic': {
             'name': 'Bayesian Information Criterion',
@@ -730,7 +767,7 @@ class ClusteringRunnerWithNClusters(ClusteringRunner, abc.ABC):
             np.random.seed(random_seed)
         # calculate the SVD of the observed data (X), and transform via X' = x_tag = dot(X, V)
         # note: the data is centered by sklearn.decomposition.PCA, no need to pre-center it.
-        pca = PCA(random_state=random_seed).fit(raw_data)
+        pca = _sklearn.decomposition.PCA(random_state=random_seed).fit(raw_data)
         x_tag = pca.transform(raw_data)
         # determine the ranges of the columns of X' (x_tag)
         a, b = x_tag.min(axis=0, keepdims=True), x_tag.max(axis=0, keepdims=True)
@@ -807,7 +844,7 @@ class ClusteringRunnerWithNClusters(ClusteringRunner, abc.ABC):
             n = np.sum(this_label)
             # don't calculate within-cluster dispersion for empty clusters or clusters with a single member
             if n > 1:
-                dispersion += np.sum(pairwise_distances(data.filter(this_label)) ** 2) / (2 * n)
+                dispersion += np.sum(_sklearn.metrics.pairwise_distances(data.filter(this_label)) ** 2) / (2 * n)
         return dispersion
 
     @staticmethod
@@ -891,7 +928,7 @@ class ClusteringRunnerWithNClusters(ClusteringRunner, abc.ABC):
 
 
 class KMeansRunner(ClusteringRunnerWithNClusters):
-    clusterer_class = KMeans
+    clusterer_class = _lazy_class_attribute(lambda: _sklearn.cluster.KMeans)
 
     def __init__(self, data, power_transform: bool, n_clusters: Union[int, List[int], str],
                  max_n_clusters_estimate: Union[int, str] = 'auto', random_seed: int = None, n_init: int = 3,
@@ -938,7 +975,7 @@ class KMeansRunner(ClusteringRunnerWithNClusters):
 
 class KMedoidsRunner(ClusteringRunnerWithNClusters):
     clusterer_class = KMedoidsIter
-    legal_metrics = set(sklearn_pairwise._VALID_METRICS)
+    legal_metrics = _lazy_class_attribute(lambda: set(_sklearn.metrics.pairwise._VALID_METRICS))
 
     def __init__(self, data, power_transform: bool, n_clusters: Union[int, List[int], str],
                  max_n_clusters_estimate: Union[int, str] = 'auto', metric: str = 'euclidean',
@@ -988,8 +1025,8 @@ class KMedoidsRunner(ClusteringRunnerWithNClusters):
 
 
 class HierarchicalRunner(ClusteringRunnerWithNClusters):
-    clusterer_class = AgglomerativeClustering
-    legal_metrics = set(sklearn_pairwise.PAIRED_DISTANCES.keys())
+    clusterer_class = _lazy_class_attribute(lambda: _sklearn.cluster.AgglomerativeClustering)
+    legal_metrics = _lazy_class_attribute(lambda: set(_sklearn.metrics.pairwise.PAIRED_DISTANCES.keys()))
 
     def __init__(self, data, power_transform: bool, n_clusters: Union[int, List[int], str],
                  max_n_clusters_estimate: Union[int, str] = 'auto', metric: str = 'euclidean',
@@ -1066,8 +1103,9 @@ class HierarchicalRunner(ClusteringRunnerWithNClusters):
 
 
 class HDBSCANRunner(ClusteringRunner):
-    clusterer_class = hdbscan.HDBSCAN if HAS_HDBSCAN else None
-    legal_metrics = set(hdbscan.dist_metrics.METRIC_MAPPING.keys()) if HAS_HDBSCAN else set()
+    clusterer_class = _lazy_class_attribute(lambda: hdbscan.HDBSCAN) if HAS_HDBSCAN else None
+    legal_metrics = _lazy_class_attribute(
+        lambda: set(hdbscan.dist_metrics.METRIC_MAPPING.keys())) if HAS_HDBSCAN else set()
 
     def __init__(self, data, power_transform: bool, min_cluster_size: int = 5, min_samples: int = 1,
                  metric: str = 'euclidean', cluster_selection_epsilon: float = 0, cluster_selection_method: str = 'eom',

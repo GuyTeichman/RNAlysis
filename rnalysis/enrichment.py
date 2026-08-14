@@ -11,13 +11,11 @@ import warnings
 from pathlib import Path
 from typing import Dict, Iterable, List, Literal, Sequence, Set, Tuple, Union
 
+import lazy_loader as lazy
 import matplotlib
 import matplotlib.pyplot as plt
-import matplotlib_venn as vn
 import numpy as np
-import pandas as pd
 import polars as pl
-import upsetplot
 
 from rnalysis.exceptions import InvalidTypeError, InvalidValueError
 from rnalysis.filtering import Filter, readable_name
@@ -31,6 +29,15 @@ from rnalysis.utils.param_typing import (BIOTYPE_ATTRIBUTE_NAMES, BIOTYPES,
                                          PositiveInt, get_ensembl_taxons,
                                          get_gene_id_types, get_panther_taxons,
                                          get_phylomedb_taxons)
+
+# The set-visualization stack is only needed by a handful of plotting functions but costs ~1s to
+# import (matplotlib_venn drags in scipy.optimize, upsetplot drags in pandas), so all three are
+# loaded lazily (SPEC 1 / https://scientific-python.org/specs/spec-0001/). Nothing may touch an
+# attribute of these proxies at import time -- doing so imports the package and defeats the whole
+# point. Guarded by tests/test_imports.py.
+pd = lazy.load('pandas')
+vn = lazy.load('matplotlib_venn')
+upsetplot = lazy.load('upsetplot')
 
 
 class FeatureSet(set):

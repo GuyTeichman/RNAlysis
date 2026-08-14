@@ -14,11 +14,9 @@ import matplotlib.pyplot as plt
 import numpy as np
 import polars as pl
 import polars.selectors as cs
-import statsmodels.stats.multitest as multitest
 from matplotlib.cm import ScalarMappable
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 from scipy.stats import fisher_exact, hypergeom, ttest_1samp
-from statsmodels.stats.descriptivestats import sign_test
 from tqdm.auto import tqdm
 
 from rnalysis.exceptions import InternalError, InvalidTypeError, InvalidValueError
@@ -42,6 +40,23 @@ except ImportError:  # pragma: no cover
 
         def get_xlmhg_test_result(self):
             pass
+
+
+# statsmodels imports pandas, which RNAlysis no longer uses for tabular work and which costs ~0.3s to
+# import. Only these two statsmodels functions are needed, and only once an enrichment run reaches
+# them, so the import is deferred to call time (issue #257; guarded by tests/test_imports.py).
+# `lazy_loader` cannot express this: statsmodels does not expose `statsmodels.stats` as an attribute
+# of the top-level package, and lazily loading a subpackage eagerly imports its parents.
+def _fdrcorrection(*args, **kwargs):
+    from statsmodels.stats.multitest import fdrcorrection
+
+    return fdrcorrection(*args, **kwargs)
+
+
+def _sign_test(*args, **kwargs):
+    from statsmodels.stats.descriptivestats import sign_test
+
+    return sign_test(*args, **kwargs)
 
 
 class Size:
@@ -121,7 +136,7 @@ class SignTest(StatsTest):
         if np.isnan(obs):
             pval = np.nan
         else:
-            _, pval = sign_test(obs_values, exp)
+            _, pval = _sign_test(obs_values, exp)
         return [attribute_name, len(gene_set), obs, exp, pval]
 
 
@@ -147,7 +162,7 @@ class PermutationTest(StatsTest):
         return [attribute_name, en_size, obs, exp, log2fc, pval]
 
     @staticmethod
-    @generic.numba.jit(nopython=True)
+    @generic.numba.jit(nopython=True, cache=generic.NUMBA_CACHE)
     def _calc_permutation_pval(log2fc: float, reps: int, obs_frac: float, bg_size: int, en_size: int, attr_size: int,
                                random_seed: int) -> float:  # pragma: no cover
         np.random.seed(random_seed)
@@ -978,7 +993,7 @@ class EnrichmentRunner:
         results_nulls = self.results.filter(pl.col('pval').is_nan())
         self.results = self.results.filter(pl.col('pval').is_not_nan())
 
-        significant, padj = multitest.fdrcorrection(self.results['pval'].to_list(), alpha=self.alpha)
+        significant, padj = _fdrcorrection(self.results['pval'].to_list(), alpha=self.alpha)
         self.results = pl.concat([self.results.with_columns(padj=padj, significant=significant), results_nulls],
                                  how='align')
 
@@ -1097,7 +1112,7 @@ class KEGGEnrichmentRunner(EnrichmentRunner):
     def _correct_multiple_comparisons(self):
         results_nulls = self.results.filter(pl.col('pval').is_nan())
         self.results = self.results.filter(pl.col('pval').is_not_nan())
-        significant, padj = multitest.fdrcorrection(self.results['pval'].to_list(), alpha=self.alpha, method='negcorr')
+        significant, padj = _fdrcorrection(self.results['pval'].to_list(), alpha=self.alpha, method='negcorr')
         self.results = pl.concat([self.results.with_columns(padj=padj, significant=significant), results_nulls],
                                  how='align')
 
@@ -1361,7 +1376,7 @@ class GOEnrichmentRunner(EnrichmentRunner):
     def _correct_multiple_comparisons(self):
         results_nulls = self.results.filter(pl.col('pval').is_nan())
         self.results = self.results.filter(pl.col('pval').is_not_nan())
-        significant, padj = multitest.fdrcorrection(self.results['pval'].to_list(), alpha=self.alpha, method='negcorr')
+        significant, padj = _fdrcorrection(self.results['pval'].to_list(), alpha=self.alpha, method='negcorr')
         self.results = pl.concat([self.results.with_columns(padj=padj, significant=significant), results_nulls],
                                  how='align')
 
