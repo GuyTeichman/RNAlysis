@@ -23,7 +23,7 @@ import yaml
 from PyQt6 import QtCore, QtGui, QtWidgets
 
 from rnalysis import __version__, enrichment, fastq, filtering
-from rnalysis.exceptions import InvalidValueError
+from rnalysis.exceptions import InternalError, InvalidValueError
 from rnalysis.gui import (gui_graphics, gui_quickstart, gui_style, gui_widgets,
                           gui_windows)
 from rnalysis.utils import (clustering, generic, io, parsing, settings,
@@ -406,8 +406,9 @@ class DiffExpWindow(gui_windows.FuncExternalWindow):
     def init_design_mat(self):
         design_mat = io.load_table(self.param_widgets['design_matrix'].text())
         for factor in design_mat.columns:
-            assert parsing.slugify(factor) == factor, f"Invalid factor name '{factor}': contains invalid characters." \
-                                                      f" \nSuggested alternative name: '{parsing.slugify(factor)}'. "
+            if parsing.slugify(factor) != factor:
+                raise InvalidValueError(f"Invalid factor name '{factor}': contains invalid characters."
+                                        f" \nSuggested alternative name: '{parsing.slugify(factor)}'. ")
         self.design_mat = design_mat
 
     def init_model_ui(self):
@@ -462,9 +463,10 @@ class DiffExpWindow(gui_windows.FuncExternalWindow):
             self.comparisons_widgets['picker'].set_comparison_values(comparisons)
 
         if self.simplified:
-            assert covariates is None or len(covariates) == 0, "Covariates are not supported in simplified mode."
-            assert lrt_factors is None or len(lrt_factors) == 0, \
-                "Likelihood Ratio Tests are not supported in simplified mode."
+            if not (covariates is None or len(covariates) == 0):
+                raise InternalError("Covariates are not supported in simplified mode.")
+            if not (lrt_factors is None or len(lrt_factors) == 0):
+                raise InternalError("Likelihood Ratio Tests are not supported in simplified mode.")
         else:
             if 'picker' in self.covariates_widgets:
                 self.covariates_widgets['picker'].set_comparison_values(covariates)
@@ -1562,7 +1564,8 @@ class TabPage(QtWidgets.QWidget):
         self.stack.widget(ind).check_selection_status()
 
     def get_all_actions(self):
-        assert self.obj() is not None, "No object was loaded!"
+        if self.obj() is None:
+            raise InternalError("No object was loaded!")
         all_methods = dir(self.obj())
         public_methods = [mthd for mthd in all_methods if
                           (not mthd.startswith('_')) and (callable(getattr(type(self.obj()), mthd))) and (
@@ -3006,7 +3009,8 @@ class InplaceCachedCommand(InplaceCommand):
             self.first_pass = False
             super().redo()
         else:
-            assert self.new_spawn_id is not None
+            if self.new_spawn_id is None:
+                raise InternalError
             source_name = generic.get_method_readable_name(getattr(self.tab.obj(), self.func_name))
             self.new_job_id = JOB_COUNTER.get_id() if self.new_job_id is None else self.new_job_id
             self.tab.update_obj(copy.copy(self.processed_obj))
@@ -3196,13 +3200,14 @@ class MainWindow(QtWidgets.QMainWindow):
                 self._generate_report = True
                 self.report = gui_report.ReportGenerator()
                 cleared = self.clear_session(not (self.tabs.count() == 1 and self.tabs.currentWidget().is_empty()))
-                assert cleared
+                if not cleared:
+                    raise InternalError
                 self.toggle_report_action.setChecked(True)
                 print("Report generation turned on. ")
             except ImportError:
                 warnings.warn("The RNAlysis 'reports' module is not installed. Please install it and try again. ")
                 self._toggle_reporting(False)
-            except AssertionError:
+            except InternalError:
                 warnings.warn("You must clear the current session before turning report generation on. "
                               "Please clear your current session and try again. ")
                 self._toggle_reporting(False)
@@ -3568,7 +3573,8 @@ class MainWindow(QtWidgets.QMainWindow):
             return
         if spawn is None:
             return
-        assert self.is_valid_spawn(spawn), f"Invalid spawn type '{type(spawn)}'!"
+        if not self.is_valid_spawn(spawn):
+            raise InternalError(f"Invalid spawn type '{type(spawn)}'!")
         spawn_type = self._get_spawn_type(spawn)
         prefix = f'{spawn_id}_{name}' if spawn_type in ('Other output', 'Pipeline') else str(spawn_id)
         filename = self._cache_spawn(spawn, prefix)
@@ -3804,7 +3810,8 @@ class MainWindow(QtWidgets.QMainWindow):
 
     @QtCore.pyqtSlot(str)
     def edit_pipeline(self, pipeline_name: str):
-        assert pipeline_name in self.pipelines, f"Pipeline {pipeline_name} doesn't exist!"
+        if pipeline_name not in self.pipelines:
+            raise InternalError(f"Pipeline {pipeline_name} doesn't exist!")
         pipeline = self.pipelines[pipeline_name][0]
         self.pipeline_window = CreatePipelineWindow.start_from_pipeline(pipeline, pipeline_name, self)
         self.pipeline_window.pipelineSaved.connect(self.save_pipeline)
@@ -4555,7 +4562,8 @@ class MainWindow(QtWidgets.QMainWindow):
         if worker_output.result is None or len(worker_output.result) == 0:
             print("Done")
             return
-        assert isinstance(worker_output, gui_widgets.WorkerOutput), f"invalid worker output: {worker_output}"
+        if not isinstance(worker_output, gui_widgets.WorkerOutput):
+            raise InternalError(f"invalid worker output: {worker_output}")
         func_name: str = worker_output.emit_args[0]
         job_id = worker_output.job_id
 
@@ -4591,7 +4599,8 @@ class MainWindow(QtWidgets.QMainWindow):
         if worker_output.result is None or len(worker_output.result) == 0:
             print("Done")
             return
-        assert isinstance(worker_output, gui_widgets.WorkerOutput), f"invalid worker output: {worker_output}"
+        if not isinstance(worker_output, gui_widgets.WorkerOutput):
+            raise InternalError(f"invalid worker output: {worker_output}")
 
         func_name: str = generic.get_method_readable_name(worker_output.partial.func)
         clustering_runner: clustering.ClusteringRunner = worker_output.result[1]
@@ -4614,7 +4623,8 @@ class MainWindow(QtWidgets.QMainWindow):
         if len(worker_output.result) == 0:
             print("Done")
             return
-        assert isinstance(worker_output, gui_widgets.WorkerOutput), f"invalid worker output: {worker_output}"
+        if not isinstance(worker_output, gui_widgets.WorkerOutput):
+            raise InternalError(f"invalid worker output: {worker_output}")
 
         set_name = worker_output.emit_args[0]
         job_id = worker_output.job_id

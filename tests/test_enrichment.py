@@ -4,6 +4,7 @@ from unittest.mock import Mock, patch
 import pytest
 import statsmodels.stats.multitest as multitest
 
+from rnalysis.exceptions import InvalidTypeError, InvalidValueError, RNAlysisInputError
 from rnalysis.enrichment import *
 from rnalysis.enrichment import _fetch_sets
 from tests import (__attr_ref__, __biotype_ref__, is_ensembl_available,
@@ -88,7 +89,7 @@ def test_featureset_change_set_name():
     en.change_set_name('different name')
     assert en.set_name == 'different name'
 
-    with pytest.raises(AssertionError):
+    with pytest.raises(InvalidTypeError):
         en.change_set_name(5)
 
 

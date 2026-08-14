@@ -2,8 +2,13 @@
 History
 =======
 
-4.3.0 (2026-08-13)
+4.4.0 (unreleased)
 -------------------
+
+Changed
+*******
+* *RNAlysis* no longer uses bare ``assert`` statements to validate your input. Every input check now raises a real exception, so validation can no longer be silently removed: previously, running Python with the ``-O`` flag (or with ``PYTHONOPTIMIZE`` set in your environment) stripped all 341 of them, and invalid inputs flowed straight into the analysis, either failing later with a cryptic internal error or — worse — producing a wrong result without complaint. This affected the API/script workflow only; the standalone app was never affected.
+* The exceptions *RNAlysis* raises for invalid input are now typed, so scripts can tell the different failure modes apart: a wrong-type argument raises ``rnalysis.exceptions.InvalidTypeError`` (which is also a ``TypeError``), a bad value — out of range, not one of the legal choices, wrong shape — raises ``rnalysis.exceptions.InvalidValueError`` (also a ``ValueError``), and a violated internal invariant (which always indicates a bug in *RNAlysis*) raises ``rnalysis.exceptions.InternalError``. All three share the common base ``rnalysis.exceptions.RNAlysisError``, and the first two additionally share ``RNAlysisInputError``. **If your scripts catch ``AssertionError`` around *RNAlysis* calls, change them to catch ``RNAlysisInputError`` (or the built-in ``TypeError``/``ValueError``), which is what those calls now raise.** Which inputs are accepted or rejected is unchanged, and so are the error messages themselves; analysis results are unaffected.
 
 Added
 ******

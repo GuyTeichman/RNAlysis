@@ -11,6 +11,7 @@ import networkx
 from pyvis.network import Network
 
 from rnalysis import __version__
+from rnalysis.exceptions import InvalidValueError
 from rnalysis.gui import gui_windows
 from rnalysis.utils import io, parsing
 
@@ -252,7 +253,8 @@ class ReportGenerator:
     def generate_report(self, output_folder: Path, title: Union[str, Literal['auto']] = 'auto',
                         title_fontsize: int = 24, show_settings_menu: bool = False, hierarchical_layout: bool = True):
         output_folder = Path(output_folder)
-        assert output_folder.exists() and output_folder.is_dir()
+        if not (output_folder.exists() and output_folder.is_dir()):
+            raise InvalidValueError
         save_file = output_folder.joinpath('report.html').as_posix()
         self.trim_function_nodes()
         vis_report = self._report_from_nx(show_settings_menu, title, hierarchical_layout)

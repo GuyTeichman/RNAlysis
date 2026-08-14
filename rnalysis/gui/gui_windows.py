@@ -10,6 +10,7 @@ import yaml
 from PyQt6 import QtCore, QtGui, QtWidgets
 
 from rnalysis import __version__
+from rnalysis.exceptions import InvalidValueError
 from rnalysis.gui import gui_style, gui_widgets
 from rnalysis.utils import generic, io, parsing, settings
 
@@ -739,9 +740,11 @@ class FuncExternalWindow(gui_widgets.MinMaxDialog):
             params = yaml.safe_load(f)
 
         for key in ['name', 'args', 'kwargs']:
-            assert key in params, f"Invalid parameter file: key '{key}' missing."
-        assert params.get('name') == self.func_name, f"Parameter file for function '{params.get('name')}' " \
-                                                     f"does not match this window's function: '{self.func_name}'"
+            if key not in params:
+                raise InvalidValueError(f"Invalid parameter file: key '{key}' missing.")
+        if params.get('name') != self.func_name:
+            raise InvalidValueError(f"Parameter file for function '{params.get('name')}' "
+                                    f"does not match this window's function: '{self.func_name}'")
         args = params['args']
         kwargs = params['kwargs']
 
@@ -821,7 +824,8 @@ class PairedFuncExternalWindow(FuncExternalWindow):
     def import_parameters(self):
         params = super().import_parameters()
         for key in ['r1_files', 'r2_files']:
-            assert key in params['kwargs'], f"cannot find value for key '{key}'"
+            if key not in params['kwargs']:
+                raise InvalidValueError(f"cannot find value for key '{key}'")
             value = params['kwargs'][key]
             gui_widgets.set_widget_value(self.pairs_widgets[key], value)
 
