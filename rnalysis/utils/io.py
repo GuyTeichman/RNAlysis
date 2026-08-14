@@ -51,7 +51,7 @@ from requests.adapters import HTTPAdapter, Retry
 from tqdm import tqdm
 
 from rnalysis import __version__
-from rnalysis.exceptions import InvalidTypeError, InvalidValueError
+from rnalysis.exceptions import InternalError, InvalidTypeError, InvalidValueError
 from rnalysis.utils import parsing, validation
 
 
@@ -318,7 +318,8 @@ def cache_gui_file(item: Union[pl.DataFrame, set, str], filename: str):
     elif isinstance(item, set):
         save_gene_set(item, file_path)
     elif isinstance(item, Path) and item.suffix in ('.R', '.log'):
-        assert item.exists(), f"File '{item}' flagged for caching does not exist!"
+        if not item.exists():
+            raise InternalError(f"File '{item}' flagged for caching does not exist!")
         shutil.copy(item, file_path)
     elif isinstance(item, str):
         with open(file_path, 'w') as f:
@@ -456,7 +457,8 @@ class GUISessionManager:
         filenames = session_data['metadata'].get('tab_order', list(session_data['files'].keys()))
         for file_name in filenames:
             file_path = session_dir.joinpath(file_name)
-            assert file_path.exists() and file_path.is_file()
+            if not (file_path.exists() and file_path.is_file()):
+                raise InternalError
             if len(session_data['files'][file_name]) == 3:  # support for legacy session files
                 item_name, item_type, item_property = session_data['files'][file_name]
                 item_id = None
@@ -474,7 +476,8 @@ class GUISessionManager:
 
         for pipeline_filename, pipeline_name in session_data['pipelines'].items():
             pipeline_path = session_dir.joinpath(pipeline_filename)
-            assert pipeline_path.exists() and pipeline_path.is_file()
+            if not (pipeline_path.exists() and pipeline_path.is_file()):
+                raise InternalError
             pipeline_data.append(PipelineData(name=pipeline_name, content=pipeline_path.read_text()))
         # handle report files, if any by copying them to the cache directory
         cache_dir = get_gui_cache_dir()
@@ -1722,7 +1725,8 @@ class OrthoInspectorOrthologMapper:
             except requests.exceptions.JSONDecodeError:
                 clean_json_string = req.text.split('\n')[0]
                 content = json.loads(clean_json_string)
-            assert content['meta']['status'] == 'success'
+            if content['meta']['status'] != 'success':
+                raise InternalError
             return database, frozenset({d['id'] for d in content['data']})
 
         # Fetch every database's species list concurrently. These requests are independent and were
@@ -2774,7 +2778,8 @@ def save_gene_set(gene_set: set, path):
 
 
 def calculate_checksum(filename: Union[str, Path]):  # pragma: no cover
-    assert Path(filename).exists(), f"file '{filename}' does not exist!"
+    if not Path(filename).exists():
+        raise InternalError(f"file '{filename}' does not exist!")
     with open(filename, 'rb') as file_to_check:
         # read contents of the file
         data = file_to_check.read()
@@ -2860,8 +2865,8 @@ def run_r_script(script_path: Union[str, Path], r_installation_folder: Union[str
     else:
         prefix = f'{Path(r_installation_folder).as_posix()}/bin/Rscript'
     script_path = Path(script_path).as_posix()
-    assert Path(script_path).exists() and Path(
-        script_path).is_file(), f"Could not find the requested R script: {script_path}"
+    if not (Path(script_path).exists() and Path(script_path).is_file()):
+        raise InternalError(f"Could not find the requested R script: {script_path}")
 
     try:
         return_code, _ = run_subprocess([prefix, "--help"], False, False)

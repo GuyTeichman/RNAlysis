@@ -1,31 +1,40 @@
 """
-Exception types raised by RNAlysis when a user supplies an invalid input.
+Exception types deliberately raised by RNAlysis.
 
-This module deliberately imports nothing at all (not even from the standard library), so that it stays cheap to
-import from anywhere in the package, including hot paths and modules that are imported at startup.
+This module imports nothing at all (not even from the standard library), so that it stays cheap to import from
+anywhere in the package, including hot paths and modules that are imported at startup.
 
-All user-input validation in the public API (:mod:`rnalysis.filtering`, :mod:`rnalysis.enrichment`, \
-:mod:`rnalysis.fastq`) raises one of the exceptions defined here. Every one of them inherits from \
-:class:`RNAlysisInputError`, so API users can catch all RNAlysis input errors with a single `except` clause::
+Every exception raised on purpose by RNAlysis inherits from :class:`RNAlysisError`, and falls into one of two
+families:
 
-    try:
-        counts.filter_low_reads(threshold=-5)
-    except RNAlysisInputError as err:
-        print(err)
+* **User-input errors** (:class:`RNAlysisInputError`) - the user supplied something RNAlysis cannot work with. \
+  These also inherit from the matching Python built-in, so code that already handles those built-ins keeps working:
+  a wrong-**type** argument raises :class:`InvalidTypeError` (a :class:`TypeError`), and a bad-**value** argument \
+  (out of range, not a legal choice, wrong shape) raises :class:`InvalidValueError` (a :class:`ValueError`)::
 
-They *also* inherit from the matching Python built-in (:class:`TypeError` / :class:`ValueError`), so code that
-already handles those built-ins keeps working:
+      try:
+          counts.filter_low_reads(threshold=-5)
+      except RNAlysisInputError as err:
+          print(err)
 
-    * a wrong-**type** argument raises :class:`InvalidTypeError`, which is a :class:`TypeError`.
-    * a bad-**value** argument (out of range, not a legal choice, wrong shape) raises :class:`InvalidValueError`, \
-      which is a :class:`ValueError`.
+* **Internal invariants** (:class:`InternalError`) - a condition that cannot be false unless RNAlysis itself has a \
+  bug. These used to be bare `assert` statements, which meant they vanished under `python -O`; they are now real \
+  exceptions, so a violated invariant always fails loudly instead of silently corrupting an analysis.
 
-Genuine internal invariants - conditions that cannot be false unless RNAlysis itself has a bug - are *not* \
-expressed with these exceptions, and remain plain `assert` statements.
+None of these inherit from :class:`AssertionError`. Code that used to catch `AssertionError` from RNAlysis must
+catch :class:`RNAlysisError` (or one of its subclasses) instead.
 """
 
+#: appended to every :class:`InternalError` message, since reaching one always means RNAlysis has a bug
+_BUG_REPORT_SUFFIX = ('This is likely a bug in RNAlysis - '
+                      'please report it at https://github.com/GuyTeichman/RNAlysis/issues')
 
-class RNAlysisInputError(Exception):
+
+class RNAlysisError(Exception):
+    """Root for all exceptions deliberately raised by RNAlysis."""
+
+
+class RNAlysisInputError(RNAlysisError):
     """Root for all user-input validation errors raised by RNAlysis."""
 
 
@@ -35,3 +44,15 @@ class InvalidTypeError(RNAlysisInputError, TypeError):
 
 class InvalidValueError(RNAlysisInputError, ValueError):
     """Raised when a user-supplied argument has an illegal value, shape, or is not one of the legal choices."""
+
+
+class InternalError(RNAlysisError, RuntimeError):
+    """An internal invariant was violated - indicates a bug in RNAlysis itself."""
+
+    def __init__(self, *args):
+        if args:
+            first = f'{args[0]} {_BUG_REPORT_SUFFIX}' if str(args[0]) else _BUG_REPORT_SUFFIX
+            args = (first,) + args[1:]
+        else:
+            args = (_BUG_REPORT_SUFFIX,)
+        super().__init__(*args)

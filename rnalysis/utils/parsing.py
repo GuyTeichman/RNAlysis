@@ -15,6 +15,7 @@ import numpy as np
 import pandas as pd
 import polars as pl
 
+from rnalysis.exceptions import InternalError
 from rnalysis.utils import validation
 
 
@@ -240,9 +241,12 @@ def data_to_set(data: Any) -> set:
 
 
 def partition_list(lst: Union[list, tuple], chunk_size: int) -> Union[List[tuple], List[list]]:
-    assert isinstance(lst, (list, tuple)), f"'lst' must be a list or tuple; instead got type {type(lst)}."
-    assert isinstance(chunk_size, int), f"'chunk_size' must be an integer; instead got type {type(chunk_size)}."
-    assert chunk_size > 0, f"'chunk_size' must be >0; instead got {chunk_size}."
+    if not isinstance(lst, (list, tuple)):
+        raise InternalError(f"'lst' must be a list or tuple; instead got type {type(lst)}.")
+    if not isinstance(chunk_size, int):
+        raise InternalError(f"'chunk_size' must be an integer; instead got type {type(chunk_size)}.")
+    if chunk_size <= 0:
+        raise InternalError(f"'chunk_size' must be >0; instead got {chunk_size}.")
     if len(lst) == 0:
         return [type(lst)()]
     return [lst[i: i + chunk_size] for i in range(0, len(lst), chunk_size)]
@@ -511,7 +515,8 @@ def generate_common_name(file_pairs):
 
 
 def make_group_names(sample_grouping: List[Iterable[str]], mode: Literal['auto', 'display'] = 'display'):
-    assert mode in ['auto', 'display'], f"Invalid mode: {mode}. Must be 'auto' or 'display'."
+    if mode not in ['auto', 'display']:
+        raise InternalError(f"Invalid mode: {mode}. Must be 'auto' or 'display'.")
     sep = '\n' if mode == 'display' else ';'
     group_names = []
     for i, group in enumerate(sample_grouping):

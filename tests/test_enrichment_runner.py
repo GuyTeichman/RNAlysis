@@ -107,7 +107,7 @@ def test_enrichment_get_attrs_all_attributes():
 def test_enrichment_get_attrs_bad_path():
     e = EnrichmentRunner({'_'}, 'attribute1', 0.05, 'fakepath', True, False, '', False, True, 'test_set', False,
                          HypergeometricTest())
-    with pytest.raises((FileNotFoundError, AssertionError)):
+    with pytest.raises((FileNotFoundError, InvalidValueError)):
         e.fetch_annotations()
         e.get_attribute_names()
         e.get_background_set()
@@ -628,7 +628,7 @@ def test_enrichment_runner_validate_attributes(attibute_list, all_attrs, is_lega
     if is_legal:
         runner._validate_attributes(attibute_list, all_attrs)
     else:
-        with pytest.raises(AssertionError):
+        with pytest.raises(RNAlysisInputError):
             runner._validate_attributes(attibute_list, all_attrs)
 
 
@@ -1407,7 +1407,7 @@ def test_go_enrichment_runner_process_annotations_no_annotations(monkeypatch):
         return AnnotationIterator(0)
 
     monkeypatch.setattr(GOEnrichmentRunner, '_get_annotation_iterator', _get_annotation_iter_zero)
-    with pytest.raises(AssertionError) as e:
+    with pytest.raises(InvalidValueError) as e:
         runner = GOEnrichmentRunner.__new__(GOEnrichmentRunner)
         runner.propagate_annotations = "no"
         runner.organism = "organism"
