@@ -1325,7 +1325,7 @@ class Filter:
                                                 qualifiers, excluded_qualifiers)
         if not (annotations.n_annotations > 0):
             raise InvalidValueError("No GO annotations were found for the given parameters. "
-                                   "Please try again with a different set of parameters. ")
+                                    "Please try again with a different set of parameters. ")
         go_to_genes = {}
         source_to_genes = {}
         for annotation in tqdm(annotations, desc="Fetching GO annotations", total=annotations.n_annotations,
@@ -1609,7 +1609,7 @@ class Filter:
         for attr in attributes:
             if not isinstance(attr, str):
                 raise InvalidTypeError(f"All attributes in 'split_by_attribute()' must be of type str. "
-                                      f"Attribute '{attr}' is of type {type(attr)}")
+                                       f"Attribute '{attr}' is of type {type(attr)}")
         return tuple([self.filter_by_attribute(att, mode='union', ref=ref, inplace=False) for att in attributes])
 
     @readable_name('Table descriptive statistics')
@@ -3309,17 +3309,17 @@ class CountFilter(Filter):
     def _diff_exp_assertions(self, design_mat_df: pl.DataFrame):
         if design_mat_df.shape[0] != self.shape[1]:
             raise InvalidValueError(f"The number of items in the design matrix "
-                                   f"({design_mat_df.shape[0]}) does not match the number of "
-                                   f"columns in the count matrix ({self.shape[1]}).")
+                                    f"({design_mat_df.shape[0]}) does not match the number of "
+                                    f"columns in the count matrix ({self.shape[1]}).")
         design_mat_samples = sorted(design_mat_df.select(pl.first()).to_series().to_list())
         if design_mat_samples != sorted(self.columns):
             raise InvalidValueError(f"The sample names in the design matrix do not "
-                                   f"match the sample names in the count matrix: "
-                                   f"{design_mat_samples} != "
-                                   f"{sorted(self.columns)}")
+                                    f"match the sample names in the count matrix: "
+                                    f"{design_mat_samples} != "
+                                    f"{sorted(self.columns)}")
         if len(design_mat_df.columns) != len(set(design_mat_df.columns)):
             raise InvalidValueError("The design matrix contains "
-                                   "duplicate factor names.")
+                                    "duplicate factor names.")
         for factor in design_mat_df.columns:
             if generic.sanitize_variable_name(factor) != factor:
                 raise InvalidValueError(f"Invalid factor name '{factor}': contains invalid characters."
@@ -3921,7 +3921,7 @@ class CountFilter(Filter):
                 raise InvalidTypeError("'new_column_names' must be either 'auto' or a list of strings!")
             if len(new_column_names) != len(sample_grouping):
                 raise InvalidValueError(f"The number of new column names {len(new_column_names)} "
-                                       f"does not match the number of sample groups {len(sample_grouping)}!")
+                                        f"does not match the number of sample groups {len(sample_grouping)}!")
 
         for group in sample_grouping:
             if isinstance(group, str):
@@ -3971,7 +3971,7 @@ class CountFilter(Filter):
         if scaling_factors.shape[0] == 1:
             if scaling_factors.shape[1] != len(numeric_cols):
                 raise InvalidValueError(f"Number of scaling factors ({scaling_factors.shape[1]}) does not match "
-                                       f"number of numeric columns in your data table ({len(numeric_cols)})!")
+                                        f"number of numeric columns in your data table ({len(numeric_cols)})!")
             # one lazy pass over self.df instead of one eager self.df.select per column: divide each
             # numeric column by its scalar factor and keep the non-numeric columns (e.g. the index) as-is
             exprs = [pl.col(column).truediv(scaling_factors[column]) if column in numeric_cols else pl.col(column)
@@ -4416,16 +4416,16 @@ class CountFilter(Filter):
         flat_grouping = parsing.flatten(sample_grouping)
         if not (len(flat_grouping) >= len(self._numeric_columns)):
             raise InvalidValueError(f"'sample_grouping' must include all columns. "
-                                   f"Only {len(flat_grouping)} out of "
-                                   f"{len(self._numeric_columns)} "
-                                   f"numeric columns were included. ")
+                                    f"Only {len(flat_grouping)} out of "
+                                    f"{len(self._numeric_columns)} "
+                                    f"numeric columns were included. ")
         if not isinstance(reference_group, int):
             raise InvalidTypeError(f"Invalid value for 'reference_group': {reference_group}")
         if not reference_group >= 0:
             raise InvalidValueError(f"Invalid value for 'reference_group': {reference_group}")
         if not (reference_group < len(sample_grouping)):
             raise InvalidValueError(f"'reference_group' value {reference_group} "
-                                   f"is larger than the number of sample groups!")
+                                    f"is larger than the number of sample groups!")
 
         suffix = '_normMRN'
         data = self.df.select(pl.col(self._numeric_columns))

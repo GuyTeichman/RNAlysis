@@ -8,9 +8,97 @@ import yaml
 from polars.testing import assert_frame_equal
 
 from rnalysis import __version__, fastq
+from rnalysis.exceptions import InvalidTypeError, InvalidValueError, RNAlysisInputError
 from rnalysis.fastq import *
 from rnalysis.utils import io
 from tests import are_dir_trees_equal, unlink_tree
+
+
+# --- input validation ---------------------------------------------------------------------------
+# These branches used to be bare `assert`s, which meant they vanished under `python -O`. They are
+# a representative sample of each validation shape in this module: missing folder/file, illegal
+# choice, wrong type, out-of-range value, and mismatched sample-name counts.
+
+_TRANSCRIPTOME = 'tests/test_files/kallisto_tests/transcripts.fasta'
+
+
+@pytest.mark.parametrize('kmer_length,expected', [
+    (31.0, InvalidTypeError),  # wrong type
+    ('31', InvalidTypeError),
+    (0, InvalidValueError),  # out of range
+    (33, InvalidValueError),
+    (30, InvalidValueError),  # even, not odd
+])
+def test_kallisto_create_index_validates_kmer_length(kmer_length, expected):
+    with pytest.raises(expected):
+        kallisto_create_index(_TRANSCRIPTOME, kmer_length=kmer_length)
+
+
+def test_kallisto_create_index_rejects_missing_transcriptome(monkeypatch):
+    monkeypatch.setattr(io, 'generate_base_call', lambda *args, **kwargs: ['kallisto'])
+    with pytest.raises(InvalidValueError):
+        kallisto_create_index('tests/test_files/no_such_transcriptome.fasta')
+
+
+@pytest.mark.parametrize('kwargs,expected', [
+    (dict(mode='not-a-mode'), InvalidValueError),
+    (dict(settings_preset='not-a-preset'), InvalidValueError),
+    (dict(quality_score_type='phred00'), InvalidValueError),
+    (dict(random_seed=0.5), InvalidTypeError),
+    (dict(random_seed=-1), InvalidValueError),
+    (dict(threads='1'), InvalidTypeError),
+    (dict(threads=-1), InvalidValueError),
+])
+def test_parse_bowtie2_misc_args_validates_parameters(monkeypatch, tmp_path, kwargs, expected):
+    monkeypatch.setattr(io, 'generate_base_call', lambda *args, **kwargs_: ['bowtie2'])
+    defaults = dict(mode='end-to-end', settings_preset='very-sensitive', ignore_qualities=False,
+                    quality_score_type='phred33', random_seed=0, threads=1)
+    defaults.update(kwargs)
+    with pytest.raises(expected):
+        fastq._parse_bowtie2_misc_args(tmp_path, 'index', 'auto', **defaults)
+
+
+def test_parse_bowtie2_misc_args_rejects_missing_output_folder(monkeypatch, tmp_path):
+    monkeypatch.setattr(io, 'generate_base_call', lambda *args, **kwargs_: ['bowtie2'])
+    with pytest.raises(InvalidValueError):
+        fastq._parse_bowtie2_misc_args(tmp_path / 'nope', 'index', 'auto', 'end-to-end', 'very-sensitive',
+                                       False, 'phred33', 0, 1)
+
+
+def test_featurecounts_get_sample_names_rejects_mismatched_count():
+    with pytest.raises(InvalidValueError):
+        fastq._featurecounts_get_sample_names(['a.sam', 'b.sam'], ['only_one_name'])
+
+
+def test_featurecounts_get_sample_names_accepts_matching_count():
+    assert fastq._featurecounts_get_sample_names(['a.sam', 'b.sam'], ['x', 'y']) == ['x', 'y']
+
+
+def test_single_end_pipeline_rejects_paired_end_function():
+    p = SingleEndPipeline()
+    with pytest.raises(InvalidValueError):
+        p.add_function(bowtie2_align_paired_end)
+
+
+def test_paired_end_pipeline_rejects_single_end_function():
+    p = PairedEndPipeline()
+    with pytest.raises(InvalidValueError):
+        p.add_function(bowtie2_align_single_end)
+
+
+def test_validation_survives_python_optimize():
+    """The whole point of the conversion: `python -O` must not strip input validation."""
+    import subprocess
+    import sys
+
+    code = ('from rnalysis import fastq\n'
+            'from rnalysis.exceptions import InvalidValueError\n'
+            'try:\n'
+            "    fastq.kallisto_create_index('x.fasta', kmer_length=0)\n"
+            'except InvalidValueError:\n'
+            "    print('RAISED')\n")
+    result = subprocess.run([sys.executable, '-O', '-c', code], capture_output=True, text=True)
+    assert 'RAISED' in result.stdout, result.stderr
 
 
 @pytest.mark.parametrize(
