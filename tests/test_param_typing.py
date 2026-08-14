@@ -1,4 +1,5 @@
 import json
+import os
 import subprocess
 import sys
 from pathlib import Path
@@ -201,8 +202,7 @@ def test_import_filtering_works_without_network(tmp_path):
     script.write_text(IMPORT_WITHOUT_NETWORK_SCRIPT, encoding='utf-8')
 
     result = subprocess.run([sys.executable, str(script)], capture_output=True, text=True, timeout=300,
-                            cwd=str(REPO_ROOT), env={**dict(__import__('os').environ),
-                                                     'PYTHONPATH': str(REPO_ROOT)})
+                            cwd=str(REPO_ROOT), env={**os.environ, 'PYTHONPATH': str(REPO_ROOT)})
 
     assert result.returncode == 0, f'importing rnalysis.filtering without network failed:\n{result.stderr}'
     assert 'IMPORT_OK' in result.stderr
