@@ -759,7 +759,7 @@ def test_sign_test_enrichment(monkeypatch, attr, gene_set, truth):
         assert np.all(sorted(values) == sorted(df.filter(pl.first().is_in(gene_set))[attr].to_list()))
         return None, 0.05
 
-    monkeypatch.setattr(enrichment_runner, 'sign_test', validate_params)
+    monkeypatch.setattr(enrichment_runner, '_sign_test', validate_params)
     runner = NonCategoricalEnrichmentRunner.__new__(NonCategoricalEnrichmentRunner)
     runner.annotations = df
     runner.gene_set = gene_set

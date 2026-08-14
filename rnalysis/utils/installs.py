@@ -8,6 +8,8 @@ from shutil import copyfileobj
 from typing import Literal, Union
 from urllib.request import urlopen
 
+import tenacity
+
 from rnalysis.exceptions import InternalError
 from rnalysis.utils import io
 
@@ -18,8 +20,11 @@ except ImportError:  # pragma: no cover
 
 
     class jdk:  # pragma: no cover
+        class JdkError(Exception):
+            pass
+
         @staticmethod
-        def install(version):
+        def install(version, *args, **kwargs):
             warnings.warn("Cannot install JDK.")
 
 PICARD_JAR = Path(os.environ.get('PICARDTOOLS_JAR', io.get_data_dir().joinpath('picard.jar')))
@@ -70,13 +75,23 @@ def is_jdk_installed():
     return False
 
 
+@tenacity.retry(retry=tenacity.retry_if_exception_type(jdk.JdkError),
+                stop=tenacity.stop_after_attempt(3),
+                wait=tenacity.wait_random_exponential(multiplier=1, max=30),
+                reraise=True)
+def _download_and_install_jdk():
+    # the JDK is fetched from an external server (Adoptium -> GitHub release asset) that intermittently
+    # drops connections; retry a few times before giving up so transient network blips don't fail the install.
+    jdk.install(str(JDK_VERSION), path=JDK_ROOT.as_posix())
+
+
 def install_jdk():
     if not is_jdk_installed():
         print("Installing Java...")
         if JDK_ROOT.exists():
             shutil.rmtree(JDK_ROOT)
         JDK_ROOT.mkdir(parents=True, exist_ok=True)
-        jdk.install(str(JDK_VERSION), path=JDK_ROOT.as_posix())
+        _download_and_install_jdk()
         print('Done')
 
 

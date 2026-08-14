@@ -10,13 +10,18 @@ from itertools import islice
 from pathlib import Path
 from typing import Any, Dict, Iterable, List, Literal, Tuple, Union
 
+import lazy_loader as lazy
 import mslex
 import numpy as np
-import pandas as pd
 import polars as pl
 
 from rnalysis.exceptions import InternalError
 from rnalysis.utils import validation
+
+# pandas is only needed by the single upsetplot helper below, but costs ~0.3s to import, so it is
+# loaded lazily (SPEC 1 / https://scientific-python.org/specs/spec-0001/). Nothing may touch an
+# attribute of `pd` at import time -- doing so imports pandas and defeats the whole point.
+pd = lazy.load('pandas')
 
 
 def quote_path(pth: Union[Path, str]) -> str:
