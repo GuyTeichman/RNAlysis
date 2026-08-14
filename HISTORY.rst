@@ -2,13 +2,8 @@
 History
 =======
 
-4.4.0 (unreleased)
+4.3.0 (2026-08-13)
 -------------------
-
-Changed
-*******
-* *RNAlysis* no longer uses bare ``assert`` statements to validate your input. Every input check now raises a real exception, so validation can no longer be silently removed: previously, running Python with the ``-O`` flag (or with ``PYTHONOPTIMIZE`` set in your environment) stripped all 341 of them, and invalid inputs flowed straight into the analysis, either failing later with a cryptic internal error or — worse — producing a wrong result without complaint. This affected the API/script workflow only; the standalone app was never affected.
-* The exceptions *RNAlysis* raises for invalid input are now typed, so scripts can tell the different failure modes apart: a wrong-type argument raises ``rnalysis.exceptions.InvalidTypeError`` (which is also a ``TypeError``), a bad value — out of range, not one of the legal choices, wrong shape — raises ``rnalysis.exceptions.InvalidValueError`` (also a ``ValueError``), and a violated internal invariant (which always indicates a bug in *RNAlysis*) raises ``rnalysis.exceptions.InternalError``. All three share the common base ``rnalysis.exceptions.RNAlysisError``, and the first two additionally share ``RNAlysisInputError``. **If your scripts catch ``AssertionError`` around *RNAlysis* calls, change them to catch ``RNAlysisInputError`` (or the built-in ``TypeError``/``ValueError``), which is what those calls now raise.** Which inputs are accepted or rejected is unchanged, and so are the error messages themselves; analysis results are unaffected.
 
 Added
 ******
@@ -38,6 +33,8 @@ Changed
 * Several ``filtering.CountFilter``/``Filter`` operations now run in a single fused Polars pass instead of scanning the table multiple times: the count-based filters (``filter_low_reads``, ``split_by_reads``, ``filter_by_row_sum``), all per-sample and per-gene normalizations, ``fold_change``, replicate averaging (``average_replicate_samples``), and the ``opposite=True`` path of every filter. Results are bit-for-bit identical, verified by a new eager-vs-lazy equivalence test suite.
 * On the "New table" screen, RNAlysis now auto-detects the most likely table type from the chosen file and pre-selects it in the table-type menu (count matrix, differential expression, or fold change), instead of always defaulting to "Other table". The detection is conservative — when the content is ambiguous it falls back to "Other table" rather than guess wrong — and it only sets the default; you can still change the table type manually. This only affects the pre-selected type, not how tables are actually loaded.
 * In the graphical interface, numeric input boxes for decimal (``float``) parameters now adapt to the magnitude of the value: an integer-valued default such as a read-count threshold of ``5`` is shown as ``5`` (rather than ``5.00``) and steps by whole units, while small fractional parameters keep a finer step and more decimals. This is a display-only change — the exact value you enter is still passed to the analysis unchanged, and arbitrary precise values can still be typed.
+* *RNAlysis* no longer uses bare ``assert`` statements to validate your input. Every input check now raises a real exception, so validation can no longer be silently removed: previously, running Python with the ``-O`` flag (or with ``PYTHONOPTIMIZE`` set in your environment) stripped all 341 of them, and invalid inputs flowed straight into the analysis, either failing later with a cryptic internal error or — worse — producing a wrong result without complaint. This affected the API/script workflow only; the standalone app was never affected.
+* The exceptions *RNAlysis* raises for invalid input are now typed, so scripts can tell the different failure modes apart: a wrong-type argument raises ``rnalysis.exceptions.InvalidTypeError`` (which is also a ``TypeError``), a bad value — out of range, not one of the legal choices, wrong shape — raises ``rnalysis.exceptions.InvalidValueError`` (also a ``ValueError``), and a violated internal invariant (which always indicates a bug in *RNAlysis*) raises ``rnalysis.exceptions.InternalError``. All three share the common base ``rnalysis.exceptions.RNAlysisError``, and the first two additionally share ``RNAlysisInputError``. **If your scripts catch ``AssertionError`` around *RNAlysis* calls, change them to catch ``RNAlysisInputError`` (or the built-in ``TypeError``/``ValueError``), which is what those calls now raise.** Which inputs are accepted or rejected is unchanged, and so are the error messages themselves; analysis results are unaffected.
 
 Fixed
 ******
