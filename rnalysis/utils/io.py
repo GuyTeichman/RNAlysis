@@ -2662,8 +2662,12 @@ def find_best_gene_mapping(ids: Tuple[str, ...], map_from_options: Union[Tuple[s
     return parsed_results[sorted_keys[0]]
 
 
-# Connect/read timeout (seconds) for the small "legal values" metadata fetches below. These run at
-# import time to populate GUI dropdowns / type annotations, so a hung request would freeze startup.
+# Connect/read timeout (seconds) for the small "legal values" metadata fetches below. These are the
+# live source of the vocabularies that fill the GUI's taxon / gene-ID-type dropdowns, but they are no
+# longer called while `import rnalysis.filtering` runs: the values are snapshotted at release time by
+# packaging/generate_api_vocabularies.py, and param_typing reads that snapshot. They are still called
+# live by that helper, and get_legal_gene_id_types is also called at analysis time (by
+# _get_id_abbreviation_dicts, for actual ID mapping) — so a hung request must not stall either.
 LEGAL_VALUES_REQUEST_TIMEOUT = (10, 30)
 
 

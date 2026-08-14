@@ -140,22 +140,29 @@ ordered checklist; the summary here is just the shape of it:
 3. `bumpversion patch|minor|major` — updates the version string across `rnalysis/__init__.py`,
    `setup.py`, `RNAlysis.spec`, the PyInstaller workflow, and `docs/source/conf.py` (per
    `.bumpversion.cfg`; it commits, does not tag), pushed directly to `master`.
-4. **Regenerate and commit the docs — required, not optional.** `docs/build/` is tracked in git
+4. **Regenerate and commit the API vocabulary snapshot — required, not optional.**
+   `python packaging/generate_api_vocabularies.py` refreshes
+   `rnalysis/data_files/api_vocabularies.json`, the packaged UniProtKB/PantherDB/Ensembl/PhylomeDB
+   vocabularies that `param_typing` bakes into `Literal[...]` annotations (and therefore into the
+   GUI dropdowns). They are pinned per version, so a skipped regeneration ships the previous
+   release's taxon lists. Run it after the bump (it records the version), and read its output —
+   it reports any service that stayed down or came back empty.
+5. **Regenerate and commit the docs — required, not optional.** `docs/build/` is tracked in git
    and is both the live site (GitHub Pages serves `/docs` on `master` directly, no build step) and
    the app's in-GUI help target, so it must reflect the version/date just bumped. The commands
    documented elsewhere for this (`make -C docs html`; the root `Makefile`'s `docs` target) are
    stale for this layout — see the skill for the verified working command.
-5. Tag `V<version>` and push it — this triggers `.github/workflows/pyinstaller.yml`, which builds
+6. Tag `V<version>` and push it — this triggers `.github/workflows/pyinstaller.yml`, which builds
    the standalone macOS/Windows packages, runs `packaging/`'s changelog + quick-start-video
    checksum helpers, and creates the GitHub Release.
-6. Publish to PyPI (`make dist && twine upload dist/*` — this step is manual, despite what
+7. Publish to PyPI (`make dist && twine upload dist/*` — this step is manual, despite what
    `CONTRIBUTING.rst` says), then merge `master` back into `development` so it doesn't drift.
 
-The `bumpversion` push, the docs-regen commit, and the Pyinstaller workflow's changelog/checksum
-auto-commit are the three narrow, deliberate exceptions to "never commit directly to `master`" —
-all three need the maintainer's own admin push access (`master`'s branch protection has
-`enforce_admins: false`), not just any contributor's. See the skill for why, and for the full
-post-release verification checklist.
+The `bumpversion` push, the vocabulary-snapshot commit, the docs-regen commit, and the Pyinstaller
+workflow's changelog/checksum auto-commit are the four narrow, deliberate exceptions to "never
+commit directly to `master`" — all four need the maintainer's own admin push access (`master`'s
+branch protection has `enforce_admins: false`), not just any contributor's. See the skill for why,
+and for the full post-release verification checklist.
 
 ---
 
