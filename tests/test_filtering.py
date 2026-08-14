@@ -2072,6 +2072,171 @@ def test_export_pipeline():
         os.remove(outname)
 
 
+# --- Pipeline YAML serialization robustness -----------------------------------------------------
+# Pipeline YAMLs are a serialized artifact users keep for years (hard rule 4), so exporting must
+# never crash on a value a user can plausibly pass, importing must never blame the user's typo on
+# Python internals, and a Pipeline that cannot be loaded must say which RNAlysis version wrote it.
+
+
+def test_export_pipeline_sanitizes_numpy_scalar_params():
+    p = Pipeline('countfilter')
+    p.add_function('filter_low_reads', threshold=np.float64(5.0))
+
+    exported = yaml.safe_load(p.export_pipeline(None))
+
+    threshold = exported['params'][0][1]['threshold']
+    assert threshold == 5.0
+    assert type(threshold) is float
+    assert Pipeline.import_pipeline(p.export_pipeline(None)) == p
+
+
+def test_export_pipeline_sanitizes_arrays_paths_and_nested_containers():
+    p = Pipeline('countfilter')
+    p.add_function('number_filters', np.int64(5), by=Path('some/dir/table.csv'),
+                   nested={'values': np.array([1.5, 2.5]), 'flags': [np.bool_(True), (np.int32(3),)]})
+
+    exported = yaml.safe_load(p.export_pipeline(None))
+
+    args, kwargs = exported['params'][0]
+    assert args == [5] and type(args[0]) is int
+    assert kwargs['by'] == 'some/dir/table.csv'
+    assert kwargs['nested'] == {'values': [1.5, 2.5], 'flags': [True, [3]]}
+
+
+def test_export_pipeline_unrepresentable_param_raises_typed_error():
+    class Unrepresentable:
+        pass
+
+    p = Pipeline('countfilter')
+    p.add_function('filter_low_reads', threshold=Unrepresentable())
+
+    with pytest.raises(RNAlysisInputError) as err:
+        p.export_pipeline(None)
+    assert 'filter_low_reads' in str(err.value)
+    assert 'threshold' in str(err.value)
+
+
+def test_export_pipeline_unrepresentable_positional_param_raises_typed_error():
+    class Unrepresentable:
+        pass
+
+    p = Pipeline('countfilter')
+    p.add_function('number_filters', Unrepresentable())
+
+    with pytest.raises(RNAlysisInputError) as err:
+        p.export_pipeline(None)
+    assert 'number_filters' in str(err.value)
+
+
+def test_import_pipeline_nonexistent_path_raises_file_not_found():
+    missing = 'tests/test_files/no_such_pipeline_file.yaml'
+    with pytest.raises(FileNotFoundError) as err:
+        Pipeline.import_pipeline(missing)
+    assert 'no_such_pipeline_file.yaml' in str(err.value)
+
+
+def test_import_pipeline_nonexistent_path_object_raises_file_not_found():
+    missing = Path('tests/test_files/no_such_pipeline_file.yaml')
+    with pytest.raises(FileNotFoundError) as err:
+        Pipeline.import_pipeline(missing)
+    assert 'no_such_pipeline_file.yaml' in str(err.value)
+
+
+def test_import_pipeline_from_yaml_string():
+    truth = Pipeline('countfilter')
+    truth.add_function(CountFilter.biotypes_from_ref_table)
+    truth.add_function('number_filters', 5, by='col_name')
+
+    with open('tests/test_files/test_pipeline.yaml') as f:
+        content = f.read()
+
+    assert Pipeline.import_pipeline(content) == truth
+
+
+def test_import_pipeline_without_metadata_still_loads():
+    truth = Pipeline('countfilter')
+    truth.add_function(CountFilter.biotypes_from_ref_table)
+    truth.add_function('number_filters', 5, by='col_name')
+
+    assert Pipeline.import_pipeline('tests/test_files/test_pipeline_no_metadata.yaml') == truth
+
+
+def test_import_pipeline_unknown_function_reports_exported_version():
+    content = ("filter_type: countfilter\n"
+               "metadata:\n"
+               "   export_time: 2022/12/01, 16:47:40\n"
+               "   rnalysis_version: 3.2.2\n"
+               "functions:\n"
+               "- a_function_that_never_existed\n"
+               "params:\n"
+               "- - []\n"
+               "  - {}\n")
+
+    with pytest.raises(RNAlysisInputError) as err:
+        Pipeline.import_pipeline(content)
+    message = str(err.value)
+    assert '3.2.2' in message
+    assert 'a_function_that_never_existed' in message
+    assert __version__ in message
+
+
+def test_import_pipeline_unknown_function_without_metadata_reports_unknown_version():
+    content = ("filter_type: countfilter\n"
+               "functions:\n"
+               "- a_function_that_never_existed\n"
+               "params:\n"
+               "- - []\n"
+               "  - {}\n")
+
+    with pytest.raises(RNAlysisInputError) as err:
+        Pipeline.import_pipeline(content)
+    assert 'a_function_that_never_existed' in str(err.value)
+    assert __version__ in str(err.value)
+
+
+def test_import_pipeline_private_function_name_rejected():
+    content = ("filter_type: countfilter\n"
+               "functions:\n"
+               "- _init_from_dict\n"
+               "params:\n"
+               "- - []\n"
+               "  - {}\n")
+
+    with pytest.raises(RNAlysisInputError):
+        Pipeline.import_pipeline(content)
+
+
+@pytest.mark.parametrize('content', [
+    "metadata:\n   rnalysis_version: 9.9.9\nfilter_type: countfilter\nfunctions:\n- describe\n",
+    "metadata:\n   rnalysis_version: 9.9.9\nfilter_type: countfilter\nparams:\n- - []\n  - {}\n",
+    "metadata:\n   rnalysis_version: 9.9.9\nfunctions:\n- describe\nparams:\n- - []\n  - {}\n",
+    "metadata:\n   rnalysis_version: 9.9.9\nfilter_type: not_a_filter_type\nfunctions: []\nparams: []\n",
+    "metadata:\n   rnalysis_version: 9.9.9\nfilter_type: countfilter\nfunctions:\n- describe\n- describe\n"
+    "params:\n- - []\n  - {}\n",
+])
+def test_import_pipeline_malformed_dict_reports_exported_version(content):
+    with pytest.raises(RNAlysisInputError) as err:
+        Pipeline.import_pipeline(content)
+    assert '9.9.9' in str(err.value)
+
+
+def test_import_pipeline_yaml_string_that_is_not_a_pipeline():
+    with pytest.raises(RNAlysisInputError):
+        Pipeline.import_pipeline('a: 1\nb: 2\n')
+
+
+def test_pipeline_tuple_params_round_trip_as_lists():
+    # documented, deliberate limitation: YAML has no tuple type, so nested tuples come back as
+    # lists. Only the top-level positional-argument tuple is restored.
+    p = Pipeline('countfilter')
+    p.add_function('filter_low_reads', 5, opposite=(True,))
+
+    imported = Pipeline.import_pipeline(p.export_pipeline(None))
+
+    assert imported.params[0][0] == (5,)
+    assert imported.params[0][1] == {'opposite': [True]}
+
+
 @pytest.mark.parametrize('components,gene_fraction,truth_paths', [
     (1, 0.32, ['tests/test_files/counted_pc1_0.32_top.csv', 'tests/test_files/counted_pc1_0.32_bottom.csv'])
 ])

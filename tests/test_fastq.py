@@ -1011,6 +1011,62 @@ def test_PairedEndPipeline_import():
     assert p == truth
 
 
+# --- Pipeline YAML serialization robustness -----------------------------------------------------
+
+
+def test_fastq_pipeline_import_nonexistent_path_raises_file_not_found():
+    with pytest.raises(FileNotFoundError) as err:
+        SingleEndPipeline.import_pipeline('tests/test_files/no_such_fastq_pipeline.yaml')
+    assert 'no_such_fastq_pipeline.yaml' in str(err.value)
+
+
+def test_fastq_pipeline_import_unknown_function_reports_exported_version():
+    content = ("metadata:\n"
+               "   rnalysis_version: 3.2.2\n"
+               "   pipeline_type: single\n"
+               "functions:\n"
+               "- a_function_that_never_existed\n"
+               "params:\n"
+               "- - []\n"
+               "  - {}\n")
+
+    with pytest.raises(InvalidValueError) as err:
+        SingleEndPipeline.import_pipeline(content)
+    message = str(err.value)
+    assert '3.2.2' in message
+    assert 'a_function_that_never_existed' in message
+    assert __version__ in message
+
+
+def test_fastq_pipeline_import_non_function_module_member_rejected():
+    # 'io' is a module imported by rnalysis.fastq - it must not be resolvable as a Pipeline function
+    content = ("metadata:\n"
+               "   rnalysis_version: 3.2.2\n"
+               "functions:\n"
+               "- io\n"
+               "params:\n"
+               "- - []\n"
+               "  - {}\n")
+
+    with pytest.raises(InvalidValueError):
+        SingleEndPipeline.import_pipeline(content)
+
+
+def test_fastq_pipeline_export_sanitizes_numpy_params():
+    import numpy as np
+
+    p = SingleEndPipeline()
+    p.add_function('trim_adapters_single_end', three_prime_adapters='ATGGG',
+                   error_tolerance=np.float64(0.1), minimum_read_length=np.int64(10))
+
+    exported = yaml.safe_load(p.export_pipeline(None))
+
+    kwargs = exported['params'][0][1]
+    assert type(kwargs['error_tolerance']) is float and kwargs['error_tolerance'] == 0.1
+    assert type(kwargs['minimum_read_length']) is int and kwargs['minimum_read_length'] == 10
+    assert SingleEndPipeline.import_pipeline(p.export_pipeline(None)) == p
+
+
 def test_PairedEndPipeline_apply_to():
     in_dir = Path('tests/test_files/fastq_pipeline_tests/in')
     out_dir = Path('tests/test_files/fastq_pipeline_tests/paired/outdir')
