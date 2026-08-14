@@ -2,7 +2,7 @@
 History
 =======
 
-4.3.0 (2026-08-13)
+4.3.0 (unreleased)
 -------------------
 
 Added
@@ -71,6 +71,7 @@ Fixed
 * Fixed a bug where mistyping the name of a Pipeline file made RNAlysis try to interpret the file *path* as the contents of a Pipeline, failing with an unrelated ``TypeError: string indices must be integers``. A path that does not exist now raises a ``FileNotFoundError`` naming the file, while passing the contents of a Pipeline file directly (as a string) keeps working as before.
 * Pipelines record the version of RNAlysis that exported them, but nothing ever read that stamp. When a Pipeline cannot be loaded — because it names a function that no longer exists, or because the file is malformed — the error now states which version of RNAlysis exported the Pipeline and which version you are running, instead of failing with a bare ``AttributeError``.
 * Fixed a bug where the organism drop-down menu of "Map genes to nearest orthologs (using PhylomeDB)" was always empty, so an organism could only be entered as free text. RNAlysis fetched PhylomeDB's list of supported species correctly, but discarded every entry while filtering that list, so not a single species ever reached the menu. The menu now offers all species supported by PhylomeDB (6,284 of them), sorted alphabetically; entering an organism name or taxon ID by hand still works exactly as before. This changes only which values the menu offers - ortholog mapping results are unchanged.
+* Fixed a bug where importing a gene set from a ``.csv`` or ``.tsv`` file kept stray leading/trailing whitespace around the gene identifiers (for example a trailing space after an ID), producing broken identifiers that match nothing in reference or count tables. Identifiers are now trimmed on import, matching how gene IDs are read when loading tables.
 
 
 4.2.0 (2026-05-30)
