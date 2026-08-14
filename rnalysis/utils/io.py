@@ -488,8 +488,9 @@ class GUISessionManager:
         except yaml.YAMLError as err:
             raise self._corrupt_session_error("its 'session_data.yaml' file could not be read") from err
 
+        mandatory_fields = ('files', 'pipelines', 'metadata')
         if not isinstance(session_data, dict) or not all(
-            isinstance(session_data.get(key), dict) for key in ('files', 'pipelines', 'metadata')):
+                isinstance(session_data.get(key), dict) for key in mandatory_fields):
             raise self._corrupt_session_error("its 'session_data.yaml' file is missing mandatory information",
                                               session_data)
         return session_data

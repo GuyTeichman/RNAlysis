@@ -531,10 +531,10 @@ def _sanitize_for_yaml(value, context: str):
             new_key = _sanitize_for_yaml(key, context)
             try:
                 hash(new_key)
-            except TypeError:
+            except TypeError as err:
                 raise InvalidTypeError(f"Cannot export Pipeline: the dictionary key {key!r} of {context} "
                                        f"cannot be saved to a Pipeline YAML file. "
-                                       f"Please use a simple dictionary key such as a string or a number. ")
+                                       f"Please use a simple dictionary key such as a string or a number. ") from err
             sanitized[new_key] = _sanitize_for_yaml(val, context)
         return sanitized
     if isinstance(value, (list, tuple)):
@@ -547,10 +547,11 @@ def _sanitize_for_yaml(value, context: str):
 
     try:
         yaml.safe_dump(value)
-    except yaml.YAMLError:
+    except yaml.YAMLError as err:
         raise InvalidTypeError(f"Cannot export Pipeline: the value of {context} (of type "
                                f"'{type(value).__name__}') cannot be saved to a Pipeline YAML file. "
-                               f"Please replace it with a simple value, such as a number, a string, or a list. ")
+                               f"Please replace it with a simple value, such as a number, a string, or a list. ") \
+            from err
     return value
 
 
