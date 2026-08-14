@@ -2,8 +2,14 @@
 History
 =======
 
-4.3.0 (2026-08-13)
+4.4.0 (unreleased)
 -------------------
+
+Changed
+*******
+* *RNAlysis* now starts up substantially faster. The heaviest third-party packages (seaborn, scikit-learn, pandas, statsmodels, matplotlib-venn, UpSetPlot, kmedoids and hdbscan) are no longer imported when you import *RNAlysis* — they are loaded on demand, the first time a function that actually needs them runs. Importing ``rnalysis.filtering`` is roughly twice as fast, and ``rnalysis.enrichment`` roughly a third faster; every script, notebook, and parallel worker process pays the smaller cost. Analysis results are unchanged.
+* The randomization tests (``FoldChangeFilter.randomization_test`` and the randomization enrichment test) now cache their compiled ``numba`` code on disk, so only the very first run after installing or upgrading pays the compilation cost instead of every new Python process. Results are unchanged. Caching is automatically disabled in the standalone (frozen) app, where the cache directory is read-only.
+* The minimum required version of ``scikit-learn`` is now 1.6.0 (from 1.5.0), which is the first version that supports loading its submodules on demand.
 
 Added
 ******

@@ -27,6 +27,12 @@ hiddenimports += collect_submodules('polars')
 hiddenimports += ['matplotlib.backends.backend_pdf', 'matplotlib.backends.backend_svg',
                   'matplotlib.backends.backend_agg', 'matplotlib.backends.backend_pgf',
                   'matplotlib.backends.backend_ps']
+# These packages are loaded lazily at runtime (`lazy_loader.load(...)`, see issue #257), which means
+# they are imported by *name* and PyInstaller's static analysis cannot see them. Each one is
+# imported by its top-level name only -- the attributes RNAlysis reaches for (e.g.
+# `hdbscan.dist_metrics`, `matplotlib_venn.layout`) are all pulled in by the package's own __init__,
+# and scikit-learn is already covered by collect_submodules('sklearn') above.
+hiddenimports += ['seaborn', 'pandas', 'kmedoids', 'hdbscan', 'matplotlib_venn', 'upsetplot']
 
 # UPX-compressing Qt's core libraries (and the CPython DLL) is a known source of slow
 # startup (extra decompression on load), occasional crashes, and AV false positives.

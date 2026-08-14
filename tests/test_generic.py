@@ -1,5 +1,8 @@
 import pytest
 from matplotlib.backend_bases import PickEvent
+# scikit-learn is imported lazily by rnalysis.utils.generic (see tests/test_imports.py), so the
+# star-import below no longer re-exports it -- the tests import it directly instead.
+from sklearn.preprocessing import PowerTransformer, StandardScaler
 
 from rnalysis.utils import generic
 from rnalysis.utils.generic import *

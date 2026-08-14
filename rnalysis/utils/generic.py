@@ -11,6 +11,7 @@ from pathlib import Path
 from typing import Callable, Dict, Tuple, Union
 
 import joblib
+import lazy_loader as lazy
 import matplotlib.collections
 import matplotlib.pyplot as plt
 import numpy as np
@@ -20,10 +21,14 @@ import yaml
 from matplotlib import figure
 from matplotlib.widgets import MultiCursor
 from scipy.special import comb
-from sklearn.preprocessing import PowerTransformer, StandardScaler
 from tqdm.auto import tqdm
 
 from rnalysis import FROZEN_ENV, __version__
+
+# scikit-learn costs ~1s to import and is only needed once a transform actually runs, so it is loaded
+# lazily (SPEC 1 / https://scientific-python.org/specs/spec-0001/). Nothing may touch an attribute of
+# `_sklearn` at import time -- doing so imports the package and defeats the whole point.
+_sklearn = lazy.load('sklearn')
 
 try:
     import numba
@@ -209,7 +214,7 @@ BOX_COX_PARALLEL_MIN_COLUMNS = 500
 def _box_cox_fit_transform(array: np.ndarray) -> np.ndarray:
     # sklearn's PowerTransformer(box-cox) fits + applies a separate lambda to each column independently
     # (and, with the default standardize=True, standardizes each column afterwards).
-    return PowerTransformer(method='box-cox').fit_transform(array + 1)
+    return _sklearn.preprocessing.PowerTransformer(method='box-cox').fit_transform(array + 1)
 
 
 def _parallel_box_cox(array: np.ndarray, backend: str, n_jobs: int) -> np.ndarray:
@@ -244,7 +249,7 @@ def standard_box_cox(data: Union[np.ndarray, pl.DataFrame],
         box_cox_array = _parallel_box_cox(array, backend=parallel_backend, n_jobs=joblib.cpu_count())
     else:
         box_cox_array = _box_cox_fit_transform(array)
-    res_array = StandardScaler().fit_transform(box_cox_array)
+    res_array = _sklearn.preprocessing.StandardScaler().fit_transform(box_cox_array)
     if isinstance(data, pl.DataFrame):
         return data.select(~cs.numeric()).with_columns(
             pl.DataFrame(res_array, schema=data.select(cs.numeric()).columns))
@@ -297,7 +302,7 @@ def standardize(data: Union[np.ndarray, pl.DataFrame]) -> Union[np.ndarray, pl.D
         array = data.select(cs.numeric()).to_numpy()
     else:
         array = data
-    res_array = StandardScaler().fit_transform(array)
+    res_array = _sklearn.preprocessing.StandardScaler().fit_transform(array)
     if isinstance(data, pl.DataFrame):
         return data.select(~cs.numeric()).with_columns(pl.DataFrame(res_array, schema=data.columns))
     return res_array
