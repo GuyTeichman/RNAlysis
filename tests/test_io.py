@@ -1665,6 +1665,21 @@ def test_save_and_load_session_round_trip(tmp_path):
         get_gui_cache_dir().joinpath('roundtrip_table.parquet').unlink(missing_ok=True)
 
 
+def test_save_session_flushes_the_archive_to_disk_before_replacing(monkeypatch, tmp_path):
+    # os.replace only makes the directory-entry swap atomic - the replacement's contents must
+    # already be on disk, or a power loss can leave a session file that was never written
+    order = []
+    real_fsync = os.fsync
+    real_replace = os.replace
+
+    monkeypatch.setattr(os, 'fsync', lambda fd: (order.append('fsync'), real_fsync(fd))[1])
+    monkeypatch.setattr(os, 'replace', lambda src, dst: (order.append('replace'), real_replace(src, dst))[1])
+
+    GUISessionManager(tmp_path.joinpath('sess.rnal')).save_session([], [], None, {})
+
+    assert order == ['fsync', 'replace']
+
+
 def test_save_and_load_session_with_a_relative_path(monkeypatch, tmp_path):
     # shutil.make_archive temporarily changes the working directory, so the staging paths must not
     # depend on it

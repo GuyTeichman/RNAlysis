@@ -8,7 +8,7 @@ import warnings
 from datetime import date, datetime
 from functools import lru_cache
 from pathlib import Path
-from typing import Callable, Dict, Tuple, Union
+from typing import Callable, Dict, Optional, Tuple, Union
 
 import joblib
 import matplotlib.collections
@@ -526,22 +526,13 @@ def _sanitize_for_yaml(value, context: str):
         return value.as_posix()
 
     if isinstance(value, dict):
-        sanitized = {}
-        for key, val in value.items():
-            new_key = _sanitize_for_yaml(key, context)
-            try:
-                hash(new_key)
-            except TypeError as err:
-                raise InvalidTypeError(f"Cannot export Pipeline: the dictionary key {key!r} of {context} "
-                                       f"cannot be saved to a Pipeline YAML file. "
-                                       f"Please use a simple dictionary key such as a string or a number. ") from err
-            sanitized[new_key] = _sanitize_for_yaml(val, context)
-        return sanitized
+        return {_sanitize_hashable(key, context, 'dictionary key'): _sanitize_for_yaml(val, context)
+                for key, val in value.items()}
     if isinstance(value, (list, tuple)):
         # YAML has no tuple type - tuples are stored (and re-loaded) as lists
         return [_sanitize_for_yaml(item, context) for item in value]
     if isinstance(value, (set, frozenset)):
-        return {_sanitize_for_yaml(item, context) for item in value}
+        return {_sanitize_hashable(item, context, 'set item') for item in value}
     if isinstance(value, _YAML_SAFE_SCALARS):
         return value
 
@@ -555,7 +546,28 @@ def _sanitize_for_yaml(value, context: str):
     return value
 
 
-def _parse_pipeline_yaml_string(content: str) -> Tuple[bool, typing.Any]:
+def _sanitize_hashable(value, context: str, kind: str):
+    """
+    Sanitize a value that must stay hashable (a dictionary key or a set item).
+
+    :param value: the value to sanitize
+    :param context: human-readable description of the parameter it belongs to, used in error messages
+    :type context: str
+    :param kind: what the value is ('dictionary key' or 'set item'), used in error messages
+    :type kind: str
+    :return: a YAML-representable, hashable version of ``value``
+    """
+    sanitized = _sanitize_for_yaml(value, context)
+    try:
+        hash(sanitized)
+    except TypeError as err:
+        raise InvalidTypeError(f"Cannot export Pipeline: the {kind} {value!r} of {context} "
+                               f"cannot be saved to a Pipeline YAML file. "
+                               f"Please use a simple value such as a string or a number. ") from err
+    return sanitized
+
+
+def _parse_pipeline_yaml_string(content: str) -> Tuple[bool, typing.Any, Optional[yaml.YAMLError]]:
     """
     Determine whether the given string plausibly *is* a Pipeline YAML document, and if so, parse it.
 
@@ -564,17 +576,17 @@ def _parse_pipeline_yaml_string(content: str) -> Tuple[bool, typing.Any]:
 
     :param content: the string to examine
     :type content: str
-    :return: a tuple of (whether the string is a plausible YAML document, the parsed document)
+    :return: a tuple of (whether the string was meant as a YAML document, the parsed document, \
+    and the error raised while parsing it, if any)
     """
+    # a multi-line string was clearly meant as file *contents* rather than as a file name
+    is_document = '\n' in content
     try:
         parsed = yaml.safe_load(content)
-    except yaml.YAMLError:
-        return False, None
-    # a multi-line string was clearly meant as file *contents*; a single-line string is only
-    # treated as YAML if it actually parses into a Pipeline-shaped mapping.
-    if '\n' in content or isinstance(parsed, dict):
-        return True, parsed
-    return False, None
+    except yaml.YAMLError as err:
+        return is_document, None, err
+    # a single-line string is only treated as YAML if it parses into a Pipeline-shaped mapping
+    return is_document or isinstance(parsed, dict), parsed, None
 
 
 class GenericPipeline(abc.ABC):
@@ -718,8 +730,8 @@ class GenericPipeline(abc.ABC):
         pipeline._init_from_dict(pipeline_dict)
         return pipeline
 
-    @staticmethod
-    def _read_pipeline_dict(filename: Union[str, Path]):
+    @classmethod
+    def _read_pipeline_dict(cls, filename: Union[str, Path]):
         """
         Read a Pipeline YAML document from either a file or a YAML-like string.
 
@@ -729,11 +741,19 @@ class GenericPipeline(abc.ABC):
         """
         try:
             with open(filename) as f:
-                return yaml.safe_load(f)
+                try:
+                    return yaml.safe_load(f)
+                except yaml.YAMLError as err:
+                    raise cls._pipeline_load_error(
+                        None, f"the file '{filename}' is not a valid YAML document ({err}).") from err
         except OSError as err:
             if isinstance(filename, str):
-                is_yaml_string, pipeline_dict = _parse_pipeline_yaml_string(filename)
+                is_yaml_string, pipeline_dict, parse_error = _parse_pipeline_yaml_string(filename)
                 if is_yaml_string:
+                    if parse_error is not None:
+                        raise cls._pipeline_load_error(
+                            None, f"the given Pipeline is not a valid YAML document "
+                                  f"({parse_error}).") from parse_error
                     return pipeline_dict
             if isinstance(err, FileNotFoundError):
                 raise FileNotFoundError(f"Could not find the Pipeline file '{filename}'. "

@@ -462,10 +462,31 @@ class GUISessionManager:
         archive_base = f'{self._staging_dir.as_posix()}_archive'
         self._staging_archive = Path(f'{archive_base}.zip')
         shutil.make_archive(archive_base, 'zip', self._staging_dir)
+        self._flush_to_disk(self._staging_archive)
         # the previous session file is replaced only now, in a single atomic step, and only once
         # its replacement has been fully written to disk.
         os.replace(self._staging_archive, self._archive_path)
         self._staging_archive = None
+
+    @staticmethod
+    def _flush_to_disk(path: Path):
+        """
+        Force a file's contents out of the operating system's cache and onto the disk.
+
+        ``os.replace`` only makes the *directory entry* swap atomic; without this, a power loss
+        right after a session was saved could leave a session file whose contents were never
+        actually written - having already replaced the previous session.
+
+        :param path: the file to flush
+        :type path: pathlib.Path
+        """
+        try:
+            with open(path, 'r+b') as f:
+                os.fsync(f.fileno())
+        except OSError:  # pragma: no cover
+            # some filesystems (notably network shares) do not support fsync - a session that was
+            # otherwise saved successfully should not fail because of that.
+            warnings.warn(f"Could not flush the session file '{path}' to disk. ")
 
     def _unpack_session_archive(self):
         archive_path = self._archive_path

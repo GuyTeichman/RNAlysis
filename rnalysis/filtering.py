@@ -6285,11 +6285,12 @@ class Pipeline(generic.GenericPipeline):
     def _init_from_dict(self, pipeline_dict: dict):
         self._validate_pipeline_dict(pipeline_dict)
         filter_type = pipeline_dict.get('filter_type')
-        if not isinstance(filter_type, str) or filter_type not in self.FILTER_TYPES:
+        # filter types are matched case-insensitively, exactly like in Pipeline.__init__
+        if not isinstance(filter_type, str) or filter_type.lower() not in self.FILTER_TYPES:
             raise self._pipeline_load_error(pipeline_dict,
                                             f"'{filter_type}' is not a valid Pipeline filter type. "
                                             f"Valid filter types are: {sorted(self.FILTER_TYPES.keys())}.")
-        self.filter_type = self.FILTER_TYPES[filter_type]
+        self.filter_type = self.FILTER_TYPES[filter_type.lower()]
         self.params = self._params_from_dict(pipeline_dict)
         self.functions = [self._resolve_function(func, self.filter_type, self.filter_type.__name__, pipeline_dict)
                           for func in pipeline_dict['functions']]

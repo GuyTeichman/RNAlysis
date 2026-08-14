@@ -12,6 +12,11 @@ Adding new names never fails the test - it only emits a warning asking for the m
 updated. To regenerate the manifest after a deliberate change, run::
 
     python -m tests.test_api_manifest
+
+**Not covered yet:** only *function* names are pinned. Pipeline YAMLs also store keyword-argument
+names, so renaming a public parameter (say ``filter_low_reads(threshold=...)`` to ``min_reads``)
+breaks previously-exported Pipelines at apply time without failing this test. Extending the
+manifest to each function's parameter names would close that half of the hole.
 """
 import types
 import warnings

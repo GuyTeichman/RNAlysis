@@ -2225,6 +2225,41 @@ def test_import_pipeline_yaml_string_that_is_not_a_pipeline():
         Pipeline.import_pipeline('a: 1\nb: 2\n')
 
 
+def test_import_pipeline_unparseable_yaml_string_raises_typed_error():
+    with pytest.raises(RNAlysisInputError) as err:
+        Pipeline.import_pipeline('functions: [\nparams: }\n')
+    assert 'YAML' in str(err.value)
+
+
+def test_import_pipeline_unparseable_yaml_file_raises_typed_error(tmp_path):
+    broken = tmp_path.joinpath('broken_pipeline.yaml')
+    broken.write_text('functions: [\nparams: }\n')
+
+    with pytest.raises(RNAlysisInputError) as err:
+        Pipeline.import_pipeline(broken)
+    assert 'YAML' in str(err.value)
+
+
+def test_import_pipeline_filter_type_is_case_insensitive():
+    # Pipeline('CountFilter') is accepted, so a hand-written Pipeline YAML must be too
+    truth = Pipeline('countfilter')
+    truth.add_function('describe')
+
+    imported = Pipeline.import_pipeline('filter_type: CountFilter\nfunctions:\n- describe\nparams:\n- - []\n  - {}\n')
+
+    assert imported == truth
+
+
+def test_export_pipeline_unhashable_set_item_raises_typed_error():
+    p = Pipeline('countfilter')
+    p.add_function('filter_low_reads', threshold=5, opposite={(1, 2)})
+
+    with pytest.raises(RNAlysisInputError) as err:
+        p.export_pipeline(None)
+    assert 'filter_low_reads' in str(err.value)
+    assert 'opposite' in str(err.value)
+
+
 def test_pipeline_tuple_params_round_trip_as_lists():
     # documented, deliberate limitation: YAML has no tuple type, so nested tuples come back as
     # lists. Only the top-level positional-argument tuple is restored.
