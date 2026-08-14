@@ -2788,8 +2788,12 @@ def find_best_gene_mapping(ids: Tuple[str, ...], map_from_options: Union[Tuple[s
     return parsed_results[sorted_keys[0]]
 
 
-# Connect/read timeout (seconds) for the small "legal values" metadata fetches below. These run at
-# import time to populate GUI dropdowns / type annotations, so a hung request would freeze startup.
+# Connect/read timeout (seconds) for the small "legal values" metadata fetches below. These are the
+# live source of the vocabularies that fill the GUI's taxon / gene-ID-type dropdowns, but they are no
+# longer called while `import rnalysis.filtering` runs: the values are snapshotted at release time by
+# packaging/generate_api_vocabularies.py, and param_typing reads that snapshot. They are still called
+# live by that helper, and get_legal_gene_id_types is also called at analysis time (by
+# _get_id_abbreviation_dicts, for actual ID mapping) — so a hung request must not stall either.
 LEGAL_VALUES_REQUEST_TIMEOUT = (10, 30)
 
 
@@ -2819,7 +2823,14 @@ def get_legal_ensembl_taxons():
 @functools.lru_cache(maxsize=2)
 def get_legal_phylomedb_taxons():
     entries = PhylomeDBOrthologMapper.get_legal_species()
-    taxons = tuple(name for name in entries.select(pl.col('name')).unique() if name[0].isupper())
+    # Iterate the 'name' column's VALUES: iterating the DataFrame itself yields whole Series, so the
+    # filter below used to test a Series' first name (e.g. 'Homo sapiens'.isupper() -> False) and
+    # dropped everything, leaving this vocabulary empty on every machine (issue #263).
+    names = entries['name'].unique().to_list()
+    # Species names are capitalized; PhylomeDB's table also lists lowercase-initial entries
+    # (unclassified/environmental samples), which aren't useful values for an organism dropdown.
+    # Sorted so the packaged vocabulary snapshot is reproducible (Series.unique() doesn't order).
+    taxons = tuple(sorted(name for name in names if name and name[:1].isupper()))
     return taxons
 
 

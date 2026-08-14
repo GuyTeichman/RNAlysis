@@ -2,9 +2,11 @@
 name: release
 description: >-
   Ordered checklist for cutting an RNAlysis release: dating the HISTORY.rst entry, merging
-  `development` into `master`, running `bumpversion`, regenerating and committing the Sphinx
-  docs (required — `docs/build/` is tracked in git and is what the app's in-GUI help links
-  point at), tagging to trigger the standalone-build workflow, and the (manual) PyPI publish.
+  `development` into `master`, running `bumpversion`, regenerating and committing the packaged
+  API-vocabulary snapshot and the Sphinx docs (both required — `docs/build/` is tracked in git and
+  is what the app's in-GUI help links point at, and the vocabulary snapshot is what populates the
+  GUI's taxon/gene-ID dropdowns for that version), tagging to trigger the standalone-build
+  workflow, and the (manual) PyPI publish.
   Use when Guy — the maintainer — says "cut a release", "release a new version", "ship 4.x.0",
   "bump the version", or asks to merge `development` into `master`. This is a maintainer-only,
   infrequent, multi-file, partly-irreversible procedure (tag push and PyPI upload can't be
@@ -26,18 +28,20 @@ with Guy before the irreversible steps (pushing the tag, `twine upload`) if ther
 Read `.claude/workflows.md`'s "Release (maintainer)" and "Branching & releases" sections first —
 this skill is the expanded version of those.
 
-## A load-bearing fact: three narrow, deliberate exceptions to "never commit to master/development"
+## A load-bearing fact: four narrow, deliberate exceptions to "never commit to master/development"
 
 CLAUDE.md hard rule 2 says never commit directly to `master` or `development`. The *release
-procedure itself* has always broken that rule in exactly three mechanical, tool-generated spots —
+procedure itself* has always broken that rule in a few mechanical, tool-generated spots —
 verified both from `CONTRIBUTING.rst`'s "Deploying" section and from git history (e.g. `c16b014e`
 "Bump version: 4.1.2 → 4.2.0" sits directly in `master`'s linear history, not behind a PR merge):
 
 1. **The `bumpversion` commit is pushed straight to `master`** (Step 2).
-2. **The docs regeneration commit is pushed straight to `master`** (Step 3 — new; docs are a
+2. **The API-vocabulary snapshot commit is pushed straight to `master`** (Step 3 — same reasoning
+   as the docs below: a generated, version-stamped release artifact that depends on the bump).
+3. **The docs regeneration commit is pushed straight to `master`** (Step 4 — new; docs are a
    release artifact in this repo, not a side project, so it belongs in the same direct-push
    lineage as the version bump it depends on).
-3. **The Pyinstaller workflow's checksum/changelog commit is pushed straight to `master`** (via
+4. **The Pyinstaller workflow's checksum/changelog commit is pushed straight to `master`** (via
    the `VID_CHECKSUM_PAT` secret; see `.github/workflows/pyinstaller.yml`).
 
 This only works because `master`'s branch protection requires 1 PR approval **but has
@@ -129,7 +133,38 @@ This is the direct-push-to-`master` exception described above — run it on `mas
 merge in Step 1, then `git push` (per CONTRIBUTING.rst's own documented "Deploying" section). Do
 **not** push yet if you're about to do Step 3 next anyway — one combined push is fine.
 
-## Step 3 — Regenerate and commit the docs (required)
+## Step 3 — Regenerate and commit the API vocabulary snapshot (required)
+
+`rnalysis/data_files/api_vocabularies.json` is the packaged snapshot of the remote vocabularies —
+UniProtKB's gene-ID types, and PantherDB's / Ensembl's / PhylomeDB's legal taxons — that
+`rnalysis/utils/param_typing.py` bakes into `Literal[...]` annotations, and therefore into the GUI's
+dropdowns. It is a **versioned release artifact**, like the quick-start video checksums: the legal
+values are pinned per RNAlysis version, so they only ever refresh when a release regenerates them.
+Skip this step and the release ships the previous release's taxon lists (a new Ensembl species won't
+be in the dropdown — users can still type it into the combo box's free-text field, so this is a
+staleness bug, not a blocker).
+
+```bash
+python packaging/generate_api_vocabularies.py
+git diff --stat rnalysis/data_files/api_vocabularies.json
+git commit -am "Regenerate the API vocabulary snapshot for <version>"
+```
+
+- Run it **after** Step 2: the file records `rnalysis_version`, which must be the version being
+  released.
+- It makes **live** requests (UniProtKB REST, PantherDB, Ensembl REST, PhylomeDB FTP), so run it
+  from a machine with network access, and **read its output**. It retries each service, then:
+  a service that stays down keeps its previous values, marked `"stale": true` (a dead service must
+  never silently empty a dropdown) — decide consciously whether to ship that or wait for the
+  service to come back. A service that answers but returns *zero* values is reported too, and means
+  the matching `io.get_legal_*` parser no longer matches the service's response format — a real bug
+  to fix before releasing, not something to ship.
+- Sanity-check the diff: entry counts should move by a handful, not collapse. As of 4.3.0 the
+  snapshot holds 73 gene-ID types, 144 PantherDB taxons and 356 Ensembl taxons (PhylomeDB is
+  empty — a known bug in `io.get_legal_phylomedb_taxons`, not a failed fetch).
+- Same direct-push-to-`master` lineage as Steps 2 and 4; one combined push at the end is fine.
+
+## Step 4 — Regenerate and commit the docs (required)
 
 **Not optional, not "if you have time."** `docs/build/` (1354 files as of this writing) is
 **tracked in git** and is exactly what's live at `https://guyteichman.github.io/RNAlysis/` —
@@ -191,7 +226,7 @@ git commit -m "Regenerate docs for <version>"
 git push origin master
 ```
 
-## Step 4 — Tag and push, to trigger the standalone build
+## Step 5 — Tag and push, to trigger the standalone build
 
 `bumpversion` deliberately does not tag (`tag = False`) — tag manually, matching the existing `V*`
 convention (`V4.2.0`, `V4.1.2`, ...; this is also what `.github/workflows/pyinstaller.yml`'s
@@ -221,7 +256,7 @@ which — with no further action needed from you — will:
 
 Watch it: `gh run watch --exit-status $(gh run list --workflow pyinstaller.yml --limit 1 --json databaseId -q '.[0].databaseId')`.
 
-## Step 5 — Publish to PyPI (manual — not automated)
+## Step 6 — Publish to PyPI (manual — not automated)
 
 `CONTRIBUTING.rst`'s "Deploying" section says GitHub Actions "will build and publish... the PyPI
 package", but **no workflow in this repo does that** — `pyinstaller.yml` only builds the
@@ -237,9 +272,10 @@ make release    # == make dist && twine upload dist/*   (needs PyPI credentials 
 to go implement as part of a routine release — flag it to Guy if he wants that gap closed
 separately; that's a CI/tooling change of its own, out of scope for the act of releasing.
 
-## Step 6 — Sync `master` back into `development`
+## Step 7 — Sync `master` back into `development`
 
-The release commits (`bumpversion`, the docs regen, the checksum/changelog auto-commit) exist
+The release commits (`bumpversion`, the vocabulary snapshot, the docs regen, the
+checksum/changelog auto-commit) exist
 only on `master` until they're folded back — otherwise the next feature branch cut from
 `development` starts from a stale version string and stale docs. Git history shows this done as a
 plain merge (`Merge remote-tracking branch 'origin/master'`), not a PR — a pure content sync with
@@ -260,7 +296,11 @@ sync; don't use the lack of protection as license to push unrelated work there d
 - [ ] `HISTORY.rst`'s new-version header carries a real date, on both `master` and `development`.
 - [ ] The version string matches across all five `bumpversion`-managed files (spot-check
       `rnalysis/__init__.py`) on `master`.
-- [ ] **Docs regenerated and committed; `docs/build/` reflects the new version string** (Step 3 —
+- [ ] **`rnalysis/data_files/api_vocabularies.json` regenerated and committed** (Step 3 — its
+      `rnalysis_version` is the version just released, `generated_at` is today, no entry is marked
+      `"stale": true` unless you consciously chose to ship one, and no entry collapsed to an empty
+      list that wasn't empty before).
+- [ ] **Docs regenerated and committed; `docs/build/` reflects the new version string** (Step 4 —
       spot-check e.g. `docs/build/index.html` or any page's footer/sidebar version, and confirm
       no leftover stale pages for anything renamed/removed this release). Live at
       `https://guyteichman.github.io/RNAlysis/` once pushed — no separate deploy step.
@@ -270,8 +310,8 @@ sync; don't use the lack of protection as license to push unrelated work there d
       attached and non-trivial in size.
 - [ ] `rnalysis/gui/videos/checksums/*.txt` and `rnalysis/data_files/latest_changelog.md` were
       auto-committed to `master` by the Pyinstaller workflow.
-- [ ] PyPI shows the new version (`https://pypi.org/project/RNAlysis/`), if Step 5 was run.
-- [ ] `master` has been merged back into `development` (Step 6).
+- [ ] PyPI shows the new version (`https://pypi.org/project/RNAlysis/`), if Step 6 was run.
+- [ ] `master` has been merged back into `development` (Step 7).
 - [ ] Nothing else broke: a quick `pip install RNAlysis==<version>` in a scratch venv, or
       launching a fresh standalone build, is worth doing before telling anyone it's out.
 
