@@ -76,6 +76,38 @@ def test_install_jdk_already_installed(monkeypatch):
     mock_install.assert_not_called()
 
 
+def test_install_jdk_retries_transient_download_error(monkeypatch):
+    monkeypatch.setattr(installs, 'is_jdk_installed', lambda: False)
+    monkeypatch.setattr('pathlib.Path.exists', lambda self: False)
+    monkeypatch.setattr('time.sleep', lambda *args, **kwargs: None)  # don't actually wait between retries
+    attempts = {'n': 0}
+
+    def flaky_install(*args, **kwargs):
+        attempts['n'] += 1
+        if attempts['n'] < 3:
+            raise installs.jdk.JdkError('Remote end closed connection without response')
+
+    monkeypatch.setattr('jdk.install', flaky_install)
+    install_jdk()
+    assert attempts['n'] == 3  # failed twice, succeeded on the third try
+
+
+def test_install_jdk_reraises_after_exhausting_retries(monkeypatch):
+    monkeypatch.setattr(installs, 'is_jdk_installed', lambda: False)
+    monkeypatch.setattr('pathlib.Path.exists', lambda self: False)
+    monkeypatch.setattr('time.sleep', lambda *args, **kwargs: None)
+    attempts = {'n': 0}
+
+    def always_fail(*args, **kwargs):
+        attempts['n'] += 1
+        raise installs.jdk.JdkError('Remote end closed connection without response')
+
+    monkeypatch.setattr('jdk.install', always_fail)
+    with pytest.raises(installs.jdk.JdkError):
+        install_jdk()
+    assert attempts['n'] == 3  # gives up after 3 attempts
+
+
 # Test is_picard_installed
 def test_is_picard_installed_success(monkeypatch, mock_jdk_install):
     monkeypatch.setattr(io, 'run_subprocess', lambda *args, **kwargs: (None, ['Version']))

@@ -119,6 +119,7 @@ All of *RNAlysis*'s dependencies can be installed automatically via PyPI.
 * `networkx <https://networkx.org>`_
 * `pyvis <https://github.com/WestHealth/pyvis>`_
 * `tenacity <https://github.com/jd/tenacity>`_
+* `lazy_loader <https://github.com/scientific-python/lazy-loader>`_
 
 ----
 
