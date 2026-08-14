@@ -2639,6 +2639,41 @@ def test_MainWindow_import_multiple_gene_sets(main_window_with_tabs, monkeypatch
         assert main_window_with_tabs.tabs.widget(i + 5).obj() == truth[i]
 
 
+@pytest.mark.unit
+@pytest.mark.parametrize('suffix,sep', [('.csv', ','), ('.tsv', '\t')])
+def test_MainWindow_filename_to_gene_set_strips_whitespace(tmp_path, suffix, sep):
+    # tabular gene-set imports trim stray leading/trailing whitespace from identifiers
+    # so they match how gene IDs are read from reference and count tables
+    path = tmp_path / f'genes{suffix}'
+    path.write_text(f'gene{sep}score\n WBGene01 {sep}5\nWBGene02{sep}6\n')
+    assert MainWindow._filename_to_gene_set(str(path)) == {'WBGene01', 'WBGene02'}
+
+
+@pytest.mark.unit
+def test_MainWindow_filename_to_gene_set_strips_whitespace_txt(tmp_path):
+    path = tmp_path / 'genes.txt'
+    path.write_text(' WBGene01 \nWBGene02\n')
+    assert MainWindow._filename_to_gene_set(str(path)) == {'WBGene01', 'WBGene02'}
+
+
+@pytest.mark.unit
+@pytest.mark.parametrize('suffix,sep', [('.csv', ','), ('.tsv', '\t')])
+def test_MainWindow_filename_to_gene_set_numeric_first_column(tmp_path, suffix, sep):
+    # a numeric first column (e.g. Entrez IDs) must not go through the string-strip path
+    path = tmp_path / f'genes{suffix}'
+    path.write_text(f'gene{sep}score\n1234{sep}5\n5678{sep}6\n')
+    assert MainWindow._filename_to_gene_set(str(path)) == {1234, 5678}
+
+
+@pytest.mark.unit
+def test_MainWindow_filename_to_gene_set_whitespace_only_cell_dropped(tmp_path):
+    # a cell containing only whitespace must not import as an empty-string "gene",
+    # matching io.load_table's strip-then-null cleanup
+    path = tmp_path / 'genes.csv'
+    path.write_text('gene,score\n WBGene01 ,5\n   ,6\nWBGene02,7\n')
+    assert MainWindow._filename_to_gene_set(str(path)) == {'WBGene01', 'WBGene02'}
+
+
 @pytest.mark.parametrize('filename', ['tests/test_files/counted.tsv', 'tests/test_files/test_deseq.csv',
                                       'tests/test_files/test_gene_set.txt'])
 def test_MainWindow_import_gene_set(main_window_with_tabs, monkeypatch, filename):
