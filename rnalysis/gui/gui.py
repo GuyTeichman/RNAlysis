@@ -3746,10 +3746,14 @@ class MainWindow(QtWidgets.QMainWindow):
 
     @staticmethod
     def _filename_to_gene_set(filename: str):
-        if filename.endswith('.csv'):
-            gene_set = parsing.data_to_set(pl.scan_csv(filename).select(pl.first()).collect())
-        elif filename.endswith('.tsv'):
-            gene_set = parsing.data_to_set(pl.scan_csv(filename, separator='\t').select(pl.first()).collect())
+        if filename.endswith(('.csv', '.tsv')):
+            separator = '\t' if filename.endswith('.tsv') else ','
+            first_col = pl.scan_csv(filename, separator=separator).select(pl.first()).collect().to_series()
+            if first_col.dtype == pl.String:
+                # trim stray leading/trailing whitespace so imported identifiers match
+                # how gene IDs are read from reference and count tables
+                first_col = first_col.str.strip_chars()
+            gene_set = parsing.data_to_set(first_col)
         else:
             with open(filename) as f:
                 gene_set = {line.strip() for line in f.readlines()}
