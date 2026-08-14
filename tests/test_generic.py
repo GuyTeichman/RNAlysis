@@ -399,6 +399,67 @@ def test_jitter(n, jitter_range):
     assert min(res) >= -jitter_range or np.isclose(min(res), -jitter_range, atol=0.001)
 
 
+# --- Pipeline YAML parameter sanitization -------------------------------------------------------
+# Pipeline parameters are dumped with yaml.safe_dump, which can only represent a handful of types.
+# Anything a user can plausibly pass (a numpy scalar plucked out of a result table, a pathlib Path)
+# must be converted first, and anything that genuinely cannot be represented must fail with a
+# message naming the offending function and parameter - not with a bare RepresenterError.
+
+
+@pytest.mark.parametrize('value,expected,expected_type', [
+    (np.float64(5.0), 5.0, float),
+    (np.int64(7), 7, int),
+    (np.bool_(True), True, bool),
+    (np.str_('abc'), 'abc', str),
+    (Path('some/dir/table.csv'), 'some/dir/table.csv', str),
+    (np.array([1, 2, 3]), [1, 2, 3], list),
+    (np.array([[1.5], [2.5]]), [[1.5], [2.5]], list),
+    ((1, 2), [1, 2], list),
+    ('plain string', 'plain string', str),
+    (None, None, type(None)),
+])
+def test_sanitize_for_yaml_converts_values(value, expected, expected_type):
+    res = generic._sanitize_for_yaml(value, 'context')
+    assert res == expected
+    assert type(res) is expected_type
+    assert yaml.safe_load(yaml.safe_dump(res)) == expected
+
+
+def test_sanitize_for_yaml_recurses_into_containers():
+    value = {'a': [np.float64(1.5), (Path('x/y'), {'b': np.array([1, 2])})], np.str_('c'): {np.int64(3)}}
+    res = generic._sanitize_for_yaml(value, 'context')
+    assert res == {'a': [1.5, ['x/y', {'b': [1, 2]}]], 'c': {3}}
+    assert yaml.safe_load(yaml.safe_dump(res)) == res
+
+
+def test_sanitize_for_yaml_unrepresentable_value_raises_typed_error():
+    class Unrepresentable:
+        pass
+
+    with pytest.raises(InvalidTypeError) as err:
+        generic._sanitize_for_yaml(Unrepresentable(), "parameter 'threshold' of function 'foo'")
+    assert "parameter 'threshold' of function 'foo'" in str(err.value)
+    assert 'Unrepresentable' in str(err.value)
+
+
+def test_sanitize_for_yaml_unhashable_dict_key_raises_typed_error():
+    with pytest.raises(InvalidTypeError) as err:
+        generic._sanitize_for_yaml({(1, 2): 'val'}, "parameter 'grouping' of function 'foo'")
+    assert "parameter 'grouping' of function 'foo'" in str(err.value)
+
+
+@pytest.mark.parametrize('content,is_yaml', [
+    ('tests/test_files/no_such_file.yaml', False),
+    ('C:/no/such/file.yaml', False),
+    ('a_bare_word', False),
+    ('', False),
+    ('filter_type: countfilter', True),
+    ('functions:\n- describe\nparams:\n- - []\n  - {}\n', True),
+])
+def test_parse_pipeline_yaml_string_only_accepts_plausible_yaml(content, is_yaml):
+    assert generic._parse_pipeline_yaml_string(content)[0] == is_yaml
+
+
 # --- numba disk cache (issue #257) ---------------------------------------------------------------
 # Without `cache=True` every fresh process -- including every Windows `spawn` multiprocessing worker
 # -- recompiles the jitted kernels from scratch. These guards keep that from silently regressing.

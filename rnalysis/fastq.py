@@ -102,8 +102,11 @@ class _FASTQPipeline(generic.GenericPipeline, abc.ABC):
         super().add_function(func, *args, **kwargs)
 
     def _init_from_dict(self, pipeline_dict: dict):
-        self.params = [(parsing.data_to_tuple(p[0]), p[1]) for p in pipeline_dict['params']]
-        self.functions = [getattr(sys.modules[__name__], func) for func in pipeline_dict['functions']]
+        self._validate_pipeline_dict(pipeline_dict)
+        self.params = self._params_from_dict(pipeline_dict)
+        thismodule = sys.modules[__name__]
+        self.functions = [self._resolve_function(func, thismodule, "the 'fastq' module", pipeline_dict)
+                          for func in pipeline_dict['functions']]
 
 
 class SingleEndPipeline(_FASTQPipeline):
