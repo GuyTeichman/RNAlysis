@@ -159,7 +159,7 @@ class PermutationTest(StatsTest):
         return [attribute_name, en_size, obs, exp, log2fc, pval]
 
     @staticmethod
-    @generic.numba.jit(nopython=True)
+    @generic.numba.jit(nopython=True, cache=generic.NUMBA_CACHE)
     def _calc_permutation_pval(log2fc: float, reps: int, obs_frac: float, bg_size: int, en_size: int, attr_size: int,
                                random_seed: int) -> float:  # pragma: no cover
         np.random.seed(random_seed)

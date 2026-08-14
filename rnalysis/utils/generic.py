@@ -48,6 +48,20 @@ except ImportError:  # pragma: no cover
             return lambda f: f
 
 
+# Cache numba's compiled kernels on disk, so only the first process ever pays JIT compilation and
+# every later one (including each Windows `spawn` multiprocessing worker) loads the compiled code
+# instead of recompiling it. Pass this as the `cache=` argument of every `numba.jit` in RNAlysis.
+#
+# It is switched off in the frozen (PyInstaller) app: numba picks the cache directory from the
+# *source file* of the jitted function (numba.core.caching.CacheImpl), and if none of its locators
+# matches it raises RuntimeError from the decorator -- that is, at import time, which would stop the
+# standalone app from starting at all. numba does ship a frozen-aware locator
+# (UserWideCacheLocator, which caches into the user-wide cache dir and stamps the cache against
+# sys.executable), so this gate can be lifted once it has been verified against a real
+# standalone build.
+NUMBA_CACHE = not FROZEN_ENV
+
+
 def readable_name(name: str):
     def decorator(item):
         item.readable_name = name

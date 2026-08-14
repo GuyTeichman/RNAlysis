@@ -2643,7 +2643,7 @@ class FoldChangeFilter(Filter):
         return res_df
 
     @staticmethod
-    @generic.numba.jit(nopython=True)
+    @generic.numba.jit(nopython=True, cache=generic.NUMBA_CACHE)
     def _foldchange_randomization(vals: np.ndarray, reps: PositiveInt, obs_fc: float, exp_fc: float,
                                   n: int):  # pragma: no cover
         success = 0

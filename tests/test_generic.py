@@ -1,9 +1,12 @@
+from types import ModuleType
+
 import pytest
 from matplotlib.backend_bases import PickEvent
 # scikit-learn is imported lazily by rnalysis.utils.generic (see tests/test_imports.py), so the
 # star-import below no longer re-exports it -- the tests import it directly instead.
 from sklearn.preprocessing import PowerTransformer, StandardScaler
 
+from rnalysis import FROZEN_ENV
 from rnalysis.utils import generic
 from rnalysis.utils.generic import *
 
@@ -394,3 +397,22 @@ def test_jitter(n, jitter_range):
     assert np.isclose(np.mean(res), 0, atol=0.001)
     assert max(res) <= jitter_range or np.isclose(max(res), jitter_range, atol=0.001)
     assert min(res) >= -jitter_range or np.isclose(min(res), -jitter_range, atol=0.001)
+
+
+# --- numba disk cache (issue #257) ---------------------------------------------------------------
+# Without `cache=True` every fresh process -- including every Windows `spawn` multiprocessing worker
+# -- recompiles the jitted kernels from scratch. These guards keep that from silently regressing.
+
+def test_numba_cache_flag_follows_frozen_env():
+    """Caching must be on from source, and off in the frozen app (see generic.NUMBA_CACHE's comment)."""
+    assert generic.NUMBA_CACHE is not FROZEN_ENV
+
+
+@pytest.mark.skipif(not isinstance(generic.numba, ModuleType), reason='numba is not installed')
+def test_jitted_kernels_use_the_disk_cache():
+    """A NullCache on either kernel means it gets recompiled from scratch in every process."""
+    from rnalysis.filtering import FoldChangeFilter
+    from rnalysis.utils.enrichment_runner import PermutationTest
+
+    for kernel in (FoldChangeFilter._foldchange_randomization, PermutationTest._calc_permutation_pval):
+        assert type(kernel._cache).__name__ != 'NullCache', f'{kernel.__name__} is not disk-cached'
