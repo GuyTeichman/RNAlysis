@@ -4822,13 +4822,6 @@ async def run():  # pragma: no cover
     sys.excepthook = window.excepthook
     builtins.input = window.input
 
-    try:
-        pass
-    except ImportError:
-        warnings.warn("RNAlysis can perform faster when package 'numba' is installed. \n"
-                      "If you want to improve the performance of slow operations on RNAlysis, "
-                      "please install package 'numba'. ")
-
     if show_app:
         window.show()
         window.check_for_updates(False)
