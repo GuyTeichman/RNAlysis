@@ -2,6 +2,13 @@
 History
 =======
 
+4.3.1 (unreleased)
+-------------------
+
+Changed
+*******
+* Starting RNAlysis, and importing the Python API, is now faster and no longer requires an internet connection. The lists of supported organisms and gene-ID types that fill the drop-down menus of the ortholog-mapping, paralog-finding and gene-ID translation functions were previously fetched from UniProtKB, PantherDB, Ensembl and PhylomeDB every time RNAlysis started — four live web requests on the first startup of each day, and close to a second of waiting even when they were already cached. They are now read from a list packaged with RNAlysis and refreshed with every release. On an offline or firewalled computer (a compute cluster, a locked-down lab PC) these menus are now fully populated instead of empty, and the available values are identical on every machine running the same version of RNAlysis, instead of depending on the day the services were contacted. Actual analyses — gene-ID translation, ortholog and paralog mapping, and enrichment analysis — still query these services live, exactly as before, so results are unchanged. An organism or ID type that a service added after the release can still be typed into these fields by hand, as before.
+
 4.3.0 (2026-08-13)
 -------------------
 
