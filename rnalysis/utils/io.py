@@ -402,9 +402,11 @@ class GUISessionManager:
     def _prepare_session_folder(self):
         # the session is assembled under a temporary name next to the target file, so that an
         # existing session file is only replaced once its replacement fully exists on disk.
-        self._archive_path.parent.mkdir(parents=True, exist_ok=True)
+        # the staging path is absolute, since shutil.make_archive temporarily changes the cwd.
+        parent_dir = self._archive_path.parent
+        parent_dir.mkdir(parents=True, exist_ok=True)
         self._staging_dir = Path(tempfile.mkdtemp(prefix=f'{self.session_filename.stem}_', suffix='.rnaltmp',
-                                                  dir=self._archive_path.parent))
+                                                  dir=parent_dir.resolve()))
 
     def _clean_up_staging(self):
         if self._staging_archive is not None:

@@ -1661,6 +1661,18 @@ def test_save_and_load_session_round_trip(tmp_path):
     assert [pth.name for pth in tmp_path.iterdir()] == ['roundtrip.rnal']
 
 
+def test_save_and_load_session_with_a_relative_path(monkeypatch, tmp_path):
+    # shutil.make_archive temporarily changes the working directory, so the staging paths must not
+    # depend on it
+    monkeypatch.chdir(tmp_path)
+
+    GUISessionManager('relative_sess.rnal').save_session([], [], None, {})
+
+    assert zipfile.is_zipfile(tmp_path.joinpath('relative_sess.rnal'))
+    assert [pth.name for pth in tmp_path.iterdir()] == ['relative_sess.rnal']
+    assert GUISessionManager('relative_sess.rnal').load_session() == ([], [], None)
+
+
 def test_save_session_failure_leaves_the_existing_session_file_intact(monkeypatch, tmp_path):
     target = tmp_path.joinpath('sess.rnal')
     target.write_bytes(b'previous session contents')
