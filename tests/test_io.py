@@ -3121,6 +3121,56 @@ def test_get_legal_panther_taxons_handles_list_and_single(monkeypatch, genome_no
         io.get_legal_panther_taxons.cache_clear()
 
 
+# get_legal_phylomedb_taxons used to iterate the species DataFrame itself, which yields whole
+# Series rather than names, so its per-name filter tested `<first name>.isupper()` -- False for any
+# real binomial -- and the function returned an empty tuple on every machine, live (issue #263). That
+# emptied the PhylomeDB organism dropdown silently. These tests pin the per-value filtering, and that
+# a well-formed species table can never again produce nothing.
+@pytest.mark.unit  # fully mocked; opt out of the module's default integration_net tier
+@pytest.mark.parametrize('names,expected', [
+    # sorted, one entry per species name
+    (['Homo sapiens', 'Caenorhabditis elegans'], ('Caenorhabditis elegans', 'Homo sapiens')),
+    # lowercase-initial entries (PhylomeDB lists e.g. unclassified/environmental samples) are dropped
+    (['Homo sapiens', 'uncultured bacterium', 'candidate division TM6'], ('Homo sapiens',)),
+    # duplicate names collapse to one
+    (['Homo sapiens', 'Homo sapiens', 'Mus musculus'], ('Homo sapiens', 'Mus musculus')),
+])
+def test_get_legal_phylomedb_taxons_filters_per_name(monkeypatch, names, expected):
+    species = pl.DataFrame({'taxid': list(range(len(names))), 'name': names})
+    monkeypatch.setattr(io.PhylomeDBOrthologMapper, 'get_legal_species', staticmethod(lambda: species))
+    io.get_legal_phylomedb_taxons.cache_clear()
+    try:
+        taxons = io.get_legal_phylomedb_taxons()
+        assert taxons == expected
+        assert all(isinstance(taxon, str) for taxon in taxons)  # not polars Series (the #263 bug)
+    finally:
+        io.get_legal_phylomedb_taxons.cache_clear()
+
+
+@pytest.mark.unit  # fully mocked; opt out of the module's default integration_net tier
+def test_get_legal_phylomedb_taxons_is_not_empty_for_a_realistic_species_table(monkeypatch):
+    names = [f'Genus{i} species{i}' for i in range(500)] + ['unclassified organism']
+    species = pl.DataFrame({'taxid': list(range(len(names))), 'name': names})
+    monkeypatch.setattr(io.PhylomeDBOrthologMapper, 'get_legal_species', staticmethod(lambda: species))
+    io.get_legal_phylomedb_taxons.cache_clear()
+    try:
+        taxons = io.get_legal_phylomedb_taxons()
+        assert len(taxons) == 500
+        assert 'unclassified organism' not in taxons
+    finally:
+        io.get_legal_phylomedb_taxons.cache_clear()
+
+
+@pytest.mark.skipif(not PHYLOMEDB_AVAILABLE,
+                    reason="No internet connection or FTP server is down. Skipping PhylomeDB tests.")
+def test_get_legal_phylomedb_taxons_live_is_populated():
+    # The live counterpart of the tests above: catches a future change to PhylomeDB's species table
+    # (or to its parsing) that empties the vocabulary again.
+    taxons = io.get_legal_phylomedb_taxons()
+    assert len(taxons) > 1000
+    assert all(isinstance(taxon, str) and taxon[:1].isupper() for taxon in taxons)
+
+
 @pytest.mark.unit  # fully mocked; opt out of the module's default integration_net tier
 def test_get_legal_panther_taxons_passes_request_timeout(monkeypatch):
     # A bare requests.post with no timeout can hang forever; this runs at import time, so a hang
