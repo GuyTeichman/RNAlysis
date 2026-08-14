@@ -7,6 +7,7 @@ import pytest
 from polars.testing import assert_frame_equal
 
 from rnalysis import filtering
+from rnalysis.exceptions import InvalidTypeError, InvalidValueError, RNAlysisInputError
 from rnalysis.utils import enrichment_runner
 from rnalysis.utils.enrichment_runner import *
 from rnalysis.utils.io import *
@@ -1043,7 +1044,7 @@ def test_go_enrichment_runner_translate_gene_ids_skips_invalid_dataset(monkeypat
     # exceptions surface at result()).
     def fake_run(self, ids):
         if 'bad' in ids:
-            raise AssertionError("'source_bad' is not a valid Uniprot Dataset")
+            raise InvalidValueError("'source_bad' is not a valid Uniprot Dataset")
         return {'good': 'good_translated'}
 
     monkeypatch.setattr(io.GeneIDTranslator, '__init__', lambda *args: None)
@@ -1059,10 +1060,10 @@ def test_go_enrichment_runner_translate_gene_ids_skips_invalid_dataset(monkeypat
 
 
 def test_go_enrichment_runner_translate_gene_ids_reraises_other_assertion(monkeypatch):
-    # An AssertionError that is not the 'invalid Uniprot Dataset' case must propagate, not be
+    # An input error that is not the 'invalid Uniprot Dataset' case must propagate, not be
     # swallowed -- including when raised inside a worker thread.
     def fake_run(self, ids):
-        raise AssertionError('some other problem')
+        raise InvalidValueError('some other problem')
 
     monkeypatch.setattr(io.GeneIDTranslator, '__init__', lambda *args: None)
     monkeypatch.setattr(io.GeneIDTranslator, 'run', fake_run)
@@ -1071,7 +1072,7 @@ def test_go_enrichment_runner_translate_gene_ids_reraises_other_assertion(monkey
 
     runner = GOEnrichmentRunner.__new__(GOEnrichmentRunner)
     runner.gene_id_type = 'target'
-    with pytest.raises(AssertionError, match='some other problem'):
+    with pytest.raises(InvalidValueError, match='some other problem'):
         runner._translate_gene_ids(annotation_dict, source_to_gene_id_dict)
 
 

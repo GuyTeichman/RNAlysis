@@ -21,6 +21,7 @@ from scipy.stats import fisher_exact, hypergeom, ttest_1samp
 from statsmodels.stats.descriptivestats import sign_test
 from tqdm.auto import tqdm
 
+from rnalysis.exceptions import InvalidTypeError, InvalidValueError
 from rnalysis.utils import (generic, io, ontology, param_typing, parsing,
                             settings, validation)
 from rnalysis.utils.param_typing import GRAPHVIZ_FORMATS, PARALLEL_BACKENDS
@@ -1300,7 +1301,7 @@ class GOEnrichmentRunner(EnrichmentRunner):
             for source in sources:
                 try:
                     translators.append(futures[source].result())
-                except AssertionError as e:
+                except InvalidValueError as e:
                     if 'not a valid Uniprot Dataset' in "".join(e.args):
                         warnings.warn(f"Failed to map gene IDs for {len(source_to_gene_id_dict[source])} annotations "
                                       f"from dataset '{source}'.")

@@ -1,5 +1,6 @@
 import pytest
 
+from rnalysis.exceptions import InvalidTypeError, InvalidValueError, RNAlysisInputError
 from rnalysis.utils.validation import *
 
 
@@ -105,7 +106,7 @@ def test_validate_uniprot_dataset_name(from_dict, to_dict, from_names, to_names,
     if is_legal:
         validate_uniprot_dataset_name((to_dict, from_dict), to_names, from_names)
     else:
-        with pytest.raises(AssertionError):
+        with pytest.raises(InvalidValueError):
             validate_uniprot_dataset_name((to_dict, from_dict), to_names, from_names)
 
 
@@ -120,7 +121,7 @@ def test_validate_hdbscan_parameters(min_cluster_size, metric, cluster_selection
     if expected_to_pass:
         validate_hdbscan_parameters(min_cluster_size, metric, cluster_selection_method, n_features)
     else:
-        with pytest.raises(AssertionError):
+        with pytest.raises(RNAlysisInputError):
             validate_hdbscan_parameters(min_cluster_size, metric, cluster_selection_method, n_features)
 
 
@@ -151,6 +152,22 @@ def test_isinstanceiter(test_input, expected_type, expected):
 ])
 def test_isinstanceiter_any(test_input, expected_type, expected):
     assert isinstanceiter_any(test_input, expected_type) == expected
+
+
+@pytest.mark.parametrize('func', [isinstanceiter, isinstanceiter_inh, isinstanceiter_any])
+@pytest.mark.parametrize('not_iterable', [5, 3.14, None, DummyClass()])
+def test_isinstanceiter_funcs_raise_on_non_iterable(func, not_iterable):
+    with pytest.raises(InvalidTypeError):
+        func(not_iterable, DummyClass)
+
+
+@pytest.mark.parametrize("test_input,parent_class,expected", [
+    ([DummyClassChild(), DummyClass()], DummyClass, True),
+    ([DummyClassChild(), DummyClassNotChild()], DummyClass, False),
+    ([], DummyClass, True),
+])
+def test_isinstanceiter_inh(test_input, parent_class, expected):
+    assert isinstanceiter_inh(test_input, parent_class) == expected
 
 
 class TestClass:
@@ -189,7 +206,7 @@ def test_validate_clustering_parameters(metric, linkage, expected_to_pass):
         truth = (metric.lower(), linkage.lower()) if linkage is not None else metric.lower()
         assert validate_clustering_parameters(legal_metrics, metric, linkage) == truth
     else:
-        with pytest.raises(AssertionError):
+        with pytest.raises(RNAlysisInputError):
             validate_clustering_parameters(legal_metrics, metric, linkage)
 
 
@@ -204,7 +221,7 @@ def test_validate_attr_table(table_path, expected_to_pass):
     if expected_to_pass:
         validate_attr_table(df)
     else:
-        with pytest.raises(AssertionError):
+        with pytest.raises(InvalidValueError):
             validate_attr_table(df)
 
 
@@ -221,7 +238,7 @@ def test_validate_biotype_table(table_path, expected_to_pass):
         validate_biotype_table(df)
         assert len(df.columns) == 2
     else:
-        with pytest.raises(AssertionError):
+        with pytest.raises(InvalidValueError):
             validate_biotype_table(df)
 
 
@@ -238,7 +255,7 @@ def test_validate_threshold(threshold, expected_to_pass):
     if expected_to_pass:
         validate_threshold(threshold)
     else:
-        with pytest.raises(AssertionError):
+        with pytest.raises(RNAlysisInputError):
             validate_threshold(threshold)
 
 
@@ -278,7 +295,7 @@ def test_is_legal_dir_path(path, is_legal_truth):
 ])
 def test_validate_genome_annotation_file(path, accept_gtf, accept_gff3, err_exp, truth):
     if err_exp:
-        with pytest.raises((AssertionError, ValueError)):
+        with pytest.raises(ValueError):
             validate_genome_annotation_file(path, accept_gtf, accept_gff3)
     else:
         res = validate_genome_annotation_file(path, accept_gtf, accept_gff3)
