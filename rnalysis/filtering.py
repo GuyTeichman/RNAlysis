@@ -16,19 +16,17 @@ import re
 import types
 import warnings
 from pathlib import Path
-from typing import (Any, Callable, Iterable, List, Literal, Sequence, Tuple,
-                    Union)
+from typing import (TYPE_CHECKING, Any, Callable, Iterable, List, Literal,
+                    Sequence, Tuple, Union)
 
+import lazy_loader as lazy
 import matplotlib.pyplot as plt
 import numpy as np
 import polars as pl
 import polars.selectors as cs
-import seaborn as sns
 from grid_strategy import strategies
 from scipy.stats import gstd, sem, spearmanr
 from scipy.stats.mstats import gmean
-from sklearn.decomposition import PCA
-from sklearn.preprocessing import PowerTransformer, StandardScaler
 from tqdm.auto import tqdm
 
 from rnalysis.utils import (clustering, differential_expression, generic,
@@ -48,6 +46,17 @@ from rnalysis.utils.param_typing import (BIOTYPE_ATTRIBUTE_NAMES, BIOTYPES,
                                          PositiveInt, get_ensembl_taxons,
                                          get_gene_id_types, get_panther_taxons,
                                          get_phylomedb_taxons)
+
+# seaborn (~1s, and it drags in pandas) and scikit-learn (~1s) are only needed once a plotting or
+# clustering function actually runs, so they are loaded lazily
+# (SPEC 1 / https://scientific-python.org/specs/spec-0001/). Nothing may touch an attribute of these
+# proxies at import time -- class-body constants, decorators and default arguments are the usual
+# traps, and doing so imports the package and defeats the whole point. Guarded by tests/test_imports.py.
+sns = lazy.load('seaborn')
+_sklearn = lazy.load('sklearn')
+
+if TYPE_CHECKING:  # pragma: no cover - for type checkers only; never imported at runtime
+    from sklearn.decomposition import PCA
 
 # --- table-type auto-detection (drives the GUI "New table" default; Qt-free & never raises) ---
 # The returned keys match the GUI's FILTER_OBJ_TYPES combo box (see rnalysis/gui/gui.py).
@@ -2110,8 +2119,10 @@ class Filter:
             Transformed 22 features. Transformed inplace.
         """
 
-        predefined_funcs = {'ln': np.log1p, 'loge': np.log1p, 'standardize': StandardScaler.fit_transform,
-                            'box-cox': lambda x: PowerTransformer(method='box-cox').fit_transform(x + 1)}
+        predefined_funcs = {'ln': np.log1p, 'loge': np.log1p,
+                            'standardize': _sklearn.preprocessing.StandardScaler.fit_transform,
+                            'box-cox': lambda x: _sklearn.preprocessing.PowerTransformer(
+                                method='box-cox').fit_transform(x + 1)}
 
         suffix = "_customtransform" if callable(function) else f"_{str(function)}transform"
 
@@ -2676,7 +2687,7 @@ class FoldChangeFilter(Filter):
         return res_df
 
     @staticmethod
-    @generic.numba.jit(nopython=True)
+    @generic.numba.jit(nopython=True, cache=generic.NUMBA_CACHE)
     def _foldchange_randomization(vals: np.ndarray, reps: PositiveInt, obs_fc: float, exp_fc: float,
                                   n: int):  # pragma: no cover
         success = 0
@@ -5537,7 +5548,7 @@ class CountFilter(Filter):
         data = self.df[self._numeric_columns].to_numpy().transpose()
         data_standardized = generic.standard_box_cox(
             data, parallel_backend=generic.box_cox_parallel_backend()) if power_transform else generic.standardize(data)
-        pca_obj = PCA(component)
+        pca_obj = _sklearn.decomposition.PCA(component)
         pca_obj.fit(data_standardized)
         loading = self.df.select(pl.first()).with_columns(
             pl.DataFrame(pca_obj.components_.T[:, component - 1], schema=['sortOrder']))
@@ -5589,7 +5600,7 @@ class CountFilter(Filter):
         data_standardized = generic.standard_box_cox(
             data, parallel_backend=generic.box_cox_parallel_backend()) if power_transform else generic.standardize(data)
 
-        pca_obj = PCA(n_components)
+        pca_obj = _sklearn.decomposition.PCA(n_components)
         pca_obj.fit(data_standardized)
         loadings = self.df.select(pl.first()).with_columns(
             pl.DataFrame(pca_obj.components_.T, schema=[f"{i + 1}" for i in range(n_components)]))
@@ -5610,7 +5621,7 @@ class CountFilter(Filter):
             power_transform: bool = True, labels: bool = True, title: Union[str, Literal['auto']] = 'auto',
             title_fontsize: float = 20, label_fontsize: float = 16, tick_fontsize: float = 12,
             proportional_axes: bool = False, plot_grid: bool = True, legend: Union[List[str], None] = None) -> Tuple[
-        PCA, List[plt.Figure]]:
+        'PCA', List[plt.Figure]]:
         """
         Performs Principal Component Analysis (PCA), visualizing the principal components that explain the most\
         variance between the different samples. The function will standardize the data prior to PCA, and then plot \
@@ -5668,7 +5679,7 @@ class CountFilter(Filter):
         data_standardized = generic.standard_box_cox(
             data, parallel_backend=generic.box_cox_parallel_backend()) if power_transform else generic.standardize(data)
 
-        pca_obj = PCA()
+        pca_obj = _sklearn.decomposition.PCA()
         pcomps = pca_obj.fit_transform(data_standardized)
         columns = [f'Principal component {i + 1}' for i in range(n_components)]
         principal_df = pl.DataFrame(data=pcomps[:, 0:n_components], schema=columns)
