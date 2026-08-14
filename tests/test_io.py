@@ -1,13 +1,15 @@
 import random
 import re
+import stat
 import warnings
+import zipfile
 from unittest import mock
 from unittest.mock import Mock, MagicMock
 
 import pytest
 import requests_mock
 
-from rnalysis.exceptions import InvalidTypeError
+from rnalysis.exceptions import CorruptSessionError, InternalError, InvalidTypeError
 from rnalysis.utils import io
 from rnalysis.utils.io import *
 from rnalysis.utils.io import _ensembl_lookup_post_request, _format_ids_iter
@@ -1593,6 +1595,237 @@ def test_save_session_flushes_before_moving_files(monkeypatch, tmp_path):
     mgr.save_session([], [], {}, {})
     assert order and order[0] == 'flush', "save_session must flush before moving/copying cache files"
     assert 'save_files' in order
+
+
+# --- session save/load robustness ---------------------------------------------------------------
+# A session file is the record of a scientist's multi-hour analysis: overwriting one must never
+# destroy the previous file before its replacement exists, loading one must never modify the
+# user's file, and a broken session file is user-facing breakage - not an internal-bug report.
+
+
+def _write_broken_session(path: Path, session_data: dict, extra_files: dict = None):
+    """Build a .rnal archive whose session_data.yaml references files that are not in it."""
+    with zipfile.ZipFile(path, 'w') as archive:
+        archive.writestr('session_data.yaml', yaml.safe_dump(session_data))
+        for name, content in (extra_files or {}).items():
+            archive.writestr(name, content)
+
+
+def _broken_session_data(version: str = '3.2.2') -> dict:
+    return {'files': {'missing_table.parquet': ('my table', 'CountFilter', {}, 1)},
+            'pipelines': {},
+            'metadata': {'creation_time': '2022/12/01, 16:47:40', 'name': 'broken', 'n_tabs': 1,
+                         'n_pipelines': 0, 'tab_order': ['missing_table.parquet'],
+                         'rnalysis_version': version},
+            'session_report_data': {'report': None, 'item_paths': {}}}
+
+
+def test_save_session_replaces_existing_file_and_leaves_no_temp_files(tmp_path):
+    target = tmp_path.joinpath('sess.rnal')
+    target.write_bytes(b'previous session contents')
+
+    GUISessionManager(target).save_session([], [], None, {})
+
+    assert zipfile.is_zipfile(target)
+    assert [pth.name for pth in tmp_path.iterdir()] == ['sess.rnal']
+
+    file_data, pipeline_data, report = GUISessionManager(target).load_session()
+    assert file_data == []
+    assert pipeline_data == []
+    assert report is None
+
+
+def test_save_and_load_session_round_trip(tmp_path):
+    target = tmp_path.joinpath('roundtrip.rnal')
+    table = pl.DataFrame({'genes': ['WBGene00000001', 'WBGene00000002'], 'cond1': [1, 2]})
+    cache_gui_file(table, 'roundtrip_table.parquet')
+    report_file = Path('roundtrip_report_item.txt')
+    get_gui_cache_dir().joinpath(report_file).write_text('report item contents')
+
+    file_data = [FileData(filename='roundtrip_table.parquet', item_name='my table', item_type='CountFilter',
+                          item_property={}, item_id=3)]
+    pipeline_data = [PipelineData(name='My Pipeline',
+                                  content='filter_type: countfilter\nfunctions: []\nparams: []\n')]
+
+    try:
+        GUISessionManager(target).save_session(file_data, pipeline_data, {'nodes': {}}, {'3': report_file})
+        loaded_files, loaded_pipelines, report = GUISessionManager(target).load_session()
+
+        assert [file.filename for file in loaded_files] == ['roundtrip_table.parquet']
+        assert loaded_files[0].item_name == 'my table'
+        assert loaded_files[0].item_type == 'CountFilter'
+        assert loaded_files[0].item_id == 3
+        assert loaded_files[0].obj.equals(table)
+        assert loaded_pipelines == pipeline_data
+        assert report == {'nodes': {}}
+        assert get_gui_cache_dir().joinpath(report_file).read_text() == 'report item contents'
+        assert [pth.name for pth in tmp_path.iterdir()] == ['roundtrip.rnal']
+    finally:
+        get_gui_cache_dir().joinpath(report_file).unlink(missing_ok=True)
+        get_gui_cache_dir().joinpath('roundtrip_table.parquet').unlink(missing_ok=True)
+
+
+def test_save_session_flushes_the_archive_to_disk_before_replacing(monkeypatch, tmp_path):
+    # os.replace only makes the directory-entry swap atomic - the replacement's contents must
+    # already be on disk, or a power loss can leave a session file that was never written
+    order = []
+    real_fsync = os.fsync
+    real_replace = os.replace
+
+    monkeypatch.setattr(os, 'fsync', lambda fd: (order.append('fsync'), real_fsync(fd))[1])
+    monkeypatch.setattr(os, 'replace', lambda src, dst: (order.append('replace'), real_replace(src, dst))[1])
+
+    GUISessionManager(tmp_path.joinpath('sess.rnal')).save_session([], [], None, {})
+
+    assert order == ['fsync', 'replace']
+
+
+def test_save_and_load_session_with_a_relative_path(monkeypatch, tmp_path):
+    # shutil.make_archive temporarily changes the working directory, so the staging paths must not
+    # depend on it
+    monkeypatch.chdir(tmp_path)
+
+    GUISessionManager('relative_sess.rnal').save_session([], [], None, {})
+
+    assert zipfile.is_zipfile(tmp_path.joinpath('relative_sess.rnal'))
+    assert [pth.name for pth in tmp_path.iterdir()] == ['relative_sess.rnal']
+    assert GUISessionManager('relative_sess.rnal').load_session() == ([], [], None)
+
+
+def test_save_session_failure_leaves_the_existing_session_file_intact(monkeypatch, tmp_path):
+    target = tmp_path.joinpath('sess.rnal')
+    target.write_bytes(b'previous session contents')
+
+    def failing_make_archive(*args, **kwargs):
+        raise OSError('No space left on device')
+
+    monkeypatch.setattr(shutil, 'make_archive', failing_make_archive)
+
+    with pytest.raises(OSError):
+        GUISessionManager(target).save_session([], [], None, {})
+
+    assert target.read_bytes() == b'previous session contents'
+    assert [pth.name for pth in tmp_path.iterdir()] == ['sess.rnal'], "save must clean up its temporary files"
+
+
+def test_save_session_failure_before_archiving_leaves_the_existing_session_file_intact(monkeypatch, tmp_path):
+    target = tmp_path.joinpath('sess.rnal')
+    target.write_bytes(b'previous session contents')
+
+    mgr = GUISessionManager(target)
+    monkeypatch.setattr(mgr, '_write_session_data_to_file', Mock(side_effect=PermissionError('access denied')))
+
+    with pytest.raises(PermissionError):
+        mgr.save_session([], [], None, {})
+
+    assert target.read_bytes() == b'previous session contents'
+    assert [pth.name for pth in tmp_path.iterdir()] == ['sess.rnal'], "save must clean up its temporary files"
+
+
+def test_load_session_does_not_rename_the_session_file(monkeypatch, tmp_path):
+    target = tmp_path.joinpath('sess.rnal')
+    GUISessionManager(target).save_session([], [], None, {})
+
+    def no_renames(*args, **kwargs):
+        raise AssertionError("loading a session must not rename the user's session file")
+
+    monkeypatch.setattr(Path, 'rename', no_renames)
+    monkeypatch.setattr(os, 'rename', no_renames)
+
+    file_data, pipeline_data, report = GUISessionManager(target).load_session()
+    assert file_data == []
+    assert pipeline_data == []
+
+
+def test_load_session_from_a_read_only_file(tmp_path):
+    target = tmp_path.joinpath('sess.rnal')
+    GUISessionManager(target).save_session([], [], None, {})
+    contents_before = target.read_bytes()
+    os.chmod(target, stat.S_IREAD)
+
+    try:
+        file_data, pipeline_data, report = GUISessionManager(target).load_session()
+    finally:
+        os.chmod(target, stat.S_IREAD | stat.S_IWRITE)
+
+    assert file_data == []
+    assert pipeline_data == []
+    assert target.read_bytes() == contents_before
+
+
+def test_load_session_missing_file_raises_file_not_found(tmp_path):
+    with pytest.raises(FileNotFoundError) as err:
+        GUISessionManager(tmp_path.joinpath('no_such_session.rnal')).load_session()
+    assert 'no_such_session.rnal' in str(err.value)
+
+
+def test_load_session_not_an_archive_reports_corrupt_session(tmp_path):
+    target = tmp_path.joinpath('corrupt.rnal')
+    target.write_bytes(b'this is not a zip archive at all')
+
+    with pytest.raises(CorruptSessionError) as err:
+        GUISessionManager(target).load_session()
+    assert 'corrupt or incomplete' in str(err.value)
+    assert not isinstance(err.value, InternalError)
+
+
+def test_load_session_truncated_archive_reports_corrupt_session(tmp_path):
+    target = tmp_path.joinpath('truncated.rnal')
+    GUISessionManager(target).save_session([], [], None, {})
+    contents = target.read_bytes()
+    target.write_bytes(contents[:len(contents) // 2])
+
+    with pytest.raises(CorruptSessionError) as err:
+        GUISessionManager(target).load_session()
+    assert 'corrupt or incomplete' in str(err.value)
+
+
+def test_load_session_without_session_data_reports_corrupt_session(tmp_path):
+    target = tmp_path.joinpath('no_session_data.rnal')
+    with zipfile.ZipFile(target, 'w') as archive:
+        archive.writestr('some_table.parquet', 'not really a table')
+
+    with pytest.raises(CorruptSessionError) as err:
+        GUISessionManager(target).load_session()
+    assert 'corrupt or incomplete' in str(err.value)
+
+
+def test_load_session_missing_data_file_reports_corrupt_session_with_version(tmp_path):
+    target = tmp_path.joinpath('broken.rnal')
+    _write_broken_session(target, _broken_session_data('3.2.2'))
+
+    with pytest.raises(CorruptSessionError) as err:
+        GUISessionManager(target).load_session()
+    message = str(err.value)
+    assert 'corrupt or incomplete' in message
+    assert 'missing_table.parquet' in message
+    assert '3.2.2' in message
+    assert not isinstance(err.value, InternalError)
+
+
+def test_load_session_missing_pipeline_file_reports_corrupt_session_with_version(tmp_path):
+    target = tmp_path.joinpath('broken_pipeline.rnal')
+    session_data = _broken_session_data('4.0.0')
+    session_data['files'] = {}
+    session_data['metadata']['tab_order'] = []
+    session_data['pipelines'] = {'pipeline_0.yaml': 'My Pipeline'}
+    _write_broken_session(target, session_data)
+
+    with pytest.raises(CorruptSessionError) as err:
+        GUISessionManager(target).load_session()
+    message = str(err.value)
+    assert 'corrupt or incomplete' in message
+    assert 'pipeline_0.yaml' in message
+    assert '4.0.0' in message
+
+
+def test_load_session_leaves_no_extracted_leftovers_on_failure(tmp_path):
+    target = tmp_path.joinpath('broken_cleanup.rnal')
+    _write_broken_session(target, _broken_session_data())
+
+    with pytest.raises(CorruptSessionError):
+        GUISessionManager(target).load_session()
+    assert not get_gui_cache_dir().joinpath(target.stem).exists()
 
 
 def test_get_next_link():

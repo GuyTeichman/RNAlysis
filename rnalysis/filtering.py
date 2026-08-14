@@ -6294,9 +6294,17 @@ class Pipeline(generic.GenericPipeline):
         return d
 
     def _init_from_dict(self, pipeline_dict: dict):
-        self.filter_type = self.FILTER_TYPES[pipeline_dict['filter_type']]
-        self.params = [(parsing.data_to_tuple(p[0]), p[1]) for p in pipeline_dict['params']]
-        self.functions = [getattr(self.filter_type, func) for func in pipeline_dict['functions']]
+        self._validate_pipeline_dict(pipeline_dict)
+        filter_type = pipeline_dict.get('filter_type')
+        # filter types are matched case-insensitively, exactly like in Pipeline.__init__
+        if not isinstance(filter_type, str) or filter_type.lower() not in self.FILTER_TYPES:
+            raise self._pipeline_load_error(pipeline_dict,
+                                            f"'{filter_type}' is not a valid Pipeline filter type. "
+                                            f"Valid filter types are: {sorted(self.FILTER_TYPES.keys())}.")
+        self.filter_type = self.FILTER_TYPES[filter_type.lower()]
+        self.params = self._params_from_dict(pipeline_dict)
+        self.functions = [self._resolve_function(func, self.filter_type, self.filter_type.__name__, pipeline_dict)
+                          for func in pipeline_dict['functions']]
 
     def _func_signature(self, func: types.FunctionType, args: tuple, kwargs: dict):
         """

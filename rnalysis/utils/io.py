@@ -20,11 +20,13 @@ import re
 import shlex
 import shutil
 import subprocess
+import tempfile
 import threading
 import time
 import typing
 import uuid
 import warnings
+import zipfile
 from collections import OrderedDict
 from datetime import date, datetime
 from functools import lru_cache, wraps
@@ -51,7 +53,8 @@ from requests.adapters import HTTPAdapter, Retry
 from tqdm import tqdm
 
 from rnalysis import __version__
-from rnalysis.exceptions import InternalError, InvalidTypeError, InvalidValueError
+from rnalysis.exceptions import (CorruptSessionError, InternalError,
+                                 InvalidTypeError, InvalidValueError)
 from rnalysis.utils import parsing, validation
 
 
@@ -364,33 +367,55 @@ class PipelineData(NamedTuple):
 class GUISessionManager:
     def __init__(self, session_filename: Union[str, Path]):
         self.session_filename = Path(session_filename)
+        self._staging_dir = None
+        self._staging_archive = None
+
+    @property
+    def _archive_path(self) -> Path:
+        return self.session_filename.with_suffix('.rnal')
 
     def save_session(self, file_data: List[FileData], pipeline_data: List[PipelineData],
                      report: dict, report_file_paths: Dict[str, Path]):
         flush_gui_cache_writes()  # cache files must be fully written before they are moved/copied
         self._prepare_session_folder()
-        self._save_report_files_to_session(report_file_paths)
-        session_data = self._create_session_data(file_data, pipeline_data, report, report_file_paths)
-        self._save_files_to_session(file_data)
-        self._save_pipelines_to_session(pipeline_data, session_data)
-        self._write_session_data_to_file(session_data)
-        self._archive_session_folder()
+        try:
+            self._save_report_files_to_session(report_file_paths)
+            session_data = self._create_session_data(file_data, pipeline_data, report, report_file_paths)
+            self._save_files_to_session(file_data)
+            self._save_pipelines_to_session(pipeline_data, session_data)
+            self._write_session_data_to_file(session_data)
+            self._archive_session_folder()
+        finally:
+            self._clean_up_staging()
 
     def load_session(self) -> Tuple[List[FileData], List[PipelineData], Any]:
-        self._unpack_session_archive()
         session_dir = self._get_session_dir()
-        with open(session_dir.joinpath('session_data.yaml')) as f:
-            session_data = yaml.safe_load(f)
-
-        file_data, pipeline_data = self._process_session_data(session_data)
-        shutil.rmtree(session_dir)
-        return file_data, pipeline_data, session_data.get('session_report_data', {'report': None})[
-            'report']
+        try:
+            self._unpack_session_archive()
+            session_data = self._read_session_data(session_dir)
+            file_data, pipeline_data = self._process_session_data(session_data)
+        finally:
+            shutil.rmtree(session_dir, ignore_errors=True)
+        report_data = session_data.get('session_report_data') or {}
+        return file_data, pipeline_data, report_data.get('report')
 
     def _prepare_session_folder(self):
-        if self.session_filename.exists():
-            shutil.rmtree(self.session_filename) if self.session_filename.is_dir() else self.session_filename.unlink()
-        self.session_filename.mkdir(parents=True)
+        # the session is assembled under a temporary name next to the target file, so that an
+        # existing session file is only replaced once its replacement fully exists on disk.
+        # the staging path is absolute, since shutil.make_archive temporarily changes the cwd.
+        parent_dir = self._archive_path.parent
+        parent_dir.mkdir(parents=True, exist_ok=True)
+        self._staging_dir = Path(tempfile.mkdtemp(prefix=f'{self.session_filename.stem}_', suffix='.rnaltmp',
+                                                  dir=parent_dir.resolve()))
+
+    def _clean_up_staging(self):
+        if self._staging_archive is not None:
+            with contextlib.suppress(OSError):
+                self._staging_archive.unlink(missing_ok=True)
+            self._staging_archive = None
+        if self._staging_dir is not None:
+            shutil.rmtree(self._staging_dir, ignore_errors=True)
+            self._staging_dir = None
 
     def _create_session_data(self, file_data: List[FileData], pipeline_data: List[PipelineData], report: dict,
                              report_item_paths: dict) -> dict:
@@ -416,34 +441,114 @@ class GUISessionManager:
     def _save_files_to_session(self, file_data: List[FileData]):
         for file in file_data:
             shutil.move(Path(get_gui_cache_dir().joinpath(file.filename)),
-                        self.session_filename.joinpath(file.filename))
+                        self._staging_dir.joinpath(file.filename))
 
     def _save_report_files_to_session(self, report_file_paths: Dict[str, Path]) -> Dict[str, Path]:
         cache_dir = get_gui_cache_dir()
         for item_id, file_path in report_file_paths.items():
-            shutil.copy(cache_dir.joinpath(file_path), self.session_filename.joinpath(file_path))
+            shutil.copy(cache_dir.joinpath(file_path), self._staging_dir.joinpath(file_path))
 
     def _save_pipelines_to_session(self, pipeline_data: List[PipelineData], session_data: dict):
         for i, pipeline in enumerate(pipeline_data):
-            pipeline_filename = self.session_filename.joinpath(f"pipeline_{i}.yaml")
+            pipeline_filename = self._staging_dir.joinpath(f"pipeline_{i}.yaml")
             Path(pipeline_filename).write_text(pipeline.content)
             session_data['pipelines'][pipeline_filename.name] = pipeline.name
 
     def _write_session_data_to_file(self, session_data: dict):
-        with open(self.session_filename.joinpath('session_data.yaml'), 'w') as f:
+        with open(self._staging_dir.joinpath('session_data.yaml'), 'w') as f:
             yaml.safe_dump(session_data, f)
 
     def _archive_session_folder(self):
-        shutil.make_archive(self.session_filename.with_suffix('').as_posix(), 'zip', self.session_filename)
-        shutil.rmtree(self.session_filename)
-        self.session_filename.with_suffix('.zip').replace(self.session_filename.with_suffix('.rnal'))
+        archive_base = f'{self._staging_dir.as_posix()}_archive'
+        self._staging_archive = Path(f'{archive_base}.zip')
+        shutil.make_archive(archive_base, 'zip', self._staging_dir)
+        self._flush_to_disk(self._staging_archive)
+        # the previous session file is replaced only now, in a single atomic step, and only once
+        # its replacement has been fully written to disk.
+        os.replace(self._staging_archive, self._archive_path)
+        self._staging_archive = None
+
+    @staticmethod
+    def _flush_to_disk(path: Path):
+        """
+        Force a file's contents out of the operating system's cache and onto the disk.
+
+        ``os.replace`` only makes the *directory entry* swap atomic; without this, a power loss
+        right after a session was saved could leave a session file whose contents were never
+        actually written - having already replaced the previous session.
+
+        :param path: the file to flush
+        :type path: pathlib.Path
+        """
+        try:
+            with open(path, 'r+b') as f:
+                os.fsync(f.fileno())
+        except OSError:  # pragma: no cover
+            # some filesystems (notably network shares) do not support fsync - a session that was
+            # otherwise saved successfully should not fail because of that.
+            warnings.warn(f"Could not flush the session file '{path}' to disk. ")
 
     def _unpack_session_archive(self):
+        archive_path = self._archive_path
+        if not (archive_path.exists() and archive_path.is_file()):
+            raise FileNotFoundError(f"Could not find the session file '{archive_path}'. "
+                                    f"Please make sure the file exists, "
+                                    f"and that its path is spelled correctly. ")
         try:
-            self.session_filename.with_suffix('.rnal').rename(self.session_filename.with_suffix('.rnal.zip'))
-            shutil.unpack_archive(self.session_filename.with_suffix('.rnal.zip'), self._get_session_dir())
-        finally:
-            self.session_filename.with_suffix('.rnal.zip').rename(self.session_filename.with_suffix('.rnal'))
+            # unpack_archive with an explicit format accepts any file extension, so the user's
+            # session file is never renamed - and therefore never modified - in order to load it.
+            shutil.unpack_archive(archive_path, self._get_session_dir(), format='zip')
+        except (shutil.ReadError, zipfile.BadZipFile, EOFError) as err:
+            raise self._corrupt_session_error('it could not be opened as a session archive') from err
+
+    def _read_session_data(self, session_dir: Path) -> dict:
+        session_data_path = session_dir.joinpath('session_data.yaml')
+        if not (session_data_path.exists() and session_data_path.is_file()):
+            raise self._corrupt_session_error("it does not contain a 'session_data.yaml' file")
+        try:
+            with open(session_data_path) as f:
+                session_data = yaml.safe_load(f)
+        except yaml.YAMLError as err:
+            raise self._corrupt_session_error("its 'session_data.yaml' file could not be read") from err
+
+        mandatory_fields = ('files', 'pipelines', 'metadata')
+        if not isinstance(session_data, dict) or not all(
+                isinstance(session_data.get(key), dict) for key in mandatory_fields):
+            raise self._corrupt_session_error("its 'session_data.yaml' file is missing mandatory information",
+                                              session_data)
+        return session_data
+
+    @staticmethod
+    def _recorded_version(session_data: Any) -> Optional[str]:
+        """
+        Return the RNAlysis version stamped into the given session data, if it can be read.
+
+        :param session_data: the session's parsed 'session_data.yaml' contents, if it was readable
+        :return: the RNAlysis version that saved the session, or None if it cannot be determined
+        """
+        if isinstance(session_data, dict):
+            metadata = session_data.get('metadata')
+            if isinstance(metadata, dict):
+                return metadata.get('rnalysis_version')
+        return None
+
+    def _corrupt_session_error(self, detail: str, session_data: Any = None) -> CorruptSessionError:
+        """
+        Build a user-facing error for a session file that cannot be loaded.
+
+        :param detail: description of what is wrong with the session file
+        :type detail: str
+        :param session_data: the session's parsed 'session_data.yaml' contents, if it was readable
+        :return: the error to raise
+        :rtype: CorruptSessionError
+        """
+        message = f"The session file '{self._archive_path}' is corrupt or incomplete: {detail}. "
+        version = self._recorded_version(session_data)
+        if version is not None:
+            message += f"This session was saved by RNAlysis {version}. "
+        message += ("RNAlysis cannot load this session. "
+                    "If you have a backup copy of this session file, please try loading it instead. ")
+        return CorruptSessionError(message)
 
     def _get_session_dir(self) -> Path:
         session_dir = get_gui_cache_dir().joinpath(self.session_filename.stem)
@@ -457,8 +562,12 @@ class GUISessionManager:
         filenames = session_data['metadata'].get('tab_order', list(session_data['files'].keys()))
         for file_name in filenames:
             file_path = session_dir.joinpath(file_name)
+            if file_name not in session_data['files']:
+                raise self._corrupt_session_error(f"the data file '{file_name}' is not described in the session",
+                                                  session_data)
             if not (file_path.exists() and file_path.is_file()):
-                raise InternalError
+                raise self._corrupt_session_error(f"the data file '{file_name}' is missing from the session archive",
+                                                  session_data)
             if len(session_data['files'][file_name]) == 3:  # support for legacy session files
                 item_name, item_type, item_property = session_data['files'][file_name]
                 item_id = None
@@ -477,12 +586,17 @@ class GUISessionManager:
         for pipeline_filename, pipeline_name in session_data['pipelines'].items():
             pipeline_path = session_dir.joinpath(pipeline_filename)
             if not (pipeline_path.exists() and pipeline_path.is_file()):
-                raise InternalError
+                raise self._corrupt_session_error(
+                    f"the Pipeline file '{pipeline_filename}' is missing from the session archive", session_data)
             pipeline_data.append(PipelineData(name=pipeline_name, content=pipeline_path.read_text()))
         # handle report files, if any by copying them to the cache directory
         cache_dir = get_gui_cache_dir()
-        for item_id, file_path in session_data.get('session_report_data', {'item_paths': {}})['item_paths'].items():
+        report_data = session_data.get('session_report_data') or {}
+        for item_id, file_path in (report_data.get('item_paths') or {}).items():
             new_pth = cache_dir.joinpath(file_path)
+            if not session_dir.joinpath(file_path).exists():
+                raise self._corrupt_session_error(
+                    f"the report file '{file_path}' is missing from the session archive", session_data)
             shutil.copy(session_dir.joinpath(file_path), new_pth)
 
         return file_data, pipeline_data

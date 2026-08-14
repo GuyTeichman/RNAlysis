@@ -17,6 +17,10 @@ families:
       except RNAlysisInputError as err:
           print(err)
 
+  A broken *file* the user asked RNAlysis to open belongs to this family too: \
+  :class:`CorruptSessionError` is raised when a session file cannot be loaded because it is \
+  corrupt or incomplete.
+
 * **Internal invariants** (:class:`InternalError`) - a condition that cannot be false unless RNAlysis itself has a \
   bug. These used to be bare `assert` statements, which meant they vanished under `python -O`; they are now real \
   exceptions, so a violated invariant always fails loudly instead of silently corrupting an analysis.
@@ -44,6 +48,15 @@ class InvalidTypeError(RNAlysisInputError, TypeError):
 
 class InvalidValueError(RNAlysisInputError, ValueError):
     """Raised when a user-supplied argument has an illegal value, shape, or is not one of the legal choices."""
+
+
+class CorruptSessionError(RNAlysisInputError, ValueError):
+    """
+    Raised when an RNAlysis session file cannot be loaded because it is corrupt or incomplete.
+
+    A truncated, hand-edited, or partially-downloaded session file is a broken *input*, not a
+    violated internal invariant - loading one must therefore not ask the user to report a bug.
+    """
 
 
 class InternalError(RNAlysisError, RuntimeError):

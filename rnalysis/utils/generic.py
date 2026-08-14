@@ -5,10 +5,10 @@ import math
 import types
 import typing
 import warnings
-from datetime import datetime
+from datetime import date, datetime
 from functools import lru_cache
 from pathlib import Path
-from typing import Callable, Dict, Tuple, Union
+from typing import Callable, Dict, Optional, Tuple, Union
 
 import joblib
 import lazy_loader as lazy
@@ -520,6 +520,94 @@ class InteractiveScatterFigure(figure.Figure):
             self.canvas.draw()
 
 
+#: types that ``yaml.safe_dump`` can always represent, and that ``yaml.safe_load`` returns as-is
+_YAML_SAFE_SCALARS = (str, bool, int, float, bytes, type(None), datetime, date)
+
+
+def _sanitize_for_yaml(value, context: str):
+    """
+    Recursively convert a Pipeline parameter into an object ``yaml.safe_dump`` can represent.
+
+    numpy scalars become their Python equivalents, numpy arrays and tuples become lists, and \
+    pathlib Paths become POSIX-style strings. Values that cannot be represented at all raise a \
+    typed error naming the offending function and parameter, instead of a bare ``RepresenterError``.
+
+    :param value: the parameter value to sanitize
+    :param context: human-readable description of the parameter, used in error messages
+    :type context: str
+    :return: a YAML-representable version of ``value``
+    """
+    if isinstance(value, np.generic):
+        value = value.item()
+    elif isinstance(value, np.ndarray):
+        value = value.tolist()
+    elif isinstance(value, Path):
+        return value.as_posix()
+
+    if isinstance(value, dict):
+        return {_sanitize_hashable(key, context, 'dictionary key'): _sanitize_for_yaml(val, context)
+                for key, val in value.items()}
+    if isinstance(value, (list, tuple)):
+        # YAML has no tuple type - tuples are stored (and re-loaded) as lists
+        return [_sanitize_for_yaml(item, context) for item in value]
+    if isinstance(value, (set, frozenset)):
+        return {_sanitize_hashable(item, context, 'set item') for item in value}
+    if isinstance(value, _YAML_SAFE_SCALARS):
+        return value
+
+    try:
+        yaml.safe_dump(value)
+    except yaml.YAMLError as err:
+        raise InvalidTypeError(f"Cannot export Pipeline: the value of {context} (of type "
+                               f"'{type(value).__name__}') cannot be saved to a Pipeline YAML file. "
+                               f"Please replace it with a simple value, such as a number, a string, or a list. ") \
+            from err
+    return value
+
+
+def _sanitize_hashable(value, context: str, kind: str):
+    """
+    Sanitize a value that must stay hashable (a dictionary key or a set item).
+
+    :param value: the value to sanitize
+    :param context: human-readable description of the parameter it belongs to, used in error messages
+    :type context: str
+    :param kind: what the value is ('dictionary key' or 'set item'), used in error messages
+    :type kind: str
+    :return: a YAML-representable, hashable version of ``value``
+    """
+    sanitized = _sanitize_for_yaml(value, context)
+    try:
+        hash(sanitized)
+    except TypeError as err:
+        raise InvalidTypeError(f"Cannot export Pipeline: the {kind} {value!r} of {context} "
+                               f"cannot be saved to a Pipeline YAML file. "
+                               f"Please use a simple value such as a string or a number. ") from err
+    return sanitized
+
+
+def _parse_pipeline_yaml_string(content: str) -> Tuple[bool, typing.Any, Optional[yaml.YAMLError]]:
+    """
+    Determine whether the given string plausibly *is* a Pipeline YAML document, and if so, parse it.
+
+    This is what keeps a mistyped filename ('C:/no/such/file.yaml') from being silently parsed as \
+    YAML and failing later with an unrelated Python error.
+
+    :param content: the string to examine
+    :type content: str
+    :return: a tuple of (whether the string was meant as a YAML document, the parsed document, \
+    and the error raised while parsing it, if any)
+    """
+    # a multi-line string was clearly meant as file *contents* rather than as a file name
+    is_document = '\n' in content
+    try:
+        parsed = yaml.safe_load(content)
+    except yaml.YAMLError as err:
+        return is_document, None, err
+    # a single-line string is only treated as YAML if it parses into a Pipeline-shaped mapping
+    return is_document or isinstance(parsed, dict), parsed, None
+
+
 class GenericPipeline(abc.ABC):
     __slots__ = {'functions': 'list of functions to perform', 'params': 'list of function parameters'}
 
@@ -599,19 +687,43 @@ class GenericPipeline(abc.ABC):
         """
         Export a Pipeline to a Pipeline YAML file or YAML-like string.
 
+        Function parameters are converted into their closest YAML equivalent before saving: \
+        numpy scalars and arrays become plain Python numbers and lists, and pathlib Paths become \
+        strings. Note that YAML has no tuple type - tuples are therefore saved (and re-loaded) as \
+        lists, except for the top-level tuple of positional arguments, which is restored on import.
+
         :param filename: filename to save the Pipeline YAML to, or None to return a YAML-like string instead.
         :type filename: str, pathlib.Path, or None
         :return: if filename is None, returns the Pipeline YAML-like string.
         """
         pipeline_dict = self._get_pipeline_dict()
-        for func, params in zip(self.functions, self.params):
+        for func, (args, kwargs) in zip(self.functions, self.params):
             pipeline_dict['functions'].append(func.__name__)
-            pipeline_dict['params'].append(params)
+            pipeline_dict['params'].append(self._sanitize_params(func.__name__, args, kwargs))
         if filename is None:
             return yaml.safe_dump(pipeline_dict)
         else:
             with open(filename, 'w') as f:
                 yaml.safe_dump(pipeline_dict, f)
+
+    @staticmethod
+    def _sanitize_params(func_name: str, args: tuple, kwargs: dict) -> list:
+        """
+        Return a YAML-representable version of a single function's arguments.
+
+        :param func_name: name of the function the arguments belong to (used in error messages)
+        :type func_name: str
+        :param args: unkeyworded arguments of the function
+        :type args: tuple
+        :param kwargs: keyworded arguments of the function
+        :type kwargs: dict
+        :return: a [args, kwargs] list that ``yaml.safe_dump`` can represent
+        """
+        sanitized_args = [_sanitize_for_yaml(arg, f"positional argument #{i + 1} of function '{func_name}'")
+                          for i, arg in enumerate(args)]
+        sanitized_kwargs = {key: _sanitize_for_yaml(val, f"parameter '{key}' of function '{func_name}'")
+                            for key, val in kwargs.items()}
+        return [sanitized_args, sanitized_kwargs]
 
     def _get_pipeline_dict(self):
         d = dict(functions=[], params=[], metadata={'rnalysis_version': f'{__version__}',
@@ -623,19 +735,151 @@ class GenericPipeline(abc.ABC):
         """
         Import a Pipeline from a Pipeline YAML file or YAML-like string.
 
+        Note that YAML has no tuple type: tuples within the Pipeline's function parameters were \
+        saved as lists, and are therefore returned as lists. The only exception is the top-level \
+        tuple of positional arguments of each function, which is restored on import.
+
         :param filename: name of the YAML file containing the Pipeline, or a YAML-like string.
         :type filename: str or pathlib.Path
         :return: the imported Pipeline
         :rtype: Pipeline
         """
-        try:
-            with open(filename) as f:
-                pipeline_dict = yaml.safe_load(f)
-        except OSError:
-            pipeline_dict = yaml.safe_load(filename)
+        pipeline_dict = cls._read_pipeline_dict(filename)
         pipeline = cls.__new__(cls)
         pipeline._init_from_dict(pipeline_dict)
         return pipeline
+
+    @classmethod
+    def _read_pipeline_dict(cls, filename: Union[str, Path]):
+        """
+        Read a Pipeline YAML document from either a file or a YAML-like string.
+
+        :param filename: name of the YAML file containing the Pipeline, or a YAML-like string.
+        :type filename: str or pathlib.Path
+        :return: the parsed Pipeline YAML document
+        """
+        try:
+            with open(filename) as f:
+                try:
+                    return yaml.safe_load(f)
+                except yaml.YAMLError as err:
+                    raise cls._pipeline_load_error(
+                        None, f"the file '{filename}' is not a valid YAML document ({err}).") from err
+        except OSError as err:
+            if isinstance(filename, str):
+                is_yaml_string, pipeline_dict, parse_error = _parse_pipeline_yaml_string(filename)
+                if is_yaml_string:
+                    if parse_error is not None:
+                        raise cls._pipeline_load_error(
+                            None, f"the given Pipeline is not a valid YAML document "
+                                  f"({parse_error}).") from parse_error
+                    return pipeline_dict
+            if isinstance(err, FileNotFoundError):
+                raise FileNotFoundError(f"Could not find the Pipeline file '{filename}'. "
+                                        f"Please make sure the file exists, "
+                                        f"and that its path is spelled correctly. ") from err
+            raise
+
+    @staticmethod
+    def _exported_version_string(pipeline_dict) -> str:
+        """
+        Describe the RNAlysis version that exported the given Pipeline, based on its version stamp.
+
+        :param pipeline_dict: a parsed Pipeline YAML document (not necessarily a valid one)
+        :return: a human-readable description of the exporting RNAlysis version
+        :rtype: str
+        """
+        version = None
+        if isinstance(pipeline_dict, dict):
+            metadata = pipeline_dict.get('metadata')
+            if isinstance(metadata, dict):
+                version = metadata.get('rnalysis_version')
+        if version is None:
+            return 'this Pipeline does not record which version of RNAlysis exported it'
+        return f'this Pipeline was exported by RNAlysis {version}'
+
+    @classmethod
+    def _pipeline_load_error(cls, pipeline_dict, reason: str) -> InvalidValueError:
+        """
+        Build a Pipeline load-failure error that names the exporting and the current RNAlysis version.
+
+        :param pipeline_dict: a parsed Pipeline YAML document (not necessarily a valid one)
+        :param reason: description of what went wrong
+        :type reason: str
+        :return: the error to raise
+        :rtype: InvalidValueError
+        """
+        return InvalidValueError(f"Failed to load Pipeline: {reason} "
+                                 f"({cls._exported_version_string(pipeline_dict)}, "
+                                 f"and the current version is RNAlysis {__version__})")
+
+    @classmethod
+    def _validate_pipeline_dict(cls, pipeline_dict):
+        """
+        Verify that the given parsed YAML document has the shape of a Pipeline.
+
+        :param pipeline_dict: a parsed Pipeline YAML document
+        """
+        if not isinstance(pipeline_dict, dict):
+            raise cls._pipeline_load_error(
+                pipeline_dict, f"expected a Pipeline YAML file or YAML-like string, but got "
+                               f"'{type(pipeline_dict).__name__}' instead.")
+        for key in ('functions', 'params'):
+            if key not in pipeline_dict:
+                raise cls._pipeline_load_error(pipeline_dict, f"the Pipeline is missing the mandatory '{key}' field.")
+            if not isinstance(pipeline_dict[key], list):
+                raise cls._pipeline_load_error(pipeline_dict, f"the Pipeline's '{key}' field must be a list, "
+                                                              f"but is '{type(pipeline_dict[key]).__name__}' instead.")
+        if len(pipeline_dict['functions']) != len(pipeline_dict['params']):
+            raise cls._pipeline_load_error(pipeline_dict,
+                                           f"the Pipeline lists {len(pipeline_dict['functions'])} functions, "
+                                           f"but {len(pipeline_dict['params'])} sets of parameters.")
+
+    @classmethod
+    def _params_from_dict(cls, pipeline_dict: dict) -> list:
+        """
+        Parse the 'params' field of a Pipeline YAML document into a list of (args, kwargs) pairs.
+
+        :param pipeline_dict: a parsed Pipeline YAML document
+        :return: the Pipeline's function parameters
+        :rtype: list
+        """
+        params = []
+        for entry in pipeline_dict['params']:
+            if not isinstance(entry, (list, tuple)) or len(entry) != 2:
+                raise cls._pipeline_load_error(pipeline_dict, f"the function parameters {entry} are malformed - "
+                                                              f"expected a pair of [arguments, keyword arguments].")
+            args, kwargs = entry
+            if kwargs is None:
+                kwargs = {}
+            if not isinstance(kwargs, dict):
+                raise cls._pipeline_load_error(pipeline_dict, f"the keyword arguments {kwargs} are malformed - "
+                                                              f"expected a dictionary.")
+            args = tuple(args) if isinstance(args, (list, tuple, set)) else (args,)
+            params.append((args, kwargs))
+        return params
+
+    @classmethod
+    def _resolve_function(cls, func_name, namespace, namespace_name: str,
+                          pipeline_dict: dict) -> types.FunctionType:
+        """
+        Look up a Pipeline function by the name recorded in a Pipeline YAML document.
+
+        :param func_name: the function name recorded in the Pipeline YAML document
+        :param namespace: the class or module the function should belong to
+        :param namespace_name: human-readable name of the namespace, used in error messages
+        :type namespace_name: str
+        :param pipeline_dict: the parsed Pipeline YAML document, used to report the exporting version
+        :return: the function matching the given name
+        """
+        if not isinstance(func_name, str) or func_name.startswith('_'):
+            raise cls._pipeline_load_error(pipeline_dict, f"'{func_name}' is not a valid RNAlysis function name.")
+        func = getattr(namespace, func_name, None)
+        if not isinstance(func, types.FunctionType):
+            raise cls._pipeline_load_error(
+                pipeline_dict, f"function '{func_name}' does not exist in {namespace_name}. "
+                               f"It may have been renamed or removed since this Pipeline was exported.")
+        return func
 
     def _init_from_dict(self, pipeline_dict: dict):
         raise NotImplementedError
