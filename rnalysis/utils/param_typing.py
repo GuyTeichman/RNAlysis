@@ -16,6 +16,10 @@ QUANTILE_INTERPOLATION_METHODS = ("nearest", "higher", "lower", "midpoint", "lin
 SUMMATION_METHODS = ('scaled_tpm', 'raw')
 LIMMA_NORM = ('scale', 'quantile', 'cyclicloess')
 K_CRITERIA = ('gap', 'silhouette', 'calinski_harabasz', 'davies_bouldin', 'bic')
+# The transforms applied to a count matrix before PCA/clustering ('power_transform'). This parameter used to be
+# a bool, and the legacy True ('box-cox') / False ('none') are still accepted by the API -- see
+# generic.parse_power_transform -- but the GUI only ever offers the named transforms.
+POWER_TRANSFORMS = ('box-cox', 'log', 'none')
 
 LEGAL_GENE_LENGTH_METHODS = ('mean', 'median', 'max', 'min', 'geometric_mean', 'merged_exons')
 
