@@ -53,7 +53,7 @@ from requests.adapters import HTTPAdapter, Retry
 from tqdm import tqdm
 
 from rnalysis import __version__
-from rnalysis.exceptions import (CorruptSessionError, InternalError,
+from rnalysis.exceptions import (CorruptSessionError, IDMappingTimeoutError, InternalError,
                                  InvalidTypeError, InvalidValueError)
 from rnalysis.utils import parsing, validation
 
@@ -2318,6 +2318,15 @@ class GeneIDTranslator:
     STATUS_POLL_MAX_RETRIES = 7
     STATUS_POLL_BACKOFF = 0.5
     STATUS_POLL_MAX_BACKOFF = 8
+    # Upper bound (in seconds of accumulated polling wait) on how long we wait for a single UniProt
+    # idmapping job to become ready. UniProt job latency is entirely server-side and usually
+    # sub-second, but a job can occasionally wedge in a RUNNING state far longer than any legitimate
+    # job takes (measured legitimate worst-case ~3 min). This is a safety net against an unbounded
+    # hang, NOT a performance knob -- it is set well above real slow jobs so it never pre-empts one
+    # that would actually finish. On timeout the poll raises IDMappingTimeoutError and the mapping
+    # degrades to a partial result: the un-fetched ids are retried on the next run rather than cached
+    # as unmappable (see get_mapping_results).
+    JOB_READY_TIMEOUT = 600
 
     def __init__(self, map_from: str, map_to: str = 'UniProtKB AC', verbose: bool = True,
                  session: Union[requests.Session, None] = None):
@@ -2449,24 +2458,37 @@ class GeneIDTranslator:
         miss_ids = [gene_id for gene_id in dict.fromkeys(ids) if gene_id not in cached_ids]
 
         if miss_ids:
-            fresh = self._fetch_mapping_results(to_db, from_db, tuple(miss_ids), session)
-            fresh_rows = fresh.collect() if fresh is not None else pl.DataFrame(schema=TRANSLATION_CACHE_SCHEMA)
-            # Record a negative marker for every miss id UniProt returned nothing for, so a later
-            # subset re-run doesn't re-query the unmappable ids forever.
-            mapped = set(fresh_rows['From'].to_list())
-            negatives = [gene_id for gene_id in miss_ids if gene_id not in mapped]
-            new_rows = fresh_rows
-            if negatives:
-                new_rows = pl.concat([fresh_rows, pl.DataFrame(
-                    {'From': negatives, 'To': [None] * len(negatives),
-                     'annotation_score': [None] * len(negatives)}, schema=TRANSLATION_CACHE_SCHEMA)])
-            if new_rows.height > 0:
-                try:
-                    _write_translation_cache_fragment(from_db, to_db, new_rows)
-                except Exception as err:  # a failed write (disk full, permission) is non-fatal
-                    if self.verbose:
-                        warnings.warn(f"Could not write to the gene-ID translation cache ({err}).")
-            cached = pl.concat([cached, new_rows])
+            try:
+                fresh = self._fetch_mapping_results(to_db, from_db, tuple(miss_ids), session)
+            except IDMappingTimeoutError as err:
+                # UniProt wedged this job. Degrade gracefully: do NOT record the un-fetched miss ids as
+                # negatives -- that would wrongly mark them permanently unmappable for the rest of the
+                # day. Leave the cache untouched so the next run retries them, and return whatever is
+                # already cached. ("UniProt never answered" must stay distinct from "UniProt says these
+                # don't map".)
+                if self.verbose:
+                    warnings.warn(
+                        f"UniProt did not finish the gene-ID mapping job in time ({err}); continuing with "
+                        f"partial results -- {len(miss_ids)} ID(s) were left unmapped this run and will be "
+                        f"retried next time.")
+            else:
+                fresh_rows = fresh.collect() if fresh is not None else pl.DataFrame(schema=TRANSLATION_CACHE_SCHEMA)
+                # Record a negative marker for every miss id UniProt returned nothing for, so a later
+                # subset re-run doesn't re-query the unmappable ids forever.
+                mapped = set(fresh_rows['From'].to_list())
+                negatives = [gene_id for gene_id in miss_ids if gene_id not in mapped]
+                new_rows = fresh_rows
+                if negatives:
+                    new_rows = pl.concat([fresh_rows, pl.DataFrame(
+                        {'From': negatives, 'To': [None] * len(negatives),
+                         'annotation_score': [None] * len(negatives)}, schema=TRANSLATION_CACHE_SCHEMA)])
+                if new_rows.height > 0:
+                    try:
+                        _write_translation_cache_fragment(from_db, to_db, new_rows)
+                    except Exception as err:  # a failed write (disk full, permission) is non-fatal
+                        if self.verbose:
+                            warnings.warn(f"Could not write to the gene-ID translation cache ({err}).")
+                cached = pl.concat([cached, new_rows])
 
         # Resolve over the requested ids' positive candidate rows (negatives are cache-only markers).
         requested = cached.filter(pl.col('From').is_in(set(ids)) & pl.col('To').is_not_null())
@@ -2538,14 +2560,27 @@ class GeneIDTranslator:
     @staticmethod
     def check_id_mapping_results_ready(session, job_id: str, polling_interval: float, verbose: bool = True):
         interval = min(GeneIDTranslator.INITIAL_POLLING_INTERVAL, polling_interval)
+        waited = 0.0  # accumulated polling wait; bounds the loop against a wedged (never-ready) job
         while True:
             r = GeneIDTranslator._poll_mapping_status(session, job_id, verbose)
             j = r.json()
             if "jobStatus" in j:
                 if j["jobStatus"] in {"RUNNING", "NEW"}:
+                    if waited >= GeneIDTranslator.JOB_READY_TIMEOUT:
+                        # The job is still RUNNING after JOB_READY_TIMEOUT of waiting -- treat it as
+                        # wedged and give up instead of polling forever. get_mapping_results catches
+                        # this and degrades to a partial mapping (these ids are retried next run).
+                        raise IDMappingTimeoutError(
+                            f"UniProt did not finish the ID mapping job (id={job_id}) after {waited:.0f}s "
+                            f"of waiting; giving up on this job.")
                     if verbose:
-                        print(f"Retrying in {interval}s")
+                        # NB: this is not an error retry -- the request succeeded and UniProt reported
+                        # the mapping job is still running. Word it as waiting on UniProt so a slow
+                        # (server-side) job doesn't read like a failing request; users previously saw
+                        # "Retrying in 3s" spam and assumed the mapping was broken.
+                        print(f"Waiting for UniProt to finish the ID mapping job (checking again in {interval}s)...")
                     time.sleep(interval)
+                    waited += interval
                     interval = min(interval * 2, polling_interval)
                 else:
                     raise Exception(j["jobStatus"])

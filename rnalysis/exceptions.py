@@ -4,7 +4,7 @@ Exception types deliberately raised by RNAlysis.
 This module imports nothing at all (not even from the standard library), so that it stays cheap to import from
 anywhere in the package, including hot paths and modules that are imported at startup.
 
-Every exception raised on purpose by RNAlysis inherits from :class:`RNAlysisError`, and falls into one of two
+Every exception raised on purpose by RNAlysis inherits from :class:`RNAlysisError`, and falls into one of three
 families:
 
 * **User-input errors** (:class:`RNAlysisInputError`) - the user supplied something RNAlysis cannot work with. \
@@ -24,6 +24,12 @@ families:
 * **Internal invariants** (:class:`InternalError`) - a condition that cannot be false unless RNAlysis itself has a \
   bug. These used to be bare `assert` statements, which meant they vanished under `python -O`; they are now real \
   exceptions, so a violated invariant always fails loudly instead of silently corrupting an analysis.
+
+* **External-service failures** (:class:`ExternalServiceError`) - a remote service RNAlysis depends on (UniProt, \
+  Ensembl, PANTHER, PhylomeDB, OrthoInspector, KEGG, GO) was slow, changed, or went down. Neither the user's fault \
+  nor an RNAlysis bug; code that hits one should degrade gracefully (a partial or empty result plus a clear \
+  message), never crash. :class:`IDMappingTimeoutError` is raised when a UniProt idmapping job never becomes ready \
+  within the allotted time.
 
 None of these inherit from :class:`AssertionError`. Code that used to catch `AssertionError` from RNAlysis must
 catch :class:`RNAlysisError` (or one of its subclasses) instead.
@@ -56,6 +62,28 @@ class CorruptSessionError(RNAlysisInputError, ValueError):
 
     A truncated, hand-edited, or partially-downloaded session file is a broken *input*, not a
     violated internal invariant - loading one must therefore not ask the user to report a bug.
+    """
+
+
+class ExternalServiceError(RNAlysisError):
+    """
+    Root for failures of a remote service RNAlysis depends on (UniProt, Ensembl, PANTHER, PhylomeDB,
+    OrthoInspector, KEGG, GO).
+
+    These are neither the user's fault (:class:`RNAlysisInputError`) nor an RNAlysis bug
+    (:class:`InternalError`) - a third party was slow, changed, or went down. Code that raises one
+    should have already degraded to a partial or empty result with a clear, user-facing message.
+    """
+
+
+class IDMappingTimeoutError(ExternalServiceError):
+    """
+    Raised when a UniProt gene-ID mapping job does not become ready within the allotted time.
+
+    UniProt idmapping runs asynchronously and its job latency is entirely server-side; a job can
+    occasionally stay in a running state for far longer than any legitimate job takes. Bounding the
+    wait lets a wedged job degrade to a partial mapping (retried on the next run) instead of hanging
+    the whole analysis indefinitely.
     """
 
 
