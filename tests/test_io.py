@@ -1620,6 +1620,7 @@ def _broken_session_data(version: str = '3.2.2') -> dict:
             'session_report_data': {'report': None, 'item_paths': {}}}
 
 
+@pytest.mark.unit
 def test_save_session_replaces_existing_file_and_leaves_no_temp_files(tmp_path):
     target = tmp_path.joinpath('sess.rnal')
     target.write_bytes(b'previous session contents')
@@ -1635,6 +1636,7 @@ def test_save_session_replaces_existing_file_and_leaves_no_temp_files(tmp_path):
     assert report is None
 
 
+@pytest.mark.unit
 def test_save_and_load_session_round_trip(tmp_path):
     target = tmp_path.joinpath('roundtrip.rnal')
     table = pl.DataFrame({'genes': ['WBGene00000001', 'WBGene00000002'], 'cond1': [1, 2]})
@@ -1665,6 +1667,22 @@ def test_save_and_load_session_round_trip(tmp_path):
         get_gui_cache_dir().joinpath('roundtrip_table.parquet').unlink(missing_ok=True)
 
 
+@pytest.mark.unit
+def test_save_session_over_a_stale_session_directory(tmp_path):
+    # a crash under a pre-4.3.0 RNAlysis left a half-built <name>.rnal *directory* behind;
+    # saving over one must still work, since os.replace cannot overwrite a directory
+    target = tmp_path.joinpath('sess.rnal')
+    target.mkdir()
+    target.joinpath('leftover.parquet').write_text('leftover from a crashed save')
+
+    GUISessionManager(target).save_session([], [], None, {})
+
+    assert target.is_file()
+    assert zipfile.is_zipfile(target)
+    assert [pth.name for pth in tmp_path.iterdir()] == ['sess.rnal']
+
+
+@pytest.mark.unit
 def test_save_session_flushes_the_archive_to_disk_before_replacing(monkeypatch, tmp_path):
     # os.replace only makes the directory-entry swap atomic - the replacement's contents must
     # already be on disk, or a power loss can leave a session file that was never written
@@ -1680,6 +1698,7 @@ def test_save_session_flushes_the_archive_to_disk_before_replacing(monkeypatch, 
     assert order == ['fsync', 'replace']
 
 
+@pytest.mark.unit
 def test_save_and_load_session_with_a_relative_path(monkeypatch, tmp_path):
     # shutil.make_archive temporarily changes the working directory, so the staging paths must not
     # depend on it
@@ -1692,6 +1711,7 @@ def test_save_and_load_session_with_a_relative_path(monkeypatch, tmp_path):
     assert GUISessionManager('relative_sess.rnal').load_session() == ([], [], None)
 
 
+@pytest.mark.unit
 def test_save_session_failure_leaves_the_existing_session_file_intact(monkeypatch, tmp_path):
     target = tmp_path.joinpath('sess.rnal')
     target.write_bytes(b'previous session contents')
@@ -1708,6 +1728,7 @@ def test_save_session_failure_leaves_the_existing_session_file_intact(monkeypatc
     assert [pth.name for pth in tmp_path.iterdir()] == ['sess.rnal'], "save must clean up its temporary files"
 
 
+@pytest.mark.unit
 def test_save_session_failure_before_archiving_leaves_the_existing_session_file_intact(monkeypatch, tmp_path):
     target = tmp_path.joinpath('sess.rnal')
     target.write_bytes(b'previous session contents')
@@ -1722,6 +1743,7 @@ def test_save_session_failure_before_archiving_leaves_the_existing_session_file_
     assert [pth.name for pth in tmp_path.iterdir()] == ['sess.rnal'], "save must clean up its temporary files"
 
 
+@pytest.mark.unit
 def test_load_session_does_not_rename_the_session_file(monkeypatch, tmp_path):
     target = tmp_path.joinpath('sess.rnal')
     GUISessionManager(target).save_session([], [], None, {})
@@ -1737,6 +1759,7 @@ def test_load_session_does_not_rename_the_session_file(monkeypatch, tmp_path):
     assert pipeline_data == []
 
 
+@pytest.mark.unit
 def test_load_session_from_a_read_only_file(tmp_path):
     target = tmp_path.joinpath('sess.rnal')
     GUISessionManager(target).save_session([], [], None, {})
@@ -1753,12 +1776,14 @@ def test_load_session_from_a_read_only_file(tmp_path):
     assert target.read_bytes() == contents_before
 
 
+@pytest.mark.unit
 def test_load_session_missing_file_raises_file_not_found(tmp_path):
     with pytest.raises(FileNotFoundError) as err:
         GUISessionManager(tmp_path.joinpath('no_such_session.rnal')).load_session()
     assert 'no_such_session.rnal' in str(err.value)
 
 
+@pytest.mark.unit
 def test_load_session_not_an_archive_reports_corrupt_session(tmp_path):
     target = tmp_path.joinpath('corrupt.rnal')
     target.write_bytes(b'this is not a zip archive at all')
@@ -1769,6 +1794,7 @@ def test_load_session_not_an_archive_reports_corrupt_session(tmp_path):
     assert not isinstance(err.value, InternalError)
 
 
+@pytest.mark.unit
 def test_load_session_truncated_archive_reports_corrupt_session(tmp_path):
     target = tmp_path.joinpath('truncated.rnal')
     GUISessionManager(target).save_session([], [], None, {})
@@ -1780,6 +1806,7 @@ def test_load_session_truncated_archive_reports_corrupt_session(tmp_path):
     assert 'corrupt or incomplete' in str(err.value)
 
 
+@pytest.mark.unit
 def test_load_session_without_session_data_reports_corrupt_session(tmp_path):
     target = tmp_path.joinpath('no_session_data.rnal')
     with zipfile.ZipFile(target, 'w') as archive:
@@ -1790,6 +1817,7 @@ def test_load_session_without_session_data_reports_corrupt_session(tmp_path):
     assert 'corrupt or incomplete' in str(err.value)
 
 
+@pytest.mark.unit
 def test_load_session_missing_data_file_reports_corrupt_session_with_version(tmp_path):
     target = tmp_path.joinpath('broken.rnal')
     _write_broken_session(target, _broken_session_data('3.2.2'))
@@ -1803,6 +1831,7 @@ def test_load_session_missing_data_file_reports_corrupt_session_with_version(tmp
     assert not isinstance(err.value, InternalError)
 
 
+@pytest.mark.unit
 def test_load_session_missing_pipeline_file_reports_corrupt_session_with_version(tmp_path):
     target = tmp_path.joinpath('broken_pipeline.rnal')
     session_data = _broken_session_data('4.0.0')
@@ -1819,6 +1848,7 @@ def test_load_session_missing_pipeline_file_reports_corrupt_session_with_version
     assert '4.0.0' in message
 
 
+@pytest.mark.unit
 def test_load_session_leaves_no_extracted_leftovers_on_failure(tmp_path):
     target = tmp_path.joinpath('broken_cleanup.rnal')
     _write_broken_session(target, _broken_session_data())
@@ -2773,6 +2803,37 @@ class TestOrthoInspectorOrthologMapper:
         assert result == {'DBone': frozenset({1, 2, 3}),
                           'DBtwo': frozenset({2, 4}),
                           'DBthree': frozenset({5})}
+
+    def test_get_database_organisms_degrades_when_one_database_reports_failure(self):
+        # A degraded OrthoInspector database (meta.status != 'success') must not crash the whole
+        # lookup, and must not tell the scientist to file an RNAlysis bug -- it is an external
+        # service problem. Warn and skip it, like the neighbouring stall/timeout paths do.
+        api = OrthoInspectorOrthologMapper.API_URL
+        with requests_mock.Mocker() as m:
+            m.get(f'{api}/databases', json={'data': ['GoodDB', 'DegradedDB']})
+            m.get(f'{api}/GoodDB/species',
+                  json={'meta': {'status': 'success'}, 'data': [{'id': 1}, {'id': 2}]})
+            m.get(f'{api}/DegradedDB/species',
+                  json={'meta': {'status': 'error'}, 'data': []})
+            with pytest.warns(UserWarning, match='DegradedDB'):
+                result = OrthoInspectorOrthologMapper.get_database_organisms()
+
+        # the healthy database is still usable; the degraded one contributes no organisms
+        assert result['GoodDB'] == frozenset({1, 2})
+        assert result.get('DegradedDB', frozenset()) == frozenset()
+
+    def test_get_database_organisms_degraded_warning_does_not_blame_rnalysis(self):
+        api = OrthoInspectorOrthologMapper.API_URL
+        with requests_mock.Mocker() as m:
+            m.get(f'{api}/databases', json={'data': ['DegradedDB']})
+            m.get(f'{api}/DegradedDB/species', json={'meta': {'status': 'maintenance'}, 'data': []})
+            with pytest.warns(UserWarning) as record:
+                OrthoInspectorOrthologMapper.get_database_organisms()
+
+        text = ' '.join(str(w.message) for w in record)
+        assert 'bug in RNAlysis' not in text
+        assert 'OrthoInspector' in text
+        assert 'maintenance' in text  # the reported status is surfaced for diagnosis
 
     def test_get_database_organisms_empty_database_list(self):
         # If OrthoInspector lists no databases, the concurrent fan-out must return {} rather than

@@ -1,4 +1,5 @@
 import abc
+import enum
 import inspect
 import itertools
 import math
@@ -24,7 +25,8 @@ from scipy.special import comb
 from tqdm.auto import tqdm
 
 from rnalysis import FROZEN_ENV, __version__
-from rnalysis.exceptions import InvalidTypeError, InvalidValueError
+from rnalysis.exceptions import (InternalError, InvalidTypeError,
+                                 InvalidValueError)
 from rnalysis.utils.param_typing import POWER_TRANSFORMS
 
 # scikit-learn costs ~1s to import and is only needed once a transform actually runs, so it is loaded
@@ -659,8 +661,28 @@ class InteractiveScatterFigure(figure.Figure):
             self.canvas.draw()
 
 
-#: types that ``yaml.safe_dump`` can always represent, and that ``yaml.safe_load`` returns as-is
+#: types that ``yaml.safe_dump`` can always represent, and that ``yaml.safe_load`` returns as-is.
+#: membership must be tested by exact type - PyYAML's SafeRepresenter dispatches on ``type(value)``,
+#: so a *subclass* of any of these (an Enum mixin, a pandas Timestamp) is NOT representable.
 _YAML_SAFE_SCALARS = (str, bool, int, float, bytes, type(None), datetime, date)
+
+
+def _coerce_yaml_scalar_subclass(value):
+    """
+    Convert a subclass of a YAML-safe scalar down to the plain built-in PyYAML can represent.
+
+    :param value: a value that is an instance - but not an exact instance - of a YAML-safe scalar
+    :return: the equivalent plain built-in value
+    """
+    if isinstance(value, datetime):  # datetime subclasses date, so it must be checked first
+        return datetime(value.year, value.month, value.day, value.hour, value.minute, value.second,
+                        value.microsecond, value.tzinfo)
+    if isinstance(value, date):
+        return date(value.year, value.month, value.day)
+    for base in (bool, int, float, str, bytes):  # bool subclasses int, so it must be checked first
+        if isinstance(value, base):
+            return base(value)
+    raise InternalError(f"'{type(value).__name__}' is not a subclass of a YAML-safe scalar type.")
 
 
 def _sanitize_for_yaml(value, context: str):
@@ -682,6 +704,9 @@ def _sanitize_for_yaml(value, context: str):
         value = value.tolist()
     elif isinstance(value, Path):
         return value.as_posix()
+    elif isinstance(value, enum.Enum):
+        # an Enum member stands for its value; str()ing it would yield 'Mode.UNION', not 'union'
+        return _sanitize_for_yaml(value.value, context)
 
     if isinstance(value, dict):
         return {_sanitize_hashable(key, context, 'dictionary key'): _sanitize_for_yaml(val, context)
@@ -691,8 +716,10 @@ def _sanitize_for_yaml(value, context: str):
         return [_sanitize_for_yaml(item, context) for item in value]
     if isinstance(value, (set, frozenset)):
         return {_sanitize_hashable(item, context, 'set item') for item in value}
-    if isinstance(value, _YAML_SAFE_SCALARS):
+    if type(value) in _YAML_SAFE_SCALARS:
         return value
+    if isinstance(value, _YAML_SAFE_SCALARS):
+        return _coerce_yaml_scalar_subclass(value)
 
     try:
         yaml.safe_dump(value)
@@ -839,11 +866,14 @@ class GenericPipeline(abc.ABC):
         for func, (args, kwargs) in zip(self.functions, self.params):
             pipeline_dict['functions'].append(func.__name__)
             pipeline_dict['params'].append(self._sanitize_params(func.__name__, args, kwargs))
+        # the whole Pipeline is serialized *before* the target file is opened: opening it for
+        # writing truncates it, so a Pipeline that cannot be serialized would otherwise destroy the
+        # Pipeline file the user was overwriting.
+        pipeline_yaml = yaml.safe_dump(pipeline_dict)
         if filename is None:
-            return yaml.safe_dump(pipeline_dict)
-        else:
-            with open(filename, 'w') as f:
-                yaml.safe_dump(pipeline_dict, f)
+            return pipeline_yaml
+        with open(filename, 'w') as f:
+            f.write(pipeline_yaml)
 
     @staticmethod
     def _sanitize_params(func_name: str, args: tuple, kwargs: dict) -> list:
@@ -1011,7 +1041,9 @@ class GenericPipeline(abc.ABC):
         :param pipeline_dict: the parsed Pipeline YAML document, used to report the exporting version
         :return: the function matching the given name
         """
-        if not isinstance(func_name, str) or func_name.startswith('_'):
+        # this check is deliberately no stricter than the one in add_function (a function object of
+        # the right namespace): anything that could be exported must import back (hard rule 4).
+        if not isinstance(func_name, str):
             raise cls._pipeline_load_error(pipeline_dict, f"'{func_name}' is not a valid RNAlysis function name.")
         func = getattr(namespace, func_name, None)
         if not isinstance(func, types.FunctionType):

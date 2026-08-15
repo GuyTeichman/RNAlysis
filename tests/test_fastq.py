@@ -18,10 +18,16 @@ from tests import are_dir_trees_equal, unlink_tree
 # These branches used to be bare `assert`s, which meant they vanished under `python -O`. They are
 # a representative sample of each validation shape in this module: missing folder/file, illegal
 # choice, wrong type, out-of-range value, and mismatched sample-name counts.
+#
+# Every test in this section carries an explicit @pytest.mark.unit. test_fastq is auto-tiered to
+# `integration_tools` by tests/conftest.py, but these are pure-Python argument checks that reach no
+# CLI - and an explicit leaf tier wins over auto-assignment. Without it, CI's fail-fast ordering
+# could skip the whole section, including the -O guard that is the point of the conversion.
 
 _TRANSCRIPTOME = 'tests/test_files/kallisto_tests/transcripts.fasta'
 
 
+@pytest.mark.unit
 @pytest.mark.parametrize('kmer_length,expected', [
     (31.0, InvalidTypeError),  # wrong type
     ('31', InvalidTypeError),
@@ -34,12 +40,14 @@ def test_kallisto_create_index_validates_kmer_length(kmer_length, expected):
         kallisto_create_index(_TRANSCRIPTOME, kmer_length=kmer_length)
 
 
+@pytest.mark.unit
 def test_kallisto_create_index_rejects_missing_transcriptome(monkeypatch):
     monkeypatch.setattr(io, 'generate_base_call', lambda *args, **kwargs: ['kallisto'])
     with pytest.raises(InvalidValueError):
         kallisto_create_index('tests/test_files/no_such_transcriptome.fasta')
 
 
+@pytest.mark.unit
 @pytest.mark.parametrize('kwargs,expected', [
     (dict(mode='not-a-mode'), InvalidValueError),
     (dict(settings_preset='not-a-preset'), InvalidValueError),
@@ -58,6 +66,7 @@ def test_parse_bowtie2_misc_args_validates_parameters(monkeypatch, tmp_path, kwa
         fastq._parse_bowtie2_misc_args(tmp_path, 'index', 'auto', **defaults)
 
 
+@pytest.mark.unit
 def test_parse_bowtie2_misc_args_rejects_missing_output_folder(monkeypatch, tmp_path):
     monkeypatch.setattr(io, 'generate_base_call', lambda *args, **kwargs_: ['bowtie2'])
     with pytest.raises(InvalidValueError):
@@ -65,27 +74,32 @@ def test_parse_bowtie2_misc_args_rejects_missing_output_folder(monkeypatch, tmp_
                                        False, 'phred33', 0, 1)
 
 
+@pytest.mark.unit
 def test_featurecounts_get_sample_names_rejects_mismatched_count():
     with pytest.raises(InvalidValueError):
         fastq._featurecounts_get_sample_names(['a.sam', 'b.sam'], ['only_one_name'])
 
 
+@pytest.mark.unit
 def test_featurecounts_get_sample_names_accepts_matching_count():
     assert fastq._featurecounts_get_sample_names(['a.sam', 'b.sam'], ['x', 'y']) == ['x', 'y']
 
 
+@pytest.mark.unit
 def test_single_end_pipeline_rejects_paired_end_function():
     p = SingleEndPipeline()
     with pytest.raises(InvalidValueError):
         p.add_function(bowtie2_align_paired_end)
 
 
+@pytest.mark.unit
 def test_paired_end_pipeline_rejects_single_end_function():
     p = PairedEndPipeline()
     with pytest.raises(InvalidValueError):
         p.add_function(bowtie2_align_single_end)
 
 
+@pytest.mark.unit
 def test_validation_survives_python_optimize():
     """The whole point of the conversion: `python -O` must not strip input validation."""
     import subprocess

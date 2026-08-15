@@ -38,6 +38,11 @@ MANIFEST_CLASSES = {
 }
 #: modules whose public functions are Pipeline-able and/or reflected into the GUI
 MANIFEST_MODULES = {'fastq': fastq, 'enrichment': enrichment}
+#: names that only exist in *some* environments, and so must never be pinned. `cutadapt_main` is
+#: imported from the cutadapt package when it is installed, but rnalysis.fastq defines a no-op
+#: fallback of its own when it is not - which would otherwise be collected as public API on a
+#: cutadapt-less machine and then fail this test everywhere else.
+EXCLUDED_NAMES = frozenset({'cutadapt_main'})
 
 MANIFEST_HEADER = """\
 # Public API manifest - a rename tripwire, not a source of truth.
@@ -53,8 +58,11 @@ _RENAME_INSTRUCTIONS = """
 A public API name that this manifest pins is gone. If this was a deliberate rename or removal,
 it breaks every Pipeline YAML that references the old name (hard rule 4), so before updating the
 manifest you must:
-  1. Add a back-compat alias so old Pipeline YAMLs referencing the old name keep importing
-     (rnalysis/utils/generic.py: GenericPipeline._resolve_function).
+  1. Make old Pipeline YAMLs that reference the old name keep importing. RNAlysis has no alias
+     mechanism yet - it was deferred until the first real rename, which is exactly what this test
+     has just caught - so this is where you ADD one: GenericPipeline._resolve_function in
+     rnalysis/utils/generic.py turns a recorded name into a function, and is the single place an
+     old-name -> new-name mapping needs to be consulted.
   2. Update the pinned Pipeline/session fixtures under tests/test_files/ that use the old name.
   3. Add an entry to HISTORY.rst describing the rename and the alias.
 Then regenerate this manifest with:  python -m tests.test_api_manifest
@@ -75,6 +83,7 @@ def collect_public_api() -> dict:
     for namespace_name, module in MANIFEST_MODULES.items():
         api[namespace_name] = sorted(name for name in dir(module)
                                      if not name.startswith('_')
+                                     and name not in EXCLUDED_NAMES
                                      and isinstance(getattr(module, name), types.FunctionType)
                                      and getattr(module, name).__module__ == module.__name__)
     return api
@@ -123,6 +132,19 @@ def test_public_api_manifest_has_no_renames_or_removals():
     assert not removed, (f"{_RENAME_INSTRUCTIONS}\n"
                          f"Public API names that disappeared: {removed}\n"
                          f"Public API names that were added (a likely rename target): {added or 'none'}")
+
+
+def test_public_api_manifest_excludes_environment_dependent_names(monkeypatch):
+    # rnalysis.fastq defines a no-op `cutadapt_main` fallback when cutadapt is missing. On a
+    # machine with cutadapt installed the name belongs to the cutadapt package and is filtered out
+    # anyway, so simulate the fallback to check the exclusion holds without cutadapt too.
+    def cutadapt_main(x):
+        return None
+
+    cutadapt_main.__module__ = fastq.__name__
+    monkeypatch.setattr(fastq, 'cutadapt_main', cutadapt_main, raising=False)
+
+    assert 'cutadapt_main' not in collect_public_api()['fastq']
 
 
 def test_public_api_manifest_covers_every_namespace():
