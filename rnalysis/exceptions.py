@@ -87,6 +87,17 @@ class IDMappingTimeoutError(ExternalServiceError):
     """
 
 
+class IDMappingJobFailedError(ExternalServiceError):
+    """
+    Raised when UniProt reports a gene-ID mapping job as finished but failed (any terminal status
+    other than success), as opposed to :class:`IDMappingTimeoutError`, which is raised when a job
+    never reaches a terminal status at all.
+
+    A job can fail transiently under the same conditions that cause a job to wedge (heavy load), so
+    like a timeout, callers should degrade to a partial mapping rather than crash.
+    """
+
+
 class InternalError(RNAlysisError, RuntimeError):
     """An internal invariant was violated - indicates a bug in RNAlysis itself."""
 
