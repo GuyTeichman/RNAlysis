@@ -68,29 +68,37 @@ before. If a beta leaves a dated HISTORY, a bumped version, a new commit, or a t
 normal test suite can't catch (missing bundled data files, hidden imports, Qt plugins, one-file vs
 one-dir issues) — and to manually exercise the frozen app, *without* cutting a release.
 
-**Mechanism:** `.github/workflows/pyinstaller.yml`'s `workflow_dispatch` trigger has a `beta`
-boolean input (**default `true`**). When `beta=true` it **skips the `createrelease` job entirely**
-— no commit to `master`, no GitHub Release — and runs only the cross-platform `build` job,
-uploading the frozen apps as **run artifacts** you download from the Actions run page. It is the
-*exact same* `build` job a real release uses (same PyInstaller spec, same dependency install), so a
-green beta is a faithful prediction of the release freeze — the whole reason it's wired into the
-same workflow rather than a separate, driftable copy.
+**Mechanism:** `.github/workflows/pyinstaller.yml` treats **any manual run (`workflow_dispatch`)
+as a beta** — the event type is the sole discriminator, so there is no input to set (or get wrong).
+A manual run **skips the `createrelease` job entirely** — no commit to `master`, no GitHub Release —
+and runs only the cross-platform `build` job, uploading the frozen apps as **run artifacts** you
+download from the Actions run page. Only a tag push (`V*`) cuts a real release. It is the *exact
+same* `build` job a real release uses (same PyInstaller spec, same dependency install), so a green
+beta is a faithful prediction of the release freeze — the whole reason it's wired into the same
+workflow rather than a separate, driftable copy. Because the beta path keys off the event type and
+adds no `workflow_dispatch` input, you can dispatch a beta from `development` (or any feature branch)
+**without the change first having to land on the default branch** — the ref you dispatch is the file
+that runs.
 
 ```bash
 # Dispatch a beta build of whatever is on `development` (or any branch/ref you want to
-# freeze-test). `beta` defaults to true, so this alone is enough:
+# freeze-test). A manual run is always a beta — there are no inputs to pass:
 gh workflow run pyinstaller.yml --ref development
 
-# ...or be explicit:
-gh workflow run pyinstaller.yml --ref development -f beta=true
-
-# Watch it:
-gh run watch --exit-status $(gh run list --workflow pyinstaller.yml --limit 1 --json databaseId -q '.[0].databaseId')
+# Grab THIS run's id. Filter to the branch + the manual (workflow_dispatch) event so you don't
+# watch an older or concurrent run, and give the freshly dispatched run a moment to register:
+sleep 5
+run_id=$(gh run list --workflow pyinstaller.yml --branch development --event workflow_dispatch \
+    --limit 1 --json databaseId -q '.[0].databaseId')
+gh run watch --exit-status "$run_id"
 ```
 
-When it finishes, open the run's **Artifacts** section, download `RNAlysis-BETA-macos-M1-<sha>` /
-`RNAlysis-BETA-windows-<sha>`, unzip, and launch. The build is unsigned, so on macOS clear the
-quarantine bit first: `xattr -dr com.apple.quarantine RNAlysis.app` (same as any unsigned local
+When it finishes, open the run's **Artifacts** section and download `RNAlysis-BETA-macos-M1-<sha>` /
+`RNAlysis-BETA-windows-<sha>`. Note the **double zip**: GitHub wraps every artifact in its own zip,
+and *inside* that sits the build's own `RNAlysis-<version>_<os>.zip` — so you unzip **twice** before
+`RNAlysis.app` (macOS) / the `RNAlysis-<version>/` folder (Windows) appears. Then launch it. The
+build is unsigned, so on macOS clear the quarantine bit first — *after* the second unzip, once
+`RNAlysis.app` exists: `xattr -dr com.apple.quarantine RNAlysis.app` (same as any unsigned local
 build).
 
 **What a beta deliberately does NOT do — its isolation contract:**
