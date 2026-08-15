@@ -41,6 +41,7 @@ from rnalysis.utils.param_typing import (BIOTYPE_ATTRIBUTE_NAMES, BIOTYPES,
                                          GO_QUALIFIERS, K_CRITERIA,
                                          LEGAL_GENE_LENGTH_METHODS,
                                          ORTHOLOG_NON_UNIQUE_MODES,
+                                         POWER_TRANSFORMS,
                                          PARALLEL_BACKENDS, Color, ColorList,
                                          ColorMap, Fraction, NonNegativeInt,
                                          PositiveInt, get_ensembl_taxons,
@@ -3243,8 +3244,16 @@ class CountFilter(Filter):
 
     """
     _precomputed_metrics = clustering.ClusteringRunner.precomputed_metrics
-    _transforms = {True: generic.standard_box_cox, False: generic.standardize}
+    # (the old ``_transforms`` boolean->function map lived here; it had no callers, and
+    # ``generic.get_transform_function`` is now the single place that resolves a transform name.)
+    #: file-name suffix each transform contributes. 'box-cox' keeps the historical 'powertransform' spelling
+    #: (rather than its own name) so that re-running an existing analysis keeps writing to the same file name.
+    _TRANSFORM_SUFFIXES = {'box-cox': 'powertransform', 'log': 'logtransform', 'none': ''}
     __slots__ = {'_is_normalized': 'indicates whether the values in this CountFilter were normalized'}
+
+    def _gene_names(self) -> List[str]:
+        """The gene names of this table, in table order. Used to name offending genes in transform errors."""
+        return self.df.select(pl.first()).to_series().to_list()
 
     def __init__(self, fname: Union[str, Path, tuple], drop_columns: Union[str, List[str]] = None,
                  is_normalized: bool = False, suppress_warnings: bool = False):
@@ -4722,7 +4731,8 @@ class CountFilter(Filter):
     @readable_name('K-Means clustering')
     def split_kmeans(self, n_clusters: Union[PositiveInt, List[PositiveInt], Literal[K_CRITERIA]],
                      n_init: PositiveInt = 3, max_iter: PositiveInt = 300,
-                     random_seed: Union[NonNegativeInt, None] = None, power_transform: bool = True,
+                     random_seed: Union[NonNegativeInt, None] = None,
+                     power_transform: Literal[POWER_TRANSFORMS] = 'box-cox',
                      plot_style: Literal['all', 'std_area', 'std_bar'] = 'all',
                      split_plots: bool = False, max_n_clusters_estimate: Union[PositiveInt, Literal['auto']] = 'auto',
                      parallel_backend: Literal[PARALLEL_BACKENDS] = 'loky',
@@ -4742,9 +4752,14 @@ class CountFilter(Filter):
         :type n_init: int (default=3)
         :param max_iter: maximum number of iterations of the k-medoids algorithm for a single run.
         :type max_iter: int (default=300)
-        :param power_transform: if True, RNAlysis will apply a power transform (Box-Cox) \
-        to the data prior to clustering.
-        :type power_transform: bool (default=True)
+        :param power_transform: the transformation applied to the data before it is standardized and \
+        clustered. 'box-cox' (the default) fits a separate power transform to every gene, which usually \
+        makes the data more normally distributed; it can be numerically unstable for a gene whose values \
+        are near-constant at a high magnitude (a reporter transgene, for example), in which case \
+        RNAlysis will tell you which genes to filter out. 'log' applies log2(x+1) to every value - \
+        simpler, and never unstable. 'none' standardizes the data without transforming it first. \
+        The legacy values True ('box-cox') and False ('none') are still accepted.
+        :type power_transform: 'box-cox', 'log', or 'none' (default='box-cox')
         :param plot_style: determines the visual style of the cluster expression plot.
         :type plot_style: 'all', 'std_area', or 'std_bar' (default='all')
         :param split_plots: if True, each discovered cluster will be plotted on its own. \
@@ -4768,7 +4783,7 @@ class CountFilter(Filter):
             >>> dev_stages = filtering.CountFilter('tests/test_files/elegans_developmental_stages.tsv')
             >>> dev_stages.filter_low_reads(100)
             Filtered 44072 features, leaving 2326 of the original 46398 features. Filtered inplace.
-            >>> clusters = dev_stages.split_kmeans(14,power_transform=True)
+            >>> clusters = dev_stages.split_kmeans(14,power_transform='box-cox')
             Filtered 44072 features, leaving 2326 of the original 46398 features. Filtered inplace.
             Filtered 1801 features, leaving 525 of the original 2326 features. Filtering result saved to new object.
             Filtered 2010 features, leaving 316 of the original 2326 features. Filtering result saved to new object.
@@ -4816,7 +4831,8 @@ class CountFilter(Filter):
                            metric: Literal['Euclidean', 'Cosine', 'Pearson', 'Spearman', 'Manhattan',
                            'L1', 'L2', 'Jackknife', 'YS1', 'YR1', 'Sharpened_Cosine'] = 'Euclidean',
                            linkage: Literal['Single', 'Average', 'Complete', 'Ward'] = 'Average',
-                           power_transform: bool = True, distance_threshold: Union[float, None] = None,
+                           power_transform: Literal[POWER_TRANSFORMS] = 'box-cox',
+                           distance_threshold: Union[float, None] = None,
                            plot_style: Literal['all', 'std_area', 'std_bar'] = 'all', split_plots: bool = False,
                            max_n_clusters_estimate: Union[PositiveInt, Literal['auto']] = 'auto',
                            parallel_backend: Literal[PARALLEL_BACKENDS] = 'loky',
@@ -4838,9 +4854,14 @@ class CountFilter(Filter):
         :param linkage: Which linkage criterion to use. The linkage criterion determines which distance to use between \
         sets of observation. The algorithm will merge the pairs of cluster that minimize this criterion.
         :type linkage: 'single', 'Average', 'complete', or 'ward' (default='Average')
-        :param power_transform: if True, RNAlysis will apply a power transform (Box-Cox) \
-        to the data prior to clustering.
-        :type power_transform: bool (default=True)
+        :param power_transform: the transformation applied to the data before it is standardized and \
+        clustered. 'box-cox' (the default) fits a separate power transform to every gene, which usually \
+        makes the data more normally distributed; it can be numerically unstable for a gene whose values \
+        are near-constant at a high magnitude (a reporter transgene, for example), in which case \
+        RNAlysis will tell you which genes to filter out. 'log' applies log2(x+1) to every value - \
+        simpler, and never unstable. 'none' standardizes the data without transforming it first. \
+        The legacy values True ('box-cox') and False ('none') are still accepted.
+        :type power_transform: 'box-cox', 'log', or 'none' (default='box-cox')
         :param distance_threshold: a distance threshold above which clusters will not be merged. \
         If a number is specified, `n_clusters` must be None.
         :type distance_threshold: float or None (default=None)
@@ -4869,7 +4890,7 @@ class CountFilter(Filter):
             >>> dev_stages.filter_low_reads(100)
             Filtered 44072 features, leaving 2326 of the original 46398 features. Filtered inplace.
             >>> clusters = dev_stages.split_hierarchical(n_clusters=13, metric='Euclidean',linkage='ward'
-            ...                                         ,power_transform=True)
+            ...                                         ,power_transform='box-cox')
             Filtered 1718 features, leaving 608 of the original 2326 features. Filtering result saved to new object.
             Filtered 1979 features, leaving 347 of the original 2326 features. Filtering result saved to new object.
             Filtered 2094 features, leaving 232 of the original 2326 features. Filtering result saved to new object.
@@ -4916,7 +4937,7 @@ class CountFilter(Filter):
                        random_seed: Union[NonNegativeInt, None] = None,
                        metric: Union[str, Literal['Euclidean', 'Cosine', 'Pearson', 'Spearman', 'Manhattan',
                        'L1', 'L2', 'Jackknife', 'YS1', 'YR1', 'Sharpened_Cosine', 'Hamming']] = 'Euclidean',
-                       power_transform: bool = True,
+                       power_transform: Literal[POWER_TRANSFORMS] = 'box-cox',
                        plot_style: Literal['all', 'std_area', 'std_bar'] = 'all', split_plots: bool = False,
                        max_n_clusters_estimate: Union[PositiveInt, Literal['auto']] = 'auto',
                        parallel_backend: Literal[PARALLEL_BACKENDS] = 'loky', gui_mode: bool = False
@@ -4939,9 +4960,14 @@ class CountFilter(Filter):
         :param metric: the distance metric used to determine similarity between data points. \
         For a full list of supported distance metrics see the user guide.
         :type metric: str (default='Euclidean')
-        :param power_transform: if True, RNAlysis will apply a power transform (Box-Cox) \
-        to the data prior to clustering.
-        :type power_transform: bool (default=True)
+        :param power_transform: the transformation applied to the data before it is standardized and \
+        clustered. 'box-cox' (the default) fits a separate power transform to every gene, which usually \
+        makes the data more normally distributed; it can be numerically unstable for a gene whose values \
+        are near-constant at a high magnitude (a reporter transgene, for example), in which case \
+        RNAlysis will tell you which genes to filter out. 'log' applies log2(x+1) to every value - \
+        simpler, and never unstable. 'none' standardizes the data without transforming it first. \
+        The legacy values True ('box-cox') and False ('none') are still accepted.
+        :type power_transform: 'box-cox', 'log', or 'none' (default='box-cox')
         :param plot_style: determines the visual style of the cluster expression plot.
         :type plot_style: 'all', 'std_area', or 'std_bar' (default='all')
         :param split_plots: if True, each discovered cluster will be plotted on its own. \
@@ -4965,7 +4991,7 @@ class CountFilter(Filter):
             >>> dev_stages = filtering.CountFilter('tests/test_files/elegans_developmental_stages.tsv')
             >>> dev_stages.filter_low_reads(100)
             Filtered 44072 features, leaving 2326 of the original 46398 features. Filtered inplace.
-            >>> clusters = dev_stages.split_kmedoids(n_clusters=14, metric='spearman', power_transform=True)
+            >>> clusters = dev_stages.split_kmedoids(n_clusters=14, metric='spearman', power_transform='box-cox')
             Filtered 1967 features, leaving 359 of the original 2326 features. Filtering result saved to new object.
             Filtered 2020 features, leaving 306 of the original 2326 features. Filtering result saved to new object.
             Filtered 2071 features, leaving 255 of the original 2326 features. Filtering result saved to new object.
@@ -5009,7 +5035,8 @@ class CountFilter(Filter):
     @readable_name('CLICOM (ensemble) clustering')
     def split_clicom(self, *parameter_dicts: dict,
                      replicate_grouping: Union[param_typing.GroupedColumns, Literal['ungrouped']] = 'ungrouped',
-                     power_transform: Union[bool, Tuple[bool, bool]] = True,
+                     power_transform: Union[Literal[POWER_TRANSFORMS],
+                                            List[Literal[POWER_TRANSFORMS]]] = 'box-cox',
                      evidence_threshold: param_typing.Fraction = 2 / 3, cluster_unclustered_features: bool = False,
                      min_cluster_size: PositiveInt = 15, plot_style: Literal['all', 'std_area', 'std_bar'] = 'all',
                      split_plots: bool = False, parallel_backend: Literal[PARALLEL_BACKENDS] = 'loky',
@@ -5034,10 +5061,15 @@ class CountFilter(Filter):
         To read more about the theory behind this, see the following publication: \
         https://doi.org/10.1093/bib/bbs057
         :type replicate_grouping: nested list of strings or 'ungrouped' (default='ungrouped')
-        :param power_transform: if True, RNAlysis will apply a power transform (Box-Cox) \
-        to the data prior to clustering. If both True and False are supplied, \
-        RNAlysis will run the initial clustering setups twice: once with a power transform, and once without.
-        :type power_transform: True, False, or (True, False) (default=True)
+        :param power_transform: the transformation applied to the data before it is standardized and \
+        clustered. 'box-cox' (the default) fits a separate power transform to every gene, which usually \
+        makes the data more normally distributed; it can be numerically unstable for a gene whose values \
+        are near-constant at a high magnitude (a reporter transgene, for example), in which case \
+        RNAlysis will tell you which genes to filter out. 'log' applies log2(x+1) to every value - \
+        simpler, and never unstable. 'none' standardizes the data without transforming it first. \
+        If more than one transform is supplied, RNAlysis will run the initial clustering setups once per \
+        transform. The legacy values True ('box-cox') and False ('none') are still accepted.
+        :type power_transform: 'box-cox', 'log', 'none', or a list of those (default='box-cox')
         :param evidence_threshold: determines whether each pair of features can be reliably clustered together. \
         For example, if evidence_threshold=0.5, a pair of features is considered reliably clustered together if \
         they were clustered together in at least 50% of the tested clustering solutions.
@@ -5082,7 +5114,7 @@ class CountFilter(Filter):
             ... {'method': 'hdbscan', 'min_cluster_size': [50, 75, 140], 'metric': ['ys1', 'yr1', 'spearman']},
             ... {'method': 'hierarchical', 'n_clusters': [7, 12], 'metric': ['Euclidean', 'jackknife', 'yr1'],
             ... 'linkage': ['average', 'ward']}, {'method': 'kmedoids', 'n_clusters': [7, 16], 'metric': 'spearman'},
-            ... power_transform=True, evidence_threshold=0.5, min_cluster_size=40)
+            ... power_transform='box-cox', evidence_threshold=0.5, min_cluster_size=40)
             Found 19 legal clustering setups.
             Running clustering setups: 100%|██████████| 19/19 [00:12<00:00,  1.49 setup/s]
             Generating cluster similarity matrix: 100%|██████████| [00:32<00:00, 651.06it/s]
@@ -5153,7 +5185,8 @@ class CountFilter(Filter):
                       metric: Union[str, Literal['Euclidean', 'Cosine', 'Pearson', 'Spearman', 'Manhattan',
                       'L1', 'L2', 'Jackknife', 'YS1', 'YR1', 'Sharpened_Cosine', 'Hamming']] = 'Euclidean',
                       cluster_selection_epsilon: float = 0, cluster_selection_method: Literal['eom', 'leaf'] = 'eom',
-                      power_transform: bool = True, plot_style: Literal['all', 'std_area', 'std_bar'] = 'all',
+                      power_transform: Literal[POWER_TRANSFORMS] = 'box-cox',
+                      plot_style: Literal['all', 'std_area', 'std_bar'] = 'all',
                       split_plots: bool = False, return_probabilities: bool = False,
                       parallel_backend: Literal[PARALLEL_BACKENDS] = 'loky', gui_mode: bool = False
                       ) -> Union[Tuple['CountFilter', ...], List[Union[Tuple['CountFilter', ...], np.ndarray]], None]:
@@ -5179,9 +5212,14 @@ class CountFilter(Filter):
         'eom' will use an Excess of Mass algorithm to find the most persistent clusters. \
         'leaf' will select the leaves of the tree, providing the most fine-grained and homogenous clusters.
         :type cluster_selection_method: 'eom' or 'leaf' (default='eom')
-        :param power_transform: if True, RNAlysis will apply a power transform (Box-Cox) \
-        to the data prior to clustering.
-        :type power_transform: bool (default=True)
+        :param power_transform: the transformation applied to the data before it is standardized and \
+        clustered. 'box-cox' (the default) fits a separate power transform to every gene, which usually \
+        makes the data more normally distributed; it can be numerically unstable for a gene whose values \
+        are near-constant at a high magnitude (a reporter transgene, for example), in which case \
+        RNAlysis will tell you which genes to filter out. 'log' applies log2(x+1) to every value - \
+        simpler, and never unstable. 'none' standardizes the data without transforming it first. \
+        The legacy values True ('box-cox') and False ('none') are still accepted.
+        :type power_transform: 'box-cox', 'log', or 'none' (default='box-cox')
         :param plot_style: determines the visual style of the cluster expression plot.
         :type plot_style: 'all', 'std_area', or 'std_bar' (default='all')
         :param split_plots: if True, each discovered cluster will be plotted on its own. \
@@ -5205,7 +5243,7 @@ class CountFilter(Filter):
             >>> dev_stages = filtering.CountFilter('tests/test_files/elegans_developmental_stages.tsv')
             >>> dev_stages.filter_low_reads(100)
             Filtered 44072 features, leaving 2326 of the original 46398 features. Filtered inplace.
-            >>> clusters = dev_stages.split_hdbscan(min_cluster_size=75,metric='yr1',power_transform=True)
+            >>> clusters = dev_stages.split_hdbscan(min_cluster_size=75,metric='yr1',power_transform='box-cox')
             Found 14 clusters of average size 141.57. Number of unclustered genes is 344, which are 14.79% of the genes.
             Filtered 2019 features, leaving 307 of the original 2326 features. Filtering result saved to new object.
             Filtered 2122 features, leaving 204 of the original 2326 features. Filtering result saved to new object.
@@ -5520,7 +5558,8 @@ class CountFilter(Filter):
         return figs
 
     @readable_name('Sort table by contribution to a Principal Component (PCA)')
-    def sort_by_principal_component(self, component: PositiveInt, ascending: bool = True, power_transform: bool = True,
+    def sort_by_principal_component(self, component: PositiveInt, ascending: bool = True,
+                                    power_transform: Literal[POWER_TRANSFORMS] = 'box-cox',
                                     inplace: bool = True):
         """
          Performs Principal Component Analysis (PCA), and sort the table based on the contribution (loadings) \
@@ -5532,9 +5571,14 @@ class CountFilter(Filter):
         :type ascending: bool (default=Trle)
         :param ascending: Sort order: ascending (negative loadings at the top of the list) \
          versus descending (positive loadings at the top of the list).
-        :param power_transform: if True, RNAlysis will apply a power transform (Box-Cox) \
-        to the data prior to standartization and principal component analysis.
-        :type power_transform: bool (default=True)
+        :param power_transform: the transformation applied to the data before it is standardized and \
+        analyzed. 'box-cox' (the default) fits a separate power transform to every gene, which usually \
+        makes the data more normally distributed; it can be numerically unstable for a gene whose values \
+        are near-constant at a high magnitude (a reporter transgene, for example), in which case \
+        RNAlysis will tell you which genes to filter out. 'log' applies log2(x+1) to every value - \
+        simpler, and never unstable. 'none' standardizes the data without transforming it first. \
+        The legacy values True ('box-cox') and False ('none') are still accepted.
+        :type power_transform: 'box-cox', 'log', or 'none' (default='box-cox')
         :type inplace: bool (default=True)
         :param inplace: If True, perform the operation in-place. \
         Otherwise, returns a sorted copy of the Filter object without modifying the original.
@@ -5544,10 +5588,13 @@ class CountFilter(Filter):
             raise InvalidValueError(
                 "'component' must be larger than 0 and equal or lower than the number of genes in the table!")
         self._validate_is_normalized()
-        suffix = f'_sortbyPC{component}' + 'powertransform' * bool(power_transform)
+        # the Box-Cox suffix keeps its historical spelling, so that re-running an existing analysis keeps
+        # writing to the same file name
+        suffix = f'_sortbyPC{component}' + self._TRANSFORM_SUFFIXES[generic.parse_power_transform(power_transform)]
         data = self.df[self._numeric_columns].to_numpy().transpose()
-        data_standardized = generic.standard_box_cox(
-            data, parallel_backend=generic.box_cox_parallel_backend()) if power_transform else generic.standardize(data)
+        data_standardized = generic.transform_and_standardize(
+            data, power_transform, parallel_backend=generic.box_cox_parallel_backend(),
+            feature_names=self._gene_names())
         pca_obj = _sklearn.decomposition.PCA(component)
         pca_obj.fit(data_standardized)
         loading = self.df.select(pl.first()).with_columns(
@@ -5558,7 +5605,8 @@ class CountFilter(Filter):
 
     @readable_name('Split table by contribution to Principal Components (PCA)')
     def split_by_principal_components(self, components: Union[PositiveInt, List[PositiveInt]],
-                                      gene_fraction: param_typing.Fraction = 0.1, power_transform: bool = True
+                                      gene_fraction: param_typing.Fraction = 0.1,
+                                      power_transform: Literal[POWER_TRANSFORMS] = 'box-cox'
                                       ) -> Union[
         Tuple['CountFilter', 'CountFilter'], Tuple[Tuple['CountFilter', 'CountFilter'], ...]]:
         """
@@ -5575,9 +5623,14 @@ class CountFilter(Filter):
         For example, if gene_fraction=0.1, *RNAlysis* will return the top and bottom 5% of genes \
         based on their loadings for any principal component.
         :type gene_fraction: float between 0 and 1 (default=0.1)
-        :param power_transform: if True, RNAlysis will apply a power transform (Box-Cox) \
-        to the data prior to standartization and principal component analysis.
-        :type power_transform: bool (default=True)
+        :param power_transform: the transformation applied to the data before it is standardized and \
+        analyzed. 'box-cox' (the default) fits a separate power transform to every gene, which usually \
+        makes the data more normally distributed; it can be numerically unstable for a gene whose values \
+        are near-constant at a high magnitude (a reporter transgene, for example), in which case \
+        RNAlysis will tell you which genes to filter out. 'log' applies log2(x+1) to every value - \
+        simpler, and never unstable. 'none' standardizes the data without transforming it first. \
+        The legacy values True ('box-cox') and False ('none') are still accepted.
+        :type power_transform: 'box-cox', 'log', or 'none' (default='box-cox')
         """
         components = parsing.data_to_list(components)
         if not validation.isinstanceiter(components, int):
@@ -5597,8 +5650,9 @@ class CountFilter(Filter):
               f'contributing to each specified Principal Component...')
 
         data = self.df[self._numeric_columns].transpose()
-        data_standardized = generic.standard_box_cox(
-            data, parallel_backend=generic.box_cox_parallel_backend()) if power_transform else generic.standardize(data)
+        data_standardized = generic.transform_and_standardize(
+            data, power_transform, parallel_backend=generic.box_cox_parallel_backend(),
+            feature_names=self._gene_names())
 
         pca_obj = _sklearn.decomposition.PCA(n_components)
         pca_obj.fit(data_standardized)
@@ -5618,7 +5672,8 @@ class CountFilter(Filter):
 
     @readable_name('Principal Component Analysis (PCA) plot')
     def pca(self, samples: Union[param_typing.GroupedColumns, Literal['all']] = 'all', n_components: PositiveInt = 3,
-            power_transform: bool = True, labels: bool = True, title: Union[str, Literal['auto']] = 'auto',
+            power_transform: Literal[POWER_TRANSFORMS] = 'box-cox', labels: bool = True,
+            title: Union[str, Literal['auto']] = 'auto',
             title_fontsize: float = 20, label_fontsize: float = 16, tick_fontsize: float = 12,
             proportional_axes: bool = False, plot_grid: bool = True, legend: Union[List[str], None] = None) -> Tuple[
         'PCA', List[plt.Figure]]:
@@ -5638,9 +5693,14 @@ class CountFilter(Filter):
         :type n_components: int >=2 (default=3)
         :param labels: if True, *RNAlysis* will display labels with the sample names next to each sample on the graph.
         :type labels: bool (default=True)
-        :param power_transform: if True, RNAlysis will apply a power transform (Box-Cox) \
-        to the data prior to standartization and principal component analysis.
-        :type power_transform: bool (default=True)
+        :param power_transform: the transformation applied to the data before it is standardized and \
+        analyzed. 'box-cox' (the default) fits a separate power transform to every gene, which usually \
+        makes the data more normally distributed; it can be numerically unstable for a gene whose values \
+        are near-constant at a high magnitude (a reporter transgene, for example), in which case \
+        RNAlysis will tell you which genes to filter out. 'log' applies log2(x+1) to every value - \
+        simpler, and never unstable. 'none' standardizes the data without transforming it first. \
+        The legacy values True ('box-cox') and False ('none') are still accepted.
+        :type power_transform: 'box-cox', 'log', or 'none' (default='box-cox')
         :param title: The title of the plot. If 'auto', a title will be generated automatically.
         :type title: str or 'auto' (default='auto')
         :param title_fontsize: determines the font size of the graph title.
@@ -5676,8 +5736,9 @@ class CountFilter(Filter):
         if samples == 'all':
             samples = [[col] for col in self._numeric_columns]
         data = self.df.select(pl.col(parsing.flatten(samples))).transpose()
-        data_standardized = generic.standard_box_cox(
-            data, parallel_backend=generic.box_cox_parallel_backend()) if power_transform else generic.standardize(data)
+        data_standardized = generic.transform_and_standardize(
+            data, power_transform, parallel_backend=generic.box_cox_parallel_backend(),
+            feature_names=self._gene_names())
 
         pca_obj = _sklearn.decomposition.PCA()
         pcomps = pca_obj.fit_transform(data_standardized)

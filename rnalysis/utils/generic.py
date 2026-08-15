@@ -27,6 +27,7 @@ from tqdm.auto import tqdm
 from rnalysis import FROZEN_ENV, __version__
 from rnalysis.exceptions import (InternalError, InvalidTypeError,
                                  InvalidValueError)
+from rnalysis.utils.param_typing import POWER_TRANSFORMS
 
 # scikit-learn costs ~1s to import and is only needed once a transform actually runs, so it is loaded
 # lazily (SPEC 1 / https://scientific-python.org/specs/spec-0001/). Nothing may touch an attribute of
@@ -227,6 +228,17 @@ class ProgressParallel(joblib.Parallel):
 # columns to make it worthwhile.
 BOX_COX_PARALLEL_MIN_COLUMNS = 500
 
+# The Box-Cox transform standardizes each column after transforming it, so every value it returns for a
+# healthy column is a z-score: the largest one a column of n values can possibly hold is sqrt(n). Anything
+# beyond this threshold therefore cannot be a properly standardized column of any real table (it would need
+# ~10^12 rows) -- it can only mean the fitted lambda exploded and the transform blew up without quite
+# overflowing to infinity. Such a column would silently dominate every principal component, so it is treated
+# exactly like a non-finite one.
+BOX_COX_MAX_ABS_VALUE = 1e6
+
+#: how many offending gene names to spell out in the instability error before summarizing the rest
+_MAX_NAMES_IN_ERROR = 10
+
 
 def _box_cox_fit_transform(array: np.ndarray) -> np.ndarray:
     # sklearn's PowerTransformer(box-cox) fits + applies a separate lambda to each column independently
@@ -245,8 +257,40 @@ def _parallel_box_cox(array: np.ndarray, backend: str, n_jobs: int) -> np.ndarra
     return np.concatenate(transformed_chunks, axis=1)
 
 
-def standard_box_cox(data: Union[np.ndarray, pl.DataFrame],
-                     parallel_backend: str = 'sequential') -> Union[np.ndarray, pl.DataFrame]:
+def _validate_box_cox_stability(box_cox_array: np.ndarray, feature_names: Optional[typing.Sequence[str]]):
+    """
+    Raise a clear, actionable error if the Box-Cox transform blew up on any column.
+
+    Box-Cox fits one lambda per column. When a column is near-constant at a high magnitude and is measured
+    across very few values (the classic case: a reporter transgene such as GFP, sitting at ~8,400 counts in
+    a handful of grouped samples, once the table is transposed so genes become columns), the maximum-likelihood
+    lambda explodes and the transform overflows float64. The result is either non-finite -- which used to
+    reach sklearn's PCA as ``ValueError: Input X contains NaN``, a message that names nothing the user can act
+    on -- or a finite but astronomical value that silently dominates every principal component.
+    """
+    with warnings.catch_warnings():  # comparing NaNs is exactly what we are here to detect
+        warnings.simplefilter('ignore')
+        unstable = ~np.isfinite(box_cox_array).all(axis=0) | (
+            np.abs(np.nan_to_num(box_cox_array)).max(axis=0) > BOX_COX_MAX_ABS_VALUE)
+    if not unstable.any():
+        return
+    unstable_indices = np.nonzero(unstable)[0]
+    if feature_names is None:
+        names = [f'#{ind + 1}' for ind in unstable_indices]
+    else:
+        names = [str(feature_names[ind]) for ind in unstable_indices]
+    n_unstable = len(names)
+    listed = ', '.join(f"'{name}'" for name in names[:_MAX_NAMES_IN_ERROR])
+    if n_unstable > _MAX_NAMES_IN_ERROR:
+        listed += f', and {n_unstable - _MAX_NAMES_IN_ERROR} more'
+    noun, these = ('gene', 'this gene') if n_unstable == 1 else ('genes', 'these genes')
+    raise InvalidValueError(f"Box-Cox transformation is numerically unstable for {n_unstable} {noun} in this "
+                            f"table ({listed}): their values are near-constant at high magnitude. "
+                            f"Filter {these} out, or choose a different transform (e.g. 'log').")
+
+
+def standard_box_cox(data: Union[np.ndarray, pl.DataFrame], parallel_backend: str = 'sequential',
+                     feature_names: Optional[typing.Sequence[str]] = None) -> Union[np.ndarray, pl.DataFrame]:
     """
     Apply a per-column Box-Cox power transform followed by standardization.
 
@@ -257,20 +301,115 @@ def standard_box_cox(data: Union[np.ndarray, pl.DataFrame],
     once the number of columns reaches ``BOX_COX_PARALLEL_MIN_COLUMNS``. The result is identical either way \
     up to floating-point precision.
     :type parallel_backend: str (default='sequential')
+    :param feature_names: names of the transformed columns, used only to name the offending genes if the \
+    transform turns out to be numerically unstable. Defaults to the numeric column names of a DataFrame, \
+    or to 1-based column positions for a bare array.
+    :type feature_names: sequence of str or None (default=None)
+    :raises InvalidValueError: if the Box-Cox transform is numerically unstable for one or more columns.
     """
     if isinstance(data, pl.DataFrame):
+        numeric_columns = data.select(cs.numeric()).columns
         array = data.select(cs.numeric()).to_numpy()
+        if feature_names is None:
+            feature_names = numeric_columns
     else:
         array = data
     if parallel_backend not in (None, 'sequential') and array.shape[1] >= BOX_COX_PARALLEL_MIN_COLUMNS:
         box_cox_array = _parallel_box_cox(array, backend=parallel_backend, n_jobs=joblib.cpu_count())
     else:
         box_cox_array = _box_cox_fit_transform(array)
+    _validate_box_cox_stability(box_cox_array, feature_names)
     res_array = _sklearn.preprocessing.StandardScaler().fit_transform(box_cox_array)
+    if isinstance(data, pl.DataFrame):
+        return data.select(~cs.numeric()).with_columns(pl.DataFrame(res_array, schema=numeric_columns))
+    return res_array
+
+
+def standard_log(data: Union[np.ndarray, pl.DataFrame]) -> Union[np.ndarray, pl.DataFrame]:
+    """
+    Apply a log2(x+1) transform followed by standardization.
+
+    This is the robust alternative to the Box-Cox power transform: it uses one fixed formula for the whole
+    table instead of fitting a separate exponent per gene, so it cannot blow up on a near-constant,
+    high-magnitude gene the way Box-Cox can.
+
+    :param data: the data to transform (must not contain values below -1).
+    :type data: np.ndarray or pl.DataFrame
+    :raises InvalidValueError: if the data contains values below -1, for which log2(x+1) is undefined.
+    """
+    if isinstance(data, pl.DataFrame):
+        array = data.select(cs.numeric()).to_numpy()
+    else:
+        array = data
+    if np.nanmin(array) <= -1:
+        raise InvalidValueError("The 'log' transform is only defined for values greater than -1 "
+                                "(it computes log2(x+1)), but this table contains smaller values. "
+                                "Choose a different transform, or filter out the offending values.")
+    log_array = np.log2(array + 1)
+    res_array = _sklearn.preprocessing.StandardScaler().fit_transform(log_array)
     if isinstance(data, pl.DataFrame):
         return data.select(~cs.numeric()).with_columns(
             pl.DataFrame(res_array, schema=data.select(cs.numeric()).columns))
     return res_array
+
+
+def parse_power_transform(power_transform: Union[bool, str]) -> str:
+    """
+    Normalize a ``power_transform`` argument into one of the names in ``param_typing.POWER_TRANSFORMS``.
+
+    ``power_transform`` used to be a boolean. ``True``/``False`` are therefore still accepted, and always
+    will be, so that Pipelines and exported parameter files saved by older versions of *RNAlysis* keep
+    running with exactly the behavior they had when they were saved.
+
+    :param power_transform: the transform to apply: 'box-cox', 'log', 'none', or the legacy True/False.
+    :type power_transform: 'box-cox', 'log', 'none', or bool
+    :return: the normalized transform name.
+    :rtype: str
+    """
+    if isinstance(power_transform, bool):
+        return 'box-cox' if power_transform else 'none'
+    if isinstance(power_transform, str) and power_transform.lower() in POWER_TRANSFORMS:
+        return power_transform.lower()
+    raise InvalidValueError(f"Invalid value for 'power_transform': {power_transform!r}. "
+                            f"'power_transform' must be one of {list(POWER_TRANSFORMS)}.")
+
+
+def get_transform_function(power_transform: Union[bool, str]) -> Callable:
+    """
+    Return the transform+standardization function matching a ``power_transform`` argument.
+
+    :param power_transform: the transform to apply: 'box-cox', 'log', 'none', or the legacy True/False.
+    :type power_transform: 'box-cox', 'log', 'none', or bool
+    """
+    method = parse_power_transform(power_transform)
+    if method == 'box-cox':
+        return standard_box_cox
+    elif method == 'log':
+        return standard_log
+    return standardize
+
+
+def transform_and_standardize(data: Union[np.ndarray, pl.DataFrame], power_transform: Union[bool, str] = 'box-cox',
+                              parallel_backend: str = 'sequential',
+                              feature_names: Optional[typing.Sequence[str]] = None
+                              ) -> Union[np.ndarray, pl.DataFrame]:
+    """
+    Standardize the data, optionally applying a power/log transform to it first.
+
+    :param data: the data to transform (columns are transformed independently).
+    :type data: np.ndarray or pl.DataFrame
+    :param power_transform: the transform to apply: 'box-cox', 'log', 'none', or the legacy True/False.
+    :type power_transform: 'box-cox', 'log', 'none', or bool (default='box-cox')
+    :param parallel_backend: joblib backend used to parallelize the per-column Box-Cox across columns. \
+    Ignored by the other transforms.
+    :type parallel_backend: str (default='sequential')
+    :param feature_names: names of the transformed columns, used only to name the offending genes if the \
+    Box-Cox transform turns out to be numerically unstable.
+    :type feature_names: sequence of str or None (default=None)
+    """
+    if parse_power_transform(power_transform) == 'box-cox':
+        return standard_box_cox(data, parallel_backend=parallel_backend, feature_names=feature_names)
+    return get_transform_function(power_transform)(data)
 
 
 def box_cox_parallel_backend() -> str:

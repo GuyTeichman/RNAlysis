@@ -682,6 +682,9 @@ class ComboBoxOrOtherWidget(QtWidgets.QWidget):
         if value in self.items:
             self.combo.setCurrentText(value)
         else:
+            # the combo has to move to "Other..." as well, or currentText() would keep reporting the
+            # previously-selected literal and the value we just set would be silently ignored
+            self.combo.setCurrentText(self.OTHER_TEXT)
             set_widget_value(self.other, value)
 
 

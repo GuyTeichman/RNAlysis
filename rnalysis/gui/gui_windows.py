@@ -731,6 +731,21 @@ class FuncExternalWindow(gui_widgets.MinMaxDialog):
         args = self.args
         return args
 
+    def migrate_legacy_parameters(self, kwargs: dict) -> dict:
+        """
+        Translate values written by older versions of *RNAlysis* into their current spelling.
+
+        A parameter file exported by an older version must keep loading forever, even when a parameter has
+        since grown from a boolean into a menu of named choices. Windows whose function has such a parameter
+        override this; by default nothing needs translating.
+
+        :param kwargs: the keyword arguments read from the parameter file.
+        :type kwargs: dict
+        :return: the same arguments, with any legacy value replaced by its current spelling.
+        :rtype: dict
+        """
+        return kwargs
+
     def import_parameters(self):
         filename, _ = QtWidgets.QFileDialog.getOpenFileName(self, "Choose a parameter file",
                                                             filter="YAML file (*.yaml)")
@@ -746,7 +761,8 @@ class FuncExternalWindow(gui_widgets.MinMaxDialog):
             raise InvalidValueError(f"Parameter file for function '{params.get('name')}' "
                                     f"does not match this window's function: '{self.func_name}'")
         args = params['args']
-        kwargs = params['kwargs']
+        kwargs = self.migrate_legacy_parameters(params['kwargs'])
+        params['kwargs'] = kwargs
 
         self.args = args
 

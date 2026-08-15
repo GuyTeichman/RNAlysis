@@ -2807,6 +2807,74 @@ def test_sort_by_principal_component(clustering_countfilter, component, ascendin
         c.sort_by_principal_component(c.shape[0] + 1)
 
 
+@pytest.fixture
+def boxcox_unstable_countfilter():
+    # a count table whose only pathological gene is a GFP reporter sitting near-constant at ~8,400 counts
+    # across 4 grouped samples -- the real-world case behind issue #285 (and closed PR #238). Once the table
+    # is transposed for PCA, Box-Cox fits a lambda of ~78 to that single gene and overflows float64.
+    return CountFilter('tests/test_files/counted_boxcox_unstable.csv')
+
+
+@pytest.mark.parametrize('power_transform', ['box-cox', True])
+@pytest.mark.parametrize('func,args', [
+    ('pca', ()),
+    ('split_by_principal_components', (1,)),
+    ('sort_by_principal_component', (1,)),
+])
+def test_pca_family_raises_on_unstable_box_cox(boxcox_unstable_countfilter, func, args, power_transform,
+                                               monkeypatch):
+    monkeypatch.setattr(plt, 'show', lambda: None)
+    with pytest.raises(InvalidValueError) as err:
+        getattr(boxcox_unstable_countfilter, func)(*args, power_transform=power_transform)
+    msg = str(err.value)
+    assert 'GFP-reporter' in msg
+    assert 'WBGene00007063' not in msg  # only the offending gene is named
+    assert "'log'" in msg
+
+
+@pytest.mark.parametrize('power_transform', ['log', 'none', False])
+@pytest.mark.parametrize('func,args,kwargs', [
+    ('pca', (), {}),
+    ('split_by_principal_components', (1,), {}),
+    ('sort_by_principal_component', (1,), {'inplace': False}),
+])
+def test_pca_family_survives_unstable_data_with_other_transforms(boxcox_unstable_countfilter, func, args, kwargs,
+                                                                 power_transform, monkeypatch):
+    # the escape hatches the error message offers must actually work on the very table that broke Box-Cox
+    monkeypatch.setattr(plt, 'show', lambda: None)
+    assert getattr(boxcox_unstable_countfilter, func)(*args, power_transform=power_transform, **kwargs) is not None
+
+
+@pytest.mark.parametrize('legacy,named', [(True, 'box-cox'), (False, 'none')])
+def test_sort_by_principal_component_legacy_booleans_match_named_transforms(basic_countfilter, legacy, named):
+    # rule 4/5: the legacy booleans must keep producing exactly the output they always did
+    basic_countfilter.filter_low_reads(1)
+    legacy_result = basic_countfilter.sort_by_principal_component(1, power_transform=legacy, inplace=False)
+    named_result = basic_countfilter.sort_by_principal_component(1, power_transform=named, inplace=False)
+    assert legacy_result.df.equals(named_result.df)
+    assert legacy_result.fname == named_result.fname  # including the file name the transform contributes
+
+
+def test_split_by_principal_components_legacy_boolean_matches_box_cox(basic_countfilter):
+    basic_countfilter.filter_low_reads(1)
+    legacy = basic_countfilter.split_by_principal_components(1, 0.32, power_transform=True)
+    named = basic_countfilter.split_by_principal_components(1, 0.32, power_transform='box-cox')
+    for legacy_obj, named_obj in zip(legacy, named):
+        assert legacy_obj.df.equals(named_obj.df)
+
+
+def test_pipeline_with_legacy_power_transform_still_loads_and_runs(basic_countfilter):
+    # rule 4: a Pipeline exported before 'power_transform' became a menu passes power_transform=True, and must
+    # keep behaving exactly as it did -- identically to the 'box-cox' it now stands for
+    basic_countfilter.filter_low_reads(1)
+    pipeline = Pipeline.import_pipeline('tests/test_files/test_pipeline_legacy_power_transform.yaml')
+    assert pipeline.params[0][1] == {'power_transform': True}
+
+    result = pipeline.apply_to(basic_countfilter, inplace=False)
+    truth = basic_countfilter.sort_by_principal_component(1, power_transform='box-cox', inplace=False)
+    assert result.df.equals(truth.df)
+
+
 @pytest.mark.parametrize('adjusted_pvals,bin_size,title', [
     (False, 0.05, 'auto'),
     (True, 0.1, 'Custom Title')
