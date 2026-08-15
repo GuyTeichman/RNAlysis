@@ -504,7 +504,7 @@ class ClusteringRunner(abc.ABC):
                            'ys1': pwdist.ys1_distance, 'yr1': pwdist.yr1_distance,
                            'jackknife': pwdist.jackknife_distance, 'sharpened_cosine': pwdist.sharpened_cosine_distance}
 
-    def __init__(self, data: pl.DataFrame, power_transform: bool, metric: str = None,
+    def __init__(self, data: pl.DataFrame, power_transform: Union[bool, str], metric: str = None,
                  plot_style: str = 'none', split_plots: bool = False, parallel_backend='loky'):
         if plot_style.lower() not in {'all', 'std_bar', 'std_area', 'none'}:
             raise InvalidValueError(f"Invalid value for 'plot_style': '{plot_style}'. "
@@ -519,8 +519,14 @@ class ClusteringRunner(abc.ABC):
         self.centers: list = []
 
         self.data: pl.DataFrame = data
-        self.power_transform: bool = power_transform
-        transform = generic.standard_box_cox if power_transform else generic.standardize
+        # 'power_transform' is kept exactly as the caller spelled it (including the legacy True/False), so that
+        # plot titles and repr()s keep reporting what was actually asked for; everything else works off the
+        # normalized name.
+        self.power_transform: Union[bool, str, List[Union[bool, str]]] = power_transform
+        # CLICOM passes several transforms at once (it runs one clustering setup per transform, and builds its
+        # own per-setup runners); the ensemble runner itself only ever needs the first one.
+        self.transform_method: str = generic.parse_power_transform(parsing.data_to_list(power_transform)[0])
+        transform = generic.get_transform_function(self.transform_method)
         self.transform: Callable = transform
 
         if metric is None:
@@ -555,11 +561,12 @@ class ClusteringRunner(abc.ABC):
             return self._run(plot)
 
     def _transform_cache_key(self):
-        # the transform result is fully determined by the (numeric) data, the power_transform flag, and — only
+        # the transform result is fully determined by the (numeric) data, the chosen transform, and — only
         # when a precomputed distance metric is used — the metric itself (which the transform folds in). The data
         # subset is identified by its column names, since it is always a deterministic selection of a fixed parent.
+        # The *normalized* transform name is used, so that the legacy True and 'box-cox' share one cache entry.
         metric_key = self.metric_name if getattr(self, 'metric', None) == 'precomputed' else None
-        return tuple(self.data.columns), self.power_transform, metric_key
+        return tuple(self.data.columns), self.transform_method, metric_key
 
     def _transform_data(self):
         if self.transformed_data is None:
@@ -574,8 +581,7 @@ class ClusteringRunner(abc.ABC):
 
         if self.data_for_plot is None:
             if self.metric == 'precomputed':
-                self.data_for_plot = generic.standard_box_cox(
-                    self.data) if self.power_transform else generic.standardize(self.data)
+                self.data_for_plot = generic.get_transform_function(self.transform_method)(self.data)
             else:
                 self.data_for_plot = self.transformed_data
 
@@ -727,7 +733,7 @@ class ClusteringRunnerWithNClusters(ClusteringRunner, abc.ABC):
             'func': generic.bic_score,
             'maximize': False}}
 
-    def __init__(self, data: pl.DataFrame, power_transform: bool, n_clusters: Union[int, List[int], str],
+    def __init__(self, data: pl.DataFrame, power_transform: Union[bool, str], n_clusters: Union[int, List[int], str],
                  max_n_clusters_estimate: Union[int, str] = 'auto', plot_style: str = 'none',
                  split_plots: bool = False, metric: str = None, parallel_backend='loky'):
         super().__init__(data, power_transform, metric, plot_style, split_plots, parallel_backend)
@@ -930,7 +936,7 @@ class ClusteringRunnerWithNClusters(ClusteringRunner, abc.ABC):
 class KMeansRunner(ClusteringRunnerWithNClusters):
     clusterer_class = _lazy_class_attribute(lambda: _sklearn.cluster.KMeans)
 
-    def __init__(self, data, power_transform: bool, n_clusters: Union[int, List[int], str],
+    def __init__(self, data, power_transform: Union[bool, str], n_clusters: Union[int, List[int], str],
                  max_n_clusters_estimate: Union[int, str] = 'auto', random_seed: int = None, n_init: int = 3,
                  max_iter: int = 300, plot_style: str = 'none', split_plots: bool = False, parallel_backend='loky'):
         if not (isinstance(random_seed, int) or random_seed is None):
@@ -977,7 +983,7 @@ class KMedoidsRunner(ClusteringRunnerWithNClusters):
     clusterer_class = KMedoidsIter
     legal_metrics = _lazy_class_attribute(lambda: set(_sklearn.metrics.pairwise._VALID_METRICS))
 
-    def __init__(self, data, power_transform: bool, n_clusters: Union[int, List[int], str],
+    def __init__(self, data, power_transform: Union[bool, str], n_clusters: Union[int, List[int], str],
                  max_n_clusters_estimate: Union[int, str] = 'auto', metric: str = 'euclidean',
                  random_seed: int = None, n_init: int = 3, max_iter: int = 300, plot_style: str = 'none',
                  split_plots: bool = False, parallel_backend='loky'):
@@ -1028,7 +1034,7 @@ class HierarchicalRunner(ClusteringRunnerWithNClusters):
     clusterer_class = _lazy_class_attribute(lambda: _sklearn.cluster.AgglomerativeClustering)
     legal_metrics = _lazy_class_attribute(lambda: set(_sklearn.metrics.pairwise.PAIRED_DISTANCES.keys()))
 
-    def __init__(self, data, power_transform: bool, n_clusters: Union[int, List[int], str],
+    def __init__(self, data, power_transform: Union[bool, str], n_clusters: Union[int, List[int], str],
                  max_n_clusters_estimate: Union[int, str] = 'auto', metric: str = 'euclidean',
                  linkage: str = 'average', distance_threshold: float = None, plot_style: str = 'none',
                  split_plots: bool = False, parallel_backend='loky'):
@@ -1107,7 +1113,7 @@ class HDBSCANRunner(ClusteringRunner):
     legal_metrics = _lazy_class_attribute(
         lambda: set(hdbscan.dist_metrics.METRIC_MAPPING.keys())) if HAS_HDBSCAN else set()
 
-    def __init__(self, data, power_transform: bool, min_cluster_size: int = 5, min_samples: int = 1,
+    def __init__(self, data, power_transform: Union[bool, str], min_cluster_size: int = 5, min_samples: int = 1,
                  metric: str = 'euclidean', cluster_selection_epsilon: float = 0, cluster_selection_method: str = 'eom',
                  return_probabilities: bool = False, plot_style: str = 'none', split_plots: bool = False,
                  parallel_backend='loky'):
@@ -1191,7 +1197,7 @@ class CLICOMRunner(ClusteringRunner):
                         'hierarchical': HierarchicalRunner, 'agglomerative': HierarchicalRunner,
                         'hdbscan': HDBSCANRunner}
 
-    def __init__(self, data, replicate_grouping: List[List[str]], power_transform: Union[bool, List[bool]],
+    def __init__(self, data, replicate_grouping: List[List[str]], power_transform: Union[bool, str, List[Union[bool, str]]],
                  evidence_threshold: float, cluster_unclustered_features: bool, min_cluster_size: int,
                  *parameter_dicts: dict, plot_style: str = 'none', split_plots: bool = False, parallel_backend='loky'):
         self.clustering_solutions: list = []

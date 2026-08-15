@@ -531,6 +531,17 @@ class ClicomWindow(gui_windows.FuncExternalWindow):
         if isinstance(widget, (gui_widgets.TableColumnPicker, gui_widgets.TableColumnPicker)):
             widget.add_columns(self.filter_obj.columns)
 
+    def migrate_legacy_parameters(self, kwargs: dict) -> dict:
+        # 'power_transform' used to be a boolean (or a pair of them); it is now a menu of named transforms.
+        # Parameter files exported by older versions still carry the booleans, so translate them to the names
+        # they now stand for -- the API accepts both, but the drop-down can only display the names.
+        kwargs = super().migrate_legacy_parameters(kwargs)
+        if 'power_transform' in kwargs:
+            transforms = [generic.parse_power_transform(value)
+                          for value in parsing.data_to_list(kwargs['power_transform'])]
+            kwargs['power_transform'] = transforms[0] if len(transforms) == 1 else transforms
+        return kwargs
+
     def init_ui(self):
         super().init_ui()
         self.setWindowTitle('CLICOM clustering setup')

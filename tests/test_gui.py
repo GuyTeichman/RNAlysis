@@ -625,11 +625,12 @@ def test_ClicomWindow_remove_setup(qtbot, monkeypatch, clicom_window):
 
 
 def test_ClicomWindow_get_analysis_params(qtbot, clicom_window):
-    truth = dict(replicate_grouping='ungrouped', power_transform=[True, False], evidence_threshold=0.35,
+    truth = dict(replicate_grouping='ungrouped', power_transform=['box-cox', 'none'], evidence_threshold=0.35,
                  cluster_unclustered_features=True, parallel_backend='loky',
                  min_cluster_size=15, plot_style='all', split_plots=False)
 
-    qtbot.mouseClick(clicom_window.param_widgets['power_transform'].false_button, LEFT_CLICK)
+    # CLICOM can test several transforms in one ensemble: picking "Other..." reveals a multi-value picker
+    clicom_window.param_widgets['power_transform'].setValue(['box-cox', 'none'])
     qtbot.mouseClick(clicom_window.param_widgets['cluster_unclustered_features'].switch, LEFT_CLICK)
     clicom_window.param_widgets['evidence_threshold'].clear()
     qtbot.keyClicks(clicom_window.param_widgets['evidence_threshold'], '0.35')
@@ -642,7 +643,7 @@ def test_ClicomWindow_start_analysis(qtbot, clicom_window):
                          max_n_clusters_estimate='auto'),
                     dict(method='hierarchical', n_clusters='silhouette', metric='Euclidean', linkage='Average',
                          distance_threshold=None, max_n_clusters_estimate='auto')]
-    truth_params = dict(replicate_grouping='ungrouped', power_transform=[True, False], evidence_threshold=0.35,
+    truth_params = dict(replicate_grouping='ungrouped', power_transform='log', evidence_threshold=0.35,
                         cluster_unclustered_features=True, min_cluster_size=15, plot_style='all', split_plots=False,
                         parallel_backend='loky')
 
@@ -654,7 +655,7 @@ def test_ClicomWindow_start_analysis(qtbot, clicom_window):
     qtbot.keyClicks(clicom_window.stack.parameter_widgets['n_clusters'].combo, 'silhouette')
     qtbot.mouseClick(clicom_window.setups_widgets['add_button'], LEFT_CLICK)
 
-    qtbot.mouseClick(clicom_window.param_widgets['power_transform'].false_button, LEFT_CLICK)
+    qtbot.keyClicks(clicom_window.param_widgets['power_transform'].combo, 'log')
     qtbot.mouseClick(clicom_window.param_widgets['cluster_unclustered_features'].switch, LEFT_CLICK)
     clicom_window.param_widgets['evidence_threshold'].clear()
     qtbot.keyClicks(clicom_window.param_widgets['evidence_threshold'], '0.35')
@@ -663,6 +664,25 @@ def test_ClicomWindow_start_analysis(qtbot, clicom_window):
         clicom_window.start_button.click()
     assert blocker.args[0] == truth_setups
     assert blocker.args[1] == truth_params
+
+
+@pytest.mark.parametrize('legacy_value,truth', [
+    (True, 'box-cox'),
+    (False, 'none'),
+    ([True, False], ['box-cox', 'none']),
+])
+def test_ClicomWindow_imports_legacy_power_transform(qtbot, monkeypatch, tmp_path, clicom_window, legacy_value,
+                                                     truth):
+    # rule 4: a parameter file exported before 'power_transform' became a menu of named transforms stores the
+    # old booleans. It must keep loading, showing (and running) the transform those booleans stand for.
+    param_file = tmp_path / 'parameters CLICOM.yaml'
+    with open(param_file, 'w') as f:
+        yaml.safe_dump({'name': 'CLICOM', 'args': [], 'kwargs': {'power_transform': legacy_value}}, f)
+    monkeypatch.setattr(QtWidgets.QFileDialog, 'getOpenFileName', lambda *args, **kwargs: (str(param_file), ''))
+
+    clicom_window.import_parameters()
+
+    assert clicom_window.get_analysis_kwargs()['power_transform'] == truth
 
 
 def test_EnrichmentWindow_init(enrichment_window):
