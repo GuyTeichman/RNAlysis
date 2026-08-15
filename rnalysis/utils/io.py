@@ -463,6 +463,11 @@ class GUISessionManager:
         self._staging_archive = Path(f'{archive_base}.zip')
         shutil.make_archive(archive_base, 'zip', self._staging_dir)
         self._flush_to_disk(self._staging_archive)
+        # a save that crashed under an older RNAlysis could leave a half-built session *directory*
+        # at the target, and os.replace cannot overwrite a directory. Clearing it is safe only
+        # here, once the replacement archive is complete - never earlier.
+        if self._archive_path.is_dir():
+            shutil.rmtree(self._archive_path)
         # the previous session file is replaced only now, in a single atomic step, and only once
         # its replacement has been fully written to disk.
         os.replace(self._staging_archive, self._archive_path)
