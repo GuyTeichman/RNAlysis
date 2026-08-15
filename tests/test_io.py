@@ -6,6 +6,7 @@ import zipfile
 from unittest import mock
 from unittest.mock import Mock, MagicMock
 
+import platformdirs
 import pytest
 import requests_mock
 
@@ -1016,8 +1017,113 @@ def test_find_best_gene_mapping_picks_best_result_and_swallows_http_error(monkey
 def test_get_todays_cache_dir():
     today = date.today()
     today_str = str(today.year) + '_' + str(today.month).zfill(2) + '_' + str(today.day).zfill(2)
-    cache_dir_truth = os.path.join(appdirs.user_cache_dir('RNAlysis'), today_str)
+    cache_dir_truth = os.path.join(platformdirs.user_cache_dir('RNAlysis'), today_str)
     assert cache_dir_truth == str(get_todays_cache_dir())
+
+
+def test_get_data_dir_matches_legacy_appdirs_path(monkeypatch):
+    """Pin get_data_dir() to the exact directory appdirs 1.4.4 resolved
+    (appdirs.user_data_dir('RNAlysis', roaming=True)), so existing users' settings are found."""
+    if sys.platform == 'win32':
+        # appdirs: os.path.join(normpath(CSIDL_APPDATA), appauthor, appname) with appauthor
+        # defaulting to appname
+        expected = Path(os.path.normpath(os.environ['APPDATA']), 'RNAlysis', 'RNAlysis')
+    elif sys.platform == 'darwin':
+        # appdirs always ignored the XDG env vars on macOS; remove them so the new implementation
+        # is compared against the appdirs-era default location
+        monkeypatch.delenv('XDG_DATA_HOME', raising=False)
+        expected = Path('~/Library/Application Support/RNAlysis').expanduser()
+    else:
+        # appdirs: os.getenv('XDG_DATA_HOME', '~/.local/share') + '/RNAlysis'
+        xdg_data_home = os.environ.get('XDG_DATA_HOME', '').strip()
+        expected = Path(xdg_data_home if xdg_data_home else os.path.expanduser('~/.local/share'), 'RNAlysis')
+    assert io.get_data_dir() == expected
+
+
+def test_cache_dir_matches_legacy_appdirs_path(monkeypatch):
+    """Pin the base cache dir to the exact directory appdirs 1.4.4 resolved
+    (appdirs.user_cache_dir('RNAlysis')), so existing users' caches keep working."""
+    if sys.platform == 'win32':
+        # appdirs: os.path.join(normpath(CSIDL_LOCAL_APPDATA), appauthor, appname, 'Cache')
+        expected = Path(os.path.normpath(os.environ['LOCALAPPDATA']), 'RNAlysis', 'RNAlysis', 'Cache')
+    elif sys.platform == 'darwin':
+        monkeypatch.delenv('XDG_CACHE_HOME', raising=False)
+        expected = Path('~/Library/Caches/RNAlysis').expanduser()
+    else:
+        xdg_cache_home = os.environ.get('XDG_CACHE_HOME', '').strip()
+        expected = Path(xdg_cache_home if xdg_cache_home else os.path.expanduser('~/.cache'), 'RNAlysis')
+    assert io.get_gui_cache_dir().parent == expected
+
+
+def test_get_data_dir_uses_platformdirs(monkeypatch, tmp_path):
+    resolved = tmp_path.joinpath('resolved_data_dir')
+    monkeypatch.setattr(io.platformdirs, 'user_data_dir',
+                        lambda appname, *args, **kwargs: str(resolved.joinpath(appname)))
+    # neutralize the macOS legacy-dir migration so this test never touches a real data dir
+    monkeypatch.setattr(io, '_get_legacy_macos_data_dir', lambda: tmp_path.joinpath('nonexistent'))
+    assert io.get_data_dir() == resolved.joinpath('RNAlysis')
+
+
+def test_get_data_dir_macos_migrates_legacy_dir(monkeypatch, tmp_path):
+    """On macOS, platformdirs honors $XDG_DATA_HOME (appdirs never did). When that moves the
+    resolved dir, the legacy appdirs-era dir (which holds the user's settings) must be migrated."""
+    new_dir = tmp_path.joinpath('xdg_data', 'RNAlysis')
+    legacy_dir = tmp_path.joinpath('Application Support', 'RNAlysis')
+    legacy_dir.mkdir(parents=True)
+    legacy_dir.joinpath('settings.yaml').write_text('key: value')
+    monkeypatch.setattr(io.sys, 'platform', 'darwin')
+    monkeypatch.setattr(io.platformdirs, 'user_data_dir', lambda *args, **kwargs: str(new_dir))
+    monkeypatch.setattr(io, '_get_legacy_macos_data_dir', lambda: legacy_dir)
+
+    assert io.get_data_dir() == new_dir
+    assert new_dir.joinpath('settings.yaml').read_text() == 'key: value'
+    assert not legacy_dir.exists()
+
+
+def test_get_data_dir_macos_no_migration_when_new_dir_exists(monkeypatch, tmp_path):
+    new_dir = tmp_path.joinpath('xdg_data', 'RNAlysis')
+    new_dir.mkdir(parents=True)
+    new_dir.joinpath('settings.yaml').write_text('new')
+    legacy_dir = tmp_path.joinpath('Application Support', 'RNAlysis')
+    legacy_dir.mkdir(parents=True)
+    legacy_dir.joinpath('settings.yaml').write_text('legacy')
+    monkeypatch.setattr(io.sys, 'platform', 'darwin')
+    monkeypatch.setattr(io.platformdirs, 'user_data_dir', lambda *args, **kwargs: str(new_dir))
+    monkeypatch.setattr(io, '_get_legacy_macos_data_dir', lambda: legacy_dir)
+
+    assert io.get_data_dir() == new_dir
+    assert new_dir.joinpath('settings.yaml').read_text() == 'new'
+    assert legacy_dir.joinpath('settings.yaml').read_text() == 'legacy'
+
+
+def test_get_data_dir_no_migration_outside_macos(monkeypatch, tmp_path):
+    new_dir = tmp_path.joinpath('xdg_data', 'RNAlysis')
+    legacy_dir = tmp_path.joinpath('Application Support', 'RNAlysis')
+    legacy_dir.mkdir(parents=True)
+    monkeypatch.setattr(io.sys, 'platform', 'linux')
+    monkeypatch.setattr(io.platformdirs, 'user_data_dir', lambda *args, **kwargs: str(new_dir))
+    monkeypatch.setattr(io, '_get_legacy_macos_data_dir', lambda: legacy_dir)
+
+    assert io.get_data_dir() == new_dir
+    assert legacy_dir.exists()
+    assert not new_dir.exists()
+
+
+def test_get_data_dir_macos_migration_failure_falls_back_to_legacy(monkeypatch, tmp_path):
+    def raise_oserror(*args, **kwargs):
+        raise OSError('migration failed')
+
+    new_dir = tmp_path.joinpath('xdg_data', 'RNAlysis')
+    legacy_dir = tmp_path.joinpath('Application Support', 'RNAlysis')
+    legacy_dir.mkdir(parents=True)
+    legacy_dir.joinpath('settings.yaml').write_text('legacy')
+    monkeypatch.setattr(io.sys, 'platform', 'darwin')
+    monkeypatch.setattr(io.platformdirs, 'user_data_dir', lambda *args, **kwargs: str(new_dir))
+    monkeypatch.setattr(io, '_get_legacy_macos_data_dir', lambda: legacy_dir)
+    monkeypatch.setattr(io.shutil, 'move', raise_oserror)
+
+    assert io.get_data_dir() == legacy_dir
+    assert legacy_dir.joinpath('settings.yaml').read_text() == 'legacy'
 
 
 def test_load_cached_file():

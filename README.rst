@@ -100,7 +100,7 @@ All of *RNAlysis*'s dependencies can be installed automatically via PyPI.
 * `statsmodels <https://www.statsmodels.org/>`_
 * `joblib <https://joblib.readthedocs.io/en/latest/>`_
 * `tqdm <https://github.com/tqdm/tqdm>`_
-* `appdirs <https://github.com/ActiveState/appdirs>`_
+* `platformdirs <https://github.com/tox-dev/platformdirs>`_
 * `grid_strategy <https://github.com/matplotlib/grid-strategy>`_
 * `pyyaml <https://github.com/yaml/pyyaml>`_
 * `UpSetPlot <https://github.com/jnothman/UpSetPlot>`_
