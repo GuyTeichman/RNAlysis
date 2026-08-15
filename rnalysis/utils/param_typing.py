@@ -1,15 +1,14 @@
 import collections.abc
-import ftplib
 import functools
+import json
 import typing
 import warnings
+from pathlib import Path
 
-import requests
-import tenacity
 import typing_extensions
 
 from rnalysis import FROZEN_ENV
-from rnalysis.utils import io, parsing
+from rnalysis.utils import parsing
 
 PARALLEL_BACKENDS = ('multiprocessing', 'sequential') if FROZEN_ENV else (
     'multiprocessing', 'loky', 'threading', 'sequential')
@@ -17,6 +16,10 @@ QUANTILE_INTERPOLATION_METHODS = ("nearest", "higher", "lower", "midpoint", "lin
 SUMMATION_METHODS = ('scaled_tpm', 'raw')
 LIMMA_NORM = ('scale', 'quantile', 'cyclicloess')
 K_CRITERIA = ('gap', 'silhouette', 'calinski_harabasz', 'davies_bouldin', 'bic')
+# The transforms applied to a count matrix before PCA/clustering ('power_transform'). This parameter used to be
+# a bool, and the legacy True ('box-cox') / False ('none') are still accepted by the API -- see
+# generic.parse_power_transform -- but the GUI only ever offers the named transforms.
+POWER_TRANSFORMS = ('box-cox', 'log', 'none')
 
 LEGAL_GENE_LENGTH_METHODS = ('mean', 'median', 'max', 'min', 'geometric_mean', 'merged_exons')
 
@@ -87,66 +90,70 @@ def type_to_supertype(this_type):
     return this_type
 
 
-# Errors that mean "couldn't fetch or parse the remote list of legal values". These getters run at
-# import time to populate Literal[...] type annotations, so an uncaught error here crashes
-# `import rnalysis.filtering` for every user and every test-collection run — degrade to an empty tuple
-# plus a warning instead. RequestException covers connection/HTTP/timeout failures (the underlying
-# io.get_legal_* calls now pass a request timeout); ValueError covers JSON-decode errors from a
-# 200-with-garbage body; Key/Type/Index errors cover otherwise-parseable-but-unexpected shapes.
-# These getters are lru_cached, so a degraded empty result is intentionally pinned for the process:
-# the Literal[...] annotations are evaluated exactly once at import, and the warning tells the user to
-# restart RNAlysis to retry.
-_LEGAL_VALUE_FETCH_ERRORS = (requests.exceptions.RequestException, tenacity.RetryError,
-                             ValueError, KeyError, TypeError, IndexError)
+# The legal values below (UniProtKB gene ID types, PantherDB/PhylomeDB/Ensembl taxons) come from
+# remote services, but they are needed to build Literal[...] type annotations on public
+# Filter/FeatureSet methods — which are evaluated when those class bodies run, i.e. during
+# `import rnalysis.filtering`. Fetching them live would therefore put four web requests on the import
+# path: slow for everyone, and on an offline machine (a cluster, a locked-down lab PC) it would leave
+# every one of those dropdowns empty. Instead they are read from a snapshot packaged with RNAlysis and
+# regenerated at release time by packaging/generate_api_vocabularies.py, which makes the legal values
+# a property of the RNAlysis *version* — identical on every machine, reproducible, and available
+# offline. Live operations (actual ID mapping, ortholog lookups, enrichment) still query the services
+# at call time through rnalysis.utils.io; only this vocabulary is snapshotted.
+API_VOCABULARIES_PATH = Path(__file__).parent.parent.joinpath('data_files/api_vocabularies.json')
+
+# Errors that mean "the packaged snapshot is missing or unreadable": OSError for a missing/unreadable
+# file, ValueError for a JSON-decode failure, Key/Type/Attribute/Index errors for a file that parses
+# but has an unexpected shape. Because these getters run inside class bodies, an uncaught error here
+# would crash the import for every user and every test-collection run — degrade to an empty tuple plus
+# a warning instead. Unlike the old live-fetch version, a failure now means a broken installation
+# rather than a network problem, so the warning says so; it is still pinned by lru_cache for the
+# process, since the annotations are evaluated exactly once at import.
+_SNAPSHOT_READ_ERRORS = (OSError, ValueError, KeyError, TypeError, AttributeError, IndexError)
+
+
+@functools.lru_cache(maxsize=1)
+def _load_api_vocabularies() -> typing.Dict[str, dict]:
+    """Read the packaged vocabulary snapshot. Raises one of _SNAPSHOT_READ_ERRORS if it is unusable."""
+    with open(API_VOCABULARIES_PATH, encoding='utf-8') as snapshot_file:
+        vocabularies = json.load(snapshot_file)['vocabularies']
+    if not isinstance(vocabularies, dict):
+        raise TypeError(f"expected a dict of vocabularies, got {type(vocabularies)}")
+    return vocabularies
+
+
+def _get_snapshot_vocabulary(key: str, description: str) -> typing.Tuple[str, ...]:
+    try:
+        values = _load_api_vocabularies()[key]['values']
+        # Literal[...] can only be built from hashable values, so anything but strings here would
+        # crash the import instead of emptying a single dropdown.
+        if not isinstance(values, (list, tuple)) or not all(isinstance(value, str) for value in values):
+            raise TypeError(f"expected a list of strings under vocabulary '{key}'")
+        return parsing.data_to_tuple(values)
+    except _SNAPSHOT_READ_ERRORS:
+        warnings.warn(f'Failed to load the list of {description} from the packaged data file '
+                      f'"{API_VOCABULARIES_PATH}". '
+                      f'Some features may not work as intended, and some drop-down menus will be empty. '
+                      f'This usually means your RNAlysis installation is incomplete or corrupted - '
+                      f'to fix this issue, re-install RNAlysis. ')
+        return tuple()
 
 
 @functools.lru_cache(maxsize=2)
 def get_gene_id_types() -> typing.Tuple[str, ...]:
-    try:
-        gene_id_types = parsing.data_to_tuple(io.get_legal_gene_id_types()[0].keys())
-    except _LEGAL_VALUE_FETCH_ERRORS:
-        gene_id_types = tuple()
-        warnings.warn('Failed to retrieve gene ID mapping data from UniProtKB. '
-                      'Some features may not work as intended. '
-                      'To fix this issue, make sure your computer has internet connection, '
-                      'and restart RNAlysis. ')
-    return gene_id_types
+    return _get_snapshot_vocabulary('gene_id_types', 'gene ID types from UniProtKB')
 
 
 @functools.lru_cache(maxsize=2)
 def get_panther_taxons() -> typing.Tuple[str, ...]:
-    try:
-        taxons = io.get_legal_panther_taxons()
-    except _LEGAL_VALUE_FETCH_ERRORS:
-        taxons = tuple()
-        warnings.warn('Failed to retrieve legal taxons from PantherDB. '
-                      'Some features may not work as intended. '
-                      'To fix this issue, make sure your computer has internet connection, '
-                      'and restart RNAlysis. ')
-    return taxons
+    return _get_snapshot_vocabulary('panther_taxons', 'legal taxons from PantherDB')
 
 
 @functools.lru_cache(maxsize=2)
 def get_phylomedb_taxons() -> typing.Tuple[str, ...]:
-    try:
-        taxons = io.get_legal_phylomedb_taxons()
-    except (*_LEGAL_VALUE_FETCH_ERRORS, *ftplib.all_errors):
-        taxons = tuple()
-        warnings.warn('Failed to retrieve legal taxons from PhylomeDB. '
-                      'Some features may not work as intended. '
-                      'To fix this issue, make sure your computer has internet connection, '
-                      'and restart RNAlysis. ')
-    return taxons
+    return _get_snapshot_vocabulary('phylomedb_taxons', 'legal taxons from PhylomeDB')
 
 
 @functools.lru_cache(maxsize=2)
 def get_ensembl_taxons() -> typing.Tuple[str, ...]:
-    try:
-        taxons = parsing.data_to_tuple(io.get_legal_ensembl_taxons())
-    except _LEGAL_VALUE_FETCH_ERRORS:
-        taxons = tuple()
-        warnings.warn('Failed to retrieve legal taxons from Ensembl. '
-                      'Some features may not work as intended. '
-                      'To fix this issue, make sure your computer has internet connection, '
-                      'and restart RNAlysis. ')
-    return taxons
+    return _get_snapshot_vocabulary('ensembl_taxons', 'legal taxons from Ensembl')

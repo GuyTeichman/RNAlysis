@@ -16,24 +16,24 @@ import re
 import types
 import warnings
 from pathlib import Path
-from typing import (Any, Callable, Iterable, List, Literal, Sequence, Tuple,
-                    Union)
+from typing import (TYPE_CHECKING, Any, Callable, Iterable, List, Literal,
+                    Sequence, Tuple, Union)
 
+import lazy_loader as lazy
 import matplotlib.pyplot as plt
 import numpy as np
 import polars as pl
 import polars.selectors as cs
-import seaborn as sns
 from grid_strategy import strategies
 from scipy.stats import gstd, sem, spearmanr
 from scipy.stats.mstats import gmean
-from sklearn.decomposition import PCA
-from sklearn.preprocessing import PowerTransformer, StandardScaler
 from tqdm.auto import tqdm
 
 from rnalysis.utils import (clustering, differential_expression, generic,
                             genome_annotation, io, ontology, param_typing,
                             parsing, settings, validation)
+from rnalysis.exceptions import (InternalError, InvalidTypeError,
+                                 InvalidValueError)
 from rnalysis.utils.generic import readable_name
 from rnalysis.utils.param_typing import (BIOTYPE_ATTRIBUTE_NAMES, BIOTYPES,
                                          GTF_ATTRIBUTE_NAMES,
@@ -41,11 +41,23 @@ from rnalysis.utils.param_typing import (BIOTYPE_ATTRIBUTE_NAMES, BIOTYPES,
                                          GO_QUALIFIERS, K_CRITERIA,
                                          LEGAL_GENE_LENGTH_METHODS,
                                          ORTHOLOG_NON_UNIQUE_MODES,
+                                         POWER_TRANSFORMS,
                                          PARALLEL_BACKENDS, Color, ColorList,
                                          ColorMap, Fraction, NonNegativeInt,
                                          PositiveInt, get_ensembl_taxons,
                                          get_gene_id_types, get_panther_taxons,
                                          get_phylomedb_taxons)
+
+# seaborn (~1s, and it drags in pandas) and scikit-learn (~1s) are only needed once a plotting or
+# clustering function actually runs, so they are loaded lazily
+# (SPEC 1 / https://scientific-python.org/specs/spec-0001/). Nothing may touch an attribute of these
+# proxies at import time -- class-body constants, decorators and default arguments are the usual
+# traps, and doing so imports the package and defeats the whole point. Guarded by tests/test_imports.py.
+sns = lazy.load('seaborn')
+_sklearn = lazy.load('sklearn')
+
+if TYPE_CHECKING:  # pragma: no cover - for type checkers only; never imported at runtime
+    from sklearn.decomposition import PCA
 
 # --- table-type auto-detection (drives the GUI "New table" default; Qt-free & never raises) ---
 # The returned keys match the GUI's FILTER_OBJ_TYPES combo box (see rnalysis/gui/gui.py).
@@ -181,7 +193,8 @@ class Filter:
 
         """
         # init from a file (load the csv into a DataFrame/Series)
-        assert isinstance(fname, (str, Path))
+        if not isinstance(fname, (str, Path)):
+            raise InvalidTypeError
         self.fname = Path(fname)
         self.df = io.load_table(fname, squeeze=True, drop_columns=drop_columns)
         if isinstance(self.df, pl.Series):
@@ -277,10 +290,12 @@ class Filter:
         """
         legal_operations = {'filter': 'Filtering', 'normalize': 'Normalization', 'sort': 'Sorting',
                             'transform': 'Transformation', 'translate': 'Translation', 'annotate': 'Annotation'}
-        assert isinstance(inplace, bool), "'inplace' must be True or False!"
-        assert isinstance(opposite, bool), "'opposite' must be True or False!"
-        assert printout_operation.lower() in legal_operations, \
-            f"Invalid input for variable 'printout_operation': {printout_operation}"
+        if not isinstance(inplace, bool):
+            raise InvalidTypeError("'inplace' must be True or False!")
+        if not isinstance(opposite, bool):
+            raise InvalidTypeError("'opposite' must be True or False!")
+        if printout_operation.lower() not in legal_operations:
+            raise InternalError(f"Invalid input for variable 'printout_operation': {printout_operation}")
         # when user requests the opposite of a filter, return the Set Difference between the filtering result and self
         if opposite:
             # the opposite is self.df minus the kept rows; an anti-join (order-preserving via
@@ -339,8 +354,9 @@ class Filter:
         if alt_filename is None:
             alt_filename = self.fname.with_suffix(suffix)
         else:
-            assert isinstance(alt_filename, (str, Path)), \
-                f"'alt_filename' must be a string or Path object. Instead got {type(alt_filename)}."
+            if not isinstance(alt_filename, (str, Path)):
+                raise InvalidTypeError(
+                    f"'alt_filename' must be a string or Path object. Instead got {type(alt_filename)}.")
             alt_filename = self.fname.parent.joinpath(alt_filename).with_suffix(suffix)
         io.save_table(self.df, alt_filename)
 
@@ -481,11 +497,13 @@ class Filter:
 
     @readable_name('Concatenate two tables (based on column names)')
     def concatenate(self, other: Sequence[str]) -> 'Filter':
-        assert isinstance(other, Filter), f"Expected a Filter object, got {type(other)} instead."
-        assert sorted(self.columns) == sorted(other.columns), "The two tables do not have the same columns!"
-        assert len({item[0] for item in self.df.select(pl.first()).iter_rows()}.intersection(
-            {item[0] for item in
-             other.df.select(pl.first()).iter_rows()})) == 0, "The two tables have overlapping indices!"
+        if not isinstance(other, Filter):
+            raise InvalidTypeError(f"Expected a Filter object, got {type(other)} instead.")
+        if sorted(self.columns) != sorted(other.columns):
+            raise InvalidValueError("The two tables do not have the same columns!")
+        if len({item[0] for item in self.df.select(pl.first()).iter_rows()}.intersection(
+                {item[0] for item in other.df.select(pl.first()).iter_rows()})) != 0:
+            raise InvalidValueError("The two tables have overlapping indices!")
         new_df = pl.concat([self.df, other.df], how='vertical')
         return self.from_dataframe(new_df, Path(self.fname.stem + '_' + other.fname.stem + '.csv'))
 
@@ -550,14 +568,16 @@ class Filter:
         suffix = '_dropcolumns'
         columns = parsing.data_to_list(columns)
         for col in columns:
-            assert col in self.columns, f"column '{col}' does not exist!"
+            if col not in self.columns:
+                raise InvalidValueError(f"column '{col}' does not exist!")
         new_df = self.df.drop(columns)
         return self._inplace(new_df, False, inplace, suffix, 'transform')
 
     @readable_name('Histogram of a column')
     def histogram(self, column: param_typing.ColumnName, bins: int = 100,
                   x_label: Union[str, Literal['auto']] = 'auto', y_logscale: bool = False, x_logscale: bool = False):
-        assert column in self.columns, f"column '{column}' does not exist!"
+        if column not in self.columns:
+            raise InvalidValueError(f"column '{column}' does not exist!")
         fig, ax = plt.subplots()
         ax.hist(self.df[column], bins=bins)
         ax.set_xlabel(column if x_label == 'auto' else x_label)
@@ -947,9 +967,14 @@ class Filter:
 
 
         """
-        assert isinstance(percentile, (float, int)) and 0 <= percentile <= 1, \
-            "percentile must be a float between 0 and 1!"
-        assert isinstance(column, str) and column in self.columns, "Invalid column name!"
+        if not isinstance(percentile, (float, int)):
+            raise InvalidTypeError("percentile must be a float between 0 and 1!")
+        if not 0 <= percentile <= 1:
+            raise InvalidValueError("percentile must be a float between 0 and 1!")
+        if not isinstance(column, str):
+            raise InvalidTypeError("Invalid column name!")
+        if column not in self.columns:
+            raise InvalidValueError("Invalid column name!")
         suffix = f'_below{percentile}percentile'
         new_df = self.df.filter(pl.col(column) <= pl.quantile(column, percentile, interpolate))
         return self._inplace(new_df, opposite, inplace, suffix)
@@ -1041,8 +1066,10 @@ class Filter:
         """
         biotype = parsing.data_to_set(biotype)
         # make sure 'biotype' is a list of strings
-        assert validation.isinstanceiter(biotype, str), "biotype must be a string or a list of strings!"
-        assert Path(gtf_path).exists(), "the given gtf path does not exist!"
+        if not validation.isinstanceiter(biotype, str):
+            raise InvalidTypeError("biotype must be a string or a list of strings!")
+        if not Path(gtf_path).exists():
+            raise InvalidValueError("the given gtf path does not exist!")
         suffix = f"_{'_'.join(sorted(biotype))}"
 
         ref_srs = self._get_ref_srs_from_gtf(gtf_path, attribute_name, feature_type)
@@ -1087,8 +1114,10 @@ class Filter:
         :return: If 'inplace' is False, returns a new and filtered instance of the Filter object.
         """
         value = parsing.data_to_set(value)
-        assert validation.isinstanceiter(value, str), "value must be a string or a list of strings!"
-        assert Path(gtf_path).exists(), "the given gtf path does not exist!"
+        if not validation.isinstanceiter(value, str):
+            raise InvalidTypeError("value must be a string or a list of strings!")
+        if not Path(gtf_path).exists():
+            raise InvalidValueError("the given gtf path does not exist!")
         suffix = f"_{attribute}_{'_'.join(sorted(value))}"
 
         ref_srs = self._get_ref_srs_from_gtf(gtf_path, attribute, feature_type)
@@ -1127,11 +1156,13 @@ class Filter:
         If False, the function will return a new Filter instance and the current instance will not be affected.
         :return: If 'inplace' is False, returns a new and annotated instance of the Filter object.
         """
-        assert Path(gtf_path).exists(), "the given gtf path does not exist!"
+        if not Path(gtf_path).exists():
+            raise InvalidValueError("the given gtf path does not exist!")
         column_name = column_name if column_name else attribute
         feature_id_col = self.df.columns[0]  # the table's feature-id (index) column; capture before dropping anything
-        assert column_name != feature_id_col, \
-            f"column_name '{column_name}' collides with the table's feature-id column; choose a different name."
+        if column_name == feature_id_col:
+            raise InvalidValueError(
+                f"column_name '{column_name}' collides with the table's feature-id column; choose a different name.")
 
         ref_srs = self._get_ref_srs_from_gtf(gtf_path, attribute, feature_type)  # 2 columns: [feature_id, attr_value]
         mapping = ref_srs.rename({ref_srs.columns[0]: '__feature_id__', ref_srs.columns[1]: column_name})
@@ -1178,7 +1209,8 @@ class Filter:
         """
         biotype = parsing.data_to_set(biotype)
         # make sure 'biotype' is a list of strings
-        assert validation.isinstanceiter(biotype, str), "biotype must be a string or a list of strings!"
+        if not validation.isinstanceiter(biotype, str):
+            raise InvalidTypeError("biotype must be a string or a list of strings!")
         suffix = f"_{'_'.join(sorted(biotype))}"
         # load the biotype reference table
         ref = settings.get_biotype_ref_path(ref)
@@ -1187,7 +1219,8 @@ class Filter:
         # generate set of legal inputs
         legal_inputs = set(ref_df['biotype'].unique())
         for bio in biotype:
-            assert bio in legal_inputs, f"biotype {bio} is not a legal string!"
+            if bio not in legal_inputs:
+                raise InvalidValueError(f"biotype {bio} is not a legal string!")
         gene_names = parsing.data_to_set(ref_df.filter(pl.last().is_in(biotype))).intersection(
             parsing.data_to_set(self.df.select(pl.first())))
         new_df = self.df.filter(pl.first().is_in(gene_names))
@@ -1274,8 +1307,8 @@ class Filter:
         suffix = '_filtGO'
         go_ids = parsing.data_to_set(go_ids)
         # make sure 'mode' is legal
-        assert mode in {'union', 'intersection'}, \
-            f"Illegal mode '{mode}': mode must be either 'union' or 'intersection'"
+        if mode not in {'union', 'intersection'}:
+            raise InvalidValueError(f"Illegal mode '{mode}': mode must be either 'union' or 'intersection'")
 
         (taxon_id, organism), gene_id_type = io.get_taxon_and_id_type(organism, gene_id_type, self.index_set,
                                                                       'UniProtKB')
@@ -1285,7 +1318,8 @@ class Filter:
         for go_id in go_ids.copy():
             if go_id in dag_tree:
                 continue
-            assert isinstance(go_id, str), "'go_ids' must all be strings!"
+            if not isinstance(go_id, str):
+                raise InvalidTypeError("'go_ids' must all be strings!")
             stripped_id = go_id.strip()
             if stripped_id in dag_tree:
                 go_ids.remove(go_id)
@@ -1299,8 +1333,9 @@ class Filter:
                                                 evidence_types, excluded_evidence_types,
                                                 databases, excluded_databases,
                                                 qualifiers, excluded_qualifiers)
-        assert annotations.n_annotations > 0, "No GO annotations were found for the given parameters. " \
-                                              "Please try again with a different set of parameters. "
+        if not (annotations.n_annotations > 0):
+            raise InvalidValueError("No GO annotations were found for the given parameters. "
+                                    "Please try again with a different set of parameters. ")
         go_to_genes = {}
         source_to_genes = {}
         for annotation in tqdm(annotations, desc="Fetching GO annotations", total=annotations.n_annotations,
@@ -1405,8 +1440,8 @@ class Filter:
         suffix = '_filtKEGG'
         kegg_ids = parsing.data_to_set(kegg_ids)
         # make sure 'mode' is legal
-        assert mode in {'union', 'intersection'}, \
-            f"Illegal mode '{mode}': mode must be either 'union' or 'intersection'"
+        if mode not in {'union', 'intersection'}:
+            raise InvalidValueError(f"Illegal mode '{mode}': mode must be either 'union' or 'intersection'")
 
         (taxon_id, organism), gene_id_type = io.get_taxon_and_id_type(organism, gene_id_type, self.index_set, 'KEGG')
 
@@ -1524,8 +1559,8 @@ class Filter:
         else:
             attributes = parsing.data_to_list(attributes)
         # make sure 'mode' is legal
-        assert mode in {'union', 'intersection'}, \
-            f"Illegal mode '{mode}': mode must be either 'union' or 'intersection'"
+        if mode not in {'union', 'intersection'}:
+            raise InvalidValueError(f"Illegal mode '{mode}': mode must be either 'union' or 'intersection'")
         # load the Attribute Reference Table
         attr_ref_table = io.load_table(settings.get_attr_ref_path(ref))
         validation.validate_attr_table(attr_ref_table)
@@ -1579,11 +1614,12 @@ class Filter:
             Filtered 20 features, leaving 2 of the original 22 features. Filtering result saved to new object.
 
         """
-        assert isinstance(attributes, (list, tuple)), \
-            f"'attributes' must be a list or a tuple. Got {type(attributes)} instead. "
+        if not isinstance(attributes, (list, tuple)):
+            raise InvalidTypeError(f"'attributes' must be a list or a tuple. Got {type(attributes)} instead. ")
         for attr in attributes:
-            assert isinstance(attr, str), f"All attributes in 'split_by_attribute()' must be of type str. " \
-                                          f"Attribute '{attr}' is of type {type(attr)}"
+            if not isinstance(attr, str):
+                raise InvalidTypeError(f"All attributes in 'split_by_attribute()' must be of type str. "
+                                       f"Attribute '{attr}' is of type {type(attr)}")
         return tuple([self.filter_by_attribute(att, mode='union', ref=ref, inplace=False) for att in attributes])
 
     @readable_name('Table descriptive statistics')
@@ -1914,12 +1950,15 @@ class Filter:
                          'lesser than': 'lt', '<': 'lt', 'equal': 'eq', 'abs greater than': 'abs_gt',
                          'abs_gt': 'abs_gt', '|x|>': 'abs_gt'}
         operator = operator.lower()
-        assert operator in operator_dict, f"Invalid operator {operator}"
+        if operator not in operator_dict:
+            raise InvalidValueError(f"Invalid operator {operator}")
         op = operator_dict[operator]
         # determine that 'value' is a number
-        assert isinstance(value, (int, float)), "'value' must be a number!"
+        if not isinstance(value, (int, float)):
+            raise InvalidTypeError("'value' must be a number!")
         # determine that the column is legal
-        assert column in self.columns, f"column {column} not in DataFrame!"
+        if column not in self.columns:
+            raise InvalidValueError(f"column {column} not in DataFrame!")
 
         suffix = f"_{column}{op}{value}"
         # perform operation according to operator
@@ -1971,12 +2010,15 @@ class Filter:
         operator_dict = {'eq': 'eq', 'equals': 'eq', '=': 'eq', 'ct': 'ct', 'in': 'ct', 'contains': 'ct', 'sw': 'sw',
                          'starts with': 'sw', 'ew': 'ew', 'ends with': 'ew', 'equal': 'eq', 'begins with': 'sw'}
         operator = operator.lower()
-        assert operator in operator_dict, f"Invalid operator {operator}"
+        if operator not in operator_dict:
+            raise InvalidValueError(f"Invalid operator {operator}")
         op = operator_dict[operator]
         # determine that 'value' is a string
-        assert isinstance(value, str), "'value' must be a string!"
+        if not isinstance(value, str):
+            raise InvalidTypeError("'value' must be a string!")
         # determine that the column is legal
-        assert column in self.columns, f"column {column} not in DataFrame!"
+        if column not in self.columns:
+            raise InvalidValueError(f"column {column} not in DataFrame!")
 
         suffix = f"_{column}{op}{value}"
         # perform operation according to operator
@@ -2029,14 +2071,17 @@ class Filter:
                                  "to filter based on the column 'all' or based on all columns. ")
 
         elif isinstance(columns, str):
-            assert columns in self.columns, f"Column '{columns}' does not exist in the Filter object."
+            if columns not in self.columns:
+                raise InvalidValueError(f"Column '{columns}' does not exist in the Filter object.")
             if len(self.columns) > 1:
                 subset = [columns]
                 suffix += columns
         elif isinstance(columns, (list, tuple, set, np.ndarray)):
             for col in columns:
-                assert isinstance(col, str), f"Column name {col} is of type {type(col)} instead of str. "
-                assert col in self.columns, f"Column '{col}' does not exist in the Filter object."
+                if not isinstance(col, str):
+                    raise InvalidTypeError(f"Column name {col} is of type {type(col)} instead of str. ")
+                if col not in self.columns:
+                    raise InvalidValueError(f"Column '{col}' does not exist in the Filter object.")
                 suffix += col
             subset = list(columns)
         else:
@@ -2075,8 +2120,10 @@ class Filter:
             Transformed 22 features. Transformed inplace.
         """
 
-        predefined_funcs = {'ln': np.log1p, 'loge': np.log1p, 'standardize': StandardScaler.fit_transform,
-                            'box-cox': lambda x: PowerTransformer(method='box-cox').fit_transform(x + 1)}
+        predefined_funcs = {'ln': np.log1p, 'loge': np.log1p,
+                            'standardize': _sklearn.preprocessing.StandardScaler.fit_transform,
+                            'box-cox': lambda x: _sklearn.preprocessing.PowerTransformer(
+                                method='box-cox').fit_transform(x + 1)}
 
         suffix = "_customtransform" if callable(function) else f"_{str(function)}transform"
 
@@ -2215,13 +2262,17 @@ class Filter:
         """
         order = 'asc' if ascending else 'desc'
         suffix = f"_top{n}{by}{order}"
-        assert isinstance(n, int), "n must be an integer!"
-        assert n > 0, "n must be a positive integer!"
+        if not isinstance(n, int):
+            raise InvalidTypeError("n must be an integer!")
+        if not (n > 0):
+            raise InvalidValueError("n must be a positive integer!")
         if isinstance(by, list):
             for col in by:
-                assert col in self.columns, f"{col} is not a column in the Filter object!"
+                if col not in self.columns:
+                    raise InvalidValueError(f"{col} is not a column in the Filter object!")
         else:
-            assert by in self.columns, f"{by} is not a column in the Filter object!"
+            if by not in self.columns:
+                raise InvalidValueError(f"{by} is not a column in the Filter object!")
         if n > self.shape[0]:
             warnings.warn(f'Current number of rows {self.shape[0]} is smaller than the specified n={n}. '
                           f'Therefore output Filter object will only have {self.shape[0]} rows. ')
@@ -2231,7 +2282,8 @@ class Filter:
 
     @staticmethod
     def _return_type(index_set: set, return_type: Literal['set', 'str']):
-        assert isinstance(return_type, str), "'return_type' must be a string!!"
+        if not isinstance(return_type, str):
+            raise InvalidTypeError("'return_type' must be a string!!")
         if return_type == 'set':
             return index_set
         elif return_type == 'str':
@@ -2615,8 +2667,12 @@ class FoldChangeFilter(Filter):
         n = self.shape[0]
         # set random seed if requested
         if random_seed is not None:
-            assert isinstance(random_seed, int) and random_seed >= 0, f"random_seed must be a non-negative integer. " \
-                                                                      f"Value {random_seed} invalid."
+            if not isinstance(random_seed, int):
+                raise InvalidTypeError(f"random_seed must be a non-negative integer. "
+                                       f"Value {random_seed} invalid.")
+            if not random_seed >= 0:
+                raise InvalidValueError(f"random_seed must be a non-negative integer. "
+                                        f"Value {random_seed} invalid.")
             np.random.seed(random_seed)
         # run randomization test
         print('Calculating...')
@@ -2632,7 +2688,7 @@ class FoldChangeFilter(Filter):
         return res_df
 
     @staticmethod
-    @generic.numba.jit(nopython=True)
+    @generic.numba.jit(nopython=True, cache=generic.NUMBA_CACHE)
     def _foldchange_randomization(vals: np.ndarray, reps: PositiveInt, obs_fc: float, exp_fc: float,
                                   n: int):  # pragma: no cover
         success = 0
@@ -2692,8 +2748,10 @@ class FoldChangeFilter(Filter):
             Filtered 18 features, leaving 4 of the original 22 features. Filtered inplace.
 
         """
-        assert isinstance(abslog2fc, (float, int)), "abslog2fc must be a number!"
-        assert abslog2fc >= 0, "abslog2fc must be non-negative!"
+        if not isinstance(abslog2fc, (float, int)):
+            raise InvalidTypeError("abslog2fc must be a number!")
+        if not (abslog2fc >= 0):
+            raise InvalidValueError("abslog2fc must be non-negative!")
         suffix = f"_{abslog2fc}abslog2foldchange"
         new_df = self.df.filter(pl.last().log(2).abs() >= abslog2fc)
         return self._inplace(new_df, opposite, inplace, suffix)
@@ -2734,8 +2792,9 @@ class FoldChangeFilter(Filter):
             Filtered 12 features, leaving 10 of the original 22 features. Filtered inplace.
 
         """
-        assert isinstance(direction, str), \
-            "'direction' must be either 'pos' for positive fold-change, or 'neg' for negative fold-change. "
+        if not isinstance(direction, str):
+            raise InvalidTypeError(
+                "'direction' must be either 'pos' for positive fold-change, or 'neg' for negative fold-change. ")
         if direction == 'pos':
             new_df = self.df.filter(pl.last() > 1)
             suffix = '_PositiveLog2FC'
@@ -2910,7 +2969,8 @@ class DESeqFilter(Filter):
             Filtered 25 features, leaving 4 of the original 29 features. Filtered inplace.
 
         """
-        assert isinstance(alpha, float), "alpha must be a float!"
+        if not isinstance(alpha, float):
+            raise InvalidTypeError("alpha must be a float!")
         self._assert_padj_col()
         new_df = self.df.filter(pl.col(self.padj_col) <= alpha)
         suffix = f"_sig{alpha}"
@@ -2978,8 +3038,10 @@ class DESeqFilter(Filter):
             Filtered 1 features, leaving 28 of the original 29 features. Filtered inplace.
 
         """
-        assert isinstance(abslog2fc, (float, int)), "abslog2fc must be a number!"
-        assert abslog2fc >= 0, "abslog2fc must be non-negative!"
+        if not isinstance(abslog2fc, (float, int)):
+            raise InvalidTypeError("abslog2fc must be a number!")
+        if not (abslog2fc >= 0):
+            raise InvalidValueError("abslog2fc must be non-negative!")
         self._assert_log2fc_col()
 
         suffix = f"_{abslog2fc}abslog2foldchange"
@@ -3020,8 +3082,9 @@ class DESeqFilter(Filter):
             Filtered 26 features, leaving 3 of the original 29 features. Filtered inplace.
 
         """
-        assert isinstance(direction, str), \
-            "'direction' must be either 'pos' for positive fold-change, or 'neg' for negative fold-change. "
+        if not isinstance(direction, str):
+            raise InvalidTypeError(
+                "'direction' must be either 'pos' for positive fold-change, or 'neg' for negative fold-change. ")
         self._assert_log2fc_col()
 
         if direction == 'pos':
@@ -3112,8 +3175,10 @@ class DESeqFilter(Filter):
         if log2fc_threshold is None:
             log2fc_threshold = 0
         else:
-            assert isinstance(log2fc_threshold, (int, float)) and log2fc_threshold >= 0, \
-                "'log2fc_threshold' must be a non-negative number!"
+            if not isinstance(log2fc_threshold, (int, float)):
+                raise InvalidTypeError("'log2fc_threshold' must be a non-negative number!")
+            if not log2fc_threshold >= 0:
+                raise InvalidValueError("'log2fc_threshold' must be a non-negative number!")
 
         if interactive:
             fig = plt.figure(constrained_layout=True, FigureClass=generic.InteractiveScatterFigure,
@@ -3179,8 +3244,16 @@ class CountFilter(Filter):
 
     """
     _precomputed_metrics = clustering.ClusteringRunner.precomputed_metrics
-    _transforms = {True: generic.standard_box_cox, False: generic.standardize}
+    # (the old ``_transforms`` boolean->function map lived here; it had no callers, and
+    # ``generic.get_transform_function`` is now the single place that resolves a transform name.)
+    #: file-name suffix each transform contributes. 'box-cox' keeps the historical 'powertransform' spelling
+    #: (rather than its own name) so that re-running an existing analysis keeps writing to the same file name.
+    _TRANSFORM_SUFFIXES = {'box-cox': 'powertransform', 'log': 'logtransform', 'none': ''}
     __slots__ = {'_is_normalized': 'indicates whether the values in this CountFilter were normalized'}
+
+    def _gene_names(self) -> List[str]:
+        """The gene names of this table, in table order. Used to name offending genes in transform errors."""
+        return self.df.select(pl.first()).to_series().to_list()
 
     def __init__(self, fname: Union[str, Path, tuple], drop_columns: Union[str, List[str]] = None,
                  is_normalized: bool = False, suppress_warnings: bool = False):
@@ -3254,20 +3327,23 @@ class CountFilter(Filter):
         return triplicate
 
     def _diff_exp_assertions(self, design_mat_df: pl.DataFrame):
-        assert design_mat_df.shape[0] == self.shape[1], f"The number of items in the design matrix " \
-                                                        f"({design_mat_df.shape[0]}) does not match the number of " \
-                                                        f"columns in the count matrix ({self.shape[1]})."
+        if design_mat_df.shape[0] != self.shape[1]:
+            raise InvalidValueError(f"The number of items in the design matrix "
+                                    f"({design_mat_df.shape[0]}) does not match the number of "
+                                    f"columns in the count matrix ({self.shape[1]}).")
         design_mat_samples = sorted(design_mat_df.select(pl.first()).to_series().to_list())
-        assert design_mat_samples == sorted(self.columns), f"The sample names in the design matrix do not " \
-                                                           f"match the sample names in the count matrix: " \
-                                                           f"{design_mat_samples} != " \
-                                                           f"{sorted(self.columns)}"
-        assert len(design_mat_df.columns) == len(set(design_mat_df.columns)), "The design matrix contains " \
-                                                                              "duplicate factor names."
+        if design_mat_samples != sorted(self.columns):
+            raise InvalidValueError(f"The sample names in the design matrix do not "
+                                    f"match the sample names in the count matrix: "
+                                    f"{design_mat_samples} != "
+                                    f"{sorted(self.columns)}")
+        if len(design_mat_df.columns) != len(set(design_mat_df.columns)):
+            raise InvalidValueError("The design matrix contains "
+                                    "duplicate factor names.")
         for factor in design_mat_df.columns:
-            assert generic.sanitize_variable_name(
-                factor) == factor, f"Invalid factor name '{factor}': contains invalid characters." \
-                                   f" \nSuggested alternative name: '{generic.sanitize_variable_name(factor)}'. "
+            if generic.sanitize_variable_name(factor) != factor:
+                raise InvalidValueError(f"Invalid factor name '{factor}': contains invalid characters."
+                                        f" \nSuggested alternative name: '{generic.sanitize_variable_name(factor)}'. ")
 
     @readable_name('Run Limma-Voom differential expression')
     def differential_expression_limma_voom(self, design_matrix: Union[str, Path],
@@ -3336,7 +3412,8 @@ class CountFilter(Filter):
         """
         if output_folder is not None:
             output_folder = Path(output_folder)
-            assert output_folder.exists(), 'Output folder does not exist!'
+            if not output_folder.exists():
+                raise InvalidValueError('Output folder does not exist!')
 
         self._validate_is_normalized(expect_normalized=False)
         data_path = io.get_todays_cache_dir().joinpath(f'{self.fname.name}.csv')
@@ -3354,8 +3431,8 @@ class CountFilter(Filter):
         samples = design_mat_df.select(pl.first()).to_series().to_list()
         design_mat_df = design_mat_df.lazy().with_columns(pl.Series([self.df.columns.index(i) for i in samples])).sort(
             pl.last()).drop(cs.last()).collect()
-        assert parsing.data_to_list(design_mat_df.select(pl.first())) == list(
-            self.columns), "The sample names in the design matrix do not match!"
+        if parsing.data_to_list(design_mat_df.select(pl.first())) != list(self.columns):
+            raise InvalidValueError("The sample names in the design matrix do not match!")
         io.save_table(design_mat_df, design_mat_path)
 
         r_output_dir = differential_expression.LimmaVoomRunner(data_path, design_mat_path, comparisons, covariates,
@@ -3513,7 +3590,8 @@ class CountFilter(Filter):
         """
         if output_folder is not None:
             output_folder = Path(output_folder)
-            assert output_folder.exists(), 'Output folder does not exist!'
+            if not output_folder.exists():
+                raise InvalidValueError('Output folder does not exist!')
 
         self._validate_is_normalized(expect_normalized=False)
         data_path = io.get_todays_cache_dir().joinpath(f'{self.fname.stem}.csv')
@@ -3533,8 +3611,8 @@ class CountFilter(Filter):
         samples = design_mat_df.select(pl.first()).to_series().to_list()
         design_mat_df = design_mat_df.lazy().with_columns(pl.Series([self.df.columns.index(i) for i in samples])).sort(
             pl.last()).drop(cs.last()).collect()
-        assert parsing.data_to_list(design_mat_df.select(pl.first())) == list(
-            self.columns), "The sample names in the design matrix do not match!"
+        if parsing.data_to_list(design_mat_df.select(pl.first())) != list(self.columns):
+            raise InvalidValueError("The sample names in the design matrix do not match!")
         io.save_table(design_mat_df, design_mat_path)
 
         if scaling_factors is None:
@@ -3545,16 +3623,19 @@ class CountFilter(Filter):
             if len(scaling_factors_df) == 1:
                 scale_factor_ndims = 1
                 scaling_factors_df = scaling_factors_df.select(self.df.columns[1:])
-                assert parsing.data_to_list(scaling_factors_df.select(pl.first())) == list(self.columns), \
-                    "The sample names in the scaling factors table do not match the sample names in the count matrix!"
+                if parsing.data_to_list(scaling_factors_df.select(pl.first())) != list(self.columns):
+                    raise InvalidValueError("The sample names in the scaling factors table do not match "
+                                            "the sample names in the count matrix!")
             else:
                 scale_factor_ndims = 2
                 scaling_factors_df = scaling_factors_df.lazy().with_columns(pl.col(counts.columns[1:]))
                 scaling_factors_df = scaling_factors_df.sort(pl.first()).collect()
-                assert sorted(scaling_factors_df.columns) == sorted(self.columns), \
-                    "The sample names in the scaling factors table do not match the sample names in the count matrix!"
-                assert scaling_factors_df.select(pl.first()).equals(counts.select(pl.first())), \
-                    "The gene names in the scaling factors table do not match the gene names in the count matrix!"
+                if sorted(scaling_factors_df.columns) != sorted(self.columns):
+                    raise InvalidValueError("The sample names in the scaling factors table do not match "
+                                            "the sample names in the count matrix!")
+                if not scaling_factors_df.select(pl.first()).equals(counts.select(pl.first())):
+                    raise InvalidValueError("The gene names in the scaling factors table do not match "
+                                            "the gene names in the count matrix!")
             scale_factor_path = None
             i = 0
             while scale_factor_path is None or scale_factor_path.exists():
@@ -3680,23 +3761,31 @@ class CountFilter(Filter):
             rnalysis.filtering.FoldChangeFilter
 
         """
-        assert isinstance(numer_name, str), "numerator name must be a string or 'default'!"
-        assert isinstance(denom_name, str), "denominator name must be a string or 'default'!"
+        if not isinstance(numer_name, str):
+            raise InvalidTypeError("numerator name must be a string or 'default'!")
+        if not isinstance(denom_name, str):
+            raise InvalidTypeError("denominator name must be a string or 'default'!")
         numer_name = f"Mean of {numerator}" if numer_name == 'default' else numer_name
         denom_name = f"Mean of {denominator}" if denom_name == 'default' else denom_name
 
         numerator = parsing.data_to_list(numerator)
         denominator = parsing.data_to_list(denominator)
-        assert validation.isinstanceiter(numerator, str), "numerator must be str or a list of str!"
-        assert validation.isinstanceiter(denominator, str), "denominator must be str or a list of str"
+        if not validation.isinstanceiter(numerator, str):
+            raise InvalidTypeError("numerator must be str or a list of str!")
+        if not validation.isinstanceiter(denominator, str):
+            raise InvalidTypeError("denominator must be str or a list of str")
 
         numeric_cols = self._numeric_columns
         for num in numerator:
-            assert num in self.columns, f"'{num}' is not a column in the CountFilter object!"
-            assert num in numeric_cols, f"Invalid dtype for column '{num}': {self.df.dtypes[num]}"
+            if num not in self.columns:
+                raise InvalidValueError(f"'{num}' is not a column in the CountFilter object!")
+            if num not in numeric_cols:
+                raise InvalidValueError(f"Invalid dtype for column '{num}': {self.df.dtypes[num]}")
         for den in denominator:
-            assert den in self.columns, f"'{den}' is not a column in the CountFilter object!"
-            assert den in numeric_cols, f"Invalid dtype for column '{den}': {self.df.dtypes[den]}"
+            if den not in self.columns:
+                raise InvalidValueError(f"'{den}' is not a column in the CountFilter object!")
+            if den not in numeric_cols:
+                raise InvalidValueError(f"Invalid dtype for column '{den}': {self.df.dtypes[den]}")
 
         # fuse the three eager scans of self.df (index column + numerator mean + denominator mean) into
         # a single lazy plan collected once; pl.mean_horizontal over each column list is the row-wise mean
@@ -3839,26 +3928,29 @@ class CountFilter(Filter):
         :return: a polars DataFrame containing samples/averaged subsamples according to the specified sample_list.
 
         """
-        assert isinstance(function, str), "'function' must be a string!"
+        if not isinstance(function, str):
+            raise InvalidTypeError("'function' must be a string!")
         function = function.lower()
-        assert function in {'mean', 'median', 'geometric_mean'}, \
-            "'function' must be 'mean', 'median', or 'geometric_mean'!"
+        if function not in {'mean', 'median', 'geometric_mean'}:
+            raise InvalidValueError("'function' must be 'mean', 'median', or 'geometric_mean'!")
 
         if new_column_names in ('auto', 'display'):
             new_column_names = parsing.make_group_names(sample_grouping, new_column_names)
         else:
-            assert validation.isiterable(new_column_names) and validation.isinstanceiter(new_column_names, str), \
-                "'new_column_names' must be either 'auto' or a list of strings!"
-            assert len(new_column_names) == len(sample_grouping), \
-                f"The number of new column names {len(new_column_names)} " \
-                f"does not match the number of sample groups {len(sample_grouping)}!"
+            if not (validation.isiterable(new_column_names) and validation.isinstanceiter(new_column_names, str)):
+                raise InvalidTypeError("'new_column_names' must be either 'auto' or a list of strings!")
+            if len(new_column_names) != len(sample_grouping):
+                raise InvalidValueError(f"The number of new column names {len(new_column_names)} "
+                                        f"does not match the number of sample groups {len(sample_grouping)}!")
 
         for group in sample_grouping:
             if isinstance(group, str):
-                assert group in self.columns, f"Column '{group}' does not exist in the original table!"
+                if group not in self.columns:
+                    raise InvalidValueError(f"Column '{group}' does not exist in the original table!")
             elif isinstance(group, (list, tuple, set)):
                 for item in group:
-                    assert item in self.columns, f"Column '{item}' does not exist in the original table!"
+                    if item not in self.columns:
+                        raise InvalidValueError(f"Column '{item}' does not exist in the original table!")
             else:
                 raise TypeError(f"'sample_list' cannot contain objects of type {type(group)}.")
 
@@ -3897,18 +3989,19 @@ class CountFilter(Filter):
         numeric_cols = self._numeric_columns
 
         if scaling_factors.shape[0] == 1:
-            assert scaling_factors.shape[1] == len(numeric_cols), \
-                f"Number of scaling factors ({scaling_factors.shape[1]}) does not match " \
-                f"number of numeric columns in your data table ({len(numeric_cols)})!"
+            if scaling_factors.shape[1] != len(numeric_cols):
+                raise InvalidValueError(f"Number of scaling factors ({scaling_factors.shape[1]}) does not match "
+                                        f"number of numeric columns in your data table ({len(numeric_cols)})!")
             # one lazy pass over self.df instead of one eager self.df.select per column: divide each
             # numeric column by its scalar factor and keep the non-numeric columns (e.g. the index) as-is
             exprs = [pl.col(column).truediv(scaling_factors[column]) if column in numeric_cols else pl.col(column)
                      for column in self.df.columns]
             return self.df.lazy().select(exprs).collect()
 
-        assert scaling_factors.shape[0] >= self.shape[0] and scaling_factors.shape[1] == len(numeric_cols) + 1, \
-            f"Dimensions of scaling factors table ({scaling_factors.shape}) does not match the " \
-            f"dimensions of your data table ({(self.shape[0], len(numeric_cols))} - numeric columns only)!"
+        if not (scaling_factors.shape[0] >= self.shape[0] and scaling_factors.shape[1] == len(numeric_cols) + 1):
+            raise InvalidValueError(
+                f"Dimensions of scaling factors table ({scaling_factors.shape}) does not match the "
+                f"dimensions of your data table ({(self.shape[0], len(numeric_cols))} - numeric columns only)!")
         # one order-preserving join on the index instead of one left-join per numeric column, then divide
         # each numeric column by its matching per-gene scaling factor in a single lazy pass
         merged = self.df.lazy().join(scaling_factors.lazy(), left_on=self.df.columns[0],
@@ -4210,8 +4303,10 @@ class CountFilter(Filter):
            Normalized 22 features. Normalized inplace.
         """
         self._validate_is_normalized(expect_normalized=False)
-        assert 0 <= log_ratio_trim < 0.5, "'log_ratio_trim' must be a value in the range 0 <= log_ratio_trim < 5"
-        assert 0 <= sum_trim < 0.5, "'sum_trim' must be a value in the range 0 <= sum_trim < 5"
+        if not (0 <= log_ratio_trim < 0.5):
+            raise InvalidValueError("'log_ratio_trim' must be a value in the range 0 <= log_ratio_trim < 5")
+        if not (0 <= sum_trim < 0.5):
+            raise InvalidValueError("'sum_trim' must be a value in the range 0 <= sum_trim < 5")
         suffix = '_normTMM'
         ref_column = self._get_ma_ref_column(ref_column)
         columns = self._numeric_columns
@@ -4339,14 +4434,18 @@ class CountFilter(Filter):
         self._validate_is_normalized(expect_normalized=False)
 
         flat_grouping = parsing.flatten(sample_grouping)
-        assert len(flat_grouping) >= len(self._numeric_columns), f"'sample_grouping' must include all columns. " \
-                                                                 f"Only {len(flat_grouping)} out of " \
-                                                                 f"{len(self._numeric_columns)} " \
-                                                                 f"numeric columns were included. "
-        assert isinstance(reference_group, int) and reference_group >= 0, \
-            f"Invalid value for 'reference_group': {reference_group}"
-        assert reference_group < len(sample_grouping), f"'reference_group' value {reference_group} " \
-                                                       f"is larger than the number of sample groups!"
+        if not (len(flat_grouping) >= len(self._numeric_columns)):
+            raise InvalidValueError(f"'sample_grouping' must include all columns. "
+                                    f"Only {len(flat_grouping)} out of "
+                                    f"{len(self._numeric_columns)} "
+                                    f"numeric columns were included. ")
+        if not isinstance(reference_group, int):
+            raise InvalidTypeError(f"Invalid value for 'reference_group': {reference_group}")
+        if not reference_group >= 0:
+            raise InvalidValueError(f"Invalid value for 'reference_group': {reference_group}")
+        if not (reference_group < len(sample_grouping)):
+            raise InvalidValueError(f"'reference_group' value {reference_group} "
+                                    f"is larger than the number of sample groups!")
 
         suffix = '_normMRN'
         data = self.df.select(pl.col(self._numeric_columns))
@@ -4409,7 +4508,8 @@ class CountFilter(Filter):
     def _get_ma_ref_column(self, ref_column):
         if isinstance(ref_column, int):
             ref_column += 1
-            assert ref_column < len(self.columns), "the index of 'ref_column' is larger than the number of columns!"
+            if not (ref_column < len(self.columns)):
+                raise InvalidValueError("the index of 'ref_column' is larger than the number of columns!")
             ref_column = self.columns[ref_column]
         elif isinstance(ref_column, str):
             if ref_column.lower() == 'auto':
@@ -4417,7 +4517,8 @@ class CountFilter(Filter):
                 ref_index = np.argmin(abs((upper_quartiles - upper_quartiles.mean_horizontal()[0]).to_numpy()))
                 ref_column = self.columns[ref_index]
             else:
-                assert ref_column in self._numeric_columns, "'ref_column' must be a name of a numeric column!"
+                if ref_column not in self._numeric_columns:
+                    raise InvalidValueError("'ref_column' must be a name of a numeric column!")
         else:
             raise TypeError(f"Invalid type for 'ref_column': {type(ref_column)}")
         return ref_column
@@ -4630,7 +4731,8 @@ class CountFilter(Filter):
     @readable_name('K-Means clustering')
     def split_kmeans(self, n_clusters: Union[PositiveInt, List[PositiveInt], Literal[K_CRITERIA]],
                      n_init: PositiveInt = 3, max_iter: PositiveInt = 300,
-                     random_seed: Union[NonNegativeInt, None] = None, power_transform: bool = True,
+                     random_seed: Union[NonNegativeInt, None] = None,
+                     power_transform: Literal[POWER_TRANSFORMS] = 'box-cox',
                      plot_style: Literal['all', 'std_area', 'std_bar'] = 'all',
                      split_plots: bool = False, max_n_clusters_estimate: Union[PositiveInt, Literal['auto']] = 'auto',
                      parallel_backend: Literal[PARALLEL_BACKENDS] = 'loky',
@@ -4650,9 +4752,14 @@ class CountFilter(Filter):
         :type n_init: int (default=3)
         :param max_iter: maximum number of iterations of the k-medoids algorithm for a single run.
         :type max_iter: int (default=300)
-        :param power_transform: if True, RNAlysis will apply a power transform (Box-Cox) \
-        to the data prior to clustering.
-        :type power_transform: bool (default=True)
+        :param power_transform: the transformation applied to the data before it is standardized and \
+        clustered. 'box-cox' (the default) fits a separate power transform to every gene, which usually \
+        makes the data more normally distributed; it can be numerically unstable for a gene whose values \
+        are near-constant at a high magnitude (a reporter transgene, for example), in which case \
+        RNAlysis will tell you which genes to filter out. 'log' applies log2(x+1) to every value - \
+        simpler, and never unstable. 'none' standardizes the data without transforming it first. \
+        The legacy values True ('box-cox') and False ('none') are still accepted.
+        :type power_transform: 'box-cox', 'log', or 'none' (default='box-cox')
         :param plot_style: determines the visual style of the cluster expression plot.
         :type plot_style: 'all', 'std_area', or 'std_bar' (default='all')
         :param split_plots: if True, each discovered cluster will be plotted on its own. \
@@ -4676,7 +4783,7 @@ class CountFilter(Filter):
             >>> dev_stages = filtering.CountFilter('tests/test_files/elegans_developmental_stages.tsv')
             >>> dev_stages.filter_low_reads(100)
             Filtered 44072 features, leaving 2326 of the original 46398 features. Filtered inplace.
-            >>> clusters = dev_stages.split_kmeans(14,power_transform=True)
+            >>> clusters = dev_stages.split_kmeans(14,power_transform='box-cox')
             Filtered 44072 features, leaving 2326 of the original 46398 features. Filtered inplace.
             Filtered 1801 features, leaving 525 of the original 2326 features. Filtering result saved to new object.
             Filtered 2010 features, leaving 316 of the original 2326 features. Filtering result saved to new object.
@@ -4724,7 +4831,8 @@ class CountFilter(Filter):
                            metric: Literal['Euclidean', 'Cosine', 'Pearson', 'Spearman', 'Manhattan',
                            'L1', 'L2', 'Jackknife', 'YS1', 'YR1', 'Sharpened_Cosine'] = 'Euclidean',
                            linkage: Literal['Single', 'Average', 'Complete', 'Ward'] = 'Average',
-                           power_transform: bool = True, distance_threshold: Union[float, None] = None,
+                           power_transform: Literal[POWER_TRANSFORMS] = 'box-cox',
+                           distance_threshold: Union[float, None] = None,
                            plot_style: Literal['all', 'std_area', 'std_bar'] = 'all', split_plots: bool = False,
                            max_n_clusters_estimate: Union[PositiveInt, Literal['auto']] = 'auto',
                            parallel_backend: Literal[PARALLEL_BACKENDS] = 'loky',
@@ -4746,9 +4854,14 @@ class CountFilter(Filter):
         :param linkage: Which linkage criterion to use. The linkage criterion determines which distance to use between \
         sets of observation. The algorithm will merge the pairs of cluster that minimize this criterion.
         :type linkage: 'single', 'Average', 'complete', or 'ward' (default='Average')
-        :param power_transform: if True, RNAlysis will apply a power transform (Box-Cox) \
-        to the data prior to clustering.
-        :type power_transform: bool (default=True)
+        :param power_transform: the transformation applied to the data before it is standardized and \
+        clustered. 'box-cox' (the default) fits a separate power transform to every gene, which usually \
+        makes the data more normally distributed; it can be numerically unstable for a gene whose values \
+        are near-constant at a high magnitude (a reporter transgene, for example), in which case \
+        RNAlysis will tell you which genes to filter out. 'log' applies log2(x+1) to every value - \
+        simpler, and never unstable. 'none' standardizes the data without transforming it first. \
+        The legacy values True ('box-cox') and False ('none') are still accepted.
+        :type power_transform: 'box-cox', 'log', or 'none' (default='box-cox')
         :param distance_threshold: a distance threshold above which clusters will not be merged. \
         If a number is specified, `n_clusters` must be None.
         :type distance_threshold: float or None (default=None)
@@ -4777,7 +4890,7 @@ class CountFilter(Filter):
             >>> dev_stages.filter_low_reads(100)
             Filtered 44072 features, leaving 2326 of the original 46398 features. Filtered inplace.
             >>> clusters = dev_stages.split_hierarchical(n_clusters=13, metric='Euclidean',linkage='ward'
-            ...                                         ,power_transform=True)
+            ...                                         ,power_transform='box-cox')
             Filtered 1718 features, leaving 608 of the original 2326 features. Filtering result saved to new object.
             Filtered 1979 features, leaving 347 of the original 2326 features. Filtering result saved to new object.
             Filtered 2094 features, leaving 232 of the original 2326 features. Filtering result saved to new object.
@@ -4824,7 +4937,7 @@ class CountFilter(Filter):
                        random_seed: Union[NonNegativeInt, None] = None,
                        metric: Union[str, Literal['Euclidean', 'Cosine', 'Pearson', 'Spearman', 'Manhattan',
                        'L1', 'L2', 'Jackknife', 'YS1', 'YR1', 'Sharpened_Cosine', 'Hamming']] = 'Euclidean',
-                       power_transform: bool = True,
+                       power_transform: Literal[POWER_TRANSFORMS] = 'box-cox',
                        plot_style: Literal['all', 'std_area', 'std_bar'] = 'all', split_plots: bool = False,
                        max_n_clusters_estimate: Union[PositiveInt, Literal['auto']] = 'auto',
                        parallel_backend: Literal[PARALLEL_BACKENDS] = 'loky', gui_mode: bool = False
@@ -4847,9 +4960,14 @@ class CountFilter(Filter):
         :param metric: the distance metric used to determine similarity between data points. \
         For a full list of supported distance metrics see the user guide.
         :type metric: str (default='Euclidean')
-        :param power_transform: if True, RNAlysis will apply a power transform (Box-Cox) \
-        to the data prior to clustering.
-        :type power_transform: bool (default=True)
+        :param power_transform: the transformation applied to the data before it is standardized and \
+        clustered. 'box-cox' (the default) fits a separate power transform to every gene, which usually \
+        makes the data more normally distributed; it can be numerically unstable for a gene whose values \
+        are near-constant at a high magnitude (a reporter transgene, for example), in which case \
+        RNAlysis will tell you which genes to filter out. 'log' applies log2(x+1) to every value - \
+        simpler, and never unstable. 'none' standardizes the data without transforming it first. \
+        The legacy values True ('box-cox') and False ('none') are still accepted.
+        :type power_transform: 'box-cox', 'log', or 'none' (default='box-cox')
         :param plot_style: determines the visual style of the cluster expression plot.
         :type plot_style: 'all', 'std_area', or 'std_bar' (default='all')
         :param split_plots: if True, each discovered cluster will be plotted on its own. \
@@ -4873,7 +4991,7 @@ class CountFilter(Filter):
             >>> dev_stages = filtering.CountFilter('tests/test_files/elegans_developmental_stages.tsv')
             >>> dev_stages.filter_low_reads(100)
             Filtered 44072 features, leaving 2326 of the original 46398 features. Filtered inplace.
-            >>> clusters = dev_stages.split_kmedoids(n_clusters=14, metric='spearman', power_transform=True)
+            >>> clusters = dev_stages.split_kmedoids(n_clusters=14, metric='spearman', power_transform='box-cox')
             Filtered 1967 features, leaving 359 of the original 2326 features. Filtering result saved to new object.
             Filtered 2020 features, leaving 306 of the original 2326 features. Filtering result saved to new object.
             Filtered 2071 features, leaving 255 of the original 2326 features. Filtering result saved to new object.
@@ -4917,7 +5035,8 @@ class CountFilter(Filter):
     @readable_name('CLICOM (ensemble) clustering')
     def split_clicom(self, *parameter_dicts: dict,
                      replicate_grouping: Union[param_typing.GroupedColumns, Literal['ungrouped']] = 'ungrouped',
-                     power_transform: Union[bool, Tuple[bool, bool]] = True,
+                     power_transform: Union[Literal[POWER_TRANSFORMS],
+                                            List[Literal[POWER_TRANSFORMS]]] = 'box-cox',
                      evidence_threshold: param_typing.Fraction = 2 / 3, cluster_unclustered_features: bool = False,
                      min_cluster_size: PositiveInt = 15, plot_style: Literal['all', 'std_area', 'std_bar'] = 'all',
                      split_plots: bool = False, parallel_backend: Literal[PARALLEL_BACKENDS] = 'loky',
@@ -4942,10 +5061,15 @@ class CountFilter(Filter):
         To read more about the theory behind this, see the following publication: \
         https://doi.org/10.1093/bib/bbs057
         :type replicate_grouping: nested list of strings or 'ungrouped' (default='ungrouped')
-        :param power_transform: if True, RNAlysis will apply a power transform (Box-Cox) \
-        to the data prior to clustering. If both True and False are supplied, \
-        RNAlysis will run the initial clustering setups twice: once with a power transform, and once without.
-        :type power_transform: True, False, or (True, False) (default=True)
+        :param power_transform: the transformation applied to the data before it is standardized and \
+        clustered. 'box-cox' (the default) fits a separate power transform to every gene, which usually \
+        makes the data more normally distributed; it can be numerically unstable for a gene whose values \
+        are near-constant at a high magnitude (a reporter transgene, for example), in which case \
+        RNAlysis will tell you which genes to filter out. 'log' applies log2(x+1) to every value - \
+        simpler, and never unstable. 'none' standardizes the data without transforming it first. \
+        If more than one transform is supplied, RNAlysis will run the initial clustering setups once per \
+        transform. The legacy values True ('box-cox') and False ('none') are still accepted.
+        :type power_transform: 'box-cox', 'log', 'none', or a list of those (default='box-cox')
         :param evidence_threshold: determines whether each pair of features can be reliably clustered together. \
         For example, if evidence_threshold=0.5, a pair of features is considered reliably clustered together if \
         they were clustered together in at least 50% of the tested clustering solutions.
@@ -4990,7 +5114,7 @@ class CountFilter(Filter):
             ... {'method': 'hdbscan', 'min_cluster_size': [50, 75, 140], 'metric': ['ys1', 'yr1', 'spearman']},
             ... {'method': 'hierarchical', 'n_clusters': [7, 12], 'metric': ['Euclidean', 'jackknife', 'yr1'],
             ... 'linkage': ['average', 'ward']}, {'method': 'kmedoids', 'n_clusters': [7, 16], 'metric': 'spearman'},
-            ... power_transform=True, evidence_threshold=0.5, min_cluster_size=40)
+            ... power_transform='box-cox', evidence_threshold=0.5, min_cluster_size=40)
             Found 19 legal clustering setups.
             Running clustering setups: 100%|██████████| 19/19 [00:12<00:00,  1.49 setup/s]
             Generating cluster similarity matrix: 100%|██████████| [00:32<00:00, 651.06it/s]
@@ -5027,11 +5151,12 @@ class CountFilter(Filter):
         if replicate_grouping == 'ungrouped':
             replicate_grouping = [self.columns]
         else:
-            assert validation.isinstanceiter(replicate_grouping,
-                                             list), "'replicate_grouping' must contain only lists of strings!"
+            if not validation.isinstanceiter(replicate_grouping, list):
+                raise InvalidTypeError("'replicate_grouping' must contain only lists of strings!")
             for grp in replicate_grouping:
                 for cond in grp:
-                    assert cond in self.columns, f"column '{cond}' does not exist!"
+                    if cond not in self.columns:
+                        raise InvalidValueError(f"column '{cond}' does not exist!")
 
         runner = clustering.CLICOMRunner(self.df.select(pl.col(self._numeric_columns)), replicate_grouping,
                                          power_transform,
@@ -5060,7 +5185,8 @@ class CountFilter(Filter):
                       metric: Union[str, Literal['Euclidean', 'Cosine', 'Pearson', 'Spearman', 'Manhattan',
                       'L1', 'L2', 'Jackknife', 'YS1', 'YR1', 'Sharpened_Cosine', 'Hamming']] = 'Euclidean',
                       cluster_selection_epsilon: float = 0, cluster_selection_method: Literal['eom', 'leaf'] = 'eom',
-                      power_transform: bool = True, plot_style: Literal['all', 'std_area', 'std_bar'] = 'all',
+                      power_transform: Literal[POWER_TRANSFORMS] = 'box-cox',
+                      plot_style: Literal['all', 'std_area', 'std_bar'] = 'all',
                       split_plots: bool = False, return_probabilities: bool = False,
                       parallel_backend: Literal[PARALLEL_BACKENDS] = 'loky', gui_mode: bool = False
                       ) -> Union[Tuple['CountFilter', ...], List[Union[Tuple['CountFilter', ...], np.ndarray]], None]:
@@ -5086,9 +5212,14 @@ class CountFilter(Filter):
         'eom' will use an Excess of Mass algorithm to find the most persistent clusters. \
         'leaf' will select the leaves of the tree, providing the most fine-grained and homogenous clusters.
         :type cluster_selection_method: 'eom' or 'leaf' (default='eom')
-        :param power_transform: if True, RNAlysis will apply a power transform (Box-Cox) \
-        to the data prior to clustering.
-        :type power_transform: bool (default=True)
+        :param power_transform: the transformation applied to the data before it is standardized and \
+        clustered. 'box-cox' (the default) fits a separate power transform to every gene, which usually \
+        makes the data more normally distributed; it can be numerically unstable for a gene whose values \
+        are near-constant at a high magnitude (a reporter transgene, for example), in which case \
+        RNAlysis will tell you which genes to filter out. 'log' applies log2(x+1) to every value - \
+        simpler, and never unstable. 'none' standardizes the data without transforming it first. \
+        The legacy values True ('box-cox') and False ('none') are still accepted.
+        :type power_transform: 'box-cox', 'log', or 'none' (default='box-cox')
         :param plot_style: determines the visual style of the cluster expression plot.
         :type plot_style: 'all', 'std_area', or 'std_bar' (default='all')
         :param split_plots: if True, each discovered cluster will be plotted on its own. \
@@ -5112,7 +5243,7 @@ class CountFilter(Filter):
             >>> dev_stages = filtering.CountFilter('tests/test_files/elegans_developmental_stages.tsv')
             >>> dev_stages.filter_low_reads(100)
             Filtered 44072 features, leaving 2326 of the original 46398 features. Filtered inplace.
-            >>> clusters = dev_stages.split_hdbscan(min_cluster_size=75,metric='yr1',power_transform=True)
+            >>> clusters = dev_stages.split_hdbscan(min_cluster_size=75,metric='yr1',power_transform='box-cox')
             Found 14 clusters of average size 141.57. Number of unclustered genes is 344, which are 14.79% of the genes.
             Filtered 2019 features, leaving 307 of the original 2326 features. Filtering result saved to new object.
             Filtered 2122 features, leaving 204 of the original 2326 features. Filtering result saved to new object.
@@ -5224,15 +5355,18 @@ class CountFilter(Filter):
            Example plot of clustergram()
 
         """
-        assert isinstance(metric, str) and isinstance(linkage, str), "Linkage and Metric must be strings!"
+        if not (isinstance(metric, str) and isinstance(linkage, str)):
+            raise InvalidTypeError("Linkage and Metric must be strings!")
         metric = metric.lower()
         linkage = linkage.lower()
         metrics = ['correlation', 'cosine', 'euclidean',
                    'hamming', 'jaccard', 'jensenshannon', 'kulsinski', 'mahalanobis', 'matching', 'minkowski',
                    'rogerstanimoto', 'russellrao', 'sEuclidean', 'sokalmichener', 'sokalsneath', 'sqEuclidean', 'yule']
         linkages = ['single', 'complete', 'average', 'weighted', 'centroid', 'median', 'ward']
-        assert metric in metrics, f"Invalid metric {metric}."
-        assert linkage in linkages, f"Invalid linkage {linkage}."
+        if metric not in metrics:
+            raise InvalidValueError(f"Invalid metric {metric}.")
+        if linkage not in linkages:
+            raise InvalidValueError(f"Invalid linkage {linkage}.")
 
         if sample_names == 'all':
             sample_names = list(self.columns)
@@ -5321,9 +5455,11 @@ class CountFilter(Filter):
 
         """
         features = parsing.data_to_list(features)
-        assert validation.isinstanceiter(features, str), "'features' must be a string or list of strings!"
+        if not validation.isinstanceiter(features, str):
+            raise InvalidTypeError("'features' must be a string or list of strings!")
         for feature in features:
-            assert feature in self, f"Supplied feature '{feature}' does not appear in this table. "
+            if feature not in self:
+                raise InvalidValueError(f"Supplied feature '{feature}' does not appear in this table. ")
         if isinstance(samples, str) and samples.lower() == 'all':
             samples = [[item] for item in self.columns]
         else:
@@ -5422,7 +5558,8 @@ class CountFilter(Filter):
         return figs
 
     @readable_name('Sort table by contribution to a Principal Component (PCA)')
-    def sort_by_principal_component(self, component: PositiveInt, ascending: bool = True, power_transform: bool = True,
+    def sort_by_principal_component(self, component: PositiveInt, ascending: bool = True,
+                                    power_transform: Literal[POWER_TRANSFORMS] = 'box-cox',
                                     inplace: bool = True):
         """
          Performs Principal Component Analysis (PCA), and sort the table based on the contribution (loadings) \
@@ -5434,22 +5571,31 @@ class CountFilter(Filter):
         :type ascending: bool (default=Trle)
         :param ascending: Sort order: ascending (negative loadings at the top of the list) \
          versus descending (positive loadings at the top of the list).
-        :param power_transform: if True, RNAlysis will apply a power transform (Box-Cox) \
-        to the data prior to standartization and principal component analysis.
-        :type power_transform: bool (default=True)
+        :param power_transform: the transformation applied to the data before it is standardized and \
+        analyzed. 'box-cox' (the default) fits a separate power transform to every gene, which usually \
+        makes the data more normally distributed; it can be numerically unstable for a gene whose values \
+        are near-constant at a high magnitude (a reporter transgene, for example), in which case \
+        RNAlysis will tell you which genes to filter out. 'log' applies log2(x+1) to every value - \
+        simpler, and never unstable. 'none' standardizes the data without transforming it first. \
+        The legacy values True ('box-cox') and False ('none') are still accepted.
+        :type power_transform: 'box-cox', 'log', or 'none' (default='box-cox')
         :type inplace: bool (default=True)
         :param inplace: If True, perform the operation in-place. \
         Otherwise, returns a sorted copy of the Filter object without modifying the original.
         :return: None if inplace=True, a sorted Filter object otherwise.
         """
-        assert 0 < component <= self.shape[0], \
-            "'component' must be larger than 0 and equal or lower than the number of genes in the table!"
+        if not (0 < component <= self.shape[0]):
+            raise InvalidValueError(
+                "'component' must be larger than 0 and equal or lower than the number of genes in the table!")
         self._validate_is_normalized()
-        suffix = f'_sortbyPC{component}' + 'powertransform' * bool(power_transform)
+        # the Box-Cox suffix keeps its historical spelling, so that re-running an existing analysis keeps
+        # writing to the same file name
+        suffix = f'_sortbyPC{component}' + self._TRANSFORM_SUFFIXES[generic.parse_power_transform(power_transform)]
         data = self.df[self._numeric_columns].to_numpy().transpose()
-        data_standardized = generic.standard_box_cox(
-            data, parallel_backend=generic.box_cox_parallel_backend()) if power_transform else generic.standardize(data)
-        pca_obj = PCA(component)
+        data_standardized = generic.transform_and_standardize(
+            data, power_transform, parallel_backend=generic.box_cox_parallel_backend(),
+            feature_names=self._gene_names())
+        pca_obj = _sklearn.decomposition.PCA(component)
         pca_obj.fit(data_standardized)
         loading = self.df.select(pl.first()).with_columns(
             pl.DataFrame(pca_obj.components_.T[:, component - 1], schema=['sortOrder']))
@@ -5459,7 +5605,8 @@ class CountFilter(Filter):
 
     @readable_name('Split table by contribution to Principal Components (PCA)')
     def split_by_principal_components(self, components: Union[PositiveInt, List[PositiveInt]],
-                                      gene_fraction: param_typing.Fraction = 0.1, power_transform: bool = True
+                                      gene_fraction: param_typing.Fraction = 0.1,
+                                      power_transform: Literal[POWER_TRANSFORMS] = 'box-cox'
                                       ) -> Union[
         Tuple['CountFilter', 'CountFilter'], Tuple[Tuple['CountFilter', 'CountFilter'], ...]]:
         """
@@ -5476,16 +5623,25 @@ class CountFilter(Filter):
         For example, if gene_fraction=0.1, *RNAlysis* will return the top and bottom 5% of genes \
         based on their loadings for any principal component.
         :type gene_fraction: float between 0 and 1 (default=0.1)
-        :param power_transform: if True, RNAlysis will apply a power transform (Box-Cox) \
-        to the data prior to standartization and principal component analysis.
-        :type power_transform: bool (default=True)
+        :param power_transform: the transformation applied to the data before it is standardized and \
+        analyzed. 'box-cox' (the default) fits a separate power transform to every gene, which usually \
+        makes the data more normally distributed; it can be numerically unstable for a gene whose values \
+        are near-constant at a high magnitude (a reporter transgene, for example), in which case \
+        RNAlysis will tell you which genes to filter out. 'log' applies log2(x+1) to every value - \
+        simpler, and never unstable. 'none' standardizes the data without transforming it first. \
+        The legacy values True ('box-cox') and False ('none') are still accepted.
+        :type power_transform: 'box-cox', 'log', or 'none' (default='box-cox')
         """
         components = parsing.data_to_list(components)
-        assert validation.isinstanceiter(components, int), "'components' must be a list of integers!"
-        assert all([0 < component <= self.shape[0] for component in components]), \
-            "'components' must be larger than 0 and equal or lower than the number of genes in the table!"
-        assert isinstance(gene_fraction, float) and 0 <= gene_fraction <= 1, \
-            "'gene_fraction' must be a number between 0 and 1!"
+        if not validation.isinstanceiter(components, int):
+            raise InvalidTypeError("'components' must be a list of integers!")
+        if not all([0 < component <= self.shape[0] for component in components]):
+            raise InvalidValueError(
+                "'components' must be larger than 0 and equal or lower than the number of genes in the table!")
+        if not isinstance(gene_fraction, float):
+            raise InvalidTypeError("'gene_fraction' must be a number between 0 and 1!")
+        if not 0 <= gene_fraction <= 1:
+            raise InvalidValueError("'gene_fraction' must be a number between 0 and 1!")
         self._validate_is_normalized()
 
         n_components = max(components)
@@ -5494,10 +5650,11 @@ class CountFilter(Filter):
               f'contributing to each specified Principal Component...')
 
         data = self.df[self._numeric_columns].transpose()
-        data_standardized = generic.standard_box_cox(
-            data, parallel_backend=generic.box_cox_parallel_backend()) if power_transform else generic.standardize(data)
+        data_standardized = generic.transform_and_standardize(
+            data, power_transform, parallel_backend=generic.box_cox_parallel_backend(),
+            feature_names=self._gene_names())
 
-        pca_obj = PCA(n_components)
+        pca_obj = _sklearn.decomposition.PCA(n_components)
         pca_obj.fit(data_standardized)
         loadings = self.df.select(pl.first()).with_columns(
             pl.DataFrame(pca_obj.components_.T, schema=[f"{i + 1}" for i in range(n_components)]))
@@ -5515,10 +5672,11 @@ class CountFilter(Filter):
 
     @readable_name('Principal Component Analysis (PCA) plot')
     def pca(self, samples: Union[param_typing.GroupedColumns, Literal['all']] = 'all', n_components: PositiveInt = 3,
-            power_transform: bool = True, labels: bool = True, title: Union[str, Literal['auto']] = 'auto',
+            power_transform: Literal[POWER_TRANSFORMS] = 'box-cox', labels: bool = True,
+            title: Union[str, Literal['auto']] = 'auto',
             title_fontsize: float = 20, label_fontsize: float = 16, tick_fontsize: float = 12,
             proportional_axes: bool = False, plot_grid: bool = True, legend: Union[List[str], None] = None) -> Tuple[
-        PCA, List[plt.Figure]]:
+        'PCA', List[plt.Figure]]:
         """
         Performs Principal Component Analysis (PCA), visualizing the principal components that explain the most\
         variance between the different samples. The function will standardize the data prior to PCA, and then plot \
@@ -5535,9 +5693,14 @@ class CountFilter(Filter):
         :type n_components: int >=2 (default=3)
         :param labels: if True, *RNAlysis* will display labels with the sample names next to each sample on the graph.
         :type labels: bool (default=True)
-        :param power_transform: if True, RNAlysis will apply a power transform (Box-Cox) \
-        to the data prior to standartization and principal component analysis.
-        :type power_transform: bool (default=True)
+        :param power_transform: the transformation applied to the data before it is standardized and \
+        analyzed. 'box-cox' (the default) fits a separate power transform to every gene, which usually \
+        makes the data more normally distributed; it can be numerically unstable for a gene whose values \
+        are near-constant at a high magnitude (a reporter transgene, for example), in which case \
+        RNAlysis will tell you which genes to filter out. 'log' applies log2(x+1) to every value - \
+        simpler, and never unstable. 'none' standardizes the data without transforming it first. \
+        The legacy values True ('box-cox') and False ('none') are still accepted.
+        :type power_transform: 'box-cox', 'log', or 'none' (default='box-cox')
         :param title: The title of the plot. If 'auto', a title will be generated automatically.
         :type title: str or 'auto' (default='auto')
         :param title_fontsize: determines the font size of the graph title.
@@ -5564,17 +5727,20 @@ class CountFilter(Filter):
            Example plot of pca()
 
         """
-        assert isinstance(n_components, int) and n_components >= 2, \
-            f"'n_components' must be an integer >=2. Instead got {n_components}."
+        if not isinstance(n_components, int):
+            raise InvalidTypeError(f"'n_components' must be an integer >=2. Instead got {n_components}.")
+        if not n_components >= 2:
+            raise InvalidValueError(f"'n_components' must be an integer >=2. Instead got {n_components}.")
         self._validate_is_normalized()
 
         if samples == 'all':
             samples = [[col] for col in self._numeric_columns]
         data = self.df.select(pl.col(parsing.flatten(samples))).transpose()
-        data_standardized = generic.standard_box_cox(
-            data, parallel_backend=generic.box_cox_parallel_backend()) if power_transform else generic.standardize(data)
+        data_standardized = generic.transform_and_standardize(
+            data, power_transform, parallel_backend=generic.box_cox_parallel_backend(),
+            feature_names=self._gene_names())
 
-        pca_obj = PCA()
+        pca_obj = _sklearn.decomposition.PCA()
         pcomps = pca_obj.fit_transform(data_standardized)
         columns = [f'Principal component {i + 1}' for i in range(n_components)]
         principal_df = pl.DataFrame(data=pcomps[:, 0:n_components], schema=columns)
@@ -6015,7 +6181,8 @@ class CountFilter(Filter):
             """
         file_suffix = '.csv'
         if save_csv:
-            assert isinstance(fname, str)
+            if not isinstance(fname, str):
+                raise InvalidTypeError
 
             if not fname.endswith(file_suffix):
                 fname += file_suffix
@@ -6027,7 +6194,8 @@ class CountFilter(Filter):
         for item in sorted(folder.iterdir()):
             if item.is_file() and item.suffix == input_format:
                 counts = counts.with_columns(pl.read_csv(item, separator='\t').select(pl.last().alias(item.stem)))
-        assert len(counts) > 0, f"No valid files with the suffix '{input_format}' were found in '{folder_path}'."
+        if not (len(counts) > 0):
+            raise InvalidValueError(f"No valid files with the suffix '{input_format}' were found in '{folder_path}'.")
 
         if save_csv:
             io.save_table(df=counts, filename=counted_fname)
@@ -6079,8 +6247,10 @@ class CountFilter(Filter):
         file_suffix = '.csv'
         misc_names = ['__no_feature', '__ambiguous', '__alignment_not_unique', '__too_low_aQual', '__not_aligned']
         if save_csv:
-            assert isinstance(counted_fname, str)
-            assert isinstance(uncounted_fname, str)
+            if not isinstance(counted_fname, str):
+                raise InvalidTypeError
+            if not isinstance(uncounted_fname, str):
+                raise InvalidTypeError
 
             if not counted_fname.endswith(file_suffix):
                 counted_fname += file_suffix
@@ -6099,7 +6269,9 @@ class CountFilter(Filter):
                     df = this_df.rename({this_df.columns[1]: item.stem, this_df.columns[0]: ''})
                     continue
                 df = df.with_columns(this_df.select(pl.nth(-1).alias(item.stem)))
-        assert df.shape[1] > 0, f"Error: no valid files with the suffix '{input_format}' were found in '{folder_path}'."
+        if not (df.shape[1] > 0):
+            raise InvalidValueError(
+                f"Error: no valid files with the suffix '{input_format}' were found in '{folder_path}'.")
 
         uncounted = df.filter(pl.first().is_in(misc_names))
         counts = df.filter(~pl.first().is_in(misc_names))
@@ -6145,13 +6317,15 @@ class Pipeline(generic.GenericPipeline):
             >>> deseq_pipe = filtering.Pipeline('deseqfilter')
 
         """
-        assert isinstance(filter_type,
-                          (type, str)), f"'filter_type' must be type of a Filter object, is instead {type(filter_type)}"
+        if not isinstance(filter_type, (type, str)):
+            raise InvalidTypeError(f"'filter_type' must be type of a Filter object, is instead {type(filter_type)}")
         if isinstance(filter_type, str):
-            assert filter_type.lower() in self.FILTER_TYPES, f"Invalid filter_type {filter_type}. "
+            if filter_type.lower() not in self.FILTER_TYPES:
+                raise InvalidValueError(f"Invalid filter_type {filter_type}. ")
             filter_type = self.FILTER_TYPES[filter_type.lower()]
         else:
-            assert filter_type in self.FILTER_TYPES.values(), f"Invalid filter_type {filter_type}"
+            if filter_type not in self.FILTER_TYPES.values():
+                raise InvalidValueError(f"Invalid filter_type {filter_type}")
         self.filter_type = filter_type
         super().__init__()
 
@@ -6181,9 +6355,17 @@ class Pipeline(generic.GenericPipeline):
         return d
 
     def _init_from_dict(self, pipeline_dict: dict):
-        self.filter_type = self.FILTER_TYPES[pipeline_dict['filter_type']]
-        self.params = [(parsing.data_to_tuple(p[0]), p[1]) for p in pipeline_dict['params']]
-        self.functions = [getattr(self.filter_type, func) for func in pipeline_dict['functions']]
+        self._validate_pipeline_dict(pipeline_dict)
+        filter_type = pipeline_dict.get('filter_type')
+        # filter types are matched case-insensitively, exactly like in Pipeline.__init__
+        if not isinstance(filter_type, str) or filter_type.lower() not in self.FILTER_TYPES:
+            raise self._pipeline_load_error(pipeline_dict,
+                                            f"'{filter_type}' is not a valid Pipeline filter type. "
+                                            f"Valid filter types are: {sorted(self.FILTER_TYPES.keys())}.")
+        self.filter_type = self.FILTER_TYPES[filter_type.lower()]
+        self.params = self._params_from_dict(pipeline_dict)
+        self.functions = [self._resolve_function(func, self.filter_type, self.filter_type.__name__, pipeline_dict)
+                          for func in pipeline_dict['functions']]
 
     def _func_signature(self, func: types.FunctionType, args: tuple, kwargs: dict):
         """
@@ -6226,12 +6408,12 @@ class Pipeline(generic.GenericPipeline):
         """
         if isinstance(func, str):
             func = func.lower()  # function names are always expected to be lowercase. This prevents capitalized typos.
-            assert hasattr(self.filter_type, func), \
-                f"Function {func} does not exist for filter_type {self.filter_type}."
+            if not hasattr(self.filter_type, func):
+                raise InvalidValueError(f"Function {func} does not exist for filter_type {self.filter_type}.")
             func = getattr(self.filter_type, func)
         else:
-            assert hasattr(self.filter_type, func.__name__) and getattr(self.filter_type, func.__name__) == func, \
-                f"Function {func.__name__} does not exist for filter_type {self.filter_type}. "
+            if not (hasattr(self.filter_type, func.__name__) and getattr(self.filter_type, func.__name__) == func):
+                raise InvalidValueError(f"Function {func.__name__} does not exist for filter_type {self.filter_type}. ")
         if 'inplace' in kwargs:
             warnings.warn(
                 'The "inplace" argument supplied to this function will be ignored. '
@@ -6422,9 +6604,9 @@ class Pipeline(generic.GenericPipeline):
         """
         self._validate_pipeline()
         # noinspection PyTypeHints
-        assert issubclass(filter_object.__class__,
-                          self.filter_type), f"Supplied filter object of type {type(filter_object)} " \
-                                             f"mismatches the specified filter_type {self.filter_type}. "
+        if not issubclass(filter_object.__class__, self.filter_type):
+            raise InvalidTypeError(f"Supplied filter object of type {type(filter_object)} "
+                                   f"mismatches the specified filter_type {self.filter_type}. ")
 
         original_filter_obj = copy.copy(filter_object)
         other_outputs = dict()
@@ -6436,8 +6618,10 @@ class Pipeline(generic.GenericPipeline):
                 filter_object = self._apply_filter_norm_sort(func, filter_object, args, kwargs, inplace, other_outputs,
                                                              other_cnt)
             elif func.__name__.startswith('split'):
-                assert not inplace, f"Cannot apply the split function {self._func_signature(func, args, kwargs)} " \
-                                    f"when inplace={inplace}!"
+                if inplace:
+                    raise InvalidValueError(
+                        f"Cannot apply the split function {self._func_signature(func, args, kwargs)} "
+                        f"when inplace={inplace}!")
                 filter_object = self._apply_split(func, filter_object, args, kwargs, other_outputs, other_cnt)
             else:
                 self._apply_other(func, filter_object, args, kwargs, other_outputs, other_cnt)

@@ -2,6 +2,7 @@ from unittest.mock import MagicMock
 
 import pytest
 
+from rnalysis.exceptions import InternalError
 from rnalysis.utils import installs
 from rnalysis.utils.installs import *
 
@@ -76,6 +77,38 @@ def test_install_jdk_already_installed(monkeypatch):
     mock_install.assert_not_called()
 
 
+def test_install_jdk_retries_transient_download_error(monkeypatch):
+    monkeypatch.setattr(installs, 'is_jdk_installed', lambda: False)
+    monkeypatch.setattr('pathlib.Path.exists', lambda self: False)
+    monkeypatch.setattr('time.sleep', lambda *args, **kwargs: None)  # don't actually wait between retries
+    attempts = {'n': 0}
+
+    def flaky_install(*args, **kwargs):
+        attempts['n'] += 1
+        if attempts['n'] < 3:
+            raise installs.jdk.JdkError('Remote end closed connection without response')
+
+    monkeypatch.setattr('jdk.install', flaky_install)
+    install_jdk()
+    assert attempts['n'] == 3  # failed twice, succeeded on the third try
+
+
+def test_install_jdk_reraises_after_exhausting_retries(monkeypatch):
+    monkeypatch.setattr(installs, 'is_jdk_installed', lambda: False)
+    monkeypatch.setattr('pathlib.Path.exists', lambda self: False)
+    monkeypatch.setattr('time.sleep', lambda *args, **kwargs: None)
+    attempts = {'n': 0}
+
+    def always_fail(*args, **kwargs):
+        attempts['n'] += 1
+        raise installs.jdk.JdkError('Remote end closed connection without response')
+
+    monkeypatch.setattr('jdk.install', always_fail)
+    with pytest.raises(installs.jdk.JdkError):
+        install_jdk()
+    assert attempts['n'] == 3  # gives up after 3 attempts
+
+
 # Test is_picard_installed
 def test_is_picard_installed_success(monkeypatch, mock_jdk_install):
     monkeypatch.setattr(io, 'run_subprocess', lambda *args, **kwargs: (None, ['Version']))
@@ -123,3 +156,51 @@ def test_install_deseq2():
 
 def test_install_rsubread():
     install_rsubread()
+
+
+# --- R install failure guidance -------------------------------------------------------------------
+# A failing R package installation (most often: no write permission to R's library folder) raises
+# ChildProcessError out of io.run_r_script. These pin that the write-permission guidance actually
+# reaches the user, and that the underlying R error stays chained so its output is still visible.
+
+R_INSTALLERS = [(install_limma, 'limma'), (install_deseq2, 'DESeq2'), (install_rsubread, 'RSubread')]
+
+
+@pytest.mark.parametrize('installer,package_name', R_INSTALLERS)
+def test_r_installer_surfaces_permission_guidance(monkeypatch, installer, package_name):
+    original = ChildProcessError("R script failed to execute: 'Error in install.packages: "
+                                 "unable to create /usr/lib/R/library'.")
+
+    def raise_child_process_error(*args, **kwargs):
+        raise original
+
+    monkeypatch.setattr(installs.io, 'run_r_script', raise_child_process_error)
+
+    with pytest.raises(ChildProcessError) as err:
+        installer()
+
+    message = str(err.value)
+    assert f'Failed to install {package_name}' in message
+    assert "write permission to R's library folder" in message
+    assert f'install {package_name} manually' in message
+    # the guidance is an environment problem, not an RNAlysis bug - no report-a-bug suffix
+    assert 'bug in RNAlysis' not in message
+    # the original R failure stays chained so its output remains visible
+    assert err.value.__cause__ is original
+
+
+@pytest.mark.parametrize('installer,package_name', R_INSTALLERS)
+def test_r_installer_propagates_internal_error_unchanged(monkeypatch, installer, package_name):
+    """A missing bundled install script is an RNAlysis bug, not a permissions problem - it must not
+    be relabelled as one."""
+    original = InternalError('Could not find the requested R script: some/path.R')
+
+    def raise_internal_error(*args, **kwargs):
+        raise original
+
+    monkeypatch.setattr(installs.io, 'run_r_script', raise_internal_error)
+
+    with pytest.raises(InternalError) as err:
+        installer()
+    assert err.value is original
+    assert "write permission to R's library folder" not in str(err.value)

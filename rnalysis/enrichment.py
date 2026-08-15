@@ -11,14 +11,13 @@ import warnings
 from pathlib import Path
 from typing import Dict, Iterable, List, Literal, Sequence, Set, Tuple, Union
 
+import lazy_loader as lazy
 import matplotlib
 import matplotlib.pyplot as plt
-import matplotlib_venn as vn
 import numpy as np
-import pandas as pd
 import polars as pl
-import upsetplot
 
+from rnalysis.exceptions import InvalidTypeError, InvalidValueError
 from rnalysis.filtering import Filter, readable_name
 from rnalysis.utils import (enrichment_runner, generic, io, ontology,
                             param_typing, parsing, settings, validation)
@@ -30,6 +29,15 @@ from rnalysis.utils.param_typing import (BIOTYPE_ATTRIBUTE_NAMES, BIOTYPES,
                                          PositiveInt, get_ensembl_taxons,
                                          get_gene_id_types, get_panther_taxons,
                                          get_phylomedb_taxons)
+
+# The set-visualization stack is only needed by a handful of plotting functions but costs ~1s to
+# import (matplotlib_venn drags in scipy.optimize, upsetplot drags in pandas), so all three are
+# loaded lazily (SPEC 1 / https://scientific-python.org/specs/spec-0001/). Nothing may touch an
+# attribute of these proxies at import time -- doing so imports the package and defeats the whole
+# point. Guarded by tests/test_imports.py.
+pd = lazy.load('pandas')
+vn = lazy.load('matplotlib_venn')
+upsetplot = lazy.load('upsetplot')
 
 
 class FeatureSet(set):
@@ -53,7 +61,8 @@ class FeatureSet(set):
             >>> my_other_set = enrichment.FeatureSet(filter_obj, 'name of my other set')
 
         """
-        assert isinstance(set_name, str), f"'set_name' must be of type str, instead got {type(set_name)}."
+        if not isinstance(set_name, str):
+            raise InvalidTypeError(f"'set_name' must be of type str, instead got {type(set_name)}.")
         if gene_set is None:
             gene_set = parsing.data_to_set(parsing.from_string(
                 "Please insert genomic features/indices separated by newline \n"
@@ -629,7 +638,8 @@ class FeatureSet(set):
         :param new_name: the new set name
         :type new_name: str
         """
-        assert isinstance(new_name, str), f"New set name must be of type str. Instead, got {type(new_name)}"
+        if not isinstance(new_name, str):
+            raise InvalidTypeError(f"New set name must be of type str. Instead, got {type(new_name)}")
         self.set_name = new_name
 
     def save_txt(self, fname: Union[str, Path]):
@@ -640,7 +650,8 @@ class FeatureSet(set):
         :param fname: full filename/path for the output file. Can include the '.txt' suffix but doesn't have to.
 
         """
-        assert isinstance(fname, (str, Path)), "fname must be str or pathlib.Path!"
+        if not isinstance(fname, (str, Path)):
+            raise InvalidTypeError("fname must be str or pathlib.Path!")
         if isinstance(fname, str):
             if not fname.endswith('.txt'):
                 fname = fname + '.txt'
@@ -1357,7 +1368,8 @@ class RankedSet(FeatureSet):
                             f"Instead got {type(ranked_genes)}.")
 
         super().__init__(ranked_genes, set_name)
-        assert len(self.ranked_genes) == len(self.gene_set), "'ranked_genes' must have no repeating elements!"
+        if len(self.ranked_genes) != len(self.gene_set):
+            raise InvalidValueError("'ranked_genes' must have no repeating elements!")
 
     def __copy__(self):
         obj = type(self)(self.ranked_genes.copy(), self.set_name)
@@ -1910,7 +1922,8 @@ def _fetch_sets(objs: dict, ref: Union[str, Path, Literal['predefined']] = 'pred
     :type ref: str or pathlib.Path (default='predefined')
     :return: a dictionary, where the keys are names of sets and the values are python sets of feature indices.
     """
-    assert isinstance(objs, dict), f"objs must be a dictionary. Instaed got {type(objs)}"
+    if not isinstance(objs, dict):
+        raise InvalidTypeError(f"objs must be a dictionary. Instaed got {type(objs)}")
     fetched_sets = dict()
 
     if validation.isinstanceiter_any(objs.values(), str):
@@ -2081,7 +2094,8 @@ def venn_diagram(objs: Dict[str, Union[str, FeatureSet, Set[str]]], title: Union
     """
     if len(objs) > 3 or len(objs) < 2:
         raise ValueError(f'Venn can only accept between 2 and 3 sets. Instead got {len(objs)}')
-    assert isinstance(title, str), f'Title must be a string. Instead got {type(title)}'
+    if not isinstance(title, str):
+        raise InvalidTypeError(f'Title must be a string. Instead got {type(title)}')
     objs = _fetch_sets(objs=objs, ref=attr_ref_table_path)
     set_colors = parsing.data_to_tuple(set_colors)
     if len(set_colors) == 1:
@@ -2148,7 +2162,8 @@ def gene_ontology_graph(aspect: Literal[param_typing.GO_ASPECTS], results_table_
     :type dpi: int (default=300)
     """
     results_df = io.load_table(results_table_path)
-    assert enrichment_score_column in results_df, f"Invalid enrichment_score_col '{enrichment_score_column}'"
+    if enrichment_score_column not in results_df:
+        raise InvalidValueError(f"Invalid enrichment_score_col '{enrichment_score_column}'")
     dag_tree = ontology.fetch_go_basic()
     return dag_tree.plot_ontology(aspect, results_df, enrichment_score_column, title, ylabel, graph_format, dpi)
 

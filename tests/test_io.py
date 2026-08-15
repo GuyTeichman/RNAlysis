@@ -1,12 +1,16 @@
 import random
 import re
+import stat
 import warnings
+import zipfile
 from unittest import mock
 from unittest.mock import Mock, MagicMock
 
+import platformdirs
 import pytest
 import requests_mock
 
+from rnalysis.exceptions import CorruptSessionError, InternalError, InvalidTypeError
 from rnalysis.utils import io
 from rnalysis.utils.io import *
 from rnalysis.utils.io import _ensembl_lookup_post_request, _format_ids_iter
@@ -58,7 +62,7 @@ class AsyncMockResponse(MockResponse):
 
 def test_load_csv_bad_input():
     invalid_input = 2349
-    with pytest.raises(AssertionError):
+    with pytest.raises(InvalidTypeError):
         load_table(invalid_input)
 
 
@@ -1013,8 +1017,113 @@ def test_find_best_gene_mapping_picks_best_result_and_swallows_http_error(monkey
 def test_get_todays_cache_dir():
     today = date.today()
     today_str = str(today.year) + '_' + str(today.month).zfill(2) + '_' + str(today.day).zfill(2)
-    cache_dir_truth = os.path.join(appdirs.user_cache_dir('RNAlysis'), today_str)
+    cache_dir_truth = os.path.join(platformdirs.user_cache_dir('RNAlysis'), today_str)
     assert cache_dir_truth == str(get_todays_cache_dir())
+
+
+def test_get_data_dir_matches_legacy_appdirs_path(monkeypatch):
+    """Pin get_data_dir() to the exact directory appdirs 1.4.4 resolved
+    (appdirs.user_data_dir('RNAlysis', roaming=True)), so existing users' settings are found."""
+    if sys.platform == 'win32':
+        # appdirs: os.path.join(normpath(CSIDL_APPDATA), appauthor, appname) with appauthor
+        # defaulting to appname
+        expected = Path(os.path.normpath(os.environ['APPDATA']), 'RNAlysis', 'RNAlysis')
+    elif sys.platform == 'darwin':
+        # appdirs always ignored the XDG env vars on macOS; remove them so the new implementation
+        # is compared against the appdirs-era default location
+        monkeypatch.delenv('XDG_DATA_HOME', raising=False)
+        expected = Path('~/Library/Application Support/RNAlysis').expanduser()
+    else:
+        # appdirs: os.getenv('XDG_DATA_HOME', '~/.local/share') + '/RNAlysis'
+        xdg_data_home = os.environ.get('XDG_DATA_HOME', '').strip()
+        expected = Path(xdg_data_home if xdg_data_home else os.path.expanduser('~/.local/share'), 'RNAlysis')
+    assert io.get_data_dir() == expected
+
+
+def test_cache_dir_matches_legacy_appdirs_path(monkeypatch):
+    """Pin the base cache dir to the exact directory appdirs 1.4.4 resolved
+    (appdirs.user_cache_dir('RNAlysis')), so existing users' caches keep working."""
+    if sys.platform == 'win32':
+        # appdirs: os.path.join(normpath(CSIDL_LOCAL_APPDATA), appauthor, appname, 'Cache')
+        expected = Path(os.path.normpath(os.environ['LOCALAPPDATA']), 'RNAlysis', 'RNAlysis', 'Cache')
+    elif sys.platform == 'darwin':
+        monkeypatch.delenv('XDG_CACHE_HOME', raising=False)
+        expected = Path('~/Library/Caches/RNAlysis').expanduser()
+    else:
+        xdg_cache_home = os.environ.get('XDG_CACHE_HOME', '').strip()
+        expected = Path(xdg_cache_home if xdg_cache_home else os.path.expanduser('~/.cache'), 'RNAlysis')
+    assert io.get_gui_cache_dir().parent == expected
+
+
+def test_get_data_dir_uses_platformdirs(monkeypatch, tmp_path):
+    resolved = tmp_path.joinpath('resolved_data_dir')
+    monkeypatch.setattr(io.platformdirs, 'user_data_dir',
+                        lambda appname, *args, **kwargs: str(resolved.joinpath(appname)))
+    # neutralize the macOS legacy-dir migration so this test never touches a real data dir
+    monkeypatch.setattr(io, '_get_legacy_macos_data_dir', lambda: tmp_path.joinpath('nonexistent'))
+    assert io.get_data_dir() == resolved.joinpath('RNAlysis')
+
+
+def test_get_data_dir_macos_migrates_legacy_dir(monkeypatch, tmp_path):
+    """On macOS, platformdirs honors $XDG_DATA_HOME (appdirs never did). When that moves the
+    resolved dir, the legacy appdirs-era dir (which holds the user's settings) must be migrated."""
+    new_dir = tmp_path.joinpath('xdg_data', 'RNAlysis')
+    legacy_dir = tmp_path.joinpath('Application Support', 'RNAlysis')
+    legacy_dir.mkdir(parents=True)
+    legacy_dir.joinpath('settings.yaml').write_text('key: value')
+    monkeypatch.setattr(io.sys, 'platform', 'darwin')
+    monkeypatch.setattr(io.platformdirs, 'user_data_dir', lambda *args, **kwargs: str(new_dir))
+    monkeypatch.setattr(io, '_get_legacy_macos_data_dir', lambda: legacy_dir)
+
+    assert io.get_data_dir() == new_dir
+    assert new_dir.joinpath('settings.yaml').read_text() == 'key: value'
+    assert not legacy_dir.exists()
+
+
+def test_get_data_dir_macos_no_migration_when_new_dir_exists(monkeypatch, tmp_path):
+    new_dir = tmp_path.joinpath('xdg_data', 'RNAlysis')
+    new_dir.mkdir(parents=True)
+    new_dir.joinpath('settings.yaml').write_text('new')
+    legacy_dir = tmp_path.joinpath('Application Support', 'RNAlysis')
+    legacy_dir.mkdir(parents=True)
+    legacy_dir.joinpath('settings.yaml').write_text('legacy')
+    monkeypatch.setattr(io.sys, 'platform', 'darwin')
+    monkeypatch.setattr(io.platformdirs, 'user_data_dir', lambda *args, **kwargs: str(new_dir))
+    monkeypatch.setattr(io, '_get_legacy_macos_data_dir', lambda: legacy_dir)
+
+    assert io.get_data_dir() == new_dir
+    assert new_dir.joinpath('settings.yaml').read_text() == 'new'
+    assert legacy_dir.joinpath('settings.yaml').read_text() == 'legacy'
+
+
+def test_get_data_dir_no_migration_outside_macos(monkeypatch, tmp_path):
+    new_dir = tmp_path.joinpath('xdg_data', 'RNAlysis')
+    legacy_dir = tmp_path.joinpath('Application Support', 'RNAlysis')
+    legacy_dir.mkdir(parents=True)
+    monkeypatch.setattr(io.sys, 'platform', 'linux')
+    monkeypatch.setattr(io.platformdirs, 'user_data_dir', lambda *args, **kwargs: str(new_dir))
+    monkeypatch.setattr(io, '_get_legacy_macos_data_dir', lambda: legacy_dir)
+
+    assert io.get_data_dir() == new_dir
+    assert legacy_dir.exists()
+    assert not new_dir.exists()
+
+
+def test_get_data_dir_macos_migration_failure_falls_back_to_legacy(monkeypatch, tmp_path):
+    def raise_oserror(*args, **kwargs):
+        raise OSError('migration failed')
+
+    new_dir = tmp_path.joinpath('xdg_data', 'RNAlysis')
+    legacy_dir = tmp_path.joinpath('Application Support', 'RNAlysis')
+    legacy_dir.mkdir(parents=True)
+    legacy_dir.joinpath('settings.yaml').write_text('legacy')
+    monkeypatch.setattr(io.sys, 'platform', 'darwin')
+    monkeypatch.setattr(io.platformdirs, 'user_data_dir', lambda *args, **kwargs: str(new_dir))
+    monkeypatch.setattr(io, '_get_legacy_macos_data_dir', lambda: legacy_dir)
+    monkeypatch.setattr(io.shutil, 'move', raise_oserror)
+
+    assert io.get_data_dir() == legacy_dir
+    assert legacy_dir.joinpath('settings.yaml').read_text() == 'legacy'
 
 
 def test_load_cached_file():
@@ -1592,6 +1701,267 @@ def test_save_session_flushes_before_moving_files(monkeypatch, tmp_path):
     mgr.save_session([], [], {}, {})
     assert order and order[0] == 'flush', "save_session must flush before moving/copying cache files"
     assert 'save_files' in order
+
+
+# --- session save/load robustness ---------------------------------------------------------------
+# A session file is the record of a scientist's multi-hour analysis: overwriting one must never
+# destroy the previous file before its replacement exists, loading one must never modify the
+# user's file, and a broken session file is user-facing breakage - not an internal-bug report.
+
+
+def _write_broken_session(path: Path, session_data: dict, extra_files: dict = None):
+    """Build a .rnal archive whose session_data.yaml references files that are not in it."""
+    with zipfile.ZipFile(path, 'w') as archive:
+        archive.writestr('session_data.yaml', yaml.safe_dump(session_data))
+        for name, content in (extra_files or {}).items():
+            archive.writestr(name, content)
+
+
+def _broken_session_data(version: str = '3.2.2') -> dict:
+    return {'files': {'missing_table.parquet': ('my table', 'CountFilter', {}, 1)},
+            'pipelines': {},
+            'metadata': {'creation_time': '2022/12/01, 16:47:40', 'name': 'broken', 'n_tabs': 1,
+                         'n_pipelines': 0, 'tab_order': ['missing_table.parquet'],
+                         'rnalysis_version': version},
+            'session_report_data': {'report': None, 'item_paths': {}}}
+
+
+@pytest.mark.unit
+def test_save_session_replaces_existing_file_and_leaves_no_temp_files(tmp_path):
+    target = tmp_path.joinpath('sess.rnal')
+    target.write_bytes(b'previous session contents')
+
+    GUISessionManager(target).save_session([], [], None, {})
+
+    assert zipfile.is_zipfile(target)
+    assert [pth.name for pth in tmp_path.iterdir()] == ['sess.rnal']
+
+    file_data, pipeline_data, report = GUISessionManager(target).load_session()
+    assert file_data == []
+    assert pipeline_data == []
+    assert report is None
+
+
+@pytest.mark.unit
+def test_save_and_load_session_round_trip(tmp_path):
+    target = tmp_path.joinpath('roundtrip.rnal')
+    table = pl.DataFrame({'genes': ['WBGene00000001', 'WBGene00000002'], 'cond1': [1, 2]})
+    cache_gui_file(table, 'roundtrip_table.parquet')
+    report_file = Path('roundtrip_report_item.txt')
+    get_gui_cache_dir().joinpath(report_file).write_text('report item contents')
+
+    file_data = [FileData(filename='roundtrip_table.parquet', item_name='my table', item_type='CountFilter',
+                          item_property={}, item_id=3)]
+    pipeline_data = [PipelineData(name='My Pipeline',
+                                  content='filter_type: countfilter\nfunctions: []\nparams: []\n')]
+
+    try:
+        GUISessionManager(target).save_session(file_data, pipeline_data, {'nodes': {}}, {'3': report_file})
+        loaded_files, loaded_pipelines, report = GUISessionManager(target).load_session()
+
+        assert [file.filename for file in loaded_files] == ['roundtrip_table.parquet']
+        assert loaded_files[0].item_name == 'my table'
+        assert loaded_files[0].item_type == 'CountFilter'
+        assert loaded_files[0].item_id == 3
+        assert loaded_files[0].obj.equals(table)
+        assert loaded_pipelines == pipeline_data
+        assert report == {'nodes': {}}
+        assert get_gui_cache_dir().joinpath(report_file).read_text() == 'report item contents'
+        assert [pth.name for pth in tmp_path.iterdir()] == ['roundtrip.rnal']
+    finally:
+        get_gui_cache_dir().joinpath(report_file).unlink(missing_ok=True)
+        get_gui_cache_dir().joinpath('roundtrip_table.parquet').unlink(missing_ok=True)
+
+
+@pytest.mark.unit
+def test_save_session_over_a_stale_session_directory(tmp_path):
+    # a crash under a pre-4.3.0 RNAlysis left a half-built <name>.rnal *directory* behind;
+    # saving over one must still work, since os.replace cannot overwrite a directory
+    target = tmp_path.joinpath('sess.rnal')
+    target.mkdir()
+    target.joinpath('leftover.parquet').write_text('leftover from a crashed save')
+
+    GUISessionManager(target).save_session([], [], None, {})
+
+    assert target.is_file()
+    assert zipfile.is_zipfile(target)
+    assert [pth.name for pth in tmp_path.iterdir()] == ['sess.rnal']
+
+
+@pytest.mark.unit
+def test_save_session_flushes_the_archive_to_disk_before_replacing(monkeypatch, tmp_path):
+    # os.replace only makes the directory-entry swap atomic - the replacement's contents must
+    # already be on disk, or a power loss can leave a session file that was never written
+    order = []
+    real_fsync = os.fsync
+    real_replace = os.replace
+
+    monkeypatch.setattr(os, 'fsync', lambda fd: (order.append('fsync'), real_fsync(fd))[1])
+    monkeypatch.setattr(os, 'replace', lambda src, dst: (order.append('replace'), real_replace(src, dst))[1])
+
+    GUISessionManager(tmp_path.joinpath('sess.rnal')).save_session([], [], None, {})
+
+    assert order == ['fsync', 'replace']
+
+
+@pytest.mark.unit
+def test_save_and_load_session_with_a_relative_path(monkeypatch, tmp_path):
+    # shutil.make_archive temporarily changes the working directory, so the staging paths must not
+    # depend on it
+    monkeypatch.chdir(tmp_path)
+
+    GUISessionManager('relative_sess.rnal').save_session([], [], None, {})
+
+    assert zipfile.is_zipfile(tmp_path.joinpath('relative_sess.rnal'))
+    assert [pth.name for pth in tmp_path.iterdir()] == ['relative_sess.rnal']
+    assert GUISessionManager('relative_sess.rnal').load_session() == ([], [], None)
+
+
+@pytest.mark.unit
+def test_save_session_failure_leaves_the_existing_session_file_intact(monkeypatch, tmp_path):
+    target = tmp_path.joinpath('sess.rnal')
+    target.write_bytes(b'previous session contents')
+
+    def failing_make_archive(*args, **kwargs):
+        raise OSError('No space left on device')
+
+    monkeypatch.setattr(shutil, 'make_archive', failing_make_archive)
+
+    with pytest.raises(OSError):
+        GUISessionManager(target).save_session([], [], None, {})
+
+    assert target.read_bytes() == b'previous session contents'
+    assert [pth.name for pth in tmp_path.iterdir()] == ['sess.rnal'], "save must clean up its temporary files"
+
+
+@pytest.mark.unit
+def test_save_session_failure_before_archiving_leaves_the_existing_session_file_intact(monkeypatch, tmp_path):
+    target = tmp_path.joinpath('sess.rnal')
+    target.write_bytes(b'previous session contents')
+
+    mgr = GUISessionManager(target)
+    monkeypatch.setattr(mgr, '_write_session_data_to_file', Mock(side_effect=PermissionError('access denied')))
+
+    with pytest.raises(PermissionError):
+        mgr.save_session([], [], None, {})
+
+    assert target.read_bytes() == b'previous session contents'
+    assert [pth.name for pth in tmp_path.iterdir()] == ['sess.rnal'], "save must clean up its temporary files"
+
+
+@pytest.mark.unit
+def test_load_session_does_not_rename_the_session_file(monkeypatch, tmp_path):
+    target = tmp_path.joinpath('sess.rnal')
+    GUISessionManager(target).save_session([], [], None, {})
+
+    def no_renames(*args, **kwargs):
+        raise AssertionError("loading a session must not rename the user's session file")
+
+    monkeypatch.setattr(Path, 'rename', no_renames)
+    monkeypatch.setattr(os, 'rename', no_renames)
+
+    file_data, pipeline_data, report = GUISessionManager(target).load_session()
+    assert file_data == []
+    assert pipeline_data == []
+
+
+@pytest.mark.unit
+def test_load_session_from_a_read_only_file(tmp_path):
+    target = tmp_path.joinpath('sess.rnal')
+    GUISessionManager(target).save_session([], [], None, {})
+    contents_before = target.read_bytes()
+    os.chmod(target, stat.S_IREAD)
+
+    try:
+        file_data, pipeline_data, report = GUISessionManager(target).load_session()
+    finally:
+        os.chmod(target, stat.S_IREAD | stat.S_IWRITE)
+
+    assert file_data == []
+    assert pipeline_data == []
+    assert target.read_bytes() == contents_before
+
+
+@pytest.mark.unit
+def test_load_session_missing_file_raises_file_not_found(tmp_path):
+    with pytest.raises(FileNotFoundError) as err:
+        GUISessionManager(tmp_path.joinpath('no_such_session.rnal')).load_session()
+    assert 'no_such_session.rnal' in str(err.value)
+
+
+@pytest.mark.unit
+def test_load_session_not_an_archive_reports_corrupt_session(tmp_path):
+    target = tmp_path.joinpath('corrupt.rnal')
+    target.write_bytes(b'this is not a zip archive at all')
+
+    with pytest.raises(CorruptSessionError) as err:
+        GUISessionManager(target).load_session()
+    assert 'corrupt or incomplete' in str(err.value)
+    assert not isinstance(err.value, InternalError)
+
+
+@pytest.mark.unit
+def test_load_session_truncated_archive_reports_corrupt_session(tmp_path):
+    target = tmp_path.joinpath('truncated.rnal')
+    GUISessionManager(target).save_session([], [], None, {})
+    contents = target.read_bytes()
+    target.write_bytes(contents[:len(contents) // 2])
+
+    with pytest.raises(CorruptSessionError) as err:
+        GUISessionManager(target).load_session()
+    assert 'corrupt or incomplete' in str(err.value)
+
+
+@pytest.mark.unit
+def test_load_session_without_session_data_reports_corrupt_session(tmp_path):
+    target = tmp_path.joinpath('no_session_data.rnal')
+    with zipfile.ZipFile(target, 'w') as archive:
+        archive.writestr('some_table.parquet', 'not really a table')
+
+    with pytest.raises(CorruptSessionError) as err:
+        GUISessionManager(target).load_session()
+    assert 'corrupt or incomplete' in str(err.value)
+
+
+@pytest.mark.unit
+def test_load_session_missing_data_file_reports_corrupt_session_with_version(tmp_path):
+    target = tmp_path.joinpath('broken.rnal')
+    _write_broken_session(target, _broken_session_data('3.2.2'))
+
+    with pytest.raises(CorruptSessionError) as err:
+        GUISessionManager(target).load_session()
+    message = str(err.value)
+    assert 'corrupt or incomplete' in message
+    assert 'missing_table.parquet' in message
+    assert '3.2.2' in message
+    assert not isinstance(err.value, InternalError)
+
+
+@pytest.mark.unit
+def test_load_session_missing_pipeline_file_reports_corrupt_session_with_version(tmp_path):
+    target = tmp_path.joinpath('broken_pipeline.rnal')
+    session_data = _broken_session_data('4.0.0')
+    session_data['files'] = {}
+    session_data['metadata']['tab_order'] = []
+    session_data['pipelines'] = {'pipeline_0.yaml': 'My Pipeline'}
+    _write_broken_session(target, session_data)
+
+    with pytest.raises(CorruptSessionError) as err:
+        GUISessionManager(target).load_session()
+    message = str(err.value)
+    assert 'corrupt or incomplete' in message
+    assert 'pipeline_0.yaml' in message
+    assert '4.0.0' in message
+
+
+@pytest.mark.unit
+def test_load_session_leaves_no_extracted_leftovers_on_failure(tmp_path):
+    target = tmp_path.joinpath('broken_cleanup.rnal')
+    _write_broken_session(target, _broken_session_data())
+
+    with pytest.raises(CorruptSessionError):
+        GUISessionManager(target).load_session()
+    assert not get_gui_cache_dir().joinpath(target.stem).exists()
 
 
 def test_get_next_link():
@@ -2540,6 +2910,37 @@ class TestOrthoInspectorOrthologMapper:
                           'DBtwo': frozenset({2, 4}),
                           'DBthree': frozenset({5})}
 
+    def test_get_database_organisms_degrades_when_one_database_reports_failure(self):
+        # A degraded OrthoInspector database (meta.status != 'success') must not crash the whole
+        # lookup, and must not tell the scientist to file an RNAlysis bug -- it is an external
+        # service problem. Warn and skip it, like the neighbouring stall/timeout paths do.
+        api = OrthoInspectorOrthologMapper.API_URL
+        with requests_mock.Mocker() as m:
+            m.get(f'{api}/databases', json={'data': ['GoodDB', 'DegradedDB']})
+            m.get(f'{api}/GoodDB/species',
+                  json={'meta': {'status': 'success'}, 'data': [{'id': 1}, {'id': 2}]})
+            m.get(f'{api}/DegradedDB/species',
+                  json={'meta': {'status': 'error'}, 'data': []})
+            with pytest.warns(UserWarning, match='DegradedDB'):
+                result = OrthoInspectorOrthologMapper.get_database_organisms()
+
+        # the healthy database is still usable; the degraded one contributes no organisms
+        assert result['GoodDB'] == frozenset({1, 2})
+        assert result.get('DegradedDB', frozenset()) == frozenset()
+
+    def test_get_database_organisms_degraded_warning_does_not_blame_rnalysis(self):
+        api = OrthoInspectorOrthologMapper.API_URL
+        with requests_mock.Mocker() as m:
+            m.get(f'{api}/databases', json={'data': ['DegradedDB']})
+            m.get(f'{api}/DegradedDB/species', json={'meta': {'status': 'maintenance'}, 'data': []})
+            with pytest.warns(UserWarning) as record:
+                OrthoInspectorOrthologMapper.get_database_organisms()
+
+        text = ' '.join(str(w.message) for w in record)
+        assert 'bug in RNAlysis' not in text
+        assert 'OrthoInspector' in text
+        assert 'maintenance' in text  # the reported status is surfaced for diagnosis
+
     def test_get_database_organisms_empty_database_list(self):
         # If OrthoInspector lists no databases, the concurrent fan-out must return {} rather than
         # crash (ThreadPoolExecutor(max_workers=0) raises ValueError) -- the 'if databases' guard.
@@ -3119,6 +3520,56 @@ def test_get_legal_panther_taxons_handles_list_and_single(monkeypatch, genome_no
         assert io.get_legal_panther_taxons() == expected
     finally:
         io.get_legal_panther_taxons.cache_clear()
+
+
+# get_legal_phylomedb_taxons used to iterate the species DataFrame itself, which yields whole
+# Series rather than names, so its per-name filter tested `<first name>.isupper()` -- False for any
+# real binomial -- and the function returned an empty tuple on every machine, live (issue #263). That
+# emptied the PhylomeDB organism dropdown silently. These tests pin the per-value filtering, and that
+# a well-formed species table can never again produce nothing.
+@pytest.mark.unit  # fully mocked; opt out of the module's default integration_net tier
+@pytest.mark.parametrize('names,expected', [
+    # sorted, one entry per species name
+    (['Homo sapiens', 'Caenorhabditis elegans'], ('Caenorhabditis elegans', 'Homo sapiens')),
+    # lowercase-initial entries (PhylomeDB lists e.g. unclassified/environmental samples) are dropped
+    (['Homo sapiens', 'uncultured bacterium', 'candidate division TM6'], ('Homo sapiens',)),
+    # duplicate names collapse to one
+    (['Homo sapiens', 'Homo sapiens', 'Mus musculus'], ('Homo sapiens', 'Mus musculus')),
+])
+def test_get_legal_phylomedb_taxons_filters_per_name(monkeypatch, names, expected):
+    species = pl.DataFrame({'taxid': list(range(len(names))), 'name': names})
+    monkeypatch.setattr(io.PhylomeDBOrthologMapper, 'get_legal_species', staticmethod(lambda: species))
+    io.get_legal_phylomedb_taxons.cache_clear()
+    try:
+        taxons = io.get_legal_phylomedb_taxons()
+        assert taxons == expected
+        assert all(isinstance(taxon, str) for taxon in taxons)  # not polars Series (the #263 bug)
+    finally:
+        io.get_legal_phylomedb_taxons.cache_clear()
+
+
+@pytest.mark.unit  # fully mocked; opt out of the module's default integration_net tier
+def test_get_legal_phylomedb_taxons_is_not_empty_for_a_realistic_species_table(monkeypatch):
+    names = [f'Genus{i} species{i}' for i in range(500)] + ['unclassified organism']
+    species = pl.DataFrame({'taxid': list(range(len(names))), 'name': names})
+    monkeypatch.setattr(io.PhylomeDBOrthologMapper, 'get_legal_species', staticmethod(lambda: species))
+    io.get_legal_phylomedb_taxons.cache_clear()
+    try:
+        taxons = io.get_legal_phylomedb_taxons()
+        assert len(taxons) == 500
+        assert 'unclassified organism' not in taxons
+    finally:
+        io.get_legal_phylomedb_taxons.cache_clear()
+
+
+@pytest.mark.skipif(not PHYLOMEDB_AVAILABLE,
+                    reason="No internet connection or FTP server is down. Skipping PhylomeDB tests.")
+def test_get_legal_phylomedb_taxons_live_is_populated():
+    # The live counterpart of the tests above: catches a future change to PhylomeDB's species table
+    # (or to its parsing) that empties the vocabulary again.
+    taxons = io.get_legal_phylomedb_taxons()
+    assert len(taxons) > 1000
+    assert all(isinstance(taxon, str) and taxon[:1].isupper() for taxon in taxons)
 
 
 @pytest.mark.unit  # fully mocked; opt out of the module's default integration_net tier

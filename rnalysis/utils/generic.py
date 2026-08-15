@@ -1,16 +1,18 @@
 import abc
+import enum
 import inspect
 import itertools
 import math
 import types
 import typing
 import warnings
-from datetime import datetime
+from datetime import date, datetime
 from functools import lru_cache
 from pathlib import Path
-from typing import Callable, Dict, Tuple, Union
+from typing import Callable, Dict, Optional, Tuple, Union
 
 import joblib
+import lazy_loader as lazy
 import matplotlib.collections
 import matplotlib.pyplot as plt
 import numpy as np
@@ -20,10 +22,17 @@ import yaml
 from matplotlib import figure
 from matplotlib.widgets import MultiCursor
 from scipy.special import comb
-from sklearn.preprocessing import PowerTransformer, StandardScaler
 from tqdm.auto import tqdm
 
 from rnalysis import FROZEN_ENV, __version__
+from rnalysis.exceptions import (InternalError, InvalidTypeError,
+                                 InvalidValueError)
+from rnalysis.utils.param_typing import POWER_TRANSFORMS
+
+# scikit-learn costs ~1s to import and is only needed once a transform actually runs, so it is loaded
+# lazily (SPEC 1 / https://scientific-python.org/specs/spec-0001/). Nothing may touch an attribute of
+# `_sklearn` at import time -- doing so imports the package and defeats the whole point.
+_sklearn = lazy.load('sklearn')
 
 try:
     import numba
@@ -41,6 +50,20 @@ except ImportError:  # pragma: no cover
         @staticmethod
         def njit(*args, **kwargs):
             return lambda f: f
+
+
+# Cache numba's compiled kernels on disk, so only the first process ever pays JIT compilation and
+# every later one (including each Windows `spawn` multiprocessing worker) loads the compiled code
+# instead of recompiling it. Pass this as the `cache=` argument of every `numba.jit` in RNAlysis.
+#
+# It is switched off in the frozen (PyInstaller) app: numba picks the cache directory from the
+# *source file* of the jitted function (numba.core.caching.CacheImpl), and if none of its locators
+# matches it raises RuntimeError from the decorator -- that is, at import time, which would stop the
+# standalone app from starting at all. numba does ship a frozen-aware locator
+# (UserWideCacheLocator, which caches into the user-wide cache dir and stamps the cache against
+# sys.executable), so this gate can be lifted once it has been verified against a real
+# standalone build.
+NUMBA_CACHE = not FROZEN_ENV
 
 
 def readable_name(name: str):
@@ -205,11 +228,22 @@ class ProgressParallel(joblib.Parallel):
 # columns to make it worthwhile.
 BOX_COX_PARALLEL_MIN_COLUMNS = 500
 
+# The Box-Cox transform standardizes each column after transforming it, so every value it returns for a
+# healthy column is a z-score: the largest one a column of n values can possibly hold is sqrt(n). Anything
+# beyond this threshold therefore cannot be a properly standardized column of any real table (it would need
+# ~10^12 rows) -- it can only mean the fitted lambda exploded and the transform blew up without quite
+# overflowing to infinity. Such a column would silently dominate every principal component, so it is treated
+# exactly like a non-finite one.
+BOX_COX_MAX_ABS_VALUE = 1e6
+
+#: how many offending gene names to spell out in the instability error before summarizing the rest
+_MAX_NAMES_IN_ERROR = 10
+
 
 def _box_cox_fit_transform(array: np.ndarray) -> np.ndarray:
     # sklearn's PowerTransformer(box-cox) fits + applies a separate lambda to each column independently
     # (and, with the default standardize=True, standardizes each column afterwards).
-    return PowerTransformer(method='box-cox').fit_transform(array + 1)
+    return _sklearn.preprocessing.PowerTransformer(method='box-cox').fit_transform(array + 1)
 
 
 def _parallel_box_cox(array: np.ndarray, backend: str, n_jobs: int) -> np.ndarray:
@@ -223,8 +257,40 @@ def _parallel_box_cox(array: np.ndarray, backend: str, n_jobs: int) -> np.ndarra
     return np.concatenate(transformed_chunks, axis=1)
 
 
-def standard_box_cox(data: Union[np.ndarray, pl.DataFrame],
-                     parallel_backend: str = 'sequential') -> Union[np.ndarray, pl.DataFrame]:
+def _validate_box_cox_stability(box_cox_array: np.ndarray, feature_names: Optional[typing.Sequence[str]]):
+    """
+    Raise a clear, actionable error if the Box-Cox transform blew up on any column.
+
+    Box-Cox fits one lambda per column. When a column is near-constant at a high magnitude and is measured
+    across very few values (the classic case: a reporter transgene such as GFP, sitting at ~8,400 counts in
+    a handful of grouped samples, once the table is transposed so genes become columns), the maximum-likelihood
+    lambda explodes and the transform overflows float64. The result is either non-finite -- which used to
+    reach sklearn's PCA as ``ValueError: Input X contains NaN``, a message that names nothing the user can act
+    on -- or a finite but astronomical value that silently dominates every principal component.
+    """
+    with warnings.catch_warnings():  # comparing NaNs is exactly what we are here to detect
+        warnings.simplefilter('ignore')
+        unstable = ~np.isfinite(box_cox_array).all(axis=0) | (
+            np.abs(np.nan_to_num(box_cox_array)).max(axis=0) > BOX_COX_MAX_ABS_VALUE)
+    if not unstable.any():
+        return
+    unstable_indices = np.nonzero(unstable)[0]
+    if feature_names is None:
+        names = [f'#{ind + 1}' for ind in unstable_indices]
+    else:
+        names = [str(feature_names[ind]) for ind in unstable_indices]
+    n_unstable = len(names)
+    listed = ', '.join(f"'{name}'" for name in names[:_MAX_NAMES_IN_ERROR])
+    if n_unstable > _MAX_NAMES_IN_ERROR:
+        listed += f', and {n_unstable - _MAX_NAMES_IN_ERROR} more'
+    noun, these = ('gene', 'this gene') if n_unstable == 1 else ('genes', 'these genes')
+    raise InvalidValueError(f"Box-Cox transformation is numerically unstable for {n_unstable} {noun} in this "
+                            f"table ({listed}): their values are near-constant at high magnitude. "
+                            f"Filter {these} out, or choose a different transform (e.g. 'log').")
+
+
+def standard_box_cox(data: Union[np.ndarray, pl.DataFrame], parallel_backend: str = 'sequential',
+                     feature_names: Optional[typing.Sequence[str]] = None) -> Union[np.ndarray, pl.DataFrame]:
     """
     Apply a per-column Box-Cox power transform followed by standardization.
 
@@ -235,20 +301,115 @@ def standard_box_cox(data: Union[np.ndarray, pl.DataFrame],
     once the number of columns reaches ``BOX_COX_PARALLEL_MIN_COLUMNS``. The result is identical either way \
     up to floating-point precision.
     :type parallel_backend: str (default='sequential')
+    :param feature_names: names of the transformed columns, used only to name the offending genes if the \
+    transform turns out to be numerically unstable. Defaults to the numeric column names of a DataFrame, \
+    or to 1-based column positions for a bare array.
+    :type feature_names: sequence of str or None (default=None)
+    :raises InvalidValueError: if the Box-Cox transform is numerically unstable for one or more columns.
     """
     if isinstance(data, pl.DataFrame):
+        numeric_columns = data.select(cs.numeric()).columns
         array = data.select(cs.numeric()).to_numpy()
+        if feature_names is None:
+            feature_names = numeric_columns
     else:
         array = data
     if parallel_backend not in (None, 'sequential') and array.shape[1] >= BOX_COX_PARALLEL_MIN_COLUMNS:
         box_cox_array = _parallel_box_cox(array, backend=parallel_backend, n_jobs=joblib.cpu_count())
     else:
         box_cox_array = _box_cox_fit_transform(array)
-    res_array = StandardScaler().fit_transform(box_cox_array)
+    _validate_box_cox_stability(box_cox_array, feature_names)
+    res_array = _sklearn.preprocessing.StandardScaler().fit_transform(box_cox_array)
+    if isinstance(data, pl.DataFrame):
+        return data.select(~cs.numeric()).with_columns(pl.DataFrame(res_array, schema=numeric_columns))
+    return res_array
+
+
+def standard_log(data: Union[np.ndarray, pl.DataFrame]) -> Union[np.ndarray, pl.DataFrame]:
+    """
+    Apply a log2(x+1) transform followed by standardization.
+
+    This is the robust alternative to the Box-Cox power transform: it uses one fixed formula for the whole
+    table instead of fitting a separate exponent per gene, so it cannot blow up on a near-constant,
+    high-magnitude gene the way Box-Cox can.
+
+    :param data: the data to transform (must not contain values below -1).
+    :type data: np.ndarray or pl.DataFrame
+    :raises InvalidValueError: if the data contains values below -1, for which log2(x+1) is undefined.
+    """
+    if isinstance(data, pl.DataFrame):
+        array = data.select(cs.numeric()).to_numpy()
+    else:
+        array = data
+    if np.nanmin(array) <= -1:
+        raise InvalidValueError("The 'log' transform is only defined for values greater than -1 "
+                                "(it computes log2(x+1)), but this table contains smaller values. "
+                                "Choose a different transform, or filter out the offending values.")
+    log_array = np.log2(array + 1)
+    res_array = _sklearn.preprocessing.StandardScaler().fit_transform(log_array)
     if isinstance(data, pl.DataFrame):
         return data.select(~cs.numeric()).with_columns(
             pl.DataFrame(res_array, schema=data.select(cs.numeric()).columns))
     return res_array
+
+
+def parse_power_transform(power_transform: Union[bool, str]) -> str:
+    """
+    Normalize a ``power_transform`` argument into one of the names in ``param_typing.POWER_TRANSFORMS``.
+
+    ``power_transform`` used to be a boolean. ``True``/``False`` are therefore still accepted, and always
+    will be, so that Pipelines and exported parameter files saved by older versions of *RNAlysis* keep
+    running with exactly the behavior they had when they were saved.
+
+    :param power_transform: the transform to apply: 'box-cox', 'log', 'none', or the legacy True/False.
+    :type power_transform: 'box-cox', 'log', 'none', or bool
+    :return: the normalized transform name.
+    :rtype: str
+    """
+    if isinstance(power_transform, bool):
+        return 'box-cox' if power_transform else 'none'
+    if isinstance(power_transform, str) and power_transform.lower() in POWER_TRANSFORMS:
+        return power_transform.lower()
+    raise InvalidValueError(f"Invalid value for 'power_transform': {power_transform!r}. "
+                            f"'power_transform' must be one of {list(POWER_TRANSFORMS)}.")
+
+
+def get_transform_function(power_transform: Union[bool, str]) -> Callable:
+    """
+    Return the transform+standardization function matching a ``power_transform`` argument.
+
+    :param power_transform: the transform to apply: 'box-cox', 'log', 'none', or the legacy True/False.
+    :type power_transform: 'box-cox', 'log', 'none', or bool
+    """
+    method = parse_power_transform(power_transform)
+    if method == 'box-cox':
+        return standard_box_cox
+    elif method == 'log':
+        return standard_log
+    return standardize
+
+
+def transform_and_standardize(data: Union[np.ndarray, pl.DataFrame], power_transform: Union[bool, str] = 'box-cox',
+                              parallel_backend: str = 'sequential',
+                              feature_names: Optional[typing.Sequence[str]] = None
+                              ) -> Union[np.ndarray, pl.DataFrame]:
+    """
+    Standardize the data, optionally applying a power/log transform to it first.
+
+    :param data: the data to transform (columns are transformed independently).
+    :type data: np.ndarray or pl.DataFrame
+    :param power_transform: the transform to apply: 'box-cox', 'log', 'none', or the legacy True/False.
+    :type power_transform: 'box-cox', 'log', 'none', or bool (default='box-cox')
+    :param parallel_backend: joblib backend used to parallelize the per-column Box-Cox across columns. \
+    Ignored by the other transforms.
+    :type parallel_backend: str (default='sequential')
+    :param feature_names: names of the transformed columns, used only to name the offending genes if the \
+    Box-Cox transform turns out to be numerically unstable.
+    :type feature_names: sequence of str or None (default=None)
+    """
+    if parse_power_transform(power_transform) == 'box-cox':
+        return standard_box_cox(data, parallel_backend=parallel_backend, feature_names=feature_names)
+    return get_transform_function(power_transform)(data)
 
 
 def box_cox_parallel_backend() -> str:
@@ -297,7 +458,7 @@ def standardize(data: Union[np.ndarray, pl.DataFrame]) -> Union[np.ndarray, pl.D
         array = data.select(cs.numeric()).to_numpy()
     else:
         array = data
-    res_array = StandardScaler().fit_transform(array)
+    res_array = _sklearn.preprocessing.StandardScaler().fit_transform(array)
     if isinstance(data, pl.DataFrame):
         return data.select(~cs.numeric()).with_columns(pl.DataFrame(res_array, schema=data.columns))
     return res_array
@@ -500,6 +661,119 @@ class InteractiveScatterFigure(figure.Figure):
             self.canvas.draw()
 
 
+#: types that ``yaml.safe_dump`` can always represent, and that ``yaml.safe_load`` returns as-is.
+#: membership must be tested by exact type - PyYAML's SafeRepresenter dispatches on ``type(value)``,
+#: so a *subclass* of any of these (an Enum mixin, a pandas Timestamp) is NOT representable.
+_YAML_SAFE_SCALARS = (str, bool, int, float, bytes, type(None), datetime, date)
+
+
+def _coerce_yaml_scalar_subclass(value):
+    """
+    Convert a subclass of a YAML-safe scalar down to the plain built-in PyYAML can represent.
+
+    :param value: a value that is an instance - but not an exact instance - of a YAML-safe scalar
+    :return: the equivalent plain built-in value
+    """
+    if isinstance(value, datetime):  # datetime subclasses date, so it must be checked first
+        return datetime(value.year, value.month, value.day, value.hour, value.minute, value.second,
+                        value.microsecond, value.tzinfo)
+    if isinstance(value, date):
+        return date(value.year, value.month, value.day)
+    for base in (bool, int, float, str, bytes):  # bool subclasses int, so it must be checked first
+        if isinstance(value, base):
+            return base(value)
+    raise InternalError(f"'{type(value).__name__}' is not a subclass of a YAML-safe scalar type.")
+
+
+def _sanitize_for_yaml(value, context: str):
+    """
+    Recursively convert a Pipeline parameter into an object ``yaml.safe_dump`` can represent.
+
+    numpy scalars become their Python equivalents, numpy arrays and tuples become lists, and \
+    pathlib Paths become POSIX-style strings. Values that cannot be represented at all raise a \
+    typed error naming the offending function and parameter, instead of a bare ``RepresenterError``.
+
+    :param value: the parameter value to sanitize
+    :param context: human-readable description of the parameter, used in error messages
+    :type context: str
+    :return: a YAML-representable version of ``value``
+    """
+    if isinstance(value, np.generic):
+        value = value.item()
+    elif isinstance(value, np.ndarray):
+        value = value.tolist()
+    elif isinstance(value, Path):
+        return value.as_posix()
+    elif isinstance(value, enum.Enum):
+        # an Enum member stands for its value; str()ing it would yield 'Mode.UNION', not 'union'
+        return _sanitize_for_yaml(value.value, context)
+
+    if isinstance(value, dict):
+        return {_sanitize_hashable(key, context, 'dictionary key'): _sanitize_for_yaml(val, context)
+                for key, val in value.items()}
+    if isinstance(value, (list, tuple)):
+        # YAML has no tuple type - tuples are stored (and re-loaded) as lists
+        return [_sanitize_for_yaml(item, context) for item in value]
+    if isinstance(value, (set, frozenset)):
+        return {_sanitize_hashable(item, context, 'set item') for item in value}
+    if type(value) in _YAML_SAFE_SCALARS:
+        return value
+    if isinstance(value, _YAML_SAFE_SCALARS):
+        return _coerce_yaml_scalar_subclass(value)
+
+    try:
+        yaml.safe_dump(value)
+    except yaml.YAMLError as err:
+        raise InvalidTypeError(f"Cannot export Pipeline: the value of {context} (of type "
+                               f"'{type(value).__name__}') cannot be saved to a Pipeline YAML file. "
+                               f"Please replace it with a simple value, such as a number, a string, or a list. ") \
+            from err
+    return value
+
+
+def _sanitize_hashable(value, context: str, kind: str):
+    """
+    Sanitize a value that must stay hashable (a dictionary key or a set item).
+
+    :param value: the value to sanitize
+    :param context: human-readable description of the parameter it belongs to, used in error messages
+    :type context: str
+    :param kind: what the value is ('dictionary key' or 'set item'), used in error messages
+    :type kind: str
+    :return: a YAML-representable, hashable version of ``value``
+    """
+    sanitized = _sanitize_for_yaml(value, context)
+    try:
+        hash(sanitized)
+    except TypeError as err:
+        raise InvalidTypeError(f"Cannot export Pipeline: the {kind} {value!r} of {context} "
+                               f"cannot be saved to a Pipeline YAML file. "
+                               f"Please use a simple value such as a string or a number. ") from err
+    return sanitized
+
+
+def _parse_pipeline_yaml_string(content: str) -> Tuple[bool, typing.Any, Optional[yaml.YAMLError]]:
+    """
+    Determine whether the given string plausibly *is* a Pipeline YAML document, and if so, parse it.
+
+    This is what keeps a mistyped filename ('C:/no/such/file.yaml') from being silently parsed as \
+    YAML and failing later with an unrelated Python error.
+
+    :param content: the string to examine
+    :type content: str
+    :return: a tuple of (whether the string was meant as a YAML document, the parsed document, \
+    and the error raised while parsing it, if any)
+    """
+    # a multi-line string was clearly meant as file *contents* rather than as a file name
+    is_document = '\n' in content
+    try:
+        parsed = yaml.safe_load(content)
+    except yaml.YAMLError as err:
+        return is_document, None, err
+    # a single-line string is only treated as YAML if it parses into a Pipeline-shaped mapping
+    return is_document or isinstance(parsed, dict), parsed, None
+
+
 class GenericPipeline(abc.ABC):
     __slots__ = {'functions': 'list of functions to perform', 'params': 'list of function parameters'}
 
@@ -553,7 +827,8 @@ class GenericPipeline(abc.ABC):
             Removed function filter_missing_values with parameters [] from the pipeline.
 
         """
-        assert len(self.functions) > 0 and len(self.params) > 0, "Pipeline is empty, no functions to remove!"
+        if not (len(self.functions) > 0 and len(self.params) > 0):
+            raise InvalidValueError("Pipeline is empty, no functions to remove!")
         func = self.functions.pop(-1)
         args, kwargs = self.params.pop(-1)
         print(
@@ -578,19 +853,46 @@ class GenericPipeline(abc.ABC):
         """
         Export a Pipeline to a Pipeline YAML file or YAML-like string.
 
+        Function parameters are converted into their closest YAML equivalent before saving: \
+        numpy scalars and arrays become plain Python numbers and lists, and pathlib Paths become \
+        strings. Note that YAML has no tuple type - tuples are therefore saved (and re-loaded) as \
+        lists, except for the top-level tuple of positional arguments, which is restored on import.
+
         :param filename: filename to save the Pipeline YAML to, or None to return a YAML-like string instead.
         :type filename: str, pathlib.Path, or None
         :return: if filename is None, returns the Pipeline YAML-like string.
         """
         pipeline_dict = self._get_pipeline_dict()
-        for func, params in zip(self.functions, self.params):
+        for func, (args, kwargs) in zip(self.functions, self.params):
             pipeline_dict['functions'].append(func.__name__)
-            pipeline_dict['params'].append(params)
+            pipeline_dict['params'].append(self._sanitize_params(func.__name__, args, kwargs))
+        # the whole Pipeline is serialized *before* the target file is opened: opening it for
+        # writing truncates it, so a Pipeline that cannot be serialized would otherwise destroy the
+        # Pipeline file the user was overwriting.
+        pipeline_yaml = yaml.safe_dump(pipeline_dict)
         if filename is None:
-            return yaml.safe_dump(pipeline_dict)
-        else:
-            with open(filename, 'w') as f:
-                yaml.safe_dump(pipeline_dict, f)
+            return pipeline_yaml
+        with open(filename, 'w') as f:
+            f.write(pipeline_yaml)
+
+    @staticmethod
+    def _sanitize_params(func_name: str, args: tuple, kwargs: dict) -> list:
+        """
+        Return a YAML-representable version of a single function's arguments.
+
+        :param func_name: name of the function the arguments belong to (used in error messages)
+        :type func_name: str
+        :param args: unkeyworded arguments of the function
+        :type args: tuple
+        :param kwargs: keyworded arguments of the function
+        :type kwargs: dict
+        :return: a [args, kwargs] list that ``yaml.safe_dump`` can represent
+        """
+        sanitized_args = [_sanitize_for_yaml(arg, f"positional argument #{i + 1} of function '{func_name}'")
+                          for i, arg in enumerate(args)]
+        sanitized_kwargs = {key: _sanitize_for_yaml(val, f"parameter '{key}' of function '{func_name}'")
+                            for key, val in kwargs.items()}
+        return [sanitized_args, sanitized_kwargs]
 
     def _get_pipeline_dict(self):
         d = dict(functions=[], params=[], metadata={'rnalysis_version': f'{__version__}',
@@ -602,19 +904,153 @@ class GenericPipeline(abc.ABC):
         """
         Import a Pipeline from a Pipeline YAML file or YAML-like string.
 
+        Note that YAML has no tuple type: tuples within the Pipeline's function parameters were \
+        saved as lists, and are therefore returned as lists. The only exception is the top-level \
+        tuple of positional arguments of each function, which is restored on import.
+
         :param filename: name of the YAML file containing the Pipeline, or a YAML-like string.
         :type filename: str or pathlib.Path
         :return: the imported Pipeline
         :rtype: Pipeline
         """
-        try:
-            with open(filename) as f:
-                pipeline_dict = yaml.safe_load(f)
-        except OSError:
-            pipeline_dict = yaml.safe_load(filename)
+        pipeline_dict = cls._read_pipeline_dict(filename)
         pipeline = cls.__new__(cls)
         pipeline._init_from_dict(pipeline_dict)
         return pipeline
+
+    @classmethod
+    def _read_pipeline_dict(cls, filename: Union[str, Path]):
+        """
+        Read a Pipeline YAML document from either a file or a YAML-like string.
+
+        :param filename: name of the YAML file containing the Pipeline, or a YAML-like string.
+        :type filename: str or pathlib.Path
+        :return: the parsed Pipeline YAML document
+        """
+        try:
+            with open(filename) as f:
+                try:
+                    return yaml.safe_load(f)
+                except yaml.YAMLError as err:
+                    raise cls._pipeline_load_error(
+                        None, f"the file '{filename}' is not a valid YAML document ({err}).") from err
+        except OSError as err:
+            if isinstance(filename, str):
+                is_yaml_string, pipeline_dict, parse_error = _parse_pipeline_yaml_string(filename)
+                if is_yaml_string:
+                    if parse_error is not None:
+                        raise cls._pipeline_load_error(
+                            None, f"the given Pipeline is not a valid YAML document "
+                                  f"({parse_error}).") from parse_error
+                    return pipeline_dict
+            if isinstance(err, FileNotFoundError):
+                raise FileNotFoundError(f"Could not find the Pipeline file '{filename}'. "
+                                        f"Please make sure the file exists, "
+                                        f"and that its path is spelled correctly. ") from err
+            raise
+
+    @staticmethod
+    def _exported_version_string(pipeline_dict) -> str:
+        """
+        Describe the RNAlysis version that exported the given Pipeline, based on its version stamp.
+
+        :param pipeline_dict: a parsed Pipeline YAML document (not necessarily a valid one)
+        :return: a human-readable description of the exporting RNAlysis version
+        :rtype: str
+        """
+        version = None
+        if isinstance(pipeline_dict, dict):
+            metadata = pipeline_dict.get('metadata')
+            if isinstance(metadata, dict):
+                version = metadata.get('rnalysis_version')
+        if version is None:
+            return 'this Pipeline does not record which version of RNAlysis exported it'
+        return f'this Pipeline was exported by RNAlysis {version}'
+
+    @classmethod
+    def _pipeline_load_error(cls, pipeline_dict, reason: str) -> InvalidValueError:
+        """
+        Build a Pipeline load-failure error that names the exporting and the current RNAlysis version.
+
+        :param pipeline_dict: a parsed Pipeline YAML document (not necessarily a valid one)
+        :param reason: description of what went wrong
+        :type reason: str
+        :return: the error to raise
+        :rtype: InvalidValueError
+        """
+        return InvalidValueError(f"Failed to load Pipeline: {reason} "
+                                 f"({cls._exported_version_string(pipeline_dict)}, "
+                                 f"and the current version is RNAlysis {__version__})")
+
+    @classmethod
+    def _validate_pipeline_dict(cls, pipeline_dict):
+        """
+        Verify that the given parsed YAML document has the shape of a Pipeline.
+
+        :param pipeline_dict: a parsed Pipeline YAML document
+        """
+        if not isinstance(pipeline_dict, dict):
+            raise cls._pipeline_load_error(
+                pipeline_dict, f"expected a Pipeline YAML file or YAML-like string, but got "
+                               f"'{type(pipeline_dict).__name__}' instead.")
+        for key in ('functions', 'params'):
+            if key not in pipeline_dict:
+                raise cls._pipeline_load_error(pipeline_dict, f"the Pipeline is missing the mandatory '{key}' field.")
+            if not isinstance(pipeline_dict[key], list):
+                raise cls._pipeline_load_error(pipeline_dict, f"the Pipeline's '{key}' field must be a list, "
+                                                              f"but is '{type(pipeline_dict[key]).__name__}' instead.")
+        if len(pipeline_dict['functions']) != len(pipeline_dict['params']):
+            raise cls._pipeline_load_error(pipeline_dict,
+                                           f"the Pipeline lists {len(pipeline_dict['functions'])} functions, "
+                                           f"but {len(pipeline_dict['params'])} sets of parameters.")
+
+    @classmethod
+    def _params_from_dict(cls, pipeline_dict: dict) -> list:
+        """
+        Parse the 'params' field of a Pipeline YAML document into a list of (args, kwargs) pairs.
+
+        :param pipeline_dict: a parsed Pipeline YAML document
+        :return: the Pipeline's function parameters
+        :rtype: list
+        """
+        params = []
+        for entry in pipeline_dict['params']:
+            if not isinstance(entry, (list, tuple)) or len(entry) != 2:
+                raise cls._pipeline_load_error(pipeline_dict, f"the function parameters {entry} are malformed - "
+                                                              f"expected a pair of [arguments, keyword arguments].")
+            args, kwargs = entry
+            if kwargs is None:
+                kwargs = {}
+            if not isinstance(kwargs, dict):
+                raise cls._pipeline_load_error(pipeline_dict, f"the keyword arguments {kwargs} are malformed - "
+                                                              f"expected a dictionary.")
+            args = tuple(args) if isinstance(args, (list, tuple, set)) else (args,)
+            params.append((args, kwargs))
+        return params
+
+    @classmethod
+    def _resolve_function(cls, func_name, namespace, namespace_name: str,
+                          pipeline_dict: dict) -> types.FunctionType:
+        """
+        Look up a Pipeline function by the name recorded in a Pipeline YAML document.
+
+        :param func_name: the function name recorded in the Pipeline YAML document
+        :param namespace: the class or module the function should belong to
+        :param namespace_name: human-readable name of the namespace, used in error messages
+        :type namespace_name: str
+        :param pipeline_dict: the parsed Pipeline YAML document, used to report the exporting version
+        :return: the function matching the given name
+        """
+        # this check is deliberately no stricter than the one in add_function (a function object of
+        # the right namespace): anything that could be exported must import back (hard rule 4).
+        if not isinstance(func_name, str):
+            raise cls._pipeline_load_error(pipeline_dict, f"'{func_name}' is not a valid RNAlysis function name.")
+        func = getattr(namespace, func_name, None)
+        if not isinstance(func, types.FunctionType):
+            raise cls._pipeline_load_error(
+                pipeline_dict, f"function '{func_name}' does not exist in {namespace_name}. "
+                               f"It may have been renamed or removed since this Pipeline was exported.")
+        return func
 
     def _init_from_dict(self, pipeline_dict: dict):
         raise NotImplementedError
@@ -635,16 +1071,19 @@ class GenericPipeline(abc.ABC):
         return f"{func.__name__}({self._param_string(args, kwargs)})"
 
     def add_function(self, func: types.FunctionType, *args, **kwargs):
-        assert isinstance(func, types.FunctionType), f"'func' must be a function, is {type(func)} instead."
+        if not isinstance(func, types.FunctionType):
+            raise InvalidTypeError(f"'func' must be a function, is {type(func)} instead.")
 
         self.functions.append(func)
         self.params.append((args, kwargs))
         print(f"Added function '{self._func_signature(func, args, kwargs)}' to the pipeline.")
 
     def _validate_pipeline(self):
-        assert len(self.functions) > 0 and len(self.params) > 0, "Cannot apply an empty pipeline!"
-        assert len(self.functions) == len(self.params), "Cannot apply Pipeline: " \
-                                                        "length of 'functions' different from length of 'params'!"
+        if not (len(self.functions) > 0 and len(self.params) > 0):
+            raise InvalidValueError("Cannot apply an empty pipeline!")
+        if len(self.functions) != len(self.params):
+            raise InvalidValueError("Cannot apply Pipeline: "
+                                    "length of 'functions' different from length of 'params'!")
 
     @abc.abstractmethod
     def apply_to(self, *args, **kwargs):

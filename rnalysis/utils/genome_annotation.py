@@ -20,6 +20,7 @@ import numpy as np
 import polars as pl
 from scipy.stats.mstats import gmean
 
+from rnalysis.exceptions import InvalidValueError
 from rnalysis.utils import generic, validation
 from rnalysis.utils.param_typing import BIOTYPE_ATTRIBUTE_NAMES, LEGAL_GENE_LENGTH_METHODS, TRANSCRIPT_FEATURE_NAMES
 
@@ -262,8 +263,10 @@ def get_genomic_feature_lengths(gtf_path: Union[str, Path], feature_type: Litera
                                 method: Literal[LEGAL_GENE_LENGTH_METHODS]):
     method_funcs = {'mean': np.mean, 'median': np.median, 'max': np.max, 'min': np.min, 'geometric_mean': gmean,
                     'merged_exons': None}
-    assert feature_type in ('gene', 'transcript'), f"Illegal feature_type: '{feature_type}'"
-    assert method in method_funcs, f"Illegal method: '{method}'."
+    if feature_type not in ('gene', 'transcript'):
+        raise InvalidValueError(f"Illegal feature_type: '{feature_type}'")
+    if method not in method_funcs:
+        raise InvalidValueError(f"Illegal method: '{method}'.")
     file_type = validation.validate_genome_annotation_file(gtf_path)
 
     records = _read_annotation_records(gtf_path, file_type)
@@ -305,7 +308,8 @@ def get_genomic_feature_lengths(gtf_path: Union[str, Path], feature_type: Litera
 def map_gene_to_attr(gtf_path: Union[str, Path], attribute: str, feature_type: str, use_name: bool, use_version: bool,
                      split_ids: bool):
     file_type = validation.validate_genome_annotation_file(gtf_path)
-    assert feature_type in {'gene', 'transcript'}, f"Invalid feature_type: '{feature_type}'"
+    if feature_type not in {'gene', 'transcript'}:
+        raise InvalidValueError(f"Invalid feature_type: '{feature_type}'")
 
     fields = _load_annotation_fields(gtf_path)  # drops malformed lines, warning once
     attribute = _resolve_attribute_name(fields, file_type, attribute, feature_type)  # #152 biotype-family resolution

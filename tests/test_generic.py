@@ -1,6 +1,13 @@
+from types import ModuleType
+
 import pytest
 from matplotlib.backend_bases import PickEvent
+# scikit-learn is imported lazily by rnalysis.utils.generic (see tests/test_imports.py), so the
+# star-import below no longer re-exports it -- the tests import it directly instead.
+from sklearn.preprocessing import PowerTransformer, StandardScaler
 
+from rnalysis import FROZEN_ENV
+from rnalysis.exceptions import InvalidValueError
 from rnalysis.utils import generic
 from rnalysis.utils.generic import *
 
@@ -82,6 +89,121 @@ def test_standard_box_cox_default_is_sequential(monkeypatch):
     array = rng.integers(1, 5000, (6, 30)).astype(float)
     reference = StandardScaler().fit_transform(PowerTransformer(method='box-cox').fit_transform(array + 1))
     assert np.array_equal(standard_box_cox(array), reference)
+
+
+# The real-world offending column (a GFP reporter at ~8,400 counts across 4 grouped samples), salvaged from the
+# closed PR #238 (branch fix/boxcox-overflow-pca-nan) together with its non-finite detection logic. Box-Cox fits
+# one lambda per column, and across only 4 near-constant high-magnitude values the MLE lambda explodes (~78), so
+# the transform overflows float64. Instead of handing sklearn a matrix full of NaNs (which used to crash PCA with
+# "Input X contains NaN"), RNAlysis now fails loudly and names the offending genes.
+UNSTABLE_BOX_COX_COLUMN = np.array([8482.73, 8459.93, 8423.67, 8288.78])
+WELL_BEHAVED_COLUMNS = np.array([[10.0, 3.0], [50.0, 90.0], [200.0, 40.0], [1000.0, 7.0]])
+
+
+def _array_with_unstable_column():
+    return np.column_stack([WELL_BEHAVED_COLUMNS[:, 0], UNSTABLE_BOX_COX_COLUMN, WELL_BEHAVED_COLUMNS[:, 1]])
+
+
+@pytest.mark.parametrize('parallel_backend', ['sequential', 'threading'])
+def test_standard_box_cox_raises_on_non_finite_column(parallel_backend, monkeypatch):
+    monkeypatch.setattr(generic, 'BOX_COX_PARALLEL_MIN_COLUMNS', 2)
+    array = _array_with_unstable_column()
+    with pytest.raises(InvalidValueError) as err:
+        standard_box_cox(array, parallel_backend=parallel_backend, feature_names=['good1', 'GFP', 'good2'])
+    msg = str(err.value)
+    assert 'GFP' in msg
+    assert 'good1' not in msg and 'good2' not in msg
+    assert "'log'" in msg
+
+
+def test_standard_box_cox_unstable_column_error_names_dataframe_columns():
+    array = _array_with_unstable_column()
+    data_df = pl.DataFrame(['sample1', 'sample2', 'sample3', 'sample4']).with_columns(
+        pl.DataFrame(array, schema=['good1', 'GFP', 'good2']))
+    with pytest.raises(InvalidValueError) as err:
+        standard_box_cox(data_df)
+    assert 'GFP' in str(err.value)
+
+
+def test_standard_box_cox_raises_on_absurdly_large_output(monkeypatch):
+    # a Box-Cox output can also come back *finite* but astronomically large (an exploded lambda that did not
+    # quite overflow). Such a column silently dominates every principal component instead of crashing, so it
+    # must be caught too. Which real inputs land there depends on the exact scipy/sklearn optimizer, so the
+    # magnitude branch is pinned here by faking the transform output rather than by a brittle input fixture.
+    array = _array_with_unstable_column()
+
+    def fake_box_cox(arr):
+        out = np.ones_like(arr)
+        out[:, 1] = np.array([1e200, -1e200, 1e199, -1e199])
+        return out
+
+    monkeypatch.setattr(generic, '_box_cox_fit_transform', fake_box_cox)
+    with pytest.raises(InvalidValueError) as err:
+        standard_box_cox(array, feature_names=['good1', 'GFP', 'good2'])
+    assert 'GFP' in str(err.value)
+
+
+def test_standard_box_cox_well_behaved_data_is_unaffected():
+    # rule 5: currently-working inputs must keep producing bit-identical output
+    reference = StandardScaler().fit_transform(
+        PowerTransformer(method='box-cox').fit_transform(WELL_BEHAVED_COLUMNS + 1))
+    assert np.array_equal(standard_box_cox(WELL_BEHAVED_COLUMNS, feature_names=['good1', 'good2']), reference)
+
+
+@pytest.mark.parametrize('value,truth', [
+    (True, 'box-cox'),
+    (False, 'none'),
+    ('box-cox', 'box-cox'),
+    ('Box-Cox', 'box-cox'),
+    ('log', 'log'),
+    ('none', 'none'),
+])
+def test_parse_power_transform(value, truth):
+    assert parse_power_transform(value) == truth
+
+
+@pytest.mark.parametrize('value', ['boxcox', 'log2', '', None, 5])
+def test_parse_power_transform_invalid(value):
+    with pytest.raises(InvalidValueError):
+        parse_power_transform(value)
+
+
+def test_standard_log():
+    rng = np.random.default_rng(4)
+    array = rng.integers(0, 5000, (6, 8)).astype(float)
+    reference = StandardScaler().fit_transform(np.log2(array + 1))
+    assert np.array_equal(standard_log(array), reference)
+
+    data_df = pl.DataFrame([f'ind{i}' for i in range(6)]).with_columns(
+        pl.DataFrame(array, schema=[f'col{j}' for j in range(8)]))
+    res_df = standard_log(data_df)
+    assert isinstance(res_df, pl.DataFrame)
+    assert res_df.columns == data_df.columns
+    assert np.all(res_df.select(pl.first()) == data_df.select(pl.first()))
+    assert np.array_equal(res_df.select(cs.numeric()).to_numpy(), reference)
+
+
+def test_standard_log_survives_unstable_box_cox_data():
+    # 'log' is the escape hatch offered by the Box-Cox error message -- it must never fail on data that
+    # Box-Cox chokes on
+    res = standard_log(_array_with_unstable_column())
+    assert np.isfinite(res).all()
+
+
+def test_standard_log_rejects_negative_values():
+    with pytest.raises(InvalidValueError):
+        standard_log(np.array([[1.0, -5.0], [2.0, 3.0]]))
+
+
+@pytest.mark.parametrize('power_transform,truth', [
+    (True, 'standard_box_cox'),
+    ('box-cox', 'standard_box_cox'),
+    ('log', 'standard_log'),
+    (False, 'standardize'),
+    ('none', 'standardize'),
+])
+def test_get_transform_function(power_transform, truth):
+    assert get_transform_function(power_transform).__name__ == truth
 
 
 def test_color_generator():
@@ -391,3 +513,83 @@ def test_jitter(n, jitter_range):
     assert np.isclose(np.mean(res), 0, atol=0.001)
     assert max(res) <= jitter_range or np.isclose(max(res), jitter_range, atol=0.001)
     assert min(res) >= -jitter_range or np.isclose(min(res), -jitter_range, atol=0.001)
+
+
+# --- Pipeline YAML parameter sanitization -------------------------------------------------------
+# Pipeline parameters are dumped with yaml.safe_dump, which can only represent a handful of types.
+# Anything a user can plausibly pass (a numpy scalar plucked out of a result table, a pathlib Path)
+# must be converted first, and anything that genuinely cannot be represented must fail with a
+# message naming the offending function and parameter - not with a bare RepresenterError.
+
+
+@pytest.mark.parametrize('value,expected,expected_type', [
+    (np.float64(5.0), 5.0, float),
+    (np.int64(7), 7, int),
+    (np.bool_(True), True, bool),
+    (np.str_('abc'), 'abc', str),
+    (Path('some/dir/table.csv'), 'some/dir/table.csv', str),
+    (np.array([1, 2, 3]), [1, 2, 3], list),
+    (np.array([[1.5], [2.5]]), [[1.5], [2.5]], list),
+    ((1, 2), [1, 2], list),
+    ('plain string', 'plain string', str),
+    (None, None, type(None)),
+])
+def test_sanitize_for_yaml_converts_values(value, expected, expected_type):
+    res = generic._sanitize_for_yaml(value, 'context')
+    assert res == expected
+    assert type(res) is expected_type
+    assert yaml.safe_load(yaml.safe_dump(res)) == expected
+
+
+def test_sanitize_for_yaml_recurses_into_containers():
+    value = {'a': [np.float64(1.5), (Path('x/y'), {'b': np.array([1, 2])})], np.str_('c'): {np.int64(3)}}
+    res = generic._sanitize_for_yaml(value, 'context')
+    assert res == {'a': [1.5, ['x/y', {'b': [1, 2]}]], 'c': {3}}
+    assert yaml.safe_load(yaml.safe_dump(res)) == res
+
+
+def test_sanitize_for_yaml_unrepresentable_value_raises_typed_error():
+    class Unrepresentable:
+        pass
+
+    with pytest.raises(InvalidTypeError) as err:
+        generic._sanitize_for_yaml(Unrepresentable(), "parameter 'threshold' of function 'foo'")
+    assert "parameter 'threshold' of function 'foo'" in str(err.value)
+    assert 'Unrepresentable' in str(err.value)
+
+
+def test_sanitize_for_yaml_unhashable_dict_key_raises_typed_error():
+    with pytest.raises(InvalidTypeError) as err:
+        generic._sanitize_for_yaml({(1, 2): 'val'}, "parameter 'grouping' of function 'foo'")
+    assert "parameter 'grouping' of function 'foo'" in str(err.value)
+
+
+@pytest.mark.parametrize('content,is_yaml', [
+    ('tests/test_files/no_such_file.yaml', False),
+    ('C:/no/such/file.yaml', False),
+    ('a_bare_word', False),
+    ('', False),
+    ('filter_type: countfilter', True),
+    ('functions:\n- describe\nparams:\n- - []\n  - {}\n', True),
+])
+def test_parse_pipeline_yaml_string_only_accepts_plausible_yaml(content, is_yaml):
+    assert generic._parse_pipeline_yaml_string(content)[0] == is_yaml
+
+
+# --- numba disk cache (issue #257) ---------------------------------------------------------------
+# Without `cache=True` every fresh process -- including every Windows `spawn` multiprocessing worker
+# -- recompiles the jitted kernels from scratch. These guards keep that from silently regressing.
+
+def test_numba_cache_flag_follows_frozen_env():
+    """Caching must be on from source, and off in the frozen app (see generic.NUMBA_CACHE's comment)."""
+    assert generic.NUMBA_CACHE is not FROZEN_ENV
+
+
+@pytest.mark.skipif(not isinstance(generic.numba, ModuleType), reason='numba is not installed')
+def test_jitted_kernels_use_the_disk_cache():
+    """A NullCache on either kernel means it gets recompiled from scratch in every process."""
+    from rnalysis.filtering import FoldChangeFilter
+    from rnalysis.utils.enrichment_runner import PermutationTest
+
+    for kernel in (FoldChangeFilter._foldchange_randomization, PermutationTest._calc_permutation_pval):
+        assert type(kernel._cache).__name__ != 'NullCache', f'{kernel.__name__} is not disk-cached'

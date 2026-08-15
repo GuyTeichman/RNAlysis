@@ -5,12 +5,24 @@ from rnalysis.utils.ontology import *
 matplotlib.use('Agg')
 
 
+def _stub_graphviz_binary(monkeypatch):
+    """Stub out the real GraphViz binary probe so these unit tests stay hermetic.
+
+    ``render_graphviz_plot`` calls ``graphviz.version()`` - a real subprocess probe of the ``dot``
+    executable - *before* it renders anything. Mocking only ``Digraph.render`` therefore leaves the
+    test depending on GraphViz actually being installed on the machine, which makes it fail on any
+    runner where the GraphViz install flaked.
+    """
+    monkeypatch.setattr(graphviz, 'version', lambda: (0, 0, 0))
+
+
 def test_render_graphviz_plot(monkeypatch):
     rendered = []
 
     def mock_render(*args, **kwargs):
         rendered.append(True)
 
+    _stub_graphviz_binary(monkeypatch)
     monkeypatch.setattr(graphviz.Digraph, 'render', mock_render)
     assert render_graphviz_plot(graphviz.Digraph(), 'pth', 'format')
     assert rendered == [True]
@@ -22,6 +34,7 @@ def test_render_graphviz_plot_no_format(monkeypatch):
     def mock_render(*args, **kwargs):
         rendered.append(True)
 
+    _stub_graphviz_binary(monkeypatch)
     monkeypatch.setattr(graphviz.Digraph, 'render', mock_render)
     assert render_graphviz_plot(graphviz.Digraph(), 'pth', 'none')
     assert rendered == []
@@ -31,7 +44,21 @@ def test_render_graphviz_plot_no_graphviz(monkeypatch):
     def mock_failed_render(*args, **kwargs):
         raise graphviz.ExecutableNotFound(('', ''))
 
+    # the binary probe is stubbed to succeed so the mocked render is what actually raises - otherwise
+    # this test would pass for the wrong reason on a machine with no GraphViz installed
+    _stub_graphviz_binary(monkeypatch)
     monkeypatch.setattr(graphviz.Digraph, 'render', mock_failed_render)
+
+    assert not render_graphviz_plot(graphviz.Digraph(), 'pth', 'format')
+
+
+def test_render_graphviz_plot_binary_missing(monkeypatch):
+    """The probe itself raising ExecutableNotFound (no GraphViz on the machine) is handled too."""
+
+    def mock_missing_binary(*args, **kwargs):
+        raise graphviz.ExecutableNotFound(('', ''))
+
+    monkeypatch.setattr(graphviz, 'version', mock_missing_binary)
 
     assert not render_graphviz_plot(graphviz.Digraph(), 'pth', 'format')
 

@@ -8,6 +8,8 @@ from typing import Iterable, Optional, Tuple, Union
 import polars as pl
 import typing_extensions
 
+from rnalysis.exceptions import InvalidTypeError, InvalidValueError
+
 
 def is_legal_file_path(file_path: str):
     if not isinstance(file_path, (str, os.PathLike)):
@@ -92,7 +94,8 @@ def isinstanceiter(iterable: Iterable, object_class: Union[type, Tuple[type, ...
     :return: True if all members of 'iterable' are of type 'object_class', and False otherwise.
     :rtype: bool
     """
-    assert isiterable(iterable), f"Object of type {type(iterable)} is not iterable."
+    if not isiterable(iterable):
+        raise InvalidTypeError(f"Object of type {type(iterable)} is not iterable.")
     return all([isinstance(i, object_class) for i in iterable])
 
 
@@ -109,7 +112,8 @@ def isinstanceiter_inh(iterable: Iterable, parent_class: Union[type, Tuple[type,
     and False otherwise.
     :rtype: bool
     """
-    assert isiterable(iterable), f"Object of type {type(iterable)} is not iterable."
+    if not isiterable(iterable):
+        raise InvalidTypeError(f"Object of type {type(iterable)} is not iterable.")
     return all([isinstanceinh(i, parent_class) for i in iterable])
 
 
@@ -125,7 +129,8 @@ def isinstanceiter_any(iterable: Iterable, object_class: Union[type, Tuple[type,
     :return: True if at least one of the members of 'iterable' is of type 'object_class', and False otherwise.
     :rtype: bool
     """
-    assert isiterable(iterable), f"Object of type {type(iterable)} is not iterable."
+    if not isiterable(iterable):
+        raise InvalidTypeError(f"Object of type {type(iterable)} is not iterable.")
     return any([isinstance(i, object_class) for i in iterable])
 
 
@@ -154,10 +159,12 @@ def validate_biotype_table(biotype_df: pl.DataFrame):
     :type biotype_df: pandas DataFrame
 
     """
-    assert biotype_df.shape[
-               1] == 2, f"Invalid number of columns in Biotype Reference Table: found {biotype_df.shape[1]} columns instead of 2!"
-    assert biotype_df.shape[
-               0] >= 2, f"Biotype Reference Table must have at least two rows, found only  {biotype_df.shape[0]}!"
+    if biotype_df.shape[1] != 2:
+        raise InvalidValueError(
+            f"Invalid number of columns in Biotype Reference Table: found {biotype_df.shape[1]} columns instead of 2!")
+    if biotype_df.shape[0] < 2:
+        raise InvalidValueError(
+            f"Biotype Reference Table must have at least two rows, found only  {biotype_df.shape[0]}!")
 
 
 def validate_attr_table(attr_df: pl.DataFrame):
@@ -167,21 +174,25 @@ def validate_attr_table(attr_df: pl.DataFrame):
     :type attr_df: pandas DataFrame
 
     """
-    assert attr_df.shape[1] >= 2, \
-        f"Attribute Reference Table must have at least two columns, found only  {attr_df.shape[1]}!"
-    assert attr_df.shape[0] >= 1, \
-        f"Attribute Reference Table must have at least one row, found only  {attr_df.shape[0]}!"
+    if attr_df.shape[1] < 2:
+        raise InvalidValueError(
+            f"Attribute Reference Table must have at least two columns, found only  {attr_df.shape[1]}!")
+    if attr_df.shape[0] < 1:
+        raise InvalidValueError(
+            f"Attribute Reference Table must have at least one row, found only  {attr_df.shape[0]}!")
 
 
 def validate_uniprot_dataset_name(dataset_dicts: Tuple[dict, dict], map_to_names: Iterable[str],
                                   map_from_names: Iterable[str]):
     dataset_to, dataset_from = dataset_dicts
     for name in map_to_names:
-        assert name in dataset_to, f"Dataset '{name}' is not a valid Uniprot Dataset to map gene names/IDs to. " \
-                                   f"Valid Uniprot Datasets are: {', '.join(dataset_to.keys())}."
+        if name not in dataset_to:
+            raise InvalidValueError(f"Dataset '{name}' is not a valid Uniprot Dataset to map gene names/IDs to. "
+                                    f"Valid Uniprot Datasets are: {', '.join(dataset_to.keys())}.")
     for name in map_from_names:
-        assert name in dataset_from, f"Dataset '{name}' is not a valid Uniprot Dataset to map gene names/IDs from. " \
-                                     f"Valid Uniprot Datasets are: {', '.join(dataset_from.keys())}."
+        if name not in dataset_from:
+            raise InvalidValueError(f"Dataset '{name}' is not a valid Uniprot Dataset to map gene names/IDs from. "
+                                    f"Valid Uniprot Datasets are: {', '.join(dataset_from.keys())}.")
 
 
 def validate_threshold(threshold: float = 1):
@@ -192,32 +203,47 @@ def validate_threshold(threshold: float = 1):
     :param threshold: optional. A threshold value for filter_low_rpm to be asserted.
 
     """
-    assert isinstance(threshold, (float, int)), "Threshold must be a number!"
-    assert threshold >= 0, "Threshold must be zero or larger!"
+    if not isinstance(threshold, (float, int)):
+        raise InvalidTypeError("Threshold must be a number!")
+    # written as `not >= 0` rather than `< 0` so NaN is rejected: every comparison against NaN is
+    # False, so `threshold < 0` would let a NaN through and silently empty the table downstream
+    if not threshold >= 0:
+        raise InvalidValueError("Threshold must be zero or larger!")
 
 
 def validate_clustering_parameters(legal_metrics: set, metric: str, linkage: str = None):
     legal_linkages = {'single', 'average', 'complete', 'ward'}
-    assert isinstance(metric, str), f"'metric' must be a string. Instead got '{type(metric)}'."
+    if not isinstance(metric, str):
+        raise InvalidTypeError(f"'metric' must be a string. Instead got '{type(metric)}'.")
     metric = metric.lower()
-    assert metric in legal_metrics, f"'metric' must be one of {legal_metrics}. Instead got '{metric}'."
+    if metric not in legal_metrics:
+        raise InvalidValueError(f"'metric' must be one of {legal_metrics}. Instead got '{metric}'.")
 
     if linkage is not None:
-        assert isinstance(linkage, str), f"'linkage' must be a string. Instead got '{type(linkage)}'."
+        if not isinstance(linkage, str):
+            raise InvalidTypeError(f"'linkage' must be a string. Instead got '{type(linkage)}'.")
         linkage = linkage.lower()
-        assert linkage in legal_linkages, f"'linkage' must be in {legal_linkages}. Instead got '{linkage}'."
+        if linkage not in legal_linkages:
+            raise InvalidValueError(f"'linkage' must be in {legal_linkages}. Instead got '{linkage}'.")
         return metric, linkage
     return metric
 
 
 def validate_hdbscan_parameters(min_cluster_size: int, metric: str, cluster_selection_method: str, n_features: int):
-    assert isinstance(min_cluster_size, int) and min_cluster_size >= 2, \
-        f"'min_cluster_size' must be an integer >=2. Instead got {min_cluster_size}, type={type(min_cluster_size)}."
-    assert min_cluster_size <= n_features, \
-        "'min_cluster_size' cannot be larger than the number of features in the CountFilter object. "
-    assert isinstance(cluster_selection_method, str), \
-        f"'cluster_selection_method' must be a string. Instead got {type(cluster_selection_method)}."
-    assert isinstance(metric, str), f"'metric' must be a string. Instead got {type(metric)}."
+    if not isinstance(min_cluster_size, int):
+        raise InvalidTypeError(
+            f"'min_cluster_size' must be an integer >=2. Instead got {min_cluster_size}, type={type(min_cluster_size)}.")
+    if min_cluster_size < 2:
+        raise InvalidValueError(
+            f"'min_cluster_size' must be an integer >=2. Instead got {min_cluster_size}, type={type(min_cluster_size)}.")
+    if min_cluster_size > n_features:
+        raise InvalidValueError(
+            "'min_cluster_size' cannot be larger than the number of features in the CountFilter object. ")
+    if not isinstance(cluster_selection_method, str):
+        raise InvalidTypeError(
+            f"'cluster_selection_method' must be a string. Instead got {type(cluster_selection_method)}.")
+    if not isinstance(metric, str):
+        raise InvalidTypeError(f"'metric' must be a string. Instead got {type(metric)}.")
 
 
 #: annotation file extensions (a trailing ``.gz`` is stripped first) mapped to their format hint
@@ -275,7 +301,8 @@ typing_extensions.Literal['gtf', 'gff3']:
     :type pth: str or pathlib.Path
     :return: 'gtf' or 'gff3' (the format of the genome annotation file)
     """
-    assert Path(pth).exists(), f"The provided gtf_path doesn't exist: {pth}"
+    if not Path(pth).exists():
+        raise InvalidValueError(f"The provided gtf_path doesn't exist: {pth}")
     file_type = sniff_annotation_format(pth) or _annotation_extension_hint(pth)
     if file_type is None:
         raise ValueError(f"The supplied annotation file has an unsupported format: '{Path(pth).name}'. "

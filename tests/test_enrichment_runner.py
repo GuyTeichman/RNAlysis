@@ -7,6 +7,7 @@ import pytest
 from polars.testing import assert_frame_equal
 
 from rnalysis import filtering
+from rnalysis.exceptions import InvalidValueError, RNAlysisInputError
 from rnalysis.utils import enrichment_runner
 from rnalysis.utils.enrichment_runner import *
 from rnalysis.utils.io import *
@@ -106,7 +107,7 @@ def test_enrichment_get_attrs_all_attributes():
 def test_enrichment_get_attrs_bad_path():
     e = EnrichmentRunner({'_'}, 'attribute1', 0.05, 'fakepath', True, False, '', False, True, 'test_set', False,
                          HypergeometricTest())
-    with pytest.raises((FileNotFoundError, AssertionError)):
+    with pytest.raises((FileNotFoundError, InvalidValueError)):
         e.fetch_annotations()
         e.get_attribute_names()
         e.get_background_set()
@@ -627,7 +628,7 @@ def test_enrichment_runner_validate_attributes(attibute_list, all_attrs, is_lega
     if is_legal:
         runner._validate_attributes(attibute_list, all_attrs)
     else:
-        with pytest.raises(AssertionError):
+        with pytest.raises(RNAlysisInputError):
             runner._validate_attributes(attibute_list, all_attrs)
 
 
@@ -698,6 +699,24 @@ def test_enrichment_runner_correct_multiple_comparisons():
         res.sort(pl.col('padj', 'colName')).select(compared_cols))
 
 
+@pytest.mark.parametrize('bad_style', ['barr', 'Lollipop', '', 5, None])
+def test_bar_plotter_rejects_invalid_plot_style(bad_style):
+    # the error message used to interpolate self.plot_style, which is not assigned yet (and the class
+    # uses __slots__), so an invalid plot_style crashed with AttributeError instead of validating
+    results = pl.DataFrame({'colName': ['a'], 'score': [1.0]})
+    with pytest.raises(InvalidValueError) as err:
+        BarPlotter(results, 'score', 'all', 0.05, 'ylabel', 'title', plot_style=bad_style)
+    assert str(bad_style) in str(err.value)
+    assert "must be 'bar' or 'lollipop'" in str(err.value)
+
+
+@pytest.mark.parametrize('good_style', ['bar', 'lollipop'])
+def test_bar_plotter_accepts_legal_plot_style(good_style):
+    results = pl.DataFrame({'colName': ['a'], 'score': [1.0]})
+    plotter = BarPlotter(results, 'score', 'all', 0.05, 'ylabel', 'title', plot_style=good_style)
+    assert plotter.plot_style == good_style
+
+
 @pytest.mark.parametrize('single_list', [True, False])
 def test_enrichment_runner_plot_results(monkeypatch, single_list):
     def validate_params(self):
@@ -758,7 +777,7 @@ def test_sign_test_enrichment(monkeypatch, attr, gene_set, truth):
         assert np.all(sorted(values) == sorted(df.filter(pl.first().is_in(gene_set))[attr].to_list()))
         return None, 0.05
 
-    monkeypatch.setattr(enrichment_runner, 'sign_test', validate_params)
+    monkeypatch.setattr(enrichment_runner, '_sign_test', validate_params)
     runner = NonCategoricalEnrichmentRunner.__new__(NonCategoricalEnrichmentRunner)
     runner.annotations = df
     runner.gene_set = gene_set
@@ -1043,7 +1062,7 @@ def test_go_enrichment_runner_translate_gene_ids_skips_invalid_dataset(monkeypat
     # exceptions surface at result()).
     def fake_run(self, ids):
         if 'bad' in ids:
-            raise AssertionError("'source_bad' is not a valid Uniprot Dataset")
+            raise InvalidValueError("'source_bad' is not a valid Uniprot Dataset")
         return {'good': 'good_translated'}
 
     monkeypatch.setattr(io.GeneIDTranslator, '__init__', lambda *args: None)
@@ -1059,10 +1078,10 @@ def test_go_enrichment_runner_translate_gene_ids_skips_invalid_dataset(monkeypat
 
 
 def test_go_enrichment_runner_translate_gene_ids_reraises_other_assertion(monkeypatch):
-    # An AssertionError that is not the 'invalid Uniprot Dataset' case must propagate, not be
+    # An input error that is not the 'invalid Uniprot Dataset' case must propagate, not be
     # swallowed -- including when raised inside a worker thread.
     def fake_run(self, ids):
-        raise AssertionError('some other problem')
+        raise InvalidValueError('some other problem')
 
     monkeypatch.setattr(io.GeneIDTranslator, '__init__', lambda *args: None)
     monkeypatch.setattr(io.GeneIDTranslator, 'run', fake_run)
@@ -1071,7 +1090,7 @@ def test_go_enrichment_runner_translate_gene_ids_reraises_other_assertion(monkey
 
     runner = GOEnrichmentRunner.__new__(GOEnrichmentRunner)
     runner.gene_id_type = 'target'
-    with pytest.raises(AssertionError, match='some other problem'):
+    with pytest.raises(InvalidValueError, match='some other problem'):
         runner._translate_gene_ids(annotation_dict, source_to_gene_id_dict)
 
 
@@ -1406,7 +1425,7 @@ def test_go_enrichment_runner_process_annotations_no_annotations(monkeypatch):
         return AnnotationIterator(0)
 
     monkeypatch.setattr(GOEnrichmentRunner, '_get_annotation_iterator', _get_annotation_iter_zero)
-    with pytest.raises(AssertionError) as e:
+    with pytest.raises(InvalidValueError) as e:
         runner = GOEnrichmentRunner.__new__(GOEnrichmentRunner)
         runner.propagate_annotations = "no"
         runner.organism = "organism"

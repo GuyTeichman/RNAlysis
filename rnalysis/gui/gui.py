@@ -23,6 +23,7 @@ import yaml
 from PyQt6 import QtCore, QtGui, QtWidgets
 
 from rnalysis import __version__, enrichment, fastq, filtering
+from rnalysis.exceptions import InternalError, InvalidValueError
 from rnalysis.gui import (gui_graphics, gui_quickstart, gui_style, gui_widgets,
                           gui_windows)
 from rnalysis.utils import (clustering, generic, io, parsing, settings,
@@ -405,8 +406,9 @@ class DiffExpWindow(gui_windows.FuncExternalWindow):
     def init_design_mat(self):
         design_mat = io.load_table(self.param_widgets['design_matrix'].text())
         for factor in design_mat.columns:
-            assert parsing.slugify(factor) == factor, f"Invalid factor name '{factor}': contains invalid characters." \
-                                                      f" \nSuggested alternative name: '{parsing.slugify(factor)}'. "
+            if parsing.slugify(factor) != factor:
+                raise InvalidValueError(f"Invalid factor name '{factor}': contains invalid characters."
+                                        f" \nSuggested alternative name: '{parsing.slugify(factor)}'. ")
         self.design_mat = design_mat
 
     def init_model_ui(self):
@@ -461,9 +463,16 @@ class DiffExpWindow(gui_windows.FuncExternalWindow):
             self.comparisons_widgets['picker'].set_comparison_values(comparisons)
 
         if self.simplified:
-            assert covariates is None or len(covariates) == 0, "Covariates are not supported in simplified mode."
-            assert lrt_factors is None or len(lrt_factors) == 0, \
-                "Likelihood Ratio Tests are not supported in simplified mode."
+            # a parameter file exported from the full window is a user-supplied artifact, so an
+            # unsupported entry in it is bad input - not an RNAlysis bug
+            if not (covariates is None or len(covariates) == 0):
+                raise InvalidValueError("This parameter file contains covariates, which the simplified window "
+                                        "does not support. Open the full version of this window to use it, "
+                                        "or remove the covariates from the file.")
+            if not (lrt_factors is None or len(lrt_factors) == 0):
+                raise InvalidValueError("This parameter file contains Likelihood Ratio Test factors, which the "
+                                        "simplified window does not support. Open the full version of this window "
+                                        "to use it, or remove those factors from the file.")
         else:
             if 'picker' in self.covariates_widgets:
                 self.covariates_widgets['picker'].set_comparison_values(covariates)
@@ -527,6 +536,17 @@ class ClicomWindow(gui_windows.FuncExternalWindow):
         super().connect_widget(widget)
         if isinstance(widget, (gui_widgets.TableColumnPicker, gui_widgets.TableColumnPicker)):
             widget.add_columns(self.filter_obj.columns)
+
+    def migrate_legacy_parameters(self, kwargs: dict) -> dict:
+        # 'power_transform' used to be a boolean (or a pair of them); it is now a menu of named transforms.
+        # Parameter files exported by older versions still carry the booleans, so translate them to the names
+        # they now stand for -- the API accepts both, but the drop-down can only display the names.
+        kwargs = super().migrate_legacy_parameters(kwargs)
+        if 'power_transform' in kwargs:
+            transforms = [generic.parse_power_transform(value)
+                          for value in parsing.data_to_list(kwargs['power_transform'])]
+            kwargs['power_transform'] = transforms[0] if len(transforms) == 1 else transforms
+        return kwargs
 
     def init_ui(self):
         super().init_ui()
@@ -1561,7 +1581,8 @@ class TabPage(QtWidgets.QWidget):
         self.stack.widget(ind).check_selection_status()
 
     def get_all_actions(self):
-        assert self.obj() is not None, "No object was loaded!"
+        if self.obj() is None:
+            raise InternalError("No object was loaded!")
         all_methods = dir(self.obj())
         public_methods = [mthd for mthd in all_methods if
                           (not mthd.startswith('_')) and (callable(getattr(type(self.obj()), mthd))) and (
@@ -2589,7 +2610,7 @@ class CreatePipelineWindow(gui_widgets.MinMaxDialog, FilterTabPage):
         try:
             self.pipeline.remove_last_function()
             self.update_pipeline_preview()
-        except AssertionError:
+        except InvalidValueError:
             err = QtWidgets.QMessageBox(self)
             err.setWindowTitle('Pipeline is already empty!')
             err.setText('Cannot remove functions from the Pipeline - it is already empty!')
@@ -3005,7 +3026,8 @@ class InplaceCachedCommand(InplaceCommand):
             self.first_pass = False
             super().redo()
         else:
-            assert self.new_spawn_id is not None
+            if self.new_spawn_id is None:
+                raise InternalError
             source_name = generic.get_method_readable_name(getattr(self.tab.obj(), self.func_name))
             self.new_job_id = JOB_COUNTER.get_id() if self.new_job_id is None else self.new_job_id
             self.tab.update_obj(copy.copy(self.processed_obj))
@@ -3195,13 +3217,14 @@ class MainWindow(QtWidgets.QMainWindow):
                 self._generate_report = True
                 self.report = gui_report.ReportGenerator()
                 cleared = self.clear_session(not (self.tabs.count() == 1 and self.tabs.currentWidget().is_empty()))
-                assert cleared
+                if not cleared:
+                    raise InternalError
                 self.toggle_report_action.setChecked(True)
                 print("Report generation turned on. ")
             except ImportError:
                 warnings.warn("The RNAlysis 'reports' module is not installed. Please install it and try again. ")
                 self._toggle_reporting(False)
-            except AssertionError:
+            except InternalError:
                 warnings.warn("You must clear the current session before turning report generation on. "
                               "Please clear your current session and try again. ")
                 self._toggle_reporting(False)
@@ -3567,7 +3590,8 @@ class MainWindow(QtWidgets.QMainWindow):
             return
         if spawn is None:
             return
-        assert self.is_valid_spawn(spawn), f"Invalid spawn type '{type(spawn)}'!"
+        if not self.is_valid_spawn(spawn):
+            raise InternalError(f"Invalid spawn type '{type(spawn)}'!")
         spawn_type = self._get_spawn_type(spawn)
         prefix = f'{spawn_id}_{name}' if spawn_type in ('Other output', 'Pipeline') else str(spawn_id)
         filename = self._cache_spawn(spawn, prefix)
@@ -3739,10 +3763,15 @@ class MainWindow(QtWidgets.QMainWindow):
 
     @staticmethod
     def _filename_to_gene_set(filename: str):
-        if filename.endswith('.csv'):
-            gene_set = parsing.data_to_set(pl.scan_csv(filename).select(pl.first()).collect())
-        elif filename.endswith('.tsv'):
-            gene_set = parsing.data_to_set(pl.scan_csv(filename, separator='\t').select(pl.first()).collect())
+        if filename.endswith(('.csv', '.tsv')):
+            separator = '\t' if filename.endswith('.tsv') else ','
+            first_col = pl.scan_csv(filename, separator=separator).select(pl.first()).collect().to_series()
+            if first_col.dtype == pl.String:
+                # trim stray leading/trailing whitespace so imported identifiers match how gene IDs
+                # are read from reference and count tables (io.load_table), then null out and drop
+                # cells that were empty/whitespace-only so they don't import as an empty "gene"
+                first_col = first_col.str.strip_chars().replace('', None).drop_nulls()
+            gene_set = parsing.data_to_set(first_col)
         else:
             with open(filename) as f:
                 gene_set = {line.strip() for line in f.readlines()}
@@ -3803,7 +3832,8 @@ class MainWindow(QtWidgets.QMainWindow):
 
     @QtCore.pyqtSlot(str)
     def edit_pipeline(self, pipeline_name: str):
-        assert pipeline_name in self.pipelines, f"Pipeline {pipeline_name} doesn't exist!"
+        if pipeline_name not in self.pipelines:
+            raise InternalError(f"Pipeline {pipeline_name} doesn't exist!")
         pipeline = self.pipelines[pipeline_name][0]
         self.pipeline_window = CreatePipelineWindow.start_from_pipeline(pipeline, pipeline_name, self)
         self.pipeline_window.pipelineSaved.connect(self.save_pipeline)
@@ -4554,7 +4584,8 @@ class MainWindow(QtWidgets.QMainWindow):
         if worker_output.result is None or len(worker_output.result) == 0:
             print("Done")
             return
-        assert isinstance(worker_output, gui_widgets.WorkerOutput), f"invalid worker output: {worker_output}"
+        if not isinstance(worker_output, gui_widgets.WorkerOutput):
+            raise InternalError(f"invalid worker output: {worker_output}")
         func_name: str = worker_output.emit_args[0]
         job_id = worker_output.job_id
 
@@ -4590,7 +4621,8 @@ class MainWindow(QtWidgets.QMainWindow):
         if worker_output.result is None or len(worker_output.result) == 0:
             print("Done")
             return
-        assert isinstance(worker_output, gui_widgets.WorkerOutput), f"invalid worker output: {worker_output}"
+        if not isinstance(worker_output, gui_widgets.WorkerOutput):
+            raise InternalError(f"invalid worker output: {worker_output}")
 
         func_name: str = generic.get_method_readable_name(worker_output.partial.func)
         clustering_runner: clustering.ClusteringRunner = worker_output.result[1]
@@ -4613,7 +4645,8 @@ class MainWindow(QtWidgets.QMainWindow):
         if len(worker_output.result) == 0:
             print("Done")
             return
-        assert isinstance(worker_output, gui_widgets.WorkerOutput), f"invalid worker output: {worker_output}"
+        if not isinstance(worker_output, gui_widgets.WorkerOutput):
+            raise InternalError(f"invalid worker output: {worker_output}")
 
         set_name = worker_output.emit_args[0]
         job_id = worker_output.job_id
@@ -4821,13 +4854,6 @@ async def run():  # pragma: no cover
     window = MainWindow()
     sys.excepthook = window.excepthook
     builtins.input = window.input
-
-    try:
-        pass
-    except ImportError:
-        warnings.warn("RNAlysis can perform faster when package 'numba' is installed. \n"
-                      "If you want to improve the performance of slow operations on RNAlysis, "
-                      "please install package 'numba'. ")
 
     if show_app:
         window.show()

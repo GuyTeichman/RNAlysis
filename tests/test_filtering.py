@@ -1,5 +1,6 @@
 import json
 import shutil
+from enum import Enum, IntEnum
 from unittest.mock import Mock, patch
 
 import matplotlib
@@ -7,6 +8,7 @@ import pytest
 import yaml
 
 from rnalysis import __version__
+from rnalysis.exceptions import InvalidTypeError, InvalidValueError, RNAlysisInputError
 from rnalysis.filtering import *
 from tests import __attr_ref__, __biotype_ref__
 
@@ -354,7 +356,7 @@ class TestFilterConcatenate:
         non_filter_obj = "not a Filter object"
 
         # Assert that concatenating with a non-Filter object raises an AssertionError
-        with pytest.raises(AssertionError):
+        with pytest.raises(InvalidTypeError):
             self.filter1.concatenate(non_filter_obj)
 
     def test_concatenate_with_different_columns(self):
@@ -363,7 +365,7 @@ class TestFilterConcatenate:
         filter3 = Filter.from_dataframe(df3, 'filter3.csv')
 
         # Assert that concatenating Filter objects with different columns raises an AssertionError
-        with pytest.raises(AssertionError):
+        with pytest.raises(InvalidValueError):
             self.filter1.concatenate(filter3)
 
     def test_concatenate_with_overlapping_indices(self):
@@ -372,7 +374,7 @@ class TestFilterConcatenate:
         filter4 = Filter.from_dataframe(df4, 'filter4.csv')
 
         # Assert that concatenating Filter objects with overlapping indices raises an AssertionError
-        with pytest.raises(AssertionError):
+        with pytest.raises(InvalidValueError):
             self.filter1.concatenate(filter4)
 
 
@@ -466,7 +468,7 @@ def test_countfilter_pairplot_shows_spearman_of_numeric_columns(basic_countfilte
 def test_countfilter_clustergram_api(basic_countfilter, args, kwargs, xfail):
     try:
         if xfail:
-            with pytest.raises(AssertionError):
+            with pytest.raises(RNAlysisInputError):
                 basic_countfilter.clustergram(*args, **kwargs)
         else:
             basic_countfilter.clustergram(*args, **kwargs)
@@ -503,7 +505,7 @@ def test_countfilter_pca_api(kwargs, xfail, basic_countfilter):
     basic_countfilter.filter_low_reads(1)
     try:
         if xfail:
-            with pytest.raises(AssertionError):
+            with pytest.raises(RNAlysisInputError):
                 basic_countfilter.pca(**kwargs)
 
         else:
@@ -646,7 +648,7 @@ def test_annotate_from_gtf_overwrites_existing_column():
 def test_annotate_from_gtf_rejects_feature_id_column_name():
     # naming the annotation column after the table's feature-id (index) column must not silently drop the IDs
     counts = Filter.from_dataframe(pl.DataFrame({'gene': ['GENE1', 'GENE2'], 'cond1': [1.0, 2.0]}), 'annot_test')
-    with pytest.raises(AssertionError):
+    with pytest.raises(InvalidValueError):
         counts.annotate_from_gtf(_ATTR_GTF, 'chromosome', column_name='gene')
 
 
@@ -697,7 +699,7 @@ def test_filter_by_attribute_intersection():
 
 def test_filter_by_attribute_invalid_mode():
     h = CountFilter('tests/test_files/counted_filter_by_bigtable.csv')
-    with pytest.raises(AssertionError):
+    with pytest.raises(InvalidValueError):
         h.filter_by_attribute(['attribute1', 'attribute2'], mode='difference',
                               ref=__attr_ref__)
 
@@ -729,15 +731,15 @@ def test_split_by_attribute_only_one_attribute(basic_deseqfilter):
     assert np.all(
         newobj[0].df.sort(pl.first()) == basic_deseqfilter.filter_by_attribute('attribute1', ref=__attr_ref__,
                                                                                inplace=False).df.sort(pl.first()))
-    with pytest.raises(AssertionError):
+    with pytest.raises(InvalidTypeError):
         basic_deseqfilter.split_by_attribute('attribute1', ref=__attr_ref__)
 
 
 def test_split_by_attribute_faulty_attributes(basic_filter):
-    with pytest.raises(AssertionError):
+    with pytest.raises(InvalidTypeError):
         basic_filter.split_by_attribute(['attribute1', ['attribute2', 'attribute3']],
                                         ref=__attr_ref__)
-    with pytest.raises(AssertionError):
+    with pytest.raises(InvalidTypeError):
         basic_filter.split_by_attribute(['attribute1', 2], ref=__attr_ref__)
 
 
@@ -790,9 +792,9 @@ def test_filter_top_n_descending_text():
 
 def test_filter_top_n_nonexisting_column(basic_deseqfilter):
     colname = 'somecol'
-    with pytest.raises(AssertionError):
+    with pytest.raises(InvalidValueError):
         basic_deseqfilter.filter_top_n(colname, 5)
-    with pytest.raises(AssertionError):
+    with pytest.raises(InvalidValueError):
         basic_deseqfilter.filter_top_n([basic_deseqfilter.df.columns[0], colname])
     assert colname not in basic_deseqfilter.df.columns
 
@@ -955,13 +957,26 @@ def test_set_ops_multiple_variable_types():
 
 
 def test_countfilter_rpm_negative_threshold(basic_countfilter):
-    with pytest.raises(AssertionError):
+    with pytest.raises(InvalidValueError):
         basic_countfilter.filter_low_reads(threshold=-3)
 
 
 def test_countfilter_threshold_invalid(basic_countfilter):
-    with pytest.raises(AssertionError):
+    with pytest.raises(InvalidTypeError):
         basic_countfilter.filter_low_reads("5")
+
+
+@pytest.mark.parametrize('func_name', ['filter_low_reads', 'split_by_reads', 'filter_by_row_sum'])
+def test_countfilter_nan_threshold_raises_instead_of_emptying_table(basic_countfilter, func_name):
+    """A NaN threshold must be rejected, not silently applied. Every comparison against NaN is False,
+    so an unguarded NaN flows through the filter and drops every feature - returning an empty table
+    with no warning, which is far worse than an error."""
+    original_n_features = basic_countfilter.shape[0]
+    # split_by_reads always returns new objects and takes no 'inplace' argument
+    kwargs = {} if func_name == 'split_by_reads' else {'inplace': False}
+    with pytest.raises(InvalidValueError):
+        getattr(basic_countfilter, func_name)(threshold=float('nan'), **kwargs)
+    assert basic_countfilter.shape[0] == original_n_features
 
 
 def test_countfilter_split_by_reads(basic_countfilter):
@@ -986,11 +1001,11 @@ def test_filter_percentile():
 
 def test_filter_percentile_bad_input():
     h = DESeqFilter(r'tests/test_files/test_deseq_percentile.csv')
-    with pytest.raises(AssertionError):
+    with pytest.raises(InvalidValueError):
         h.filter_percentile(-0.2, 'pvalue')
-    with pytest.raises(AssertionError):
+    with pytest.raises(InvalidValueError):
         h.filter_percentile(1.1, 'baseMean')
-    with pytest.raises(AssertionError):
+    with pytest.raises(InvalidTypeError):
         h.filter_percentile('0.5', 'log2FoldChange')
 
 
@@ -1215,7 +1230,7 @@ def test_number_filters_eq(basic_countfilter, args):
     ('cond2', 'equals', '55')
 ])
 def test_number_filters_invalid_input(basic_countfilter, args):
-    with pytest.raises(AssertionError):
+    with pytest.raises(RNAlysisInputError):
         basic_countfilter.number_filters(*args)
 
 
@@ -1265,7 +1280,7 @@ def test_text_filters_ew():
     ('cond2', 'equals', 55)
 ])
 def test_text_filters_invalid_input(basic_countfilter, args):
-    with pytest.raises(AssertionError):
+    with pytest.raises(RNAlysisInputError):
         basic_countfilter.text_filters(*args)
 
 
@@ -1419,9 +1434,9 @@ def test_filter_missing_values_invalid_type():
 
 def test_filter_missing_values_nonexistent_column():
     f = Filter('tests/test_files/test_deseq_with_nan.csv')
-    with pytest.raises(AssertionError):
+    with pytest.raises(InvalidValueError):
         f.filter_missing_values('pval')
-    with pytest.raises(AssertionError):
+    with pytest.raises(InvalidValueError):
         f.filter_missing_values(['padj', 'pval'])
 
 
@@ -1494,13 +1509,13 @@ def test_pipeline_remove_last_function():
 
 def test_pipeline_remove_last_from_empty_pipeline():
     pl = Pipeline()
-    with pytest.raises(AssertionError):
+    with pytest.raises(InvalidValueError):
         pl.remove_last_function()
 
 
 def test_pipeline_apply_empty_pipeline(basic_deseqfilter):
     pl = Pipeline()
-    with pytest.raises(AssertionError):
+    with pytest.raises(InvalidValueError):
         pl.apply_to(basic_deseqfilter)
 
 
@@ -1555,12 +1570,12 @@ def test_pipeline_apply_to_with_multiple_functions():
 def test_pipeline_apply_to_invalid_object(basic_countfilter):
     pl = Pipeline('deseqfilter')
     pl.add_function(DESeqFilter.filter_significant, alpha=10 ** -70)
-    with pytest.raises(AssertionError):
+    with pytest.raises(InvalidTypeError):
         pl.apply_to(basic_countfilter)
 
 
 def test_pipeline_init_invalid_filter_type():
-    with pytest.raises(AssertionError):
+    with pytest.raises(RNAlysisInputError):
         Pipeline(filter_type='otherFilter')
 
     class otherFilter:
@@ -1568,26 +1583,26 @@ def test_pipeline_init_invalid_filter_type():
             self.value = 'value'
             self.othervalue = 'othervalue'
 
-    with pytest.raises(AssertionError):
+    with pytest.raises(RNAlysisInputError):
         Pipeline(filter_type=otherFilter)
-    with pytest.raises(AssertionError):
+    with pytest.raises(RNAlysisInputError):
         Pipeline(filter_type=max)
-    with pytest.raises(AssertionError):
+    with pytest.raises(RNAlysisInputError):
         Pipeline(filter_type=5)
 
 
 def test_pipeline_add_function_out_of_module():
     pl = Pipeline()
-    with pytest.raises(AssertionError):
+    with pytest.raises(InvalidValueError):
         pl.add_function(len)
 
-    with pytest.raises(AssertionError):
+    with pytest.raises(InvalidValueError):
         pl.add_function(np.sort, arg='val')
 
 
 def test_pipeline_add_function_invalid_type():
     pl = Pipeline()
-    with pytest.raises(AssertionError):
+    with pytest.raises(InvalidValueError):
         pl.add_function('string', arg='val')
 
 
@@ -1595,7 +1610,7 @@ def test_pipeline_add_function_mismatch_filter_type():
     pl_deseq = Pipeline('DESeqFilter')
     pl_deseq.add_function(CountFilter.filter_biotype_from_ref_table, biotype='protein_coding',
                           ref=__biotype_ref__)
-    with pytest.raises(AssertionError):
+    with pytest.raises(InvalidValueError):
         pl_deseq.add_function(CountFilter.filter_low_reads, threshold=5)
 
 
@@ -1684,7 +1699,7 @@ def test_pipeline_apply_to_with_split_function_inplace_raise_error(basic_deseqfi
     pl.add_function('filter_missing_values')
     pl.add_function(DESeqFilter.filter_significant, 0.05, opposite=True)
     pl.add_function(DESeqFilter.split_fold_change_direction)
-    with pytest.raises(AssertionError):
+    with pytest.raises(InvalidValueError):
         pl.apply_to(basic_deseqfilter, inplace=True)
 
 
@@ -1816,9 +1831,9 @@ def test_split_hierarchical_api(clustering_countfilter):
     assert isinstance(res3, tuple)
     _test_correct_clustering_split(c, res3)
 
-    with pytest.raises(AssertionError):
+    with pytest.raises(InvalidValueError):
         c.split_hierarchical(5, metric='badinput')
-    with pytest.raises(AssertionError):
+    with pytest.raises(InvalidValueError):
         c.split_hierarchical(4, linkage='badinput')
 
 
@@ -1830,9 +1845,9 @@ def test_split_hdbscan_api(clustering_countfilter):
     assert isinstance(res2, list)
     assert isinstance(res2[0], tuple)
     assert isinstance(res2[1], np.ndarray)
-    with pytest.raises(AssertionError):
+    with pytest.raises(InvalidValueError):
         c.split_hdbscan(min_cluster_size=1)
-    with pytest.raises(AssertionError):
+    with pytest.raises(InvalidValueError):
         c.split_hdbscan(c.shape[0] + 1)
 
 
@@ -2069,6 +2084,282 @@ def test_export_pipeline():
                 assert exported[key] == truth[key]
     finally:
         os.remove(outname)
+
+
+# --- Pipeline YAML serialization robustness -----------------------------------------------------
+# Pipeline YAMLs are a serialized artifact users keep for years (hard rule 4), so exporting must
+# never crash on a value a user can plausibly pass, importing must never blame the user's typo on
+# Python internals, and a Pipeline that cannot be loaded must say which RNAlysis version wrote it.
+
+
+def test_export_pipeline_sanitizes_numpy_scalar_params():
+    p = Pipeline('countfilter')
+    p.add_function('filter_low_reads', threshold=np.float64(5.0))
+
+    exported = yaml.safe_load(p.export_pipeline(None))
+
+    threshold = exported['params'][0][1]['threshold']
+    assert threshold == 5.0
+    assert type(threshold) is float
+    assert Pipeline.import_pipeline(p.export_pipeline(None)) == p
+
+
+def test_export_pipeline_sanitizes_arrays_paths_and_nested_containers():
+    p = Pipeline('countfilter')
+    p.add_function('number_filters', np.int64(5), by=Path('some/dir/table.csv'),
+                   nested={'values': np.array([1.5, 2.5]), 'flags': [np.bool_(True), (np.int32(3),)]})
+
+    exported = yaml.safe_load(p.export_pipeline(None))
+
+    args, kwargs = exported['params'][0]
+    assert args == [5] and type(args[0]) is int
+    assert kwargs['by'] == 'some/dir/table.csv'
+    assert kwargs['nested'] == {'values': [1.5, 2.5], 'flags': [True, [3]]}
+
+
+def test_export_pipeline_unrepresentable_param_raises_typed_error():
+    class Unrepresentable:
+        pass
+
+    p = Pipeline('countfilter')
+    p.add_function('filter_low_reads', threshold=Unrepresentable())
+
+    with pytest.raises(RNAlysisInputError) as err:
+        p.export_pipeline(None)
+    assert 'filter_low_reads' in str(err.value)
+    assert 'threshold' in str(err.value)
+
+
+def test_export_pipeline_unrepresentable_positional_param_raises_typed_error():
+    class Unrepresentable:
+        pass
+
+    p = Pipeline('countfilter')
+    p.add_function('number_filters', Unrepresentable())
+
+    with pytest.raises(RNAlysisInputError) as err:
+        p.export_pipeline(None)
+    assert 'number_filters' in str(err.value)
+
+
+def test_import_pipeline_nonexistent_path_raises_file_not_found():
+    missing = 'tests/test_files/no_such_pipeline_file.yaml'
+    with pytest.raises(FileNotFoundError) as err:
+        Pipeline.import_pipeline(missing)
+    assert 'no_such_pipeline_file.yaml' in str(err.value)
+
+
+def test_import_pipeline_nonexistent_path_object_raises_file_not_found():
+    missing = Path('tests/test_files/no_such_pipeline_file.yaml')
+    with pytest.raises(FileNotFoundError) as err:
+        Pipeline.import_pipeline(missing)
+    assert 'no_such_pipeline_file.yaml' in str(err.value)
+
+
+def test_import_pipeline_from_yaml_string():
+    truth = Pipeline('countfilter')
+    truth.add_function(CountFilter.biotypes_from_ref_table)
+    truth.add_function('number_filters', 5, by='col_name')
+
+    with open('tests/test_files/test_pipeline.yaml') as f:
+        content = f.read()
+
+    assert Pipeline.import_pipeline(content) == truth
+
+
+def test_import_pipeline_without_metadata_still_loads():
+    truth = Pipeline('countfilter')
+    truth.add_function(CountFilter.biotypes_from_ref_table)
+    truth.add_function('number_filters', 5, by='col_name')
+
+    assert Pipeline.import_pipeline('tests/test_files/test_pipeline_no_metadata.yaml') == truth
+
+
+def test_import_pipeline_unknown_function_reports_exported_version():
+    content = ("filter_type: countfilter\n"
+               "metadata:\n"
+               "   export_time: 2022/12/01, 16:47:40\n"
+               "   rnalysis_version: 3.2.2\n"
+               "functions:\n"
+               "- a_function_that_never_existed\n"
+               "params:\n"
+               "- - []\n"
+               "  - {}\n")
+
+    with pytest.raises(RNAlysisInputError) as err:
+        Pipeline.import_pipeline(content)
+    message = str(err.value)
+    assert '3.2.2' in message
+    assert 'a_function_that_never_existed' in message
+    assert __version__ in message
+
+
+def test_import_pipeline_unknown_function_without_metadata_reports_unknown_version():
+    content = ("filter_type: countfilter\n"
+               "functions:\n"
+               "- a_function_that_never_existed\n"
+               "params:\n"
+               "- - []\n"
+               "  - {}\n")
+
+    with pytest.raises(RNAlysisInputError) as err:
+        Pipeline.import_pipeline(content)
+    assert 'a_function_that_never_existed' in str(err.value)
+    assert __version__ in str(err.value)
+
+
+def test_import_pipeline_private_function_name_rejected():
+    content = ("filter_type: countfilter\n"
+               "functions:\n"
+               "- _init_from_dict\n"
+               "params:\n"
+               "- - []\n"
+               "  - {}\n")
+
+    with pytest.raises(RNAlysisInputError):
+        Pipeline.import_pipeline(content)
+
+
+@pytest.mark.parametrize('content', [
+    "metadata:\n   rnalysis_version: 9.9.9\nfilter_type: countfilter\nfunctions:\n- describe\n",
+    "metadata:\n   rnalysis_version: 9.9.9\nfilter_type: countfilter\nparams:\n- - []\n  - {}\n",
+    "metadata:\n   rnalysis_version: 9.9.9\nfunctions:\n- describe\nparams:\n- - []\n  - {}\n",
+    "metadata:\n   rnalysis_version: 9.9.9\nfilter_type: not_a_filter_type\nfunctions: []\nparams: []\n",
+    "metadata:\n   rnalysis_version: 9.9.9\nfilter_type: countfilter\nfunctions:\n- describe\n- describe\n"
+    "params:\n- - []\n  - {}\n",
+])
+def test_import_pipeline_malformed_dict_reports_exported_version(content):
+    with pytest.raises(RNAlysisInputError) as err:
+        Pipeline.import_pipeline(content)
+    assert '9.9.9' in str(err.value)
+
+
+def test_import_pipeline_yaml_string_that_is_not_a_pipeline():
+    with pytest.raises(RNAlysisInputError):
+        Pipeline.import_pipeline('a: 1\nb: 2\n')
+
+
+def test_import_pipeline_unparseable_yaml_string_raises_typed_error():
+    with pytest.raises(RNAlysisInputError) as err:
+        Pipeline.import_pipeline('functions: [\nparams: }\n')
+    assert 'YAML' in str(err.value)
+
+
+def test_import_pipeline_unparseable_yaml_file_raises_typed_error(tmp_path):
+    broken = tmp_path.joinpath('broken_pipeline.yaml')
+    broken.write_text('functions: [\nparams: }\n')
+
+    with pytest.raises(RNAlysisInputError) as err:
+        Pipeline.import_pipeline(broken)
+    assert 'YAML' in str(err.value)
+
+
+def test_import_pipeline_filter_type_is_case_insensitive():
+    # Pipeline('CountFilter') is accepted, so a hand-written Pipeline YAML must be too
+    truth = Pipeline('countfilter')
+    truth.add_function('describe')
+
+    imported = Pipeline.import_pipeline('filter_type: CountFilter\nfunctions:\n- describe\nparams:\n- - []\n  - {}\n')
+
+    assert imported == truth
+
+
+def test_export_pipeline_unhashable_set_item_raises_typed_error():
+    p = Pipeline('countfilter')
+    p.add_function('filter_low_reads', threshold=5, opposite={(1, 2)})
+
+    with pytest.raises(RNAlysisInputError) as err:
+        p.export_pipeline(None)
+    assert 'filter_low_reads' in str(err.value)
+    assert 'opposite' in str(err.value)
+
+
+class _Mode(str, Enum):
+    UNION = 'union'
+
+
+class _Level(IntEnum):
+    HIGH = 3
+
+
+def test_export_pipeline_converts_enum_params():
+    # PyYAML dispatches on the *exact* type, so a str/int subclass (an Enum mixin, a pandas
+    # Timestamp) is not representable even though isinstance() says it is
+    p = Pipeline('countfilter')
+    p.add_function('filter_low_reads', threshold=_Level.HIGH, opposite=_Mode.UNION)
+
+    exported = yaml.safe_load(p.export_pipeline(None))
+
+    kwargs = exported['params'][0][1]
+    assert kwargs['threshold'] == 3 and type(kwargs['threshold']) is int
+    assert kwargs['opposite'] == 'union' and type(kwargs['opposite']) is str
+
+
+def test_export_pipeline_with_enum_params_over_an_existing_file(tmp_path):
+    target = tmp_path.joinpath('pipeline.yaml')
+    target.write_text('previous pipeline contents')
+
+    p = Pipeline('countfilter')
+    p.add_function('filter_low_reads', threshold=5, opposite=_Mode.UNION)
+    p.export_pipeline(target)
+
+    assert Pipeline.import_pipeline(target) == p
+
+
+def test_export_pipeline_does_not_truncate_the_target_when_dumping_fails(monkeypatch, tmp_path):
+    target = tmp_path.joinpath('pipeline.yaml')
+    target.write_text('previous pipeline contents')
+    real_safe_dump = yaml.safe_dump
+
+    def failing_safe_dump(data, *args, **kwargs):
+        if isinstance(data, dict) and 'functions' in data:  # the Pipeline itself, not a scalar probe
+            raise yaml.representer.RepresenterError('cannot represent an object')
+        return real_safe_dump(data, *args, **kwargs)
+
+    monkeypatch.setattr(generic.yaml, 'safe_dump', failing_safe_dump)
+
+    p = Pipeline('countfilter')
+    p.add_function('filter_low_reads', threshold=5)
+
+    with pytest.raises(yaml.representer.RepresenterError):
+        p.export_pipeline(target)
+    assert target.read_text() == 'previous pipeline contents'
+
+
+def test_export_pipeline_unrepresentable_param_leaves_the_existing_file_intact(tmp_path):
+    class Unrepresentable:
+        pass
+
+    target = tmp_path.joinpath('pipeline.yaml')
+    target.write_text('previous pipeline contents')
+
+    p = Pipeline('countfilter')
+    p.add_function('filter_low_reads', threshold=Unrepresentable())
+
+    with pytest.raises(RNAlysisInputError):
+        p.export_pipeline(target)
+    assert target.read_text() == 'previous pipeline contents'
+
+
+def test_pipeline_with_a_private_function_round_trips():
+    # add_function accepts any function of the filter type, private ones included, so whatever can
+    # be exported must also import (hard rule 4)
+    p = Pipeline('countfilter')
+    p.add_function('_inplace')
+
+    assert Pipeline.import_pipeline(p.export_pipeline(None)) == p
+
+
+def test_pipeline_tuple_params_round_trip_as_lists():
+    # documented, deliberate limitation: YAML has no tuple type, so nested tuples come back as
+    # lists. Only the top-level positional-argument tuple is restored.
+    p = Pipeline('countfilter')
+    p.add_function('filter_low_reads', 5, opposite=(True,))
+
+    imported = Pipeline.import_pipeline(p.export_pipeline(None))
+
+    assert imported.params[0][0] == (5,)
+    assert imported.params[0][1] == {'opposite': [True]}
 
 
 @pytest.mark.parametrize('components,gene_fraction,truth_paths', [
@@ -2510,10 +2801,78 @@ def test_sort_by_principal_component(clustering_countfilter, component, ascendin
     c.sort_by_principal_component(component, ascending=ascending, power_transform=power_transform)
     assert c.df.equals(c_sorted.df)
 
-    with pytest.raises(AssertionError):
+    with pytest.raises(InvalidValueError):
         c.sort_by_principal_component(0)
-    with pytest.raises(AssertionError):
+    with pytest.raises(InvalidValueError):
         c.sort_by_principal_component(c.shape[0] + 1)
+
+
+@pytest.fixture
+def boxcox_unstable_countfilter():
+    # a count table whose only pathological gene is a GFP reporter sitting near-constant at ~8,400 counts
+    # across 4 grouped samples -- the real-world case behind issue #285 (and closed PR #238). Once the table
+    # is transposed for PCA, Box-Cox fits a lambda of ~78 to that single gene and overflows float64.
+    return CountFilter('tests/test_files/counted_boxcox_unstable.csv')
+
+
+@pytest.mark.parametrize('power_transform', ['box-cox', True])
+@pytest.mark.parametrize('func,args', [
+    ('pca', ()),
+    ('split_by_principal_components', (1,)),
+    ('sort_by_principal_component', (1,)),
+])
+def test_pca_family_raises_on_unstable_box_cox(boxcox_unstable_countfilter, func, args, power_transform,
+                                               monkeypatch):
+    monkeypatch.setattr(plt, 'show', lambda: None)
+    with pytest.raises(InvalidValueError) as err:
+        getattr(boxcox_unstable_countfilter, func)(*args, power_transform=power_transform)
+    msg = str(err.value)
+    assert 'GFP-reporter' in msg
+    assert 'WBGene00007063' not in msg  # only the offending gene is named
+    assert "'log'" in msg
+
+
+@pytest.mark.parametrize('power_transform', ['log', 'none', False])
+@pytest.mark.parametrize('func,args,kwargs', [
+    ('pca', (), {}),
+    ('split_by_principal_components', (1,), {}),
+    ('sort_by_principal_component', (1,), {'inplace': False}),
+])
+def test_pca_family_survives_unstable_data_with_other_transforms(boxcox_unstable_countfilter, func, args, kwargs,
+                                                                 power_transform, monkeypatch):
+    # the escape hatches the error message offers must actually work on the very table that broke Box-Cox
+    monkeypatch.setattr(plt, 'show', lambda: None)
+    assert getattr(boxcox_unstable_countfilter, func)(*args, power_transform=power_transform, **kwargs) is not None
+
+
+@pytest.mark.parametrize('legacy,named', [(True, 'box-cox'), (False, 'none')])
+def test_sort_by_principal_component_legacy_booleans_match_named_transforms(basic_countfilter, legacy, named):
+    # rule 4/5: the legacy booleans must keep producing exactly the output they always did
+    basic_countfilter.filter_low_reads(1)
+    legacy_result = basic_countfilter.sort_by_principal_component(1, power_transform=legacy, inplace=False)
+    named_result = basic_countfilter.sort_by_principal_component(1, power_transform=named, inplace=False)
+    assert legacy_result.df.equals(named_result.df)
+    assert legacy_result.fname == named_result.fname  # including the file name the transform contributes
+
+
+def test_split_by_principal_components_legacy_boolean_matches_box_cox(basic_countfilter):
+    basic_countfilter.filter_low_reads(1)
+    legacy = basic_countfilter.split_by_principal_components(1, 0.32, power_transform=True)
+    named = basic_countfilter.split_by_principal_components(1, 0.32, power_transform='box-cox')
+    for legacy_obj, named_obj in zip(legacy, named):
+        assert legacy_obj.df.equals(named_obj.df)
+
+
+def test_pipeline_with_legacy_power_transform_still_loads_and_runs(basic_countfilter):
+    # rule 4: a Pipeline exported before 'power_transform' became a menu passes power_transform=True, and must
+    # keep behaving exactly as it did -- identically to the 'box-cox' it now stands for
+    basic_countfilter.filter_low_reads(1)
+    pipeline = Pipeline.import_pipeline('tests/test_files/test_pipeline_legacy_power_transform.yaml')
+    assert pipeline.params[0][1] == {'power_transform': True}
+
+    result = pipeline.apply_to(basic_countfilter, inplace=False)
+    truth = basic_countfilter.sort_by_principal_component(1, power_transform='box-cox', inplace=False)
+    assert result.df.equals(truth.df)
 
 
 @pytest.mark.parametrize('adjusted_pvals,bin_size,title', [

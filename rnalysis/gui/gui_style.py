@@ -3,6 +3,7 @@ from pathlib import Path
 
 import qdarkstyle
 
+from rnalysis.exceptions import InvalidTypeError, InvalidValueError
 from rnalysis.utils import settings
 
 FONTPLACEHOLDER = "$FONTPLACEHOLDER"
@@ -17,8 +18,12 @@ def get_stylesheet_names():
 
 
 def get_parametric_stylesheet(font_base_size: int, font_name: str):
-    assert isinstance(font_base_size, int) and font_base_size >= 1
-    assert isinstance(font_name, str)
+    if not isinstance(font_base_size, int):
+        raise InvalidTypeError
+    if not (font_base_size >= 1):
+        raise InvalidValueError
+    if not isinstance(font_name, str):
+        raise InvalidTypeError
     with open(Path.joinpath(Path(__file__).parent, PARAMETRIC_STYLESHEET_PATH)) as f:
         style_text = f.read()
 

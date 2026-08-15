@@ -20,11 +20,13 @@ import re
 import shlex
 import shutil
 import subprocess
+import tempfile
 import threading
 import time
 import typing
 import uuid
 import warnings
+import zipfile
 from collections import OrderedDict
 from datetime import date, datetime
 from functools import lru_cache, wraps
@@ -38,10 +40,10 @@ from urllib.parse import parse_qs, urlencode, urlparse
 
 import aiohttp
 import aiolimiter
-import appdirs
 import matplotlib.pyplot as plt
 import nest_asyncio
 import numpy as np
+import platformdirs
 import polars as pl
 import requests
 import tenacity
@@ -51,6 +53,8 @@ from requests.adapters import HTTPAdapter, Retry
 from tqdm import tqdm
 
 from rnalysis import __version__
+from rnalysis.exceptions import (CorruptSessionError, InternalError,
+                                 InvalidTypeError, InvalidValueError)
 from rnalysis.utils import parsing, validation
 
 
@@ -111,12 +115,33 @@ def get_datafile_dir() -> Path:
 
 
 def get_gui_cache_dir() -> Path:
-    cache_dir = Path(appdirs.user_cache_dir('RNAlysis'))
+    cache_dir = Path(platformdirs.user_cache_dir('RNAlysis'))
     return cache_dir.joinpath('rnalysis_gui')
 
 
+def _get_legacy_macos_data_dir() -> Path:
+    """Return the data directory RNAlysis used on macOS before migrating from appdirs to platformdirs.
+
+    appdirs always resolved the macOS user data dir to '~/Library/Application Support/RNAlysis',
+    ignoring the XDG environment variables that platformdirs (>=4.6) gives precedence to.
+    """
+    return Path('~/Library/Application Support/RNAlysis').expanduser()
+
+
 def get_data_dir() -> Path:
-    data_dir = Path(appdirs.user_data_dir('RNAlysis', roaming=True))
+    data_dir = Path(platformdirs.user_data_dir('RNAlysis', roaming=True))
+    if sys.platform == 'darwin':
+        # platformdirs (unlike the appdirs package it replaced) honors $XDG_DATA_HOME on macOS.
+        # If that changes where the data dir resolves, move the existing data (user settings,
+        # tutorial videos, etc.) to the new location once, so users don't lose their settings.
+        legacy_dir = _get_legacy_macos_data_dir()
+        if data_dir != legacy_dir and legacy_dir.exists() and not data_dir.exists():
+            try:
+                data_dir.parent.mkdir(parents=True, exist_ok=True)
+                shutil.move(str(legacy_dir), str(data_dir))
+            except OSError:
+                # migration failed - keep using the legacy directory so no settings are lost
+                return legacy_dir
     return data_dir
 
 
@@ -127,7 +152,7 @@ def get_tutorial_videos_dir() -> Path:
 
 def get_todays_cache_dir() -> Path:
     today = date.today().strftime('%Y_%m_%d')
-    cache_dir = Path(appdirs.user_cache_dir('RNAlysis'))
+    cache_dir = Path(platformdirs.user_cache_dir('RNAlysis'))
     todays_dir = cache_dir.joinpath(today)
     todays_dir.mkdir(parents=True, exist_ok=True)
     return todays_dir
@@ -169,7 +194,7 @@ def clear_directory(directory: Union[str, Path], skip_ok=False):
 
 
 def clear_cache():
-    cache_dir = Path(appdirs.user_cache_dir('RNAlysis'))
+    cache_dir = Path(platformdirs.user_cache_dir('RNAlysis'))
     clear_directory(cache_dir)
 
 
@@ -317,7 +342,8 @@ def cache_gui_file(item: Union[pl.DataFrame, set, str], filename: str):
     elif isinstance(item, set):
         save_gene_set(item, file_path)
     elif isinstance(item, Path) and item.suffix in ('.R', '.log'):
-        assert item.exists(), f"File '{item}' flagged for caching does not exist!"
+        if not item.exists():
+            raise InternalError(f"File '{item}' flagged for caching does not exist!")
         shutil.copy(item, file_path)
     elif isinstance(item, str):
         with open(file_path, 'w') as f:
@@ -362,33 +388,55 @@ class PipelineData(NamedTuple):
 class GUISessionManager:
     def __init__(self, session_filename: Union[str, Path]):
         self.session_filename = Path(session_filename)
+        self._staging_dir = None
+        self._staging_archive = None
+
+    @property
+    def _archive_path(self) -> Path:
+        return self.session_filename.with_suffix('.rnal')
 
     def save_session(self, file_data: List[FileData], pipeline_data: List[PipelineData],
                      report: dict, report_file_paths: Dict[str, Path]):
         flush_gui_cache_writes()  # cache files must be fully written before they are moved/copied
         self._prepare_session_folder()
-        self._save_report_files_to_session(report_file_paths)
-        session_data = self._create_session_data(file_data, pipeline_data, report, report_file_paths)
-        self._save_files_to_session(file_data)
-        self._save_pipelines_to_session(pipeline_data, session_data)
-        self._write_session_data_to_file(session_data)
-        self._archive_session_folder()
+        try:
+            self._save_report_files_to_session(report_file_paths)
+            session_data = self._create_session_data(file_data, pipeline_data, report, report_file_paths)
+            self._save_files_to_session(file_data)
+            self._save_pipelines_to_session(pipeline_data, session_data)
+            self._write_session_data_to_file(session_data)
+            self._archive_session_folder()
+        finally:
+            self._clean_up_staging()
 
     def load_session(self) -> Tuple[List[FileData], List[PipelineData], Any]:
-        self._unpack_session_archive()
         session_dir = self._get_session_dir()
-        with open(session_dir.joinpath('session_data.yaml')) as f:
-            session_data = yaml.safe_load(f)
-
-        file_data, pipeline_data = self._process_session_data(session_data)
-        shutil.rmtree(session_dir)
-        return file_data, pipeline_data, session_data.get('session_report_data', {'report': None})[
-            'report']
+        try:
+            self._unpack_session_archive()
+            session_data = self._read_session_data(session_dir)
+            file_data, pipeline_data = self._process_session_data(session_data)
+        finally:
+            shutil.rmtree(session_dir, ignore_errors=True)
+        report_data = session_data.get('session_report_data') or {}
+        return file_data, pipeline_data, report_data.get('report')
 
     def _prepare_session_folder(self):
-        if self.session_filename.exists():
-            shutil.rmtree(self.session_filename) if self.session_filename.is_dir() else self.session_filename.unlink()
-        self.session_filename.mkdir(parents=True)
+        # the session is assembled under a temporary name next to the target file, so that an
+        # existing session file is only replaced once its replacement fully exists on disk.
+        # the staging path is absolute, since shutil.make_archive temporarily changes the cwd.
+        parent_dir = self._archive_path.parent
+        parent_dir.mkdir(parents=True, exist_ok=True)
+        self._staging_dir = Path(tempfile.mkdtemp(prefix=f'{self.session_filename.stem}_', suffix='.rnaltmp',
+                                                  dir=parent_dir.resolve()))
+
+    def _clean_up_staging(self):
+        if self._staging_archive is not None:
+            with contextlib.suppress(OSError):
+                self._staging_archive.unlink(missing_ok=True)
+            self._staging_archive = None
+        if self._staging_dir is not None:
+            shutil.rmtree(self._staging_dir, ignore_errors=True)
+            self._staging_dir = None
 
     def _create_session_data(self, file_data: List[FileData], pipeline_data: List[PipelineData], report: dict,
                              report_item_paths: dict) -> dict:
@@ -414,34 +462,119 @@ class GUISessionManager:
     def _save_files_to_session(self, file_data: List[FileData]):
         for file in file_data:
             shutil.move(Path(get_gui_cache_dir().joinpath(file.filename)),
-                        self.session_filename.joinpath(file.filename))
+                        self._staging_dir.joinpath(file.filename))
 
     def _save_report_files_to_session(self, report_file_paths: Dict[str, Path]) -> Dict[str, Path]:
         cache_dir = get_gui_cache_dir()
         for item_id, file_path in report_file_paths.items():
-            shutil.copy(cache_dir.joinpath(file_path), self.session_filename.joinpath(file_path))
+            shutil.copy(cache_dir.joinpath(file_path), self._staging_dir.joinpath(file_path))
 
     def _save_pipelines_to_session(self, pipeline_data: List[PipelineData], session_data: dict):
         for i, pipeline in enumerate(pipeline_data):
-            pipeline_filename = self.session_filename.joinpath(f"pipeline_{i}.yaml")
+            pipeline_filename = self._staging_dir.joinpath(f"pipeline_{i}.yaml")
             Path(pipeline_filename).write_text(pipeline.content)
             session_data['pipelines'][pipeline_filename.name] = pipeline.name
 
     def _write_session_data_to_file(self, session_data: dict):
-        with open(self.session_filename.joinpath('session_data.yaml'), 'w') as f:
+        with open(self._staging_dir.joinpath('session_data.yaml'), 'w') as f:
             yaml.safe_dump(session_data, f)
 
     def _archive_session_folder(self):
-        shutil.make_archive(self.session_filename.with_suffix('').as_posix(), 'zip', self.session_filename)
-        shutil.rmtree(self.session_filename)
-        self.session_filename.with_suffix('.zip').replace(self.session_filename.with_suffix('.rnal'))
+        archive_base = f'{self._staging_dir.as_posix()}_archive'
+        self._staging_archive = Path(f'{archive_base}.zip')
+        shutil.make_archive(archive_base, 'zip', self._staging_dir)
+        self._flush_to_disk(self._staging_archive)
+        # a save that crashed under an older RNAlysis could leave a half-built session *directory*
+        # at the target, and os.replace cannot overwrite a directory. Clearing it is safe only
+        # here, once the replacement archive is complete - never earlier.
+        if self._archive_path.is_dir():
+            shutil.rmtree(self._archive_path)
+        # the previous session file is replaced only now, in a single atomic step, and only once
+        # its replacement has been fully written to disk.
+        os.replace(self._staging_archive, self._archive_path)
+        self._staging_archive = None
+
+    @staticmethod
+    def _flush_to_disk(path: Path):
+        """
+        Force a file's contents out of the operating system's cache and onto the disk.
+
+        ``os.replace`` only makes the *directory entry* swap atomic; without this, a power loss
+        right after a session was saved could leave a session file whose contents were never
+        actually written - having already replaced the previous session.
+
+        :param path: the file to flush
+        :type path: pathlib.Path
+        """
+        try:
+            with open(path, 'r+b') as f:
+                os.fsync(f.fileno())
+        except OSError:  # pragma: no cover
+            # some filesystems (notably network shares) do not support fsync - a session that was
+            # otherwise saved successfully should not fail because of that.
+            warnings.warn(f"Could not flush the session file '{path}' to disk. ")
 
     def _unpack_session_archive(self):
+        archive_path = self._archive_path
+        if not (archive_path.exists() and archive_path.is_file()):
+            raise FileNotFoundError(f"Could not find the session file '{archive_path}'. "
+                                    f"Please make sure the file exists, "
+                                    f"and that its path is spelled correctly. ")
         try:
-            self.session_filename.with_suffix('.rnal').rename(self.session_filename.with_suffix('.rnal.zip'))
-            shutil.unpack_archive(self.session_filename.with_suffix('.rnal.zip'), self._get_session_dir())
-        finally:
-            self.session_filename.with_suffix('.rnal.zip').rename(self.session_filename.with_suffix('.rnal'))
+            # unpack_archive with an explicit format accepts any file extension, so the user's
+            # session file is never renamed - and therefore never modified - in order to load it.
+            shutil.unpack_archive(archive_path, self._get_session_dir(), format='zip')
+        except (shutil.ReadError, zipfile.BadZipFile, EOFError) as err:
+            raise self._corrupt_session_error('it could not be opened as a session archive') from err
+
+    def _read_session_data(self, session_dir: Path) -> dict:
+        session_data_path = session_dir.joinpath('session_data.yaml')
+        if not (session_data_path.exists() and session_data_path.is_file()):
+            raise self._corrupt_session_error("it does not contain a 'session_data.yaml' file")
+        try:
+            with open(session_data_path) as f:
+                session_data = yaml.safe_load(f)
+        except yaml.YAMLError as err:
+            raise self._corrupt_session_error("its 'session_data.yaml' file could not be read") from err
+
+        mandatory_fields = ('files', 'pipelines', 'metadata')
+        if not isinstance(session_data, dict) or not all(
+                isinstance(session_data.get(key), dict) for key in mandatory_fields):
+            raise self._corrupt_session_error("its 'session_data.yaml' file is missing mandatory information",
+                                              session_data)
+        return session_data
+
+    @staticmethod
+    def _recorded_version(session_data: Any) -> Optional[str]:
+        """
+        Return the RNAlysis version stamped into the given session data, if it can be read.
+
+        :param session_data: the session's parsed 'session_data.yaml' contents, if it was readable
+        :return: the RNAlysis version that saved the session, or None if it cannot be determined
+        """
+        if isinstance(session_data, dict):
+            metadata = session_data.get('metadata')
+            if isinstance(metadata, dict):
+                return metadata.get('rnalysis_version')
+        return None
+
+    def _corrupt_session_error(self, detail: str, session_data: Any = None) -> CorruptSessionError:
+        """
+        Build a user-facing error for a session file that cannot be loaded.
+
+        :param detail: description of what is wrong with the session file
+        :type detail: str
+        :param session_data: the session's parsed 'session_data.yaml' contents, if it was readable
+        :return: the error to raise
+        :rtype: CorruptSessionError
+        """
+        message = f"The session file '{self._archive_path}' is corrupt or incomplete: {detail}. "
+        version = self._recorded_version(session_data)
+        if version is not None:
+            message += f"This session was saved by RNAlysis {version}. "
+        message += ("RNAlysis cannot load this session. "
+                    "If you have a backup copy of this session file, please try loading it instead. ")
+        return CorruptSessionError(message)
 
     def _get_session_dir(self) -> Path:
         session_dir = get_gui_cache_dir().joinpath(self.session_filename.stem)
@@ -455,7 +588,12 @@ class GUISessionManager:
         filenames = session_data['metadata'].get('tab_order', list(session_data['files'].keys()))
         for file_name in filenames:
             file_path = session_dir.joinpath(file_name)
-            assert file_path.exists() and file_path.is_file()
+            if file_name not in session_data['files']:
+                raise self._corrupt_session_error(f"the data file '{file_name}' is not described in the session",
+                                                  session_data)
+            if not (file_path.exists() and file_path.is_file()):
+                raise self._corrupt_session_error(f"the data file '{file_name}' is missing from the session archive",
+                                                  session_data)
             if len(session_data['files'][file_name]) == 3:  # support for legacy session files
                 item_name, item_type, item_property = session_data['files'][file_name]
                 item_id = None
@@ -473,12 +611,18 @@ class GUISessionManager:
 
         for pipeline_filename, pipeline_name in session_data['pipelines'].items():
             pipeline_path = session_dir.joinpath(pipeline_filename)
-            assert pipeline_path.exists() and pipeline_path.is_file()
+            if not (pipeline_path.exists() and pipeline_path.is_file()):
+                raise self._corrupt_session_error(
+                    f"the Pipeline file '{pipeline_filename}' is missing from the session archive", session_data)
             pipeline_data.append(PipelineData(name=pipeline_name, content=pipeline_path.read_text()))
         # handle report files, if any by copying them to the cache directory
         cache_dir = get_gui_cache_dir()
-        for item_id, file_path in session_data.get('session_report_data', {'item_paths': {}})['item_paths'].items():
+        report_data = session_data.get('session_report_data') or {}
+        for item_id, file_path in (report_data.get('item_paths') or {}).items():
             new_pth = cache_dir.joinpath(file_path)
+            if not session_dir.joinpath(file_path).exists():
+                raise self._corrupt_session_error(
+                    f"the report file '{file_path}' is missing from the session archive", session_data)
             shutil.copy(session_dir.joinpath(file_path), new_pth)
 
         return file_data, pipeline_data
@@ -504,13 +648,14 @@ def load_table(filename: Union[str, Path], drop_columns: Union[str, List[str]] =
     The column names and order are identical to a full read. If None (default), the whole table is read.
     :return: a Polars DataFrame of the loaded file
     """
-    assert isinstance(filename,
-                      (str, Path)), f"Filename must be of type str or pathlib.Path, is instead {type(filename)}."
+    if not isinstance(filename, (str, Path)):
+        raise InvalidTypeError(f"Filename must be of type str or pathlib.Path, is instead {type(filename)}.")
     filename = Path(filename)
-    assert filename.exists() and filename.is_file(), f"File '{filename.as_posix()}' does not exist!"
-    assert filename.suffix.lower() in {'.csv', '.tsv', '.txt', '.parquet'}, \
-        f"RNAlysis cannot load files of type '{filename.suffix}'. " \
-        f"Please convert your file to a .csv, .tsv, .txt, or .parquet file and try again."
+    if not (filename.exists() and filename.is_file()):
+        raise InvalidValueError(f"File '{filename.as_posix()}' does not exist!")
+    if filename.suffix.lower() not in {'.csv', '.tsv', '.txt', '.parquet'}:
+        raise InvalidValueError(f"RNAlysis cannot load files of type '{filename.suffix}'. "
+                                f"Please convert your file to a .csv, .tsv, .txt, or .parquet file and try again.")
 
     kwargs = {}
     if comment is not None:
@@ -551,9 +696,9 @@ def load_table(filename: Union[str, Path], drop_columns: Union[str, List[str]] =
         df = df.with_columns([pl.col(col).replace("", None) for col in string_cols])
         if drop_columns:
             drop_columns_lst = parsing.data_to_list(drop_columns)
-            assert validation.isinstanceiter(drop_columns_lst,
-                                             str), f"'drop_columns' must be str, list of str, or False; " \
-                                                   f"is instead {type(drop_columns)}."
+            if not validation.isinstanceiter(drop_columns_lst, str):
+                raise InvalidTypeError(f"'drop_columns' must be str, list of str, or False; "
+                                       f"is instead {type(drop_columns)}.")
             for col in drop_columns_lst:
                 col_stripped = col.strip()
                 if col_stripped in df.columns:
@@ -577,7 +722,8 @@ def save_table(df: pl.DataFrame, filename: Union[str, Path], postfix: str = None
     if postfix is None:
         postfix = ''
     else:
-        assert isinstance(postfix, str), "'postfix' must be either str or None!"
+        if not isinstance(postfix, str):
+            raise InvalidTypeError("'postfix' must be either str or None!")
     new_fname = os.path.join(fname.parent.absolute(), f"{fname.stem}{postfix}{fname.suffix}")
     if fname.suffix.lower() == '.parquet':
         if isinstance(df, pl.Series):
@@ -615,7 +761,8 @@ class KEGGAnnotationIterator:
             self.pathway_names, self.n_annotations = self.get_pathways()
         else:
             pathways = parsing.data_to_list(pathways)
-            assert len(pathways) > 0, "No KEGG pathway IDs were given!"
+            if len(pathways) == 0:
+                raise InvalidValueError("No KEGG pathway IDs were given!")
             self.pathway_names = {pathway: None for pathway in pathways}
             self.n_annotations = len(self.pathway_names)
         self.pathway_annotations = None
@@ -881,15 +1028,18 @@ class GOlrAnnotationIterator:
         """
         Validate the type and legality of the user's inputs.
         """
-        assert isinstance(self.taxon_id, int), f"'taxon_id' must be an integer. Instead got type {type(self.taxon_id)}."
-        assert isinstance(self.iter_size, int), \
-            f"'iter_size' must be an integer. Instead got type {type(self.iter_size)}."
-        assert self.iter_size > 0, f"Invalid value for 'iter_size': {self.iter_size}."
+        if not isinstance(self.taxon_id, int):
+            raise InvalidTypeError(f"'taxon_id' must be an integer. Instead got type {type(self.taxon_id)}.")
+        if not isinstance(self.iter_size, int):
+            raise InvalidTypeError(f"'iter_size' must be an integer. Instead got type {type(self.iter_size)}.")
+        if self.iter_size <= 0:
+            raise InvalidValueError(f"Invalid value for 'iter_size': {self.iter_size}.")
         for field, legals in zip((self.aspects, chain(self.evidence_types, self.excluded_evidence_types),
                                   chain(self.qualifiers, self.excluded_qualifiers)),
                                  (self.LEGAL_ASPECTS, self.LEGAL_EVIDENCES, self.LEGAL_QUALIFIERS)):
             for item in field:
-                assert item in legals, f"Illegal item {item}. Legal items are {legals}."
+                if item not in legals:
+                    raise InvalidValueError(f"Illegal item {item}. Legal items are {legals}.")
 
     def _golr_request(self, params: dict, cached_filename: Union[str, None] = None) -> str:
         """
@@ -1379,10 +1529,10 @@ class PhylomeDBOrthologMapper:
 
     def __init__(self, map_to_organism, map_from_organism='auto', gene_id_type='auto'):
         legal_species = self.get_legal_species()
-        assert map_from_organism in legal_species[
-            legal_species.columns[0]], f"organism with taxon id {map_from_organism} is not supported by PhylomeDB. "
-        assert map_to_organism in legal_species[
-            legal_species.columns[0]], f"organism with taxon id {map_to_organism} is not supported by PhylomeDB. "
+        if map_from_organism not in legal_species[legal_species.columns[0]]:
+            raise InvalidValueError(f"organism with taxon id {map_from_organism} is not supported by PhylomeDB. ")
+        if map_to_organism not in legal_species[legal_species.columns[0]]:
+            raise InvalidValueError(f"organism with taxon id {map_to_organism} is not supported by PhylomeDB. ")
         self.gene_id_type = gene_id_type
         self.map_from_organism = map_from_organism
         self.map_to_organism = map_to_organism
@@ -1715,7 +1865,15 @@ class OrthoInspectorOrthologMapper:
             except requests.exceptions.JSONDecodeError:
                 clean_json_string = req.text.split('\n')[0]
                 content = json.loads(clean_json_string)
-            assert content['meta']['status'] == 'success'
+            status = content.get('meta', {}).get('status')
+            if status != 'success':
+                # A degraded OrthoInspector database is an external-service problem, not an RNAlysis
+                # bug: warn and contribute no organisms, so this database is simply not selectable
+                # while the healthy ones keep working (same degrade-gracefully policy as the
+                # stall/timeout handling in get_orthologs).
+                warnings.warn(f"OrthoInspector database '{database}' reported status '{status}' instead of "
+                              f"'success'. Skipping it - its organisms will not be available.")
+                return database, frozenset()
             return database, frozenset({d['id'] for d in content['data']})
 
         # Fetch every database's species list concurrently. These requests are independent and were
@@ -1755,7 +1913,8 @@ class OrthoInspectorOrthologMapper:
 
         else:
             databases = self.get_databases()
-            assert database in databases, f"Invalid database: {database}. Valid databases are: {databases}."
+            if database not in databases:
+                raise InvalidValueError(f"Invalid database: {database}. Valid databases are: {databases}.")
             valid_dbs = [database]
 
         mapping_one2one = {}
@@ -2662,8 +2821,12 @@ def find_best_gene_mapping(ids: Tuple[str, ...], map_from_options: Union[Tuple[s
     return parsed_results[sorted_keys[0]]
 
 
-# Connect/read timeout (seconds) for the small "legal values" metadata fetches below. These run at
-# import time to populate GUI dropdowns / type annotations, so a hung request would freeze startup.
+# Connect/read timeout (seconds) for the small "legal values" metadata fetches below. These are the
+# live source of the vocabularies that fill the GUI's taxon / gene-ID-type dropdowns, but they are no
+# longer called while `import rnalysis.filtering` runs: the values are snapshotted at release time by
+# packaging/generate_api_vocabularies.py, and param_typing reads that snapshot. They are still called
+# live by that helper, and get_legal_gene_id_types is also called at analysis time (by
+# _get_id_abbreviation_dicts, for actual ID mapping) — so a hung request must not stall either.
 LEGAL_VALUES_REQUEST_TIMEOUT = (10, 30)
 
 
@@ -2693,7 +2856,14 @@ def get_legal_ensembl_taxons():
 @functools.lru_cache(maxsize=2)
 def get_legal_phylomedb_taxons():
     entries = PhylomeDBOrthologMapper.get_legal_species()
-    taxons = tuple(name for name in entries.select(pl.col('name')).unique() if name[0].isupper())
+    # Iterate the 'name' column's VALUES: iterating the DataFrame itself yields whole Series, so the
+    # filter below used to test a Series' first name (e.g. 'Homo sapiens'.isupper() -> False) and
+    # dropped everything, leaving this vocabulary empty on every machine (issue #263).
+    names = entries['name'].unique().to_list()
+    # Species names are capitalized; PhylomeDB's table also lists lowercase-initial entries
+    # (unclassified/environmental samples), which aren't useful values for an organism dropdown.
+    # Sorted so the packaged vocabulary snapshot is reproducible (Series.unique() doesn't order).
+    taxons = tuple(sorted(name for name in names if name and name[:1].isupper()))
     return taxons
 
 
@@ -2766,7 +2936,8 @@ def save_gene_set(gene_set: set, path):
 
 
 def calculate_checksum(filename: Union[str, Path]):  # pragma: no cover
-    assert Path(filename).exists(), f"file '{filename}' does not exist!"
+    if not Path(filename).exists():
+        raise InternalError(f"file '{filename}' does not exist!")
     with open(filename, 'rb') as file_to_check:
         # read contents of the file
         data = file_to_check.read()
@@ -2852,8 +3023,8 @@ def run_r_script(script_path: Union[str, Path], r_installation_folder: Union[str
     else:
         prefix = f'{Path(r_installation_folder).as_posix()}/bin/Rscript'
     script_path = Path(script_path).as_posix()
-    assert Path(script_path).exists() and Path(
-        script_path).is_file(), f"Could not find the requested R script: {script_path}"
+    if not (Path(script_path).exists() and Path(script_path).is_file()):
+        raise InternalError(f"Could not find the requested R script: {script_path}")
 
     try:
         return_code, _ = run_subprocess([prefix, "--help"], False, False)
@@ -2982,8 +3153,9 @@ def generate_base_call(command: str, installation_folder: Union[str, Path, Liter
 
     try:
         exit_code, stderr = run_subprocess(call + [version_command], shell=shell)
-        assert exit_code == 0 or (len(stderr) >= 1 and 'Version' in stderr[0]), \
-            f"call to {call[0]} exited with exit status {exit_code}: \n'{''.join(stderr)}'"
+        if not (exit_code == 0 or (len(stderr) >= 1 and 'Version' in stderr[0])):
+            raise InvalidValueError(
+                f"call to {call[0]} exited with exit status {exit_code}: \n'{''.join(stderr)}'")
     except FileNotFoundError:
         raise FileNotFoundError(f"RNAlysis could not find '{command}'. "
                                 'Please ensure that your installation folder is correct, or add it to PATH. ')

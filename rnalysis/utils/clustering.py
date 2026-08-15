@@ -1,33 +1,71 @@
 import abc
 import contextvars
 import functools
+import importlib.util
 import itertools
 import warnings
 from typing import Callable, List, Set, Tuple, Union
 
 import joblib
+import lazy_loader as lazy
 import matplotlib.pyplot as plt
 import numpy as np
 import pairwisedist as pwdist
 import polars as pl
 import polars.selectors as cs
-import sklearn.metrics.pairwise as sklearn_pairwise
 from grid_strategy import strategies
-from kmedoids import KMedoids
-from sklearn.cluster import AgglomerativeClustering, KMeans
-from sklearn.decomposition import PCA
-from sklearn.metrics import (calinski_harabasz_score, davies_bouldin_score,
-                             pairwise_distances, silhouette_score)
 from tqdm.auto import tqdm
 
+from rnalysis.exceptions import (InternalError, InvalidTypeError, InvalidValueError, RNAlysisInputError)
 from rnalysis.utils import generic, parsing, validation
 
-try:
-    import hdbscan
+# scikit-learn costs ~1s to import and is only needed once a clustering run actually starts, so it is
+# loaded lazily (SPEC 1 / https://scientific-python.org/specs/spec-0001/). `kmedoids` and `hdbscan`
+# get the same treatment because they import scikit-learn themselves. Nothing may touch an attribute
+# of these proxies at import time -- doing so imports the package and defeats the whole point, which
+# is why the class attributes below go through `_lazy_class_attribute`. Guarded by
+# tests/test_imports.py.
+_sklearn = lazy.load('sklearn')
+_kmedoids = lazy.load('kmedoids')
 
-    HAS_HDBSCAN = True
-except ImportError:
-    HAS_HDBSCAN = False
+# hdbscan is optional, so its availability is probed *without* executing it -- importing it here
+# would drag scikit-learn back in for everyone who installed the optional extra.
+HAS_HDBSCAN = importlib.util.find_spec('hdbscan') is not None
+hdbscan = lazy.load('hdbscan') if HAS_HDBSCAN else None
+
+
+class _lazy_class_attribute:
+    """A class attribute whose value is only computed the first time it is read.
+
+    Lets a class declare an attribute that comes out of a lazily-imported package (e.g.
+    ``sklearn.cluster.KMeans``) without importing that package while the class body executes.
+    """
+
+    _UNSET = object()
+
+    def __init__(self, factory: Callable):
+        self._factory = factory
+        self._value = self._UNSET
+
+    def __get__(self, instance, owner=None):
+        if self._value is self._UNSET:
+            self._value = self._factory()
+        return self._value
+
+
+# thin wrappers so ``ClusteringRunnerWithNClusters.N_CLUSTERS_METHODS`` can name sklearn's scoring
+# functions without importing sklearn while the class body executes
+def _silhouette_score(*args, **kwargs):
+    return _sklearn.metrics.silhouette_score(*args, **kwargs)
+
+
+def _calinski_harabasz_score(*args, **kwargs):
+    return _sklearn.metrics.calinski_harabasz_score(*args, **kwargs)
+
+
+def _davies_bouldin_score(*args, **kwargs):
+    return _sklearn.metrics.davies_bouldin_score(*args, **kwargs)
+
 
 # Run-scoped memoization of the (expensive) Box-Cox/standardize transform. CLICOM builds many clustering
 # setups that share the same replicate-column subset and power_transform flag, and each fresh runner would
@@ -64,17 +102,19 @@ class BinaryFormatClusters:
 
     @staticmethod
     def _validate_clustering_solutions(clustering_solutions: List[np.ndarray]):
-        assert isinstance(clustering_solutions, list), \
-            f"'clustering_solutions' must be a list; instead got {type(clustering_solutions)}"
-        assert len(clustering_solutions) > 0, "'clustering_solutions' must contain at least one clustering solution"
-        assert validation.isinstanceiter(clustering_solutions, np.ndarray), \
-            "'clustering_solutions' must exclusively contain numpy arrays"
+        if not isinstance(clustering_solutions, list):
+            raise InternalError(f"'clustering_solutions' must be a list; instead got {type(clustering_solutions)}")
+        if len(clustering_solutions) == 0:
+            raise InternalError("'clustering_solutions' must contain at least one clustering solution")
+        if not validation.isinstanceiter(clustering_solutions, np.ndarray):
+            raise InternalError("'clustering_solutions' must exclusively contain numpy arrays")
         for solution in clustering_solutions:
             # in each clustering solution, every feature must be included in one cluster at most
             # clustering algorithms such as HDBSCAN can classify some features as 'noise',
             # and therefore we accept features that are included in 0 clusters.
-            assert np.all(solution.sum(axis=0) <= 1), \
-                'each feature must be included in one cluster at most per clustering solution'
+            if not np.all(solution.sum(axis=0) <= 1):
+                raise InternalError(
+                    'each feature must be included in one cluster at most per clustering solution')
 
     def __copy__(self):
         new_obj = type(self)(None)
@@ -99,9 +139,12 @@ class BinaryFormatClusters:
         return len(self.clustering_solutions)
 
     def __getitem__(self, item: int):
-        assert isinstance(item, int)
-        assert item >= 0
-        assert item < self.n_clusters
+        if not isinstance(item, int):
+            raise InternalError
+        if item < 0:
+            raise InternalError
+        if item >= self.n_clusters:
+            raise InternalError
 
         current_ind = 0
         for line_idx, line in enumerate(self.len_index):
@@ -278,7 +321,8 @@ class CLICOM:
         return filtered_clusters
 
     def feature_cluster_similarity(self, feature: int, cluster: Set[int]):
-        assert not self.cluster_wise_cliques
+        if self.cluster_wise_cliques:
+            raise InternalError
         # the similarity between a features and a cluster is the mean similarity to every feature in the cluster
         # (equivalent to average linkage criterion)
         return np.mean([self.adj_mat[feature, i] for i in cluster])
@@ -403,16 +447,19 @@ class KMedoidsIter:
 
     def __init__(self, n_clusters: int, metric: str = 'euclidean', max_iter: int = 300,
                  n_init: int = 10, random_state: int = None):
-        assert isinstance(n_init, int), f"'n_init' must be an integer, is {type(n_init)} instead."
-        assert isinstance(metric, str), f"'metric' must be a string, is {type(metric)} instead."
-        assert n_init > 0, f"'n_init' must be a positive integer. Input {n_init} is invalid. "
+        if not isinstance(n_init, int):
+            raise InvalidTypeError(f"'n_init' must be an integer, is {type(n_init)} instead.")
+        if not isinstance(metric, str):
+            raise InvalidTypeError(f"'metric' must be a string, is {type(metric)} instead.")
+        if n_init <= 0:
+            raise InvalidValueError(f"'n_init' must be a positive integer. Input {n_init} is invalid. ")
         self.n_clusters = n_clusters
         self.metric = metric
         self.n_init = n_init
         self.max_iter = max_iter
         self.random_state = random_state
-        self.clusterer = KMedoids(n_clusters=self.n_clusters, metric=self.metric,
-                                  max_iter=self.max_iter, random_state=random_state)
+        self.clusterer = _kmedoids.KMedoids(n_clusters=self.n_clusters, metric=self.metric,
+                                            max_iter=self.max_iter, random_state=random_state)
         self.inertia_ = None
         self.cluster_centers_ = None
         self.medoid_indices_ = None
@@ -430,11 +477,11 @@ class KMedoidsIter:
         for i in range(self.n_init):
             if self.random_state is not None:
                 clusterers.append(
-                    KMedoids(n_clusters=self.n_clusters, metric=self.metric, max_iter=self.max_iter,
-                             random_state=self.random_state + i).fit(x))
+                    _kmedoids.KMedoids(n_clusters=self.n_clusters, metric=self.metric, max_iter=self.max_iter,
+                                       random_state=self.random_state + i).fit(x))
             else:
-                clusterers.append(KMedoids(n_clusters=self.n_clusters, metric=self.metric,
-                                           max_iter=self.max_iter).fit(x))
+                clusterers.append(_kmedoids.KMedoids(n_clusters=self.n_clusters, metric=self.metric,
+                                                     max_iter=self.max_iter).fit(x))
             inertias[i] = clusterers[i].inertia_
         best_clusterer = clusterers[int(np.argmax(inertias))]
         self.clusterer = best_clusterer
@@ -457,12 +504,13 @@ class ClusteringRunner(abc.ABC):
                            'ys1': pwdist.ys1_distance, 'yr1': pwdist.yr1_distance,
                            'jackknife': pwdist.jackknife_distance, 'sharpened_cosine': pwdist.sharpened_cosine_distance}
 
-    def __init__(self, data: pl.DataFrame, power_transform: bool, metric: str = None,
+    def __init__(self, data: pl.DataFrame, power_transform: Union[bool, str], metric: str = None,
                  plot_style: str = 'none', split_plots: bool = False, parallel_backend='loky'):
-        assert plot_style.lower() in {'all', 'std_bar', 'std_area', 'none'}, \
-            f"Invalid value for 'plot_style': '{plot_style}'. " \
-            f"'plot_style' must be 'all', 'std_bar', 'std_area' or 'none'. "
-        assert isinstance(split_plots, bool), f"'split_plots' must be of type bool, instead got {type(split_plots)}"
+        if plot_style.lower() not in {'all', 'std_bar', 'std_area', 'none'}:
+            raise InvalidValueError(f"Invalid value for 'plot_style': '{plot_style}'. "
+                                    f"'plot_style' must be 'all', 'std_bar', 'std_area' or 'none'. ")
+        if not isinstance(split_plots, bool):
+            raise InvalidTypeError(f"'split_plots' must be of type bool, instead got {type(split_plots)}")
 
         self.clusterer_class: type
         self.clusterer_kwargs: dict
@@ -471,8 +519,14 @@ class ClusteringRunner(abc.ABC):
         self.centers: list = []
 
         self.data: pl.DataFrame = data
-        self.power_transform: bool = power_transform
-        transform = generic.standard_box_cox if power_transform else generic.standardize
+        # 'power_transform' is kept exactly as the caller spelled it (including the legacy True/False), so that
+        # plot titles and repr()s keep reporting what was actually asked for; everything else works off the
+        # normalized name.
+        self.power_transform: Union[bool, str, List[Union[bool, str]]] = power_transform
+        # CLICOM passes several transforms at once (it runs one clustering setup per transform, and builds its
+        # own per-setup runners); the ensemble runner itself only ever needs the first one.
+        self.transform_method: str = generic.parse_power_transform(parsing.data_to_list(power_transform)[0])
+        transform = generic.get_transform_function(self.transform_method)
         self.transform: Callable = transform
 
         if metric is None:
@@ -507,11 +561,12 @@ class ClusteringRunner(abc.ABC):
             return self._run(plot)
 
     def _transform_cache_key(self):
-        # the transform result is fully determined by the (numeric) data, the power_transform flag, and — only
+        # the transform result is fully determined by the (numeric) data, the chosen transform, and — only
         # when a precomputed distance metric is used — the metric itself (which the transform folds in). The data
         # subset is identified by its column names, since it is always a deterministic selection of a fixed parent.
+        # The *normalized* transform name is used, so that the legacy True and 'box-cox' share one cache entry.
         metric_key = self.metric_name if getattr(self, 'metric', None) == 'precomputed' else None
-        return tuple(self.data.columns), self.power_transform, metric_key
+        return tuple(self.data.columns), self.transform_method, metric_key
 
     def _transform_data(self):
         if self.transformed_data is None:
@@ -526,8 +581,7 @@ class ClusteringRunner(abc.ABC):
 
         if self.data_for_plot is None:
             if self.metric == 'precomputed':
-                self.data_for_plot = generic.standard_box_cox(
-                    self.data) if self.power_transform else generic.standardize(self.data)
+                self.data_for_plot = generic.get_transform_function(self.transform_method)(self.data)
             else:
                 self.data_for_plot = self.transformed_data
 
@@ -550,7 +604,7 @@ class ClusteringRunner(abc.ABC):
     def _pca_plot(self, n_clusters: int, data: pl.DataFrame, labels: np.ndarray, title: str) -> plt.Figure:
         data_standardized = generic.standardize(data)
         n_components = 2
-        pca_obj = PCA(n_components=n_components)
+        pca_obj = _sklearn.decomposition.PCA(n_components=n_components)
         pcomps = pca_obj.fit_transform(data_standardized)
 
         columns = [f'Principal component {i + 1}' for i in range(n_components)]
@@ -663,23 +717,23 @@ class ClusteringRunnerWithNClusters(ClusteringRunner, abc.ABC):
     N_CLUSTERS_METHODS = {
         'silhouette': {
             'name': 'Silhouette',
-            'func': silhouette_score,
+            'func': _silhouette_score,
             'maximize': True,
             'range': (-1, 1)},
         'calinski_harabasz': {
             'name': 'Calinski-Harabasz',
-            'func': calinski_harabasz_score,
+            'func': _calinski_harabasz_score,
             'maximize': True},
         'davies_bouldin': {
             'name': 'Davies-Bouldin',
-            'func': davies_bouldin_score,
+            'func': _davies_bouldin_score,
             'maximize': False},
         'bic': {
             'name': 'Bayesian Information Criterion',
             'func': generic.bic_score,
             'maximize': False}}
 
-    def __init__(self, data: pl.DataFrame, power_transform: bool, n_clusters: Union[int, List[int], str],
+    def __init__(self, data: pl.DataFrame, power_transform: Union[bool, str], n_clusters: Union[int, List[int], str],
                  max_n_clusters_estimate: Union[int, str] = 'auto', plot_style: str = 'none',
                  split_plots: bool = False, metric: str = None, parallel_backend='loky'):
         super().__init__(data, power_transform, metric, plot_style, split_plots, parallel_backend)
@@ -702,9 +756,10 @@ class ClusteringRunnerWithNClusters(ClusteringRunner, abc.ABC):
         # make sure all values of n_clusters are in valid range
         n_clusters, n_clusters_copy = itertools.tee(n_clusters)
         n_clusters = parsing.data_to_list(n_clusters)
-        assert np.all([isinstance(item, int) and 2 <= item <= self.data.shape[0] for item in n_clusters_copy]), \
-            f"Invalid value for n_clusters: '{n_clusters}'. n_clusters must be 'gap', 'silhouette', " \
-            f"or an integer/Iterable of integers in range 2 <= n_clusters <= n_features."
+        if not np.all([isinstance(item, int) and 2 <= item <= self.data.shape[0] for item in n_clusters_copy]):
+            raise InvalidValueError(f"Invalid value for n_clusters: '{n_clusters}'. n_clusters must be 'gap', "
+                                    f"'silhouette', or an integer/Iterable of integers in range "
+                                    f"2 <= n_clusters <= n_features.")
         return n_clusters
 
     def gap_statistic(self, random_seed: int = None, n_refs: int = 10) -> int:
@@ -718,7 +773,7 @@ class ClusteringRunnerWithNClusters(ClusteringRunner, abc.ABC):
             np.random.seed(random_seed)
         # calculate the SVD of the observed data (X), and transform via X' = x_tag = dot(X, V)
         # note: the data is centered by sklearn.decomposition.PCA, no need to pre-center it.
-        pca = PCA(random_state=random_seed).fit(raw_data)
+        pca = _sklearn.decomposition.PCA(random_state=random_seed).fit(raw_data)
         x_tag = pca.transform(raw_data)
         # determine the ranges of the columns of X' (x_tag)
         a, b = x_tag.min(axis=0, keepdims=True), x_tag.max(axis=0, keepdims=True)
@@ -795,7 +850,7 @@ class ClusteringRunnerWithNClusters(ClusteringRunner, abc.ABC):
             n = np.sum(this_label)
             # don't calculate within-cluster dispersion for empty clusters or clusters with a single member
             if n > 1:
-                dispersion += np.sum(pairwise_distances(data.filter(this_label)) ** 2) / (2 * n)
+                dispersion += np.sum(_sklearn.metrics.pairwise_distances(data.filter(this_label)) ** 2) / (2 * n)
         return dispersion
 
     @staticmethod
@@ -848,7 +903,8 @@ class ClusteringRunnerWithNClusters(ClusteringRunner, abc.ABC):
 
     @staticmethod
     def _plot_k_criterion_res(best_n_clusters: int, n_clusters_range: list, scores: list, method: str) -> plt.Figure:
-        assert method in ClusteringRunnerWithNClusters.N_CLUSTERS_METHODS
+        if method not in ClusteringRunnerWithNClusters.N_CLUSTERS_METHODS:
+            raise InternalError
         fig = plt.figure(figsize=(7, 9))
         ax = fig.add_subplot(111)
         ax.plot(n_clusters_range, scores, '--o', color='r')
@@ -878,14 +934,21 @@ class ClusteringRunnerWithNClusters(ClusteringRunner, abc.ABC):
 
 
 class KMeansRunner(ClusteringRunnerWithNClusters):
-    clusterer_class = KMeans
+    clusterer_class = _lazy_class_attribute(lambda: _sklearn.cluster.KMeans)
 
-    def __init__(self, data, power_transform: bool, n_clusters: Union[int, List[int], str],
+    def __init__(self, data, power_transform: Union[bool, str], n_clusters: Union[int, List[int], str],
                  max_n_clusters_estimate: Union[int, str] = 'auto', random_seed: int = None, n_init: int = 3,
                  max_iter: int = 300, plot_style: str = 'none', split_plots: bool = False, parallel_backend='loky'):
-        assert isinstance(random_seed, int) or random_seed is None
-        assert isinstance(n_init, int) and n_init >= 1
-        assert isinstance(max_iter, int) and max_iter >= 1
+        if not (isinstance(random_seed, int) or random_seed is None):
+            raise InvalidTypeError
+        if not isinstance(n_init, int):
+            raise InvalidTypeError
+        if n_init < 1:
+            raise InvalidValueError
+        if not isinstance(max_iter, int):
+            raise InvalidTypeError
+        if max_iter < 1:
+            raise InvalidValueError
         self.random_seed = random_seed
         self.n_init = n_init
         self.max_iter = max_iter
@@ -918,16 +981,24 @@ class KMeansRunner(ClusteringRunnerWithNClusters):
 
 class KMedoidsRunner(ClusteringRunnerWithNClusters):
     clusterer_class = KMedoidsIter
-    legal_metrics = set(sklearn_pairwise._VALID_METRICS)
+    legal_metrics = _lazy_class_attribute(lambda: set(_sklearn.metrics.pairwise._VALID_METRICS))
 
-    def __init__(self, data, power_transform: bool, n_clusters: Union[int, List[int], str],
+    def __init__(self, data, power_transform: Union[bool, str], n_clusters: Union[int, List[int], str],
                  max_n_clusters_estimate: Union[int, str] = 'auto', metric: str = 'euclidean',
                  random_seed: int = None, n_init: int = 3, max_iter: int = 300, plot_style: str = 'none',
                  split_plots: bool = False, parallel_backend='loky'):
-        assert isinstance(random_seed, int) or random_seed is None
-        assert isinstance(n_init, int) and n_init >= 1
-        assert isinstance(max_iter, int) and max_iter >= 1
-        assert isinstance(metric, str)
+        if not (isinstance(random_seed, int) or random_seed is None):
+            raise InvalidTypeError
+        if not isinstance(n_init, int):
+            raise InvalidTypeError
+        if n_init < 1:
+            raise InvalidValueError
+        if not isinstance(max_iter, int):
+            raise InvalidTypeError
+        if max_iter < 1:
+            raise InvalidValueError
+        if not isinstance(metric, str):
+            raise InvalidTypeError
 
         self.random_seed = random_seed
         self.n_init = n_init
@@ -960,20 +1031,24 @@ class KMedoidsRunner(ClusteringRunnerWithNClusters):
 
 
 class HierarchicalRunner(ClusteringRunnerWithNClusters):
-    clusterer_class = AgglomerativeClustering
-    legal_metrics = set(sklearn_pairwise.PAIRED_DISTANCES.keys())
+    clusterer_class = _lazy_class_attribute(lambda: _sklearn.cluster.AgglomerativeClustering)
+    legal_metrics = _lazy_class_attribute(lambda: set(_sklearn.metrics.pairwise.PAIRED_DISTANCES.keys()))
 
-    def __init__(self, data, power_transform: bool, n_clusters: Union[int, List[int], str],
+    def __init__(self, data, power_transform: Union[bool, str], n_clusters: Union[int, List[int], str],
                  max_n_clusters_estimate: Union[int, str] = 'auto', metric: str = 'euclidean',
                  linkage: str = 'average', distance_threshold: float = None, plot_style: str = 'none',
                  split_plots: bool = False, parallel_backend='loky'):
-        assert isinstance(linkage, str), f"'linkage' must be of type str, instead got {type(linkage)}."
-        assert isinstance(metric, str), f"'metric' must be of type str, instead got {type(metric)}."
-        assert linkage.lower() in {'ward', 'complete', 'average',
-                                   'single'}, f"Invalid linkage method '{linkage.lower()}'."
-        assert isinstance(distance_threshold, (int, float)) or distance_threshold is None
+        if not isinstance(linkage, str):
+            raise InvalidTypeError(f"'linkage' must be of type str, instead got {type(linkage)}.")
+        if not isinstance(metric, str):
+            raise InvalidTypeError(f"'metric' must be of type str, instead got {type(metric)}.")
+        if linkage.lower() not in {'ward', 'complete', 'average', 'single'}:
+            raise InvalidValueError(f"Invalid linkage method '{linkage.lower()}'.")
+        if not (isinstance(distance_threshold, (int, float)) or distance_threshold is None):
+            raise InvalidTypeError
         if linkage.lower() == 'ward':
-            assert metric.lower() == 'euclidean', "metric must be 'euclidean' if linkage is 'ward'."
+            if metric.lower() != 'euclidean':
+                raise InvalidValueError("metric must be 'euclidean' if linkage is 'ward'.")
 
         self.linkage = linkage.lower()
         self.distance_threshold = distance_threshold
@@ -1034,10 +1109,11 @@ class HierarchicalRunner(ClusteringRunnerWithNClusters):
 
 
 class HDBSCANRunner(ClusteringRunner):
-    clusterer_class = hdbscan.HDBSCAN if HAS_HDBSCAN else None
-    legal_metrics = set(hdbscan.dist_metrics.METRIC_MAPPING.keys()) if HAS_HDBSCAN else set()
+    clusterer_class = _lazy_class_attribute(lambda: hdbscan.HDBSCAN) if HAS_HDBSCAN else None
+    legal_metrics = _lazy_class_attribute(
+        lambda: set(hdbscan.dist_metrics.METRIC_MAPPING.keys())) if HAS_HDBSCAN else set()
 
-    def __init__(self, data, power_transform: bool, min_cluster_size: int = 5, min_samples: int = 1,
+    def __init__(self, data, power_transform: Union[bool, str], min_cluster_size: int = 5, min_samples: int = 1,
                  metric: str = 'euclidean', cluster_selection_epsilon: float = 0, cluster_selection_method: str = 'eom',
                  return_probabilities: bool = False, plot_style: str = 'none', split_plots: bool = False,
                  parallel_backend='loky'):
@@ -1045,11 +1121,22 @@ class HDBSCANRunner(ClusteringRunner):
         if not HAS_HDBSCAN:
             self.parallel_backend = parallel_backend
             return
-        assert isinstance(metric, str)
-        assert isinstance(min_cluster_size, int) and min_cluster_size > 1
-        assert min_samples is None or (isinstance(min_samples, int) and min_samples >= 1)
-        assert isinstance(cluster_selection_epsilon, (int, float))
-        assert isinstance(cluster_selection_method, str) and cluster_selection_method.lower() in {'eom', 'leaf'}
+        if not isinstance(metric, str):
+            raise InvalidTypeError
+        if not isinstance(min_cluster_size, int):
+            raise InvalidTypeError
+        if min_cluster_size <= 1:
+            raise InvalidValueError
+        if not (min_samples is None or isinstance(min_samples, int)):
+            raise InvalidTypeError
+        if not (min_samples is None or min_samples >= 1):
+            raise InvalidValueError
+        if not isinstance(cluster_selection_epsilon, (int, float)):
+            raise InvalidTypeError
+        if not isinstance(cluster_selection_method, str):
+            raise InvalidTypeError
+        if cluster_selection_method.lower() not in {'eom', 'leaf'}:
+            raise InvalidValueError
 
         self.min_cluster_size = min_cluster_size
         self.min_samples = min_samples
@@ -1110,7 +1197,8 @@ class CLICOMRunner(ClusteringRunner):
                         'hierarchical': HierarchicalRunner, 'agglomerative': HierarchicalRunner,
                         'hdbscan': HDBSCANRunner}
 
-    def __init__(self, data, replicate_grouping: List[List[str]], power_transform: Union[bool, List[bool]],
+    def __init__(self, data, replicate_grouping: List[List[str]],
+                 power_transform: Union[bool, str, List[Union[bool, str]]],
                  evidence_threshold: float, cluster_unclustered_features: bool, min_cluster_size: int,
                  *parameter_dicts: dict, plot_style: str = 'none', split_plots: bool = False, parallel_backend='loky'):
         self.clustering_solutions: list = []
@@ -1177,10 +1265,13 @@ class CLICOMRunner(ClusteringRunner):
     def find_valid_clustering_setups(self) -> list:
         valid_setups = []
         for d in self.parameter_dicts:
-            assert isinstance(d, dict)
-            assert 'method' in d, \
-                f"Each parameter_dict must contain a 'method' field. Failed to find 'method' field in: {d}"
-            assert d['method'].lower() in self.algorithm_mapper, f"Unknown clustering method '{d['method']}'."
+            if not isinstance(d, dict):
+                raise InvalidTypeError
+            if 'method' not in d:
+                raise InvalidValueError(
+                    f"Each parameter_dict must contain a 'method' field. Failed to find 'method' field in: {d}")
+            if d['method'].lower() not in self.algorithm_mapper:
+                raise InvalidValueError(f"Unknown clustering method '{d['method']}'.")
             runner_class = self.algorithm_mapper[d['method'].lower()]
             params = d.copy()
             params.pop('method')
@@ -1193,7 +1284,7 @@ class CLICOMRunner(ClusteringRunner):
                     try:
                         runner_class(*args, **kwargs)
                         valid_setups.append((runner_class, args, kwargs))
-                    except AssertionError:
+                    except RNAlysisInputError:
                         continue
 
         return valid_setups

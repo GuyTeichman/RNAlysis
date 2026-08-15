@@ -90,10 +90,11 @@ rnalysis/
     gui_graphics.py, gui_quickstart.py, gui_style.py, main.py
   data_files/
     r_templates/         # parametrized R scripts (DESeq2, limma, Rsubread, install, sessioninfo)
+    api_vocabularies.json  # release-time snapshot of the remote vocabularies in Literal[...] types
     report_templates/, report_misc/
 tests/                   # pytest + pytest-qt; one test_*.py per module; fixtures in test_files/
 docs/source/             # Sphinx sources; per-function .rst are sphinx-apidoc GENERATED (don't hand-edit)
-packaging/               # changelog + video-checksum helpers for releases
+packaging/               # changelog, video-checksum + API-vocabulary-snapshot helpers for releases
 ```
 
 Class hierarchy (public API): `Filter` → `CountFilter`, `DESeqFilter`, `FoldChangeFilter`;

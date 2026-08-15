@@ -142,7 +142,7 @@ That way, each sub-group will be drawn with a different color on the final graph
 In our case we only have one column per condition, and we want to examine them all, so we don't need to change this parameter.
 
 By default, *RNAlysis* will apply a power-transform (Box-Cox) to the data before standardazing it and running PCA. This is the case for many functions in *RNAlysis*, since applying power transform minimizes undesirable characteristics of counts data, such as skeweness, mean-variance dependence, and extreme values.
-However, this feature can always be disabled with the `power_transform` parameter.
+The `power_transform` parameter lets you choose a different transform instead: 'log' applies log2(x+1) to every value, which is simpler and can never become numerically unstable, and 'none' disables the transform altogether.
 
 Whether we apply a power transform to our data or not, *RNAlysis* will then standardize our data to neutralize any differences in absolute gene expression level, and then applies the Principal Component Analysis
 

@@ -8,6 +8,8 @@ from shutil import copyfileobj
 from typing import Literal, Union
 from urllib.request import urlopen
 
+import tenacity
+
 from rnalysis.utils import io
 
 try:
@@ -17,8 +19,11 @@ except ImportError:  # pragma: no cover
 
 
     class jdk:  # pragma: no cover
+        class JdkError(Exception):
+            pass
+
         @staticmethod
-        def install(version):
+        def install(version, *args, **kwargs):
             warnings.warn("Cannot install JDK.")
 
 PICARD_JAR = Path(os.environ.get('PICARDTOOLS_JAR', io.get_data_dir().joinpath('picard.jar')))
@@ -69,13 +74,23 @@ def is_jdk_installed():
     return False
 
 
+@tenacity.retry(retry=tenacity.retry_if_exception_type(jdk.JdkError),
+                stop=tenacity.stop_after_attempt(3),
+                wait=tenacity.wait_random_exponential(multiplier=1, max=30),
+                reraise=True)
+def _download_and_install_jdk():
+    # the JDK is fetched from an external server (Adoptium -> GitHub release asset) that intermittently
+    # drops connections; retry a few times before giving up so transient network blips don't fail the install.
+    jdk.install(str(JDK_VERSION), path=JDK_ROOT.as_posix())
+
+
 def install_jdk():
     if not is_jdk_installed():
         print("Installing Java...")
         if JDK_ROOT.exists():
             shutil.rmtree(JDK_ROOT)
         JDK_ROOT.mkdir(parents=True, exist_ok=True)
-        jdk.install(str(JDK_VERSION), path=JDK_ROOT.as_posix())
+        _download_and_install_jdk()
         print('Done')
 
 
@@ -99,31 +114,34 @@ def install_picard():
     print('Done')
 
 
-def install_limma(r_installation_folder: Union[str, Path, Literal['auto']] = 'auto'):
-    script_path = Path(__file__).parent.parent.joinpath('data_files/r_templates/limma_install.R')
+def _run_r_installer(script_name: str, package_name: str,
+                     r_installation_folder: Union[str, Path, Literal['auto']] = 'auto'):
+    """
+    Run one of the bundled R package-installation scripts, and turn a failed installation into
+    actionable guidance.
+
+    ``io.run_r_script`` raises :class:`ChildProcessError` when the R script itself fails, which on
+    fresh machines and CI is most often a missing write permission to R's library folder. The
+    original error is chained (``from``) so the R output stays visible. Failures that indicate an
+    RNAlysis bug rather than an environment problem (for example a missing bundled script, which
+    raises :class:`~rnalysis.exceptions.InternalError`) are deliberately left to propagate as-is.
+    """
+    script_path = Path(__file__).parent.parent.joinpath(f'data_files/r_templates/{script_name}')
     try:
         io.run_r_script(script_path, r_installation_folder)
-    except AssertionError:
-        raise AssertionError("Failed to install limma. "
-                             "Please make sure you have write permission to R's library folder, "
-                             "or try to install limma manually.")
+    except ChildProcessError as e:
+        raise ChildProcessError(f"Failed to install {package_name}. "
+                                f"Please make sure you have write permission to R's library folder, "
+                                f"or try to install {package_name} manually.") from e
+
+
+def install_limma(r_installation_folder: Union[str, Path, Literal['auto']] = 'auto'):
+    _run_r_installer('limma_install.R', 'limma', r_installation_folder)
 
 
 def install_deseq2(r_installation_folder: Union[str, Path, Literal['auto']] = 'auto'):
-    script_path = Path(__file__).parent.parent.joinpath('data_files/r_templates/deseq2_install.R')
-    try:
-        io.run_r_script(script_path, r_installation_folder)
-    except AssertionError:
-        raise AssertionError("Failed to install DESeq2. "
-                             "Please make sure you have write permission to R's library folder, "
-                             "or try to install DESeq2 manually.")
+    _run_r_installer('deseq2_install.R', 'DESeq2', r_installation_folder)
 
 
 def install_rsubread(r_installation_folder: Union[str, Path, Literal['auto']] = 'auto'):
-    script_path = Path(__file__).parent.parent.joinpath('data_files/r_templates/rsubread_install.R')
-    try:
-        io.run_r_script(script_path, r_installation_folder)
-    except AssertionError:
-        raise AssertionError("Failed to install RSubread. "
-                             "Please make sure you have write permission to R's library folder, "
-                             "or try to install RSubread manually.")
+    _run_r_installer('rsubread_install.R', 'RSubread', r_installation_folder)

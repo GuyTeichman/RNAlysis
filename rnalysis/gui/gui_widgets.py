@@ -21,6 +21,7 @@ from PyQt6 import QtCore, QtGui, QtWidgets
 from tqdm.auto import tqdm
 from typing_extensions import get_args, get_origin
 
+from rnalysis.exceptions import InternalError, InvalidTypeError, InvalidValueError
 from rnalysis.utils import generic, param_typing, parsing, validation
 
 EMPTY = inspect._empty
@@ -161,8 +162,10 @@ class TableSingleColumnPicker(TableColumnPicker):
 
     def value(self):
         picked_cols = super().value()
-        assert len(picked_cols) > 0, "Not enough columns were picked!"
-        assert len(picked_cols) < 2, "Too many columns were picked!"
+        if not (len(picked_cols) > 0):
+            raise InvalidValueError("Not enough columns were picked!")
+        if not (len(picked_cols) < 2):
+            raise InvalidValueError("Too many columns were picked!")
         return picked_cols[0]
 
 
@@ -235,7 +238,8 @@ class TableColumnGroupPicker(TableColumnPicker):
         self.clear_selection()
         for group_ind, grp in enumerate(selection):
             for item in grp:
-                assert item in self.columns, f"Item '{item}' is not a column in this table!"
+                if item not in self.columns:
+                    raise InvalidValueError(f"Item '{item}' is not a column in this table!")
                 item_ind = self.columns.index(item)
                 self.column_checks[item_ind].setChecked(True)
                 self.column_combos[item_ind].setCurrentText(str(group_ind + 1))
@@ -678,6 +682,9 @@ class ComboBoxOrOtherWidget(QtWidgets.QWidget):
         if value in self.items:
             self.combo.setCurrentText(value)
         else:
+            # the combo has to move to "Other..." as well, or currentText() would keep reporting the
+            # previously-selected literal and the value we just set would be silently ignored
+            self.combo.setCurrentText(self.OTHER_TEXT)
             set_widget_value(self.other, value)
 
 
@@ -991,8 +998,8 @@ class OrderedFileList(MultiChoiceListWithDeleteReorder):
         return [name for name in self.items]
 
     def setValue(self, items):
-        assert validation.isiterable(items) and validation.isinstanceiter(items, str), \
-            f"Invalid type for 'items': {type(items)}."
+        if not (validation.isiterable(items) and validation.isinstanceiter(items, str)):
+            raise InvalidTypeError(f"Invalid type for 'items': {type(items)}.")
         self.delete_all_quietly()
         self.add_items(items)
 
@@ -1062,14 +1069,16 @@ class GeneSetComboBox(MandatoryComboBox):
         set_name = self.currentText()
         if set_name == self.default_choice:
             return set()
-        assert set_name in self.available_objects, f"Tab '{set_name}' does not exist!"
+        if set_name not in self.available_objects:
+            raise InternalError(f"Tab '{set_name}' does not exist!")
         return self.available_objects[set_name][0].obj()
 
     def current_id(self):
         set_name = self.currentText()
         if set_name == self.default_choice:
             return None
-        assert set_name in self.available_objects, f"Tab '{set_name}' does not exist!"
+        if set_name not in self.available_objects:
+            raise InternalError(f"Tab '{set_name}' does not exist!")
         return self.available_objects[set_name][0].tab_id
 
 

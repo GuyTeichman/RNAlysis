@@ -8,6 +8,7 @@ from typing import Dict, Iterable, List, Literal, Set, Tuple, Union
 
 import polars as pl
 
+from rnalysis.exceptions import InvalidTypeError, InvalidValueError
 from rnalysis.utils import generic, installs, io, parsing, validation
 
 
@@ -21,10 +22,12 @@ class DiffExpRunner(abc.ABC):
                  lrt_factors: Iterable[str] = tuple(),
                  model_factors: Iterable[str] = 'auto',
                  r_installation_folder: Union[str, Path, Literal['auto']] = 'auto'):
-        assert validation.isiterable(comparisons) and validation.isinstanceiter(comparisons, tuple), \
-            f"comparisons must be an iterable of tuples, instead got: {comparisons}"
-        assert validation.isiterable(covariates), f"covariates must be an iterable, instead got: {covariates}"
-        assert validation.isiterable(lrt_factors), f"lrt_factors must be an iterable, instead got: {lrt_factors}"
+        if not (validation.isiterable(comparisons) and validation.isinstanceiter(comparisons, tuple)):
+            raise InvalidTypeError(f"comparisons must be an iterable of tuples, instead got: {comparisons}")
+        if not validation.isiterable(covariates):
+            raise InvalidTypeError(f"covariates must be an iterable, instead got: {covariates}")
+        if not validation.isiterable(lrt_factors):
+            raise InvalidTypeError(f"lrt_factors must be an iterable, instead got: {lrt_factors}")
         self.data_path = data_path
         self.design_mat_path = design_mat_path
         self.comparisons = comparisons
@@ -47,7 +50,8 @@ class DiffExpRunner(abc.ABC):
         else:
             self.model_factors = model_factors
             for factor in itertools.chain(self.lrt_factors, self.covariates, [comp[0] for comp in self.comparisons]):
-                assert factor in self.model_factors, f"factor {factor} not found in design matrix columns"
+                if factor not in self.model_factors:
+                    raise InvalidValueError(f"factor {factor} not found in design matrix columns")
 
     def run(self) -> Path:
         self.install_required_packages()
@@ -98,7 +102,8 @@ class DESeqRunner(DiffExpRunner):
                          r_installation_folder)
         self.scale_factor_path = scale_factor_path
         self.cooks_cutoff = cooks_cutoff
-        assert scale_factors_ndims in [1, 2], "scale_factors_ndims must be 1 or 2!"
+        if scale_factors_ndims not in [1, 2]:
+            raise InvalidValueError("scale_factors_ndims must be 1 or 2!")
         self.scaling_factors_ndims = scale_factors_ndims
 
     def install_required_packages(self):

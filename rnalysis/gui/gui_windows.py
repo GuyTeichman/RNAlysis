@@ -10,6 +10,7 @@ import yaml
 from PyQt6 import QtCore, QtGui, QtWidgets
 
 from rnalysis import __version__
+from rnalysis.exceptions import InvalidValueError
 from rnalysis.gui import gui_style, gui_widgets
 from rnalysis.utils import generic, io, parsing, settings
 
@@ -730,6 +731,21 @@ class FuncExternalWindow(gui_widgets.MinMaxDialog):
         args = self.args
         return args
 
+    def migrate_legacy_parameters(self, kwargs: dict) -> dict:
+        """
+        Translate values written by older versions of *RNAlysis* into their current spelling.
+
+        A parameter file exported by an older version must keep loading forever, even when a parameter has
+        since grown from a boolean into a menu of named choices. Windows whose function has such a parameter
+        override this; by default nothing needs translating.
+
+        :param kwargs: the keyword arguments read from the parameter file.
+        :type kwargs: dict
+        :return: the same arguments, with any legacy value replaced by its current spelling.
+        :rtype: dict
+        """
+        return kwargs
+
     def import_parameters(self):
         filename, _ = QtWidgets.QFileDialog.getOpenFileName(self, "Choose a parameter file",
                                                             filter="YAML file (*.yaml)")
@@ -739,11 +755,14 @@ class FuncExternalWindow(gui_widgets.MinMaxDialog):
             params = yaml.safe_load(f)
 
         for key in ['name', 'args', 'kwargs']:
-            assert key in params, f"Invalid parameter file: key '{key}' missing."
-        assert params.get('name') == self.func_name, f"Parameter file for function '{params.get('name')}' " \
-                                                     f"does not match this window's function: '{self.func_name}'"
+            if key not in params:
+                raise InvalidValueError(f"Invalid parameter file: key '{key}' missing.")
+        if params.get('name') != self.func_name:
+            raise InvalidValueError(f"Parameter file for function '{params.get('name')}' "
+                                    f"does not match this window's function: '{self.func_name}'")
         args = params['args']
-        kwargs = params['kwargs']
+        kwargs = self.migrate_legacy_parameters(params['kwargs'])
+        params['kwargs'] = kwargs
 
         self.args = args
 
@@ -821,7 +840,8 @@ class PairedFuncExternalWindow(FuncExternalWindow):
     def import_parameters(self):
         params = super().import_parameters()
         for key in ['r1_files', 'r2_files']:
-            assert key in params['kwargs'], f"cannot find value for key '{key}'"
+            if key not in params['kwargs']:
+                raise InvalidValueError(f"cannot find value for key '{key}'")
             value = params['kwargs'][key]
             gui_widgets.set_widget_value(self.pairs_widgets[key], value)
 
