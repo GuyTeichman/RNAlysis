@@ -463,10 +463,16 @@ class DiffExpWindow(gui_windows.FuncExternalWindow):
             self.comparisons_widgets['picker'].set_comparison_values(comparisons)
 
         if self.simplified:
+            # a parameter file exported from the full window is a user-supplied artifact, so an
+            # unsupported entry in it is bad input - not an RNAlysis bug
             if not (covariates is None or len(covariates) == 0):
-                raise InternalError("Covariates are not supported in simplified mode.")
+                raise InvalidValueError("This parameter file contains covariates, which the simplified window "
+                                        "does not support. Open the full version of this window to use it, "
+                                        "or remove the covariates from the file.")
             if not (lrt_factors is None or len(lrt_factors) == 0):
-                raise InternalError("Likelihood Ratio Tests are not supported in simplified mode.")
+                raise InvalidValueError("This parameter file contains Likelihood Ratio Test factors, which the "
+                                        "simplified window does not support. Open the full version of this window "
+                                        "to use it, or remove those factors from the file.")
         else:
             if 'picker' in self.covariates_widgets:
                 self.covariates_widgets['picker'].set_comparison_values(covariates)

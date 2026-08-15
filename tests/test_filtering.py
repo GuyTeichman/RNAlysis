@@ -965,6 +965,19 @@ def test_countfilter_threshold_invalid(basic_countfilter):
         basic_countfilter.filter_low_reads("5")
 
 
+@pytest.mark.parametrize('func_name', ['filter_low_reads', 'split_by_reads', 'filter_by_row_sum'])
+def test_countfilter_nan_threshold_raises_instead_of_emptying_table(basic_countfilter, func_name):
+    """A NaN threshold must be rejected, not silently applied. Every comparison against NaN is False,
+    so an unguarded NaN flows through the filter and drops every feature - returning an empty table
+    with no warning, which is far worse than an error."""
+    original_n_features = basic_countfilter.shape[0]
+    # split_by_reads always returns new objects and takes no 'inplace' argument
+    kwargs = {} if func_name == 'split_by_reads' else {'inplace': False}
+    with pytest.raises(InvalidValueError):
+        getattr(basic_countfilter, func_name)(threshold=float('nan'), **kwargs)
+    assert basic_countfilter.shape[0] == original_n_features
+
+
 def test_countfilter_split_by_reads(basic_countfilter):
     high_truth = io.load_table(r"tests/test_files/counted_above60_rpm.csv")
     low_truth = io.load_table(r"tests/test_files/counted_below60_rpm.csv")

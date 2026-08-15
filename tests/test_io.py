@@ -2774,6 +2774,37 @@ class TestOrthoInspectorOrthologMapper:
                           'DBtwo': frozenset({2, 4}),
                           'DBthree': frozenset({5})}
 
+    def test_get_database_organisms_degrades_when_one_database_reports_failure(self):
+        # A degraded OrthoInspector database (meta.status != 'success') must not crash the whole
+        # lookup, and must not tell the scientist to file an RNAlysis bug -- it is an external
+        # service problem. Warn and skip it, like the neighbouring stall/timeout paths do.
+        api = OrthoInspectorOrthologMapper.API_URL
+        with requests_mock.Mocker() as m:
+            m.get(f'{api}/databases', json={'data': ['GoodDB', 'DegradedDB']})
+            m.get(f'{api}/GoodDB/species',
+                  json={'meta': {'status': 'success'}, 'data': [{'id': 1}, {'id': 2}]})
+            m.get(f'{api}/DegradedDB/species',
+                  json={'meta': {'status': 'error'}, 'data': []})
+            with pytest.warns(UserWarning, match='DegradedDB'):
+                result = OrthoInspectorOrthologMapper.get_database_organisms()
+
+        # the healthy database is still usable; the degraded one contributes no organisms
+        assert result['GoodDB'] == frozenset({1, 2})
+        assert result.get('DegradedDB', frozenset()) == frozenset()
+
+    def test_get_database_organisms_degraded_warning_does_not_blame_rnalysis(self):
+        api = OrthoInspectorOrthologMapper.API_URL
+        with requests_mock.Mocker() as m:
+            m.get(f'{api}/databases', json={'data': ['DegradedDB']})
+            m.get(f'{api}/DegradedDB/species', json={'meta': {'status': 'maintenance'}, 'data': []})
+            with pytest.warns(UserWarning) as record:
+                OrthoInspectorOrthologMapper.get_database_organisms()
+
+        text = ' '.join(str(w.message) for w in record)
+        assert 'bug in RNAlysis' not in text
+        assert 'OrthoInspector' in text
+        assert 'maintenance' in text  # the reported status is surfaced for diagnosis
+
     def test_get_database_organisms_empty_database_list(self):
         # If OrthoInspector lists no databases, the concurrent fan-out must return {} rather than
         # crash (ThreadPoolExecutor(max_workers=0) raises ValueError) -- the 'if databases' guard.

@@ -492,6 +492,29 @@ def test_SimpleDESeqWindow_init(simple_deseq_window):
     _ = simple_deseq_window
 
 
+@pytest.mark.parametrize('unsupported_key,expected_text', [
+    ('covariates', 'covariates'),
+    ('lrt_factors', 'Likelihood Ratio Test'),
+])
+def test_SimpleDESeqWindow_import_parameters_rejects_unsupported_keys(monkeypatch, simple_deseq_window,
+                                                                     unsupported_key, expected_text):
+    """Importing a parameter file exported from the full DESeq window into the simplified window is a
+    user action on a serialized artifact, so it must raise a user-input error with actionable advice -
+    not an InternalError telling the scientist to report an RNAlysis bug."""
+    params = {'name': 'run_deseq2', 'args': [], 'kwargs': {'comparisons': [], unsupported_key: ['batch']}}
+    monkeypatch.setattr(gui_windows.FuncExternalWindow, 'import_parameters', lambda self: params)
+    monkeypatch.setattr(type(simple_deseq_window), 'init_righthand_uis', lambda self: None)
+
+    with pytest.raises(InvalidValueError) as err:
+        simple_deseq_window.import_parameters()
+
+    message = str(err.value)
+    assert expected_text in message
+    assert 'bug in RNAlysis' not in message
+    # the message must tell the user what to do about it
+    assert 'full' in message.lower()
+
+
 def test_SimpleDESeqWindow_load_design_mat(qtbot, simple_deseq_window):
     design_mat_path = 'tests/test_files/test_design_matrix.csv'
     design_mat_truth = io.load_table(design_mat_path, 0)

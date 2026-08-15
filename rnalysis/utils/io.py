@@ -1839,8 +1839,15 @@ class OrthoInspectorOrthologMapper:
             except requests.exceptions.JSONDecodeError:
                 clean_json_string = req.text.split('\n')[0]
                 content = json.loads(clean_json_string)
-            if content['meta']['status'] != 'success':
-                raise InternalError
+            status = content.get('meta', {}).get('status')
+            if status != 'success':
+                # A degraded OrthoInspector database is an external-service problem, not an RNAlysis
+                # bug: warn and contribute no organisms, so this database is simply not selectable
+                # while the healthy ones keep working (same degrade-gracefully policy as the
+                # stall/timeout handling in get_orthologs).
+                warnings.warn(f"OrthoInspector database '{database}' reported status '{status}' instead of "
+                              f"'success'. Skipping it - its organisms will not be available.")
+                return database, frozenset()
             return database, frozenset({d['id'] for d in content['data']})
 
         # Fetch every database's species list concurrently. These requests are independent and were
