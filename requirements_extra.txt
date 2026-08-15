@@ -8,7 +8,7 @@
 # and list multiple comma-separated tags to put one package in several feature groups.
 hdbscan>=0.8.40       # feature: hdbscan
 xlmhglite>=1.1.1      # feature: single-set
-numba>=0.61.0         # feature: randomization
+numba>=0.63.0         # feature: randomization
 cutadapt>=5.0         # feature: fastq
 pyvis>=0.3.2          # feature: reports
 networkx>=3.5.0       # feature: reports

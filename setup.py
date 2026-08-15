@@ -57,8 +57,6 @@ if __name__ == '__main__':
     with open('requirements.txt') as requirements_file:
         requirements = requirements_file.read().split('\n')
 
-    test_requirements = ['pytest', 'pytest-qt']
-
     extras_require = get_extra_requires('requirements_extra.txt')
 
     setup(
@@ -89,8 +87,6 @@ if __name__ == '__main__':
         keywords="RNAlysis",
         name="RNAlysis",
         packages=find_packages(exclude=["tests", "packaging"]),
-        test_suite="tests",
-        tests_require=test_requirements,
         extras_require=extras_require,
         url="https://github.com/GuyTeichman/RNAlysis",
         version="4.3.0",
