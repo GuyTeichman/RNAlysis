@@ -5036,7 +5036,7 @@ class CountFilter(Filter):
     def split_clicom(self, *parameter_dicts: dict,
                      replicate_grouping: Union[param_typing.GroupedColumns, Literal['ungrouped']] = 'ungrouped',
                      power_transform: Union[Literal[POWER_TRANSFORMS],
-                                               List[Literal[POWER_TRANSFORMS]]] = 'box-cox',
+                                            List[Literal[POWER_TRANSFORMS]]] = 'box-cox',
                      evidence_threshold: param_typing.Fraction = 2 / 3, cluster_unclustered_features: bool = False,
                      min_cluster_size: PositiveInt = 15, plot_style: Literal['all', 'std_area', 'std_bar'] = 'all',
                      split_plots: bool = False, parallel_backend: Literal[PARALLEL_BACKENDS] = 'loky',
