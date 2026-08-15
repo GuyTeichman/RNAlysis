@@ -1,5 +1,6 @@
 import json
 import shutil
+from enum import Enum, IntEnum
 from unittest.mock import Mock, patch
 
 import matplotlib
@@ -2258,6 +2259,82 @@ def test_export_pipeline_unhashable_set_item_raises_typed_error():
         p.export_pipeline(None)
     assert 'filter_low_reads' in str(err.value)
     assert 'opposite' in str(err.value)
+
+
+class _Mode(str, Enum):
+    UNION = 'union'
+
+
+class _Level(IntEnum):
+    HIGH = 3
+
+
+def test_export_pipeline_converts_enum_params():
+    # PyYAML dispatches on the *exact* type, so a str/int subclass (an Enum mixin, a pandas
+    # Timestamp) is not representable even though isinstance() says it is
+    p = Pipeline('countfilter')
+    p.add_function('filter_low_reads', threshold=_Level.HIGH, opposite=_Mode.UNION)
+
+    exported = yaml.safe_load(p.export_pipeline(None))
+
+    kwargs = exported['params'][0][1]
+    assert kwargs['threshold'] == 3 and type(kwargs['threshold']) is int
+    assert kwargs['opposite'] == 'union' and type(kwargs['opposite']) is str
+
+
+def test_export_pipeline_with_enum_params_over_an_existing_file(tmp_path):
+    target = tmp_path.joinpath('pipeline.yaml')
+    target.write_text('previous pipeline contents')
+
+    p = Pipeline('countfilter')
+    p.add_function('filter_low_reads', threshold=5, opposite=_Mode.UNION)
+    p.export_pipeline(target)
+
+    assert Pipeline.import_pipeline(target) == p
+
+
+def test_export_pipeline_does_not_truncate_the_target_when_dumping_fails(monkeypatch, tmp_path):
+    target = tmp_path.joinpath('pipeline.yaml')
+    target.write_text('previous pipeline contents')
+    real_safe_dump = yaml.safe_dump
+
+    def failing_safe_dump(data, *args, **kwargs):
+        if isinstance(data, dict) and 'functions' in data:  # the Pipeline itself, not a scalar probe
+            raise yaml.representer.RepresenterError('cannot represent an object')
+        return real_safe_dump(data, *args, **kwargs)
+
+    monkeypatch.setattr(generic.yaml, 'safe_dump', failing_safe_dump)
+
+    p = Pipeline('countfilter')
+    p.add_function('filter_low_reads', threshold=5)
+
+    with pytest.raises(yaml.representer.RepresenterError):
+        p.export_pipeline(target)
+    assert target.read_text() == 'previous pipeline contents'
+
+
+def test_export_pipeline_unrepresentable_param_leaves_the_existing_file_intact(tmp_path):
+    class Unrepresentable:
+        pass
+
+    target = tmp_path.joinpath('pipeline.yaml')
+    target.write_text('previous pipeline contents')
+
+    p = Pipeline('countfilter')
+    p.add_function('filter_low_reads', threshold=Unrepresentable())
+
+    with pytest.raises(RNAlysisInputError):
+        p.export_pipeline(target)
+    assert target.read_text() == 'previous pipeline contents'
+
+
+def test_pipeline_with_a_private_function_round_trips():
+    # add_function accepts any function of the filter type, private ones included, so whatever can
+    # be exported must also import (hard rule 4)
+    p = Pipeline('countfilter')
+    p.add_function('_inplace')
+
+    assert Pipeline.import_pipeline(p.export_pipeline(None)) == p
 
 
 def test_pipeline_tuple_params_round_trip_as_lists():
