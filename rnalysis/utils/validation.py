@@ -205,7 +205,9 @@ def validate_threshold(threshold: float = 1):
     """
     if not isinstance(threshold, (float, int)):
         raise InvalidTypeError("Threshold must be a number!")
-    if threshold < 0:
+    # written as `not >= 0` rather than `< 0` so NaN is rejected: every comparison against NaN is
+    # False, so `threshold < 0` would let a NaN through and silently empty the table downstream
+    if not threshold >= 0:
         raise InvalidValueError("Threshold must be zero or larger!")
 
 
