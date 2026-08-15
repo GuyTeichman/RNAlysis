@@ -2218,11 +2218,22 @@ def test_check_id_mapping_results_ready_silent_when_not_verbose(monkeypatch, cap
     assert capsys.readouterr().out == ''
 
 
+def _fake_monotonic_clock(monkeypatch):
+    """Patch io.time.sleep/monotonic with a fake clock: sleep(x) advances the clock by x instead of
+    actually blocking, and monotonic() reads it back. Keeps timeout-loop tests fast, deterministic,
+    and accurate to production (which measures elapsed time via time.monotonic(), not accumulated
+    sleep args -- see check_id_mapping_results_ready)."""
+    now = [0.0]
+    monkeypatch.setattr(io.time, 'monotonic', lambda: now[0])
+    monkeypatch.setattr(io.time, 'sleep', lambda seconds: now.__setitem__(0, now[0] + seconds))
+    return now
+
+
 def test_check_id_mapping_results_ready_times_out_when_job_never_ready(monkeypatch):
     # A UniProt job stuck in RUNNING must not hang the analysis forever: after JOB_READY_TIMEOUT worth
-    # of accumulated polling wait, the loop raises IDMappingTimeoutError instead of looping without end.
-    # (sleep is a no-op so elapsed == the sum of intended sleep intervals -- deterministic and fast.)
-    monkeypatch.setattr(io.time, 'sleep', lambda *args, **kwargs: None)
+    # of elapsed (wall-clock) time, the loop raises IDMappingTimeoutError instead of looping without
+    # end. The fake clock advances exactly as far as the loop's own sleep calls, so this stays fast.
+    _fake_monotonic_clock(monkeypatch)
     monkeypatch.setattr(GeneIDTranslator, 'JOB_READY_TIMEOUT', 5.0)
     with requests_mock.Mocker() as m:
         adapter = m.get("https://rest.uniprot.org/idmapping/status/123", json={"jobStatus": "RUNNING"})
@@ -2235,7 +2246,7 @@ def test_check_id_mapping_results_ready_times_out_when_job_never_ready(monkeypat
 def test_check_id_mapping_results_ready_does_not_time_out_a_job_that_finishes_in_time(monkeypatch):
     # A job that is slow but finishes before the bound must still succeed -- the timeout is a hang-guard
     # and must never pre-empt a legitimately-completing job.
-    monkeypatch.setattr(io.time, 'sleep', lambda *args, **kwargs: None)
+    _fake_monotonic_clock(monkeypatch)
     monkeypatch.setattr(GeneIDTranslator, 'JOB_READY_TIMEOUT', 1000.0)  # generous
     with requests_mock.Mocker() as m:
         count = 0
