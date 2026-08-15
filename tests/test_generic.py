@@ -7,6 +7,7 @@ from matplotlib.backend_bases import PickEvent
 from sklearn.preprocessing import PowerTransformer, StandardScaler
 
 from rnalysis import FROZEN_ENV
+from rnalysis.exceptions import InvalidValueError
 from rnalysis.utils import generic
 from rnalysis.utils.generic import *
 
@@ -88,6 +89,121 @@ def test_standard_box_cox_default_is_sequential(monkeypatch):
     array = rng.integers(1, 5000, (6, 30)).astype(float)
     reference = StandardScaler().fit_transform(PowerTransformer(method='box-cox').fit_transform(array + 1))
     assert np.array_equal(standard_box_cox(array), reference)
+
+
+# The real-world offending column (a GFP reporter at ~8,400 counts across 4 grouped samples), salvaged from the
+# closed PR #238 (branch fix/boxcox-overflow-pca-nan) together with its non-finite detection logic. Box-Cox fits
+# one lambda per column, and across only 4 near-constant high-magnitude values the MLE lambda explodes (~78), so
+# the transform overflows float64. Instead of handing sklearn a matrix full of NaNs (which used to crash PCA with
+# "Input X contains NaN"), RNAlysis now fails loudly and names the offending genes.
+UNSTABLE_BOX_COX_COLUMN = np.array([8482.73, 8459.93, 8423.67, 8288.78])
+WELL_BEHAVED_COLUMNS = np.array([[10.0, 3.0], [50.0, 90.0], [200.0, 40.0], [1000.0, 7.0]])
+
+
+def _array_with_unstable_column():
+    return np.column_stack([WELL_BEHAVED_COLUMNS[:, 0], UNSTABLE_BOX_COX_COLUMN, WELL_BEHAVED_COLUMNS[:, 1]])
+
+
+@pytest.mark.parametrize('parallel_backend', ['sequential', 'threading'])
+def test_standard_box_cox_raises_on_non_finite_column(parallel_backend, monkeypatch):
+    monkeypatch.setattr(generic, 'BOX_COX_PARALLEL_MIN_COLUMNS', 2)
+    array = _array_with_unstable_column()
+    with pytest.raises(InvalidValueError) as err:
+        standard_box_cox(array, parallel_backend=parallel_backend, feature_names=['good1', 'GFP', 'good2'])
+    msg = str(err.value)
+    assert 'GFP' in msg
+    assert 'good1' not in msg and 'good2' not in msg
+    assert "'log'" in msg
+
+
+def test_standard_box_cox_unstable_column_error_names_dataframe_columns():
+    array = _array_with_unstable_column()
+    data_df = pl.DataFrame(['sample1', 'sample2', 'sample3', 'sample4']).with_columns(
+        pl.DataFrame(array, schema=['good1', 'GFP', 'good2']))
+    with pytest.raises(InvalidValueError) as err:
+        standard_box_cox(data_df)
+    assert 'GFP' in str(err.value)
+
+
+def test_standard_box_cox_raises_on_absurdly_large_output(monkeypatch):
+    # a Box-Cox output can also come back *finite* but astronomically large (an exploded lambda that did not
+    # quite overflow). Such a column silently dominates every principal component instead of crashing, so it
+    # must be caught too. Which real inputs land there depends on the exact scipy/sklearn optimizer, so the
+    # magnitude branch is pinned here by faking the transform output rather than by a brittle input fixture.
+    array = _array_with_unstable_column()
+
+    def fake_box_cox(arr):
+        out = np.ones_like(arr)
+        out[:, 1] = np.array([1e200, -1e200, 1e199, -1e199])
+        return out
+
+    monkeypatch.setattr(generic, '_box_cox_fit_transform', fake_box_cox)
+    with pytest.raises(InvalidValueError) as err:
+        standard_box_cox(array, feature_names=['good1', 'GFP', 'good2'])
+    assert 'GFP' in str(err.value)
+
+
+def test_standard_box_cox_well_behaved_data_is_unaffected():
+    # rule 5: currently-working inputs must keep producing bit-identical output
+    reference = StandardScaler().fit_transform(
+        PowerTransformer(method='box-cox').fit_transform(WELL_BEHAVED_COLUMNS + 1))
+    assert np.array_equal(standard_box_cox(WELL_BEHAVED_COLUMNS, feature_names=['good1', 'good2']), reference)
+
+
+@pytest.mark.parametrize('value,truth', [
+    (True, 'box-cox'),
+    (False, 'none'),
+    ('box-cox', 'box-cox'),
+    ('Box-Cox', 'box-cox'),
+    ('log', 'log'),
+    ('none', 'none'),
+])
+def test_parse_power_transform(value, truth):
+    assert parse_power_transform(value) == truth
+
+
+@pytest.mark.parametrize('value', ['boxcox', 'log2', '', None, 5])
+def test_parse_power_transform_invalid(value):
+    with pytest.raises(InvalidValueError):
+        parse_power_transform(value)
+
+
+def test_standard_log():
+    rng = np.random.default_rng(4)
+    array = rng.integers(0, 5000, (6, 8)).astype(float)
+    reference = StandardScaler().fit_transform(np.log2(array + 1))
+    assert np.array_equal(standard_log(array), reference)
+
+    data_df = pl.DataFrame([f'ind{i}' for i in range(6)]).with_columns(
+        pl.DataFrame(array, schema=[f'col{j}' for j in range(8)]))
+    res_df = standard_log(data_df)
+    assert isinstance(res_df, pl.DataFrame)
+    assert res_df.columns == data_df.columns
+    assert np.all(res_df.select(pl.first()) == data_df.select(pl.first()))
+    assert np.array_equal(res_df.select(cs.numeric()).to_numpy(), reference)
+
+
+def test_standard_log_survives_unstable_box_cox_data():
+    # 'log' is the escape hatch offered by the Box-Cox error message -- it must never fail on data that
+    # Box-Cox chokes on
+    res = standard_log(_array_with_unstable_column())
+    assert np.isfinite(res).all()
+
+
+def test_standard_log_rejects_negative_values():
+    with pytest.raises(InvalidValueError):
+        standard_log(np.array([[1.0, -5.0], [2.0, 3.0]]))
+
+
+@pytest.mark.parametrize('power_transform,truth', [
+    (True, 'standard_box_cox'),
+    ('box-cox', 'standard_box_cox'),
+    ('log', 'standard_log'),
+    (False, 'standardize'),
+    ('none', 'standardize'),
+])
+def test_get_transform_function(power_transform, truth):
+    assert get_transform_function(power_transform).__name__ == truth
 
 
 def test_color_generator():

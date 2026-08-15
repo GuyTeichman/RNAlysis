@@ -492,6 +492,29 @@ def test_SimpleDESeqWindow_init(simple_deseq_window):
     _ = simple_deseq_window
 
 
+@pytest.mark.parametrize('unsupported_key,expected_text', [
+    ('covariates', 'covariates'),
+    ('lrt_factors', 'Likelihood Ratio Test'),
+])
+def test_SimpleDESeqWindow_import_parameters_rejects_unsupported_keys(monkeypatch, simple_deseq_window,
+                                                                     unsupported_key, expected_text):
+    """Importing a parameter file exported from the full DESeq window into the simplified window is a
+    user action on a serialized artifact, so it must raise a user-input error with actionable advice -
+    not an InternalError telling the scientist to report an RNAlysis bug."""
+    params = {'name': 'run_deseq2', 'args': [], 'kwargs': {'comparisons': [], unsupported_key: ['batch']}}
+    monkeypatch.setattr(gui_windows.FuncExternalWindow, 'import_parameters', lambda self: params)
+    monkeypatch.setattr(type(simple_deseq_window), 'init_righthand_uis', lambda self: None)
+
+    with pytest.raises(InvalidValueError) as err:
+        simple_deseq_window.import_parameters()
+
+    message = str(err.value)
+    assert expected_text in message
+    assert 'bug in RNAlysis' not in message
+    # the message must tell the user what to do about it
+    assert 'full' in message.lower()
+
+
 def test_SimpleDESeqWindow_load_design_mat(qtbot, simple_deseq_window):
     design_mat_path = 'tests/test_files/test_design_matrix.csv'
     design_mat_truth = io.load_table(design_mat_path, 0)
@@ -625,11 +648,12 @@ def test_ClicomWindow_remove_setup(qtbot, monkeypatch, clicom_window):
 
 
 def test_ClicomWindow_get_analysis_params(qtbot, clicom_window):
-    truth = dict(replicate_grouping='ungrouped', power_transform=[True, False], evidence_threshold=0.35,
+    truth = dict(replicate_grouping='ungrouped', power_transform=['box-cox', 'none'], evidence_threshold=0.35,
                  cluster_unclustered_features=True, parallel_backend='loky',
                  min_cluster_size=15, plot_style='all', split_plots=False)
 
-    qtbot.mouseClick(clicom_window.param_widgets['power_transform'].false_button, LEFT_CLICK)
+    # CLICOM can test several transforms in one ensemble: picking "Other..." reveals a multi-value picker
+    clicom_window.param_widgets['power_transform'].setValue(['box-cox', 'none'])
     qtbot.mouseClick(clicom_window.param_widgets['cluster_unclustered_features'].switch, LEFT_CLICK)
     clicom_window.param_widgets['evidence_threshold'].clear()
     qtbot.keyClicks(clicom_window.param_widgets['evidence_threshold'], '0.35')
@@ -642,7 +666,7 @@ def test_ClicomWindow_start_analysis(qtbot, clicom_window):
                          max_n_clusters_estimate='auto'),
                     dict(method='hierarchical', n_clusters='silhouette', metric='Euclidean', linkage='Average',
                          distance_threshold=None, max_n_clusters_estimate='auto')]
-    truth_params = dict(replicate_grouping='ungrouped', power_transform=[True, False], evidence_threshold=0.35,
+    truth_params = dict(replicate_grouping='ungrouped', power_transform='log', evidence_threshold=0.35,
                         cluster_unclustered_features=True, min_cluster_size=15, plot_style='all', split_plots=False,
                         parallel_backend='loky')
 
@@ -654,7 +678,7 @@ def test_ClicomWindow_start_analysis(qtbot, clicom_window):
     qtbot.keyClicks(clicom_window.stack.parameter_widgets['n_clusters'].combo, 'silhouette')
     qtbot.mouseClick(clicom_window.setups_widgets['add_button'], LEFT_CLICK)
 
-    qtbot.mouseClick(clicom_window.param_widgets['power_transform'].false_button, LEFT_CLICK)
+    qtbot.keyClicks(clicom_window.param_widgets['power_transform'].combo, 'log')
     qtbot.mouseClick(clicom_window.param_widgets['cluster_unclustered_features'].switch, LEFT_CLICK)
     clicom_window.param_widgets['evidence_threshold'].clear()
     qtbot.keyClicks(clicom_window.param_widgets['evidence_threshold'], '0.35')
@@ -663,6 +687,25 @@ def test_ClicomWindow_start_analysis(qtbot, clicom_window):
         clicom_window.start_button.click()
     assert blocker.args[0] == truth_setups
     assert blocker.args[1] == truth_params
+
+
+@pytest.mark.parametrize('legacy_value,truth', [
+    (True, 'box-cox'),
+    (False, 'none'),
+    ([True, False], ['box-cox', 'none']),
+])
+def test_ClicomWindow_imports_legacy_power_transform(qtbot, monkeypatch, tmp_path, clicom_window, legacy_value,
+                                                     truth):
+    # rule 4: a parameter file exported before 'power_transform' became a menu of named transforms stores the
+    # old booleans. It must keep loading, showing (and running) the transform those booleans stand for.
+    param_file = tmp_path / 'parameters CLICOM.yaml'
+    with open(param_file, 'w') as f:
+        yaml.safe_dump({'name': 'CLICOM', 'args': [], 'kwargs': {'power_transform': legacy_value}}, f)
+    monkeypatch.setattr(QtWidgets.QFileDialog, 'getOpenFileName', lambda *args, **kwargs: (str(param_file), ''))
+
+    clicom_window.import_parameters()
+
+    assert clicom_window.get_analysis_kwargs()['power_transform'] == truth
 
 
 def test_EnrichmentWindow_init(enrichment_window):
@@ -2637,6 +2680,41 @@ def test_MainWindow_import_multiple_gene_sets(main_window_with_tabs, monkeypatch
     assert isinstance(main_window_with_tabs.tabs.currentWidget(), SetTabPage)
     for i in range(3):
         assert main_window_with_tabs.tabs.widget(i + 5).obj() == truth[i]
+
+
+@pytest.mark.unit
+@pytest.mark.parametrize('suffix,sep', [('.csv', ','), ('.tsv', '\t')])
+def test_MainWindow_filename_to_gene_set_strips_whitespace(tmp_path, suffix, sep):
+    # tabular gene-set imports trim stray leading/trailing whitespace from identifiers
+    # so they match how gene IDs are read from reference and count tables
+    path = tmp_path / f'genes{suffix}'
+    path.write_text(f'gene{sep}score\n WBGene01 {sep}5\nWBGene02{sep}6\n')
+    assert MainWindow._filename_to_gene_set(str(path)) == {'WBGene01', 'WBGene02'}
+
+
+@pytest.mark.unit
+def test_MainWindow_filename_to_gene_set_strips_whitespace_txt(tmp_path):
+    path = tmp_path / 'genes.txt'
+    path.write_text(' WBGene01 \nWBGene02\n')
+    assert MainWindow._filename_to_gene_set(str(path)) == {'WBGene01', 'WBGene02'}
+
+
+@pytest.mark.unit
+@pytest.mark.parametrize('suffix,sep', [('.csv', ','), ('.tsv', '\t')])
+def test_MainWindow_filename_to_gene_set_numeric_first_column(tmp_path, suffix, sep):
+    # a numeric first column (e.g. Entrez IDs) must not go through the string-strip path
+    path = tmp_path / f'genes{suffix}'
+    path.write_text(f'gene{sep}score\n1234{sep}5\n5678{sep}6\n')
+    assert MainWindow._filename_to_gene_set(str(path)) == {1234, 5678}
+
+
+@pytest.mark.unit
+def test_MainWindow_filename_to_gene_set_whitespace_only_cell_dropped(tmp_path):
+    # a cell containing only whitespace must not import as an empty-string "gene",
+    # matching io.load_table's strip-then-null cleanup
+    path = tmp_path / 'genes.csv'
+    path.write_text('gene,score\n WBGene01 ,5\n   ,6\nWBGene02,7\n')
+    assert MainWindow._filename_to_gene_set(str(path)) == {'WBGene01', 'WBGene02'}
 
 
 @pytest.mark.parametrize('filename', ['tests/test_files/counted.tsv', 'tests/test_files/test_deseq.csv',

@@ -259,6 +259,19 @@ def test_validate_threshold(threshold, expected_to_pass):
             validate_threshold(threshold)
 
 
+@pytest.mark.parametrize('threshold', [float('nan'), float('-inf')])
+def test_validate_threshold_rejects_nan_and_negative_infinity(threshold):
+    """NaN passes `threshold < 0` (every NaN comparison is False), so the check must be written as
+    `not threshold >= 0` - otherwise a NaN threshold flows into the filters and silently empties the
+    table instead of raising."""
+    with pytest.raises(InvalidValueError):
+        validate_threshold(threshold)
+
+
+def test_validate_threshold_accepts_positive_infinity():
+    validate_threshold(float('inf'))
+
+
 @pytest.mark.parametrize('path,is_legal_truth', [
     ('tests/test_files/test_deseq.csv', True),
     ('test_deseq.csv', False),

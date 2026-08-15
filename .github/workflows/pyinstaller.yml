@@ -5,6 +5,12 @@ on:
         tags:
             - 'V*' #
     workflow_dispatch:
+        # A manual run is ALWAYS a beta freeze smoke-test: it builds the standalone app only
+        # (no GitHub Release, no commit, no version bump) and uploads the frozen apps as
+        # downloadable run artifacts to test the PyInstaller freeze by hand. Only a tag push
+        # (the `V*` trigger above) cuts a real release. The event type is the sole discriminator,
+        # so there is deliberately no `beta` input to get wrong — and nothing here has to reach
+        # the default branch before a beta can be dispatched from a feature/development branch.
 
 env:
     HOMEBREW_NO_INSTALLED_DEPENDENTS_CHECK: 1
@@ -13,6 +19,10 @@ jobs:
 
     createrelease:
         name: Create Release
+        # Runs ONLY on a tag push (github.event_name == 'push'). Every manual run
+        # (workflow_dispatch) is a beta freeze smoke-test and must never commit to master or
+        # publish a Release, so createrelease is skipped for it — no exceptions, no input to flip.
+        if: ${{ github.event_name != 'workflow_dispatch' }}
         runs-on: ubuntu-latest
         permissions:
             contents: write
@@ -62,6 +72,10 @@ jobs:
     build:
         name: Build packages
         needs: createrelease
+        # Runs for both real releases and beta smoke-tests. always() lets it proceed when
+        # createrelease was skipped (a manual beta run); it is still blocked if createrelease
+        # actually failed on a real release (don't upload assets to a Release that never got made).
+        if: ${{ always() && needs.createrelease.result != 'failure' && needs.createrelease.result != 'cancelled' }}
         runs-on: ${{ matrix.os }}
         strategy:
             matrix:
@@ -136,19 +150,31 @@ jobs:
             - name: Build with pyinstaller for ${{ matrix.TARGET }}
               run: ${{ matrix.CMD_BUILD }}
 
+            - name: Upload beta artifact (freeze smoke-test)
+              # Manual runs only: the standalone app as a downloadable run artifact, no Release.
+              if: ${{ github.event_name == 'workflow_dispatch' }}
+              uses: actions/upload-artifact@v7
+              with:
+                  name: RNAlysis-BETA-${{ matrix.TARGET }}-${{ github.sha }}
+                  path: ./dist/${{ matrix.OUT_FILE_NAME }}
+                  retention-days: 14
+
             - name: Load Release URL File from release job
+              if: ${{ github.event_name != 'workflow_dispatch' }}
               uses: actions/download-artifact@v8
               with:
                   name: release_url
                   path: release_url
 
             - name: Get Release File Name & Upload URL
+              if: ${{ github.event_name != 'workflow_dispatch' }}
               id: get_release_info
               run: |
                   value=$(cat release_url/release_url.txt)
                   echo "UPLOAD_URL=$value" >> $GITHUB_ENV
               shell: bash
             - name: Upload Release Asset
+              if: ${{ github.event_name != 'workflow_dispatch' }}
               id: upload-release-asset
               uses: softprops/action-gh-release@v3
               env:

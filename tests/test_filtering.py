@@ -1,5 +1,6 @@
 import json
 import shutil
+from enum import Enum, IntEnum
 from unittest.mock import Mock, patch
 
 import matplotlib
@@ -963,6 +964,19 @@ def test_countfilter_rpm_negative_threshold(basic_countfilter):
 def test_countfilter_threshold_invalid(basic_countfilter):
     with pytest.raises(InvalidTypeError):
         basic_countfilter.filter_low_reads("5")
+
+
+@pytest.mark.parametrize('func_name', ['filter_low_reads', 'split_by_reads', 'filter_by_row_sum'])
+def test_countfilter_nan_threshold_raises_instead_of_emptying_table(basic_countfilter, func_name):
+    """A NaN threshold must be rejected, not silently applied. Every comparison against NaN is False,
+    so an unguarded NaN flows through the filter and drops every feature - returning an empty table
+    with no warning, which is far worse than an error."""
+    original_n_features = basic_countfilter.shape[0]
+    # split_by_reads always returns new objects and takes no 'inplace' argument
+    kwargs = {} if func_name == 'split_by_reads' else {'inplace': False}
+    with pytest.raises(InvalidValueError):
+        getattr(basic_countfilter, func_name)(threshold=float('nan'), **kwargs)
+    assert basic_countfilter.shape[0] == original_n_features
 
 
 def test_countfilter_split_by_reads(basic_countfilter):
@@ -2260,6 +2274,82 @@ def test_export_pipeline_unhashable_set_item_raises_typed_error():
     assert 'opposite' in str(err.value)
 
 
+class _Mode(str, Enum):
+    UNION = 'union'
+
+
+class _Level(IntEnum):
+    HIGH = 3
+
+
+def test_export_pipeline_converts_enum_params():
+    # PyYAML dispatches on the *exact* type, so a str/int subclass (an Enum mixin, a pandas
+    # Timestamp) is not representable even though isinstance() says it is
+    p = Pipeline('countfilter')
+    p.add_function('filter_low_reads', threshold=_Level.HIGH, opposite=_Mode.UNION)
+
+    exported = yaml.safe_load(p.export_pipeline(None))
+
+    kwargs = exported['params'][0][1]
+    assert kwargs['threshold'] == 3 and type(kwargs['threshold']) is int
+    assert kwargs['opposite'] == 'union' and type(kwargs['opposite']) is str
+
+
+def test_export_pipeline_with_enum_params_over_an_existing_file(tmp_path):
+    target = tmp_path.joinpath('pipeline.yaml')
+    target.write_text('previous pipeline contents')
+
+    p = Pipeline('countfilter')
+    p.add_function('filter_low_reads', threshold=5, opposite=_Mode.UNION)
+    p.export_pipeline(target)
+
+    assert Pipeline.import_pipeline(target) == p
+
+
+def test_export_pipeline_does_not_truncate_the_target_when_dumping_fails(monkeypatch, tmp_path):
+    target = tmp_path.joinpath('pipeline.yaml')
+    target.write_text('previous pipeline contents')
+    real_safe_dump = yaml.safe_dump
+
+    def failing_safe_dump(data, *args, **kwargs):
+        if isinstance(data, dict) and 'functions' in data:  # the Pipeline itself, not a scalar probe
+            raise yaml.representer.RepresenterError('cannot represent an object')
+        return real_safe_dump(data, *args, **kwargs)
+
+    monkeypatch.setattr(generic.yaml, 'safe_dump', failing_safe_dump)
+
+    p = Pipeline('countfilter')
+    p.add_function('filter_low_reads', threshold=5)
+
+    with pytest.raises(yaml.representer.RepresenterError):
+        p.export_pipeline(target)
+    assert target.read_text() == 'previous pipeline contents'
+
+
+def test_export_pipeline_unrepresentable_param_leaves_the_existing_file_intact(tmp_path):
+    class Unrepresentable:
+        pass
+
+    target = tmp_path.joinpath('pipeline.yaml')
+    target.write_text('previous pipeline contents')
+
+    p = Pipeline('countfilter')
+    p.add_function('filter_low_reads', threshold=Unrepresentable())
+
+    with pytest.raises(RNAlysisInputError):
+        p.export_pipeline(target)
+    assert target.read_text() == 'previous pipeline contents'
+
+
+def test_pipeline_with_a_private_function_round_trips():
+    # add_function accepts any function of the filter type, private ones included, so whatever can
+    # be exported must also import (hard rule 4)
+    p = Pipeline('countfilter')
+    p.add_function('_inplace')
+
+    assert Pipeline.import_pipeline(p.export_pipeline(None)) == p
+
+
 def test_pipeline_tuple_params_round_trip_as_lists():
     # documented, deliberate limitation: YAML has no tuple type, so nested tuples come back as
     # lists. Only the top-level positional-argument tuple is restored.
@@ -2715,6 +2805,74 @@ def test_sort_by_principal_component(clustering_countfilter, component, ascendin
         c.sort_by_principal_component(0)
     with pytest.raises(InvalidValueError):
         c.sort_by_principal_component(c.shape[0] + 1)
+
+
+@pytest.fixture
+def boxcox_unstable_countfilter():
+    # a count table whose only pathological gene is a GFP reporter sitting near-constant at ~8,400 counts
+    # across 4 grouped samples -- the real-world case behind issue #285 (and closed PR #238). Once the table
+    # is transposed for PCA, Box-Cox fits a lambda of ~78 to that single gene and overflows float64.
+    return CountFilter('tests/test_files/counted_boxcox_unstable.csv')
+
+
+@pytest.mark.parametrize('power_transform', ['box-cox', True])
+@pytest.mark.parametrize('func,args', [
+    ('pca', ()),
+    ('split_by_principal_components', (1,)),
+    ('sort_by_principal_component', (1,)),
+])
+def test_pca_family_raises_on_unstable_box_cox(boxcox_unstable_countfilter, func, args, power_transform,
+                                               monkeypatch):
+    monkeypatch.setattr(plt, 'show', lambda: None)
+    with pytest.raises(InvalidValueError) as err:
+        getattr(boxcox_unstable_countfilter, func)(*args, power_transform=power_transform)
+    msg = str(err.value)
+    assert 'GFP-reporter' in msg
+    assert 'WBGene00007063' not in msg  # only the offending gene is named
+    assert "'log'" in msg
+
+
+@pytest.mark.parametrize('power_transform', ['log', 'none', False])
+@pytest.mark.parametrize('func,args,kwargs', [
+    ('pca', (), {}),
+    ('split_by_principal_components', (1,), {}),
+    ('sort_by_principal_component', (1,), {'inplace': False}),
+])
+def test_pca_family_survives_unstable_data_with_other_transforms(boxcox_unstable_countfilter, func, args, kwargs,
+                                                                 power_transform, monkeypatch):
+    # the escape hatches the error message offers must actually work on the very table that broke Box-Cox
+    monkeypatch.setattr(plt, 'show', lambda: None)
+    assert getattr(boxcox_unstable_countfilter, func)(*args, power_transform=power_transform, **kwargs) is not None
+
+
+@pytest.mark.parametrize('legacy,named', [(True, 'box-cox'), (False, 'none')])
+def test_sort_by_principal_component_legacy_booleans_match_named_transforms(basic_countfilter, legacy, named):
+    # rule 4/5: the legacy booleans must keep producing exactly the output they always did
+    basic_countfilter.filter_low_reads(1)
+    legacy_result = basic_countfilter.sort_by_principal_component(1, power_transform=legacy, inplace=False)
+    named_result = basic_countfilter.sort_by_principal_component(1, power_transform=named, inplace=False)
+    assert legacy_result.df.equals(named_result.df)
+    assert legacy_result.fname == named_result.fname  # including the file name the transform contributes
+
+
+def test_split_by_principal_components_legacy_boolean_matches_box_cox(basic_countfilter):
+    basic_countfilter.filter_low_reads(1)
+    legacy = basic_countfilter.split_by_principal_components(1, 0.32, power_transform=True)
+    named = basic_countfilter.split_by_principal_components(1, 0.32, power_transform='box-cox')
+    for legacy_obj, named_obj in zip(legacy, named):
+        assert legacy_obj.df.equals(named_obj.df)
+
+
+def test_pipeline_with_legacy_power_transform_still_loads_and_runs(basic_countfilter):
+    # rule 4: a Pipeline exported before 'power_transform' became a menu passes power_transform=True, and must
+    # keep behaving exactly as it did -- identically to the 'box-cox' it now stands for
+    basic_countfilter.filter_low_reads(1)
+    pipeline = Pipeline.import_pipeline('tests/test_files/test_pipeline_legacy_power_transform.yaml')
+    assert pipeline.params[0][1] == {'power_transform': True}
+
+    result = pipeline.apply_to(basic_countfilter, inplace=False)
+    truth = basic_countfilter.sort_by_principal_component(1, power_transform='box-cox', inplace=False)
+    assert result.df.equals(truth.df)
 
 
 @pytest.mark.parametrize('adjusted_pvals,bin_size,title', [

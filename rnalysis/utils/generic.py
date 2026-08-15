@@ -1,4 +1,5 @@
 import abc
+import enum
 import inspect
 import itertools
 import math
@@ -24,7 +25,9 @@ from scipy.special import comb
 from tqdm.auto import tqdm
 
 from rnalysis import FROZEN_ENV, __version__
-from rnalysis.exceptions import InvalidTypeError, InvalidValueError
+from rnalysis.exceptions import (InternalError, InvalidTypeError,
+                                 InvalidValueError)
+from rnalysis.utils.param_typing import POWER_TRANSFORMS
 
 # scikit-learn costs ~1s to import and is only needed once a transform actually runs, so it is loaded
 # lazily (SPEC 1 / https://scientific-python.org/specs/spec-0001/). Nothing may touch an attribute of
@@ -225,6 +228,17 @@ class ProgressParallel(joblib.Parallel):
 # columns to make it worthwhile.
 BOX_COX_PARALLEL_MIN_COLUMNS = 500
 
+# The Box-Cox transform standardizes each column after transforming it, so every value it returns for a
+# healthy column is a z-score: the largest one a column of n values can possibly hold is sqrt(n). Anything
+# beyond this threshold therefore cannot be a properly standardized column of any real table (it would need
+# ~10^12 rows) -- it can only mean the fitted lambda exploded and the transform blew up without quite
+# overflowing to infinity. Such a column would silently dominate every principal component, so it is treated
+# exactly like a non-finite one.
+BOX_COX_MAX_ABS_VALUE = 1e6
+
+#: how many offending gene names to spell out in the instability error before summarizing the rest
+_MAX_NAMES_IN_ERROR = 10
+
 
 def _box_cox_fit_transform(array: np.ndarray) -> np.ndarray:
     # sklearn's PowerTransformer(box-cox) fits + applies a separate lambda to each column independently
@@ -243,8 +257,40 @@ def _parallel_box_cox(array: np.ndarray, backend: str, n_jobs: int) -> np.ndarra
     return np.concatenate(transformed_chunks, axis=1)
 
 
-def standard_box_cox(data: Union[np.ndarray, pl.DataFrame],
-                     parallel_backend: str = 'sequential') -> Union[np.ndarray, pl.DataFrame]:
+def _validate_box_cox_stability(box_cox_array: np.ndarray, feature_names: Optional[typing.Sequence[str]]):
+    """
+    Raise a clear, actionable error if the Box-Cox transform blew up on any column.
+
+    Box-Cox fits one lambda per column. When a column is near-constant at a high magnitude and is measured
+    across very few values (the classic case: a reporter transgene such as GFP, sitting at ~8,400 counts in
+    a handful of grouped samples, once the table is transposed so genes become columns), the maximum-likelihood
+    lambda explodes and the transform overflows float64. The result is either non-finite -- which used to
+    reach sklearn's PCA as ``ValueError: Input X contains NaN``, a message that names nothing the user can act
+    on -- or a finite but astronomical value that silently dominates every principal component.
+    """
+    with warnings.catch_warnings():  # comparing NaNs is exactly what we are here to detect
+        warnings.simplefilter('ignore')
+        unstable = ~np.isfinite(box_cox_array).all(axis=0) | (
+            np.abs(np.nan_to_num(box_cox_array)).max(axis=0) > BOX_COX_MAX_ABS_VALUE)
+    if not unstable.any():
+        return
+    unstable_indices = np.nonzero(unstable)[0]
+    if feature_names is None:
+        names = [f'#{ind + 1}' for ind in unstable_indices]
+    else:
+        names = [str(feature_names[ind]) for ind in unstable_indices]
+    n_unstable = len(names)
+    listed = ', '.join(f"'{name}'" for name in names[:_MAX_NAMES_IN_ERROR])
+    if n_unstable > _MAX_NAMES_IN_ERROR:
+        listed += f', and {n_unstable - _MAX_NAMES_IN_ERROR} more'
+    noun, these = ('gene', 'this gene') if n_unstable == 1 else ('genes', 'these genes')
+    raise InvalidValueError(f"Box-Cox transformation is numerically unstable for {n_unstable} {noun} in this "
+                            f"table ({listed}): their values are near-constant at high magnitude. "
+                            f"Filter {these} out, or choose a different transform (e.g. 'log').")
+
+
+def standard_box_cox(data: Union[np.ndarray, pl.DataFrame], parallel_backend: str = 'sequential',
+                     feature_names: Optional[typing.Sequence[str]] = None) -> Union[np.ndarray, pl.DataFrame]:
     """
     Apply a per-column Box-Cox power transform followed by standardization.
 
@@ -255,20 +301,115 @@ def standard_box_cox(data: Union[np.ndarray, pl.DataFrame],
     once the number of columns reaches ``BOX_COX_PARALLEL_MIN_COLUMNS``. The result is identical either way \
     up to floating-point precision.
     :type parallel_backend: str (default='sequential')
+    :param feature_names: names of the transformed columns, used only to name the offending genes if the \
+    transform turns out to be numerically unstable. Defaults to the numeric column names of a DataFrame, \
+    or to 1-based column positions for a bare array.
+    :type feature_names: sequence of str or None (default=None)
+    :raises InvalidValueError: if the Box-Cox transform is numerically unstable for one or more columns.
     """
     if isinstance(data, pl.DataFrame):
+        numeric_columns = data.select(cs.numeric()).columns
         array = data.select(cs.numeric()).to_numpy()
+        if feature_names is None:
+            feature_names = numeric_columns
     else:
         array = data
     if parallel_backend not in (None, 'sequential') and array.shape[1] >= BOX_COX_PARALLEL_MIN_COLUMNS:
         box_cox_array = _parallel_box_cox(array, backend=parallel_backend, n_jobs=joblib.cpu_count())
     else:
         box_cox_array = _box_cox_fit_transform(array)
+    _validate_box_cox_stability(box_cox_array, feature_names)
     res_array = _sklearn.preprocessing.StandardScaler().fit_transform(box_cox_array)
+    if isinstance(data, pl.DataFrame):
+        return data.select(~cs.numeric()).with_columns(pl.DataFrame(res_array, schema=numeric_columns))
+    return res_array
+
+
+def standard_log(data: Union[np.ndarray, pl.DataFrame]) -> Union[np.ndarray, pl.DataFrame]:
+    """
+    Apply a log2(x+1) transform followed by standardization.
+
+    This is the robust alternative to the Box-Cox power transform: it uses one fixed formula for the whole
+    table instead of fitting a separate exponent per gene, so it cannot blow up on a near-constant,
+    high-magnitude gene the way Box-Cox can.
+
+    :param data: the data to transform (must not contain values below -1).
+    :type data: np.ndarray or pl.DataFrame
+    :raises InvalidValueError: if the data contains values below -1, for which log2(x+1) is undefined.
+    """
+    if isinstance(data, pl.DataFrame):
+        array = data.select(cs.numeric()).to_numpy()
+    else:
+        array = data
+    if np.nanmin(array) <= -1:
+        raise InvalidValueError("The 'log' transform is only defined for values greater than -1 "
+                                "(it computes log2(x+1)), but this table contains smaller values. "
+                                "Choose a different transform, or filter out the offending values.")
+    log_array = np.log2(array + 1)
+    res_array = _sklearn.preprocessing.StandardScaler().fit_transform(log_array)
     if isinstance(data, pl.DataFrame):
         return data.select(~cs.numeric()).with_columns(
             pl.DataFrame(res_array, schema=data.select(cs.numeric()).columns))
     return res_array
+
+
+def parse_power_transform(power_transform: Union[bool, str]) -> str:
+    """
+    Normalize a ``power_transform`` argument into one of the names in ``param_typing.POWER_TRANSFORMS``.
+
+    ``power_transform`` used to be a boolean. ``True``/``False`` are therefore still accepted, and always
+    will be, so that Pipelines and exported parameter files saved by older versions of *RNAlysis* keep
+    running with exactly the behavior they had when they were saved.
+
+    :param power_transform: the transform to apply: 'box-cox', 'log', 'none', or the legacy True/False.
+    :type power_transform: 'box-cox', 'log', 'none', or bool
+    :return: the normalized transform name.
+    :rtype: str
+    """
+    if isinstance(power_transform, bool):
+        return 'box-cox' if power_transform else 'none'
+    if isinstance(power_transform, str) and power_transform.lower() in POWER_TRANSFORMS:
+        return power_transform.lower()
+    raise InvalidValueError(f"Invalid value for 'power_transform': {power_transform!r}. "
+                            f"'power_transform' must be one of {list(POWER_TRANSFORMS)}.")
+
+
+def get_transform_function(power_transform: Union[bool, str]) -> Callable:
+    """
+    Return the transform+standardization function matching a ``power_transform`` argument.
+
+    :param power_transform: the transform to apply: 'box-cox', 'log', 'none', or the legacy True/False.
+    :type power_transform: 'box-cox', 'log', 'none', or bool
+    """
+    method = parse_power_transform(power_transform)
+    if method == 'box-cox':
+        return standard_box_cox
+    elif method == 'log':
+        return standard_log
+    return standardize
+
+
+def transform_and_standardize(data: Union[np.ndarray, pl.DataFrame], power_transform: Union[bool, str] = 'box-cox',
+                              parallel_backend: str = 'sequential',
+                              feature_names: Optional[typing.Sequence[str]] = None
+                              ) -> Union[np.ndarray, pl.DataFrame]:
+    """
+    Standardize the data, optionally applying a power/log transform to it first.
+
+    :param data: the data to transform (columns are transformed independently).
+    :type data: np.ndarray or pl.DataFrame
+    :param power_transform: the transform to apply: 'box-cox', 'log', 'none', or the legacy True/False.
+    :type power_transform: 'box-cox', 'log', 'none', or bool (default='box-cox')
+    :param parallel_backend: joblib backend used to parallelize the per-column Box-Cox across columns. \
+    Ignored by the other transforms.
+    :type parallel_backend: str (default='sequential')
+    :param feature_names: names of the transformed columns, used only to name the offending genes if the \
+    Box-Cox transform turns out to be numerically unstable.
+    :type feature_names: sequence of str or None (default=None)
+    """
+    if parse_power_transform(power_transform) == 'box-cox':
+        return standard_box_cox(data, parallel_backend=parallel_backend, feature_names=feature_names)
+    return get_transform_function(power_transform)(data)
 
 
 def box_cox_parallel_backend() -> str:
@@ -520,8 +661,28 @@ class InteractiveScatterFigure(figure.Figure):
             self.canvas.draw()
 
 
-#: types that ``yaml.safe_dump`` can always represent, and that ``yaml.safe_load`` returns as-is
+#: types that ``yaml.safe_dump`` can always represent, and that ``yaml.safe_load`` returns as-is.
+#: membership must be tested by exact type - PyYAML's SafeRepresenter dispatches on ``type(value)``,
+#: so a *subclass* of any of these (an Enum mixin, a pandas Timestamp) is NOT representable.
 _YAML_SAFE_SCALARS = (str, bool, int, float, bytes, type(None), datetime, date)
+
+
+def _coerce_yaml_scalar_subclass(value):
+    """
+    Convert a subclass of a YAML-safe scalar down to the plain built-in PyYAML can represent.
+
+    :param value: a value that is an instance - but not an exact instance - of a YAML-safe scalar
+    :return: the equivalent plain built-in value
+    """
+    if isinstance(value, datetime):  # datetime subclasses date, so it must be checked first
+        return datetime(value.year, value.month, value.day, value.hour, value.minute, value.second,
+                        value.microsecond, value.tzinfo)
+    if isinstance(value, date):
+        return date(value.year, value.month, value.day)
+    for base in (bool, int, float, str, bytes):  # bool subclasses int, so it must be checked first
+        if isinstance(value, base):
+            return base(value)
+    raise InternalError(f"'{type(value).__name__}' is not a subclass of a YAML-safe scalar type.")
 
 
 def _sanitize_for_yaml(value, context: str):
@@ -543,6 +704,9 @@ def _sanitize_for_yaml(value, context: str):
         value = value.tolist()
     elif isinstance(value, Path):
         return value.as_posix()
+    elif isinstance(value, enum.Enum):
+        # an Enum member stands for its value; str()ing it would yield 'Mode.UNION', not 'union'
+        return _sanitize_for_yaml(value.value, context)
 
     if isinstance(value, dict):
         return {_sanitize_hashable(key, context, 'dictionary key'): _sanitize_for_yaml(val, context)
@@ -552,8 +716,10 @@ def _sanitize_for_yaml(value, context: str):
         return [_sanitize_for_yaml(item, context) for item in value]
     if isinstance(value, (set, frozenset)):
         return {_sanitize_hashable(item, context, 'set item') for item in value}
-    if isinstance(value, _YAML_SAFE_SCALARS):
+    if type(value) in _YAML_SAFE_SCALARS:
         return value
+    if isinstance(value, _YAML_SAFE_SCALARS):
+        return _coerce_yaml_scalar_subclass(value)
 
     try:
         yaml.safe_dump(value)
@@ -700,11 +866,14 @@ class GenericPipeline(abc.ABC):
         for func, (args, kwargs) in zip(self.functions, self.params):
             pipeline_dict['functions'].append(func.__name__)
             pipeline_dict['params'].append(self._sanitize_params(func.__name__, args, kwargs))
+        # the whole Pipeline is serialized *before* the target file is opened: opening it for
+        # writing truncates it, so a Pipeline that cannot be serialized would otherwise destroy the
+        # Pipeline file the user was overwriting.
+        pipeline_yaml = yaml.safe_dump(pipeline_dict)
         if filename is None:
-            return yaml.safe_dump(pipeline_dict)
-        else:
-            with open(filename, 'w') as f:
-                yaml.safe_dump(pipeline_dict, f)
+            return pipeline_yaml
+        with open(filename, 'w') as f:
+            f.write(pipeline_yaml)
 
     @staticmethod
     def _sanitize_params(func_name: str, args: tuple, kwargs: dict) -> list:
@@ -872,7 +1041,9 @@ class GenericPipeline(abc.ABC):
         :param pipeline_dict: the parsed Pipeline YAML document, used to report the exporting version
         :return: the function matching the given name
         """
-        if not isinstance(func_name, str) or func_name.startswith('_'):
+        # this check is deliberately no stricter than the one in add_function (a function object of
+        # the right namespace): anything that could be exported must import back (hard rule 4).
+        if not isinstance(func_name, str):
             raise cls._pipeline_load_error(pipeline_dict, f"'{func_name}' is not a valid RNAlysis function name.")
         func = getattr(namespace, func_name, None)
         if not isinstance(func, types.FunctionType):

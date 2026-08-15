@@ -40,10 +40,10 @@ from urllib.parse import parse_qs, urlencode, urlparse
 
 import aiohttp
 import aiolimiter
-import appdirs
 import matplotlib.pyplot as plt
 import nest_asyncio
 import numpy as np
+import platformdirs
 import polars as pl
 import requests
 import tenacity
@@ -115,12 +115,33 @@ def get_datafile_dir() -> Path:
 
 
 def get_gui_cache_dir() -> Path:
-    cache_dir = Path(appdirs.user_cache_dir('RNAlysis'))
+    cache_dir = Path(platformdirs.user_cache_dir('RNAlysis'))
     return cache_dir.joinpath('rnalysis_gui')
 
 
+def _get_legacy_macos_data_dir() -> Path:
+    """Return the data directory RNAlysis used on macOS before migrating from appdirs to platformdirs.
+
+    appdirs always resolved the macOS user data dir to '~/Library/Application Support/RNAlysis',
+    ignoring the XDG environment variables that platformdirs (>=4.6) gives precedence to.
+    """
+    return Path('~/Library/Application Support/RNAlysis').expanduser()
+
+
 def get_data_dir() -> Path:
-    data_dir = Path(appdirs.user_data_dir('RNAlysis', roaming=True))
+    data_dir = Path(platformdirs.user_data_dir('RNAlysis', roaming=True))
+    if sys.platform == 'darwin':
+        # platformdirs (unlike the appdirs package it replaced) honors $XDG_DATA_HOME on macOS.
+        # If that changes where the data dir resolves, move the existing data (user settings,
+        # tutorial videos, etc.) to the new location once, so users don't lose their settings.
+        legacy_dir = _get_legacy_macos_data_dir()
+        if data_dir != legacy_dir and legacy_dir.exists() and not data_dir.exists():
+            try:
+                data_dir.parent.mkdir(parents=True, exist_ok=True)
+                shutil.move(str(legacy_dir), str(data_dir))
+            except OSError:
+                # migration failed - keep using the legacy directory so no settings are lost
+                return legacy_dir
     return data_dir
 
 
@@ -131,7 +152,7 @@ def get_tutorial_videos_dir() -> Path:
 
 def get_todays_cache_dir() -> Path:
     today = date.today().strftime('%Y_%m_%d')
-    cache_dir = Path(appdirs.user_cache_dir('RNAlysis'))
+    cache_dir = Path(platformdirs.user_cache_dir('RNAlysis'))
     todays_dir = cache_dir.joinpath(today)
     todays_dir.mkdir(parents=True, exist_ok=True)
     return todays_dir
@@ -173,7 +194,7 @@ def clear_directory(directory: Union[str, Path], skip_ok=False):
 
 
 def clear_cache():
-    cache_dir = Path(appdirs.user_cache_dir('RNAlysis'))
+    cache_dir = Path(platformdirs.user_cache_dir('RNAlysis'))
     clear_directory(cache_dir)
 
 
@@ -463,6 +484,11 @@ class GUISessionManager:
         self._staging_archive = Path(f'{archive_base}.zip')
         shutil.make_archive(archive_base, 'zip', self._staging_dir)
         self._flush_to_disk(self._staging_archive)
+        # a save that crashed under an older RNAlysis could leave a half-built session *directory*
+        # at the target, and os.replace cannot overwrite a directory. Clearing it is safe only
+        # here, once the replacement archive is complete - never earlier.
+        if self._archive_path.is_dir():
+            shutil.rmtree(self._archive_path)
         # the previous session file is replaced only now, in a single atomic step, and only once
         # its replacement has been fully written to disk.
         os.replace(self._staging_archive, self._archive_path)
@@ -1839,8 +1865,15 @@ class OrthoInspectorOrthologMapper:
             except requests.exceptions.JSONDecodeError:
                 clean_json_string = req.text.split('\n')[0]
                 content = json.loads(clean_json_string)
-            if content['meta']['status'] != 'success':
-                raise InternalError
+            status = content.get('meta', {}).get('status')
+            if status != 'success':
+                # A degraded OrthoInspector database is an external-service problem, not an RNAlysis
+                # bug: warn and contribute no organisms, so this database is simply not selectable
+                # while the healthy ones keep working (same degrade-gracefully policy as the
+                # stall/timeout handling in get_orthologs).
+                warnings.warn(f"OrthoInspector database '{database}' reported status '{status}' instead of "
+                              f"'success'. Skipping it - its organisms will not be available.")
+                return database, frozenset()
             return database, frozenset({d['id'] for d in content['data']})
 
         # Fetch every database's species list concurrently. These requests are independent and were

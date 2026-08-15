@@ -1302,6 +1302,36 @@ def test_float_widget_returns_exact_value(qtbot, annotation, default, typed_valu
     assert get_val_from_widget(widget) == typed_value
 
 
+def test_power_transform_renders_as_a_plain_combo_box(qtbot):
+    # 'power_transform' is annotated Literal[POWER_TRANSFORMS] on the PCA/clustering functions specifically so
+    # that it renders as one plain drop-down listing exactly the transforms -- not as the toggle switch it used
+    # to be while it was a bool, and not as a combo-plus-"Other..." pair (which is what a Union with bool would
+    # produce, defaulting to the confusing "Other..." entry).
+    param = NewParam(Literal[param_typing.POWER_TRANSFORMS], 'box-cox')
+    widget = param_to_widget(param, 'power_transform')
+    qtbot.add_widget(widget)
+    assert isinstance(widget, QtWidgets.QComboBox)
+    assert [widget.itemText(i) for i in range(widget.count())] == ['box-cox', 'log', 'none']
+    assert get_val_from_widget(widget) == 'box-cox'
+
+
+def test_clicom_power_transform_renders_as_combo_with_multi_choice(qtbot):
+    # CLICOM can run its setups once per transform, so its 'power_transform' additionally accepts a list --
+    # rendering as the same drop-down, with an "Other..." entry that reveals a multi-value picker.
+    param = NewParam(Union[Literal[param_typing.POWER_TRANSFORMS],
+                           List[Literal[param_typing.POWER_TRANSFORMS]]], 'box-cox')
+    widget = param_to_widget(param, 'power_transform')
+    qtbot.add_widget(widget)
+    assert isinstance(widget, ComboBoxOrOtherWidget)
+    assert [widget.combo.itemText(i) for i in range(widget.combo.count())] == ['box-cox', 'log', 'none', 'Other...']
+    assert isinstance(widget.other, QMultiComboBox)
+    assert get_val_from_widget(widget) == 'box-cox'
+
+    # picking several transforms must actually come back as the list, and not be swallowed by the combo
+    widget.setValue(['box-cox', 'log'])
+    assert get_val_from_widget(widget) == ['box-cox', 'log']
+
+
 def test_float_widget_returns_exact_typed_value(qtbot):
     # a precise value typed by hand (finer than the old fixed 2 decimals) must be reachable
     # and returned unchanged from the widget.

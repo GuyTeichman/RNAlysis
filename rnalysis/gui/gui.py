@@ -463,10 +463,16 @@ class DiffExpWindow(gui_windows.FuncExternalWindow):
             self.comparisons_widgets['picker'].set_comparison_values(comparisons)
 
         if self.simplified:
+            # a parameter file exported from the full window is a user-supplied artifact, so an
+            # unsupported entry in it is bad input - not an RNAlysis bug
             if not (covariates is None or len(covariates) == 0):
-                raise InternalError("Covariates are not supported in simplified mode.")
+                raise InvalidValueError("This parameter file contains covariates, which the simplified window "
+                                        "does not support. Open the full version of this window to use it, "
+                                        "or remove the covariates from the file.")
             if not (lrt_factors is None or len(lrt_factors) == 0):
-                raise InternalError("Likelihood Ratio Tests are not supported in simplified mode.")
+                raise InvalidValueError("This parameter file contains Likelihood Ratio Test factors, which the "
+                                        "simplified window does not support. Open the full version of this window "
+                                        "to use it, or remove those factors from the file.")
         else:
             if 'picker' in self.covariates_widgets:
                 self.covariates_widgets['picker'].set_comparison_values(covariates)
@@ -530,6 +536,17 @@ class ClicomWindow(gui_windows.FuncExternalWindow):
         super().connect_widget(widget)
         if isinstance(widget, (gui_widgets.TableColumnPicker, gui_widgets.TableColumnPicker)):
             widget.add_columns(self.filter_obj.columns)
+
+    def migrate_legacy_parameters(self, kwargs: dict) -> dict:
+        # 'power_transform' used to be a boolean (or a pair of them); it is now a menu of named transforms.
+        # Parameter files exported by older versions still carry the booleans, so translate them to the names
+        # they now stand for -- the API accepts both, but the drop-down can only display the names.
+        kwargs = super().migrate_legacy_parameters(kwargs)
+        if 'power_transform' in kwargs:
+            transforms = [generic.parse_power_transform(value)
+                          for value in parsing.data_to_list(kwargs['power_transform'])]
+            kwargs['power_transform'] = transforms[0] if len(transforms) == 1 else transforms
+        return kwargs
 
     def init_ui(self):
         super().init_ui()
@@ -3746,10 +3763,15 @@ class MainWindow(QtWidgets.QMainWindow):
 
     @staticmethod
     def _filename_to_gene_set(filename: str):
-        if filename.endswith('.csv'):
-            gene_set = parsing.data_to_set(pl.scan_csv(filename).select(pl.first()).collect())
-        elif filename.endswith('.tsv'):
-            gene_set = parsing.data_to_set(pl.scan_csv(filename, separator='\t').select(pl.first()).collect())
+        if filename.endswith(('.csv', '.tsv')):
+            separator = '\t' if filename.endswith('.tsv') else ','
+            first_col = pl.scan_csv(filename, separator=separator).select(pl.first()).collect().to_series()
+            if first_col.dtype == pl.String:
+                # trim stray leading/trailing whitespace so imported identifiers match how gene IDs
+                # are read from reference and count tables (io.load_table), then null out and drop
+                # cells that were empty/whitespace-only so they don't import as an empty "gene"
+                first_col = first_col.str.strip_chars().replace('', None).drop_nulls()
+            gene_set = parsing.data_to_set(first_col)
         else:
             with open(filename) as f:
                 gene_set = {line.strip() for line in f.readlines()}

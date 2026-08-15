@@ -91,9 +91,20 @@ class InternalError(RNAlysisError, RuntimeError):
     """An internal invariant was violated - indicates a bug in RNAlysis itself."""
 
     def __init__(self, *args):
+        # the suffix is baked into args (not just into __str__) because the GUI's error dialog
+        # renders exception.args, so this is the only way the bug-report line reaches the user
+        self._raw_args = args
         if args:
             first = f'{args[0]} {_BUG_REPORT_SUFFIX}' if str(args[0]) else _BUG_REPORT_SUFFIX
             args = (first,) + args[1:]
         else:
             args = (_BUG_REPORT_SUFFIX,)
         super().__init__(*args)
+
+    def __reduce__(self):
+        # BaseException's default __reduce__ returns (cls, self.args), which would feed the
+        # already-suffixed message back through __init__ and append a second copy of the suffix.
+        # joblib pickles worker exceptions back to the parent under the loky/multiprocessing
+        # backends, so without this an error would gain one suffix per hop. Reconstruct from the
+        # original arguments instead, which makes round-trips idempotent.
+        return self.__class__, self._raw_args
