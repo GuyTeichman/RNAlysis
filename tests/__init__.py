@@ -36,13 +36,15 @@ def are_dir_trees_equal(dir1, dir2, compare_contents: bool = True, ignore: list 
     ignore = filecmp.DEFAULT_IGNORES + ignore
     dirs_cmp = filecmp.dircmp(dir1, dir2, ignore=ignore)
     if len(dirs_cmp.left_only) > 0 or len(dirs_cmp.right_only) > 0 or len(dirs_cmp.funny_files) > 0:
-        print(f"mismatch between {dir1} and {dir2} with left_only={dirs_cmp.left_only}, "
-              f"right_only={dirs_cmp.right_only}, funny={dirs_cmp.funny_files}")
+        print(
+            f'mismatch between {dir1} and {dir2} with left_only={dirs_cmp.left_only}, '
+            f'right_only={dirs_cmp.right_only}, funny={dirs_cmp.funny_files}'
+        )
         return False
     files_to_cmp = [item for item in dirs_cmp.common_files if Path(item).suffix not in ignore]
     (_, mismatch, errors) = filecmp.cmpfiles(dir1, dir2, files_to_cmp, shallow=False)
     if (len(mismatch) > 0 or len(errors) > 0) and compare_contents:
-        print(f"mismatch between {dir1} and {dir2} in the files {mismatch} with errors {errors}")
+        print(f'mismatch between {dir1} and {dir2} in the files {mismatch} with errors {errors}')
         for item in mismatch:
             items = []
             for this_dir in [dir1, dir2]:

@@ -17,6 +17,7 @@ def clear_all_cache():
     io.clear_cache()
     io.clear_gui_cache()
 
+
 def clear_gui_cache():
     io.clear_gui_cache()
 
@@ -89,10 +90,10 @@ def reset_settings_file():
     """
     settings_pth = settings.get_settings_file_path()
     if not settings_pth.exists():
-        print("No local settings file exists. ")
+        print('No local settings file exists. ')
     else:
         settings_pth.unlink()
-        print("Local settings file was deleted. ")
+        print('Local settings file was deleted. ')
 
 
 def set_attr_ref_table_path(path: str = None):
@@ -108,7 +109,7 @@ def set_attr_ref_table_path(path: str = None):
     Attribute Reference Table path set as: my_attribute_reference_table_path
     """
     if path is None:
-        path = input("Please write the new Attribute Reference Table Path:\n")
+        path = input('Please write the new Attribute Reference Table Path:\n')
     settings.update_settings_file(path, __attr_file_key__)
     print(f'Attribute Reference Table path set as: {path}')
 
@@ -126,7 +127,7 @@ def set_biotype_ref_table_path(path: str = None):
     Biotype Reference Table path set as: my_biotype_reference_table_path
     """
     if path is None:
-        path = input("Please write the new Biotype Reference Table Path:\n")
+        path = input('Please write the new Biotype Reference Table Path:\n')
     settings.update_settings_file(path, __biotype_file_key__)
     print(f'Biotype Reference Table path set as: {path}')
 
@@ -159,4 +160,4 @@ def save_to_csv(df: Union[pl.DataFrame, Filter], filename: str):
     elif validation.isinstanceinh(df, Filter):
         io.save_table(df.df, filename)
     else:
-        raise TypeError(f"Object of type {type(df)} cannot be saved to csv")
+        raise TypeError(f'Object of type {type(df)} cannot be saved to csv')

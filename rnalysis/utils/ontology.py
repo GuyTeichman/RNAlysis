@@ -25,8 +25,10 @@ def render_graphviz_plot(graph: graphviz.Digraph, save_path: Union[str, Path], f
             graph.render(Path(save_path).with_suffix(''), view=True, format=file_format)
         return True
     except graphviz.ExecutableNotFound:
-        warnings.warn("You must install 'GraphViz' and add it to PATH in order to generate Ontology Graphs. \n"
-                      "Please see https://graphviz.org/download/ for more information. ")
+        warnings.warn(
+            "You must install 'GraphViz' and add it to PATH in order to generate Ontology Graphs. \n"
+            'Please see https://graphviz.org/download/ for more information. '
+        )
         return False
 
 
@@ -34,49 +36,59 @@ def pipe_graphviz_plot(graph: graphviz.Digraph, file_format: str = 'png'):
     try:
         return graph.pipe(format=file_format)
     except graphviz.ExecutableNotFound:  # pragma: no cover
-        warnings.warn("'GraphViz' installation not found. If you want to generate Ontology and Pathway Graphs, "
-                      "Please install GraphViz and add it to PATH. \n"
-                      "See https://graphviz.org/download/ for more information. ")
-    except graphviz.CalledProcessError as e: # pragma: no cover
+        warnings.warn(
+            "'GraphViz' installation not found. If you want to generate Ontology and Pathway Graphs, "
+            'Please install GraphViz and add it to PATH. \n'
+            'See https://graphviz.org/download/ for more information. '
+        )
+    except graphviz.CalledProcessError as e:  # pragma: no cover
         warnings.warn(f"'GraphViz failed to run with error: {e}", RuntimeWarning)
     return ''
 
 
 class KEGGEntry:
-    NODE_TYPES = {'gene/enzyme': dict(shape='box', style='rounded', label=''),
-                  'compound': dict(shape='circle', label=''),
-                  'pathway': dict(shape='hexagon', label=''),
-                  'complex': dict(shape='record', label='|'),
-                  'other': dict(shape='oval', label='')}
-    RELATIONSHIP_TYPES = {'ECrel': 'enzyme-enzyme',
-                          'PPrel': 'protein-protein',
-                          'GErel': 'gene-expression',
-                          'PCrel': 'protein-compound'}
-    RELATIONSHIP_SUBTYPES = {'compound': {},
-                             'activation': {'color': 'red2'},
-                             'inhibition': {'color': 'mediumblue', 'arrowhead': 'tee'},
-                             'expression': {'color': 'red2', 'style': 'dashed'},
-                             'repression': {'color': 'mediumblue', 'arrowhead': 'tee', 'style': 'dashed'},
-                             'indirect effect': {'style': 'dotted'},
-                             'state change': {'style': 'dotted', 'dir': 'none'},
-                             'binding/association': {'style': 'dashed', 'dir': 'none'},
-                             'dissociation': {'style': 'dashed', 'color': 'gray32'},
-                             'missing interaction': {},
-                             'phosphorylation': {'label': 'p+'},
-                             'dephosphorylation': {'label': 'p-'},
-                             'glycosylation': {'label': 'g+'},
-                             'ubiquitination': {'label': 'u+'},
-                             'methylation': {'label': 'm+'},
-                             'reversible reaction': {'dir': 'both'},
-                             'irreversible reaction': {},
-                             'unknown': {'label': '?', 'style': 'dashed'}}
+    NODE_TYPES = {
+        'gene/enzyme': dict(shape='box', style='rounded', label=''),
+        'compound': dict(shape='circle', label=''),
+        'pathway': dict(shape='hexagon', label=''),
+        'complex': dict(shape='record', label='|'),
+        'other': dict(shape='oval', label=''),
+    }
+    RELATIONSHIP_TYPES = {
+        'ECrel': 'enzyme-enzyme',
+        'PPrel': 'protein-protein',
+        'GErel': 'gene-expression',
+        'PCrel': 'protein-compound',
+    }
+    RELATIONSHIP_SUBTYPES = {
+        'compound': {},
+        'activation': {'color': 'red2'},
+        'inhibition': {'color': 'mediumblue', 'arrowhead': 'tee'},
+        'expression': {'color': 'red2', 'style': 'dashed'},
+        'repression': {'color': 'mediumblue', 'arrowhead': 'tee', 'style': 'dashed'},
+        'indirect effect': {'style': 'dotted'},
+        'state change': {'style': 'dotted', 'dir': 'none'},
+        'binding/association': {'style': 'dashed', 'dir': 'none'},
+        'dissociation': {'style': 'dashed', 'color': 'gray32'},
+        'missing interaction': {},
+        'phosphorylation': {'label': 'p+'},
+        'dephosphorylation': {'label': 'p-'},
+        'glycosylation': {'label': 'g+'},
+        'ubiquitination': {'label': 'u+'},
+        'methylation': {'label': 'm+'},
+        'reversible reaction': {'dir': 'both'},
+        'irreversible reaction': {},
+        'unknown': {'label': '?', 'style': 'dashed'},
+    }
 
-    __slots__ = {'_id': 'KEGG ID',
-                 '_name': 'KEGG Entry name',
-                 '_type': 'KEGG Entry type',
-                 '_display_name': 'KEGG Entry display name',
-                 'relationships': 'direct parent relationships of the KEGG Entry',
-                 'children_relationships': 'direct children relationships of the KEGG Entry'}
+    __slots__ = {
+        '_id': 'KEGG ID',
+        '_name': 'KEGG Entry name',
+        '_type': 'KEGG Entry type',
+        '_display_name': 'KEGG Entry display name',
+        'relationships': 'direct parent relationships of the KEGG Entry',
+        'children_relationships': 'direct children relationships of the KEGG Entry',
+    }
 
     def __init__(self):
         self._id = None
@@ -84,8 +96,9 @@ class KEGGEntry:
         self._type = None
         self._display_name = None
         self.relationships: Dict[str, Set[Tuple[int, str]]] = {subtype: set() for subtype in self.RELATIONSHIP_SUBTYPES}
-        self.children_relationships: Dict[str, Set[Tuple[int, str]]] = {subtype: set() for subtype in
-                                                                        self.RELATIONSHIP_SUBTYPES}
+        self.children_relationships: Dict[str, Set[Tuple[int, str]]] = {
+            subtype: set() for subtype in self.RELATIONSHIP_SUBTYPES
+        }
 
     @classmethod
     def with_properties(cls, kegg_id: int, name: str, entry_type: str, display_name: str):
@@ -135,27 +148,45 @@ class KEGGEntry:
 
 
 class KEGGPathway:
-    __slots__ = {'compounds': 'dict mapping compound IDs to display names',
-                 'entries': 'KEGG entries',
-                 'name_to_id': 'dict mapping entry names to entry IDs',
-                 'id_to_group': 'dict mapping sub-component entry IDs to group IDs',
-                 'pathway_id': 'KEGG ID of the pathway',
-                 'pathway_name': 'Display name of the pathway',
-                 'organism_code': 'KEGG organism code of the pathway',
-                 'gene_id_translator': 'mapping from KEGG gene IDs to a different type'}
-    LEGEND_GRAPH = graphviz.Digraph(name='cluster_legend', edge_attr=dict(fontname='Arial'),
-                                    node_attr=dict(fontname='Arial', shape='plaintext'),
-                                    graph_attr=dict(fontname='Arial', fontsize='20', rankdir='LR'))
-    LEGEND_GRAPH.node('key1', label='<<table border="0" cellpadding="14" cellspacing="0" cellborder="0">' + '\n'.join(
-        [f'<tr><td align="right" port="rel{i}">{rel}</td></tr>' for i, rel in
-         enumerate(KEGGEntry.RELATIONSHIP_SUBTYPES)]) + '\n'.join(
-        [f'<tr><td align="right" port="node{i}">{node}</td></tr>' for i, node in
-         enumerate(KEGGEntry.NODE_TYPES)]) + '</table>>')
+    __slots__ = {
+        'compounds': 'dict mapping compound IDs to display names',
+        'entries': 'KEGG entries',
+        'name_to_id': 'dict mapping entry names to entry IDs',
+        'id_to_group': 'dict mapping sub-component entry IDs to group IDs',
+        'pathway_id': 'KEGG ID of the pathway',
+        'pathway_name': 'Display name of the pathway',
+        'organism_code': 'KEGG organism code of the pathway',
+        'gene_id_translator': 'mapping from KEGG gene IDs to a different type',
+    }
+    LEGEND_GRAPH = graphviz.Digraph(
+        name='cluster_legend',
+        edge_attr=dict(fontname='Arial'),
+        node_attr=dict(fontname='Arial', shape='plaintext'),
+        graph_attr=dict(fontname='Arial', fontsize='20', rankdir='LR'),
+    )
+    LEGEND_GRAPH.node(
+        'key1',
+        label='<<table border="0" cellpadding="14" cellspacing="0" cellborder="0">'
+        + '\n'.join(
+            [
+                f'<tr><td align="right" port="rel{i}">{rel}</td></tr>'
+                for i, rel in enumerate(KEGGEntry.RELATIONSHIP_SUBTYPES)
+            ]
+        )
+        + '\n'.join(
+            [f'<tr><td align="right" port="node{i}">{node}</td></tr>' for i, node in enumerate(KEGGEntry.NODE_TYPES)]
+        )
+        + '</table>>',
+    )
 
-    LEGEND_GRAPH.node('key2',
-                      label='<<table border="0" cellpadding="14" cellspacing="0" cellborder="0">' + '\n'.join(
-                          [f'<tr><td port="rel{i}">&nbsp;</td></tr>' for i, rel in
-                           enumerate(KEGGEntry.RELATIONSHIP_SUBTYPES)]) + '</table>>')
+    LEGEND_GRAPH.node(
+        'key2',
+        label='<<table border="0" cellpadding="14" cellspacing="0" cellborder="0">'
+        + '\n'.join(
+            [f'<tr><td port="rel{i}">&nbsp;</td></tr>' for i, rel in enumerate(KEGGEntry.RELATIONSHIP_SUBTYPES)]
+        )
+        + '</table>>',
+    )
 
     for node, attrs in KEGGEntry.NODE_TYPES.items():
         LEGEND_GRAPH.node(node, rank='max', margin='0', fixedsize='true', height='0.16', width='0.4', **attrs)
@@ -281,9 +312,14 @@ class KEGGPathway:
         self.entries[pred].relationships[rel_type].add((succ, rel_symbol))
         self.entries[succ].children_relationships[rel_type].add((pred, rel_symbol))
 
-    def plot_pathway(self, significant: Union[set, dict, None] = None, title: Union[str, Literal['auto']] = 'auto',
-                     ylabel: str = '', graph_format: Literal[param_typing.GRAPHVIZ_FORMATS] = 'none', dpi: int = 300
-                     ) -> Union[plt.Figure, None]:
+    def plot_pathway(
+        self,
+        significant: Union[set, dict, None] = None,
+        title: Union[str, Literal['auto']] = 'auto',
+        ylabel: str = '',
+        graph_format: Literal[param_typing.GRAPHVIZ_FORMATS] = 'none',
+        dpi: int = 300,
+    ) -> Union[plt.Figure, None]:
         if significant is None:
             significant = {}
         elif isinstance(significant, dict):
@@ -299,9 +335,12 @@ class KEGGPathway:
         main_graph = graphviz.Digraph()
         main_graph.attr(dpi=str(dpi), fontname='Arial', rankdir='LR', newrank='true', compound='true')
 
-        kegg_graph = graphviz.Digraph('cluster_kegg',
-                                      graph_attr=dict(dpi=str(dpi), fontname='Arial', color='white', rankdir='LR'),
-                                      node_attr=dict(fontname='Arial'), edge_attr=dict(fontname='Arial'))
+        kegg_graph = graphviz.Digraph(
+            'cluster_kegg',
+            graph_attr=dict(dpi=str(dpi), fontname='Arial', color='white', rankdir='LR'),
+            node_attr=dict(fontname='Arial'),
+            edge_attr=dict(fontname='Arial'),
+        )
 
         for entry in self.entries:
             this_type = self.entries[entry].type
@@ -330,9 +369,11 @@ class KEGGPathway:
                         elif isinstance(significant, dict):
                             this_score = significant[self.entries[child].name]
                             color_norm = 0.5 * (1 + this_score / (np.floor(max_score) + 1)) * 255
-                            color_norm_8bit = int(
-                                color_norm) if color_norm != np.inf and color_norm != -np.inf else np.sign(
-                                color_norm) * max_abs_score
+                            color_norm_8bit = (
+                                int(color_norm)
+                                if color_norm != np.inf and color_norm != -np.inf
+                                else np.sign(color_norm) * max_abs_score
+                            )
                             color = tuple([int(i * 255) for i in colormap(color_norm_8bit)[:-1]])
                             color_str = '#%02x%02x%02x' % color
                             label += f'bgcolor="{color_str}" '
@@ -350,8 +391,11 @@ class KEGGPathway:
                 elif isinstance(significant, dict):
                     this_score = significant[self.entries[entry].name]
                     color_norm = 0.5 * (1 + this_score / (np.floor(max_score) + 1)) * 255
-                    color_norm_8bit = int(color_norm) if color_norm != np.inf and color_norm != -np.inf else np.sign(
-                        color_norm) * max(np.abs(scores_no_inf))
+                    color_norm_8bit = (
+                        int(color_norm)
+                        if color_norm != np.inf and color_norm != -np.inf
+                        else np.sign(color_norm) * max(np.abs(scores_no_inf))
+                    )
                     color = tuple([int(i * 255) for i in colormap(color_norm_8bit)[:-1]])
                     kwargs['fillcolor'] = '#%02x%02x%02x' % color
                     if int(np.mean(color)) < 128:
@@ -364,12 +408,12 @@ class KEGGPathway:
             for relationship_type in self[entry].relationships:
                 for child, _ in self[entry].relationships[relationship_type]:
                     if entry in self.id_to_group:
-                        first_id = f"{self.id_to_group[entry]}:loc{entry}"
+                        first_id = f'{self.id_to_group[entry]}:loc{entry}'
                     else:
                         first_id = str(entry)
 
                     if child in self.id_to_group:
-                        second_id = f"{self.id_to_group[child]}:loc{child}"
+                        second_id = f'{self.id_to_group[child]}:loc{child}'
                     else:
                         second_id = str(child)
 
@@ -382,7 +426,8 @@ class KEGGPathway:
         i = 0
         while save_path is None or save_path.exists():
             save_path = io.get_todays_cache_dir().joinpath(
-                f'KEGG_pathway_{self.pathway_id.replace(":", "")}_{i}.{graph_format}')
+                f'KEGG_pathway_{self.pathway_id.replace(":", "")}_{i}.{graph_format}'
+            )
             i += 1
         res = render_graphviz_plot(main_graph, save_path, graph_format)
         if not res:
@@ -421,11 +466,14 @@ class KEGGPathway:
 
 
 class GOTerm:
-    __slots__ = {'_id': 'GO ID', '_name': 'GO Term name',
-                 '_namespace': 'biological_process, cellular_component or molecular_function',
-                 '_level': "GO Term's level in the DAG Tree",
-                 'relationships': 'direct parent relationships of the GO Term',
-                 'children_relationships': 'direct children relationships of the GO Term'}
+    __slots__ = {
+        '_id': 'GO ID',
+        '_name': 'GO Term name',
+        '_namespace': 'biological_process, cellular_component or molecular_function',
+        '_level': "GO Term's level in the DAG Tree",
+        'relationships': 'direct parent relationships of the GO Term',
+        'children_relationships': 'direct children relationships of the GO Term',
+    }
 
     def __init__(self):
         self._id: str = None
@@ -486,20 +534,23 @@ class GOTerm:
 
 
 def parse_go_id(sequence: str) -> str:
-    return re.findall("GO:[0-9]{7}", sequence)[0]
+    return re.findall('GO:[0-9]{7}', sequence)[0]
 
 
 class DAGTree:
-    __slots__ = {'data_version': 'version of the go-basic.obo file',
-                 'go_terms': 'dictionary of GO Terms in the DAG Tree',
-                 'alt_ids': 'mapping of alternative GO IDs to their main GO ID',
-                 'namespaces': "namespaces included in the DAGTree",
-                 'levels': 'list of levels in the DAG Tree',
-                 'parent_relationship_types': 'the types of relationships that constitute parenthood in the DAG Tree',
-                 '_upper_induced_graphs': 'memoized upper-induced graphs'}
+    __slots__ = {
+        'data_version': 'version of the go-basic.obo file',
+        'go_terms': 'dictionary of GO Terms in the DAG Tree',
+        'alt_ids': 'mapping of alternative GO IDs to their main GO ID',
+        'namespaces': 'namespaces included in the DAGTree',
+        'levels': 'list of levels in the DAG Tree',
+        'parent_relationship_types': 'the types of relationships that constitute parenthood in the DAG Tree',
+        '_upper_induced_graphs': 'memoized upper-induced graphs',
+    }
 
-    def __init__(self, line_iterator: Iterable[str],
-                 parent_relationship_types: Union[str, Iterable[str]] = ('is_a', 'part_of')):
+    def __init__(
+        self, line_iterator: Iterable[str], parent_relationship_types: Union[str, Iterable[str]] = ('is_a', 'part_of')
+    ):
         self.data_version = None
         self.go_terms: Dict[str, GOTerm] = {}
         self.alt_ids: Dict[str, str] = {}
@@ -584,8 +635,15 @@ class DAGTree:
         elif len(go_term.get_parents(self.parent_relationship_types)) == 0:
             go_term.set_level(0)
         else:
-            go_term.set_level(1 + max([self._get_term_level_rec(self[parent_id]) for parent_id in
-                                       go_term.get_parents(self.parent_relationship_types)]))
+            go_term.set_level(
+                1
+                + max(
+                    [
+                        self._get_term_level_rec(self[parent_id])
+                        for parent_id in go_term.get_parents(self.parent_relationship_types)
+                    ]
+                )
+            )
         return go_term.level
 
     def _populate_children(self):
@@ -640,11 +698,16 @@ class DAGTree:
             # memoize the function's output for go_id
             self._upper_induced_graphs[go_id] = processed_nodes
 
-    def plot_ontology(self, namespace: Literal[param_typing.GO_ASPECTS], results_df: pl.DataFrame,
-                      en_score_col: str = 'log2_fold_enrichment', title: Union[str, Literal['auto']] = 'auto',
-                      ylabel: str = r"$\log_2$(Fold Enrichment)",
-                      graph_format: Literal[param_typing.GRAPHVIZ_FORMATS] = 'none', dpi: int = 300
-                      ) -> Union[plt.Figure, None]:
+    def plot_ontology(
+        self,
+        namespace: Literal[param_typing.GO_ASPECTS],
+        results_df: pl.DataFrame,
+        en_score_col: str = 'log2_fold_enrichment',
+        title: Union[str, Literal['auto']] = 'auto',
+        ylabel: str = r'$\log_2$(Fold Enrichment)',
+        graph_format: Literal[param_typing.GRAPHVIZ_FORMATS] = 'none',
+        dpi: int = 300,
+    ) -> Union[plt.Figure, None]:
         # colormap
         scores_no_inf = [i for i in results_df[en_score_col].to_list() if i != np.inf and i != -np.inf and i < 0]
         if len(scores_no_inf) == 0:
@@ -673,8 +736,11 @@ class DAGTree:
             if this_node in significant:
                 this_score = results_df.filter(pl.first() == this_node).select(pl.col(en_score_col)).item()
                 color_norm = 0.5 * (1 + this_score / (np.floor(max_score) + 1)) * 255
-                color_norm_8bit = int(color_norm) if color_norm != np.inf and color_norm != -np.inf else np.sign(
-                    color_norm) * max(np.abs(scores_no_inf))
+                color_norm_8bit = (
+                    int(color_norm)
+                    if color_norm != np.inf and color_norm != -np.inf
+                    else np.sign(color_norm) * max(np.abs(scores_no_inf))
+                )
                 color = tuple([int(i * 255) for i in colormap(color_norm_8bit)[:-1]])
                 kwargs['fillcolor'] = '#%02x%02x%02x' % color
                 kwargs['style'] = 'rounded, filled'

@@ -2,6 +2,7 @@ from types import ModuleType
 
 import pytest
 from matplotlib.backend_bases import PickEvent
+
 # scikit-learn is imported lazily by rnalysis.utils.generic (see tests/test_imports.py), so the
 # star-import below no longer re-exports it -- the tests import it directly instead.
 from sklearn.preprocessing import PowerTransformer, StandardScaler
@@ -37,7 +38,8 @@ def test_standard_box_cox():
     assert not np.isclose(res, standardize(data)).all()
 
     data_df = pl.DataFrame([f'ind{i}' for i in range(100)]).with_columns(
-        pl.DataFrame(data, schema=[f'col{j}' for j in range(5)]))
+        pl.DataFrame(data, schema=[f'col{j}' for j in range(5)])
+    )
     res_df = standard_box_cox(data_df)
     assert isinstance(res_df, pl.DataFrame)
     assert res_df.shape == data_df.shape
@@ -74,12 +76,17 @@ def test_standard_box_cox_parallel_equals_sequential(monkeypatch):
     assert np.allclose(parallel, sequential, rtol=0, atol=_BOX_COX_PARALLEL_TOL)
 
     data_df = pl.DataFrame([f'ind{i}' for i in range(6)]).with_columns(
-        pl.DataFrame(array, schema=[f'col{j}' for j in range(30)]))
+        pl.DataFrame(array, schema=[f'col{j}' for j in range(30)])
+    )
     seq_df = standard_box_cox(data_df, parallel_backend='sequential')
     par_df = standard_box_cox(data_df, parallel_backend='threading')
     assert np.all(par_df.select(pl.first()) == seq_df.select(pl.first()))
-    assert np.allclose(par_df.select(cs.numeric()).to_numpy(),
-                       seq_df.select(cs.numeric()).to_numpy(), rtol=0, atol=_BOX_COX_PARALLEL_TOL)
+    assert np.allclose(
+        par_df.select(cs.numeric()).to_numpy(),
+        seq_df.select(cs.numeric()).to_numpy(),
+        rtol=0,
+        atol=_BOX_COX_PARALLEL_TOL,
+    )
 
 
 def test_standard_box_cox_default_is_sequential(monkeypatch):
@@ -119,7 +126,8 @@ def test_standard_box_cox_raises_on_non_finite_column(parallel_backend, monkeypa
 def test_standard_box_cox_unstable_column_error_names_dataframe_columns():
     array = _array_with_unstable_column()
     data_df = pl.DataFrame(['sample1', 'sample2', 'sample3', 'sample4']).with_columns(
-        pl.DataFrame(array, schema=['good1', 'GFP', 'good2']))
+        pl.DataFrame(array, schema=['good1', 'GFP', 'good2'])
+    )
     with pytest.raises(InvalidValueError) as err:
         standard_box_cox(data_df)
     assert 'GFP' in str(err.value)
@@ -146,18 +154,22 @@ def test_standard_box_cox_raises_on_absurdly_large_output(monkeypatch):
 def test_standard_box_cox_well_behaved_data_is_unaffected():
     # rule 5: currently-working inputs must keep producing bit-identical output
     reference = StandardScaler().fit_transform(
-        PowerTransformer(method='box-cox').fit_transform(WELL_BEHAVED_COLUMNS + 1))
+        PowerTransformer(method='box-cox').fit_transform(WELL_BEHAVED_COLUMNS + 1)
+    )
     assert np.array_equal(standard_box_cox(WELL_BEHAVED_COLUMNS, feature_names=['good1', 'good2']), reference)
 
 
-@pytest.mark.parametrize('value,truth', [
-    (True, 'box-cox'),
-    (False, 'none'),
-    ('box-cox', 'box-cox'),
-    ('Box-Cox', 'box-cox'),
-    ('log', 'log'),
-    ('none', 'none'),
-])
+@pytest.mark.parametrize(
+    'value,truth',
+    [
+        (True, 'box-cox'),
+        (False, 'none'),
+        ('box-cox', 'box-cox'),
+        ('Box-Cox', 'box-cox'),
+        ('log', 'log'),
+        ('none', 'none'),
+    ],
+)
 def test_parse_power_transform(value, truth):
     assert parse_power_transform(value) == truth
 
@@ -175,7 +187,8 @@ def test_standard_log():
     assert np.array_equal(standard_log(array), reference)
 
     data_df = pl.DataFrame([f'ind{i}' for i in range(6)]).with_columns(
-        pl.DataFrame(array, schema=[f'col{j}' for j in range(8)]))
+        pl.DataFrame(array, schema=[f'col{j}' for j in range(8)])
+    )
     res_df = standard_log(data_df)
     assert isinstance(res_df, pl.DataFrame)
     assert res_df.columns == data_df.columns
@@ -195,48 +208,78 @@ def test_standard_log_rejects_negative_values():
         standard_log(np.array([[1.0, -5.0], [2.0, 3.0]]))
 
 
-@pytest.mark.parametrize('power_transform,truth', [
-    (True, 'standard_box_cox'),
-    ('box-cox', 'standard_box_cox'),
-    ('log', 'standard_log'),
-    (False, 'standardize'),
-    ('none', 'standardize'),
-])
+@pytest.mark.parametrize(
+    'power_transform,truth',
+    [
+        (True, 'standard_box_cox'),
+        ('box-cox', 'standard_box_cox'),
+        ('log', 'standard_log'),
+        (False, 'standardize'),
+        ('none', 'standardize'),
+    ],
+)
 def test_get_transform_function(power_transform, truth):
     assert get_transform_function(power_transform).__name__ == truth
 
 
 def test_color_generator():
     gen = color_generator()
-    preset_colors = ['tab:blue', 'tab:red', 'tab:green', 'tab:orange', 'tab:purple', 'tab:brown', 'tab:pink',
-                     'tab:gray', 'tab:olive', 'tab:cyan', 'gold', 'maroon', 'mediumslateblue', 'fuchsia',
-                     'lawngreen', 'moccasin', 'thistle']
+    preset_colors = [
+        'tab:blue',
+        'tab:red',
+        'tab:green',
+        'tab:orange',
+        'tab:purple',
+        'tab:brown',
+        'tab:pink',
+        'tab:gray',
+        'tab:olive',
+        'tab:cyan',
+        'gold',
+        'maroon',
+        'mediumslateblue',
+        'fuchsia',
+        'lawngreen',
+        'moccasin',
+        'thistle',
+    ]
     for i in range(150):
         color = next(gen)
         assert (isinstance(color, str) and color in preset_colors) or (
-            isinstance(color, np.ndarray) and len(color) == 3 and
-            np.max(color) <= 1 and np.min(color) >= 0)
+            isinstance(color, np.ndarray) and len(color) == 3 and np.max(color) <= 1 and np.min(color) >= 0
+        )
 
 
-@pytest.mark.parametrize("this_set,other_sets,majority_threshold,truth",
-                         [({1, 2, 3, 4}, [{1, 2, 3, 6}, {4, 5, 6}], 2 / 3, {1, 2, 3, 4, 6}),
-                          ({'a', 'ab', 'aab'}, [{'ba', 'b'}], 0.501, set()),
-                          ({'a', 'ab', 'aab'}, [{'ba', 'b'}], 0.5, {'a', 'ab', 'aab', 'ba', 'b'}),
-                          ({1, 2, 3}, [{2, 3, 4}, {3, 4, 5}], 0.5, {2, 3, 4}),
-                          ({1, 2, 3}, [{2, 3, 4}, {3, 4, 5}], 1, {3})])
+@pytest.mark.parametrize(
+    'this_set,other_sets,majority_threshold,truth',
+    [
+        ({1, 2, 3, 4}, [{1, 2, 3, 6}, {4, 5, 6}], 2 / 3, {1, 2, 3, 4, 6}),
+        ({'a', 'ab', 'aab'}, [{'ba', 'b'}], 0.501, set()),
+        ({'a', 'ab', 'aab'}, [{'ba', 'b'}], 0.5, {'a', 'ab', 'aab', 'ba', 'b'}),
+        ({1, 2, 3}, [{2, 3, 4}, {3, 4, 5}], 0.5, {2, 3, 4}),
+        ({1, 2, 3}, [{2, 3, 4}, {3, 4, 5}], 1, {3}),
+    ],
+)
 def test_majority_vote_intersection(this_set, other_sets, majority_threshold, truth):
-    result = SetWithMajorityVote.majority_vote_intersection(this_set, *other_sets,
-                                                            majority_threshold=majority_threshold)
+    result = SetWithMajorityVote.majority_vote_intersection(
+        this_set, *other_sets, majority_threshold=majority_threshold
+    )
     assert result == truth
 
 
-@pytest.mark.parametrize("is_df", [True, False])
-@pytest.mark.parametrize("data,baseline,truth", [
-    (np.array([1, 2, 3, 4, 5]), 0, np.array([0, 1, 2, 3, 4])),
-    (np.array([[1, 2, 3], [-2, 4, 5], [0, 0, -1], [3, -2, 1]]), 1,
-     np.array([[4, 5, 6], [1, 7, 8], [3, 3, 2], [6, 1, 4]])),
-    (np.array([[[1, 2], [3, 4]], [[5, 6], [7, 8]]]), -1, np.array([[[-1, 0], [1, 2]], [[3, 4], [5, 6]]]))
-])
+@pytest.mark.parametrize('is_df', [True, False])
+@pytest.mark.parametrize(
+    'data,baseline,truth',
+    [
+        (np.array([1, 2, 3, 4, 5]), 0, np.array([0, 1, 2, 3, 4])),
+        (
+            np.array([[1, 2, 3], [-2, 4, 5], [0, 0, -1], [3, -2, 1]]),
+            1,
+            np.array([[4, 5, 6], [1, 7, 8], [3, 3, 2], [6, 1, 4]]),
+        ),
+        (np.array([[[1, 2], [3, 4]], [[5, 6], [7, 8]]]), -1, np.array([[[-1, 0], [1, 2]], [[3, 4], [5, 6]]])),
+    ],
+)
 def test_shift_to_baseline(data, baseline, is_df, truth):
     if is_df and len(data.shape) <= 2:
         assert shift_to_baseline(pl.DataFrame(data), baseline).equals(pl.DataFrame(truth))
@@ -264,18 +307,40 @@ class TestObj:
         pass
 
 
-@pytest.mark.parametrize("func,obj,truth", [
-    (first_test_func, None, {}),
-    (second_test_func, None, {'a': {'annotation': str, 'default': inspect._empty},
-                              'b': {'annotation': bool, 'default': inspect._empty},
-                              'c': {'annotation': inspect._empty, 'default': inspect._empty}}),
-    (third_test_func, None, {'a': {'annotation': typing.List[str], 'default': inspect._empty},
-                             'b': {'annotation': typing.Callable, 'default': inspect._empty},
-                             'c': {'annotation': int, 'default': 3},
-                             'd': {'annotation': inspect._empty, 'default': None}}),
-    ('fourth_test_func', TestObj(), {'a': {'annotation': inspect._empty, 'default': inspect._empty},
-                                     'b': {'annotation': None, 'default': inspect._empty},
-                                     'c': {'annotation': float, 'default': 5.2}})])
+@pytest.mark.parametrize(
+    'func,obj,truth',
+    [
+        (first_test_func, None, {}),
+        (
+            second_test_func,
+            None,
+            {
+                'a': {'annotation': str, 'default': inspect._empty},
+                'b': {'annotation': bool, 'default': inspect._empty},
+                'c': {'annotation': inspect._empty, 'default': inspect._empty},
+            },
+        ),
+        (
+            third_test_func,
+            None,
+            {
+                'a': {'annotation': typing.List[str], 'default': inspect._empty},
+                'b': {'annotation': typing.Callable, 'default': inspect._empty},
+                'c': {'annotation': int, 'default': 3},
+                'd': {'annotation': inspect._empty, 'default': None},
+            },
+        ),
+        (
+            'fourth_test_func',
+            TestObj(),
+            {
+                'a': {'annotation': inspect._empty, 'default': inspect._empty},
+                'b': {'annotation': None, 'default': inspect._empty},
+                'c': {'annotation': float, 'default': 5.2},
+            },
+        ),
+    ],
+)
 def test_get_signature(func, obj, truth):
     this_signature = get_method_signature(func, obj)
     assert len(this_signature) == len(truth)
@@ -287,45 +352,54 @@ def test_get_signature(func, obj, truth):
         assert param.default == val['default']
 
 
-@pytest.mark.parametrize('intervals,expected', [
-    ([], 0),
-    ([(1, 3)], 3),
-    ([(1, 3), (4, 6), (7, 10)], 10),
-    ([(4, 6), (1, 3), (7, 10)], 10),
-    ([(1, 4), (3, 6), (3, 5), (3, 6), (4, 9)], 9),
-    ([(7, 10), (2, 5), (1, 4), (2, 5)], 9),
-
-])
+@pytest.mark.parametrize(
+    'intervals,expected',
+    [
+        ([], 0),
+        ([(1, 3)], 3),
+        ([(1, 3), (4, 6), (7, 10)], 10),
+        ([(4, 6), (1, 3), (7, 10)], 10),
+        ([(1, 4), (3, 6), (3, 5), (3, 6), (4, 9)], 9),
+        ([(7, 10), (2, 5), (1, 4), (2, 5)], 9),
+    ],
+)
 def test_sum_intervals_inclusive(intervals, expected):
     res = sum_intervals_inclusive(intervals)
     assert res == expected
 
 
-@pytest.mark.parametrize('seconds,expected', [
-    (13, '00:13'),
-    (0, '00:00'),
-    (59.34, '00:59'),
-    (60.0, '01:00'),
-    (60.2, '01:00'),
-    (192.17, '03:12'),
-    (13 * 60 + 1.5, '13:01'),
-    (100 * 60, '100:00')])
+@pytest.mark.parametrize(
+    'seconds,expected',
+    [
+        (13, '00:13'),
+        (0, '00:00'),
+        (59.34, '00:59'),
+        (60.0, '01:00'),
+        (60.2, '01:00'),
+        (192.17, '03:12'),
+        (13 * 60 + 1.5, '13:01'),
+        (100 * 60, '100:00'),
+    ],
+)
 def test_format_time(seconds, expected):
     res = format_time(seconds)
     assert res == expected
 
 
-@pytest.mark.parametrize('name,expected', [
-    ('aname', 'aname'),
-    ('name123n', 'name123n'),
-    ('camelCase', 'camelCase'),
-    ('snake_case', 'snake_case'),
-    ('name with spaces ', 'name_with_spaces'),
-    ('1name of var', 'var_1name_of_var'),
-    ('12345', 'var_12345'),
-    ('%asdf&sign', '_asdf_sign'),
-    (' ^^more things123 ', '___more_things123')
-])
+@pytest.mark.parametrize(
+    'name,expected',
+    [
+        ('aname', 'aname'),
+        ('name123n', 'name123n'),
+        ('camelCase', 'camelCase'),
+        ('snake_case', 'snake_case'),
+        ('name with spaces ', 'name_with_spaces'),
+        ('1name of var', 'var_1name_of_var'),
+        ('12345', 'var_12345'),
+        ('%asdf&sign', '_asdf_sign'),
+        (' ^^more things123 ', '___more_things123'),
+    ],
+)
 def test_sanitize_variable_name(name, expected):
     res = sanitize_variable_name(name)
     assert res == expected
@@ -334,16 +408,17 @@ def test_sanitize_variable_name(name, expected):
 def test_get_method_readable_name():
     def func(x):
         return x + 1
-    func.readable_name = "readable name"
-    assert get_method_readable_name(func) == "readable name"
+
+    func.readable_name = 'readable name'
+    assert get_method_readable_name(func) == 'readable name'
 
     def func2(a, b):
         return a + b
 
     assert get_method_readable_name(func2) == 'func2'
 
-    func2.readable_name = "readable name"
-    assert get_method_readable_name(func2) == "readable name"
+    func2.readable_name = 'readable name'
+    assert get_method_readable_name(func2) == 'readable name'
 
 
 def test_param_readable_names_decorator_sets_attribute():
@@ -358,30 +433,33 @@ def test_param_readable_names_decorator_sets_attribute():
     assert func(False, ['a']) == (False, ['a'])
 
 
-@pytest.mark.parametrize("param_name,expected", [
-    ('fastq_folder', 'FASTQ folder'),
-    ('three_prime_adapters', 'Three prime adapters'),
-    ('minimum_read_length', 'Minimum read length'),
-    ('power_transform', 'Power transform'),
-    ('drop_columns', 'Drop columns'),
-    ('trim_n', 'Trim n'),
-    ('single', 'Single'),
-    ('go_id', 'GO ID'),
-    ('kegg_pathways', 'KEGG pathways'),
-    ('gene_ids', 'Gene IDs'),
-    ('rna_type', 'RNA type'),
-    ('mrna_length', 'mRNA length'),
-    ('use_pca', 'Use PCA'),
-    ('fdr_level', 'FDR level'),
-    ('deseq2_normalization', 'DESeq2 normalization'),
-    ('sam_path', 'SAM path'),
-    ('bam_index', 'BAM index'),
-    ('fastq_to_sam', 'FASTQ to SAM'),
-    ('padj_threshold', 'padj threshold'),
-    ('gtf_file', 'GTF file'),
-    ('n_components', 'Number of components'),
-    ('', ''),
-])
+@pytest.mark.parametrize(
+    'param_name,expected',
+    [
+        ('fastq_folder', 'FASTQ folder'),
+        ('three_prime_adapters', 'Three prime adapters'),
+        ('minimum_read_length', 'Minimum read length'),
+        ('power_transform', 'Power transform'),
+        ('drop_columns', 'Drop columns'),
+        ('trim_n', 'Trim n'),
+        ('single', 'Single'),
+        ('go_id', 'GO ID'),
+        ('kegg_pathways', 'KEGG pathways'),
+        ('gene_ids', 'Gene IDs'),
+        ('rna_type', 'RNA type'),
+        ('mrna_length', 'mRNA length'),
+        ('use_pca', 'Use PCA'),
+        ('fdr_level', 'FDR level'),
+        ('deseq2_normalization', 'DESeq2 normalization'),
+        ('sam_path', 'SAM path'),
+        ('bam_index', 'BAM index'),
+        ('fastq_to_sam', 'FASTQ to SAM'),
+        ('padj_threshold', 'padj threshold'),
+        ('gtf_file', 'GTF file'),
+        ('n_components', 'Number of components'),
+        ('', ''),
+    ],
+)
 def test_get_param_readable_name_auto(param_name, expected):
     assert get_param_readable_name(param_name) == expected
 
@@ -415,24 +493,16 @@ def test_get_param_readable_name_override_beats_special_name():
 
 
 @pytest.mark.parametrize(
-    "X, labels, expected_bic",
+    'X, labels, expected_bic',
     [
-        (
-            np.array([[1, 2], [1.5, 2.5], [3, 4], [4, 5]]),
-            np.array([0, 0, 1, 1]),
-            -13.510391348997054
-        ),
-        (
-            np.array([[1, 1], [2, 2], [3, 3], [4, 4], [5, 5]]),
-            np.array([0, 0, 0, 1, 1]),
-            -23.462198946075148
-        ),
+        (np.array([[1, 2], [1.5, 2.5], [3, 4], [4, 5]]), np.array([0, 0, 1, 1]), -13.510391348997054),
+        (np.array([[1, 1], [2, 2], [3, 3], [4, 4], [5, 5]]), np.array([0, 0, 0, 1, 1]), -23.462198946075148),
         (
             np.array([[1, 1, 1], [2, 2, 2], [3, 3, 3], [4, 4, 4], [5, 5, 5]]),
             np.array([0, 0, 0, 1, 1]),
-            -33.747038606183764
+            -33.747038606183764,
         ),
-    ]
+    ],
 )
 def test_bic_score(X, labels, expected_bic):
     assert np.isclose(bic_score(X, labels), expected_bic)
@@ -483,23 +553,26 @@ class TestInteractiveScatterFigure:
         # No specific assertions, but ensure the canvas is redrawn
 
     def test_on_pick_add_annotation(self):
-        event = PickEvent('pick_event', self.fig.canvas, mouseevent=MockMouseEvent(), artist=self.fig.ax.collections[0],
-                          ind=[0])
+        event = PickEvent(
+            'pick_event', self.fig.canvas, mouseevent=MockMouseEvent(), artist=self.fig.ax.collections[0], ind=[0]
+        )
         self.fig.on_pick(event)
         assert 0 in self.fig.is_labeled
         assert isinstance(self.fig.is_labeled[0], plt.Annotation)
         assert self.fig.is_labeled[0].get_text() == 'A'
 
     def test_on_pick_remove_annotation(self):
-        event = PickEvent('pick_event', self.fig.canvas, mouseevent=MockMouseEvent(), artist=self.fig.ax.collections[0],
-                          ind=[0])
+        event = PickEvent(
+            'pick_event', self.fig.canvas, mouseevent=MockMouseEvent(), artist=self.fig.ax.collections[0], ind=[0]
+        )
         self.fig.on_pick(event)
         self.fig.on_pick(event)
         assert 0 not in self.fig.is_labeled
 
     def test_on_pick_invalid_artist(self):
-        event = PickEvent('pick_event', self.fig.canvas, mouseevent=MockMouseEvent(),
-                          artist=plt.Rectangle((0, 0), 1, 1), ind=[0])
+        event = PickEvent(
+            'pick_event', self.fig.canvas, mouseevent=MockMouseEvent(), artist=plt.Rectangle((0, 0), 1, 1), ind=[0]
+        )
         self.fig.on_pick(event)
         assert self.fig.is_labeled == {}
 
@@ -522,18 +595,21 @@ def test_jitter(n, jitter_range):
 # message naming the offending function and parameter - not with a bare RepresenterError.
 
 
-@pytest.mark.parametrize('value,expected,expected_type', [
-    (np.float64(5.0), 5.0, float),
-    (np.int64(7), 7, int),
-    (np.bool_(True), True, bool),
-    (np.str_('abc'), 'abc', str),
-    (Path('some/dir/table.csv'), 'some/dir/table.csv', str),
-    (np.array([1, 2, 3]), [1, 2, 3], list),
-    (np.array([[1.5], [2.5]]), [[1.5], [2.5]], list),
-    ((1, 2), [1, 2], list),
-    ('plain string', 'plain string', str),
-    (None, None, type(None)),
-])
+@pytest.mark.parametrize(
+    'value,expected,expected_type',
+    [
+        (np.float64(5.0), 5.0, float),
+        (np.int64(7), 7, int),
+        (np.bool_(True), True, bool),
+        (np.str_('abc'), 'abc', str),
+        (Path('some/dir/table.csv'), 'some/dir/table.csv', str),
+        (np.array([1, 2, 3]), [1, 2, 3], list),
+        (np.array([[1.5], [2.5]]), [[1.5], [2.5]], list),
+        ((1, 2), [1, 2], list),
+        ('plain string', 'plain string', str),
+        (None, None, type(None)),
+    ],
+)
 def test_sanitize_for_yaml_converts_values(value, expected, expected_type):
     res = generic._sanitize_for_yaml(value, 'context')
     assert res == expected
@@ -564,14 +640,17 @@ def test_sanitize_for_yaml_unhashable_dict_key_raises_typed_error():
     assert "parameter 'grouping' of function 'foo'" in str(err.value)
 
 
-@pytest.mark.parametrize('content,is_yaml', [
-    ('tests/test_files/no_such_file.yaml', False),
-    ('C:/no/such/file.yaml', False),
-    ('a_bare_word', False),
-    ('', False),
-    ('filter_type: countfilter', True),
-    ('functions:\n- describe\nparams:\n- - []\n  - {}\n', True),
-])
+@pytest.mark.parametrize(
+    'content,is_yaml',
+    [
+        ('tests/test_files/no_such_file.yaml', False),
+        ('C:/no/such/file.yaml', False),
+        ('a_bare_word', False),
+        ('', False),
+        ('filter_type: countfilter', True),
+        ('functions:\n- describe\nparams:\n- - []\n  - {}\n', True),
+    ],
+)
 def test_parse_pipeline_yaml_string_only_accepts_plausible_yaml(content, is_yaml):
     assert generic._parse_pipeline_yaml_string(content)[0] == is_yaml
 
@@ -579,6 +658,7 @@ def test_parse_pipeline_yaml_string_only_accepts_plausible_yaml(content, is_yaml
 # --- numba disk cache (issue #257) ---------------------------------------------------------------
 # Without `cache=True` every fresh process -- including every Windows `spawn` multiprocessing worker
 # -- recompiles the jitted kernels from scratch. These guards keep that from silently regressing.
+
 
 def test_numba_cache_flag_follows_frozen_env():
     """Caching must be on from source, and off in the frozen app (see generic.NUMBA_CACHE's comment)."""

@@ -8,7 +8,7 @@ from rnalysis.utils.installs import *
 
 # Constants for mocking
 MOCK_JDK_DIRS = [f'jdk-{installs.JDK_VERSION}.0.1', 'jdk-16', 'jdk-15']
-MOCK_JDK_VERSION_OUTPUT = f"java version {installs.JDK_VERSION}"
+MOCK_JDK_VERSION_OUTPUT = f'java version {installs.JDK_VERSION}'
 
 
 @pytest.fixture
@@ -44,8 +44,10 @@ def test_is_jdk_installed_failure_no_dir(monkeypatch):
 
 def test_is_jdk_installed_failure_wrong_version(monkeypatch):
     monkeypatch.setattr('pathlib.Path.exists', lambda self: True)
-    monkeypatch.setattr('subprocess.check_output',
-                        lambda *args, **kwargs: MOCK_JDK_VERSION_OUTPUT.replace(str(installs.JDK_VERSION), '15'))
+    monkeypatch.setattr(
+        'subprocess.check_output',
+        lambda *args, **kwargs: MOCK_JDK_VERSION_OUTPUT.replace(str(installs.JDK_VERSION), '15'),
+    )
     assert not is_jdk_installed()
 
 
@@ -168,8 +170,9 @@ R_INSTALLERS = [(install_limma, 'limma'), (install_deseq2, 'DESeq2'), (install_r
 
 @pytest.mark.parametrize('installer,package_name', R_INSTALLERS)
 def test_r_installer_surfaces_permission_guidance(monkeypatch, installer, package_name):
-    original = ChildProcessError("R script failed to execute: 'Error in install.packages: "
-                                 "unable to create /usr/lib/R/library'.")
+    original = ChildProcessError(
+        "R script failed to execute: 'Error in install.packages: unable to create /usr/lib/R/library'."
+    )
 
     def raise_child_process_error(*args, **kwargs):
         raise original

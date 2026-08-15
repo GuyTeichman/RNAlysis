@@ -50,7 +50,7 @@ def r_make_names(names: List[str]):
                     new_name = name
                     # Append a number if this is not the first occurrence
                     if name in name_map:
-                        new_name = f"{name}.{suffix_count}"
+                        new_name = f'{name}.{suffix_count}'
                         suffix_count += 1
                     valid_names[i] = new_name
                     name_map[name] = True  # Mark as processed
@@ -65,7 +65,7 @@ def python_to_r_kwargs(kwargs: dict, delimiter: str = ',\n'):
         val = _parse_r_arg(val)
         this_arg = f'{key} = {val}{delimiter}'
         kwargs_str += this_arg
-    return kwargs_str[:-len(delimiter)]  # ignore the last delimiter
+    return kwargs_str[: -len(delimiter)]  # ignore the last delimiter
 
 
 def _parse_r_arg(arg):
@@ -81,7 +81,7 @@ def _parse_r_arg(arg):
         base = ', '.join([f'"{item}"' for item in arg])
         return f'c({base})'
     else:
-        raise TypeError(f"Cannot parse argument: {arg} of type: {type(arg)}")
+        raise TypeError(f'Cannot parse argument: {arg} of type: {type(arg)}')
 
 
 def remove_suffixes(path: Union[str, Path]) -> Union[str, Path]:
@@ -145,8 +145,11 @@ def uniprot_tab_with_score_to_dict(tab_input: str, reverse_key_value: bool = Fal
     split_list = split_list[3:]
 
     parsed: Dict[str, Tuple[List[str], List[int]]] = {}
-    for gene_id, rank, key in zip(islice(split_list, 0, len(split_list), 3), islice(split_list, 1, len(split_list), 3),
-                                  islice(split_list, 2, len(split_list), 3)):
+    for gene_id, rank, key in zip(
+        islice(split_list, 0, len(split_list), 3),
+        islice(split_list, 1, len(split_list), 3),
+        islice(split_list, 2, len(split_list), 3),
+    ):
         if reverse_key_value:
             gene_id, key = key, gene_id
         numeric_rank = int(rank[0])
@@ -167,8 +170,10 @@ def uniprot_tab_with_score_to_dict(tab_input: str, reverse_key_value: bool = Fal
             duplicates[key] = best_id
 
     if len(duplicates) > 0:
-        warnings.warn(f"Duplicate mappings were found for {len(duplicates)} genes. "
-                      f"The following mapping was chosen for them based on their annotation score: {duplicates}")
+        warnings.warn(
+            f'Duplicate mappings were found for {len(duplicates)} genes. '
+            f'The following mapping was chosen for them based on their annotation score: {duplicates}'
+        )
     return key_to_id
 
 
@@ -204,15 +209,15 @@ def data_to_tuple(data: Any, sort: bool = False) -> tuple:
     elif isinstance(data, (set, list, np.ndarray)):
         tpl = tuple(data)
     elif isinstance(data, (int, float, bool, str)):
-        tpl = data,
+        tpl = (data,)
     elif data is None:
-        tpl = None,
+        tpl = (None,)
     elif isinstance(data, pl.DataFrame):
         return tuple(data.to_series().to_list())
     elif isinstance(data, pl.Series):
         return tuple(data.to_list())
     elif callable(data):
-        tpl = data,
+        tpl = (data,)
     else:
         try:
             tpl = tuple(data)
@@ -254,7 +259,7 @@ def partition_list(lst: Union[list, tuple], chunk_size: int) -> Union[List[tuple
         raise InternalError(f"'chunk_size' must be >0; instead got {chunk_size}.")
     if len(lst) == 0:
         return [type(lst)()]
-    return [lst[i: i + chunk_size] for i in range(0, len(lst), chunk_size)]
+    return [lst[i : i + chunk_size] for i in range(0, len(lst), chunk_size)]
 
 
 def flatten(lst: list) -> list:
@@ -289,7 +294,8 @@ def parse_docstring(docstring: str) -> Tuple[str, Dict[str, str]]:
     params_str = split[1]
     free_text_match = r'["#\w\s\.\(\)\-\:%\*=@!\?\+\_,/`><\[\]' + "'" + ']'
     params_matches = list(
-        re.finditer(r'^:param ([a-zA-Z_0-9]+):(' + free_text_match + r'+?)(?=^:.*:)', params_str, re.MULTILINE))
+        re.finditer(r'^:param ([a-zA-Z_0-9]+):(' + free_text_match + r'+?)(?=^:.*:)', params_str, re.MULTILINE)
+    )
     params = {match.group(1): match.group(2).replace('. ', '. \n') for match in params_matches}
     return desc, params
 
@@ -326,11 +332,13 @@ def parse_version(version: str):
 # deferred to call time to avoid a circular import (genome_annotation imports from this module).
 def parse_gtf_attributes(attr_str: str):
     from rnalysis.utils import genome_annotation
+
     return genome_annotation.parse_gtf_attributes(attr_str)
 
 
 def parse_gff3_attributes(attr_str: str):
     from rnalysis.utils import genome_annotation
+
     return genome_annotation.parse_gff3_attributes(attr_str)
 
 
@@ -345,7 +353,7 @@ def format_dict_for_display(d: dict) -> str:
     """
     output = []
     for key, val in d.items():
-        output.append(f"{key} = {repr(val)}")
+        output.append(f'{key} = {repr(val)}')
     return ', \n'.join(output)
 
 
@@ -382,11 +390,11 @@ def items_to_html_table(items):
     :type items: list of str
     :return: A string representation of the HTML table.
     :rtype: str
-        """
+    """
     table = '<table border="1" class="dataframe">\n'
     for item in items:
         table += f'<tr><td style="border: 1px solid black; border-collapse: collapse;"><b>{item}</b></td></tr>\n'
-    table += "</table>"
+    table += '</table>'
     return table
 
 
@@ -415,9 +423,12 @@ def df_to_html(df: pl.DataFrame, max_rows: int = 5, max_cols: int = 5):
 
     styler = df_subset.style.format(precision=2)
     styler.set_table_styles(
-        [{'selector': 'td', 'props': 'border: 1px solid grey; border-collapse: collapse;'},
-         {'selector': 'th', 'props': 'border: 1px solid grey; border-collapse: collapse;'}], )
-    html = styler.to_html(float_format=lambda x: f"{x:.2f}")
+        [
+            {'selector': 'td', 'props': 'border: 1px solid grey; border-collapse: collapse;'},
+            {'selector': 'th', 'props': 'border: 1px solid grey; border-collapse: collapse;'},
+        ],
+    )
+    html = styler.to_html(float_format=lambda x: f'{x:.2f}')
     if df.shape[0] > max_rows and df.shape[1] > max_cols:
         # remove a redundant '...' from the end of the table
         html = replace_last_occurrence(r'<td class="data col[\d]+ row_trim" >...<\/td>', '', html)
@@ -446,22 +457,18 @@ def slugify(value, allow_unicode=False):
     """
     value = str(value)
     if allow_unicode:
-        value = unicodedata.normalize("NFKC", value)
+        value = unicodedata.normalize('NFKC', value)
     else:
-        value = (
-            unicodedata.normalize("NFKD", value)
-            .encode("ascii", "ignore")
-            .decode("ascii")
-        )
-    value = re.sub(r"[^\w\s-]", "", value)
-    return re.sub(r"[-\s]+", "-", value).strip("-_")
+        value = unicodedata.normalize('NFKD', value).encode('ascii', 'ignore').decode('ascii')
+    value = re.sub(r'[^\w\s-]', '', value)
+    return re.sub(r'[-\s]+', '-', value).strip('-_')
 
 
 def longest_common_substring(s1, s2):
     """Return the longest common substring between two strings using difflib."""
     matcher = difflib.SequenceMatcher(None, s1, s2)
     match = matcher.find_longest_match(0, len(s1), 0, len(s2))
-    return s1[match.a: match.a + match.size]
+    return s1[match.a : match.a + match.size]
 
 
 def common_suffix(strings):
@@ -473,8 +480,8 @@ def common_suffix(strings):
     max_overlap = min(len(s1), len(s2))
     for i in range(max_overlap):
         if s1[-(i + 1)] != s2[-(i + 1)]:
-            return s1[len(s1) - i:]
-    return s1[len(s1) - max_overlap:]
+            return s1[len(s1) - i :]
+    return s1[len(s1) - max_overlap :]
 
 
 def remove_suffix(s: str, suffix: Union[str, List[str]]):
@@ -482,7 +489,7 @@ def remove_suffix(s: str, suffix: Union[str, List[str]]):
     suffixes = sorted(data_to_list(suffix), key=len, reverse=True)
     for this_suffix in suffixes:
         if s.endswith(this_suffix):
-            return s[:-len(this_suffix)]
+            return s[: -len(this_suffix)]
     return s
 
 
@@ -492,7 +499,7 @@ def generate_common_name(file_pairs):
     lcs_list = [(pair[0], pair[1], longest_common_substring(pair[0], pair[1])) for pair in file_pairs]
 
     # Find LCS among all LCSs
-    overall_lcs = lcs_list[0][2] if len(lcs_list) > 1 else ""
+    overall_lcs = lcs_list[0][2] if len(lcs_list) > 1 else ''
     for _, _, lcs in lcs_list[1:]:
         overall_lcs = longest_common_substring(overall_lcs, lcs)
 
@@ -511,8 +518,9 @@ def generate_common_name(file_pairs):
     suffix = common_suffix(lcs_only)
     if suffix and len(lcs_only) > 1:
         trimmed_results = [
-            result[:-len(suffix)] if result.endswith(suffix) and len(result[:-len(suffix)]) > 0 else result for result
-            in initial_results]
+            result[: -len(suffix)] if result.endswith(suffix) and len(result[: -len(suffix)]) > 0 else result
+            for result in initial_results
+        ]
     else:
         trimmed_results = initial_results
 

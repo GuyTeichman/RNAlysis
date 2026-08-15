@@ -6,6 +6,7 @@ tests fall back to ``np.allclose``. This harness instead compares the production
 independent *in-memory* eager oracle and asserts they are byte-for-byte identical, so any float or dtype
 drift introduced by a lazy rewrite is caught immediately.
 """
+
 import numpy as np
 import polars as pl
 import polars.selectors as cs
@@ -20,9 +21,9 @@ def assert_bit_identical(result: pl.DataFrame, reference: pl.DataFrame):
     (schema), identical shape, and identical values including nulls. This is the equivalence contract a
     lazy rewrite must satisfy to preserve reproducibility.
     """
-    assert result.schema == reference.schema, f"schema differs:\n{result.schema}\n!=\n{reference.schema}"
-    assert result.shape == reference.shape, f"shape differs: {result.shape} != {reference.shape}"
-    assert result.equals(reference), "values differ between the lazy result and the eager oracle"
+    assert result.schema == reference.schema, f'schema differs:\n{result.schema}\n!=\n{reference.schema}'
+    assert result.shape == reference.shape, f'shape differs: {result.shape} != {reference.shape}'
+    assert result.equals(reference), 'values differ between the lazy result and the eager oracle'
 
 
 def _eager_fold_change(count_filter: CountFilter, numerator, denominator) -> pl.DataFrame:
@@ -30,8 +31,10 @@ def _eager_fold_change(count_filter: CountFilter, numerator, denominator) -> pl.
     here so the production (lazy) path can be proven bit-identical to a straightforward eager one."""
     df = count_filter.df
     return df.select(pl.first()).with_columns(
-        ((df.select(numerator).mean_horizontal() + 1) / (
-            df.select(denominator).mean_horizontal() + 1)).alias('Fold Change'))
+        ((df.select(numerator).mean_horizontal() + 1) / (df.select(denominator).mean_horizontal() + 1)).alias(
+            'Fold Change'
+        )
+    )
 
 
 def test_fold_change_lazy_matches_eager():
@@ -47,8 +50,10 @@ def _eager_filter_low_reads(cf: CountFilter, threshold, n_samples) -> pl.DataFra
     """Eager oracle for CountFilter.filter_low_reads: two scans of self.df (build the count mask on a
     selected copy, then filter the full frame) -- what the method did before being fused into one pass."""
     df = cf.df
-    mask = df.select(pl.col(cf._numeric_columns)).with_columns(
-        pl.col(cf._numeric_columns) >= threshold).sum_horizontal() >= n_samples
+    mask = (
+        df.select(pl.col(cf._numeric_columns)).with_columns(pl.col(cf._numeric_columns) >= threshold).sum_horizontal()
+        >= n_samples
+    )
     return df.filter(mask)
 
 
@@ -100,7 +105,7 @@ def _eager_norm_apply(cf: CountFilter, scaling_factors: pl.DataFrame) -> pl.Data
 
 
 def _eager_normalize_to_rpm(cf: CountFilter) -> pl.DataFrame:
-    sf = cf.df.select(pl.col(cf._numeric_columns)).sum() / (10 ** 6)
+    sf = cf.df.select(pl.col(cf._numeric_columns)).sum() / (10**6)
     return _eager_norm_apply(cf, sf)
 
 
@@ -164,7 +169,8 @@ def _per_gene_scaling_factors(cf: CountFilter) -> pl.DataFrame:
     ``shape[0] > 1`` case that normalize_to_rpkm/tpm feed to _norm_scaling_factors."""
     numeric = cf._numeric_columns
     return cf.df.select(pl.first()).with_columns(
-        [(pl.int_range(1, cf.df.height + 1) + j).cast(pl.Float64).alias(col) for j, col in enumerate(numeric)])
+        [(pl.int_range(1, cf.df.height + 1) + j).cast(pl.Float64).alias(col) for j, col in enumerate(numeric)]
+    )
 
 
 def _eager_norm_per_gene(cf: CountFilter, scaling_factors: pl.DataFrame) -> pl.DataFrame:
@@ -174,8 +180,11 @@ def _eager_norm_per_gene(cf: CountFilter, scaling_factors: pl.DataFrame) -> pl.D
     for column in cf.df.columns:
         if column in numeric:
             merged = cf.df.select(cs.first() | cs.by_name(column)).join(
-                scaling_factors.select(cs.first() | cs.by_name(column)), left_on=cf.df.columns[0],
-                right_on=scaling_factors.columns[0], how='left')
+                scaling_factors.select(cs.first() | cs.by_name(column)),
+                left_on=cf.df.columns[0],
+                right_on=scaling_factors.columns[0],
+                how='left',
+            )
             merged_div = merged.with_columns((pl.nth(-2).truediv(pl.nth(-1))).alias('div'))
             out = out.with_columns((merged_div.select(pl.col('div').alias(column))))
         else:

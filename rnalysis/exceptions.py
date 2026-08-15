@@ -30,8 +30,9 @@ catch :class:`RNAlysisError` (or one of its subclasses) instead.
 """
 
 #: appended to every :class:`InternalError` message, since reaching one always means RNAlysis has a bug
-_BUG_REPORT_SUFFIX = ('This is likely a bug in RNAlysis - '
-                      'please report it at https://github.com/GuyTeichman/RNAlysis/issues')
+_BUG_REPORT_SUFFIX = (
+    'This is likely a bug in RNAlysis - please report it at https://github.com/GuyTeichman/RNAlysis/issues'
+)
 
 
 class RNAlysisError(Exception):

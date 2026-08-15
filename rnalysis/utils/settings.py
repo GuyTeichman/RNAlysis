@@ -4,15 +4,26 @@ from typing import Any, Union
 
 import yaml
 
-from rnalysis import (__attr_file_key__, __biotype_file_key__,
-                      __databases_key__, __font_key__, __font_size_key__,
-                      __report_gen_key__, __show_tutorial_key__,
-                      __stylesheet_key__)
+from rnalysis import (
+    __attr_file_key__,
+    __biotype_file_key__,
+    __databases_key__,
+    __font_key__,
+    __font_size_key__,
+    __report_gen_key__,
+    __show_tutorial_key__,
+    __stylesheet_key__,
+)
 from rnalysis.utils import io
 
-DEFAULT_VALUES = {__font_key__: 'Times New Roman', __font_size_key__: 10, __stylesheet_key__: 'base',
-                  __show_tutorial_key__: True, __databases_key__: ['Google', 'NCBI Genes', 'UniProtKB'],
-                  __report_gen_key__: None}
+DEFAULT_VALUES = {
+    __font_key__: 'Times New Roman',
+    __font_size_key__: 10,
+    __stylesheet_key__: 'base',
+    __show_tutorial_key__: True,
+    __databases_key__: ['Google', 'NCBI Genes', 'UniProtKB'],
+    __report_gen_key__: None,
+}
 
 
 def get_settings_file_path():
@@ -150,8 +161,9 @@ def get_gui_settings():
     return font, font_size, stylesheet, databases, show_tutorial, prompt_report_gen
 
 
-def set_gui_settings(font: str, font_size: int, stylesheet: str, databases, show_tutorial: bool,
-                     prompt_report_gen: Union[bool, None]):
+def set_gui_settings(
+    font: str, font_size: int, stylesheet: str, databases, show_tutorial: bool, prompt_report_gen: Union[bool, None]
+):
     update_settings_file(font, __font_key__)
     update_settings_file(str(font_size), __font_size_key__)
     update_settings_file(stylesheet, __stylesheet_key__)
@@ -195,9 +207,9 @@ def make_temp_copy_of_settings_file():
     try:
         remove_temp_copy_of_settings_file()
     except FileNotFoundError:
-        print("no previous temporary settings file existed")
+        print('no previous temporary settings file existed')
     if not pth.exists():
-        print("no previous settings file exists")
+        print('no previous settings file exists')
         return
     with open(os.path.join(str(pth.parent), 'temp_settings.yaml'), 'w') as tempfile, pth.open() as originfile:
         tempfile.writelines(originfile.readlines())
@@ -212,7 +224,7 @@ def set_temp_copy_of_settings_file_as_default():
     if pth.exists():
         pth.unlink()
     if not Path(os.path.join(str(pth.parent), 'temp_settings.yaml')).exists():
-        print("no temporary settings file exists")
+        print('no temporary settings file exists')
         return
     with open(os.path.join(str(pth.parent), 'temp_settings.yaml')) as temp_file, pth.open('w') as original_file:
         original_file.writelines(temp_file.readlines())

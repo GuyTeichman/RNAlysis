@@ -20,6 +20,7 @@ class DataFrameModel(QtCore.QAbstractTableModel):
     Based upon:
     https://stackoverflow.com/a/44605011
     """
+
     DtypeRole = QtCore.Qt.ItemDataRole.UserRole + 1000
     ValueRole = QtCore.Qt.ItemDataRole.UserRole + 1001
 
@@ -40,8 +41,9 @@ class DataFrameModel(QtCore.QAbstractTableModel):
     dataFrame = QtCore.pyqtProperty(pl.DataFrame, fget=dataFrame, fset=setDataFrame)
 
     @QtCore.pyqtSlot(int, QtCore.Qt.Orientation, result=str)
-    def headerData(self, section: int, orientation: QtCore.Qt.Orientation,
-                   role: int = QtCore.Qt.ItemDataRole.DisplayRole):
+    def headerData(
+        self, section: int, orientation: QtCore.Qt.Orientation, role: int = QtCore.Qt.ItemDataRole.DisplayRole
+    ):
         if role == QtCore.Qt.ItemDataRole.DisplayRole:
             if orientation == QtCore.Qt.Orientation.Horizontal:
                 return self._dataframe.columns[section + 1]
@@ -85,7 +87,7 @@ class DataFrameModel(QtCore.QAbstractTableModel):
         roles = {
             QtCore.Qt.ItemDataRole.DisplayRole: b'display',
             DataFrameModel.DtypeRole: b'dtype',
-            DataFrameModel.ValueRole: b'value'
+            DataFrameModel.ValueRole: b'value',
         }
         return roles
 
@@ -99,7 +101,7 @@ class DataFramePreviewModel(DataFrameModel):
         n_rows = min(2, shape[0])
         n_cols = min(3, shape[1] - 1)
         if isinstance(df, pl.DataFrame):
-            df_minimal = df.head(n_rows).select(df.columns[0:n_cols + 1])  # Exclude the first column
+            df_minimal = df.head(n_rows).select(df.columns[0 : n_cols + 1])  # Exclude the first column
             df_preview = df_minimal.with_columns(pl.col(pl.Float64).round(2))  # round floats to 2 decimal points
             df_preview = df_preview.cast(pl.String)  # Cast to string data type
             if n_rows < shape[0]:
@@ -113,7 +115,7 @@ class DataFramePreviewModel(DataFrameModel):
             if n_rows < shape[0]:
                 df_preview = pl.concat([df_preview, pl.Series(['...'])], how='vertical')
         else:
-            raise TypeError(f"Expected DataFrame or Series, got {type(df)}")
+            raise TypeError(f'Expected DataFrame or Series, got {type(df)}')
         super().__init__(df_preview, parent)
         self.df_minimal = df_minimal
 
@@ -174,13 +176,12 @@ class GeneSetView(DataView):
 
     def save(self):
         default_name = parsing.slugify(str(self.name)) + '.txt'
-        filename, _ = QtWidgets.QFileDialog.getSaveFileName(self, "Save gene set",
-                                                            str(Path.home().joinpath(default_name)),
-                                                            "Text document (*.txt);;"
-                                                            "All Files (*)")
+        filename, _ = QtWidgets.QFileDialog.getSaveFileName(
+            self, 'Save gene set', str(Path.home().joinpath(default_name)), 'Text document (*.txt);;All Files (*)'
+        )
         if filename:
             io.save_gene_set(self.data, filename)
-            print(f"Successfully saved at {io.get_datetime()} under {filename}")
+            print(f'Successfully saved at {io.get_datetime()} under {filename}')
 
 
 class DataFrameView(DataView):
@@ -202,12 +203,12 @@ class DataFrameView(DataView):
 
     def save(self):
         default_name = parsing.slugify(self.name) + '.csv'
-        filename, _ = QtWidgets.QFileDialog.getSaveFileName(self, "Save table",
-                                                            str(Path.home().joinpath(default_name)),
-                                                            "Comma-Separated Values (*.csv);;"
-                                                            "Tab-Separated Values (*.tsv);;"
-                                                            "Parquet (*.parquet);;"
-                                                            "All Files (*)")
+        filename, _ = QtWidgets.QFileDialog.getSaveFileName(
+            self,
+            'Save table',
+            str(Path.home().joinpath(default_name)),
+            'Comma-Separated Values (*.csv);;Tab-Separated Values (*.tsv);;Parquet (*.parquet);;All Files (*)',
+        )
         if filename:
             if filename.endswith('.csv'):
                 self.data.write_csv(filename)
@@ -217,7 +218,7 @@ class DataFrameView(DataView):
                 self.data.write_parquet(filename)
             else:
                 self.data.write_csv(filename)
-            print(f"Successfully saved at {io.get_datetime()} under {filename}")
+            print(f'Successfully saved at {io.get_datetime()} under {filename}')
 
 
 class ErrorMessage(QtWidgets.QDialog):
@@ -229,14 +230,15 @@ class ErrorMessage(QtWidgets.QDialog):
         self.init_ui()
 
     def init_ui(self):
-        self.setWindowTitle("Error")
+        self.setWindowTitle('Error')
         self.setWindowIcon(self.style().standardIcon(QtWidgets.QStyle.StandardPixmap.SP_MessageBoxCritical))
 
         self.widgets['error_label'] = QtWidgets.QLabel('<i>RNAlysis</i> has encountered the following error:')
         self.layout.addWidget(self.widgets['error_label'])
 
         self.widgets['error_summary'] = QtWidgets.QLabel(
-            f'<b>{";".join([str(i) for i in parsing.data_to_list(self.exception[1].args)])}</b>')
+            f'<b>{";".join([str(i) for i in parsing.data_to_list(self.exception[1].args)])}</b>'
+        )
         self.widgets['error_summary'].setTextInteractionFlags(QtCore.Qt.TextInteractionFlag.TextSelectableByMouse)
         self.widgets['error_summary'].setWordWrap(True)
         self.layout.addWidget(self.widgets['error_summary'])
@@ -245,7 +247,7 @@ class ErrorMessage(QtWidgets.QDialog):
         self.widgets['full_text_label'] = QtWidgets.QLabel('Full error report:')
         self.layout.addWidget(self.widgets['full_text_label'])
 
-        tb = "\n".join(traceback.format_exception(*self.exception))
+        tb = '\n'.join(traceback.format_exception(*self.exception))
         self.widgets['error_text'] = QtWidgets.QPlainTextEdit(tb)
         self.widgets['error_text'].setReadOnly(True)
         self.layout.addWidget(self.widgets['error_text'])
@@ -264,7 +266,7 @@ class ErrorMessage(QtWidgets.QDialog):
     def copy_to_clipboard(self):
         cb = QtWidgets.QApplication.clipboard()
         cb.clear(mode=QtGui.QClipboard.Mode.Clipboard)
-        cb.setText("".join(traceback.format_exception(*self.exception)), mode=QtGui.QClipboard.Mode.Clipboard)
+        cb.setText(''.join(traceback.format_exception(*self.exception)), mode=QtGui.QClipboard.Mode.Clipboard)
         self.widgets['copied_label'].setText('Copied to clipboard')
 
 
@@ -288,8 +290,7 @@ class WhatsNewWindow(QtWidgets.QMessageBox):
         self.scroll_layout.addWidget(self.text)
         self.layout().addWidget(self.scroll, 0, 0, 1, self.layout().columnCount())
         self.setWindowTitle(f"What's new in version {__version__}")
-        self.setStyleSheet("QScrollArea{min-width:900 px; min-height: 600px}"
-                           "QScrollBar:vertical {width: 40;}")
+        self.setStyleSheet('QScrollArea{min-width:900 px; min-height: 600px}QScrollBar:vertical {width: 40;}')
         self.setStandardButtons(QtWidgets.QMessageBox.StandardButton.Ok)
         self.buttonClicked.connect(self.close)
 
@@ -310,7 +311,7 @@ class AboutWindow(QtWidgets.QMessageBox):
                 Contributors: Dror Cohen, Or Ganon, Netta Dunsky, Shachar Shani
                 </p>"""
         self.setText(text)
-        self.setWindowTitle("About RNAlysis")
+        self.setWindowTitle('About RNAlysis')
         self.setStandardButtons(QtWidgets.QMessageBox.StandardButton.Ok)
         self.buttonClicked.connect(self.close)
 
@@ -326,7 +327,7 @@ class SettingsWindow(gui_widgets.MinMaxDialog):
         super().__init__(parent)
         self.settings_changed: bool = False
         self.layout = QtWidgets.QVBoxLayout(self)
-        self.setWindowTitle("Settings")
+        self.setWindowTitle('Settings')
 
         self.appearance_group = QtWidgets.QGroupBox('User Interface settings')
         self.appearance_grid = QtWidgets.QGridLayout(self.appearance_group)
@@ -337,8 +338,11 @@ class SettingsWindow(gui_widgets.MinMaxDialog):
         self.tables_widgets = {}
 
         self.button_box = QtWidgets.QDialogButtonBox(
-            QtWidgets.QDialogButtonBox.StandardButton.Ok | QtWidgets.QDialogButtonBox.StandardButton.Cancel |
-            QtWidgets.QDialogButtonBox.StandardButton.Apply | QtWidgets.QDialogButtonBox.StandardButton.RestoreDefaults)
+            QtWidgets.QDialogButtonBox.StandardButton.Ok
+            | QtWidgets.QDialogButtonBox.StandardButton.Cancel
+            | QtWidgets.QDialogButtonBox.StandardButton.Apply
+            | QtWidgets.QDialogButtonBox.StandardButton.RestoreDefaults
+        )
 
         self.layout.addWidget(self.appearance_group)
         self.layout.addWidget(self.tables_group)
@@ -359,8 +363,9 @@ class SettingsWindow(gui_widgets.MinMaxDialog):
         super().exec()
 
     def set_choices(self):
-        current_font, current_font_size, current_theme, current_dbs, current_show_tutorial, current_report_gen = \
+        current_font, current_font_size, current_theme, current_dbs, current_show_tutorial, current_report_gen = (
             settings.get_gui_settings()
+        )
         current_theme = {val: key for key, val in self.THEMES.items()}[current_theme]
 
         self.appearance_widgets['app_theme'].setCurrentText(current_theme)
@@ -368,7 +373,8 @@ class SettingsWindow(gui_widgets.MinMaxDialog):
         self.appearance_widgets['app_font_size'].setCurrentText(str(current_font_size))
         self.appearance_widgets['show_tutorial'].setChecked(current_show_tutorial)
         self.appearance_widgets['report_gen'].setCurrentText(
-            {val: key for key, val in self.REPORT_GEN_OPTIONS.items()}[current_report_gen])
+            {val: key for key, val in self.REPORT_GEN_OPTIONS.items()}[current_report_gen]
+        )
 
         for i in range(self.appearance_widgets['databases'].count()):
             item = self.appearance_widgets['databases'].item(i)
@@ -393,7 +399,8 @@ class SettingsWindow(gui_widgets.MinMaxDialog):
         self.appearance_widgets['app_font'].setFontFilters(QtWidgets.QFontComboBox.FontFilter.ScalableFonts)
         self.appearance_widgets['app_font'].setEditable(True)
         self.appearance_widgets['app_font'].completer().setCompletionMode(
-            QtWidgets.QCompleter.CompletionMode.PopupCompletion)
+            QtWidgets.QCompleter.CompletionMode.PopupCompletion
+        )
         self.appearance_widgets['app_font'].setInsertPolicy(QtWidgets.QComboBox.InsertPolicy.NoInsert)
 
         self.appearance_widgets['app_font_size'] = QtWidgets.QComboBox(self.appearance_group)
@@ -406,7 +413,7 @@ class SettingsWindow(gui_widgets.MinMaxDialog):
                 item.setCheckState(QtCore.Qt.CheckState.Unchecked)
                 self.appearance_widgets['databases'].addItem(item)
 
-        self.appearance_widgets['show_tutorial'] = QtWidgets.QCheckBox("Show tutorial page on startup")
+        self.appearance_widgets['show_tutorial'] = QtWidgets.QCheckBox('Show tutorial page on startup')
         self.appearance_widgets['report_gen'] = QtWidgets.QComboBox()
         self.appearance_widgets['report_gen'].addItems(self.REPORT_GEN_OPTIONS.keys())
         self.appearance_widgets['report_gen'].setInsertPolicy(QtWidgets.QComboBox.InsertPolicy.NoInsert)
@@ -443,10 +450,14 @@ class SettingsWindow(gui_widgets.MinMaxDialog):
 
             settings.set_gui_settings(font, font_size, theme, dbs, show_tutorial, prompt_report_gen)
 
-            attr_ref_path = self.tables_widgets['attr_ref_path'].text() if self.tables_widgets[
-                'attr_ref_path'].is_legal else ''
-            biotype_ref_path = self.tables_widgets['biotype_ref_path'].text() if self.tables_widgets[
-                'biotype_ref_path'].is_legal else ''
+            attr_ref_path = (
+                self.tables_widgets['attr_ref_path'].text() if self.tables_widgets['attr_ref_path'].is_legal else ''
+            )
+            biotype_ref_path = (
+                self.tables_widgets['biotype_ref_path'].text()
+                if self.tables_widgets['biotype_ref_path'].is_legal
+                else ''
+            )
 
             settings.set_table_settings(attr_ref_path, biotype_ref_path)
 
@@ -458,7 +469,7 @@ class SettingsWindow(gui_widgets.MinMaxDialog):
         settings.reset_settings()
         self.styleSheetUpdated.emit()
         self.set_choices()
-        print("Settings reset successfully")
+        print('Settings reset successfully')
 
     def save_and_exit(self):
         self.save_settings()
@@ -491,11 +502,15 @@ class SettingsWindow(gui_widgets.MinMaxDialog):
     def closeEvent(self, event):
         to_exit = True
         if self.settings_changed:
-            quit_msg = "Are you sure you want to close settings without saving?"
+            quit_msg = 'Are you sure you want to close settings without saving?'
 
-            reply = QtWidgets.QMessageBox.question(self, 'Close settings without saving?',
-                                                   quit_msg, QtWidgets.QMessageBox.StandardButton.No,
-                                                   QtWidgets.QMessageBox.StandardButton.Yes)
+            reply = QtWidgets.QMessageBox.question(
+                self,
+                'Close settings without saving?',
+                quit_msg,
+                QtWidgets.QMessageBox.StandardButton.No,
+                QtWidgets.QMessageBox.StandardButton.Yes,
+            )
             to_exit = reply == QtWidgets.QMessageBox.StandardButton.Yes
 
         if to_exit:
@@ -565,7 +580,7 @@ class HowToCiteWindow(gui_widgets.MinMaxDialog):
         with open(self.CITATION_FILE_PATH, encoding='utf-8') as f:
             citation_dict = json.load(f)
         for data in citation_dict.values():
-            txt = f"If you use {data['name']} in your research, please cite:"
+            txt = f'If you use {data["name"]} in your research, please cite:'
             self.citation_labels.append(QtWidgets.QLabel(txt))
             self.citations.append(gui_widgets.TextWithCopyButton(data['citation']))
 
@@ -585,7 +600,7 @@ class HowToCiteWindow(gui_widgets.MinMaxDialog):
 
         self.main_layout.addWidget(self.scroll)
 
-        self.setWindowTitle("How to cite RNAlysis")
+        self.setWindowTitle('How to cite RNAlysis')
         self.layout.addWidget(self.label)
 
         for label, citation in zip(self.citation_labels, self.citations):
@@ -602,8 +617,10 @@ def splash_screen():
     splash_font = QtGui.QFont('Calibri', 16)
     splash = QtWidgets.QSplashScreen(splash_pixmap)
     splash.setFont(splash_font)
-    splash.showMessage(f"<i>RNAlysis</i> version {__version__}",
-                       QtCore.Qt.AlignmentFlag.AlignBottom | QtCore.Qt.AlignmentFlag.AlignHCenter)
+    splash.showMessage(
+        f'<i>RNAlysis</i> version {__version__}',
+        QtCore.Qt.AlignmentFlag.AlignBottom | QtCore.Qt.AlignmentFlag.AlignHCenter,
+    )
     splash.show()
     return splash
 
@@ -612,27 +629,36 @@ class FuncExternalWindow(gui_widgets.MinMaxDialog):
     IGNORED_WIDGETS = {'help_link'}
     paramsAccepted = QtCore.pyqtSignal(list, dict, object)
     geneSetsRequested = QtCore.pyqtSignal(object)
-    __slots__ = {'func_name': 'name of the function to be applied',
-                 'func': 'function to be applied',
-                 'signature': 'signature of the function',
-                 'desc': 'description of the function',
-                 'param_desc': 'description of the function parameters',
-                 'help_link': 'link to the documentation page of the function',
-                 'excluded_params': 'parameters to be excluded from the window',
-                 'scroll': 'scroll area',
-                 'scroll_widget': 'widget containing the scroll area',
-                 'scroll_layout': 'layout for the scroll widget',
-                 'param_group': 'widget group for the parameter widgets',
-                 'param_grid': 'layout for the parameter widgets',
-                 'param_widgets': 'parameter widgets',
-                 'start_button': 'start button',
-                 'import_button': 'import button',
-                 'export_button': 'export button',
-                 'close_button': 'close button',
-                 'args': 'function args'}
+    __slots__ = {
+        'func_name': 'name of the function to be applied',
+        'func': 'function to be applied',
+        'signature': 'signature of the function',
+        'desc': 'description of the function',
+        'param_desc': 'description of the function parameters',
+        'help_link': 'link to the documentation page of the function',
+        'excluded_params': 'parameters to be excluded from the window',
+        'scroll': 'scroll area',
+        'scroll_widget': 'widget containing the scroll area',
+        'scroll_layout': 'layout for the scroll widget',
+        'param_group': 'widget group for the parameter widgets',
+        'param_grid': 'layout for the parameter widgets',
+        'param_widgets': 'parameter widgets',
+        'start_button': 'start button',
+        'import_button': 'import button',
+        'export_button': 'export button',
+        'close_button': 'close button',
+        'args': 'function args',
+    }
 
-    def __init__(self, func_name: str, func: Callable, help_link: Union[None, str], excluded_params: set, threaded=True,
-                 parent=None):
+    def __init__(
+        self,
+        func_name: str,
+        func: Callable,
+        help_link: Union[None, str],
+        excluded_params: set,
+        threaded=True,
+        parent=None,
+    ):
         super().__init__(parent)
         self.func_name = func_name
         self.func = func
@@ -650,7 +676,7 @@ class FuncExternalWindow(gui_widgets.MinMaxDialog):
         self.scroll_widget = QtWidgets.QWidget(self.scroll)
         self.scroll_layout = QtWidgets.QGridLayout(self.scroll_widget)
 
-        self.param_group = QtWidgets.QGroupBox(f"1. Set {func_name} parameters")
+        self.param_group = QtWidgets.QGroupBox(f'1. Set {func_name} parameters')
         self.param_grid = QtWidgets.QGridLayout(self.param_group)
         self.param_widgets = {}
 
@@ -670,7 +696,8 @@ class FuncExternalWindow(gui_widgets.MinMaxDialog):
 
         if self.help_link is not None:
             self.param_widgets['help_link'] = QtWidgets.QLabel(
-                text=f'<a href="{self.help_link}">Open documentation for <b>{self.func_name}</b></a>')
+                text=f'<a href="{self.help_link}">Open documentation for <b>{self.func_name}</b></a>'
+            )
             self.param_widgets['help_link'].setOpenExternalLinks(True)
             self.main_layout.addWidget(self.param_widgets['help_link'])
 
@@ -747,8 +774,9 @@ class FuncExternalWindow(gui_widgets.MinMaxDialog):
         return kwargs
 
     def import_parameters(self):
-        filename, _ = QtWidgets.QFileDialog.getOpenFileName(self, "Choose a parameter file",
-                                                            filter="YAML file (*.yaml)")
+        filename, _ = QtWidgets.QFileDialog.getOpenFileName(
+            self, 'Choose a parameter file', filter='YAML file (*.yaml)'
+        )
         if not filename:
             return
         with open(filename) as f:
@@ -758,8 +786,10 @@ class FuncExternalWindow(gui_widgets.MinMaxDialog):
             if key not in params:
                 raise InvalidValueError(f"Invalid parameter file: key '{key}' missing.")
         if params.get('name') != self.func_name:
-            raise InvalidValueError(f"Parameter file for function '{params.get('name')}' "
-                                    f"does not match this window's function: '{self.func_name}'")
+            raise InvalidValueError(
+                f"Parameter file for function '{params.get('name')}' "
+                f"does not match this window's function: '{self.func_name}'"
+            )
         args = params['args']
         kwargs = self.migrate_legacy_parameters(params['kwargs'])
         params['kwargs'] = kwargs
@@ -779,13 +809,13 @@ class FuncExternalWindow(gui_widgets.MinMaxDialog):
         parameter_dict = {'name': self.func_name, 'args': args, 'kwargs': kwargs}
 
         default_name = f'parameters {self.func_name}.yaml'
-        filename, _ = QtWidgets.QFileDialog.getSaveFileName(self, "Export parameter file",
-                                                            str(Path.home().joinpath(default_name)),
-                                                            "YAML file (*.yaml)")
+        filename, _ = QtWidgets.QFileDialog.getSaveFileName(
+            self, 'Export parameter file', str(Path.home().joinpath(default_name)), 'YAML file (*.yaml)'
+        )
         if filename:
             with open(filename, 'w') as f:
                 yaml.safe_dump(parameter_dict, f)
-                print(f"Successfully saved at {io.get_datetime()} under {filename}")
+                print(f'Successfully saved at {io.get_datetime()} under {filename}')
 
     def run_function_threaded(self):
         args = self.get_analysis_args()
@@ -804,15 +834,17 @@ class FuncExternalWindow(gui_widgets.MinMaxDialog):
 
 
 class PairedFuncExternalWindow(FuncExternalWindow):
-    __slots__ = {'pairs_group': 'widget group for picking file pairs',
-                 'pairs_grid': 'layout for widget group',
-                 'pairs_widgets': 'widgets for picking file pairs'}
+    __slots__ = {
+        'pairs_group': 'widget group for picking file pairs',
+        'pairs_grid': 'layout for widget group',
+        'pairs_widgets': 'widgets for picking file pairs',
+    }
     EXCLUDED_PARAMS = {'r1_files', 'r2_files'}
 
     def __init__(self, func_name: str, func: Callable, help_link: Union[str, None], excluded_params: set, parent=None):
         super().__init__(func_name, func, help_link, excluded_params, parent=parent)
 
-        self.pairs_group = QtWidgets.QGroupBox("2. Choose FASTQ file pairs")
+        self.pairs_group = QtWidgets.QGroupBox('2. Choose FASTQ file pairs')
         self.pairs_grid = QtWidgets.QGridLayout(self.pairs_group)
         self.pairs_widgets = {}
 
@@ -828,8 +860,8 @@ class PairedFuncExternalWindow(FuncExternalWindow):
 
         self.pairs_grid.addWidget(self.pairs_widgets['r1_files'], 1, 0)
         self.pairs_grid.addWidget(self.pairs_widgets['r2_files'], 1, 1)
-        self.pairs_grid.addWidget(QtWidgets.QLabel("<b>R1 files:</b>"), 0, 0)
-        self.pairs_grid.addWidget(QtWidgets.QLabel("<b>R2 files:</b>"), 0, 1)
+        self.pairs_grid.addWidget(QtWidgets.QLabel('<b>R1 files:</b>'), 0, 0)
+        self.pairs_grid.addWidget(QtWidgets.QLabel('<b>R2 files:</b>'), 0, 1)
 
     def get_analysis_kwargs(self):
         kwargs = super().get_analysis_kwargs()
@@ -902,9 +934,10 @@ class StatusBar(QtWidgets.QStatusBar):
             remaining_time = elapsed_time * self.progbar_total
         else:
             remaining_time = (elapsed_time / self.progbar_completed_items) * abs(
-                self.progbar_total - self.progbar_completed_items)
-        self.elapsed_label.setText(f"{generic.format_time(elapsed_time)} elapsed ")
-        self.remaining_label.setText(f"{generic.format_time(remaining_time)} remaining ")
+                self.progbar_total - self.progbar_completed_items
+            )
+        self.elapsed_label.setText(f'{generic.format_time(elapsed_time)} elapsed ')
+        self.remaining_label.setText(f'{generic.format_time(remaining_time)} remaining ')
         self.elapsed_label.setVisible(True)
         self.remaining_label.setVisible(True)
 
@@ -966,11 +999,13 @@ class TaskQueueWindow(gui_widgets.MinMaxDialog):
 
 
 class ApplyTablePipelineWindow(gui_widgets.MinMaxDialog):
-    __slots__ = {'available_objects': 'available objects',
-                 'layout': 'layout',
-                 'label': 'main label of the window',
-                 'button_box': 'button box for accept/cancel buttons',
-                 'list': 'multiple choice list for choosing objects to apply to'}
+    __slots__ = {
+        'available_objects': 'available objects',
+        'layout': 'layout',
+        'label': 'main label of the window',
+        'button_box': 'button box for accept/cancel buttons',
+        'list': 'multiple choice list for choosing objects to apply to',
+    }
 
     def __init__(self, available_objects: dict, parent=None):
         super().__init__(parent)
@@ -978,10 +1013,11 @@ class ApplyTablePipelineWindow(gui_widgets.MinMaxDialog):
         self.layout = QtWidgets.QVBoxLayout(self)
         self.label = QtWidgets.QLabel('Choose the tables you wish to apply your Pipeline to', self)
         self.button_box = QtWidgets.QDialogButtonBox(
-            QtWidgets.QDialogButtonBox.StandardButton.Ok | QtWidgets.QDialogButtonBox.StandardButton.Cancel)
-        self.list = gui_widgets.MultipleChoiceList(self.available_objects,
-                                                   [val[1] for val in self.available_objects.values()],
-                                                   self)
+            QtWidgets.QDialogButtonBox.StandardButton.Ok | QtWidgets.QDialogButtonBox.StandardButton.Cancel
+        )
+        self.list = gui_widgets.MultipleChoiceList(
+            self.available_objects, [val[1] for val in self.available_objects.values()], self
+        )
 
         self.init_ui()
 
@@ -1000,12 +1036,13 @@ class ApplyTablePipelineWindow(gui_widgets.MinMaxDialog):
 class ReportGenerationMessageBox(QtWidgets.QMessageBox):  # pragma: no cover
     def __init__(self, parent=None):
         super().__init__(parent=parent)
-        self.setWindowTitle("Report Generation")
-        self.setText("Do you want to enable report generation for this session?\n"
-                     "(this will slow down the program slightly)")
+        self.setWindowTitle('Report Generation')
+        self.setText(
+            'Do you want to enable report generation for this session?\n(this will slow down the program slightly)'
+        )
 
-        self.yes_button = self.addButton(QtWidgets.QPushButton("Yes"), QtWidgets.QMessageBox.ButtonRole.YesRole)
-        self.no_button = self.addButton(QtWidgets.QPushButton("No"), QtWidgets.QMessageBox.ButtonRole.NoRole)
+        self.yes_button = self.addButton(QtWidgets.QPushButton('Yes'), QtWidgets.QMessageBox.ButtonRole.YesRole)
+        self.no_button = self.addButton(QtWidgets.QPushButton('No'), QtWidgets.QMessageBox.ButtonRole.NoRole)
 
         self.checkbox = QtWidgets.QCheckBox("Don't ask me again")
         self.setCheckBox(self.checkbox)
@@ -1041,8 +1078,9 @@ class ReactiveHeaderView(QtWidgets.QHeaderView):
         for name in settings.get_databases_settings():
             action = QtGui.QAction(f'Search "{value}" on {name}')
             self.db_actions.append(action)
-            open_url_partial = functools.partial(QtGui.QDesktopServices.openUrl,
-                                                 QtCore.QUrl(f'{databases[name]}{value}'))
+            open_url_partial = functools.partial(
+                QtGui.QDesktopServices.openUrl, QtCore.QUrl(f'{databases[name]}{value}')
+            )
             action.triggered.connect(open_url_partial)
             self.context_menu.addAction(action)
 
@@ -1086,8 +1124,9 @@ class ReactiveListWidget(QtWidgets.QListWidget):
         for name in settings.get_databases_settings():
             action = QtGui.QAction(f'Search "{value}" on {name}')
             self.db_actions.append(action)
-            open_url_partial = functools.partial(QtGui.QDesktopServices.openUrl,
-                                                 QtCore.QUrl(f'{databases[name]}{value}'))
+            open_url_partial = functools.partial(
+                QtGui.QDesktopServices.openUrl, QtCore.QUrl(f'{databases[name]}{value}')
+            )
             action.triggered.connect(open_url_partial)
             self.context_menu.addAction(action)
 

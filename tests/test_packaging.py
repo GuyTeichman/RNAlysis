@@ -6,6 +6,7 @@ custom grammar (the old ``pkg>=x: tag`` format) makes that job fail with an ``In
 error. These tests pin both properties: the file parses as pip requirements, and ``setup.py``'s
 ``get_extra_requires`` still maps every feature tag to the right package(s).
 """
+
 import importlib.util
 from pathlib import Path
 
@@ -55,8 +56,9 @@ def test_requirements_extra_is_valid_pip_syntax():
 def test_get_extra_requires_maps_features_to_packages():
     """Each feature tag resolves to its intended package(s)."""
     get_extra_requires = _load_get_extra_requires()
-    extras = {tag: {Requirement(dep).name for dep in deps}
-              for tag, deps in get_extra_requires(str(EXTRAS_FILE)).items()}
+    extras = {
+        tag: {Requirement(dep).name for dep in deps} for tag, deps in get_extra_requires(str(EXTRAS_FILE)).items()
+    }
 
     for tag, expected_packages in EXPECTED_FEATURES.items():
         assert extras.get(tag) == expected_packages, f'feature {tag!r} maps to the wrong package(s)'

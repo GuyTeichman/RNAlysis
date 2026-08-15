@@ -18,6 +18,7 @@ names, so renaming a public parameter (say ``filter_low_reads(threshold=...)`` t
 breaks previously-exported Pipelines at apply time without failing this test. Extending the
 manifest to each function's parameter names would close that half of the hole.
 """
+
 import types
 import warnings
 from pathlib import Path
@@ -78,14 +79,18 @@ def collect_public_api() -> dict:
     """
     api = {}
     for namespace_name, cls in MANIFEST_CLASSES.items():
-        api[namespace_name] = sorted(name for name in dir(cls)
-                                     if not name.startswith('_') and not hasattr(object, name))
+        api[namespace_name] = sorted(
+            name for name in dir(cls) if not name.startswith('_') and not hasattr(object, name)
+        )
     for namespace_name, module in MANIFEST_MODULES.items():
-        api[namespace_name] = sorted(name for name in dir(module)
-                                     if not name.startswith('_')
-                                     and name not in EXCLUDED_NAMES
-                                     and isinstance(getattr(module, name), types.FunctionType)
-                                     and getattr(module, name).__module__ == module.__name__)
+        api[namespace_name] = sorted(
+            name
+            for name in dir(module)
+            if not name.startswith('_')
+            and name not in EXCLUDED_NAMES
+            and isinstance(getattr(module, name), types.FunctionType)
+            and getattr(module, name).__module__ == module.__name__
+        )
     return api
 
 
@@ -121,17 +126,23 @@ def test_public_api_manifest_has_no_renames_or_removals():
         if missing:
             removed[namespace_name] = missing
 
-    added = {namespace_name: sorted(set(names) - set(manifest.get(namespace_name, [])))
-             for namespace_name, names in live.items()}
+    added = {
+        namespace_name: sorted(set(names) - set(manifest.get(namespace_name, [])))
+        for namespace_name, names in live.items()
+    }
     added = {namespace_name: names for namespace_name, names in added.items() if names}
 
     if added and not removed:
-        warnings.warn(f"New public API names are missing from '{MANIFEST_PATH.name}': {added}. "
-                      f"Please regenerate the manifest with 'python -m tests.test_api_manifest'.")
+        warnings.warn(
+            f"New public API names are missing from '{MANIFEST_PATH.name}': {added}. "
+            f"Please regenerate the manifest with 'python -m tests.test_api_manifest'."
+        )
 
-    assert not removed, (f"{_RENAME_INSTRUCTIONS}\n"
-                         f"Public API names that disappeared: {removed}\n"
-                         f"Public API names that were added (a likely rename target): {added or 'none'}")
+    assert not removed, (
+        f'{_RENAME_INSTRUCTIONS}\n'
+        f'Public API names that disappeared: {removed}\n'
+        f'Public API names that were added (a likely rename target): {added or "none"}'
+    )
 
 
 def test_public_api_manifest_excludes_environment_dependent_names(monkeypatch):
@@ -149,9 +160,10 @@ def test_public_api_manifest_excludes_environment_dependent_names(monkeypatch):
 
 def test_public_api_manifest_covers_every_namespace():
     manifest = load_manifest()
-    assert set(manifest.keys()) == set(collect_public_api().keys()), \
-        ("The public API manifest does not cover the same namespaces as the live API. "
-         "Regenerate it with 'python -m tests.test_api_manifest'.")
+    assert set(manifest.keys()) == set(collect_public_api().keys()), (
+        'The public API manifest does not cover the same namespaces as the live API. '
+        "Regenerate it with 'python -m tests.test_api_manifest'."
+    )
 
 
 # --- meta-tests: the tripwire itself must actually trip -----------------------------------------

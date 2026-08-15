@@ -36,55 +36,59 @@ def test_create_legend(report_generator):
 
 
 def test_add_node(report_generator):
-    report_generator.add_node("test", 1)
+    report_generator.add_node('test', 1)
     assert len(report_generator.graph.nodes) == 10
 
 
 def test_add_duplicate_node(report_generator):
-    report_generator.add_node("Test Node", 1, [0], "Popup Element", "Other table")
-    report_generator.add_node("Test Node", 1, [0], "Popup Element", "Other table")
+    report_generator.add_node('Test Node', 1, [0], 'Popup Element', 'Other table')
+    report_generator.add_node('Test Node', 1, [0], 'Popup Element', 'Other table')
     assert report_generator.graph.number_of_nodes() == 10
     assert report_generator.graph.number_of_edges() == 1
 
 
 def test_add_inactive_node(report_generator):
-    report_generator.add_node("Test Node", 1, [0], "Popup Element", "Other table")
+    report_generator.add_node('Test Node', 1, [0], 'Popup Element', 'Other table')
     assert report_generator.graph.number_of_nodes() == 10
     assert report_generator.graph.number_of_edges() == 1
     report_generator.trim_node(1)
     assert report_generator.graph.number_of_nodes() == 9
     assert report_generator.graph.number_of_edges() == 0
-    report_generator.add_node("Test Node", 1, [0], "Popup Element", "Other table")
+    report_generator.add_node('Test Node', 1, [0], 'Popup Element', 'Other table')
     assert report_generator.graph.number_of_nodes() == 10
     assert report_generator.graph.number_of_edges() == 1
 
 
 def test_add_inactive_predecessor(report_generator):
     report_generator.nodes[0].set_active(False)
-    report_generator.add_node("Test Node", 1, [0], "Popup Element", "Other table")
+    report_generator.add_node('Test Node', 1, [0], 'Popup Element', 'Other table')
     assert report_generator.graph.number_of_nodes() == 10
     assert report_generator.graph.number_of_edges() == 1
 
 
 def test_trim_node(report_generator):
-    report_generator.add_node("test", 1)
+    report_generator.add_node('test', 1)
     report_generator.trim_node(1)
     assert len(report_generator.graph.nodes) == 9
 
 
 def test_trim_function(report_generator):
-    report_generator.add_node("Test Node", 1, [0], "Popup Element", "Function")
-    report_generator.add_node("Test Node 2", 2, [1], "Popup Element", "Other table")
+    report_generator.add_node('Test Node', 1, [0], 'Popup Element', 'Function')
+    report_generator.add_node('Test Node 2', 2, [1], 'Popup Element', 'Other table')
     report_generator.trim_node(2)
     assert report_generator.graph.number_of_nodes() == 9
     assert report_generator.graph.number_of_edges() == 0
 
 
-@pytest.mark.parametrize('show_settings,title,fontsize,hierarchical_layout',
-                         [(True, 'Test Title', 18, True),
-                          (False, 'auto', 32, True),
-                          (True, 'auto', 16, False),
-                          (True, 'Test Title2', 24, True)])
+@pytest.mark.parametrize(
+    'show_settings,title,fontsize,hierarchical_layout',
+    [
+        (True, 'Test Title', 18, True),
+        (False, 'auto', 32, True),
+        (True, 'auto', 16, False),
+        (True, 'Test Title2', 24, True),
+    ],
+)
 def test_modify_html(report_generator, show_settings, title, fontsize, hierarchical_layout):
     html = report_generator._report_from_nx(show_settings, title, hierarchical_layout).generate_html()
     modified_html = report_generator._modify_html(html, title, fontsize)

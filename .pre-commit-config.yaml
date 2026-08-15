@@ -11,6 +11,14 @@
 # CI (.github/workflows/pre-commit.yml) runs these same hooks on every pull request, scoped to
 # just the files the PR changed (`pre-commit run --from-ref <base> --to-ref <head>`) — NOT
 # `--all-files`, since the repo-wide sweep above hasn't happened yet.
+#
+# `exclude` below keeps every hook off content that must not be hand-normalized:
+#   - docs/build/       : ~600 MB of committed, generated Sphinx HTML, regenerated at release time.
+#   - docs/source/rnalysis.*.rst : sphinx-apidoc-generated per-function stubs (see CLAUDE.md: "don't
+#     hand-edit them") — same story, regenerated on every docs build.
+#   - tests/test_files/ : test fixtures and "truth" reference files compared verbatim by tests;
+#     normalizing their line endings/whitespace risks silently changing what a test asserts against.
+exclude: '^(docs/build/|docs/source/rnalysis\..*\.rst$|tests/test_files/)'
 
 default_language_version:
   python: python3

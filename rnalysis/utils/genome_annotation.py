@@ -11,6 +11,7 @@ and attribute values are pulled out column-wise with anchored regular expression
 :func:`parse_gtf_attributes` / :func:`parse_gff3_attributes` are kept here (and re-exported from
 ``utils.parsing`` for backwards compatibility) but are no longer on the hot path.
 """
+
 import re
 import warnings
 from pathlib import Path
@@ -50,7 +51,7 @@ def parse_gtf_attributes(attr_str: str):
         key = this_attr[:key_end]
         val_start = this_attr.find('"', key_end)
         val_end = this_attr.find('"', val_start + 1)
-        val = this_attr[val_start + 1:val_end]
+        val = this_attr[val_start + 1 : val_end]
         attributes_dict[key] = val
     return attributes_dict
 
@@ -112,10 +113,13 @@ def _scan_annotation_lines(path: Union[str, Path]) -> pl.LazyFrame:
     rule themselves. ``quote_char=None`` keeps the literal ``"`` characters of GTF values intact. ``scan_csv``
     transparently reads gzip-compressed (``.gz``) files.
     """
-    return (pl.scan_csv(path, separator=_LINE_SEP, has_header=False, comment_prefix='#',
-                        quote_char=None, schema={'raw': pl.String})
-            .with_columns(pl.col('raw').str.split('\t').alias('_fields'))
-            .with_columns(pl.col('_fields').list.len().alias('_n')))
+    return (
+        pl.scan_csv(
+            path, separator=_LINE_SEP, has_header=False, comment_prefix='#', quote_char=None, schema={'raw': pl.String}
+        )
+        .with_columns(pl.col('raw').str.split('\t').alias('_fields'))
+        .with_columns(pl.col('_fields').list.len().alias('_n'))
+    )
 
 
 def _load_annotation_fields(path: Union[str, Path]) -> pl.DataFrame:
@@ -131,8 +135,10 @@ def _load_annotation_fields(path: Union[str, Path]) -> pl.DataFrame:
     # they don't inflate the warning to thousands of "malformed" lines on a real genome annotation.
     n_malformed = df.filter((pl.col('_n') != _N_COLUMNS) & (pl.col('_n') > 1)).height
     if n_malformed:
-        warnings.warn(f'Skipped {n_malformed} malformed line(s) in the annotation file '
-                      f'(expected {_N_COLUMNS} tab-separated columns).')
+        warnings.warn(
+            f'Skipped {n_malformed} malformed line(s) in the annotation file '
+            f'(expected {_N_COLUMNS} tab-separated columns).'
+        )
     return df.filter(pl.col('_n') == _N_COLUMNS)
 
 
@@ -144,11 +150,15 @@ def _read_annotation_records(path: Union[str, Path], file_type: Literal['gtf', '
     gene, for transcript/mRNA rows) and ``_parents`` (List[str] of parent transcript ids, for exon rows). For GFF3,
     SO-term ``type:`` prefixes are stripped from IDs so they match a user's count table.
     """
-    base = _load_annotation_fields(path).lazy().select(
-        pl.col('_fields').list.get(_FEATURE_IDX).alias('feature'),
-        pl.col('_fields').list.get(_START_IDX).cast(pl.Int64).alias('start'),
-        pl.col('_fields').list.get(_END_IDX).cast(pl.Int64).alias('end'),
-        pl.col('_fields').list.get(_ATTR_IDX).alias('_attr'),
+    base = (
+        _load_annotation_fields(path)
+        .lazy()
+        .select(
+            pl.col('_fields').list.get(_FEATURE_IDX).alias('feature'),
+            pl.col('_fields').list.get(_START_IDX).cast(pl.Int64).alias('start'),
+            pl.col('_fields').list.get(_END_IDX).cast(pl.Int64).alias('end'),
+            pl.col('_fields').list.get(_ATTR_IDX).alias('_attr'),
+        )
     )
     if file_type == 'gtf':
         records = base.with_columns(
@@ -159,8 +169,12 @@ def _read_annotation_records(path: Union[str, Path], file_type: Literal['gtf', '
         records = base.with_columns(
             _strip_so_prefix(_extract_gff3_attribute(pl.col('_attr'), 'ID')).alias('_transcript'),
             _strip_so_prefix(_extract_gff3_attribute(pl.col('_attr'), 'Parent')).alias('_gene'),
-        ).with_columns(_extract_gff3_attribute(pl.col('_attr'), 'Parent').str.split(',')
-                       .list.eval(_strip_so_prefix(pl.element())).alias('_parents'))
+        ).with_columns(
+            _extract_gff3_attribute(pl.col('_attr'), 'Parent')
+            .str.split(',')
+            .list.eval(_strip_so_prefix(pl.element()))
+            .alias('_parents')
+        )
     return records.collect()
 
 
@@ -170,8 +184,9 @@ _GENE_BIOTYPE_FAMILY = ('gene_biotype', 'gene_type', 'biotype')
 _TRANSCRIPT_BIOTYPE_FAMILY = ('transcript_biotype', 'transcript_type', 'biotype')
 
 
-def _resolve_attribute_name(fields: pl.DataFrame, file_type: Literal['gtf', 'gff3'], attribute: str,
-                            feature_type: str) -> str:
+def _resolve_attribute_name(
+    fields: pl.DataFrame, file_type: Literal['gtf', 'gff3'], attribute: str, feature_type: str
+) -> str:
     """Resolve a biotype attribute across its naming-convention family (#152 hybrid alias resolution).
 
     If ``attribute`` is a member of :data:`BIOTYPE_ATTRIBUTE_NAMES` (e.g. the default ``gene_biotype``) but is
@@ -186,8 +201,9 @@ def _resolve_attribute_name(fields: pl.DataFrame, file_type: Literal['gtf', 'gff
     candidates = [attribute] + [name for name in family if name != attribute]
     extract = _extract_gtf_attribute if file_type == 'gtf' else _extract_gff3_attribute
     attr_col = pl.col('_fields').list.get(_ATTR_IDX)
-    present = fields.lazy().select(
-        [extract(attr_col, name).is_not_null().any().alias(name) for name in candidates]).collect()
+    present = (
+        fields.lazy().select([extract(attr_col, name).is_not_null().any().alias(name) for name in candidates]).collect()
+    )
     for name in candidates:
         if present[name][0]:
             return name
@@ -203,8 +219,9 @@ def _sum_exon_lengths_per_parent(exons: pl.DataFrame) -> dict:
     return dict(zip(grouped['_parents'].to_list(), grouped['_length'].to_list()))
 
 
-def map_transcripts_to_genes(gtf_path: Union[str, Path], use_name: bool = False, use_version: bool = True,
-                             split_ids: bool = True):
+def map_transcripts_to_genes(
+    gtf_path: Union[str, Path], use_name: bool = False, use_version: bool = True, split_ids: bool = True
+):
     file_type = validation.validate_genome_annotation_file(gtf_path)
 
     fields = _load_annotation_fields(gtf_path)  # drops malformed lines, warning once
@@ -242,10 +259,14 @@ def map_transcripts_to_genes(gtf_path: Union[str, Path], use_name: bool = False,
         # a version suffix is appended only when BOTH transcript_version and gene_version are present
         both_versions = pl.col('transcript_version').is_not_null() & pl.col('gene_version').is_not_null()
         transcripts = transcripts.with_columns(
-            pl.when(both_versions).then(pl.col('transcript_id') + '.' + pl.col('transcript_version'))
-            .otherwise(pl.col('transcript_id')).alias('transcript_id'),
-            pl.when(both_versions).then(pl.col('gene_id') + '.' + pl.col('gene_version'))
-            .otherwise(pl.col('gene_id')).alias('gene_id'),
+            pl.when(both_versions)
+            .then(pl.col('transcript_id') + '.' + pl.col('transcript_version'))
+            .otherwise(pl.col('transcript_id'))
+            .alias('transcript_id'),
+            pl.when(both_versions)
+            .then(pl.col('gene_id') + '.' + pl.col('gene_version'))
+            .otherwise(pl.col('gene_id'))
+            .alias('gene_id'),
         )
     if use_name:
         transcripts = transcripts.filter(pl.col('gene_name').is_not_null())
@@ -254,15 +275,25 @@ def map_transcripts_to_genes(gtf_path: Union[str, Path], use_name: bool = False,
         value = pl.col('gene_id')
 
     # first-wins on duplicate transcript ids (e.g. WormBase ids collapsed by split_ids)
-    result = transcripts.select(pl.col('transcript_id').alias('key'), value.alias('val')).unique(
-        subset=['key'], keep='first', maintain_order=True).collect()
+    result = (
+        transcripts.select(pl.col('transcript_id').alias('key'), value.alias('val'))
+        .unique(subset=['key'], keep='first', maintain_order=True)
+        .collect()
+    )
     return dict(zip(result['key'].to_list(), result['val'].to_list()))
 
 
-def get_genomic_feature_lengths(gtf_path: Union[str, Path], feature_type: Literal['gene', 'transcript'],
-                                method: Literal[LEGAL_GENE_LENGTH_METHODS]):
-    method_funcs = {'mean': np.mean, 'median': np.median, 'max': np.max, 'min': np.min, 'geometric_mean': gmean,
-                    'merged_exons': None}
+def get_genomic_feature_lengths(
+    gtf_path: Union[str, Path], feature_type: Literal['gene', 'transcript'], method: Literal[LEGAL_GENE_LENGTH_METHODS]
+):
+    method_funcs = {
+        'mean': np.mean,
+        'median': np.median,
+        'max': np.max,
+        'min': np.min,
+        'geometric_mean': gmean,
+        'merged_exons': None,
+    }
     if feature_type not in ('gene', 'transcript'):
         raise InvalidValueError(f"Illegal feature_type: '{feature_type}'")
     if method not in method_funcs:
@@ -274,7 +305,8 @@ def get_genomic_feature_lengths(gtf_path: Union[str, Path], feature_type: Litera
     transcript_rows = records.filter(pl.col('feature').is_in(('transcript', 'mRNA')))
     transcripts_to_genes = dict(zip(transcript_rows['_transcript'].to_list(), transcript_rows['_gene'].to_list()))
     exons = records.filter(pl.col('feature') == 'exon').with_columns(
-        (pl.col('end') - pl.col('start') + 1).alias('_length'))
+        (pl.col('end') - pl.col('start') + 1).alias('_length')
+    )
 
     if feature_type == 'transcript':
         warnings.warn("Since feature_type='transcript', the method parameter is ignored. ")
@@ -286,8 +318,7 @@ def get_genomic_feature_lengths(gtf_path: Union[str, Path], feature_type: Litera
         for parents, start, end in exons.select('_parents', 'start', 'end').iter_rows():
             gene_id = transcripts_to_genes[parents[0]]
             gene_intervals.setdefault(gene_id, []).append((start, end))
-        return {gene_id: generic.sum_intervals_inclusive(intervals)
-                for gene_id, intervals in gene_intervals.items()}
+        return {gene_id: generic.sum_intervals_inclusive(intervals) for gene_id, intervals in gene_intervals.items()}
 
     # average the per-transcript lengths within each gene, per the chosen method
     transcript_lengths = _sum_exon_lengths_per_parent(exons)
@@ -305,8 +336,9 @@ def get_genomic_feature_lengths(gtf_path: Union[str, Path], feature_type: Litera
     return avg_gene_lengths
 
 
-def map_gene_to_attr(gtf_path: Union[str, Path], attribute: str, feature_type: str, use_name: bool, use_version: bool,
-                     split_ids: bool):
+def map_gene_to_attr(
+    gtf_path: Union[str, Path], attribute: str, feature_type: str, use_name: bool, use_version: bool, split_ids: bool
+):
     file_type = validation.validate_genome_annotation_file(gtf_path)
     if feature_type not in {'gene', 'transcript'}:
         raise InvalidValueError(f"Invalid feature_type: '{feature_type}'")
@@ -318,20 +350,25 @@ def map_gene_to_attr(gtf_path: Union[str, Path], attribute: str, feature_type: s
     return _map_gene_to_attr_gff3(fields, attribute, feature_type, use_name, split_ids)
 
 
-def _map_gene_to_attr_gtf(fields: pl.DataFrame, attribute: str, feature_type: str, use_name: bool, use_version: bool,
-                          split_ids: bool) -> dict:
+def _map_gene_to_attr_gtf(
+    fields: pl.DataFrame, attribute: str, feature_type: str, use_name: bool, use_version: bool, split_ids: bool
+) -> dict:
     # extract everything the reduction below reads, one row per line, in file order
-    rows = fields.lazy().with_columns(
-        pl.col('_fields').list.get(_ATTR_IDX).alias('_attr')).select(
-        _attr_value_expr(pl.col('_fields'), attribute, 'gtf').alias('attr_value'),
-        _extract_gtf_attribute(pl.col('_attr'), 'gene_id').alias('gene_id'),
-        _extract_gtf_attribute(pl.col('_attr'), 'transcript_id').alias('transcript_id'),
-        _extract_gtf_attribute(pl.col('_attr'), 'gene_version').alias('gene_version'),
-        _extract_gtf_attribute(pl.col('_attr'), 'transcript_version').alias('transcript_version'),
-        _extract_gtf_attribute(pl.col('_attr'), 'gene_name').alias('gene_name'),
-        _extract_gtf_attribute(pl.col('_attr'), 'transcript_name').alias('transcript_name'),
-        _extract_gtf_attribute(pl.col('_attr'), 'name').alias('name'),
-    ).collect()
+    rows = (
+        fields.lazy()
+        .with_columns(pl.col('_fields').list.get(_ATTR_IDX).alias('_attr'))
+        .select(
+            _attr_value_expr(pl.col('_fields'), attribute, 'gtf').alias('attr_value'),
+            _extract_gtf_attribute(pl.col('_attr'), 'gene_id').alias('gene_id'),
+            _extract_gtf_attribute(pl.col('_attr'), 'transcript_id').alias('transcript_id'),
+            _extract_gtf_attribute(pl.col('_attr'), 'gene_version').alias('gene_version'),
+            _extract_gtf_attribute(pl.col('_attr'), 'transcript_version').alias('transcript_version'),
+            _extract_gtf_attribute(pl.col('_attr'), 'gene_name').alias('gene_name'),
+            _extract_gtf_attribute(pl.col('_attr'), 'transcript_name').alias('transcript_name'),
+            _extract_gtf_attribute(pl.col('_attr'), 'name').alias('name'),
+        )
+        .collect()
+    )
 
     mapping = {}
     for row in rows.iter_rows(named=True):
@@ -373,24 +410,31 @@ def _map_gene_to_attr_gtf(fields: pl.DataFrame, attribute: str, feature_type: st
     return mapping
 
 
-def _map_gene_to_attr_gff3(fields: pl.DataFrame, attribute: str, feature_type: str, use_name: bool,
-                           split_ids: bool) -> dict:
+def _map_gene_to_attr_gff3(
+    fields: pl.DataFrame, attribute: str, feature_type: str, use_name: bool, split_ids: bool
+) -> dict:
     # In GFF3 the attribute lives on the feature it describes: gene-level attrs on 'gene' rows, transcript-level
     # attrs on transcript rows. The feature id is that row's own (prefix-stripped) ID. GFF3 has no *_version attrs.
     role_features = ('gene',) if feature_type == 'gene' else TRANSCRIPT_FEATURE_NAMES
     attr_col = pl.col('_fields').list.get(_ATTR_IDX)
-    rows = fields.lazy().filter(
-        pl.col('_fields').list.get(_FEATURE_IDX).is_in(role_features)).select(
-        _attr_value_expr(pl.col('_fields'), attribute, 'gff3').alias('attr_value'),
-        _strip_so_prefix(_extract_gff3_attribute(attr_col, 'ID')).alias('feature_id'),
-        _extract_gff3_attribute(attr_col, 'Name').alias('name'),
-    ).collect()
+    rows = (
+        fields.lazy()
+        .filter(pl.col('_fields').list.get(_FEATURE_IDX).is_in(role_features))
+        .select(
+            _attr_value_expr(pl.col('_fields'), attribute, 'gff3').alias('attr_value'),
+            _strip_so_prefix(_extract_gff3_attribute(attr_col, 'ID')).alias('feature_id'),
+            _extract_gff3_attribute(attr_col, 'Name').alias('name'),
+        )
+        .collect()
+    )
 
     mapping = {}
     for row in rows.iter_rows(named=True):
         if row['attr_value'] is None:
             continue
-        if row['feature_id'] is None:  # a role row lacking an ID (e.g. a fixed-column read) -> skip, mirroring the GTF path
+        if (
+            row['feature_id'] is None
+        ):  # a role row lacking an ID (e.g. a fixed-column read) -> skip, mirroring the GTF path
             continue
         feature_id = row['feature_id'].split('.')[0] if split_ids else row['feature_id']
         if use_name:

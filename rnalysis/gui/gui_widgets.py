@@ -8,8 +8,7 @@ from decimal import Decimal
 from functools import lru_cache
 from pathlib import Path
 from queue import Queue
-from typing import (Callable, Dict, Iterable, List, Literal, Sequence, Tuple,
-                    Union)
+from typing import Callable, Dict, Iterable, List, Literal, Sequence, Tuple, Union
 
 import matplotlib
 import matplotlib.pyplot as plt
@@ -30,13 +29,15 @@ EMPTY = inspect._empty
 class TableColumnPicker(QtWidgets.QPushButton):
     valueChanged = QtCore.pyqtSignal()
     IS_MULTI_INPUT = True
-    __slots__ = {'dialog': 'dialog window of the widget',
-                 'dialog_table': 'table containing widgets inside the dialog window',
-                 'done_button': 'done button',
-                 'select_all_button': 'select all button',
-                 'clear_button': 'clear button',
-                 'column_labels': 'labels of the differenet columns',
-                 'column_checks': 'toggle switches of the different columns'}
+    __slots__ = {
+        'dialog': 'dialog window of the widget',
+        'dialog_table': 'table containing widgets inside the dialog window',
+        'done_button': 'done button',
+        'select_all_button': 'select all button',
+        'clear_button': 'clear button',
+        'column_labels': 'labels of the differenet columns',
+        'column_checks': 'toggle switches of the different columns',
+    }
 
     def __init__(self, text: str = 'Choose columns', parent=None):
         super().__init__(text, parent)
@@ -56,7 +57,7 @@ class TableColumnPicker(QtWidgets.QPushButton):
     def init_ui(self):
         self.clicked.connect(self.open_dialog)
 
-        self.dialog.setWindowTitle("Choose table columns")
+        self.dialog.setWindowTitle('Choose table columns')
 
         self.select_all_button.clicked.connect(self.select_all)
         self.dialog_layout.addWidget(self.select_all_button, 5, 0, 1, 2)
@@ -106,12 +107,13 @@ class TableColumnPicker(QtWidgets.QPushButton):
 
         screen_height = QtWidgets.QApplication.primaryScreen().size().height()
 
-        self.dialog_table.resize(self.dialog_table.horizontalHeader().length() +
-                                 self.dialog_table.verticalHeader().width(),
-                                 self.dialog_table.verticalHeader().length() +
-                                 self.dialog_table.horizontalHeader().height())
-        self.dialog.resize(self.dialog_table.size().width(),
-                           min(self.dialog_table.size().height(), int(screen_height * 0.75)))
+        self.dialog_table.resize(
+            self.dialog_table.horizontalHeader().length() + self.dialog_table.verticalHeader().width(),
+            self.dialog_table.verticalHeader().length() + self.dialog_table.horizontalHeader().height(),
+        )
+        self.dialog.resize(
+            self.dialog_table.size().width(), min(self.dialog_table.size().height(), int(screen_height * 0.75))
+        )
 
     def update_table(self):
         if self.dialog_table.rowCount() < len(self.columns):
@@ -146,7 +148,7 @@ class TableSingleColumnPicker(TableColumnPicker):
 
     def init_ui(self):
         super().init_ui()
-        self.dialog.setWindowTitle("Choose a table column")
+        self.dialog.setWindowTitle('Choose a table column')
         self.dialog_layout.removeWidget(self.select_all_button)
         self.select_all_button.deleteLater()
         self.dialog_layout.removeWidget(self.clear_button)
@@ -163,17 +165,19 @@ class TableSingleColumnPicker(TableColumnPicker):
     def value(self):
         picked_cols = super().value()
         if not (len(picked_cols) > 0):
-            raise InvalidValueError("Not enough columns were picked!")
+            raise InvalidValueError('Not enough columns were picked!')
         if not (len(picked_cols) < 2):
-            raise InvalidValueError("Too many columns were picked!")
+            raise InvalidValueError('Too many columns were picked!')
         return picked_cols[0]
 
 
 class TableColumnGroupPicker(TableColumnPicker):
-    __slots__ = {'column_combos': 'combo boxes for choosing column groups',
-                 'colors': 'list of colors for each row',
-                 'reset_button': 'button for resetting the selections',
-                 '_color_gen': 'generator for choosing row colors'}
+    __slots__ = {
+        'column_combos': 'combo boxes for choosing column groups',
+        'colors': 'list of colors for each row',
+        'reset_button': 'button for resetting the selections',
+        '_color_gen': 'generator for choosing row colors',
+    }
 
     def __init__(self, text: str = 'Choose columns', parent=None):
         self.column_combos: List[QtWidgets.QComboBox] = []
@@ -193,8 +197,11 @@ class TableColumnGroupPicker(TableColumnPicker):
     def set_row_color(self):
         groups = self._get_groups_in_use()
         for row in range(self.dialog_table.rowCount()):
-            color = self.colors[groups.index(self.column_combos[row].currentText())] if self.column_checks[
-                row].isChecked() else "#FFFFFF"
+            color = (
+                self.colors[groups.index(self.column_combos[row].currentText())]
+                if self.column_checks[row].isChecked()
+                else '#FFFFFF'
+            )
             for col in range(self.dialog_table.columnCount()):
                 self.dialog_table.item(row, col).setBackground(QtGui.QColor(color))
                 # self.column_combos[row].setStyleSheet("QComboBox {background-color: " + str(color) + "}")
@@ -216,19 +223,17 @@ class TableColumnGroupPicker(TableColumnPicker):
     def export_selection(self):
         value = self.value()
         default_name = 'selection.txt'
-        output_filename, _ = QtWidgets.QFileDialog.getSaveFileName(self, "Export selection",
-                                                                   str(Path.home().joinpath(default_name)),
-                                                                   "Text files (*.txt);;"
-                                                                   "All Files (*)")
+        output_filename, _ = QtWidgets.QFileDialog.getSaveFileName(
+            self, 'Export selection', str(Path.home().joinpath(default_name)), 'Text files (*.txt);;All Files (*)'
+        )
         if output_filename:
             with open(output_filename, 'w') as f:
                 json.dump(value, f)
 
     def import_selection(self):
-        input_filename, _ = QtWidgets.QFileDialog.getOpenFileName(self, "Import selection",
-                                                                  str(Path.home()),
-                                                                  "Text files (*.txt);;"
-                                                                  "All Files (*)")
+        input_filename, _ = QtWidgets.QFileDialog.getOpenFileName(
+            self, 'Import selection', str(Path.home()), 'Text files (*.txt);;All Files (*)'
+        )
         if input_filename:
             with open(input_filename) as f:
                 selection = json.load(f)
@@ -300,12 +305,14 @@ class TableColumnGroupPicker(TableColumnPicker):
 
 
 class PathInputDialog(QtWidgets.QDialog):
-    __slots__ = {'message': 'default message to display',
-                 'layout': 'layout of the widget',
-                 'button_box': 'button box for accept/reject buttons',
-                 'path': 'path line edit widget'}
+    __slots__ = {
+        'message': 'default message to display',
+        'layout': 'layout of the widget',
+        'button_box': 'button box for accept/reject buttons',
+        'path': 'path line edit widget',
+    }
 
-    def __init__(self, message: str = "No prompt available", parent=None):
+    def __init__(self, message: str = 'No prompt available', parent=None):
         super().__init__(parent)
         self.message = message
         self.layout = QtWidgets.QVBoxLayout(self)
@@ -347,15 +354,18 @@ class JobCounter(QtCore.QObject):
 
 
 class WorkerOutput:
-    __slots__ = {'partial': 'partial function executed in the Worker',
-                 'emit_args': "arguments to emit alongside the partial function's output",
-                 'result': 'result of the worker',
-                 'job_id': 'job ID',
-                 'predecessor_ids': 'predecessor IDs',
-                 'raised_exception': 'indicates if an exception was raised'}
+    __slots__ = {
+        'partial': 'partial function executed in the Worker',
+        'emit_args': "arguments to emit alongside the partial function's output",
+        'result': 'result of the worker',
+        'job_id': 'job ID',
+        'predecessor_ids': 'predecessor IDs',
+        'raised_exception': 'indicates if an exception was raised',
+    }
 
-    def __init__(self, result, partial: functools.partial, job_id: int, predecessor_ids: List[int], *args_to_emit,
-                 err=None):
+    def __init__(
+        self, result, partial: functools.partial, job_id: int, predecessor_ids: List[int], *args_to_emit, err=None
+    ):
         self.result = result
         self.partial = partial
         self.job_id = job_id
@@ -366,19 +376,23 @@ class WorkerOutput:
     def __eq__(self, other):
         if type(self) is not type(other):
             return False
-        return self.result == other.result and \
-            self.partial == other.partial and \
-            self.job_id == other.job_id and \
-            self.predecessor_ids == other.predecessor_ids and \
-            self.emit_args == other.emit_args and \
-            self.raised_exception == other.raised_exception
+        return (
+            self.result == other.result
+            and self.partial == other.partial
+            and self.job_id == other.job_id
+            and self.predecessor_ids == other.predecessor_ids
+            and self.emit_args == other.emit_args
+            and self.raised_exception == other.raised_exception
+        )
 
 
 class Worker(QtCore.QObject):
     finished = QtCore.pyqtSignal(WorkerOutput)
     startProgBar = QtCore.pyqtSignal(object)
-    __slots__ = {'partial': 'partial function to run in the Worker',
-                 'emit_args': "arguments to emit alongside the partial function's output"}
+    __slots__ = {
+        'partial': 'partial function to run in the Worker',
+        'emit_args': "arguments to emit alongside the partial function's output",
+    }
 
     def __init__(self, partial: functools.partial, job_id: int, predecessor_ids: List[int], *emit_args):
         self.partial = partial
@@ -407,8 +421,9 @@ class AltTQDM(QtCore.QObject):
     barFinished = QtCore.pyqtSignal()
     __slots__ = {'tqdm': 'underlying tqdm object/progress bar'}
 
-    def __init__(self, iter_obj: Iterable = None, desc: str = '', unit: str = '',
-                 bar_format: str = '', total: int = None):
+    def __init__(
+        self, iter_obj: Iterable = None, desc: str = '', unit: str = '', bar_format: str = '', total: int = None
+    ):
         self.tqdm = tqdm(iter_obj, desc=desc, unit=unit, bar_format=bar_format, total=total)
         super().__init__()
 
@@ -433,14 +448,17 @@ class AltParallel(QtCore.QObject):
     barUpdate = QtCore.pyqtSignal(int)
     barTotalUpdate = QtCore.pyqtSignal(int)
     barFinished = QtCore.pyqtSignal()
-    __slots__ = {'parallel': 'underlying Parallel object',
-                 'desc': 'progress bar description',
-                 'total': 'progreess bar total',
-                 'prev_total': 'previous bar total',
-                 'prev_report': 'last sent update of bar progress'}
+    __slots__ = {
+        'parallel': 'underlying Parallel object',
+        'desc': 'progress bar description',
+        'total': 'progreess bar total',
+        'prev_total': 'previous bar total',
+        'prev_report': 'last sent update of bar progress',
+    }
 
-    def __init__(self, n_jobs: int = -1, total=None, desc: str = '', unit: str = 'it',
-                 bar_format: str = '', *args, **kwargs):
+    def __init__(
+        self, n_jobs: int = -1, total=None, desc: str = '', unit: str = 'it', bar_format: str = '', *args, **kwargs
+    ):
         kwargs['backend'] = 'multiprocessing'
         self.parallel = Parallel(*args, n_jobs=n_jobs, **kwargs)
         self.desc = desc
@@ -457,7 +475,7 @@ class AltParallel(QtCore.QObject):
 
     def update(self, n: int = 1):
         self.barUpdate.emit(n)
-        print(f"{self.desc}: finished {self.parallel.n_completed_tasks} of {self.prev_total} tasks\r")
+        print(f'{self.desc}: finished {self.parallel.n_completed_tasks} of {self.prev_total} tasks\r')
 
     def total_update(self, n: int):
         self.barTotalUpdate.emit(n)
@@ -499,7 +517,6 @@ def init_color_map_pixmap_cache():
 
 
 class ColorMapComboBox(QtWidgets.QComboBox):
-
     def __init__(self, default_choice: str, parent=None):
         super(ColorMapComboBox, self).__init__(parent)
         self.setIconSize(QtCore.QSize(100, 10))
@@ -512,10 +529,12 @@ class ColorMapComboBox(QtWidgets.QComboBox):
 
 
 class TextWithCopyButton(QtWidgets.QWidget):
-    __slots__ = {'text': 'text',
-                 'copy_button': 'copy button',
-                 'copied_label': 'label indicating when copy button was pressed',
-                 'layout': 'widget layout'}
+    __slots__ = {
+        'text': 'text',
+        'copy_button': 'copy button',
+        'copied_label': 'label indicating when copy button was pressed',
+        'layout': 'widget layout',
+    }
 
     def __init__(self, text: str, parent=None):
         super().__init__(parent)
@@ -546,6 +565,7 @@ class ToggleSwitchCore(QtWidgets.QPushButton):
     Based upon a StackOverflow response by the user Heike:
     https://stackoverflow.com/questions/56806987/switch-button-in-pyqt
     """
+
     stateChanged = QtCore.pyqtSignal(bool)
     RADIUS = 12
     WIDTH = 42
@@ -576,7 +596,7 @@ class ToggleSwitchCore(QtWidgets.QPushButton):
         self.state_changed()
 
     def paintEvent(self, event):
-        label = " True" if self.isChecked() else "False"
+        label = ' True' if self.isChecked() else 'False'
         if self.isChecked():
             # warm gold for the "on" state - a highlight/active accent that harmonizes with the
             # RNAlysis red/black logo without reading as an error or a warning. Paired with the
@@ -599,9 +619,9 @@ class ToggleSwitchCore(QtWidgets.QPushButton):
         painter = QtGui.QPainter(self)
         painter.setRenderHint(QtGui.QPainter.RenderHint.Antialiasing)
         painter.translate(center)
-        painter.setBrush(QtGui.QColor("#cccccc"))
+        painter.setBrush(QtGui.QColor('#cccccc'))
 
-        pen = QtGui.QPen(QtGui.QColor("#222228"))
+        pen = QtGui.QPen(QtGui.QColor('#222228'))
         pen.setWidth(self.BORDER)
         painter.setPen(pen)
 
@@ -616,8 +636,7 @@ class ToggleSwitchCore(QtWidgets.QPushButton):
 
 class ToggleSwitch(QtWidgets.QWidget):
     IS_CHECK_BOX_LIKE = True
-    __slots__ = {'switch': 'toggle switch core',
-                 'layout': 'widget layout'}
+    __slots__ = {'switch': 'toggle switch core', 'layout': 'widget layout'}
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -635,11 +654,13 @@ class ToggleSwitch(QtWidgets.QWidget):
 class ComboBoxOrOtherWidget(QtWidgets.QWidget):
     IS_COMBO_BOX_LIKE = True
     OTHER_TEXT = 'Other...'
-    __slots__ = {'layout': 'layout',
-                 'combo': 'Literals combo box',
-                 'items': 'combo box items',
-                 'other': 'other widget',
-                 'default': 'default_value'}
+    __slots__ = {
+        'layout': 'layout',
+        'combo': 'Literals combo box',
+        'items': 'combo box items',
+        'other': 'other widget',
+        'default': 'default_value',
+    }
 
     def __init__(self, items: Tuple[str, ...], other: QtWidgets.QWidget, default: str = None, parent=None):
         super().__init__(parent)
@@ -689,8 +710,7 @@ class ComboBoxOrOtherWidget(QtWidgets.QWidget):
 
 
 class HelpButton(QtWidgets.QToolButton):
-    __slots__ = {'param_name': 'name of the parameter',
-                 'desc': 'description of the parameter'}
+    __slots__ = {'param_name': 'name of the parameter', 'desc': 'description of the parameter'}
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -705,7 +725,7 @@ class HelpButton(QtWidgets.QToolButton):
     def set_param_help(self, param_name: str, desc: str):
         self.param_name = param_name
         self.desc = desc
-        self.setToolTip(f"<b>{self.param_name}:</b> <br>{self.desc}")
+        self.setToolTip(f'<b>{self.param_name}:</b> <br>{self.desc}')
 
     def mouseReleaseEvent(self, event: QtGui.QMouseEvent):
         super().mouseReleaseEvent(event)
@@ -715,16 +735,18 @@ class HelpButton(QtWidgets.QToolButton):
 
 class ColorPicker(QtWidgets.QWidget):
     IS_LINE_EDIT_LIKE = True
-    __slots__ = {'picker_window': 'color picker dialog',
-                 'layout': 'widget layout',
-                 'pick_button': 'button for opening dialog',
-                 'color_line': 'text edit containing the color name/hex code'}
+    __slots__ = {
+        'picker_window': 'color picker dialog',
+        'layout': 'widget layout',
+        'pick_button': 'button for opening dialog',
+        'color_line': 'text edit containing the color name/hex code',
+    }
 
     def __init__(self, default: Union[str, None] = None, parent=None):
         super().__init__(parent)
         self.picker_window = QtWidgets.QColorDialog(self)
         self.layout = QtWidgets.QGridLayout(self)
-        self.pick_button = QtWidgets.QPushButton("Pick color", self)
+        self.pick_button = QtWidgets.QPushButton('Pick color', self)
         self.color_line = QtWidgets.QLineEdit(self)
         self.init_ui()
 
@@ -750,8 +772,9 @@ class ColorPicker(QtWidgets.QWidget):
         try:
             color = self.text()
             text_color = matplotlib.colors.to_hex(
-                [abs(i - j) for i, j in zip(matplotlib.colors.to_rgb('white'), matplotlib.colors.to_rgb(color))])
-            self.color_line.setStyleSheet("QLineEdit {background : " + color + "; \ncolor : " + text_color + ";}")
+                [abs(i - j) for i, j in zip(matplotlib.colors.to_rgb('white'), matplotlib.colors.to_rgb(color))]
+            )
+            self.color_line.setStyleSheet('QLineEdit {background : ' + color + '; \ncolor : ' + text_color + ';}')
         except ValueError:
             pass
 
@@ -767,12 +790,14 @@ class ColorPicker(QtWidgets.QWidget):
 
 
 class MultipleChoiceList(QtWidgets.QWidget):
-    __slots__ = {'layout': 'layout',
-                 'items': 'list items',
-                 'list': 'list widget',
-                 'select_all_button': 'select all button',
-                 'clear_all_button': 'clear all button',
-                 'current_layout_row': 'current bottom-most row in the layout'}
+    __slots__ = {
+        'layout': 'layout',
+        'items': 'list items',
+        'list': 'list widget',
+        'select_all_button': 'select all button',
+        'clear_all_button': 'clear all button',
+        'current_layout_row': 'current bottom-most row in the layout',
+    }
 
     def __init__(self, items: Sequence, icons: Sequence = None, parent=None):
         super().__init__(parent)
@@ -859,9 +884,12 @@ class MultiChoiceListWithDelete(MultipleChoiceList):
             self.itemDeleted.emit(row)
 
     def delete_all(self):
-        accepted = QtWidgets.QMessageBox.question(self, f"{self.delete_text.capitalize()} all items?",
-                                                  f"Are you sure you want to {self.delete_text} all items?",
-                                                  QtWidgets.QMessageBox.StandardButton.Yes | QtWidgets.QMessageBox.StandardButton.No)
+        accepted = QtWidgets.QMessageBox.question(
+            self,
+            f'{self.delete_text.capitalize()} all items?',
+            f'Are you sure you want to {self.delete_text} all items?',
+            QtWidgets.QMessageBox.StandardButton.Yes | QtWidgets.QMessageBox.StandardButton.No,
+        )
         if accepted == QtWidgets.QMessageBox.StandardButton.Yes:
             for n_item in reversed(range(len(self.items))):
                 self.itemDeleted.emit(n_item)
@@ -875,11 +903,13 @@ class MultiChoiceListWithDelete(MultipleChoiceList):
 
 class MultiChoiceListWithReorder(MultipleChoiceList):
     itemOrderChanged = QtCore.pyqtSignal()
-    __slots__ = {'top_button': 'send to top',
-                 'up_button': 'send up',
-                 'down_button': 'send down',
-                 'bottm_button': 'send to bottom',
-                 'reorder_label': 'label'}
+    __slots__ = {
+        'top_button': 'send to top',
+        'up_button': 'send up',
+        'down_button': 'send down',
+        'bottm_button': 'send to bottom',
+        'reorder_label': 'label',
+    }
 
     def __init__(self, items: Sequence, icons: Sequence = None, parent=None):
         super().__init__(items, icons, parent)
@@ -960,8 +990,7 @@ class MultiChoiceListWithDeleteReorder(MultiChoiceListWithReorder, MultiChoiceLi
 
 
 class FileListWidgetItem(QtWidgets.QListWidgetItem):
-    __slots__ = {'file_path': 'path of the file',
-                 'display_name': 'display name of the file path'}
+    __slots__ = {'file_path': 'path of the file', 'display_name': 'display name of the file path'}
 
     def __init__(self, file_path, parent=None):
         self.file_path = file_path
@@ -982,7 +1011,7 @@ class OrderedFileList(MultiChoiceListWithDeleteReorder):
         self.layout.addWidget(self.add_files_button, 0, 1)
 
     def add_files(self):
-        filenames, _ = QtWidgets.QFileDialog.getOpenFileNames(self, "Load fastq files")
+        filenames, _ = QtWidgets.QFileDialog.getOpenFileNames(self, 'Load fastq files')
         if filenames:
             self.add_items(filenames)
 
@@ -1020,12 +1049,12 @@ class MandatoryComboBox(QtWidgets.QComboBox):
 
     def set_bg_color(self):
         if self.is_legal():
-            self.setStyleSheet("MandatoryComboBox{border: 1.5px solid #57C4AD;}")
+            self.setStyleSheet('MandatoryComboBox{border: 1.5px solid #57C4AD;}')
         else:
-            self.setStyleSheet("MandatoryComboBox{border: 1.5px solid #DB4325;}")
+            self.setStyleSheet('MandatoryComboBox{border: 1.5px solid #DB4325;}')
 
     def disable_bg_color(self):
-        self.setStyleSheet("MandatoryComboBox{}")
+        self.setStyleSheet('MandatoryComboBox{}')
 
     def is_legal(self):
         return self.currentText() != self.default_choice
@@ -1057,7 +1086,8 @@ class GeneSetComboBox(MandatoryComboBox):
     def update_gene_sets(self, available_objects: Dict[str, Tuple[QtWidgets.QWidget, QtGui.QIcon]]):
         # if the gene sets didn't change, don't do anything
         if available_objects.keys() == self.available_objects.keys() and [item[0] for item in available_objects] == [
-            item[0] for item in self.available_objects]:
+            item[0] for item in self.available_objects
+        ]:
             return
         # clear the previous list of gene sets, and add the current available gene sets to the list
         self.clear()
@@ -1092,24 +1122,22 @@ class MinMaxDialog(QtWidgets.QDialog):
 
 class TrueFalseBoth(QtWidgets.QWidget):
     IS_MULTI_INPUT = True
-    STYLESHEET = '''QPushButton::checked {background-color : green;
+    STYLESHEET = """QPushButton::checked {background-color : green;
             color: white;
             border: 1px solid #32ba32;
-            border-radius: 4px;}'''
+            border-radius: 4px;}"""
     selectionChanged = QtCore.pyqtSignal()
-    __slots__ = {'layout': 'layout',
-                 'true_button': 'True button',
-                 'false_button': 'False button'}
+    __slots__ = {'layout': 'layout', 'true_button': 'True button', 'false_button': 'False button'}
 
     def __init__(self, default=None, parent=None):
         super().__init__(parent)
         self.layout = QtWidgets.QHBoxLayout(self)
-        self.true_button = QtWidgets.QPushButton("True")
+        self.true_button = QtWidgets.QPushButton('True')
         self.true_button.setCheckable(True)
         self.true_button.setMinimumSize(90, 30)
         self.true_button.setStyleSheet(self.STYLESHEET)
 
-        self.false_button = QtWidgets.QPushButton("False")
+        self.false_button = QtWidgets.QPushButton('False')
         self.false_button.setCheckable(True)
         self.false_button.setMinimumSize(90, 30)
         self.false_button.setStyleSheet(self.STYLESHEET)
@@ -1142,16 +1170,24 @@ class TrueFalseBoth(QtWidgets.QWidget):
 class PathLineEdit(QtWidgets.QWidget):
     IS_LINE_EDIT_LIKE = True
     textChanged = QtCore.pyqtSignal(bool)
-    __slots__ = {'file_path': 'line edit',
-                 'open_button': 'open button',
-                 'is_file': 'is the current text pointing to an exisintg file',
-                 'file_types': 'file types',
-                 '_is_legal': 'is the current path legal',
-                 '_full_path': 'the full, unelided path - the value returned by text()',
-                 'layout': 'layout'}
+    __slots__ = {
+        'file_path': 'line edit',
+        'open_button': 'open button',
+        'is_file': 'is the current text pointing to an exisintg file',
+        'file_types': 'file types',
+        '_is_legal': 'is the current path legal',
+        '_full_path': 'the full, unelided path - the value returned by text()',
+        'layout': 'layout',
+    }
 
-    def __init__(self, contents: str = 'auto', button_text: str = 'Load', is_file: bool = True,
-                 file_types: str = 'All Files (*)', parent=None):
+    def __init__(
+        self,
+        contents: str = 'auto',
+        button_text: str = 'Load',
+        is_file: bool = True,
+        file_types: str = 'All Files (*)',
+        parent=None,
+    ):
         super().__init__(parent)
         self.file_path = QtWidgets.QLineEdit('', self)
         self.open_button = QtWidgets.QPushButton(button_text, self)
@@ -1249,7 +1285,8 @@ class PathLineEdit(QtWidgets.QWidget):
     def _check_legality(self):
         current_path = self._full_path
         if (self.is_file and validation.is_legal_file_path(current_path)) or (
-            not self.is_file and validation.is_legal_dir_path(current_path)):
+            not self.is_file and validation.is_legal_dir_path(current_path)
+        ):
             self._is_legal = True
         else:
             self._is_legal = False
@@ -1258,12 +1295,12 @@ class PathLineEdit(QtWidgets.QWidget):
 
     def set_file_path_bg_color(self):
         if self.is_legal:
-            self.file_path.setStyleSheet("QLineEdit{border: 1.5px solid #57C4AD;}")
+            self.file_path.setStyleSheet('QLineEdit{border: 1.5px solid #57C4AD;}')
         else:
-            self.file_path.setStyleSheet("QLineEdit{border: 1.5px solid #DB4325;}")
+            self.file_path.setStyleSheet('QLineEdit{border: 1.5px solid #DB4325;}')
 
     def disable_bg_color(self):
-        self.file_path.setStyleSheet("QLineEdit{}")
+        self.file_path.setStyleSheet('QLineEdit{}')
 
     def setEnabled(self, to_enable: bool):
         self.setDisabled(not to_enable)
@@ -1276,12 +1313,12 @@ class PathLineEdit(QtWidgets.QWidget):
         super().setDisabled(to_disable)
 
     def choose_file(self):
-        filename, _ = QtWidgets.QFileDialog.getOpenFileName(self, "Choose a file", filter=self.file_types)
+        filename, _ = QtWidgets.QFileDialog.getOpenFileName(self, 'Choose a file', filter=self.file_types)
         if filename:
             self.setText(filename)
 
     def choose_folder(self):
-        dirname = QtWidgets.QFileDialog.getExistingDirectory(self, "Choose a folder")
+        dirname = QtWidgets.QFileDialog.getExistingDirectory(self, 'Choose a folder')
         if dirname:
             self.setText(dirname)
 
@@ -1313,9 +1350,7 @@ class StrIntLineEdit(QtWidgets.QLineEdit):
 
 class RadioButtonBox(QtWidgets.QGroupBox):
     selectionChanged = QtCore.pyqtSignal()
-    __slots__ = {'button_box': 'button group',
-                 'radio_layout': 'radio button layout',
-                 'radio_buttons': 'radio buttons'}
+    __slots__ = {'button_box': 'button group', 'radio_layout': 'radio button layout', 'radio_buttons': 'radio buttons'}
 
     def __init__(self, title: str, actions, is_flat=False, parent=None):
         super().__init__(title, parent)
@@ -1360,10 +1395,12 @@ class RadioButtonBox(QtWidgets.QGroupBox):
 
 
 class OptionalWidget(QtWidgets.QWidget):
-    __slots__ = {'layout': 'layout',
-                 'other': 'other widget',
-                 'default': 'default value',
-                 'checkbox': 'set-value checkbox'}
+    __slots__ = {
+        'layout': 'layout',
+        'other': 'other widget',
+        'default': 'default value',
+        'checkbox': 'set-value checkbox',
+    }
 
     def __init__(self, other: QtWidgets.QWidget, default=EMPTY, parent=None):
         super().__init__(parent)
@@ -1411,11 +1448,13 @@ class OptionalWidget(QtWidgets.QWidget):
 
 
 class DiffExpPickerGroup(QtWidgets.QWidget):
-    __slots__ = {'design_mat': 'design matrix',
-                 'widgets': 'widgets',
-                 'layout': 'layouts',
-                 'inputs': 'inputs',
-                 'input_labels': 'labels for inputs', }
+    __slots__ = {
+        'design_mat': 'design matrix',
+        'widgets': 'widgets',
+        'layout': 'layouts',
+        'inputs': 'inputs',
+        'input_labels': 'labels for inputs',
+    }
 
     def __init__(self, design_mat: pl.DataFrame, parent=None):
         super().__init__(parent)
@@ -1453,10 +1492,7 @@ class DiffExpPickerGroup(QtWidgets.QWidget):
 
 
 class CovariatePicker(QtWidgets.QWidget):
-    __slots__ = {'design_mat': 'design matrix',
-                 'layout': 'layout',
-                 'factor': 'factor',
-                 'factors_tpl': 'factors tuple'}
+    __slots__ = {'design_mat': 'design matrix', 'layout': 'layout', 'factor': 'factor', 'factors_tpl': 'factors tuple'}
 
     def __init__(self, design_mat: pl.DataFrame, parent=None):
         super().__init__(parent)
@@ -1503,12 +1539,14 @@ class CovariatePickerGroup(DiffExpPickerGroup):
 
 
 class LRTPicker(QtWidgets.QWidget):
-    __slots__ = {'design_mat': 'design matrix',
-                 'layout': 'layout',
-                 'factor': 'factor combo box',
-                 'factors': 'factors in the design matrix',
-                 'poly': 'polynomial terms',
-                 'interactions': 'interaction terms'}
+    __slots__ = {
+        'design_mat': 'design matrix',
+        'layout': 'layout',
+        'factor': 'factor combo box',
+        'factors': 'factors in the design matrix',
+        'poly': 'polynomial terms',
+        'interactions': 'interaction terms',
+    }
 
     def __init__(self, design_mat: pl.DataFrame, parent=None):
         super().__init__(parent)
@@ -1564,7 +1602,6 @@ class LRTPicker(QtWidgets.QWidget):
 
 
 class LRTPickerGroup(DiffExpPickerGroup):
-
     def init_ui(self):
         self.widgets['add_widget'] = QtWidgets.QPushButton('Add test')
         self.widgets['add_widget'].clicked.connect(self.add_comparison_widget)
@@ -1590,12 +1627,14 @@ class LRTPickerGroup(DiffExpPickerGroup):
 
 
 class ComparisonPicker(QtWidgets.QWidget):
-    __slots__ = {'design_mat': 'design matrix',
-                 'layout': 'layout',
-                 'factor': 'factor combo box',
-                 'numerator': 'numerator combo box',
-                 'denominator': 'denominator combo box',
-                 'factor_tpl': 'tuple of factors in the design matrix'}
+    __slots__ = {
+        'design_mat': 'design matrix',
+        'layout': 'layout',
+        'factor': 'factor combo box',
+        'numerator': 'numerator combo box',
+        'denominator': 'denominator combo box',
+        'factor_tpl': 'tuple of factors in the design matrix',
+    }
 
     def __init__(self, design_mat: pl.DataFrame, parent=None):
         super().__init__(parent)
@@ -1621,7 +1660,7 @@ class ComparisonPicker(QtWidgets.QWidget):
         if this_factor in self.factor_tpl:
             options = sorted({str(item) for item in self.design_mat[this_factor]})
         else:
-            options = ["Select a factor..."]
+            options = ['Select a factor...']
         self.numerator.clear()
         self.denominator.clear()
 
@@ -1640,7 +1679,6 @@ class ComparisonPicker(QtWidgets.QWidget):
 
 
 class ComparisonPickerGroup(DiffExpPickerGroup):
-
     def __init__(self, design_mat: pl.DataFrame, parent=None):
         super().__init__(design_mat, parent)
         self.add_comparison_widget()
@@ -1674,10 +1712,12 @@ class QMultiInput(QtWidgets.QPushButton):
     IS_MULTI_INPUT = True
     CHILD_QWIDGET = None
     valueChanged = QtCore.pyqtSignal()
-    __slots__ = {'label': 'multi widget label',
-                 'dialog_widgets': 'dict of the dialog widgets',
-                 'dialog_started': 'stores whether the dialog was already started >=1 times',
-                 'dialog_layout': 'layout of the dialog window'}
+    __slots__ = {
+        'label': 'multi widget label',
+        'dialog_widgets': 'dict of the dialog widgets',
+        'dialog_started': 'stores whether the dialog was already started >=1 times',
+        'dialog_layout': 'layout of the dialog window',
+    }
 
     def __init__(self, label: str = '', text='Choose values', parent=None):
         super().__init__(text, parent)
@@ -1727,7 +1767,8 @@ class QMultiInput(QtWidgets.QPushButton):
         self.dialog_layout.addWidget(self.dialog_widgets['inputs'][-1], len(self.dialog_widgets['inputs']) + 2, 1)
 
         self.dialog_widgets['input_labels'].append(
-            QtWidgets.QLabel(f'{self.label}:', self.dialog_widgets['inputs'][-1]))
+            QtWidgets.QLabel(f'{self.label}:', self.dialog_widgets['inputs'][-1])
+        )
         self.dialog_layout.addWidget(self.dialog_widgets['input_labels'][-1], len(self.dialog_widgets['inputs']) + 2, 0)
 
     @QtCore.pyqtSlot()
@@ -1770,8 +1811,7 @@ class MultiColorPicker(QMultiInput):
 
 
 class QMultiSpinBox(QMultiInput):
-    __slots__ = {'minimum': 'minimum value for spin boxes',
-                 'maximum': 'maximum value for spinboxes'}
+    __slots__ = {'minimum': 'minimum value for spin boxes', 'maximum': 'maximum value for spinboxes'}
     CHILD_QWIDGET = QtWidgets.QSpinBox
 
     def __init__(self, label: str = '', text='Choose values', parent=None, minimum=-2147483648, maximum=2147483647):
@@ -1792,13 +1832,22 @@ class QMultiSpinBox(QMultiInput):
 
 
 class QMultiDoubleSpinBox(QMultiSpinBox):
-    __slots__ = {'minimum': 'minimum value for spinboxes',
-                 'maximum': 'maximum value for spinboxes',
-                 'step_size': 'default step size of spinboxes'}
+    __slots__ = {
+        'minimum': 'minimum value for spinboxes',
+        'maximum': 'maximum value for spinboxes',
+        'step_size': 'default step size of spinboxes',
+    }
     CHILD_QWIDGET = QtWidgets.QDoubleSpinBox
 
-    def __init__(self, label: str = '', text='Choose values', parent=None, minimum=float("-inf"), maximum=float("inf"),
-                 step_size: float = 0.05):
+    def __init__(
+        self,
+        label: str = '',
+        text='Choose values',
+        parent=None,
+        minimum=float('-inf'),
+        maximum=float('inf'),
+        step_size: float = 0.05,
+    ):
         self.minimum = minimum
         self.maximum = maximum
         self.step_size = step_size
@@ -1831,7 +1880,7 @@ def float_spinbox_decimals_and_step(value: float) -> Tuple[int, float]:
         return 3, 0.1
     order = Decimal(str(v)).adjusted()  # order of magnitude of the first significant digit (< 0)
     decimals = min(2 - order, 8)
-    step = 10.0 ** order
+    step = 10.0**order
     return decimals, step
 
 
@@ -1852,7 +1901,7 @@ class AdaptiveDoubleSpinBox(QtWidgets.QDoubleSpinBox):
         if decimal_point in text:
             text = text.rstrip('0')
             if text.endswith(decimal_point):
-                text = text[:-len(decimal_point)]
+                text = text[: -len(decimal_point)]
         return text
 
 
@@ -1884,7 +1933,8 @@ class QMultiPathLineEdit(QMultiLineEdit):
         self.dialog_layout.addWidget(self.dialog_widgets['inputs'][-1], len(self.dialog_widgets['inputs']) + 2, 1)
 
         self.dialog_widgets['input_labels'].append(
-            QtWidgets.QLabel(f'{self.label}:', self.dialog_widgets['inputs'][-1]))
+            QtWidgets.QLabel(f'{self.label}:', self.dialog_widgets['inputs'][-1])
+        )
         self.dialog_layout.addWidget(self.dialog_widgets['input_labels'][-1], len(self.dialog_widgets['inputs']) + 2, 0)
 
 
@@ -1953,8 +2003,7 @@ class ThreadStdOutStreamTextQueueReceiver(QtCore.QObject):
 
 
 class StdOutTextEdit(QtWidgets.QTextEdit):
-    __slots__ = {'carriage': 'carriage',
-                 'prev_coord': 'previous coordinate'}
+    __slots__ = {'carriage': 'carriage', 'prev_coord': 'previous coordinate'}
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -1972,14 +2021,15 @@ class StdOutTextEdit(QtWidgets.QTextEdit):
         self.moveCursor(QtGui.QTextCursor.MoveOperation.End)
         if text == '\n':
             return
-        text = text.replace("<", "&lt;").replace(">", "&gt;")
+        text = text.replace('<', '&lt;').replace('>', '&gt;')
 
         if self.carriage:
             self.carriage = False
             diff = self.document().characterCount() - self.prev_coord
             cursor = self.textCursor()
-            cursor.movePosition(QtGui.QTextCursor.MoveOperation.PreviousCharacter,
-                                QtGui.QTextCursor.MoveMode.MoveAnchor, n=diff)
+            cursor.movePosition(
+                QtGui.QTextCursor.MoveOperation.PreviousCharacter, QtGui.QTextCursor.MoveMode.MoveAnchor, n=diff
+            )
             cursor.movePosition(QtGui.QTextCursor.MoveOperation.End, QtGui.QTextCursor.MoveMode.KeepAnchor)
             cursor.removeSelectedText()
 
@@ -2015,8 +2065,7 @@ class WriteStream(QtCore.QObject):
 
 
 class NewParam:
-    __slots__ = {'annotation': 'annotation',
-                 'default': 'default'}
+    __slots__ = {'annotation': 'annotation', 'default': 'default'}
 
     def __init__(self, annotation, default=EMPTY):
         self.annotation = annotation
@@ -2036,11 +2085,14 @@ def set_widget_value(widget: QtWidgets.QWidget, value):
         raise AttributeError(f'cannot set value for widget of type {type(widget)}.')
 
 
-def param_to_widget(param, name: str,
-                    actions_to_connect: Union[Iterable[Callable], Callable] = tuple(), pipeline_mode: bool = False):
-    column_annotations = {param_typing.GroupedColumns: TableColumnGroupPicker,
-                          param_typing.ColumnNames: TableColumnPicker,
-                          param_typing.ColumnName: TableSingleColumnPicker}
+def param_to_widget(
+    param, name: str, actions_to_connect: Union[Iterable[Callable], Callable] = tuple(), pipeline_mode: bool = False
+):
+    column_annotations = {
+        param_typing.GroupedColumns: TableColumnGroupPicker,
+        param_typing.ColumnNames: TableColumnPicker,
+        param_typing.ColumnName: TableSingleColumnPicker,
+    }
     actions_to_connect = parsing.data_to_tuple(actions_to_connect)
 
     if param.default == EMPTY:
@@ -2052,7 +2104,7 @@ def param_to_widget(param, name: str,
     if get_origin(param.annotation) == Union and type(None) in get_args(param.annotation):
         args = get_args(param.annotation)
         none_ind = args.index(type(None))
-        without_none = tuple(args[0:none_ind] + args[none_ind + 1:])
+        without_none = tuple(args[0:none_ind] + args[none_ind + 1 :])
         if param.default is None:
             this_default = None
             other_default = EMPTY
@@ -2061,7 +2113,8 @@ def param_to_widget(param, name: str,
             other_default = param.default
         widget = OptionalWidget(
             param_to_widget(NewParam(Union[without_none], other_default), name, actions_to_connect, pipeline_mode),
-            this_default)
+            this_default,
+        )
         for action in actions_to_connect:
             widget.toggled.connect(action)
 
@@ -2071,16 +2124,18 @@ def param_to_widget(param, name: str,
         args = get_args(param.annotation)
         literal_ind = [get_origin(ann) for ann in args].index(Literal)
         literal = args[literal_ind]
-        without_literal = tuple(args[0:literal_ind] + args[literal_ind + 1:])
+        without_literal = tuple(args[0:literal_ind] + args[literal_ind + 1 :])
         if param.default in get_args(literal):
             this_default = param.default
             other_default = EMPTY
         else:
             this_default = None
             other_default = param.default
-        widget = ComboBoxOrOtherWidget(get_args(literal),
-                                       param_to_widget(NewParam(Union[without_literal], other_default), name,
-                                                       actions_to_connect, pipeline_mode), this_default)
+        widget = ComboBoxOrOtherWidget(
+            get_args(literal),
+            param_to_widget(NewParam(Union[without_literal], other_default), name, actions_to_connect, pipeline_mode),
+            this_default,
+        )
         for action in actions_to_connect:
             widget.currentIndexChanged.connect(action)
 
@@ -2158,14 +2213,13 @@ def param_to_widget(param, name: str,
         for action in actions_to_connect:
             widget.valueChanged.connect(action)
 
-
     elif param.annotation is float:
         default = param.default if is_default else 0.0
         decimals, step = float_spinbox_decimals_and_step(default)
         widget = AdaptiveDoubleSpinBox()
         widget.setDecimals(decimals)
-        widget.setMinimum(float("-inf"))
-        widget.setMaximum(float("inf"))
+        widget.setMinimum(float('-inf'))
+        widget.setMaximum(float('inf'))
         widget.setSingleStep(step)
         widget.setValue(default)
         for action in actions_to_connect:
@@ -2225,8 +2279,10 @@ def param_to_widget(param, name: str,
         for action in actions_to_connect:
             widget.valueChanged.connect(action)
 
-    elif param.annotation in (Union[param_typing.Fraction, List[param_typing.Fraction]],
-                              Union[param_typing.Fraction, Iterable[param_typing.Fraction]]):
+    elif param.annotation in (
+        Union[param_typing.Fraction, List[param_typing.Fraction]],
+        Union[param_typing.Fraction, Iterable[param_typing.Fraction]],
+    ):
         widget = QMultiDoubleSpinBox(name, minimum=0, maximum=1, step_size=0.05)
         if is_default:
             widget.setValue(param.default)
@@ -2240,27 +2296,36 @@ def param_to_widget(param, name: str,
         for action in actions_to_connect:
             widget.valueChanged.connect(action)
 
-    elif param.annotation in (Union[param_typing.PositiveInt, List[param_typing.PositiveInt]],
-                              Union[param_typing.PositiveInt, Iterable[param_typing.PositiveInt]],
-                              List[param_typing.PositiveInt], Iterable[param_typing.PositiveInt]):
+    elif param.annotation in (
+        Union[param_typing.PositiveInt, List[param_typing.PositiveInt]],
+        Union[param_typing.PositiveInt, Iterable[param_typing.PositiveInt]],
+        List[param_typing.PositiveInt],
+        Iterable[param_typing.PositiveInt],
+    ):
         widget = QMultiSpinBox(name, minimum=1)
         if is_default:
             widget.setValue(param.default)
         for action in actions_to_connect:
             widget.valueChanged.connect(action)
 
-    elif param.annotation in (Union[param_typing.NonNegativeInt, List[param_typing.NonNegativeInt]],
-                              Union[param_typing.NonNegativeInt, Iterable[param_typing.NonNegativeInt]],
-                              List[param_typing.NonNegativeInt], Iterable[param_typing.NonNegativeInt]):
+    elif param.annotation in (
+        Union[param_typing.NonNegativeInt, List[param_typing.NonNegativeInt]],
+        Union[param_typing.NonNegativeInt, Iterable[param_typing.NonNegativeInt]],
+        List[param_typing.NonNegativeInt],
+        Iterable[param_typing.NonNegativeInt],
+    ):
         widget = QMultiSpinBox(name, minimum=0)
         if is_default:
             widget.setValue(param.default)
         for action in actions_to_connect:
             widget.valueChanged.connect(action)
 
-    elif param.annotation in (Union[param_typing.NegativeInt, List[param_typing.NegativeInt]],
-                              Union[param_typing.NegativeInt, Iterable[param_typing.NegativeInt]],
-                              List[param_typing.NegativeInt], Iterable[param_typing.NegativeInt]):
+    elif param.annotation in (
+        Union[param_typing.NegativeInt, List[param_typing.NegativeInt]],
+        Union[param_typing.NegativeInt, Iterable[param_typing.NegativeInt]],
+        List[param_typing.NegativeInt],
+        Iterable[param_typing.NegativeInt],
+    ):
         widget = QMultiSpinBox(name, maximum=-1)
         if is_default:
             widget.setValue(param.default)
@@ -2279,8 +2344,11 @@ def param_to_widget(param, name: str,
         for action in actions_to_connect:
             widget.textChanged.connect(action)
 
-    elif param.annotation in (Union[str, int, Iterable[str], Iterable[int]], Union[str, int, List[str], List[int]],
-                              Union[List[int], List[str]]):
+    elif param.annotation in (
+        Union[str, int, Iterable[str], Iterable[int]],
+        Union[str, int, List[str], List[int]],
+        Union[List[int], List[str]],
+    ):
         widget = QMultiStrIntLineEdit(name)
         widget.setValue(param.default if is_default else '')
         for action in actions_to_connect:
@@ -2294,8 +2362,10 @@ def param_to_widget(param, name: str,
         if is_default:
             widget.setText(str(param.default))
 
-    elif get_origin(param.annotation) in (collections.abc.Iterable, list, tuple, set) and get_origin(
-        get_args(param.annotation)[0]) == Literal:
+    elif (
+        get_origin(param.annotation) in (collections.abc.Iterable, list, tuple, set)
+        and get_origin(get_args(param.annotation)[0]) == Literal
+    ):
         widget = QMultiComboBox(name, items=get_args(get_args(param.annotation)[0]))
         if is_default:
             widget.setValue(param.default)
@@ -2335,7 +2405,7 @@ def get_val_from_widget(widget):
         try:
             val = widget.value()
         except AttributeError:
-            raise TypeError(f"Invalid QtWidget type {type(widget)}.")
+            raise TypeError(f'Invalid QtWidget type {type(widget)}.')
     return val
 
 
