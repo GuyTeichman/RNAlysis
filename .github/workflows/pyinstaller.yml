@@ -5,6 +5,11 @@ on:
         tags:
             - 'V*' #
     workflow_dispatch:
+        inputs:
+            beta:
+                description: 'Beta freeze smoke-test: build the standalone app only — no GitHub Release, no commits, no version bump. Produces downloadable run artifacts to test the PyInstaller freeze by hand.'
+                type: boolean
+                default: true
 
 env:
     HOMEBREW_NO_INSTALLED_DEPENDENTS_CHECK: 1
@@ -13,6 +18,10 @@ jobs:
 
     createrelease:
         name: Create Release
+        # Skipped for a beta freeze smoke-test (workflow_dispatch with beta=true): a beta must never
+        # commit to master or publish a Release. Tag pushes, and an explicit beta=false dispatch,
+        # still run the full release path below.
+        if: ${{ github.event_name != 'workflow_dispatch' || inputs.beta == false }}
         runs-on: ubuntu-latest
         permissions:
             contents: write
@@ -62,7 +71,14 @@ jobs:
     build:
         name: Build packages
         needs: createrelease
+        # Runs for both real releases and beta smoke-tests. always() lets it proceed when
+        # createrelease was skipped (a beta); it is still blocked if createrelease actually failed.
+        if: ${{ always() && needs.createrelease.result != 'failure' && needs.createrelease.result != 'cancelled' }}
         runs-on: ${{ matrix.os }}
+        # IS_BETA is the string 'true' only for a beta freeze-test dispatch; it flips the publish
+        # tail (upload to a Release) off and the run-artifact upload on, without touching the build.
+        env:
+            IS_BETA: ${{ github.event_name == 'workflow_dispatch' && inputs.beta }}
         strategy:
             matrix:
                 include:
@@ -136,19 +152,30 @@ jobs:
             - name: Build with pyinstaller for ${{ matrix.TARGET }}
               run: ${{ matrix.CMD_BUILD }}
 
+            - name: Upload beta artifact (freeze smoke-test)
+              if: ${{ env.IS_BETA == 'true' }}
+              uses: actions/upload-artifact@v7
+              with:
+                  name: RNAlysis-BETA-${{ matrix.TARGET }}-${{ github.sha }}
+                  path: ./dist/${{ matrix.OUT_FILE_NAME }}
+                  retention-days: 14
+
             - name: Load Release URL File from release job
+              if: ${{ env.IS_BETA != 'true' }}
               uses: actions/download-artifact@v8
               with:
                   name: release_url
                   path: release_url
 
             - name: Get Release File Name & Upload URL
+              if: ${{ env.IS_BETA != 'true' }}
               id: get_release_info
               run: |
                   value=$(cat release_url/release_url.txt)
                   echo "UPLOAD_URL=$value" >> $GITHUB_ENV
               shell: bash
             - name: Upload Release Asset
+              if: ${{ env.IS_BETA != 'true' }}
               id: upload-release-asset
               uses: softprops/action-gh-release@v3
               env:
