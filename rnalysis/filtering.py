@@ -3244,7 +3244,8 @@ class CountFilter(Filter):
 
     """
     _precomputed_metrics = clustering.ClusteringRunner.precomputed_metrics
-    _transforms = {'box-cox': generic.standard_box_cox, 'log': generic.standard_log, 'none': generic.standardize}
+    # (the old ``_transforms`` boolean->function map lived here; it had no callers, and
+    # ``generic.get_transform_function`` is now the single place that resolves a transform name.)
     #: file-name suffix each transform contributes. 'box-cox' keeps the historical 'powertransform' spelling
     #: (rather than its own name) so that re-running an existing analysis keeps writing to the same file name.
     _TRANSFORM_SUFFIXES = {'box-cox': 'powertransform', 'log': 'logtransform', 'none': ''}
