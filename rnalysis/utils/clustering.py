@@ -1197,7 +1197,8 @@ class CLICOMRunner(ClusteringRunner):
                         'hierarchical': HierarchicalRunner, 'agglomerative': HierarchicalRunner,
                         'hdbscan': HDBSCANRunner}
 
-    def __init__(self, data, replicate_grouping: List[List[str]], power_transform: Union[bool, str, List[Union[bool, str]]],
+    def __init__(self, data, replicate_grouping: List[List[str]],
+                 power_transform: Union[bool, str, List[Union[bool, str]]],
                  evidence_threshold: float, cluster_unclustered_features: bool, min_cluster_size: int,
                  *parameter_dicts: dict, plot_style: str = 'none', split_plots: bool = False, parallel_backend='loky'):
         self.clustering_solutions: list = []
