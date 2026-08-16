@@ -9,25 +9,35 @@ import matplotlib_venn
 import numpy as np
 import pandas as pd
 import upsetplot
-from PyQt6 import QtCore, QtGui
 from matplotlib import pyplot as plt
-from matplotlib.backends.backend_qtagg import (FigureCanvasQTAgg,
-                                               NavigationToolbar2QT)
+from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg, NavigationToolbar2QT
+from PyQt6 import QtCore, QtGui
 
 from rnalysis.utils import generic, parsing
 
-COLOR_ICONS = {'black': 'black_icon.png', 'green': 'green_icon.png', 'red': 'red_icon.png', 'white': 'white_icon.png',
-               'blue': 'blue_icon.png', 'grey': 'grey_icon.png', 'pink': 'pink_icon.png', 'orange': 'orange_icon.png',
-               'yellow': 'yellow_icon.png'}
-AVAILABLE_ICONS = {'CountFilter': 'countfilter_icon.png', 'DESeqFilter': 'deseqfilter_icon.png',
-                   'set': 'featureset_icon.png', 'Filter': 'filter_icon.png',
-                   'FoldChangeFilter': 'foldchangefilter_icon.png', }
+COLOR_ICONS = {
+    'black': 'black_icon.png',
+    'green': 'green_icon.png',
+    'red': 'red_icon.png',
+    'white': 'white_icon.png',
+    'blue': 'blue_icon.png',
+    'grey': 'grey_icon.png',
+    'pink': 'pink_icon.png',
+    'orange': 'orange_icon.png',
+    'yellow': 'yellow_icon.png',
+}
+AVAILABLE_ICONS = {
+    'CountFilter': 'countfilter_icon.png',
+    'DESeqFilter': 'deseqfilter_icon.png',
+    'set': 'featureset_icon.png',
+    'Filter': 'filter_icon.png',
+    'FoldChangeFilter': 'foldchangefilter_icon.png',
+}
 AVAILABLE_ICONS.update(COLOR_ICONS)
 
 
 class CleanPlotToolBar(NavigationToolbar2QT):
-    toolitems = [t for t in NavigationToolbar2QT.toolitems if
-                 t[0] in ('Home', 'Pan', 'Zoom')]
+    toolitems = [t for t in NavigationToolbar2QT.toolitems if t[0] in ('Home', 'Pan', 'Zoom')]
 
     def set_message(self, msg):
         pass
@@ -56,8 +66,12 @@ class BaseInteractiveCanvas(FigureCanvasQTAgg):
     HOVER_COLOR = (0.7, 0.7, 0.7)
     HOVER_SELECTED_COLOR = (0.7, 0.3, 1)
 
-    COLORMAP = {DESELECTED_STATE: DESELECTED_COLOR, SELECTED_STATE: SELECTED_COLOR, HOVER_STATE: HOVER_COLOR,
-                HOVER_SELECTED_STATE: HOVER_SELECTED_COLOR}
+    COLORMAP = {
+        DESELECTED_STATE: DESELECTED_COLOR,
+        SELECTED_STATE: SELECTED_COLOR,
+        HOVER_STATE: HOVER_COLOR,
+        HOVER_SELECTED_STATE: HOVER_SELECTED_COLOR,
+    }
 
     manualChoice = QtCore.pyqtSignal()
 
@@ -115,7 +129,7 @@ class BaseInteractiveCanvas(FigureCanvasQTAgg):
         raise NotImplementedError
 
     def draw(self):
-        self.fig.suptitle(f"{len(self.get_custom_selection())} selected genes")
+        self.fig.suptitle(f'{len(self.get_custom_selection())} selected genes')
         super().draw()
 
 
@@ -132,7 +146,7 @@ class VennInteractiveCanvas(BaseInteractiveCanvas):
             funcs = matplotlib_venn.venn3, matplotlib_venn.venn3_circles
             colors = (self.SELECTED_COLOR, self.SELECTED_COLOR, self.SELECTED_COLOR)
         else:
-            raise ValueError("Cannot process more than 3 sets!")
+            raise ValueError('Cannot process more than 3 sets!')
 
         self.venn = funcs[0](gene_sets.values(), gene_sets.keys(), set_colors=colors, ax=self.ax, alpha=1)
         self.venn_circles = funcs[1](gene_sets.values(), linestyle='solid', linewidth=2.0, ax=self.ax)
@@ -244,7 +258,7 @@ class VennInteractiveCanvas(BaseInteractiveCanvas):
     @QtCore.pyqtSlot()
     def intersection(self):
         self.clear_selection(draw=False)
-        self.select("1" * len(self.gene_sets), draw=False)
+        self.select('1' * len(self.gene_sets), draw=False)
         self.draw()
 
     @QtCore.pyqtSlot()
@@ -252,17 +266,17 @@ class VennInteractiveCanvas(BaseInteractiveCanvas):
         if len(self.gene_sets) != 2:
             return
         self.clear_selection(draw=False)
-        self.select("10", draw=False)
-        self.select("01", draw=False)
+        self.select('10', draw=False)
+        self.select('01', draw=False)
         self.draw()
 
     @QtCore.pyqtSlot(str)
     def difference(self, primary_set: str):
         self.clear_selection(draw=False)
         if primary_set in self.gene_sets:
-            key = ""
+            key = ''
             for set_name in self.gene_sets:
-                key += "1" if set_name == primary_set else "0"
+                key += '1' if set_name == primary_set else '0'
             self.select(key, draw=False)
         self.draw()
 
@@ -273,7 +287,7 @@ class VennInteractiveCanvas(BaseInteractiveCanvas):
                 self.union()
             elif (1 / 3) < majority_threshold <= (2 / 3):
                 self.clear_selection(draw=False)
-                for ind in ["111", "110", "101", "011"]:
+                for ind in ['111', '110', '101', '011']:
                     self.select(ind, draw=False)
                 self.draw()
             else:
@@ -306,7 +320,7 @@ class UpSetInteractiveCanvas(BaseInteractiveCanvas):
     def __init__(self, gene_sets: dict, parent=None):
         super().__init__(gene_sets, parent, constrained_layout=False)
         self.upset_df = parsing.generate_upset_series(gene_sets)
-        with pd.option_context("mode.copy_on_write", False):
+        with pd.option_context('mode.copy_on_write', False):
             self.upset = upsetplot.UpSet(self.upset_df, sort_by='degree', sort_categories_by=None)
             self.subset_states = {i: self.DESELECTED_STATE for i in range(len(self.upset.subset_styles))}
 
@@ -327,7 +341,7 @@ class UpSetInteractiveCanvas(BaseInteractiveCanvas):
 
     def draw(self):
         # update matrix
-        with pd.option_context("mode.copy_on_write", False):
+        with pd.option_context('mode.copy_on_write', False):
             matrix_ax = self.axes['matrix']
             matrix_ax.clear()
             self.upset.plot_matrix(matrix_ax)
@@ -432,7 +446,7 @@ class UpSetInteractiveCanvas(BaseInteractiveCanvas):
 
     @QtCore.pyqtSlot(float)
     def majority_vote_intersection(self, majority_threshold: float):
-        thresholds = [-float("inf")] + [(i + 1) * (1 / len(self.gene_sets)) for i in range(len(self.gene_sets))]
+        thresholds = [-float('inf')] + [(i + 1) * (1 / len(self.gene_sets)) for i in range(len(self.gene_sets))]
 
         self.clear_selection(draw=False)
         for i in range(len(self.gene_sets)):

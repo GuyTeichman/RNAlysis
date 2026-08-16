@@ -13,34 +13,36 @@ Two capabilities, both dependency-free (stdlib only) so the CI workflow needs no
 Both are best-effort: the pure text helpers are unit-tested (tests/test_contributors.py); the GitHub
 API calls degrade gracefully. Run ``python packaging/contributors.py --help`` for usage.
 """
+
 from __future__ import annotations
 
 import argparse
 import json
 import os
-import sys
 import re
+import sys
 import urllib.error
 import urllib.request
 from pathlib import Path
 from typing import Iterable, List, Tuple
 from urllib.parse import quote
 
-GITHUB_API = "https://api.github.com"
-DEFAULT_REPO = "GuyTeichman/RNAlysis"
-README_PATH = Path(__file__).resolve().parent.parent / "README.rst"
+GITHUB_API = 'https://api.github.com'
+DEFAULT_REPO = 'GuyTeichman/RNAlysis'
+README_PATH = Path(__file__).resolve().parent.parent / 'README.rst'
 
 # reStructuredText comment markers that bracket the auto-maintained contributor bullet list.
-CONTRIB_START = ".. contributors-list-start"
-CONTRIB_END = ".. contributors-list-end"
+CONTRIB_START = '.. contributors-list-start'
+CONTRIB_END = '.. contributors-list-end'
 
 # Logins to never auto-add (the maintainer is already credited as Development Lead).
-EXCLUDE_LOGINS = frozenset({"guyteichman"})
+EXCLUDE_LOGINS = frozenset({'guyteichman'})
 
-_HANDLE_RE = re.compile(r"github\.com/([A-Za-z0-9](?:[A-Za-z0-9-]*[A-Za-z0-9])?)", re.IGNORECASE)
+_HANDLE_RE = re.compile(r'github\.com/([A-Za-z0-9](?:[A-Za-z0-9-]*[A-Za-z0-9])?)', re.IGNORECASE)
 
 
 # --------------------------------------------------------------------------- pure text helpers
+
 
 def extract_existing_handles(region: str) -> set:
     """Return the lower-cased GitHub handles already linked in a chunk of text."""
@@ -48,7 +50,7 @@ def extract_existing_handles(region: str) -> set:
 
 
 def _contributor_bullet(login: str) -> str:
-    return f"* `{login} <https://github.com/{login}>`_"
+    return f'* `{login} <https://github.com/{login}>`_'
 
 
 def merge_contributor_bullets(readme_text: str, logins: Iterable[str]) -> Tuple[str, List[str]]:
@@ -63,8 +65,7 @@ def merge_contributor_bullets(readme_text: str, logins: Iterable[str]) -> Tuple[
         start = readme_text.index(CONTRIB_START)
         end = readme_text.index(CONTRIB_END, start)
     except ValueError as e:
-        raise ValueError(
-            f"README is missing the {CONTRIB_START!r} / {CONTRIB_END!r} markers") from e
+        raise ValueError(f'README is missing the {CONTRIB_START!r} / {CONTRIB_END!r} markers') from e
 
     existing = extract_existing_handles(readme_text[start:end])
 
@@ -80,9 +81,9 @@ def merge_contributor_bullets(readme_text: str, logins: Iterable[str]) -> Tuple[
     if not added:
         return readme_text, []
 
-    head = readme_text[:end].rstrip("\n")
-    new_bullets = "\n".join(_contributor_bullet(login) for login in added)
-    new_text = f"{head}\n{new_bullets}\n\n{readme_text[end:]}"
+    head = readme_text[:end].rstrip('\n')
+    new_bullets = '\n'.join(_contributor_bullet(login) for login in added)
+    new_text = f'{head}\n{new_bullets}\n\n{readme_text[end:]}'
     return new_text, added
 
 
@@ -90,32 +91,36 @@ def format_thanks(logins: Iterable[str]) -> str:
     """Return an rst 'Thanks to ...' line crediting *logins* (sorted, de-duplicated); '' if none."""
     uniq = sorted({login for login in logins if login}, key=str.lower)
     if not uniq:
-        return ""
-    links = ", ".join(f"`@{login} <https://github.com/{login}>`_" for login in uniq)
-    return f"Thanks to {links} for contributing to this release! \U0001f389"
+        return ''
+    links = ', '.join(f'`@{login} <https://github.com/{login}>`_' for login in uniq)
+    return f'Thanks to {links} for contributing to this release! \U0001f389'
 
 
 # --------------------------------------------------------------------------- GitHub API (best-effort)
 
+
 def _api_get(url: str, token: str | None = None):
-    req = urllib.request.Request(url, headers={
-        "Accept": "application/vnd.github+json",
-        "User-Agent": "rnalysis-contributors-script",
-        "X-GitHub-Api-Version": "2022-11-28",
-    })
+    req = urllib.request.Request(
+        url,
+        headers={
+            'Accept': 'application/vnd.github+json',
+            'User-Agent': 'rnalysis-contributors-script',
+            'X-GitHub-Api-Version': '2022-11-28',
+        },
+    )
     if token:
-        req.add_header("Authorization", f"Bearer {token}")
+        req.add_header('Authorization', f'Bearer {token}')
     with urllib.request.urlopen(req, timeout=30) as resp:
-        payload = json.loads(resp.read().decode("utf-8"))
-        link = resp.headers.get("Link", "")
+        payload = json.loads(resp.read().decode('utf-8'))
+        link = resp.headers.get('Link', '')
     return payload, link
 
 
 def _next_link(link_header: str) -> str | None:
-    for part in link_header.split(","):
-        section = part.split(";")
+    for part in link_header.split(','):
+        section = part.split(';')
         if len(section) >= 2 and 'rel="next"' in section[1]:
-            return section[0].strip().strip("<>")
+            return section[0].strip().strip('<>')
     return None
 
 
@@ -125,17 +130,17 @@ def fetch_all_contributor_logins(repo: str = DEFAULT_REPO, token: str | None = N
     Best-effort: on a network/HTTP error it warns and returns whatever was collected so far, so a
     transient API hiccup degrades to a no-op update rather than crashing the workflow.
     """
-    url = f"{GITHUB_API}/repos/{repo}/contributors?per_page=100&anon=0"
+    url = f'{GITHUB_API}/repos/{repo}/contributors?per_page=100&anon=0'
     logins: List[str] = []
     while url:
         try:
             data, link = _api_get(url, token)
         except urllib.error.URLError as e:
-            print(f"warning: fetching contributors failed ({e}); using partial results", file=sys.stderr)
+            print(f'warning: fetching contributors failed ({e}); using partial results', file=sys.stderr)
             break
         for c in data:
-            login = c.get("login")
-            if login and c.get("type") != "Bot" and not login.endswith("[bot]"):
+            login = c.get('login')
+            if login and c.get('type') != 'Bot' and not login.endswith('[bot]'):
                 logins.append(login)
         url = _next_link(link)
     return logins
@@ -143,30 +148,29 @@ def fetch_all_contributor_logins(repo: str = DEFAULT_REPO, token: str | None = N
 
 def get_previous_release_date(repo: str = DEFAULT_REPO, token: str | None = None) -> str | None:
     try:
-        data, _ = _api_get(f"{GITHUB_API}/repos/{repo}/releases/latest", token)
+        data, _ = _api_get(f'{GITHUB_API}/repos/{repo}/releases/latest', token)
     except urllib.error.URLError:
         return None
-    return data.get("published_at")
+    return data.get('published_at')
 
 
-def fetch_merged_pr_authors_since(since_iso: str, repo: str = DEFAULT_REPO,
-                                  token: str | None = None) -> List[str]:
+def fetch_merged_pr_authors_since(since_iso: str, repo: str = DEFAULT_REPO, token: str | None = None) -> List[str]:
     """Return logins of authors whose PRs merged after *since_iso* (excludes bots).
 
     Best-effort: on a network/HTTP error it warns and returns whatever was collected so far.
     """
-    q = quote(f"repo:{repo} is:pr is:merged merged:>{since_iso}")
-    url = f"{GITHUB_API}/search/issues?q={q}&per_page=100"
+    q = quote(f'repo:{repo} is:pr is:merged merged:>{since_iso}')
+    url = f'{GITHUB_API}/search/issues?q={q}&per_page=100'
     authors: List[str] = []
     while url:
         try:
             data, link = _api_get(url, token)
         except urllib.error.URLError as e:
-            print(f"warning: fetching merged PRs failed ({e}); using partial results", file=sys.stderr)
+            print(f'warning: fetching merged PRs failed ({e}); using partial results', file=sys.stderr)
             break
-        for pr in (data.get("items", []) if isinstance(data, dict) else []):
-            user = (pr.get("user") or {}).get("login")
-            if user and not user.endswith("[bot]"):
+        for pr in data.get('items', []) if isinstance(data, dict) else []:
+            user = (pr.get('user') or {}).get('login')
+            if user and not user.endswith('[bot]'):
                 authors.append(user)
         url = _next_link(link)
     return authors
@@ -174,46 +178,48 @@ def fetch_merged_pr_authors_since(since_iso: str, repo: str = DEFAULT_REPO,
 
 # --------------------------------------------------------------------------- CLI
 
+
 def main(argv=None) -> int:
-    parser = argparse.ArgumentParser(description=__doc__,
-                                     formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument("--repo", default=os.environ.get("GITHUB_REPOSITORY", DEFAULT_REPO))
-    parser.add_argument("--readme", default=str(README_PATH))
-    parser.add_argument("--since", help="ISO date for --emit-release-thanks (default: last release date)")
+    parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser.add_argument('--repo', default=os.environ.get('GITHUB_REPOSITORY', DEFAULT_REPO))
+    parser.add_argument('--readme', default=str(README_PATH))
+    parser.add_argument('--since', help='ISO date for --emit-release-thanks (default: last release date)')
     mode = parser.add_mutually_exclusive_group(required=True)
-    mode.add_argument("--update-readme", action="store_true",
-                      help="append missing GitHub contributors to README.rst")
-    mode.add_argument("--emit-release-thanks", action="store_true",
-                      help="print an rst 'Thanks to ...' block for PRs merged since the last release")
+    mode.add_argument('--update-readme', action='store_true', help='append missing GitHub contributors to README.rst')
+    mode.add_argument(
+        '--emit-release-thanks',
+        action='store_true',
+        help="print an rst 'Thanks to ...' block for PRs merged since the last release",
+    )
     args = parser.parse_args(argv)
 
-    token = os.environ.get("GITHUB_TOKEN") or os.environ.get("GH_TOKEN")
+    token = os.environ.get('GITHUB_TOKEN') or os.environ.get('GH_TOKEN')
 
     if args.update_readme:
-        logins = [login for login in fetch_all_contributor_logins(args.repo, token)
-                  if login.lower() not in EXCLUDE_LOGINS]
+        logins = [
+            login for login in fetch_all_contributor_logins(args.repo, token) if login.lower() not in EXCLUDE_LOGINS
+        ]
         readme = Path(args.readme)
-        new_text, added = merge_contributor_bullets(readme.read_text(encoding="utf-8"), logins)
+        new_text, added = merge_contributor_bullets(readme.read_text(encoding='utf-8'), logins)
         if added:
-            readme.write_text(new_text, encoding="utf-8")
-            print("Added contributors: " + ", ".join(added))
+            readme.write_text(new_text, encoding='utf-8')
+            print('Added contributors: ' + ', '.join(added))
         else:
-            print("No new contributors to add.")
+            print('No new contributors to add.')
         return 0
 
     since = args.since or get_previous_release_date(args.repo, token)
     if not since:
-        print("Could not determine the previous release date; pass --since YYYY-MM-DD.", file=sys.stderr)
+        print('Could not determine the previous release date; pass --since YYYY-MM-DD.', file=sys.stderr)
         return 1
-    authors = [a for a in fetch_merged_pr_authors_since(since, args.repo, token)
-               if a.lower() not in EXCLUDE_LOGINS]
+    authors = [a for a in fetch_merged_pr_authors_since(since, args.repo, token) if a.lower() not in EXCLUDE_LOGINS]
     thanks = format_thanks(authors)
     if thanks:
         print(thanks)
     else:
-        print(f"No merged pull requests found since {since}.", file=sys.stderr)
+        print(f'No merged pull requests found since {since}.', file=sys.stderr)
     return 0
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     raise SystemExit(main())

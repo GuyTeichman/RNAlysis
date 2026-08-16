@@ -1,10 +1,10 @@
 import pytest
 
-from rnalysis.exceptions import (InternalError, InvalidTypeError, InvalidValueError, RNAlysisError,
-                                 RNAlysisInputError)
+from rnalysis.exceptions import InternalError, InvalidTypeError, InvalidValueError, RNAlysisError, RNAlysisInputError
 
-BUG_REPORT_SUFFIX = ('This is likely a bug in RNAlysis - '
-                     'please report it at https://github.com/GuyTeichman/RNAlysis/issues')
+BUG_REPORT_SUFFIX = (
+    'This is likely a bug in RNAlysis - please report it at https://github.com/GuyTeichman/RNAlysis/issues'
+)
 
 
 def test_root_is_an_exception():
@@ -16,8 +16,9 @@ def test_everything_inherits_the_root(cls):
     assert issubclass(cls, RNAlysisError)
 
 
-@pytest.mark.parametrize('cls,builtin', [(InvalidTypeError, TypeError), (InvalidValueError, ValueError),
-                                         (InternalError, RuntimeError)])
+@pytest.mark.parametrize(
+    'cls,builtin', [(InvalidTypeError, TypeError), (InvalidValueError, ValueError), (InternalError, RuntimeError)]
+)
 def test_subclasses_inherit_matching_builtin(cls, builtin):
     assert issubclass(cls, builtin)
 
@@ -42,8 +43,7 @@ def test_message_is_preserved(cls):
     assert str(err) == 'some message'
 
 
-@pytest.mark.parametrize('cls', [RNAlysisError, RNAlysisInputError, InvalidTypeError, InvalidValueError,
-                                 InternalError])
+@pytest.mark.parametrize('cls', [RNAlysisError, RNAlysisInputError, InvalidTypeError, InvalidValueError, InternalError])
 def test_nothing_inherits_assertionerror(cls):
     """The exception-type change is a clean break: no compat shim through AssertionError."""
     assert not issubclass(cls, AssertionError)

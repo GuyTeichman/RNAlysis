@@ -130,7 +130,7 @@ def test_WelcomeWizard_do_not_show_again_finish(qtbot, monkeypatch):
     assert saved[0]
 
 
-@pytest.mark.parametrize("show", [True, False])
+@pytest.mark.parametrize('show', [True, False])
 def test_WelcomeWizard_do_not_show_again_cancel(qtbot, monkeypatch, show):
     saved = []
 

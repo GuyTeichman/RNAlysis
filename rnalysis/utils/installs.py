@@ -17,32 +17,33 @@ try:
 except ImportError:  # pragma: no cover
     warnings.warn("'install-jdk' not found. To use PicardTools, you would need to install JDK manually.")
 
-
     class jdk:  # pragma: no cover
         class JdkError(Exception):
             pass
 
         @staticmethod
         def install(version, *args, **kwargs):
-            warnings.warn("Cannot install JDK.")
+            warnings.warn('Cannot install JDK.')
+
 
 PICARD_JAR = Path(os.environ.get('PICARDTOOLS_JAR', io.get_data_dir().joinpath('picard.jar')))
-JDK_VERSION = "21"
+JDK_VERSION = '21'
 JDK_ROOT = io.get_data_dir().joinpath(f'jdk{JDK_VERSION}')
 
 
-def get_jdk_path()->Path:
+def get_jdk_path() -> Path:
     try:
         if platform.system() == 'Windows':
-            pattern = "java.exe"
+            pattern = 'java.exe'
         else:
-            pattern = "java"
+            pattern = 'java'
         # List all files and directories in the given directory
         items = os.listdir(JDK_ROOT)
         # Filter for directories starting with 'jdk-'
-        jdk_directories = sorted([item for item in items if
-                                  item.startswith('jdk-') and os.path.isdir(os.path.join(JDK_ROOT, item))],
-                                 reverse=True)
+        jdk_directories = sorted(
+            [item for item in items if item.startswith('jdk-') and os.path.isdir(os.path.join(JDK_ROOT, item))],
+            reverse=True,
+        )
         if len(jdk_directories) == 0:
             raise FileNotFoundError('No JDK directory found')
         base_dir = JDK_ROOT.joinpath(f'{jdk_directories[0]}')
@@ -56,6 +57,7 @@ def get_jdk_path()->Path:
         # find jdk installation in PATH
         return Path()
 
+
 def is_jdk_installed():
     try:
         if not JDK_ROOT.exists():
@@ -63,10 +65,10 @@ def is_jdk_installed():
         # Run the "java -version" command and capture the output
         jdk_path = get_jdk_path()
         output = subprocess.check_output(
-            [Path(jdk_path).joinpath("java").as_posix(), "-version"],
-            stderr=subprocess.STDOUT, text=True)
+            [Path(jdk_path).joinpath('java').as_posix(), '-version'], stderr=subprocess.STDOUT, text=True
+        )
         # Check if the output contains "version X" or "X." (for Java X)
-        if f"version {JDK_VERSION}" in output or f" {JDK_VERSION}." in output:
+        if f'version {JDK_VERSION}' in output or f' {JDK_VERSION}.' in output:
             return True
     except (subprocess.CalledProcessError, FileNotFoundError):
         # If the "java -version" command returns an error, Java X is not installed.
@@ -74,10 +76,12 @@ def is_jdk_installed():
     return False
 
 
-@tenacity.retry(retry=tenacity.retry_if_exception_type(jdk.JdkError),
-                stop=tenacity.stop_after_attempt(3),
-                wait=tenacity.wait_random_exponential(multiplier=1, max=30),
-                reraise=True)
+@tenacity.retry(
+    retry=tenacity.retry_if_exception_type(jdk.JdkError),
+    stop=tenacity.stop_after_attempt(3),
+    wait=tenacity.wait_random_exponential(multiplier=1, max=30),
+    reraise=True,
+)
 def _download_and_install_jdk():
     # the JDK is fetched from an external server (Adoptium -> GitHub release asset) that intermittently
     # drops connections; retry a few times before giving up so transient network blips don't fail the install.
@@ -86,7 +90,7 @@ def _download_and_install_jdk():
 
 def install_jdk():
     if not is_jdk_installed():
-        print("Installing Java...")
+        print('Installing Java...')
         if JDK_ROOT.exists():
             shutil.rmtree(JDK_ROOT)
         JDK_ROOT.mkdir(parents=True, exist_ok=True)
@@ -105,7 +109,7 @@ def is_picard_installed():
 def install_picard():
     install_jdk()
     if is_picard_installed():
-        print("Found Picard installation")
+        print('Found Picard installation')
         return
     picard_url = 'https://github.com/broadinstitute/picard/releases/latest/download/picard.jar'
     print(f'downloading picard.jar from {picard_url} to {PICARD_JAR}...')
@@ -114,8 +118,9 @@ def install_picard():
     print('Done')
 
 
-def _run_r_installer(script_name: str, package_name: str,
-                     r_installation_folder: Union[str, Path, Literal['auto']] = 'auto'):
+def _run_r_installer(
+    script_name: str, package_name: str, r_installation_folder: Union[str, Path, Literal['auto']] = 'auto'
+):
     """
     Run one of the bundled R package-installation scripts, and turn a failed installation into
     actionable guidance.
@@ -130,9 +135,11 @@ def _run_r_installer(script_name: str, package_name: str,
     try:
         io.run_r_script(script_path, r_installation_folder)
     except ChildProcessError as e:
-        raise ChildProcessError(f"Failed to install {package_name}. "
-                                f"Please make sure you have write permission to R's library folder, "
-                                f"or try to install {package_name} manually.") from e
+        raise ChildProcessError(
+            f'Failed to install {package_name}. '
+            f"Please make sure you have write permission to R's library folder, "
+            f'or try to install {package_name} manually.'
+        ) from e
 
 
 def install_limma(r_installation_folder: Union[str, Path, Literal['auto']] = 'auto'):

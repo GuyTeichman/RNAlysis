@@ -20,8 +20,7 @@ from scipy.stats import fisher_exact, hypergeom, ttest_1samp
 from tqdm.auto import tqdm
 
 from rnalysis.exceptions import InternalError, InvalidTypeError, InvalidValueError
-from rnalysis.utils import (generic, io, ontology, param_typing, parsing,
-                            settings, validation)
+from rnalysis.utils import generic, io, ontology, param_typing, parsing, settings, validation
 from rnalysis.utils.param_typing import GRAPHVIZ_FORMATS, PARALLEL_BACKENDS
 
 try:
@@ -32,7 +31,6 @@ try:
 
 except ImportError:  # pragma: no cover
     HAS_XLMHG = False
-
 
     class xlmhglite:  # pragma: no cover
         class mHGResult:
@@ -75,9 +73,15 @@ class SizeHandler:
     def legend_artist(self, legend, orig_handle, fontsize, handlebox):
         x0, y0 = handlebox.xdescent, handlebox.ydescent
         radius = np.sqrt((dot_scaling_func(self.size)) / np.pi)
-        patch = mpatches.Circle((x0, y0), radius, facecolor='black',
-                                edgecolor='black', hatch='xx', lw=3,
-                                transform=handlebox.get_transform())
+        patch = mpatches.Circle(
+            (x0, y0),
+            radius,
+            facecolor='black',
+            edgecolor='black',
+            hatch='xx',
+            lw=3,
+            transform=handlebox.get_transform(),
+        )
         handlebox.add_artist(patch)
         return patch
 
@@ -86,18 +90,25 @@ class SizeHandler:
 # these four integer counts, and the same term-shape recurs across the thousands of GO terms tested in a single
 # run (typically >90% of terms are duplicates, since bg_size/en_size are constant within a run). Bounded so a
 # long-lived GUI session testing many different gene sets cannot grow the cache without limit.
-_PVAL_CACHE_MAXSIZE = 2 ** 16
+_PVAL_CACHE_MAXSIZE = 2**16
 
 
 class StatsTest(abc.ABC):
     @abc.abstractmethod
-    def run(self, attribute_name: str, annotation_set: Set[str], gene_set: Set[str], background_set: Set[str],
-            annotation_set_unfiltered: Union[Set[str], None] = None) -> list:
+    def run(
+        self,
+        attribute_name: str,
+        annotation_set: Set[str],
+        gene_set: Set[str],
+        background_set: Set[str],
+        annotation_set_unfiltered: Union[Set[str], None] = None,
+    ) -> list:
         raise NotImplementedError
 
     @staticmethod
-    def get_hypergeometric_params(annotation_set: Set[str], gene_set: Set[str], background_set: Set[str]
-                                  ) -> Tuple[int, int, int, int, int, float, float]:
+    def get_hypergeometric_params(
+        annotation_set: Set[str], gene_set: Set[str], background_set: Set[str]
+    ) -> Tuple[int, int, int, int, int, float, float]:
         bg_size = len(background_set)
         en_size = len(gene_set)
         attr_size = len(annotation_set)
@@ -111,8 +122,14 @@ class StatsTest(abc.ABC):
 
 
 class TTest(StatsTest):
-    def run(self, attribute_name: str, annotation_dict: Dict[str, float], gene_set: Set[str], background_set: Set[str],
-            annotation_set_unfiltered=None):
+    def run(
+        self,
+        attribute_name: str,
+        annotation_dict: Dict[str, float],
+        gene_set: Set[str],
+        background_set: Set[str],
+        annotation_set_unfiltered=None,
+    ):
         if annotation_set_unfiltered is not None:
             raise InternalError
         obs_values = [annotation_dict[gene] for gene in gene_set]
@@ -126,8 +143,14 @@ class TTest(StatsTest):
 
 
 class SignTest(StatsTest):
-    def run(self, attribute_name: str, annotation_dict: Dict[str, float], gene_set: Set[str], background_set: Set[str],
-            annotation_set_unfiltered=None):
+    def run(
+        self,
+        attribute_name: str,
+        annotation_dict: Dict[str, float],
+        gene_set: Set[str],
+        background_set: Set[str],
+        annotation_set_unfiltered=None,
+    ):
         if annotation_set_unfiltered is not None:
             raise InternalError
         obs_values = [annotation_dict[gene] for gene in gene_set]
@@ -145,26 +168,36 @@ class PermutationTest(StatsTest):
         self.n_permutations = n_permutations
         self.random_seed = random_seed
 
-    def run(self, attribute_name: str, annotation_set: Set[str], gene_set: Set[str], background_set: Set[str],
-            annotation_set_unfiltered: Union[Set[str], None] = None):
+    def run(
+        self,
+        attribute_name: str,
+        annotation_set: Set[str],
+        gene_set: Set[str],
+        background_set: Set[str],
+        annotation_set_unfiltered: Union[Set[str], None] = None,
+    ):
         # The permutation loop runs inside a numba-jitted function with its own RNG. Seeding numpy
         # from here (interpreted code) does NOT reach numba's generator, so the seed must be passed
         # in and applied inside the jitted function to make results reproducible.
         # random_seed=None means "non-deterministic": draw a fresh integer seed per call.
-        seed = self.random_seed if self.random_seed is not None else np.random.randint(0, 2 ** 31 - 1)
+        seed = self.random_seed if self.random_seed is not None else np.random.randint(0, 2**31 - 1)
         bg_size, en_size, attr_size, en_attr_size, obs, exp, log2fc = self.get_hypergeometric_params(
-            annotation_set, gene_set, background_set)
-        pval = self._calc_permutation_pval(log2fc, self.n_permutations, obs / en_size, bg_size, en_size, attr_size,
-                                           seed)
+            annotation_set, gene_set, background_set
+        )
+        pval = self._calc_permutation_pval(
+            log2fc, self.n_permutations, obs / en_size, bg_size, en_size, attr_size, seed
+        )
         if annotation_set_unfiltered is not None:
-            _, _, _, _, obs, exp, log2fc = self.get_hypergeometric_params(annotation_set_unfiltered, gene_set,
-                                                                          background_set)
+            _, _, _, _, obs, exp, log2fc = self.get_hypergeometric_params(
+                annotation_set_unfiltered, gene_set, background_set
+            )
         return [attribute_name, en_size, obs, exp, log2fc, pval]
 
     @staticmethod
     @generic.numba.jit(nopython=True, cache=generic.NUMBA_CACHE)
-    def _calc_permutation_pval(log2fc: float, reps: int, obs_frac: float, bg_size: int, en_size: int, attr_size: int,
-                               random_seed: int) -> float:  # pragma: no cover
+    def _calc_permutation_pval(
+        log2fc: float, reps: int, obs_frac: float, bg_size: int, en_size: int, attr_size: int, random_seed: int
+    ) -> float:  # pragma: no cover
         np.random.seed(random_seed)
         bg_array = np.empty(bg_size, dtype=generic.numba.bool_)
         bg_array[0:attr_size] = True
@@ -183,50 +216,67 @@ class PermutationTest(StatsTest):
 
 
 class FishersExactTest(StatsTest):
-    def run(self, attribute_name: str, annotation_set: Set[str], gene_set: Set[str], background_set: Set[str],
-            annotation_set_unfiltered: Union[Set[str], None] = None):
-        bg_size, en_size, attr_size, en_attr_size, obs, exp, log2fc = self.get_hypergeometric_params(annotation_set,
-                                                                                                     gene_set,
-                                                                                                     background_set)
+    def run(
+        self,
+        attribute_name: str,
+        annotation_set: Set[str],
+        gene_set: Set[str],
+        background_set: Set[str],
+        annotation_set_unfiltered: Union[Set[str], None] = None,
+    ):
+        bg_size, en_size, attr_size, en_attr_size, obs, exp, log2fc = self.get_hypergeometric_params(
+            annotation_set, gene_set, background_set
+        )
         pval = self._calc_fisher_pval(bg_size, en_size, attr_size, en_attr_size)
         if annotation_set_unfiltered is not None:
-            _, _, _, _, obs, exp, log2fc = self.get_hypergeometric_params(annotation_set_unfiltered, gene_set,
-                                                                          background_set)
+            _, _, _, _, obs, exp, log2fc = self.get_hypergeometric_params(
+                annotation_set_unfiltered, gene_set, background_set
+            )
         return [attribute_name, en_size, obs, exp, log2fc, pval]
 
-    def run_weight(self, attribute_name: str, annotation_dict: Dict[str, float], gene_set: Set[str],
-                   background_set: Set[str]):
+    def run_weight(
+        self, attribute_name: str, annotation_dict: Dict[str, float], gene_set: Set[str], background_set: Set[str]
+    ):
         bg_size = len(background_set)
         en_size = len(gene_set)
         attr_size = sum(annotation_dict.values())
         en_attr_size = sum(val for key, val in annotation_dict.items() if key in gene_set)
         pval = self._calc_fisher_pval(bg_size, en_size, attr_size, en_attr_size)
-        bg_size, en_size, attr_size, en_attr_size, obs, exp, log2fc = self.get_hypergeometric_params(annotation_dict,
-                                                                                                     gene_set,
-                                                                                                     background_set)
+        bg_size, en_size, attr_size, en_attr_size, obs, exp, log2fc = self.get_hypergeometric_params(
+            annotation_dict, gene_set, background_set
+        )
 
         return [attribute_name, en_size, obs, exp, log2fc, pval]
 
     @staticmethod
     @lru_cache(maxsize=_PVAL_CACHE_MAXSIZE, typed=False)
     def _calc_fisher_pval(bg_size: int, en_size: int, attr_size: int, en_attr_size: int):
-        contingency_table = [[en_attr_size, attr_size - en_attr_size],
-                             [en_size - en_attr_size, bg_size - attr_size - en_size + en_attr_size]]
+        contingency_table = [
+            [en_attr_size, attr_size - en_attr_size],
+            [en_size - en_attr_size, bg_size - attr_size - en_size + en_attr_size],
+        ]
         _, pval = fisher_exact(contingency_table)
         return pval
 
 
 class HypergeometricTest(StatsTest):
-    def run(self, attribute_name: str, annotation_set: Set[str], gene_set: Set[str], background_set: Set[str],
-            annotation_set_unfiltered: Union[Set[str], None] = None):
-        bg_size, en_size, attr_size, en_attr_size, obs, exp, log2fc = self.get_hypergeometric_params(annotation_set,
-                                                                                                     gene_set,
-                                                                                                     background_set)
+    def run(
+        self,
+        attribute_name: str,
+        annotation_set: Set[str],
+        gene_set: Set[str],
+        background_set: Set[str],
+        annotation_set_unfiltered: Union[Set[str], None] = None,
+    ):
+        bg_size, en_size, attr_size, en_attr_size, obs, exp, log2fc = self.get_hypergeometric_params(
+            annotation_set, gene_set, background_set
+        )
 
         pval = self._calc_hg_pval(bg_size, en_size, attr_size, en_attr_size)
         if annotation_set_unfiltered is not None:
-            _, _, _, _, obs, exp, log2fc = self.get_hypergeometric_params(annotation_set_unfiltered, gene_set,
-                                                                          background_set)
+            _, _, _, _, obs, exp, log2fc = self.get_hypergeometric_params(
+                annotation_set_unfiltered, gene_set, background_set
+            )
         return [attribute_name, en_size, obs, exp, log2fc, pval]
 
     @staticmethod
@@ -245,14 +295,22 @@ class XlmhgTest(StatsTest):
         self.min_positive_genes = min_positive_genes
         self.lowest_cutoff = lowest_cutoff
 
-    def run(self, attribute_name: str, annotation_set: Set[str], gene_set: List[str], background_set: Set[str] = None,
-            annotation_set_unfiltered: Union[Set[str], None] = None):
+    def run(
+        self,
+        attribute_name: str,
+        annotation_set: Set[str],
+        gene_set: List[str],
+        background_set: Set[str] = None,
+        annotation_set_unfiltered: Union[Set[str], None] = None,
+    ):
         if background_set is not None:
             raise InternalError
         if not HAS_XLMHG:
-            warnings.warn("Package 'xlmhglite' is not installed. \n"
-                          "If you want to run single-set enrichment analysis, "
-                          "please install package 'xlmhglite' and try again. ")
+            warnings.warn(
+                "Package 'xlmhglite' is not installed. \n"
+                'If you want to run single-set enrichment analysis, '
+                "please install package 'xlmhglite' and try again. "
+            )
             return [attribute_name, np.nan, np.nan, np.nan, np.nan, np.nan]
 
         index_vec, rev_index_vec = self._generate_xlmhg_index_vectors(gene_set, annotation_set)
@@ -278,8 +336,9 @@ class XlmhgTest(StatsTest):
         return n, X, L, table
 
     @staticmethod
-    def _extract_xlmhg_results(result_obj_fwd: xlmhglite.mHGResult, result_obj_rev: xlmhglite.mHGResult
-                               ) -> Tuple[int, float, float, float]:
+    def _extract_xlmhg_results(
+        result_obj_fwd: xlmhglite.mHGResult, result_obj_rev: xlmhglite.mHGResult
+    ) -> Tuple[int, float, float, float]:
         if result_obj_fwd.pval <= result_obj_rev.pval:
             obs = result_obj_fwd.k
             exp = result_obj_fwd.K * (result_obj_fwd.cutoff / float(result_obj_fwd.N))
@@ -317,13 +376,13 @@ class EnrichmentPlotter(abc.ABC):
             asterisks = 'ns'
             fontweight = 'normal'
         elif pval < 0.0001:
-            asterisks = u'\u2217' * 4
+            asterisks = '\u2217' * 4
         elif pval < 0.001:
-            asterisks = u'\u2217' * 3
+            asterisks = '\u2217' * 3
         elif pval < 0.01:
-            asterisks = u'\u2217' * 2
+            asterisks = '\u2217' * 2
         else:
-            asterisks = u'\u2217'
+            asterisks = '\u2217'
         return asterisks, fontweight
 
     @abc.abstractmethod
@@ -335,6 +394,7 @@ class EmptyPlotter(EnrichmentPlotter):
     """A no-op plotter for enrichment runs that produced no results (e.g. an empty gene set, or no valid
     statistical test). Returns an empty figure so callers that request a plot degrade gracefully instead
     of crashing."""
+
     __slots__ = ()
 
     def __init__(self):
@@ -346,14 +406,37 @@ class EmptyPlotter(EnrichmentPlotter):
 
 class BarPlotter(EnrichmentPlotter):
     __slots__ = (
-        'n_bars', 'center_bars', 'ylabel', 'title', 'ylim', 'title_fontsize', 'label_fontsize', 'ylabel_fontsize',
-        'plot_style', 'plot_horizontal', 'alpha', 'show_expected')
+        'n_bars',
+        'center_bars',
+        'ylabel',
+        'title',
+        'ylim',
+        'title_fontsize',
+        'label_fontsize',
+        'ylabel_fontsize',
+        'plot_style',
+        'plot_horizontal',
+        'alpha',
+        'show_expected',
+    )
 
-    def __init__(self, results: pl.DataFrame, en_score_col: str, n_bars: Union[int, Literal['all']],
-                 alpha: float, ylabel: str, title: str, ylim: Union[float, Literal['auto']] = 'auto',
-                 title_fontsize: float = 18, label_fontsize: float = 13, ylabel_fontsize: float = 16,
-                 plot_style: Literal['bar', 'lollipop'] = 'bar', plot_horizontal: bool = True,
-                 show_expected: bool = False, center_bars: bool = True):
+    def __init__(
+        self,
+        results: pl.DataFrame,
+        en_score_col: str,
+        n_bars: Union[int, Literal['all']],
+        alpha: float,
+        ylabel: str,
+        title: str,
+        ylim: Union[float, Literal['auto']] = 'auto',
+        title_fontsize: float = 18,
+        label_fontsize: float = 13,
+        ylabel_fontsize: float = 16,
+        plot_style: Literal['bar', 'lollipop'] = 'bar',
+        plot_horizontal: bool = True,
+        show_expected: bool = False,
+        center_bars: bool = True,
+    ):
         super().__init__(results)
         if en_score_col not in results.columns:
             raise InternalError(f"Column '{en_score_col}' not found in the results DataFrame.")
@@ -442,30 +525,43 @@ class BarPlotter(EnrichmentPlotter):
 
         # get color values for bars
         data_color_norm = [0.5 * (1 + i / (np.ceil(max_score))) * 255 for i in enrichment_scores]
-        data_color_norm_8bit = [int(i) if i != np.inf and i != -np.inf else np.sign(i) * max(np.abs(scores_no_inf)) for
-                                i in data_color_norm]
+        data_color_norm_8bit = [
+            int(i) if i != np.inf and i != -np.inf else np.sign(i) * max(np.abs(scores_no_inf)) for i in data_color_norm
+        ]
         my_cmap = plt.colormaps.get_cmap('coolwarm')
         colors = my_cmap(data_color_norm_8bit)
 
         # generate bar plot
         fig, ax = plt.subplots(tight_layout=True, figsize=figsize)
 
-        args = (ax, range(len(enrichment_names)), enrichment_scores) if self.plot_style == 'bar' else (
-            ax, range(len(enrichment_names)), 0, enrichment_scores)
+        args = (
+            (ax, range(len(enrichment_names)), enrichment_scores)
+            if self.plot_style == 'bar'
+            else (ax, range(len(enrichment_names)), 0, enrichment_scores)
+        )
         kwargs = dict(linewidth=1, edgecolor='black') if self.plot_style == 'bar' else dict(linewidth=5)
 
         graph = bar_func(*args, color=colors, zorder=2, **kwargs)
         graph.tick_labels = enrichment_names
 
         if self.plot_style == 'lollipop':
-            x, y = (enrichment_scores, range(len(enrichment_names))) if self.plot_horizontal else (range(
-                len(enrichment_names)), enrichment_scores)
+            x, y = (
+                (enrichment_scores, range(len(enrichment_names)))
+                if self.plot_horizontal
+                else (range(len(enrichment_names)), enrichment_scores)
+            )
             ax.scatter(x, y, color=colors, zorder=3, s=dot_scaling_func(enrichment_obs))
 
             legend_sizes = [Size(i) for i in [10, 50, 250, 500]]
-            ax.legend(legend_sizes, [f"observed={i.size}" for i in legend_sizes],
-                      labelspacing=3.2, borderpad=2.5, draggable=True,
-                      handler_map={size: SizeHandler(size.size) for size in legend_sizes}, loc='lower right')
+            ax.legend(
+                legend_sizes,
+                [f'observed={i.size}' for i in legend_sizes],
+                labelspacing=3.2,
+                borderpad=2.5,
+                draggable=True,
+                handler_map={size: SizeHandler(size.size) for size in legend_sizes},
+                loc='lower right',
+            )
 
         # determine bounds, and enlarge the bound by a small margin (0.5%) so nothing gets cut out of the figure
         if self.ylim == 'auto':
@@ -486,7 +582,8 @@ class BarPlotter(EnrichmentPlotter):
         ax.set_title(self.title, fontsize=self.title_fontsize)
         # add significance asterisks
         for i, (score, sig, obs, exp) in enumerate(
-            zip(enrichment_scores, enrichment_pvalue, enrichment_obs, enrichment_exp)):
+            zip(enrichment_scores, enrichment_pvalue, enrichment_obs, enrichment_exp)
+        ):
             asterisks, fontweight = self._get_pval_asterisk(sig, self.alpha)
             if self.plot_horizontal:
                 x = score
@@ -504,12 +601,25 @@ class BarPlotter(EnrichmentPlotter):
                 rotation_mode = 'default'
 
             if self.show_expected:
-                extra_text = f"{obs}/{exp:.1f}"
-                asterisks = f"{extra_text}\n{asterisks}" if self.plot_horizontal or np.sign(
-                    score) == 1 else f"{asterisks}\n{extra_text}"
-            ax.text(x=x, y=y, s=asterisks, fontname='DejaVu Sans',
-                    fontweight=fontweight, rotation=rotation, fontsize=9,
-                    horizontalalignment=halign, verticalalignment=valign, zorder=3, rotation_mode=rotation_mode)
+                extra_text = f'{obs}/{exp:.1f}'
+                asterisks = (
+                    f'{extra_text}\n{asterisks}'
+                    if self.plot_horizontal or np.sign(score) == 1
+                    else f'{asterisks}\n{extra_text}'
+                )
+            ax.text(
+                x=x,
+                y=y,
+                s=asterisks,
+                fontname='DejaVu Sans',
+                fontweight=fontweight,
+                rotation=rotation,
+                fontsize=9,
+                horizontalalignment=halign,
+                verticalalignment=valign,
+                zorder=3,
+                rotation_mode=rotation_mode,
+            )
 
         # despine
         _ = [ax.spines[side].set_visible(False) for side in ['top', 'bottom', 'left', 'right']]
@@ -523,7 +633,7 @@ class BarPlotter(EnrichmentPlotter):
                 plt.tick_params(axis='y', which='both', left=False, right=False, labelleft=False)
         # add colorbar
         divider = make_axes_locatable(ax)
-        cax = divider.append_axes(cbar_location, size=f"{5 * (1 + self.plot_horizontal)}%", pad=0.05)
+        cax = divider.append_axes(cbar_location, size=f'{5 * (1 + self.plot_horizontal)}%', pad=0.05)
         sm = ScalarMappable(cmap=my_cmap, norm=plt.Normalize(*bounds))
         sm.set_array(np.array([]))
         cbar_label_kwargs = dict(label=self.ylabel, fontsize=self.ylabel_fontsize, labelpad=15)
@@ -540,16 +650,37 @@ class BarPlotter(EnrichmentPlotter):
 
 
 class HistogramPlotter(EnrichmentPlotter):
-    __slots__ = ('annotations', 'attributes', 'alpha', 'set_name', 'gene_set', 'background_set', 'plot_log_scale',
-                 'n_bins', 'plot_style', 'parametric_test')
+    __slots__ = (
+        'annotations',
+        'attributes',
+        'alpha',
+        'set_name',
+        'gene_set',
+        'background_set',
+        'plot_log_scale',
+        'n_bins',
+        'plot_style',
+        'parametric_test',
+    )
 
-    def __init__(self, results: pl.DataFrame, annotations: dict, attributes: List[str],
-                 alpha: float, set_name: str, gene_set: set, background_set: set, plot_log_scale: bool, n_bins: int,
-                 plot_style: str, parametric_test: bool):
+    def __init__(
+        self,
+        results: pl.DataFrame,
+        annotations: dict,
+        attributes: List[str],
+        alpha: float,
+        set_name: str,
+        gene_set: set,
+        background_set: set,
+        plot_log_scale: bool,
+        n_bins: int,
+        plot_style: str,
+        parametric_test: bool,
+    ):
         super().__init__(results)
 
         if not all([attr in annotations for attr in attributes]):
-            raise InternalError(f"Attributes {attributes} not found in annotations DataFrame.")
+            raise InternalError(f'Attributes {attributes} not found in annotations DataFrame.')
 
         self.alpha = alpha
         self.annotations = annotations
@@ -567,11 +698,11 @@ class HistogramPlotter(EnrichmentPlotter):
         exp = [self.annotations[attribute][gene] for gene in self.background_set]
         obs = [self.annotations[attribute][gene] for gene in self.gene_set]
         if self.plot_log_scale:
-            xlabel = r"$\log_{10}$" + f"({attribute})"
+            xlabel = r'$\log_{10}$' + f'({attribute})'
             exp = np.log10(exp)
             obs = np.log10(obs)
         else:
-            xlabel = f"{attribute}"
+            xlabel = f'{attribute}'
 
         # determine bins according to value range and 'n_bins'
         bins = np.linspace(np.min(exp), np.max(exp), self.n_bins).squeeze()
@@ -600,24 +731,24 @@ class HistogramPlotter(EnrichmentPlotter):
             label_exp, label_obs = 'Expected median', 'Observed median'
 
         # add lines for mean/median of observed and expected distributions
-        ax.vlines(x_exp, ymin=0, ymax=max_y_val * 1.1, color='blue', linestyle='dashed', linewidth=2,
-                  label=label_exp)
-        ax.vlines(x_obs, ymin=0, ymax=max_y_val * 1.1, color='red', linestyle='dashed', linewidth=2,
-                  label=label_obs)
+        ax.vlines(x_exp, ymin=0, ymax=max_y_val * 1.1, color='blue', linestyle='dashed', linewidth=2, label=label_exp)
+        ax.vlines(x_obs, ymin=0, ymax=max_y_val * 1.1, color='red', linestyle='dashed', linewidth=2, label=label_obs)
 
         # add significance notation
         asterisks, fontweight = self._get_pval_asterisk(
-            self.results.filter(pl.first() == attribute).select('padj').item(), self.alpha)
+            self.results.filter(pl.first() == attribute).select('padj').item(), self.alpha
+        )
         ax.vlines([x_exp, x_obs], ymin=max_y_val * 1.12, ymax=max_y_val * 1.16, color='k', linewidth=1)
         ax.hlines(max_y_val * 1.16, xmin=min(x_exp, x_obs), xmax=max(x_exp, x_obs), color='k', linewidth=1)
-        ax.text(np.mean([x_exp, x_obs]), max_y_val * 1.17, asterisks, horizontalalignment='center',
-                fontweight=fontweight)
+        ax.text(
+            np.mean([x_exp, x_obs]), max_y_val * 1.17, asterisks, horizontalalignment='center', fontweight=fontweight
+        )
 
         # legend and titles
         ax.legend()
         obs_name = 'Observed' if self.set_name == '' else self.set_name
-        ax.set_title(f"Histogram of {attribute} - {obs_name} vs Expected", fontsize=17)
-        ax.set_ylabel("Probability density", fontsize=14)
+        ax.set_title(f'Histogram of {attribute} - {obs_name} vs Expected', fontsize=17)
+        ax.set_ylabel('Probability density', fontsize=14)
         ax.set_xlabel(xlabel, fontsize=14)
         plt.show()
 
@@ -635,9 +766,17 @@ class HistogramPlotter(EnrichmentPlotter):
 
 
 class KEGGPlotter(EnrichmentPlotter):
-    def __init__(self, results: pl.DataFrame, en_score_col: str, gene_set: set, pathway_names_dict: dict,
-                 gene_id_map: io.GeneIDDict, pathway_graphs_format: Literal[param_typing.GRAPHVIZ_FORMATS],
-                 single_set: bool, ylabel: str = "$\\log_2$(Fold Enrichment)"):
+    def __init__(
+        self,
+        results: pl.DataFrame,
+        en_score_col: str,
+        gene_set: set,
+        pathway_names_dict: dict,
+        gene_id_map: io.GeneIDDict,
+        pathway_graphs_format: Literal[param_typing.GRAPHVIZ_FORMATS],
+        single_set: bool,
+        ylabel: str = '$\\log_2$(Fold Enrichment)',
+    ):
         super().__init__(results)
         if en_score_col not in results.columns:
             raise InternalError(f"Column '{en_score_col}' not found in the results DataFrame.")
@@ -672,17 +811,27 @@ class KEGGPlotter(EnrichmentPlotter):
 
 
 class GODagPlotter(EnrichmentPlotter):
-    def __init__(self, results: pl.DataFrame, en_score_col: str, dag_tree: ontology.DAGTree,
-                 go_aspects: Union[Iterable[Literal[param_typing.GO_ASPECTS]], Literal['any']],
-                 title: str, ylabel: str = "$\\log_2$(Fold Enrichment)", dpi: int = 300,
-                 graph_format: Literal[param_typing.GRAPHVIZ_FORMATS] = 'none'):
+    def __init__(
+        self,
+        results: pl.DataFrame,
+        en_score_col: str,
+        dag_tree: ontology.DAGTree,
+        go_aspects: Union[Iterable[Literal[param_typing.GO_ASPECTS]], Literal['any']],
+        title: str,
+        ylabel: str = '$\\log_2$(Fold Enrichment)',
+        dpi: int = 300,
+        graph_format: Literal[param_typing.GRAPHVIZ_FORMATS] = 'none',
+    ):
         super().__init__(results)
         if en_score_col not in results.columns:
             raise InternalError(f"Column '{en_score_col}' not found in the results DataFrame.")
         self.en_score_col = en_score_col
         self.dag_tree = dag_tree
-        self.go_aspects = ('biological_process', 'cellular_component', 'molecular_function') if (
-            go_aspects == 'any') else parsing.data_to_tuple(go_aspects)
+        self.go_aspects = (
+            ('biological_process', 'cellular_component', 'molecular_function')
+            if (go_aspects == 'any')
+            else parsing.data_to_tuple(go_aspects)
+        )
         self.title = title
         self.ylabel = ylabel
         self.dpi = dpi
@@ -692,8 +841,9 @@ class GODagPlotter(EnrichmentPlotter):
         figs = []
         for go_aspect in self.go_aspects:
             this_title = self.title + f'\n{go_aspect}'.replace('_', ' ').title()
-            fig = self.dag_tree.plot_ontology(go_aspect, self.results, self.en_score_col, this_title, self.ylabel,
-                                              self.graph_format, self.dpi)
+            fig = self.dag_tree.plot_ontology(
+                go_aspect, self.results, self.en_score_col, this_title, self.ylabel, self.graph_format, self.dpi
+            )
             if fig is None:
                 return figs
             figs.append(fig)
@@ -714,42 +864,56 @@ class MultiPlotter(EnrichmentPlotter):
 
 
 class EnrichmentRunner:
-    ENRICHMENT_SCORE_YLABEL = "$\\log_2$(Fold Enrichment)"
-    SINGLE_SET_ENRICHMENT_SCORE_YLABEL = r"$\log_2$(XL-mHG enrichment score)"
+    ENRICHMENT_SCORE_YLABEL = '$\\log_2$(Fold Enrichment)'
+    SINGLE_SET_ENRICHMENT_SCORE_YLABEL = r'$\log_2$(XL-mHG enrichment score)'
 
-    __slots__ = {'results': 'DataFrame containing enrichment analysis results',
-                 'annotations': 'dict containing all annotation data',
-                 'gene_set': 'the set of genes/genomic features whose enrichment to calculate',
-                 'attributes': 'the list of attributes/terms to calculate enrichment for',
-                 'alpha': 'the statistical signifiacnce threshold',
-                 'attr_ref_path': 'path of the Attribute Reference Table to load, if such table exists',
-                 'return_nonsignificant': 'indicates whether to return results which were not found to be '
-                                          'statistically significant after enrichment analysis',
-                 'save_csv': 'indicates whether the results should be saved to a csv file',
-                 'fname': 'name of the file to save results to',
-                 'plot_horizontal': 'indicates whether to plot the results horizontally or vertically',
-                 'set_name': 'name of the set of genes/genomic features whose enrichment is calculated',
-                 'parallel_backend': 'indicates whether to use parallel processing, and with which backend',
-                 'exclude_unannotated_genes': 'indicates whether to discard unannotated genes from the background and enrichment sets',
-                 'stats_test': 'the function to be used to calculate enrichment p-values',
-                 'single_set': 'indicates whether enrichment is calculated on a single set of genes '
-                               '(without background) or on a set of target genes and a set of background genes',
-                 'background_set': 'the background set of genes for enrichment analysis',
-                 'en_score_col': 'name of the enrichment score column in the results DataFrame',
-                 'ranked_genes': 'the set of genes/genomic features whose enrichment to calculate, '
-                                 'pre-sorted and ranked by the user',
-                 'plot_style': 'plot style',
-                 'show_expected': 'show observed/expected values on plot',
-                 'annotated_genes': 'set of annotated genes'}
-    printout_params = "appear in the Attribute Reference Table"
+    __slots__ = {
+        'results': 'DataFrame containing enrichment analysis results',
+        'annotations': 'dict containing all annotation data',
+        'gene_set': 'the set of genes/genomic features whose enrichment to calculate',
+        'attributes': 'the list of attributes/terms to calculate enrichment for',
+        'alpha': 'the statistical signifiacnce threshold',
+        'attr_ref_path': 'path of the Attribute Reference Table to load, if such table exists',
+        'return_nonsignificant': 'indicates whether to return results which were not found to be '
+        'statistically significant after enrichment analysis',
+        'save_csv': 'indicates whether the results should be saved to a csv file',
+        'fname': 'name of the file to save results to',
+        'plot_horizontal': 'indicates whether to plot the results horizontally or vertically',
+        'set_name': 'name of the set of genes/genomic features whose enrichment is calculated',
+        'parallel_backend': 'indicates whether to use parallel processing, and with which backend',
+        'exclude_unannotated_genes': 'indicates whether to discard unannotated genes from the background and enrichment sets',
+        'stats_test': 'the function to be used to calculate enrichment p-values',
+        'single_set': 'indicates whether enrichment is calculated on a single set of genes '
+        '(without background) or on a set of target genes and a set of background genes',
+        'background_set': 'the background set of genes for enrichment analysis',
+        'en_score_col': 'name of the enrichment score column in the results DataFrame',
+        'ranked_genes': 'the set of genes/genomic features whose enrichment to calculate, '
+        'pre-sorted and ranked by the user',
+        'plot_style': 'plot style',
+        'show_expected': 'show observed/expected values on plot',
+        'annotated_genes': 'set of annotated genes',
+    }
+    printout_params = 'appear in the Attribute Reference Table'
 
-    def __init__(self, genes: Union[set, np.ndarray], attributes: Union[Iterable, str, int],
-                 alpha: param_typing.Fraction, attr_ref_path: str, return_nonsignificant: bool, save_csv: bool,
-                 fname: str, plot_horizontal: bool, set_name: str,
-                 parallel_backend: Literal[PARALLEL_BACKENDS], stats_test: StatsTest,
-                 background_set: set = None, exclude_unannotated_genes: bool = True,
-                 single_set: bool = False, plot_style: Literal['bar', 'lollipop'] = 'bar',
-                 show_expected: bool = False):
+    def __init__(
+        self,
+        genes: Union[set, np.ndarray],
+        attributes: Union[Iterable, str, int],
+        alpha: param_typing.Fraction,
+        attr_ref_path: str,
+        return_nonsignificant: bool,
+        save_csv: bool,
+        fname: str,
+        plot_horizontal: bool,
+        set_name: str,
+        parallel_backend: Literal[PARALLEL_BACKENDS],
+        stats_test: StatsTest,
+        background_set: set = None,
+        exclude_unannotated_genes: bool = True,
+        single_set: bool = False,
+        plot_style: Literal['bar', 'lollipop'] = 'bar',
+        show_expected: bool = False,
+    ):
         self.results: pl.DataFrame = pl.DataFrame()
         self.annotations: dict = dict()
         self.gene_set = parsing.data_to_set(genes)
@@ -761,7 +925,7 @@ class EnrichmentRunner:
 
         if self.save_csv:
             if fname is None:
-                self.fname = input("Please insert the full name and path to save the file to")
+                self.fname = input('Please insert the full name and path to save the file to')
             else:
                 if not isinstance(fname, (str, Path)):
                     raise InvalidTypeError
@@ -779,11 +943,12 @@ class EnrichmentRunner:
         self.single_set = single_set
         if self.single_set:
             if background_set is not None:
-                raise InvalidValueError(
-                    "Enrichment in single_set mode does not accept a 'background_set' argument.")
+                raise InvalidValueError("Enrichment in single_set mode does not accept a 'background_set' argument.")
             if not isinstance(genes, np.ndarray):
-                raise InvalidTypeError(f"Invalid type for argument 'genes' in single_set mode: "
-                                       f"expected np.ndarray, instead got '{type(genes)}'.")
+                raise InvalidTypeError(
+                    f"Invalid type for argument 'genes' in single_set mode: "
+                    f"expected np.ndarray, instead got '{type(genes)}'."
+                )
 
             if not isinstance(stats_test, XlmhgTest):
                 raise InvalidTypeError(f"Invalid enrichment function for single_set mode: '{stats_test}'.")
@@ -818,9 +983,11 @@ class EnrichmentRunner:
             self.get_background_set()
         self.update_gene_set()
         if len(self.gene_set) == 0:
-            warnings.warn('After removing unannotated genes and/or genes not in the background set, '
-                          'the enrichment set is empty. '
-                          'Therefore, RNAlysis will not proceed with enrichment analysis. ')
+            warnings.warn(
+                'After removing unannotated genes and/or genes not in the background set, '
+                'the enrichment set is empty. '
+                'Therefore, RNAlysis will not proceed with enrichment analysis. '
+            )
             return pl.DataFrame(), EmptyPlotter()
         self.filter_annotations()
         unformatted_results = self.calculate_enrichment()
@@ -865,26 +1032,34 @@ class EnrichmentRunner:
             self.background_set = self.background_set.intersection(annotated_genes)
 
         if orig_bg_size - len(self.background_set) > 0:
-            warning = f"{orig_bg_size - len(self.background_set)} genes out of the requested {orig_bg_size} " \
-                      f"background genes do not {self.printout_params}"
+            warning = (
+                f'{orig_bg_size - len(self.background_set)} genes out of the requested {orig_bg_size} '
+                f'background genes do not {self.printout_params}'
+            )
             if self.exclude_unannotated_genes:
-                warning += f", and are therefore ignored. " \
-                           f"\nThis leaves a total of {len(self.background_set)} background genes."
+                warning += (
+                    f', and are therefore ignored. '
+                    f'\nThis leaves a total of {len(self.background_set)} background genes.'
+                )
             else:
-                warning += ". \nThese genes are not discarded from the background set because you set the paremeter " \
-                           "'exclude_unannotated_genes' to False. Note that this is not a recommended practice. "
+                warning += (
+                    '. \nThese genes are not discarded from the background set because you set the paremeter '
+                    "'exclude_unannotated_genes' to False. Note that this is not a recommended practice. "
+                )
             warnings.warn(warning)
 
-        print(f"{len(self.background_set)} background genes are used.")
+        print(f'{len(self.background_set)} background genes are used.')
 
     def validate_statistical_test(self):
         if not isinstance(self.stats_test, StatsTest):
-            warnings.warn(f"Invalid statistical test: {self.stats_test}.")
+            warnings.warn(f'Invalid statistical test: {self.stats_test}.')
             return False
         if isinstance(self.stats_test, XlmhgTest) and not HAS_XLMHG:
-            warnings.warn("Package 'xlmhglite' is not installed. \n"
-                          "If you want to run single-set enrichment analysis, "
-                          "please install package 'xlmhglite' and try again. ")
+            warnings.warn(
+                "Package 'xlmhglite' is not installed. \n"
+                'If you want to run single-set enrichment analysis, '
+                "please install package 'xlmhglite' and try again. "
+            )
             return False
         return True
 
@@ -898,18 +1073,20 @@ class EnrichmentRunner:
             self.gene_set = updated_gene_set
             self._update_ranked_genes()
             if not_annotated > 0:
-                warnings.warn(f"{not_annotated} genes in the enrichment set do are not annotated. \n"
-                              f"Enrichment will be computed on the remaining {len(self.gene_set)} genes.")
+                warnings.warn(
+                    f'{not_annotated} genes in the enrichment set do are not annotated. \n'
+                    f'Enrichment will be computed on the remaining {len(self.gene_set)} genes.'
+                )
 
         else:
             updated_gene_set = self.gene_set.intersection(self.background_set)
             not_in_bg = len(self.gene_set) - len(updated_gene_set)
             self.gene_set = updated_gene_set
             if not_in_bg > 0:
-                warning = f"{not_in_bg} genes in the enrichment set do not appear in the background gene set"
+                warning = f'{not_in_bg} genes in the enrichment set do not appear in the background gene set'
                 if self.exclude_unannotated_genes:
-                    warning += f" and/or do not {self.printout_params}"
-                warning += f". \nEnrichment will be computed on the remaining {len(self.gene_set)} genes."
+                    warning += f' and/or do not {self.printout_params}'
+                warning += f'. \nEnrichment will be computed on the remaining {len(self.gene_set)} genes.'
                 warnings.warn(warning)
 
     def fetch_annotations(self):
@@ -919,7 +1096,8 @@ class EnrichmentRunner:
         self.annotations = {}
         for attr in annotation_df.columns[1:]:
             self.annotations[attr] = parsing.data_to_set(
-                annotation_df.filter(pl.col(attr).is_not_null()).select(pl.first()))
+                annotation_df.filter(pl.col(attr).is_not_null()).select(pl.first())
+            )
 
     def get_attribute_names(self):
         all_attrs = parsing.data_to_list(self.annotations.keys())
@@ -928,8 +1106,11 @@ class EnrichmentRunner:
         else:
             attribute_list = parsing.data_to_list(self.attributes)
             self._validate_attributes(attribute_list, all_attrs)
-            self.attributes = [all_attrs[ind] for ind in attribute_list] if \
-                validation.isinstanceiter(attribute_list, int) else attribute_list
+            self.attributes = (
+                [all_attrs[ind] for ind in attribute_list]
+                if validation.isinstanceiter(attribute_list, int)
+                else attribute_list
+            )
 
     @staticmethod
     def _validate_attributes(attribute_list: list, all_attrs: Collection):
@@ -939,14 +1120,14 @@ class EnrichmentRunner:
         for attr in attribute_list:
             if type(attr) in {int}:
                 if attr < 0:
-                    raise InvalidValueError(f"Error in attribute number {attr}: index must be non-negative!")
+                    raise InvalidValueError(f'Error in attribute number {attr}: index must be non-negative!')
                 if attr >= len(all_attrs):
-                    raise InvalidValueError(f"Attribute index {attr} out of range.")
+                    raise InvalidValueError(f'Attribute index {attr} out of range.')
             else:
                 if not isinstance(attr, str):
-                    raise InvalidTypeError(f"Invalid type of attribute {attr}: {type(attr)}")
+                    raise InvalidTypeError(f'Invalid type of attribute {attr}: {type(attr)}')
                 if attr not in all_attrs:
-                    raise InvalidValueError(f"Attribute {attr} does not appear in the Attribute Refernce Table.")
+                    raise InvalidValueError(f'Attribute {attr} does not appear in the Attribute Refernce Table.')
 
     def filter_annotations(self):
         self.annotations = {attr: self.annotations[attr] for attr in self.attributes}
@@ -955,8 +1136,9 @@ class EnrichmentRunner:
                 if isinstance(self.annotations[attr], set):
                     self.annotations[attr].intersection_update(self.background_set)
                 else:
-                    self.annotations[attr] = {k: v for k, v in self.annotations[attr].items() if
-                                              k in self.background_set}
+                    self.annotations[attr] = {
+                        k: v for k, v in self.annotations[attr].items() if k in self.background_set
+                    }
 
     def calculate_enrichment(self) -> list:
         if self.parallel_backend != 'sequential' and len(self.attributes) > 5:
@@ -966,19 +1148,21 @@ class EnrichmentRunner:
     def _calculate_enrichment_serial(self) -> list:
         gene_set = self.ranked_genes if self.single_set else self.gene_set
         result = []
-        for attribute in tqdm(self.attributes, desc="Calculating enrichment", unit='attributes'):
+        for attribute in tqdm(self.attributes, desc='Calculating enrichment', unit='attributes'):
             if not isinstance(attribute, str):
-                raise InternalError(f"Error in attribute {attribute}: attributes must be strings!")
+                raise InternalError(f'Error in attribute {attribute}: attributes must be strings!')
             this_res = self.stats_test.run(attribute, self.annotations[attribute], gene_set, self.background_set)
             result.append(this_res)
         return result
 
     def _calculate_enrichment_parallel(self) -> list:
         gene_set = self.ranked_genes if self.single_set else self.gene_set
-        result = generic.ProgressParallel(desc="Calculating enrichment", unit='attribute', n_jobs=-1,
-                                          backend=self.parallel_backend)(
-            joblib.delayed(self.stats_test.run)(attribute, self.annotations[attribute], gene_set,
-                                                self.background_set) for attribute in self.attributes)
+        result = generic.ProgressParallel(
+            desc='Calculating enrichment', unit='attribute', n_jobs=-1, backend=self.parallel_backend
+        )(
+            joblib.delayed(self.stats_test.run)(attribute, self.annotations[attribute], gene_set, self.background_set)
+            for attribute in self.attributes
+        )
         return result
 
     def format_results(self, unformatted_results_list: list):
@@ -989,13 +1173,15 @@ class EnrichmentRunner:
         # filter non-significant results
         if not self.return_nonsignificant:
             self.results = self.results.filter(pl.col('significant'))
+
     def _correct_multiple_comparisons(self):
         results_nulls = self.results.filter(pl.col('pval').is_nan())
         self.results = self.results.filter(pl.col('pval').is_not_nan())
 
         significant, padj = _fdrcorrection(self.results['pval'].to_list(), alpha=self.alpha)
-        self.results = pl.concat([self.results.with_columns(padj=padj, significant=significant), results_nulls],
-                                 how='align')
+        self.results = pl.concat(
+            [self.results.with_columns(padj=padj, significant=significant), results_nulls], how='align'
+        )
 
     def plot_results(self) -> EnrichmentPlotter:
         if self.single_set:
@@ -1009,15 +1195,28 @@ class EnrichmentRunner:
 class NonCategoricalEnrichmentRunner(EnrichmentRunner):
     __slots__ = {
         'parametric_test': 'indicates whether to calculate enrichment using a '
-                           'parametric or a-parametric statistical test',
+        'parametric or a-parametric statistical test',
         'plot_log_scale': 'indicates whether to plot the results on a logarithmic or linear scale',
         'plot_style': 'indicates the style of histogram to plot the results in',
-        'n_bins': 'number of bins in histogram plot of results'}
+        'n_bins': 'number of bins in histogram plot of results',
+    }
 
-    def __init__(self, genes: set, attributes: Union[Iterable, str, int], alpha: param_typing.Fraction,
-                 background_set: set, attr_ref_path: str, save_csv: bool, fname: str,
-                 plot_log_scale: bool, plot_style: Literal['interleaved', 'overlap'],
-                 n_bins: int, set_name: str, parallel_backend: Literal[PARALLEL_BACKENDS], parametric_test: bool):
+    def __init__(
+        self,
+        genes: set,
+        attributes: Union[Iterable, str, int],
+        alpha: param_typing.Fraction,
+        background_set: set,
+        attr_ref_path: str,
+        save_csv: bool,
+        fname: str,
+        plot_log_scale: bool,
+        plot_style: Literal['interleaved', 'overlap'],
+        n_bins: int,
+        set_name: str,
+        parallel_backend: Literal[PARALLEL_BACKENDS],
+        parametric_test: bool,
+    ):
 
         if not isinstance(plot_log_scale, bool):
             raise InvalidTypeError(f"Invalid type for 'plot_log_scale': '{plot_log_scale}'.")
@@ -1029,8 +1228,22 @@ class NonCategoricalEnrichmentRunner(EnrichmentRunner):
             raise InvalidValueError(f"'n_bins' must be a positive integer. Instead got {type(n_bins)}.")
 
         stats_test = TTest() if parametric_test else SignTest()
-        super().__init__(genes, attributes, alpha, attr_ref_path, True, save_csv, fname, True, set_name,
-                         parallel_backend, stats_test, background_set, exclude_unannotated_genes=True, single_set=False)
+        super().__init__(
+            genes,
+            attributes,
+            alpha,
+            attr_ref_path,
+            True,
+            save_csv,
+            fname,
+            True,
+            set_name,
+            parallel_backend,
+            stats_test,
+            background_set,
+            exclude_unannotated_genes=True,
+            single_set=False,
+        )
         self.parametric_test = parametric_test
         self.plot_log_scale = plot_log_scale
         self.plot_style = plot_style
@@ -1041,9 +1254,12 @@ class NonCategoricalEnrichmentRunner(EnrichmentRunner):
         validation.validate_attr_table(annotation_df)
         self.annotations = {}
         for attr in annotation_df.columns[1:]:
-            self.annotations[attr] = {key: val[0] for key, val in
-                                      annotation_df.select(cs.first() | cs.by_name(attr)).rows_by_key(
-                                          annotation_df.columns[0], unique=True).items()}
+            self.annotations[attr] = {
+                key: val[0]
+                for key, val in annotation_df.select(cs.first() | cs.by_name(attr))
+                .rows_by_key(annotation_df.columns[0], unique=True)
+                .items()
+            }
             for gene_id, val in self.annotations[attr].items():
                 if val is None:
                     self.annotations[attr][gene_id] = np.nan
@@ -1053,48 +1269,91 @@ class NonCategoricalEnrichmentRunner(EnrichmentRunner):
         self.results = pl.DataFrame(unformatted_results_list, schema=columns, orient='row')
         self._correct_multiple_comparisons()
         if self.results['pval'].is_nan().any():
-            warnings.warn(f"One or more of the genes in the background set contained NaN values in "
-                          f"{len(self.results['pval'].is_nan())} of the attributes. "
-                          f"P-values and plots will not be generated for those attributes. ")
+            warnings.warn(
+                f'One or more of the genes in the background set contained NaN values in '
+                f'{len(self.results["pval"].is_nan())} of the attributes. '
+                f'P-values and plots will not be generated for those attributes. '
+            )
         if not self.return_nonsignificant:
             self.results = self.results.filter(pl.col('significant') is True)
 
     def plot_results(self) -> HistogramPlotter:
-        plotter = HistogramPlotter(self.results, self.annotations,
-                                   parsing.data_to_list(self.attributes), self.alpha, self.set_name, self.gene_set,
-                                   self.background_set, self.plot_log_scale, self.n_bins, self.plot_style,
-                                   self.parametric_test)
+        plotter = HistogramPlotter(
+            self.results,
+            self.annotations,
+            parsing.data_to_list(self.attributes),
+            self.alpha,
+            self.set_name,
+            self.gene_set,
+            self.background_set,
+            self.plot_log_scale,
+            self.n_bins,
+            self.plot_style,
+            self.parametric_test,
+        )
         return plotter
 
 
 class KEGGEnrichmentRunner(EnrichmentRunner):
-    __slots__ = {'organism': 'the organism name for which to fetch GO Annotations',
-                 'taxon_id': 'NCBI Taxon ID for which to fetch GO Annotations',
-                 'gene_id_type': 'the type of gene ID index that is used',
-                 'return_nonsignificant': 'indicates whether to return results which were not found to be '
-                                          'statistically significant after enrichment analysis',
-                 'attributes_set': 'set of the attributes/KEGG Pathways for which enrichment should be calculated',
-                 'pathway_names_dict': 'a dict with KEGG Pathway IDs as keys and their names as values',
-                 'plot_pathway_graphs': 'indicates whether to plot pathway graphs of the statistically significant KEGG pathways',
-                 'pathway_graphs_format': 'file format for the generated pathway graphs',
-                 'gene_id_map': 'gene ID translator from KEGG into a user-defined gene ID type'
-                 }
+    __slots__ = {
+        'organism': 'the organism name for which to fetch GO Annotations',
+        'taxon_id': 'NCBI Taxon ID for which to fetch GO Annotations',
+        'gene_id_type': 'the type of gene ID index that is used',
+        'return_nonsignificant': 'indicates whether to return results which were not found to be '
+        'statistically significant after enrichment analysis',
+        'attributes_set': 'set of the attributes/KEGG Pathways for which enrichment should be calculated',
+        'pathway_names_dict': 'a dict with KEGG Pathway IDs as keys and their names as values',
+        'plot_pathway_graphs': 'indicates whether to plot pathway graphs of the statistically significant KEGG pathways',
+        'pathway_graphs_format': 'file format for the generated pathway graphs',
+        'gene_id_map': 'gene ID translator from KEGG into a user-defined gene ID type',
+    }
     KEGG_DF_QUERIES = {}
-    printout_params = "have any KEGG Annotations asocciated with them"
+    printout_params = 'have any KEGG Annotations asocciated with them'
 
-    def __init__(self, genes: Union[set, np.ndarray], organism: Union[str, int], gene_id_type: str, alpha: float,
-                 return_nonsignificant: bool, save_csv: bool, fname: str, plot_horizontal: bool,
-                 plot_pathway_graphs: bool, set_name: str, parallel_backend: Literal[PARALLEL_BACKENDS],
-                 stats_test: StatsTest, background_set: set = None, exclude_unannotated_genes: bool = True,
-                 single_set: bool = False, pathway_graphs_format: Literal[GRAPHVIZ_FORMATS] = 'none',
-                 plot_style: Literal['bar', 'lollipop'] = 'bar', show_expected: bool = False):
-        super().__init__(genes, [], alpha, '', return_nonsignificant, save_csv, fname, plot_horizontal,
-                         set_name, parallel_backend, stats_test, background_set, exclude_unannotated_genes, single_set,
-                         plot_style, show_expected)
+    def __init__(
+        self,
+        genes: Union[set, np.ndarray],
+        organism: Union[str, int],
+        gene_id_type: str,
+        alpha: float,
+        return_nonsignificant: bool,
+        save_csv: bool,
+        fname: str,
+        plot_horizontal: bool,
+        plot_pathway_graphs: bool,
+        set_name: str,
+        parallel_backend: Literal[PARALLEL_BACKENDS],
+        stats_test: StatsTest,
+        background_set: set = None,
+        exclude_unannotated_genes: bool = True,
+        single_set: bool = False,
+        pathway_graphs_format: Literal[GRAPHVIZ_FORMATS] = 'none',
+        plot_style: Literal['bar', 'lollipop'] = 'bar',
+        show_expected: bool = False,
+    ):
+        super().__init__(
+            genes,
+            [],
+            alpha,
+            '',
+            return_nonsignificant,
+            save_csv,
+            fname,
+            plot_horizontal,
+            set_name,
+            parallel_backend,
+            stats_test,
+            background_set,
+            exclude_unannotated_genes,
+            single_set,
+            plot_style,
+            show_expected,
+        )
         if not self.stats_test:
             return
-        (self.taxon_id, self.organism), self.gene_id_type = io.get_taxon_and_id_type(organism, gene_id_type,
-                                                                                     self.gene_set, 'KEGG')
+        (self.taxon_id, self.organism), self.gene_id_type = io.get_taxon_and_id_type(
+            organism, gene_id_type, self.gene_set, 'KEGG'
+        )
         self.pathway_names_dict: dict = {}
         self.plot_pathway_graphs = plot_pathway_graphs
         self.pathway_graphs_format = pathway_graphs_format
@@ -1106,15 +1365,17 @@ class KEGGEnrichmentRunner(EnrichmentRunner):
     def format_results(self, unformatted_results_list: list):
         super().format_results(unformatted_results_list)
         self.results = self.results.rename({'name': 'KEGG ID'})
-        self.results.insert_column(1, pl.Series(
-            [self.pathway_names_dict[kegg_id] for kegg_id in self.results['KEGG ID']]).alias('name'))
+        self.results.insert_column(
+            1, pl.Series([self.pathway_names_dict[kegg_id] for kegg_id in self.results['KEGG ID']]).alias('name')
+        )
 
     def _correct_multiple_comparisons(self):
         results_nulls = self.results.filter(pl.col('pval').is_nan())
         self.results = self.results.filter(pl.col('pval').is_not_nan())
         significant, padj = _fdrcorrection(self.results['pval'].to_list(), alpha=self.alpha, method='negcorr')
-        self.results = pl.concat([self.results.with_columns(padj=padj, significant=significant), results_nulls],
-                                 how='align')
+        self.results = pl.concat(
+            [self.results.with_columns(padj=padj, significant=significant), results_nulls], how='align'
+        )
 
     def fetch_annotations(self):
         # check if annotations for the requested query were previously fetched and cached
@@ -1130,7 +1391,7 @@ class KEGGEnrichmentRunner(EnrichmentRunner):
     def _generate_annotation_dict(self) -> Tuple[Dict[str, Set[str]], Dict[str, str]]:
         # fetch and process KEGG annotations
         annotation_dict, pathway_name_dict = self._process_annotations()
-        print(f"Found annotations for {len(annotation_dict)} genes.")
+        print(f'Found annotations for {len(annotation_dict)} genes.')
         # translate gene IDs
         translated_annotation_dict = self._translate_gene_ids(annotation_dict)
         return translated_annotation_dict, pathway_name_dict
@@ -1142,10 +1403,13 @@ class KEGGEnrichmentRunner(EnrichmentRunner):
         pathway_name_dict = {}
         annotation_iter = self._get_annotation_iterator()
         if annotation_iter.n_annotations <= 0:
-            raise InvalidValueError("No KEGG annotations were found for the given parameters. "
-                                    "Please try again with a different set of parameters. ")
-        for pathway_id, pathway_name, annotations in tqdm(annotation_iter, desc=desc,
-                                                          total=annotation_iter.n_annotations, unit=' annotations'):
+            raise InvalidValueError(
+                'No KEGG annotations were found for the given parameters. '
+                'Please try again with a different set of parameters. '
+            )
+        for pathway_id, pathway_name, annotations in tqdm(
+            annotation_iter, desc=desc, total=annotation_iter.n_annotations, unit=' annotations'
+        ):
             pathway_name_dict[pathway_id] = pathway_name
             # add annotation to annotation dictionary
             if pathway_id not in annotation_dict:
@@ -1157,8 +1421,7 @@ class KEGGEnrichmentRunner(EnrichmentRunner):
         translated_dict = {}
         source = 'KEGG'
 
-        gene_id_map = io.GeneIDTranslator(source, self.gene_id_type).run(
-            set.union(*annotation_dict.values()))
+        gene_id_map = io.GeneIDTranslator(source, self.gene_id_type).run(set.union(*annotation_dict.values()))
         self.gene_id_map = gene_id_map
         for kegg_id in annotation_dict:
             translated_dict[kegg_id] = set()
@@ -1178,48 +1441,92 @@ class KEGGEnrichmentRunner(EnrichmentRunner):
         bar_plotter = super().plot_results()
         if self.plot_pathway_graphs:
             ylabel = self.SINGLE_SET_ENRICHMENT_SCORE_YLABEL if self.single_set else self.ENRICHMENT_SCORE_YLABEL
-            kegg_plotter = KEGGPlotter(self.results, self.en_score_col, self.gene_set, self.pathway_names_dict,
-                                       self.gene_id_map, self.pathway_graphs_format, self.single_set, ylabel)
+            kegg_plotter = KEGGPlotter(
+                self.results,
+                self.en_score_col,
+                self.gene_set,
+                self.pathway_names_dict,
+                self.gene_id_map,
+                self.pathway_graphs_format,
+                self.single_set,
+                ylabel,
+            )
             return MultiPlotter(self.results, [bar_plotter, kegg_plotter])
         return bar_plotter
 
 
 class GOEnrichmentRunner(EnrichmentRunner):
-    __slots__ = {'dag_tree': 'DAG tree containing the hierarchical structure of all GO Terms',
-                 'mutable_annotations': "Additional copies of 'annotations' which are "
-                                        "actively mutated by p-value propagation algorithms",
-                 'organism': 'the organism name for which to fetch GO Annotations',
-                 'taxon_id': 'NCBI Taxon ID for which to fetch GO Annotations',
-                 'gene_id_type': 'the type of gene ID index that is used',
-                 'propagate_annotations': 'indicates whether to propagate GO Annotations, and with which algorithm',
-                 'aspects': 'the GO Aspects for which GO Annotations should be fetched',
-                 'evidence_types': 'the evidence types for which GO Annotations should be fetched',
-                 'excluded_evidence_types': 'the evidence types for which GO Annotations should NOT be fetched',
-                 'databases': 'the ontology databases from which GO Annotations should be fetched',
-                 'excluded_databases': 'the ontology databases from which GO Annotations should NOT be fetched',
-                 'qualifiers': 'the evidence types for which GO Annotations should be fetched',
-                 'excluded_qualifiers': 'the evidence types for which GO Annotations should NOT be fetched',
-                 'plot_ontology_graph': 'indicates whether to plot ontology graph of the statistically significant GO Terms',
-                 'ontology_graph_format': 'file format for the generated ontology graph',
-                 'attributes_set': 'set of the attributes/GO Terms for which enrichment should be calculated'}
-    printout_params = "have any GO Annotations asocciated with them"
+    __slots__ = {
+        'dag_tree': 'DAG tree containing the hierarchical structure of all GO Terms',
+        'mutable_annotations': "Additional copies of 'annotations' which are "
+        'actively mutated by p-value propagation algorithms',
+        'organism': 'the organism name for which to fetch GO Annotations',
+        'taxon_id': 'NCBI Taxon ID for which to fetch GO Annotations',
+        'gene_id_type': 'the type of gene ID index that is used',
+        'propagate_annotations': 'indicates whether to propagate GO Annotations, and with which algorithm',
+        'aspects': 'the GO Aspects for which GO Annotations should be fetched',
+        'evidence_types': 'the evidence types for which GO Annotations should be fetched',
+        'excluded_evidence_types': 'the evidence types for which GO Annotations should NOT be fetched',
+        'databases': 'the ontology databases from which GO Annotations should be fetched',
+        'excluded_databases': 'the ontology databases from which GO Annotations should NOT be fetched',
+        'qualifiers': 'the evidence types for which GO Annotations should be fetched',
+        'excluded_qualifiers': 'the evidence types for which GO Annotations should NOT be fetched',
+        'plot_ontology_graph': 'indicates whether to plot ontology graph of the statistically significant GO Terms',
+        'ontology_graph_format': 'file format for the generated ontology graph',
+        'attributes_set': 'set of the attributes/GO Terms for which enrichment should be calculated',
+    }
+    printout_params = 'have any GO Annotations asocciated with them'
     GOA_DF_QUERIES = {}
 
-    def __init__(self, genes: Union[set, np.ndarray], organism: Union[str, int], gene_id_type: str, alpha: float,
-                 propagate_annotations: str, aspects: Union[str, Iterable[str]],
-                 evidence_types: Union[str, Iterable[str]], excluded_evidence_types: Union[str, Iterable[str]],
-                 databases: Union[str, Iterable[str]], excluded_databases: Union[str, Iterable[str]],
-                 qualifiers: Union[str, Iterable[str]], excluded_qualifiers: Union[str, Iterable[str]],
-                 return_nonsignificant: bool, save_csv: bool, fname: str, plot_horizontal: bool,
-                 plot_ontology_graph: bool, set_name: str, parallel_backend: Literal[PARALLEL_BACKENDS],
-                 stats_test: StatsTest, background_set: set = None, exclude_unannotated_genes: bool = True,
-                 single_set: bool = False, ontology_graph_format: Literal[GRAPHVIZ_FORMATS] = 'none',
-                 plot_style: Literal['bar', 'lollipop'] = 'bar', show_expected: bool = False):
+    def __init__(
+        self,
+        genes: Union[set, np.ndarray],
+        organism: Union[str, int],
+        gene_id_type: str,
+        alpha: float,
+        propagate_annotations: str,
+        aspects: Union[str, Iterable[str]],
+        evidence_types: Union[str, Iterable[str]],
+        excluded_evidence_types: Union[str, Iterable[str]],
+        databases: Union[str, Iterable[str]],
+        excluded_databases: Union[str, Iterable[str]],
+        qualifiers: Union[str, Iterable[str]],
+        excluded_qualifiers: Union[str, Iterable[str]],
+        return_nonsignificant: bool,
+        save_csv: bool,
+        fname: str,
+        plot_horizontal: bool,
+        plot_ontology_graph: bool,
+        set_name: str,
+        parallel_backend: Literal[PARALLEL_BACKENDS],
+        stats_test: StatsTest,
+        background_set: set = None,
+        exclude_unannotated_genes: bool = True,
+        single_set: bool = False,
+        ontology_graph_format: Literal[GRAPHVIZ_FORMATS] = 'none',
+        plot_style: Literal['bar', 'lollipop'] = 'bar',
+        show_expected: bool = False,
+    ):
 
         self.propagate_annotations = propagate_annotations.lower()
-        super().__init__(genes, [], alpha, '', return_nonsignificant, save_csv, fname, plot_horizontal,
-                         set_name, parallel_backend, stats_test, background_set,
-                         exclude_unannotated_genes, single_set, plot_style, show_expected)
+        super().__init__(
+            genes,
+            [],
+            alpha,
+            '',
+            return_nonsignificant,
+            save_csv,
+            fname,
+            plot_horizontal,
+            set_name,
+            parallel_backend,
+            stats_test,
+            background_set,
+            exclude_unannotated_genes,
+            single_set,
+            plot_style,
+            show_expected,
+        )
         if not self.stats_test:
             return
         # Fetch+parse the GO DAG (a blocking download on a cold cache) concurrently with resolving
@@ -1230,8 +1537,9 @@ class GOEnrichmentRunner(EnrichmentRunner):
         with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
             dag_future = executor.submit(ontology.fetch_go_basic)
             self.mutable_annotations: Tuple[dict, ...] = tuple()
-            (self.taxon_id, self.organism), self.gene_id_type = io.get_taxon_and_id_type(organism, gene_id_type,
-                                                                                         self.gene_set, 'UniProtKB')
+            (self.taxon_id, self.organism), self.gene_id_type = io.get_taxon_and_id_type(
+                organism, gene_id_type, self.gene_set, 'UniProtKB'
+            )
             self.dag_tree: ontology.DAGTree = dag_future.result()
         self.aspects = aspects
         self.evidence_types = evidence_types
@@ -1258,7 +1566,7 @@ class GOEnrichmentRunner(EnrichmentRunner):
     def _generate_annotation_dict(self) -> Dict[str, Set[str]]:
         # fetch and process GO annotations
         annotation_dict, source_to_gene_id_dict = self._process_annotations()
-        print(f"Found annotations for {len(annotation_dict)} genes.")
+        print(f'Found annotations for {len(annotation_dict)} genes.')
         # translate gene IDs
         translated_annotation_dict = self._translate_gene_ids(annotation_dict, source_to_gene_id_dict)
         return translated_annotation_dict
@@ -1273,8 +1581,10 @@ class GOEnrichmentRunner(EnrichmentRunner):
         source_to_gene_id_dict = {}
         annotation_iter = self._get_annotation_iterator()
         if annotation_iter.n_annotations <= 0:
-            raise InvalidValueError("No GO annotations were found for the given parameters. "
-                                    "Please try again with a different set of parameters. ")
+            raise InvalidValueError(
+                'No GO annotations were found for the given parameters. '
+                'Please try again with a different set of parameters. '
+            )
         for annotation in tqdm(annotation_iter, desc=desc, total=annotation_iter.n_annotations, unit=' annotations'):
             # extract gene_id, go_id, source from the annotation. skip annotations that don't appear in the GO DAG
 
@@ -1286,7 +1596,7 @@ class GOEnrichmentRunner(EnrichmentRunner):
 
             # add annotation to annotation dictionary
             if go_id not in annotation_dict:
-                annotation_dict[go_id] = (set())
+                annotation_dict[go_id] = set()
             annotation_dict[go_id].add(gene_id)
 
             # add gene id and source to source dict
@@ -1298,10 +1608,16 @@ class GOEnrichmentRunner(EnrichmentRunner):
         return annotation_dict, source_to_gene_id_dict
 
     def _get_annotation_iterator(self):
-        return io.GOlrAnnotationIterator(self.taxon_id, self.aspects,
-                                         self.evidence_types, self.excluded_evidence_types,
-                                         self.databases, self.excluded_databases,
-                                         self.qualifiers, self.excluded_qualifiers)
+        return io.GOlrAnnotationIterator(
+            self.taxon_id,
+            self.aspects,
+            self.evidence_types,
+            self.excluded_evidence_types,
+            self.databases,
+            self.excluded_databases,
+            self.qualifiers,
+            self.excluded_qualifiers,
+        )
 
     def _propagate_annotation(self, gene_id: str, go_id: str, annotation_dict: dict):
         if self.propagate_annotations != 'no':
@@ -1342,22 +1658,28 @@ class GOEnrichmentRunner(EnrichmentRunner):
                 try:
                     translators.append(futures[source].result())
                 except InvalidValueError as e:
-                    if 'not a valid Uniprot Dataset' in "".join(e.args):
-                        warnings.warn(f"Failed to map gene IDs for {len(source_to_gene_id_dict[source])} annotations "
-                                      f"from dataset '{source}'.")
+                    if 'not a valid Uniprot Dataset' in ''.join(e.args):
+                        warnings.warn(
+                            f'Failed to map gene IDs for {len(source_to_gene_id_dict[source])} annotations '
+                            f"from dataset '{source}'."
+                        )
                     else:
                         raise e
         return translators
 
     def _get_query_key(self):
-        return (self.taxon_id, self.gene_id_type, parsing.data_to_tuple(self.aspects, sort=True),
-                parsing.data_to_tuple(self.evidence_types, sort=True),
-                parsing.data_to_tuple(self.excluded_evidence_types, sort=True),
-                parsing.data_to_tuple(self.databases, sort=True),
-                parsing.data_to_tuple(self.excluded_databases, sort=True),
-                parsing.data_to_tuple(self.qualifiers, sort=True),
-                parsing.data_to_tuple(self.excluded_qualifiers, sort=True),
-                self.propagate_annotations != 'no')
+        return (
+            self.taxon_id,
+            self.gene_id_type,
+            parsing.data_to_tuple(self.aspects, sort=True),
+            parsing.data_to_tuple(self.evidence_types, sort=True),
+            parsing.data_to_tuple(self.excluded_evidence_types, sort=True),
+            parsing.data_to_tuple(self.databases, sort=True),
+            parsing.data_to_tuple(self.excluded_databases, sort=True),
+            parsing.data_to_tuple(self.qualifiers, sort=True),
+            parsing.data_to_tuple(self.excluded_qualifiers, sort=True),
+            self.propagate_annotations != 'no',
+        )
 
     def validate_statistical_test(self):
         super().validate_statistical_test()
@@ -1377,50 +1699,60 @@ class GOEnrichmentRunner(EnrichmentRunner):
         results_nulls = self.results.filter(pl.col('pval').is_nan())
         self.results = self.results.filter(pl.col('pval').is_not_nan())
         significant, padj = _fdrcorrection(self.results['pval'].to_list(), alpha=self.alpha, method='negcorr')
-        self.results = pl.concat([self.results.with_columns(padj=padj, significant=significant), results_nulls],
-                                 how='align')
+        self.results = pl.concat(
+            [self.results.with_columns(padj=padj, significant=significant), results_nulls], how='align'
+        )
 
     def plot_results(self) -> EnrichmentPlotter:
         n_bars = min(10, len(self.results))
         kwargs = dict()
         if self.single_set:
             kwargs['ylabel'] = self.SINGLE_SET_ENRICHMENT_SCORE_YLABEL
-            kwargs['title'] = f"Single-list GO enrichment for gene set '{self.set_name}'\n" \
-                              f"top {n_bars} most specific GO terms"
+            kwargs['title'] = (
+                f"Single-list GO enrichment for gene set '{self.set_name}'\ntop {n_bars} most specific GO terms"
+            )
         else:
             kwargs['ylabel'] = self.ENRICHMENT_SCORE_YLABEL
-            kwargs['title'] = f"GO enrichment for gene set '{self.set_name}'\n" \
-                              f"top {n_bars} most specific GO terms"
+            kwargs['title'] = f"GO enrichment for gene set '{self.set_name}'\ntop {n_bars} most specific GO terms"
         bar_plotter = BarPlotter(self.results, self.en_score_col, n_bars, self.alpha, **kwargs)
 
         if self.plot_ontology_graph:
             ontology_kwargs = kwargs.copy()
-            ontology_kwargs['title'] = f"Single-list GO enrichment for gene set '{self.set_name}'" if self.single_set \
+            ontology_kwargs['title'] = (
+                f"Single-list GO enrichment for gene set '{self.set_name}'"
+                if self.single_set
                 else f"GO enrichment for gene set '{self.set_name}'"
+            )
             dag_plotter = self.go_dag_plot(**ontology_kwargs)
             return MultiPlotter(self.results, [bar_plotter, dag_plotter])
 
         return bar_plotter
 
-    def go_dag_plot(self, title, dpi: int = 300, ylabel: str = "$\\log_2$(Fold Enrichment)") -> GODagPlotter:
-        plotter = GODagPlotter(self.results, self.en_score_col, self.dag_tree, self.aspects, title, ylabel, dpi,
-                               self.ontology_graph_format)
+    def go_dag_plot(self, title, dpi: int = 300, ylabel: str = '$\\log_2$(Fold Enrichment)') -> GODagPlotter:
+        plotter = GODagPlotter(
+            self.results, self.en_score_col, self.dag_tree, self.aspects, title, ylabel, dpi, self.ontology_graph_format
+        )
         return plotter
 
     def format_results(self, unformatted_results_dict: dict):
         super().format_results(parsing.data_to_list(unformatted_results_dict.values()))
         self.results = self.results.rename({'name': 'GO ID'})
-        self.results.insert_column(1, pl.Series([self.dag_tree[go_id].name for go_id in self.results['GO ID']]).alias(
-            'name'))
+        self.results.insert_column(
+            1, pl.Series([self.dag_tree[go_id].name for go_id in self.results['GO ID']]).alias('name')
+        )
         # sort results by specificity (level in DAG tree)
-        self.results = self.results.with_columns(pl.Series(
-            [self.dag_tree[ind].level for ind in self.results.select(pl.first()).to_series().to_list()]).alias(
-            'dag_level'))
+        self.results = self.results.with_columns(
+            pl.Series(
+                [self.dag_tree[ind].level for ind in self.results.select(pl.first()).to_series().to_list()]
+            ).alias('dag_level')
+        )
         self.results = self.results.sort(pl.col('dag_level'), descending=True).drop('dag_level')
 
     def _calculate_enrichment_serial(self) -> dict:
-        desc = f"Calculating enrichment for {len(self.attributes)} GO terms " \
-               f"using the '{self.propagate_annotations}' method"
+        desc = (
+            f'Calculating enrichment for {len(self.attributes)} GO terms '
+            f"using the '{self.propagate_annotations}' method"
+        )
         if self.propagate_annotations == 'classic' or self.propagate_annotations == 'no':
             self.mutable_annotations = (self.annotations,)
             result = self._go_classic_pvalues_serial(desc)
@@ -1439,21 +1771,32 @@ class GOEnrichmentRunner(EnrichmentRunner):
         return result
 
     def _calculate_enrichment_parallel(self) -> dict:
-        desc = f"Calculating enrichment for {len(self.attributes)} GO terms " \
-               f"using the '{self.propagate_annotations}' method"
+        desc = (
+            f'Calculating enrichment for {len(self.attributes)} GO terms '
+            f"using the '{self.propagate_annotations}' method"
+        )
         if self.propagate_annotations == 'classic' or self.propagate_annotations == 'no':
             self.mutable_annotations = (self.annotations,)
             result = self._go_classic_pvalues_parallel(desc)
         elif self.propagate_annotations == 'elim':
             self.mutable_annotations = tuple(
-                {attr: set(self.annotations[attr]) for attr in self._go_level_iterator(namespace) if
-                 attr in self.annotations} for namespace in
-                self.dag_tree.namespaces)
+                {
+                    attr: set(self.annotations[attr])
+                    for attr in self._go_level_iterator(namespace)
+                    if attr in self.annotations
+                }
+                for namespace in self.dag_tree.namespaces
+            )
             result = self._go_elim_pvalues_parallel(desc)
         elif self.propagate_annotations == 'weight':
-            self.mutable_annotations = tuple({attr: {v: 1.0 for v in val} for attr, val in self.annotations.items() if
-                                              attr in set(self._go_level_iterator(namespace))} for namespace in
-                                             self.dag_tree.namespaces)
+            self.mutable_annotations = tuple(
+                {
+                    attr: {v: 1.0 for v in val}
+                    for attr, val in self.annotations.items()
+                    if attr in set(self._go_level_iterator(namespace))
+                }
+                for namespace in self.dag_tree.namespaces
+            )
             result = self._go_weight_pvalues_parallel(desc)
         elif self.propagate_annotations == 'all.m':
             result = self._go_allm_pvalues_parallel()
@@ -1468,8 +1811,12 @@ class GOEnrichmentRunner(EnrichmentRunner):
         # split GO terms into batches of size 1000 to reduce the overhead of parallel jobs.
         # the GO terms in each batch are calculated serially in a single process
         partitioned = parsing.partition_list(self.attributes, 1000)
-        return self._parallel_over_grouping(self._go_classic_on_batch, partitioned,
-                                            (0 for _ in range(len(partitioned))), progress_bar_desc=progress_bar_desc)
+        return self._parallel_over_grouping(
+            self._go_classic_on_batch,
+            partitioned,
+            (0 for _ in range(len(partitioned))),
+            progress_bar_desc=progress_bar_desc,
+        )
 
     def _go_classic_on_batch(self, go_term_batch: Iterable[str], annotation_idx: int = 0):
         """
@@ -1484,20 +1831,28 @@ class GOEnrichmentRunner(EnrichmentRunner):
         """
         gene_set = self.ranked_genes if self.single_set else self.gene_set
         annotations = self.mutable_annotations[annotation_idx]
-        return {go_id: self.stats_test.run(go_id, annotations[go_id], gene_set, self.background_set) for go_id in
-                go_term_batch}
+        return {
+            go_id: self.stats_test.run(go_id, annotations[go_id], gene_set, self.background_set)
+            for go_id in go_term_batch
+        }
 
     def _go_elim_pvalues_serial(self, progress_bar_desc: str = '') -> dict:
         result = self._go_elim_on_aspect('all', progress_bar_desc=progress_bar_desc)
         return result
 
-    def _parallel_over_grouping(self, func, grouping: Iterable, annotation_indices: Iterable[int],
-                                max_nbytes: Union[str, None] = '1M', progress_bar_desc: str = '') -> dict:
+    def _parallel_over_grouping(
+        self,
+        func,
+        grouping: Iterable,
+        annotation_indices: Iterable[int],
+        max_nbytes: Union[str, None] = '1M',
+        progress_bar_desc: str = '',
+    ) -> dict:
         if not validation.is_method_of_class(func, type(self)):
             raise InternalError
-        result_dicts = generic.ProgressParallel(desc=progress_bar_desc, n_jobs=-1, max_nbytes=max_nbytes,
-                                                backend=self.parallel_backend)(
-            joblib.delayed(func)(group, ind) for group, ind in zip(grouping, annotation_indices))
+        result_dicts = generic.ProgressParallel(
+            desc=progress_bar_desc, n_jobs=-1, max_nbytes=max_nbytes, backend=self.parallel_backend
+        )(joblib.delayed(func)(group, ind) for group, ind in zip(grouping, annotation_indices))
         result = {}
         for d in result_dicts:
             result.update(d)
@@ -1508,22 +1863,32 @@ class GOEnrichmentRunner(EnrichmentRunner):
         # max_nbytes is set to None to prevent joblib from turning the mod_annotation_df into a memory map.
         # since this algorithm modifies the dataframe while running, turning the dataframe into a memory map
         # would raise an exception ("...trying to write into a read-only location...").
-        return self._parallel_over_grouping(self._go_elim_on_aspect, go_aspects, range(len(go_aspects)),
-                                            max_nbytes=None, progress_bar_desc=progress_bar_desc)
+        return self._parallel_over_grouping(
+            self._go_elim_on_aspect,
+            go_aspects,
+            range(len(go_aspects)),
+            max_nbytes=None,
+            progress_bar_desc=progress_bar_desc,
+        )
 
     def _go_elim_on_aspect(self, go_aspect: str, annotation_idx: int = 0, progress_bar_desc: str = None) -> dict:
         result_dict = {}
         marked_nodes = {}
         annotations = self.mutable_annotations[annotation_idx]
         gene_set = self.ranked_genes if self.single_set else self.gene_set
-        go_id_iter = self._go_level_iterator(go_aspect) if progress_bar_desc is None \
-            else tqdm(self._go_level_iterator(go_aspect), unit=' GO terms', desc=progress_bar_desc,
-                      total=len(self.attributes))
+        go_id_iter = (
+            self._go_level_iterator(go_aspect)
+            if progress_bar_desc is None
+            else tqdm(
+                self._go_level_iterator(go_aspect), unit=' GO terms', desc=progress_bar_desc, total=len(self.attributes)
+            )
+        )
         for go_id in go_id_iter:
             if go_id in marked_nodes:  # if this node was marked, remove from it all marked genes
                 annotations[go_id].difference_update(marked_nodes[go_id])
-            result_dict[go_id] = self.stats_test.run(go_id, annotations[go_id], gene_set, self.background_set,
-                                                     self.annotations[go_id])
+            result_dict[go_id] = self.stats_test.run(
+                go_id, annotations[go_id], gene_set, self.background_set, self.annotations[go_id]
+            )
             # if current GO ID is significantly ENRICHED, mark its ancestors
             if result_dict[go_id][-1] <= self.alpha and result_dict[go_id][-2] > 0:
                 new_marked_genes = annotations[go_id].intersection(annotations[go_id])
@@ -1541,20 +1906,38 @@ class GOEnrichmentRunner(EnrichmentRunner):
         # max_nbytes is set to None to prevent joblib from turning the mod_annotation_df into a memory map.
         # since this algorithm modifies the dataframe while running, turning the dataframe into a memory map
         # would raise an exception ("...trying to write into a read-only location...").
-        return self._parallel_over_grouping(self._go_weight_on_aspect, go_aspects, range(len(go_aspects)),
-                                            max_nbytes=None, progress_bar_desc=progress_bar_desc)
+        return self._parallel_over_grouping(
+            self._go_weight_on_aspect,
+            go_aspects,
+            range(len(go_aspects)),
+            max_nbytes=None,
+            progress_bar_desc=progress_bar_desc,
+        )
 
     def _go_weight_on_aspect(self, go_aspect: str, annotation_idx: int = 0, progress_bar_desc: str = None) -> dict:
         result_dict = {}
         mut_annotation = self.mutable_annotations[annotation_idx]
         weights = collections.defaultdict(lambda: 1)  # default weight for all nodes is 1
-        go_id_iter = self._go_level_iterator(go_aspect) if progress_bar_desc is None \
-            else tqdm(self._go_level_iterator(go_aspect), unit=' GO terms', desc=progress_bar_desc,
-                      total=len(self.attributes))
+        go_id_iter = (
+            self._go_level_iterator(go_aspect)
+            if progress_bar_desc is None
+            else tqdm(
+                self._go_level_iterator(go_aspect), unit=' GO terms', desc=progress_bar_desc, total=len(self.attributes)
+            )
+        )
         for go_id in go_id_iter:
             children = {child for child in self.dag_tree[go_id].get_children() if child in self.attributes_set}
-            self._compute_term_sig(mut_annotation, self.gene_set, self.background_set, self.dag_tree,
-                                   self.attributes_set, go_id, children, weights, result_dict)
+            self._compute_term_sig(
+                mut_annotation,
+                self.gene_set,
+                self.background_set,
+                self.dag_tree,
+                self.attributes_set,
+                go_id,
+                children,
+                weights,
+                result_dict,
+            )
         return result_dict
 
     def _go_allm_pvalues_serial(self):
@@ -1593,8 +1976,11 @@ class GOEnrichmentRunner(EnrichmentRunner):
         """
         result = {}
         for go_id in self.attributes:
-            pvalue = np.exp(np.mean(
-                np.log([outputs['classic'][go_id][-1], outputs['elim'][go_id][-1], outputs['weight'][go_id][-1]])))
+            pvalue = np.exp(
+                np.mean(
+                    np.log([outputs['classic'][go_id][-1], outputs['elim'][go_id][-1], outputs['weight'][go_id][-1]])
+                )
+            )
             result[go_id] = (*outputs['classic'][go_id][:-1], pvalue)
         return result
 
@@ -1604,9 +1990,18 @@ class GOEnrichmentRunner(EnrichmentRunner):
                 yield go_id
 
     @staticmethod
-    def _compute_term_sig(mut_annotation: Dict[str, Dict[str, int]], gene_set: Set[str], background_set: Set[str],
-                          dag_tree: ontology.DAGTree, attributes_set: Set[str],
-                          go_id: str, children: set, weights: dict, result: dict, tolerance: float = 10 ** -50):
+    def _compute_term_sig(
+        mut_annotation: Dict[str, Dict[str, int]],
+        gene_set: Set[str],
+        background_set: Set[str],
+        dag_tree: ontology.DAGTree,
+        attributes_set: Set[str],
+        go_id: str,
+        children: set,
+        weights: dict,
+        result: dict,
+        tolerance: float = 10**-50,
+    ):
         """
         Implementation of the computeTermSig(u, children) function from Alexa et al 2006: \
         https://doi.org/10.1093/bioinformatics/btl140
@@ -1662,13 +2057,25 @@ class GOEnrichmentRunner(EnrichmentRunner):
 
         # CASE 2: if some children are more significant than parent, re-weigh ancesctors (including 'go_id'),
         # and then recompute stats for go_id
-        inclusive_ancestors = {ancestor for ancestor in
-                               itertools.chain([go_id], dag_tree.upper_induced_graph_iter(go_id)) if
-                               ancestor in attributes_set}
+        inclusive_ancestors = {
+            ancestor
+            for ancestor in itertools.chain([go_id], dag_tree.upper_induced_graph_iter(go_id))
+            if ancestor in attributes_set
+        }
         for sig_child in sig_children:
             for inclusive_ancestor in inclusive_ancestors:
                 for gene_id in mut_annotation[inclusive_ancestor]:
-                    mut_annotation[inclusive_ancestor][gene_id] *= (1 / weights[sig_child])
+                    mut_annotation[inclusive_ancestor][gene_id] *= 1 / weights[sig_child]
         # re-run compute_term_sig, only with the children which were not more significant than their parents
-        GOEnrichmentRunner._compute_term_sig(mut_annotation, gene_set, background_set, dag_tree, attributes_set, go_id,
-                                             children.difference(sig_children), weights, result, tolerance)
+        GOEnrichmentRunner._compute_term_sig(
+            mut_annotation,
+            gene_set,
+            background_set,
+            dag_tree,
+            attributes_set,
+            go_id,
+            children.difference(sig_children),
+            weights,
+            result,
+            tolerance,
+        )

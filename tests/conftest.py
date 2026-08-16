@@ -6,11 +6,11 @@ import pytest
 
 # Force headless offscreen rendering for Qt on macOS CI environments
 if sys.platform == 'darwin':
-    os.environ["QT_QPA_PLATFORM"] = "offscreen"
+    os.environ['QT_QPA_PLATFORM'] = 'offscreen'
 
 
 def pytest_configure(config):
-    os.environ["QT_DEBUG_PLUGINS"] = "1"
+    os.environ['QT_DEBUG_PLUGINS'] = '1'
 
 
 def pytest_runtest_logstart(nodeid, location):
@@ -21,12 +21,12 @@ def pytest_runtest_logstart(nodeid, location):
     file's last value identifies the culprit after a crash (see the CI "Report last test before a
     crash" step). No-op unless the env var is set, so it costs nothing on local/normal runs.
     """
-    breadcrumb = os.environ.get("PYTEST_CRASH_BREADCRUMB")
+    breadcrumb = os.environ.get('PYTEST_CRASH_BREADCRUMB')
     if not breadcrumb:
         return
     try:
-        with open(breadcrumb, "w", encoding="utf-8") as handle:
-            handle.write(f"{nodeid}\n")
+        with open(breadcrumb, 'w', encoding='utf-8') as handle:
+            handle.write(f'{nodeid}\n')
             handle.flush()
     except OSError:
         pass
@@ -39,15 +39,19 @@ def pytest_runtest_logstart(nodeid, location):
 #   * integration_tools — bound to external CLIs / R; exercise OS-specific binaries.
 # Both sub-tiers also carry the umbrella `integration` marker, so `-m integration` still selects all
 # of them (back-compat with the old single tier).
-_INTEGRATION_NET_MODULES = frozenset({
-    'test_io',                       # web APIs (UniProt/Ensembl/PANTHER/PhylomeDB/OrthoInspector/KEGG/GO)
-})
-_INTEGRATION_TOOLS_MODULES = frozenset({
-    'test_fastq',                    # kallisto / bowtie2 / cutadapt CLIs
-    'test_differential_expression',  # R (DESeq2 / limma-voom)
-    'test_feature_counting',         # R (Rsubread featureCounts)
-    'test_installs',                 # installs R packages
-})
+_INTEGRATION_NET_MODULES = frozenset(
+    {
+        'test_io',  # web APIs (UniProt/Ensembl/PANTHER/PhylomeDB/OrthoInspector/KEGG/GO)
+    }
+)
+_INTEGRATION_TOOLS_MODULES = frozenset(
+    {
+        'test_fastq',  # kallisto / bowtie2 / cutadapt CLIs
+        'test_differential_expression',  # R (DESeq2 / limma-voom)
+        'test_feature_counting',  # R (Rsubread featureCounts)
+        'test_installs',  # installs R packages
+    }
+)
 # Leaf tiers — an explicit one of these on a test/class/module wins over auto-assignment. The
 # umbrella `integration` is intentionally NOT listed here, so tagging it never suppresses
 # auto-assignment: classification keys off the module name, and each integration module maps to
@@ -56,8 +60,7 @@ _INTEGRATION_TOOLS_MODULES = frozenset({
 _TIER_MARKERS = ('unit', 'integration_net', 'integration_tools', 'e2e')
 
 
-def _tier_markers_for(module: str, fixturenames: Iterable[str],
-                      has_availability_skip: bool) -> Tuple[str, ...]:
+def _tier_markers_for(module: str, fixturenames: Iterable[str], has_availability_skip: bool) -> Tuple[str, ...]:
     """Return the marker name(s) a test should carry, from its module name and traits.
 
     Pure function (no pytest state) so it can be unit-tested directly. Integration tests get two

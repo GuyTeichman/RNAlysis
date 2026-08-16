@@ -5,11 +5,11 @@ that reports a *healthy* service as unavailable silently skips real coverage on 
 probes themselves are worth pinning down. All tests here mock the HTTP layer -- no real network -- so
 they belong to the ``unit`` tier (the module name keeps them out of ``integration_net``).
 """
+
 import pytest
 import requests
 
 import tests as tests_pkg
-
 
 # A healthy PantherDB answers an ortholog/matchortho query with a non-empty `search.mapping.mapped`.
 _MAPPED_PAYLOAD = {'search': {'mapping': {'mapped': [{'target_gene': 'HUMAN|HGNC=1|UniProtKB=P12345'}]}}}

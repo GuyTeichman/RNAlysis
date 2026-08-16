@@ -7,93 +7,74 @@ from rnalysis.utils import io, settings
 
 class QuickStartWizard(QtWidgets.QWizard):
     TITLES = (
-        "Importing Data",
-        "Exploring Your Dataset",
-        "Applying Filters",
-        "Undo the operations you applied to your data",
+        'Importing Data',
+        'Exploring Your Dataset',
+        'Applying Filters',
+        'Undo the operations you applied to your data',
         "Apply your operations 'in-place' or make a copy",
-        "Saving Modified Tables",
-        "Analyze Multiple Tables at the Same Time",
-        "Leveraging Table-Specific Functions",
-        "Generating and Saving Visualizations",
-        "Rapid Gene Information Lookup",
-        "Organizing Your Workspace",
-        "Recovering Closed Tabs",
-        "Creating Gene Sets",
-        "Visualizing Gene Set Intersections",
-        "Performing Set Operations",
-        "Conducting Enrichment Analysis",
-        "Building Analysis Pipelines",
-        "Executing Pipelines",
-        "Sharing and Reproducing Analyses",
-        "Integrating External Bioinformatic Tools",
-        "Generating Interactive Analysis Reports",)
+        'Saving Modified Tables',
+        'Analyze Multiple Tables at the Same Time',
+        'Leveraging Table-Specific Functions',
+        'Generating and Saving Visualizations',
+        'Rapid Gene Information Lookup',
+        'Organizing Your Workspace',
+        'Recovering Closed Tabs',
+        'Creating Gene Sets',
+        'Visualizing Gene Set Intersections',
+        'Performing Set Operations',
+        'Conducting Enrichment Analysis',
+        'Building Analysis Pipelines',
+        'Executing Pipelines',
+        'Sharing and Reproducing Analyses',
+        'Integrating External Bioinformatic Tools',
+        'Generating Interactive Analysis Reports',
+    )
 
     CONTENTS = (
         "Click 'Choose table' to select a file from your computer, and click 'Load' to import it into <i>RNAlysis</i>. ",
-
         "You will now be able to see an overview of your data, including the table's name, type, and dimensions. "
         "Click the 'View full table' button to see your table in its entirety. ",
-
         "Choose a filtering function, set your desired parameters, and click 'Apply' to filter your table. "
-        "The changes you make will not affect your original file until you save them. ",
-
+        'The changes you make will not affect your original file until you save them. ',
         "At any moment, you can use the 'Command history' window "
-        "to undo or redo an operation you applied to your table. ",
-
+        'to undo or redo an operation you applied to your table. ',
         "Instead of applying operations 'in-place', "
-        "you can choose to apply the operation to a copy of your table in a new tab. "
+        'you can choose to apply the operation to a copy of your table in a new tab. '
         "The table in the original tab won't be modified. ",
-
-        "To save result of your filtering operations, "
+        'To save result of your filtering operations, '
         "click the 'Save table' button and choose where to save the modified table. ",
-
-        "You can work on multiple tables at the same time by opening a new tab and loading another table. ",
-
-        "When loading a table, you can specify its type. "
-        "Different types of tables support different types of functions: for example, "
-        "count matrices support clustering analysis. ",
-
-        "Some functions can generate graphs of your data. "
-        "You can resize those graphs, and save them to your computer in multiple file formats. ",
-
-        "Easily get information about your genes with a right-click. "
-        "Select from a range of databases such as NCBI Genes, UniProtKB and others, "
-        "which can be configured from the settings menu. ",
-
-        "To help organize your workspace, you can sort tabs by "
-        "right-clicking a tab and choosing a sorting method. "
+        'You can work on multiple tables at the same time by opening a new tab and loading another table. ',
+        'When loading a table, you can specify its type. '
+        'Different types of tables support different types of functions: for example, '
+        'count matrices support clustering analysis. ',
+        'Some functions can generate graphs of your data. '
+        'You can resize those graphs, and save them to your computer in multiple file formats. ',
+        'Easily get information about your genes with a right-click. '
+        'Select from a range of databases such as NCBI Genes, UniProtKB and others, '
+        'which can be configured from the settings menu. ',
+        'To help organize your workspace, you can sort tabs by '
+        'right-clicking a tab and choosing a sorting method. '
         "You can also change specific tabs' colors, to help you differentiate them. ",
-
         "If you accidentally closed one of your tabs - don't worry! "
         "You can restore closed tabs through the 'Edit' menu. ",
-
-        "In addition to tables, <i>RNAlysis</i> can also import lists of genes as Gene Sets. "
-        "We will soon review what we can do with those gene sets. ",
-
+        'In addition to tables, <i>RNAlysis</i> can also import lists of genes as Gene Sets. '
+        'We will soon review what we can do with those gene sets. ',
         "In the 'Visualize Gene Sets' window you can create Venn diagrams and UpSet plots "
-        "that will display the various intersections between your tables and gene sets. ",
-
+        'that will display the various intersections between your tables and gene sets. ',
         "In the 'Set Operations' window you can extract specific subsets from your data. "
-        "Either use predefined set operations, or click on specific subsets in the preview pane to select them. ",
-
+        'Either use predefined set operations, or click on specific subsets in the preview pane to select them. ',
         "In the 'Enrichment Analysis' window, you can perform various types of enrichment analysis "
-        "on the tables and gene sets you filtered. ",
-
-        "You can group multiple operations in a specific order and with specific parameters into a Pipeline. "
-        "Just add those functions to the Pipeline in the order you choose. ",
-
+        'on the tables and gene sets you filtered. ',
+        'You can group multiple operations in a specific order and with specific parameters into a Pipeline. '
+        'Just add those functions to the Pipeline in the order you choose. ',
         "You can apply a Pipeline to a group of tables through the 'Pipelines' menu. "
-        "Using Pipelines to analyze multiple datasets can make your workflow faster and less error-prone. ",
-
-        "Pipelines you export can be imported from any computer, and can be shared with others "
-        "to help make your analysis easier to understand and more reproducible.",
-
-        "<i>RNAlysis</i> offers a graphic interface for many bioinformatic tools. "
-        "Analyze your data at any stage - adapter trimming, alignment, feature counting, or differential expression. ",
-
-        "Create an interactive analysis report with the click of a button. "
-        "All tables, gene sets, and graphs you generate will be added to your report automatically. ",
+        'Using Pipelines to analyze multiple datasets can make your workflow faster and less error-prone. ',
+        'Pipelines you export can be imported from any computer, and can be shared with others '
+        'to help make your analysis easier to understand and more reproducible.',
+        '<i>RNAlysis</i> offers a graphic interface for many bioinformatic tools. '
+        'Analyze your data at any stage - adapter trimming, alignment, feature counting, or differential expression. ',
+        'Create an interactive analysis report with the click of a button. '
+        'All tables, gene sets, and graphs you generate will be added to your report automatically. ',
     )
 
     VIDEO_FILES = (
@@ -136,8 +117,10 @@ class QuickStartWizard(QtWidgets.QWizard):
 
         self.setWizardStyle(QtWidgets.QWizard.WizardStyle.ModernStyle)
         self.setWindowTitle('Welcome to RNAlysis!')
-        self.setPixmap(self.WizardPixmap.LogoPixmap,
-                       QtGui.QPixmap(Path.cwd().parent.parent.joinpath('docs/source/favicon.ico').as_posix()))
+        self.setPixmap(
+            self.WizardPixmap.LogoPixmap,
+            QtGui.QPixmap(Path.cwd().parent.parent.joinpath('docs/source/favicon.ico').as_posix()),
+        )
         self.setField('dont_show_again', not settings.get_show_tutorial_settings())
 
     def play_tutorial(self, ind: int):
@@ -180,15 +163,17 @@ class QuickStartWizard(QtWidgets.QWizard):
 
 
 class EndPage(QtWidgets.QWizardPage):
-    USER_GUIDE_URL = "https://guyteichman.github.io/RNAlysis/build/user_guide.html"
-    DOCUMENTATION_URL = "://guyteichman.github.io/RNAlysis"
-    TEXT = f'If you want to learn more about the various features <i>RNAlysis</i> has to offer, ' \
-           f'you can read more about them in the <a href="{USER_GUIDE_URL}"><b>user guide </b></a>' \
-           f'or the complete <a href="{DOCUMENTATION_URL}"><b>documentation</b></a>. Good luck!'
+    USER_GUIDE_URL = 'https://guyteichman.github.io/RNAlysis/build/user_guide.html'
+    DOCUMENTATION_URL = '://guyteichman.github.io/RNAlysis'
+    TEXT = (
+        f'If you want to learn more about the various features <i>RNAlysis</i> has to offer, '
+        f'you can read more about them in the <a href="{USER_GUIDE_URL}"><b>user guide </b></a>'
+        f'or the complete <a href="{DOCUMENTATION_URL}"><b>documentation</b></a>. Good luck!'
+    )
 
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.setTitle("<b>You are now ready to use <i>RNAlysis</i>!</b>")
+        self.setTitle('<b>You are now ready to use <i>RNAlysis</i>!</b>')
         self.layout = QtWidgets.QVBoxLayout(self)
         self.label = QtWidgets.QLabel(self.TEXT)
         self.label.setWordWrap(True)
@@ -202,7 +187,7 @@ class StartPage(QtWidgets.QWizardPage):
         self.setTitle('<b><i>Welcome to RNAlysis</i></b>')
         self.setSubTitle('This quick-start guide will lead you through the basic usage of <i>RNAlysis</i>. ')
         self.layout = QtWidgets.QGridLayout(self)
-        self.dont_show_again = QtWidgets.QCheckBox("Do not show this window again")
+        self.dont_show_again = QtWidgets.QCheckBox('Do not show this window again')
         self.dont_show_again.stateChanged.connect(self.setFinalPage)
         self.dont_show_again.stateChanged.connect(self.completeChanged.emit)
         self.registerField('dont_show_again', self.dont_show_again)
@@ -291,7 +276,11 @@ class QuickStartMovie(QtWidgets.QWidget):
     def mouseReleaseEvent(self, event):
         # ensure that the left button was pressed *and* released within the
         # geometry of the widget; if so, emit the signal;
-        if self.press_pos is not None and event.button() == QtCore.Qt.MouseButton.LeftButton and event.pos() in self.rect():
+        if (
+            self.press_pos is not None
+            and event.button() == QtCore.Qt.MouseButton.LeftButton
+            and event.pos() in self.rect()
+        ):
             self.clicked.emit()
         self.press_pos = None
 

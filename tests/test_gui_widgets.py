@@ -18,13 +18,7 @@ def widget_setup(qtbot, widget_class, *args, **kwargs):
     return qtbot, widget
 
 
-@pytest.mark.parametrize("item,expected", [
-    ('hello', 'hello'),
-    ('', ''),
-    ('55', 55),
-    ('high5', 'high5'),
-    ('-37', -37)
-])
+@pytest.mark.parametrize('item,expected', [('hello', 'hello'), ('', ''), ('55', 55), ('high5', 'high5'), ('-37', -37)])
 def test_StrIntLineEdit(qtbot, item, expected):
     qtbot, widget = widget_setup(qtbot, StrIntLineEdit)
 
@@ -32,11 +26,7 @@ def test_StrIntLineEdit(qtbot, item, expected):
     assert widget.text() == expected
 
 
-@pytest.mark.parametrize("item,expected", [
-    ('black', '#000000'),
-    ('#123456', '#123456'),
-    ('r', '#FF0000')
-])
+@pytest.mark.parametrize('item,expected', [('black', '#000000'), ('#123456', '#123456'), ('r', '#FF0000')])
 def test_ColorPicker_written_colors(qtbot, item, expected):
     qtbot, widget = widget_setup(qtbot, ColorPicker)
     widget.color_line.clear()
@@ -45,7 +35,7 @@ def test_ColorPicker_written_colors(qtbot, item, expected):
 
 
 def test_ColorPicker_validColor(qtbot, monkeypatch):
-    color = "#ccab56"
+    color = '#ccab56'
 
     def mock_get_color():
         return QtGui.QColor(color)
@@ -119,7 +109,7 @@ def test_clear_layout(qtbot):
     layout = QtWidgets.QGridLayout(widget)
     layout.addWidget(QtWidgets.QSpinBox(), 0, 0)
     layout.addWidget(QtWidgets.QLineEdit(), 1, 2)
-    layout.addWidget(QtWidgets.QLabel("test"), 3, 3)
+    layout.addWidget(QtWidgets.QLabel('test'), 3, 3)
 
     clear_layout(layout)
 
@@ -135,40 +125,42 @@ class FilledComboBox(QtWidgets.QComboBox):
         pass
 
 
-@pytest.mark.parametrize("widget_class,keyboard_interact,expected_val", [
-    (QtWidgets.QCheckBox, False, True),
-    (QtWidgets.QLineEdit, True, "12"),
-    (QtWidgets.QSpinBox, True, 12),
-    (QtWidgets.QTextEdit, True, 12),
-    (FilledComboBox, True, '12')
-
-])
+@pytest.mark.parametrize(
+    'widget_class,keyboard_interact,expected_val',
+    [
+        (QtWidgets.QCheckBox, False, True),
+        (QtWidgets.QLineEdit, True, '12'),
+        (QtWidgets.QSpinBox, True, 12),
+        (QtWidgets.QTextEdit, True, 12),
+        (FilledComboBox, True, '12'),
+    ],
+)
 def test_get_val_from_widget_native_types(qtbot, widget_class, keyboard_interact, expected_val):
     qtbot, widget = widget_setup(qtbot, widget_class)
     if keyboard_interact:
         widget.clear()
-        qtbot.keyClicks(widget, "12")
+        qtbot.keyClicks(widget, '12')
     else:
         qtbot.mouseClick(widget, LEFT_CLICK)
     assert get_val_from_widget(widget) == expected_val
 
 
-@pytest.mark.parametrize("widget_class,expected_val,kwargs", [
-    (QtWidgets.QLineEdit, "12", {}),
-    (QtWidgets.QSpinBox, 12, {}),
-    (FilledComboBox, '12', {}),
-    (PathLineEdit, '12', {}),
-    (StrIntLineEdit, 12, {}),
-    (OptionalWidget, None, {}),
-    (OptionalWidget, 'test123', {}),
-    (ComboBoxOrOtherWidget, '12',
-     {'items': ['opt1', 'opt2', '12'], 'default': 'opt1'}),
-    (ComboBoxOrOtherWidget, '12',
-     {'items': ['opt1', 'opt2', 'opt3'], 'default': None}),
-    (ToggleSwitch, True, {}),
-    (QMultiDoubleSpinBox, [0.1, 3.2, 5], {}),
-
-])
+@pytest.mark.parametrize(
+    'widget_class,expected_val,kwargs',
+    [
+        (QtWidgets.QLineEdit, '12', {}),
+        (QtWidgets.QSpinBox, 12, {}),
+        (FilledComboBox, '12', {}),
+        (PathLineEdit, '12', {}),
+        (StrIntLineEdit, 12, {}),
+        (OptionalWidget, None, {}),
+        (OptionalWidget, 'test123', {}),
+        (ComboBoxOrOtherWidget, '12', {'items': ['opt1', 'opt2', '12'], 'default': 'opt1'}),
+        (ComboBoxOrOtherWidget, '12', {'items': ['opt1', 'opt2', 'opt3'], 'default': None}),
+        (ToggleSwitch, True, {}),
+        (QMultiDoubleSpinBox, [0.1, 3.2, 5], {}),
+    ],
+)
 def test_set_widget_val(qtbot, widget_class, expected_val, kwargs):
     if widget_class in (ComboBoxOrOtherWidget, OptionalWidget):
         kwargs['other'] = QtWidgets.QLineEdit()
@@ -177,18 +169,18 @@ def test_set_widget_val(qtbot, widget_class, expected_val, kwargs):
     assert get_val_from_widget(widget) == expected_val
 
 
-@pytest.mark.parametrize("widget_class,keyboard_interact,attr,expected_val,kwargs", [
-    (PathLineEdit, True, 'file_path', '12', {}),
-    (StrIntLineEdit, True, None, 12, {}),
-    (OptionalWidget, False, 'checkbox', None, {}),
-    (OptionalWidget, False, 'other', True, {}),
-    (ComboBoxOrOtherWidget, True, 'combo', '12',
-     {'items': ['opt1', 'opt2', '12'], 'default': 'opt1'}),
-    (ComboBoxOrOtherWidget, True, 'other', '12',
-     {'items': ['opt1', 'opt2', 'opt3'], 'default': None}),
-    (ToggleSwitch, False, 'switch', True, {}),
-
-])
+@pytest.mark.parametrize(
+    'widget_class,keyboard_interact,attr,expected_val,kwargs',
+    [
+        (PathLineEdit, True, 'file_path', '12', {}),
+        (StrIntLineEdit, True, None, 12, {}),
+        (OptionalWidget, False, 'checkbox', None, {}),
+        (OptionalWidget, False, 'other', True, {}),
+        (ComboBoxOrOtherWidget, True, 'combo', '12', {'items': ['opt1', 'opt2', '12'], 'default': 'opt1'}),
+        (ComboBoxOrOtherWidget, True, 'other', '12', {'items': ['opt1', 'opt2', 'opt3'], 'default': None}),
+        (ToggleSwitch, False, 'switch', True, {}),
+    ],
+)
 def test_get_val_from_widget_nonnative_types(qtbot, widget_class, keyboard_interact, attr, expected_val, kwargs):
     if widget_class == ComboBoxOrOtherWidget:
         kwargs['other'] = QtWidgets.QLineEdit()
@@ -200,7 +192,7 @@ def test_get_val_from_widget_nonnative_types(qtbot, widget_class, keyboard_inter
     interact_with = widget if attr is None else getattr(widget, attr)
     if keyboard_interact:
         widget.clear()
-        qtbot.keyClicks(interact_with, "12")
+        qtbot.keyClicks(interact_with, '12')
     else:
         qtbot.mouseClick(interact_with, LEFT_CLICK)
     assert get_val_from_widget(widget) == expected_val
@@ -268,13 +260,16 @@ def test_OptionalWidget_setValue_value_roundtrip(qtbot, val):
         assert widget.other.isEnabled()
 
 
-@pytest.mark.parametrize('param_type,default,expected', [
-    (Union[str, None], None, None),
-    (Union[str, None], 'text', 'text'),
-    (Union[int, None], None, None),
-    (Union[int, None], 5, 5),
-    (Union[float, None], -0.5, -0.5),
-])
+@pytest.mark.parametrize(
+    'param_type,default,expected',
+    [
+        (Union[str, None], None, None),
+        (Union[str, None], 'text', 'text'),
+        (Union[int, None], None, None),
+        (Union[int, None], 5, 5),
+        (Union[float, None], -0.5, -0.5),
+    ],
+)
 def test_OptionalWidget_param_to_widget_value_matches_default(qtbot, param_type, default, expected):
     param = NewParam(param_type, default)
     widget = param_to_widget(param, 'name')
@@ -287,17 +282,31 @@ def test_OptionalWidget_param_to_widget_value_matches_default(qtbot, param_type,
     assert widget.other.isEnabled() == (default is not None)
 
 
-@pytest.mark.parametrize("widget_class,default,excepted_val_empty,expected_val,kwargs", [
-    (QMultiSpinBox, [0, 2, 3], 0, [0, 2, 3], {}),
-    (QMultiDoubleSpinBox, [0.1, 3.2, 5], 0.0, [0.1, 3.2, 5], {}),
-    (QMultiLineEdit, ['', 'text', 'other text'], [], ['', 'text', 'other text'], {}),
-    (QMultiStrIntLineEdit, ['3', '-7', 'text', 'othertext', 'param5'], [], [3, -7, 'text', 'othertext', 'param5'], {}),
-    (QMultiToggleSwitch, [True, True, False, True], False, [True, True, False, True], {}),
-    (MultiColorPicker, ['r', 'black', '#0000ff'], None, ['#ff0000', '#000000', '#0000ff'], {}),
-    (QMultiComboBox, ['option3', 'option2', 'option2'], 'option1', ['option3', 'option2', 'option2'],
-     {'items': ['option1', 'option2', 'option3']}),
-    (TrueFalseBoth, [True, False], [], [True, False], None)
-])
+@pytest.mark.parametrize(
+    'widget_class,default,excepted_val_empty,expected_val,kwargs',
+    [
+        (QMultiSpinBox, [0, 2, 3], 0, [0, 2, 3], {}),
+        (QMultiDoubleSpinBox, [0.1, 3.2, 5], 0.0, [0.1, 3.2, 5], {}),
+        (QMultiLineEdit, ['', 'text', 'other text'], [], ['', 'text', 'other text'], {}),
+        (
+            QMultiStrIntLineEdit,
+            ['3', '-7', 'text', 'othertext', 'param5'],
+            [],
+            [3, -7, 'text', 'othertext', 'param5'],
+            {},
+        ),
+        (QMultiToggleSwitch, [True, True, False, True], False, [True, True, False, True], {}),
+        (MultiColorPicker, ['r', 'black', '#0000ff'], None, ['#ff0000', '#000000', '#0000ff'], {}),
+        (
+            QMultiComboBox,
+            ['option3', 'option2', 'option2'],
+            'option1',
+            ['option3', 'option2', 'option2'],
+            {'items': ['option1', 'option2', 'option3']},
+        ),
+        (TrueFalseBoth, [True, False], [], [True, False], None),
+    ],
+)
 def test_get_val_from_widget_multiinput_types(qtbot, widget_class, default, excepted_val_empty, expected_val, kwargs):
     if kwargs is None:
         qtbot, widget = widget_setup(qtbot, widget_class)
@@ -309,17 +318,20 @@ def test_get_val_from_widget_multiinput_types(qtbot, widget_class, default, exce
     assert get_val_from_widget(widget) == expected_val
 
 
-@pytest.mark.parametrize("widget_class,kwargs", [
-    (QMultiSpinBox, {}),
-    (QMultiDoubleSpinBox, {}),
-    (QMultiLineEdit, {}),
-    (QMultiStrIntLineEdit, {}),
-    (QMultiToggleSwitch, {}),
-    (MultiColorPicker, {}),
-    (QMultiPathLineEdit, {}),
-    (TwoLayerMultiLineEdit, {}),
-    (QMultiComboBox, {'items': ['option1', 'option2']}),
-])
+@pytest.mark.parametrize(
+    'widget_class,kwargs',
+    [
+        (QMultiSpinBox, {}),
+        (QMultiDoubleSpinBox, {}),
+        (QMultiLineEdit, {}),
+        (QMultiStrIntLineEdit, {}),
+        (QMultiToggleSwitch, {}),
+        (MultiColorPicker, {}),
+        (QMultiPathLineEdit, {}),
+        (TwoLayerMultiLineEdit, {}),
+        (QMultiComboBox, {'items': ['option1', 'option2']}),
+    ],
+)
 def test_QMultiInput_default_text(qtbot, widget_class, kwargs):
     # regression test for #208: the default button text should be a clear,
     # action-oriented label instead of the vague "Set input"/"Set Input"
@@ -328,7 +340,7 @@ def test_QMultiInput_default_text(qtbot, widget_class, kwargs):
     assert widget.text() not in ('Set input', 'Set Input')
 
 
-@pytest.mark.parametrize("widget_class", (QtWidgets.QWidget, QtWidgets.QDateTimeEdit))
+@pytest.mark.parametrize('widget_class', (QtWidgets.QWidget, QtWidgets.QDateTimeEdit))
 def test_get_val_from_widget_bad_widget(qtbot, widget_class):
     qtbot, widget = widget_setup(qtbot, widget_class)
     with pytest.raises(TypeError):
@@ -376,8 +388,9 @@ def test_ComparisonPickerGroup_init(qtbot):
 
 
 def test_ComparisonPickerGroup_add_widget(qtbot):
-    qtbot, widget = widget_setup(qtbot, ComparisonPickerGroup,
-                                 io.load_table('tests/test_files/test_design_matrix.csv', 0))
+    qtbot, widget = widget_setup(
+        qtbot, ComparisonPickerGroup, io.load_table('tests/test_files/test_design_matrix.csv', 0)
+    )
     widget.add_comparison_widget()
     assert len(widget.inputs) == 2
     widget.add_comparison_widget()
@@ -385,8 +398,9 @@ def test_ComparisonPickerGroup_add_widget(qtbot):
 
 
 def test_ComparisonPickerGroup_remove_widget(qtbot):
-    qtbot, widget = widget_setup(qtbot, ComparisonPickerGroup,
-                                 io.load_table('tests/test_files/test_design_matrix.csv', 0))
+    qtbot, widget = widget_setup(
+        qtbot, ComparisonPickerGroup, io.load_table('tests/test_files/test_design_matrix.csv', 0)
+    )
     widget.remove_comparison_widget()
     assert len(widget.inputs) == 0
     widget.remove_comparison_widget()
@@ -394,8 +408,9 @@ def test_ComparisonPickerGroup_remove_widget(qtbot):
 
 
 def test_ComparisonPickerGroup_get_comparison_values(qtbot):
-    qtbot, widget = widget_setup(qtbot, ComparisonPickerGroup,
-                                 io.load_table('tests/test_files/test_design_matrix.csv', 0))
+    qtbot, widget = widget_setup(
+        qtbot, ComparisonPickerGroup, io.load_table('tests/test_files/test_design_matrix.csv', 0)
+    )
     widget.add_comparison_widget()
 
     widget.inputs[0].factor.setCurrentText('replicate')
@@ -433,11 +448,15 @@ def test_PathLineEdit_is_legal(qtbot):
     assert widget.is_legal
 
 
-@pytest.mark.parametrize('path,is_legal_expected', [
-    ('path/that/doesnt/exist', False),
-    ('tests/test_files/test_deseq.csv', False),
-    ('tests/test_files', True),
-    ('path/that/doesnt/exist.png', False)])
+@pytest.mark.parametrize(
+    'path,is_legal_expected',
+    [
+        ('path/that/doesnt/exist', False),
+        ('tests/test_files/test_deseq.csv', False),
+        ('tests/test_files', True),
+        ('path/that/doesnt/exist.png', False),
+    ],
+)
 def test_PathLineEdit_is_legal_dirmode(qtbot, path, is_legal_expected):
     qtbot, widget = widget_setup(qtbot, PathLineEdit, is_file=False)
 
@@ -514,6 +533,8 @@ def test_mark_primary(qtbot):
 
     mark_primary(widget)
     assert widget.property('class') == 'primary'
+
+
 def test_PathLineEdit_tooltip_reflects_full_path(qtbot):
     qtbot, widget = widget_setup(qtbot, PathLineEdit)
     long_path = 'C:/Users/example_user/very/long/nested/directory/structure/elegans_developmental_stages.tsv'
@@ -533,10 +554,13 @@ def test_PathLineEdit_tooltip_updates_on_keyboard_edit(qtbot):
     assert widget.file_path.toolTip() == 'tests/test_files/test_deseq.csv'
 
 
-@pytest.mark.parametrize('long_path', [
-    'C:/Users/example_user/very/long/nested/directory/structure/elegans_developmental_stages.tsv',
-    '/home/example_user/very/long/nested/directory/structure/elegans_developmental_stages.tsv',
-])
+@pytest.mark.parametrize(
+    'long_path',
+    [
+        'C:/Users/example_user/very/long/nested/directory/structure/elegans_developmental_stages.tsv',
+        '/home/example_user/very/long/nested/directory/structure/elegans_developmental_stages.tsv',
+    ],
+)
 def test_PathLineEdit_text_roundtrip_unchanged_for_long_paths(qtbot, long_path):
     qtbot, widget = widget_setup(qtbot, PathLineEdit)
 
@@ -866,7 +890,7 @@ def test_ToggleSwitchCore(qtbot):
 
 
 def test_MultiChoiceListWithDelete_delete_all(qtbot, monkeypatch):
-    monkeypatch.setattr(QtWidgets.QMessageBox, "question", lambda *args: QtWidgets.QMessageBox.StandardButton.Yes)
+    monkeypatch.setattr(QtWidgets.QMessageBox, 'question', lambda *args: QtWidgets.QMessageBox.StandardButton.Yes)
 
     items = ['item1', 'item2', 'item3']
     qtbot, widget = widget_setup(qtbot, MultiChoiceListWithDelete, items)
@@ -1064,12 +1088,15 @@ def test_OrderedFileList_add_item(qtbot):
     assert widget.list.count() == 1
 
 
-@pytest.mark.parametrize("filenames", [
-    ['tests/test_files/test_deseq.csv'],
-    [],
-    ['tests/test_files/test_deseq.csv', 'tests/test_files/counted.tsv'],
-    ['tests/test_files/a.fa', 'tests/test_files/c.fa', 'tests/test_files/b.fa', 'aa.fa']
-])
+@pytest.mark.parametrize(
+    'filenames',
+    [
+        ['tests/test_files/test_deseq.csv'],
+        [],
+        ['tests/test_files/test_deseq.csv', 'tests/test_files/counted.tsv'],
+        ['tests/test_files/a.fa', 'tests/test_files/c.fa', 'tests/test_files/b.fa', 'aa.fa'],
+    ],
+)
 def test_OrderedFileList_add_files(qtbot, monkeypatch, filenames):
     def mock_get_file_names(*args, **kwargs):
         return filenames, None
@@ -1082,13 +1109,15 @@ def test_OrderedFileList_add_files(qtbot, monkeypatch, filenames):
     assert widget.items == filenames
 
 
-@pytest.mark.parametrize("filenames", [
-    ['tests/test_files/test_deseq.csv'],
-    [],
-    ['tests/test_files/test_deseq.csv', 'tests/test_files/counted.tsv'],
-    ['tests/test_files/a.fa', 'tests/test_files/c.fa', 'tests/test_files/b.fa', 'aa.fa']
-
-])
+@pytest.mark.parametrize(
+    'filenames',
+    [
+        ['tests/test_files/test_deseq.csv'],
+        [],
+        ['tests/test_files/test_deseq.csv', 'tests/test_files/counted.tsv'],
+        ['tests/test_files/a.fa', 'tests/test_files/c.fa', 'tests/test_files/b.fa', 'aa.fa'],
+    ],
+)
 def test_OrderedFileList_get_sorted_selected_names(qtbot, monkeypatch, filenames):
     def mock_get_file_names(*args, **kwargs):
         return filenames, None
@@ -1192,39 +1221,45 @@ def test_RadioButtonBox_emit(qtbot):
     assert blocker.args[0] == widget.radio_buttons['action1']
 
 
-@pytest.mark.parametrize('param_type,default,expected_widget', [
-    (str, 'default', QtWidgets.QLineEdit),
-    (int, 15, QtWidgets.QSpinBox),
-    (param_typing.PositiveInt, 15, QtWidgets.QSpinBox),
-    (param_typing.NonNegativeInt, 0, QtWidgets.QSpinBox),
-    (param_typing.NegativeInt, -15, QtWidgets.QSpinBox),
-    (float, 3.14, AdaptiveDoubleSpinBox),
-    (param_typing.Fraction, 0.15, AdaptiveDoubleSpinBox),
-    (Literal['a1', 'b1', 'c1'], 'b1', QtWidgets.QComboBox),
-    (Union[str, float, None, bool], True, OptionalWidget),
-    (Union[str, float, bool], 17, QtWidgets.QTextEdit)
-])
+@pytest.mark.parametrize(
+    'param_type,default,expected_widget',
+    [
+        (str, 'default', QtWidgets.QLineEdit),
+        (int, 15, QtWidgets.QSpinBox),
+        (param_typing.PositiveInt, 15, QtWidgets.QSpinBox),
+        (param_typing.NonNegativeInt, 0, QtWidgets.QSpinBox),
+        (param_typing.NegativeInt, -15, QtWidgets.QSpinBox),
+        (float, 3.14, AdaptiveDoubleSpinBox),
+        (param_typing.Fraction, 0.15, AdaptiveDoubleSpinBox),
+        (Literal['a1', 'b1', 'c1'], 'b1', QtWidgets.QComboBox),
+        (Union[str, float, None, bool], True, OptionalWidget),
+        (Union[str, float, bool], 17, QtWidgets.QTextEdit),
+    ],
+)
 def test_param_to_widget_native_types(qtbot, param_type, default, expected_widget):
     _run_param_to_widget(qtbot, param_type, default, 'param_name', expected_widget)
 
 
-@pytest.mark.parametrize('value,expected_decimals,expected_step', [
-    (5, 3, 1.0),
-    (5.0, 3, 1.0),
-    (50.0, 3, 1.0),
-    (100.0, 3, 1.0),
-    (0, 3, 1.0),
-    (0.0, 3, 1.0),
-    (-5.0, 3, 1.0),
-    (3.14, 3, 0.1),
-    (2.5, 3, 0.1),
-    (0.5, 3, 0.1),
-    (0.15, 3, 0.1),
-    (-0.5, 3, 0.1),
-    (0.05, 4, 0.01),
-    (-0.05, 4, 0.01),
-    (0.001, 5, 0.001),
-])
+@pytest.mark.parametrize(
+    'value,expected_decimals,expected_step',
+    [
+        (5, 3, 1.0),
+        (5.0, 3, 1.0),
+        (50.0, 3, 1.0),
+        (100.0, 3, 1.0),
+        (0, 3, 1.0),
+        (0.0, 3, 1.0),
+        (-5.0, 3, 1.0),
+        (3.14, 3, 0.1),
+        (2.5, 3, 0.1),
+        (0.5, 3, 0.1),
+        (0.15, 3, 0.1),
+        (-0.5, 3, 0.1),
+        (0.05, 4, 0.01),
+        (-0.05, 4, 0.01),
+        (0.001, 5, 0.001),
+    ],
+)
 def test_float_spinbox_decimals_and_step(value, expected_decimals, expected_step):
     decimals, step = float_spinbox_decimals_and_step(value)
     assert decimals == expected_decimals
@@ -1281,16 +1316,19 @@ def test_param_to_widget_fraction_keeps_step_and_sensible_decimals(qtbot):
     assert widget.textFromValue(1.0) == '1'
 
 
-@pytest.mark.parametrize('annotation,default,typed_value', [
-    (float, 5, 5.5),
-    (float, 5, 5.125),
-    (float, 5, 7.0),
-    (float, 5, 42.75),
-    (float, 0.05, 0.123),
-    (float, 0.001, 0.00042),
-    (param_typing.Fraction, 0.05, 0.001),
-    (param_typing.Fraction, 0.05, 0.375),
-])
+@pytest.mark.parametrize(
+    'annotation,default,typed_value',
+    [
+        (float, 5, 5.5),
+        (float, 5, 5.125),
+        (float, 5, 7.0),
+        (float, 5, 42.75),
+        (float, 0.05, 0.123),
+        (float, 0.001, 0.00042),
+        (param_typing.Fraction, 0.05, 0.001),
+        (param_typing.Fraction, 0.05, 0.375),
+    ],
+)
 def test_float_widget_returns_exact_value(qtbot, annotation, default, typed_value):
     # DISPLAY ONLY: the widget must return the exact float the user set, so values
     # passed to the API are numerically identical (a hard reproducibility invariant).
@@ -1318,8 +1356,9 @@ def test_power_transform_renders_as_a_plain_combo_box(qtbot):
 def test_clicom_power_transform_renders_as_combo_with_multi_choice(qtbot):
     # CLICOM can run its setups once per transform, so its 'power_transform' additionally accepts a list --
     # rendering as the same drop-down, with an "Other..." entry that reveals a multi-value picker.
-    param = NewParam(Union[Literal[param_typing.POWER_TRANSFORMS],
-                           List[Literal[param_typing.POWER_TRANSFORMS]]], 'box-cox')
+    param = NewParam(
+        Union[Literal[param_typing.POWER_TRANSFORMS], List[Literal[param_typing.POWER_TRANSFORMS]]], 'box-cox'
+    )
     widget = param_to_widget(param, 'power_transform')
     qtbot.add_widget(widget)
     assert isinstance(widget, ComboBoxOrOtherWidget)
@@ -1345,67 +1384,74 @@ def test_float_widget_returns_exact_typed_value(qtbot):
     assert get_val_from_widget(widget) == 5.125
 
 
-@pytest.mark.parametrize('param_type,default,name,expected_widget', [
-    (bool, True, 'status', ToggleSwitch),
-    (param_typing.Color, '#000000', 'linecolor', ColorPicker),
-    (param_typing.ColorList, ['#000000', '#aabbcc'], 'colors', MultiColorPicker),
-    (Union[str, None], None, 'name', OptionalWidget),
-    (Union[str, None], 'text', 'name', OptionalWidget),
-    (Union[int, None], None, 'name', OptionalWidget),
-    (Union[int, None], 5, 'name', OptionalWidget),
-    (Union[float, None], None, 'name', OptionalWidget),
-    (Union[float, None], -0.5, 'name', OptionalWidget),
-    (Union[str, List[str]], ['a', 'b'], 'name', QMultiLineEdit),
-    (Union[str, Iterable[str]], None, 'name', QMultiLineEdit),
-    (Union[int, List[int]], [2, 7], 'name', QMultiSpinBox),
-    (Union[param_typing.NegativeInt, List[param_typing.NegativeInt]], [-2, -7], 'name', QMultiSpinBox),
-    (Union[param_typing.NonNegativeInt, List[param_typing.NonNegativeInt]], [0, 7], 'name', QMultiSpinBox),
-    (Union[int, List[int]], [2, 7], 'name', QMultiSpinBox),
-    (Union[int, Iterable[int]], None, 'name', QMultiSpinBox),
-    (Union[float, List[float]], [2.5, -0.72], 'name', QMultiDoubleSpinBox),
-    (Union[param_typing.Fraction, List[param_typing.Fraction]], [2.5, -0.72], 'name', QMultiDoubleSpinBox),
-    (Union[float, Iterable[float]], None, 'name', QMultiDoubleSpinBox),
-    (Union[bool, List[bool]], [True, False, True], 'name', QMultiToggleSwitch),
-    (Union[bool, Iterable[bool]], None, 'name', QMultiToggleSwitch),
-    (List[Literal['a', 'b', 'c']], ['a', 'b', 'a'], 'name', QMultiComboBox),
-    (Set[Literal['a', 'b', 'c']], 'c', 'name', QMultiComboBox),
-    (Iterable[Literal['a', 'b', 'c']], None, 'name', QMultiComboBox),
-    (Union[str, int], 5, 'name', StrIntLineEdit),
-    (Union[str, int], 'text', 'name', StrIntLineEdit),
-    (Union[str, Path], str(Path('tests/test_files/test_deseq.csv').absolute()), 'name', PathLineEdit),
-    (Union[bool, Tuple[bool, bool]], True, 'name', TrueFalseBoth),
-    (Union[bool, Tuple[bool, bool]], [True, False], 'name', TrueFalseBoth),
-    (Union[str, int, List[str], List[int]], [3, 5, -2], 'name', QMultiStrIntLineEdit),
-    (Union[str, int, Iterable[str], Iterable[int]], ['a', 'b', 'c'], 'name', QMultiStrIntLineEdit)
-
-])
+@pytest.mark.parametrize(
+    'param_type,default,name,expected_widget',
+    [
+        (bool, True, 'status', ToggleSwitch),
+        (param_typing.Color, '#000000', 'linecolor', ColorPicker),
+        (param_typing.ColorList, ['#000000', '#aabbcc'], 'colors', MultiColorPicker),
+        (Union[str, None], None, 'name', OptionalWidget),
+        (Union[str, None], 'text', 'name', OptionalWidget),
+        (Union[int, None], None, 'name', OptionalWidget),
+        (Union[int, None], 5, 'name', OptionalWidget),
+        (Union[float, None], None, 'name', OptionalWidget),
+        (Union[float, None], -0.5, 'name', OptionalWidget),
+        (Union[str, List[str]], ['a', 'b'], 'name', QMultiLineEdit),
+        (Union[str, Iterable[str]], None, 'name', QMultiLineEdit),
+        (Union[int, List[int]], [2, 7], 'name', QMultiSpinBox),
+        (Union[param_typing.NegativeInt, List[param_typing.NegativeInt]], [-2, -7], 'name', QMultiSpinBox),
+        (Union[param_typing.NonNegativeInt, List[param_typing.NonNegativeInt]], [0, 7], 'name', QMultiSpinBox),
+        (Union[int, List[int]], [2, 7], 'name', QMultiSpinBox),
+        (Union[int, Iterable[int]], None, 'name', QMultiSpinBox),
+        (Union[float, List[float]], [2.5, -0.72], 'name', QMultiDoubleSpinBox),
+        (Union[param_typing.Fraction, List[param_typing.Fraction]], [2.5, -0.72], 'name', QMultiDoubleSpinBox),
+        (Union[float, Iterable[float]], None, 'name', QMultiDoubleSpinBox),
+        (Union[bool, List[bool]], [True, False, True], 'name', QMultiToggleSwitch),
+        (Union[bool, Iterable[bool]], None, 'name', QMultiToggleSwitch),
+        (List[Literal['a', 'b', 'c']], ['a', 'b', 'a'], 'name', QMultiComboBox),
+        (Set[Literal['a', 'b', 'c']], 'c', 'name', QMultiComboBox),
+        (Iterable[Literal['a', 'b', 'c']], None, 'name', QMultiComboBox),
+        (Union[str, int], 5, 'name', StrIntLineEdit),
+        (Union[str, int], 'text', 'name', StrIntLineEdit),
+        (Union[str, Path], str(Path('tests/test_files/test_deseq.csv').absolute()), 'name', PathLineEdit),
+        (Union[bool, Tuple[bool, bool]], True, 'name', TrueFalseBoth),
+        (Union[bool, Tuple[bool, bool]], [True, False], 'name', TrueFalseBoth),
+        (Union[str, int, List[str], List[int]], [3, 5, -2], 'name', QMultiStrIntLineEdit),
+        (Union[str, int, Iterable[str], Iterable[int]], ['a', 'b', 'c'], 'name', QMultiStrIntLineEdit),
+    ],
+)
 def test_param_to_widget_nonnative_types(qtbot, param_type, default, name, expected_widget):
     _run_param_to_widget(qtbot, param_type, default, name, expected_widget)
 
 
-@pytest.mark.parametrize('param_type,name,expected_widget,expected_widget_pipeline', [
-    (param_typing.GroupedColumns, 'samples', TableColumnGroupPicker, TwoLayerMultiLineEdit),
-    (param_typing.GroupedColumns, 'sample_grouping', TableColumnGroupPicker, TwoLayerMultiLineEdit),
-    (param_typing.ColumnNames, 'sample_names', TableColumnPicker, QMultiLineEdit),
-    (param_typing.ColumnNames, 'sample1', TableColumnPicker, QMultiLineEdit),
-    (param_typing.ColumnNames, 'sample2', TableColumnPicker, QMultiLineEdit),
-    (param_typing.ColumnNames, 'columns', TableColumnPicker, QMultiLineEdit),
-    (param_typing.ColumnName, 'by', TableSingleColumnPicker, QtWidgets.QLineEdit),
-    (param_typing.ColumnName, 'column', TableSingleColumnPicker, QtWidgets.QLineEdit),
-
-])
+@pytest.mark.parametrize(
+    'param_type,name,expected_widget,expected_widget_pipeline',
+    [
+        (param_typing.GroupedColumns, 'samples', TableColumnGroupPicker, TwoLayerMultiLineEdit),
+        (param_typing.GroupedColumns, 'sample_grouping', TableColumnGroupPicker, TwoLayerMultiLineEdit),
+        (param_typing.ColumnNames, 'sample_names', TableColumnPicker, QMultiLineEdit),
+        (param_typing.ColumnNames, 'sample1', TableColumnPicker, QMultiLineEdit),
+        (param_typing.ColumnNames, 'sample2', TableColumnPicker, QMultiLineEdit),
+        (param_typing.ColumnNames, 'columns', TableColumnPicker, QMultiLineEdit),
+        (param_typing.ColumnName, 'by', TableSingleColumnPicker, QtWidgets.QLineEdit),
+        (param_typing.ColumnName, 'column', TableSingleColumnPicker, QtWidgets.QLineEdit),
+    ],
+)
 def test_param_to_widget_pipeline_mode_types(qtbot, param_type, name, expected_widget, expected_widget_pipeline):
-    _run_param_to_widget(qtbot, param_type, 'default', name, expected_widget, expected_widget_pipeline,
-                         test_pipeline_mode=True)
+    _run_param_to_widget(
+        qtbot, param_type, 'default', name, expected_widget, expected_widget_pipeline, test_pipeline_mode=True
+    )
 
 
-@pytest.mark.parametrize('param_type,default,literal_default,expected_sub_widget', [
-    (Union[Literal['all'], str], 'text', 'all', QtWidgets.QLineEdit),
-    (Union[Literal['any'], str, None], None, 'any', ComboBoxOrOtherWidget),
-    (Union[Literal['any'], str, int], 5, 'any', StrIntLineEdit),
-    (Union[Literal['any', 'none'], Union[int, List[int]]], [15, 16], 'any', QMultiSpinBox),
-
-])
+@pytest.mark.parametrize(
+    'param_type,default,literal_default,expected_sub_widget',
+    [
+        (Union[Literal['all'], str], 'text', 'all', QtWidgets.QLineEdit),
+        (Union[Literal['any'], str, None], None, 'any', ComboBoxOrOtherWidget),
+        (Union[Literal['any'], str, int], 5, 'any', StrIntLineEdit),
+        (Union[Literal['any', 'none'], Union[int, List[int]]], [15, 16], 'any', QMultiSpinBox),
+    ],
+)
 def test_param_to_widget_with_literals(qtbot, param_type, default, literal_default, expected_sub_widget):
     if expected_sub_widget == ComboBoxOrOtherWidget:
         expected_widget = OptionalWidget
@@ -1426,8 +1472,9 @@ def _func_to_connect():
     return
 
 
-def _run_param_to_widget(qtbot, param_type, default, name, expected_widget, expected_widget_pipeline=None,
-                         test_pipeline_mode: bool = False):
+def _run_param_to_widget(
+    qtbot, param_type, default, name, expected_widget, expected_widget_pipeline=None, test_pipeline_mode: bool = False
+):
     param = NewParam(param_type)
     plain_widget = param_to_widget(param, name)
     plain_widget.show()
@@ -1451,7 +1498,7 @@ def _run_param_to_widget(qtbot, param_type, default, name, expected_widget, expe
             if default is None:
                 assert len(val) == 0
             else:
-                assert (val[0] == default)
+                assert val[0] == default
         else:
             assert val == default
 
@@ -1622,12 +1669,13 @@ def test_AltTqdm_enter_signals():
 
 
 def _power(a, b):
-    return a ** b
+    return a**b
 
 
 def test_AltParallel_init():
     res = AltParallel(n_jobs=1, desc='description')(
-        joblib.delayed(_power)(a, b) for a, b in zip(range(5), [2, 2, 2, 2, 2]))
+        joblib.delayed(_power)(a, b) for a, b in zip(range(5), [2, 2, 2, 2, 2])
+    )
     assert res == [0, 1, 4, 9, 16]
 
 
@@ -1642,11 +1690,11 @@ def test_AltParallel_signals(qtbot):
 
 
 def test_TextWithCopyButton_copy_to_clipboard(qtbot, monkeypatch):
-    rich_text = '''<p>
+    rich_text = """<p>
     Auther, F. (2001). The name of the paper. Journal.
     <br>
     <a href=www.google.com>doi.org/10.12345/journalName.496351</a>
-    </p>'''
+    </p>"""
     truth = 'Auther, F. (2001). The name of the paper. Journal. \ndoi.org/10.12345/journalName.496351 '
     qtbot, dialog = widget_setup(qtbot, TextWithCopyButton, rich_text)
     qtbot.mouseClick(dialog.copy_button, LEFT_CLICK)
@@ -1657,7 +1705,7 @@ def test_TextWithCopyButton_copy_to_clipboard(qtbot, monkeypatch):
 
 @pytest.fixture()
 def column_names():
-    return ["A", "B", "C", "D", "E", "F", "G"]
+    return ['A', 'B', 'C', 'D', 'E', 'F', 'G']
 
 
 @pytest.fixture()
@@ -1668,16 +1716,16 @@ def column_picker(column_names, qtbot):
 
 
 @pytest.mark.parametrize(
-    "selected_columns",
+    'selected_columns',
     [
-        [["A"]],
-        [["B", "D"]],
-        [["C", "E"], ["G"]],
-        [["A"], ["C"], ["E"], ["G"]],
+        [['A']],
+        [['B', 'D']],
+        [['C', 'E'], ['G']],
+        [['A'], ['C'], ['E'], ['G']],
         [],
-        [["A", "B", "C", "D"], ["E", "F"], ["G"]],
-        [["A", "C"], ["B", "E", "G"], ["D", "F"]],
-    ]
+        [['A', 'B', 'C', 'D'], ['E', 'F'], ['G']],
+        [['A', 'C'], ['B', 'E', 'G'], ['D', 'F']],
+    ],
 )
 def test_set_selection(column_picker, selected_columns):
     column_picker.set_selection(selected_columns)
@@ -1685,25 +1733,25 @@ def test_set_selection(column_picker, selected_columns):
 
 
 @pytest.mark.parametrize(
-    "selected_columns",
+    'selected_columns',
     [
-        [["A"]],
-        [["B", "D"]],
-        [["C", "E"], ["G"]],
-        [["A"], ["C"], ["E"], ["G"]],
+        [['A']],
+        [['B', 'D']],
+        [['C', 'E'], ['G']],
+        [['A'], ['C'], ['E'], ['G']],
         [],
-        [["A", "B", "C", "D"], ["E", "F"], ["G"]],
-        [["A", "C"], ["B", "E", "G"], ["D", "F"]],
-    ]
+        [['A', 'B', 'C', 'D'], ['E', 'F'], ['G']],
+        [['A', 'C'], ['B', 'E', 'G'], ['D', 'F']],
+    ],
 )
 def test_import_selection(column_picker, monkeypatch, selected_columns):
-    file_name = "test_selection.txt"
-    monkeypatch.setattr(QtWidgets.QFileDialog, "getOpenFileName", lambda *args: (file_name, ""))
-    monkeypatch.setattr(QtWidgets.QFileDialog, "getSaveFileName", lambda *args: (file_name, ""))
+    file_name = 'test_selection.txt'
+    monkeypatch.setattr(QtWidgets.QFileDialog, 'getOpenFileName', lambda *args: (file_name, ''))
+    monkeypatch.setattr(QtWidgets.QFileDialog, 'getSaveFileName', lambda *args: (file_name, ''))
 
     try:
         # Save the selected columns to the file
-        with open(file_name, "w") as f:
+        with open(file_name, 'w') as f:
             json.dump(selected_columns, f)
         column_picker.clear_selection()
         column_picker.import_selection()
@@ -1714,24 +1762,24 @@ def test_import_selection(column_picker, monkeypatch, selected_columns):
 
 
 @pytest.mark.parametrize(
-    "selected_columns",
+    'selected_columns',
     [
-        [["A"]],
-        [["B", "D"]],
-        [["C", "E"], ["G"]],
-        [["A"], ["C"], ["E"], ["G"]],
+        [['A']],
+        [['B', 'D']],
+        [['C', 'E'], ['G']],
+        [['A'], ['C'], ['E'], ['G']],
         [],
-        [["A", "B", "C", "D"], ["E", "F"], ["G"]],
-        [["A", "C"], ["B", "E", "G"], ["D", "F"]],
-    ]
+        [['A', 'B', 'C', 'D'], ['E', 'F'], ['G']],
+        [['A', 'C'], ['B', 'E', 'G'], ['D', 'F']],
+    ],
 )
 def test_export_selection(column_picker, tmp_path, monkeypatch, selected_columns):
-    file_name = tmp_path / "test_selection.txt"
-    monkeypatch.setattr(QtWidgets.QFileDialog, "getSaveFileName", lambda *args: (file_name, ""))
+    file_name = tmp_path / 'test_selection.txt'
+    monkeypatch.setattr(QtWidgets.QFileDialog, 'getSaveFileName', lambda *args: (file_name, ''))
     try:
         column_picker.set_selection(selected_columns)
         column_picker.export_selection()
-        with open(file_name, "r") as f:
+        with open(file_name, 'r') as f:
             contents = json.load(f)
             print(contents)
         assert contents == selected_columns
@@ -1741,7 +1789,7 @@ def test_export_selection(column_picker, tmp_path, monkeypatch, selected_columns
 
 
 class TestCreateColormapPixmap:
-    @pytest.mark.parametrize("map_name", plt.colormaps())
+    @pytest.mark.parametrize('map_name', plt.colormaps())
     def test_create_colormap_pixmap_valid(self, map_name, qtbot):
         pixmap = create_colormap_pixmap(map_name)
         assert isinstance(pixmap, QtGui.QPixmap)
@@ -1749,7 +1797,7 @@ class TestCreateColormapPixmap:
 
     def test_create_colormap_pixmap_invalid(self):
         with pytest.raises(ValueError):
-            create_colormap_pixmap("invalid_colormap_name")
+            create_colormap_pixmap('invalid_colormap_name')
 
     # Additional tests can be added for cache behavior, image content, etc.
 
@@ -1761,14 +1809,14 @@ def test_init_color_map_pixmap_cache(qtbot):
 class TestColorMapComboBox:
     @pytest.fixture
     def combo_box(self, qtbot):
-        qtbot, widget = widget_setup(qtbot, ColorMapComboBox, "viridis")
+        qtbot, widget = widget_setup(qtbot, ColorMapComboBox, 'viridis')
         return widget
 
     def test_initialization(self, combo_box):
-        assert combo_box.currentText() == "viridis", "Default choice is not selected correctly"
+        assert combo_box.currentText() == 'viridis', 'Default choice is not selected correctly'
 
     def test_populate_color_maps(self, combo_box):
-        assert combo_box.count() == len(plt.colormaps()), "Not all colormaps are populated in the combo box"
+        assert combo_box.count() == len(plt.colormaps()), 'Not all colormaps are populated in the combo box'
 
     def test_color_map_combobox_items(self, combo_box):
         # Test if items in combobox are correctly set
@@ -1787,8 +1835,7 @@ class TestCovariatePicker:
         _ = widget_setup(qtbot, CovariatePicker, io.load_table(self.design_mat_path, 0))
 
     def test_get_value(self, qtbot):
-        qtbot, widget = widget_setup(qtbot, CovariatePicker,
-                                     io.load_table(self.design_mat_path, 0))
+        qtbot, widget = widget_setup(qtbot, CovariatePicker, io.load_table(self.design_mat_path, 0))
         assert widget.value() == 'covariate1'
         widget.factor.setCurrentText('covariate2')
         assert widget.value() == 'covariate2'
@@ -1798,28 +1845,24 @@ class TestCovariatePickerGroup:
     design_mat_path = 'tests/test_files/test_design_matrix_advanced.csv'
 
     def test_init(self, qtbot):
-        _ = widget_setup(qtbot, CovariatePickerGroup,
-                         io.load_table(self.design_mat_path, 0))
+        _ = widget_setup(qtbot, CovariatePickerGroup, io.load_table(self.design_mat_path, 0))
 
     def test_add_widget(self, qtbot):
-        qtbot, widget = widget_setup(qtbot, CovariatePickerGroup,
-                                     io.load_table(self.design_mat_path, 0))
+        qtbot, widget = widget_setup(qtbot, CovariatePickerGroup, io.load_table(self.design_mat_path, 0))
         widget.add_comparison_widget()
         assert len(widget.inputs) == 1
         widget.add_comparison_widget()
         assert len(widget.inputs) == 2
 
     def test_remove_widget(self, qtbot):
-        qtbot, widget = widget_setup(qtbot, CovariatePickerGroup,
-                                     io.load_table(self.design_mat_path, 0))
+        qtbot, widget = widget_setup(qtbot, CovariatePickerGroup, io.load_table(self.design_mat_path, 0))
         widget.remove_comparison_widget()
         assert len(widget.inputs) == 0
         widget.remove_comparison_widget()
         assert len(widget.inputs) == 0
 
     def test_get_comparison_values(self, qtbot):
-        qtbot, widget = widget_setup(qtbot, CovariatePickerGroup,
-                                     io.load_table(self.design_mat_path, 0))
+        qtbot, widget = widget_setup(qtbot, CovariatePickerGroup, io.load_table(self.design_mat_path, 0))
         widget.add_comparison_widget()
         widget.add_comparison_widget()
 
@@ -1834,8 +1877,7 @@ class TestLRTPicker:
         _ = widget_setup(qtbot, LRTPicker, io.load_table(self.design_mat_path, 0))
 
     def test_get_value(self, qtbot):
-        qtbot, widget = widget_setup(qtbot, LRTPicker,
-                                     io.load_table(self.design_mat_path, 0))
+        qtbot, widget = widget_setup(qtbot, LRTPicker, io.load_table(self.design_mat_path, 0))
         assert widget.value() == 'condition'
         widget.factor.setCurrentText('covariate1+covariate1^2')
         assert widget.value() == 'poly(covariate1, degree = 2)'
@@ -1848,24 +1890,21 @@ class TestLRTPickerGroup:
         _ = widget_setup(qtbot, LRTPickerGroup, io.load_table(self.design_mat_path, 0))
 
     def test_add_widget(self, qtbot):
-        qtbot, widget = widget_setup(qtbot, LRTPickerGroup,
-                                     io.load_table(self.design_mat_path, 0))
+        qtbot, widget = widget_setup(qtbot, LRTPickerGroup, io.load_table(self.design_mat_path, 0))
         widget.add_comparison_widget()
         assert len(widget.inputs) == 1
         widget.add_comparison_widget()
         assert len(widget.inputs) == 2
 
     def test_remove_widget(self, qtbot):
-        qtbot, widget = widget_setup(qtbot, LRTPickerGroup,
-                                     io.load_table(self.design_mat_path, 0))
+        qtbot, widget = widget_setup(qtbot, LRTPickerGroup, io.load_table(self.design_mat_path, 0))
         widget.remove_comparison_widget()
         assert len(widget.inputs) == 0
         widget.remove_comparison_widget()
         assert len(widget.inputs) == 0
 
     def test_get_comparison_values(self, qtbot):
-        qtbot, widget = widget_setup(qtbot, LRTPickerGroup,
-                                     io.load_table(self.design_mat_path, 0))
+        qtbot, widget = widget_setup(qtbot, LRTPickerGroup, io.load_table(self.design_mat_path, 0))
         widget.add_comparison_widget()
         widget.add_comparison_widget()
 
@@ -1887,8 +1926,8 @@ def test_ThreadStdOutStreamTextQueueReceiver_run_stops_on_sentinel(qtbot):
     thread = threading.Thread(target=receiver.run, daemon=True)
     thread.start()
 
-    q.put('ordinary console output')      # a normal item -> loop keeps going
-    q.put(receiver.STOP_SIGNAL)           # sentinel -> loop must return
+    q.put('ordinary console output')  # a normal item -> loop keeps going
+    q.put(receiver.STOP_SIGNAL)  # sentinel -> loop must return
     thread.join(timeout=5)
 
     assert not thread.is_alive()

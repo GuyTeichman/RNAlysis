@@ -6,9 +6,9 @@ import qdarkstyle
 from rnalysis.exceptions import InvalidTypeError, InvalidValueError
 from rnalysis.utils import settings
 
-FONTPLACEHOLDER = "$FONTPLACEHOLDER"
-FONTSIZEPLACEHOLDER = "$FONTSIZEPLACEHOLDER"
-PATHPLACEHOLDER = "$PATHPLACEHOLDER"
+FONTPLACEHOLDER = '$FONTPLACEHOLDER'
+FONTSIZEPLACEHOLDER = '$FONTSIZEPLACEHOLDER'
+PATHPLACEHOLDER = '$PATHPLACEHOLDER'
 STYLESHEETS = {'base': None, 'light': qdarkstyle.LightPalette, 'dark': qdarkstyle.DarkPalette}
 PARAMETRIC_STYLESHEET_PATH = 'styles/parametric_style.qss'
 
@@ -30,11 +30,11 @@ def get_parametric_stylesheet(font_base_size: int, font_name: str):
     style_text = style_text.replace(FONTPLACEHOLDER, font_name)
     style_text = style_text.replace(PATHPLACEHOLDER, Path(__file__).parent.absolute().as_posix())
 
-    fontsize_pattern = f"\\{FONTSIZEPLACEHOLDER}\\*[0-9]*\\.?[0-9]+"
+    fontsize_pattern = f'\\{FONTSIZEPLACEHOLDER}\\*[0-9]*\\.?[0-9]+'
     for fontsize_match in reversed(list(re.finditer(fontsize_pattern, style_text))):
-        multiplier = float(fontsize_match.group(0)[len(FONTSIZEPLACEHOLDER) + 1:])
+        multiplier = float(fontsize_match.group(0)[len(FONTSIZEPLACEHOLDER) + 1 :])
         start, end = fontsize_match.span()
-        style_text = style_text[:start] + f"{int(font_base_size * multiplier)}pt" + style_text[end:]
+        style_text = style_text[:start] + f'{int(font_base_size * multiplier)}pt' + style_text[end:]
     style_text = style_text.replace(FONTSIZEPLACEHOLDER, str(font_base_size))
     return style_text
 

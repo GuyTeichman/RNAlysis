@@ -4,6 +4,7 @@ The script lives in ``packaging/`` (which is *not* a package and would shadow th
 distribution if imported by name -- see ``tests/test_contributors.py`` for the same pattern), so it
 is loaded directly from its file path.
 """
+
 import importlib.util
 from pathlib import Path
 

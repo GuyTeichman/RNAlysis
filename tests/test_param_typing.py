@@ -39,10 +39,15 @@ def snapshot_path(tmp_path, monkeypatch):
 
 
 def write_snapshot(path, vocabularies):
-    payload = {'_comment': 'test fixture', 'generated_at': '2026-01-02T03:04:05+00:00',
-               'rnalysis_version': '9.9.9',
-               'vocabularies': {key: {'source': 'test', 'generated_at': '2026-01-02T03:04:05+00:00',
-                                      'values': list(values)} for key, values in vocabularies.items()}}
+    payload = {
+        '_comment': 'test fixture',
+        'generated_at': '2026-01-02T03:04:05+00:00',
+        'rnalysis_version': '9.9.9',
+        'vocabularies': {
+            key: {'source': 'test', 'generated_at': '2026-01-02T03:04:05+00:00', 'values': list(values)}
+            for key, values in vocabularies.items()
+        },
+    }
     path.write_text(json.dumps(payload), encoding='utf-8')
 
 
@@ -93,14 +98,17 @@ def test_getter_degrades_on_a_corrupt_snapshot(snapshot_path, getter_name, key):
 
 
 @pytest.mark.parametrize('getter_name,key', list(GETTERS.items()))
-@pytest.mark.parametrize('payload', [
-    {},                                                        # no 'vocabularies' at all
-    {'vocabularies': {}},                                      # the vocabulary is missing
-    {'vocabularies': {'KEY': {'source': 'test'}}},             # the entry has no 'values'
-    {'vocabularies': {'KEY': {'values': 'Homo sapiens'}}},     # a string instead of a list
-    {'vocabularies': {'KEY': {'values': [{'name': 'Homo sapiens'}]}}},  # not a list of strings
-    {'vocabularies': 'nope'},
-])
+@pytest.mark.parametrize(
+    'payload',
+    [
+        {},  # no 'vocabularies' at all
+        {'vocabularies': {}},  # the vocabulary is missing
+        {'vocabularies': {'KEY': {'source': 'test'}}},  # the entry has no 'values'
+        {'vocabularies': {'KEY': {'values': 'Homo sapiens'}}},  # a string instead of a list
+        {'vocabularies': {'KEY': {'values': [{'name': 'Homo sapiens'}]}}},  # not a list of strings
+        {'vocabularies': 'nope'},
+    ],
+)
 def test_getter_degrades_on_an_unexpected_snapshot_shape(snapshot_path, getter_name, key, payload):
     # A Literal[...] annotation can only be built from hashable values, so a wrong-shaped snapshot
     # must not reach the annotation - it would crash the import instead of emptying one dropdown.
@@ -119,8 +127,12 @@ def test_getter_does_not_touch_the_network(monkeypatch, getter_name, key):
     def _fail(*args, **kwargs):
         raise AssertionError('a param_typing getter performed network I/O')
 
-    for io_func_name in ('get_legal_gene_id_types', 'get_legal_panther_taxons',
-                         'get_legal_phylomedb_taxons', 'get_legal_ensembl_taxons'):
+    for io_func_name in (
+        'get_legal_gene_id_types',
+        'get_legal_panther_taxons',
+        'get_legal_phylomedb_taxons',
+        'get_legal_ensembl_taxons',
+    ):
         monkeypatch.setattr(io, io_func_name, _fail)
     clear_vocabulary_caches()
     try:
@@ -135,9 +147,9 @@ def load_packaged_snapshot():
 
 
 def test_packaged_snapshot_is_shipped_and_well_formed():
-    assert param_typing.API_VOCABULARIES_PATH.is_file(), \
-        'the packaged vocabulary snapshot is missing - regenerate it with ' \
-        'packaging/generate_api_vocabularies.py'
+    assert param_typing.API_VOCABULARIES_PATH.is_file(), (
+        'the packaged vocabulary snapshot is missing - regenerate it with packaging/generate_api_vocabularies.py'
+    )
     payload = load_packaged_snapshot()
 
     assert 'generate_api_vocabularies.py' in payload['_comment']
@@ -157,7 +169,7 @@ def test_packaged_snapshot_is_populated(key):
     assert len(load_packaged_snapshot()['vocabularies'][key]['values']) > 10
 
 
-IMPORT_WITHOUT_NETWORK_SCRIPT = '''
+IMPORT_WITHOUT_NETWORK_SCRIPT = """
 import socket
 import sys
 import time
@@ -186,7 +198,7 @@ elapsed = time.perf_counter() - start
 counts = {name: len(getattr(param_typing, name)())
           for name in ('get_gene_id_types', 'get_panther_taxons', 'get_ensembl_taxons')}
 print('IMPORT_OK', elapsed, counts, file=sys.stderr)
-'''
+"""
 
 
 def test_import_filtering_works_without_network(tmp_path):
@@ -199,8 +211,14 @@ def test_import_filtering_works_without_network(tmp_path):
     script = tmp_path / 'import_without_network.py'
     script.write_text(IMPORT_WITHOUT_NETWORK_SCRIPT, encoding='utf-8')
 
-    result = subprocess.run([sys.executable, str(script)], capture_output=True, text=True, timeout=300,
-                            cwd=str(REPO_ROOT), env={**os.environ, 'PYTHONPATH': str(REPO_ROOT)})
+    result = subprocess.run(
+        [sys.executable, str(script)],
+        capture_output=True,
+        text=True,
+        timeout=300,
+        cwd=str(REPO_ROOT),
+        env={**os.environ, 'PYTHONPATH': str(REPO_ROOT)},
+    )
 
     assert result.returncode == 0, f'importing rnalysis.filtering without network failed:\n{result.stderr}'
     assert 'IMPORT_OK' in result.stderr
