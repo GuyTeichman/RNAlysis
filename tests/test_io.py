@@ -1880,6 +1880,66 @@ def test_flush_gui_cache_writes_reraises_write_errors(gui_cache_writer):
         flush_gui_cache_writes()
 
 
+def test_stream_cached_parquet_to_csv_matches_eager(gui_cache_writer, tmp_path):
+    df = pl.DataFrame({'': ['g1', 'g2', 'g3'], 'a': [1, 2, 3], 'b': [4.5, None, 6.5], 's': ['x', 'y,z', 'w']})
+    filename = 'stream_unit.parquet'
+    cache_path = get_gui_cache_dir().joinpath(filename)
+    dst = tmp_path.joinpath('out.csv')
+    try:
+        cache_gui_file(df, filename)  # queued as a background write; the transcode must flush it first
+        stream_cached_parquet_to_csv(filename, dst)
+        assert dst.exists()
+        expected = tmp_path.joinpath('expected.csv')
+        pl.read_parquet(cache_path).write_csv(expected)
+        assert dst.read_bytes() == expected.read_bytes()
+    finally:
+        if cache_path.exists():
+            cache_path.unlink()
+
+
+def test_stream_cached_parquet_to_csv_handles_legacy_index_column(tmp_path):
+    # legacy (pandas-era) session parquet files are copied raw into the cache and carry an
+    # '__index_level_0__' column that the eager load_table renames to ''. The exported CSV must match
+    # that eager output byte-for-byte, not leak the raw column name.
+    df = pl.DataFrame({'__index_level_0__': ['g1', 'g2'], 'a': [1, 2]})
+    filename = 'stream_legacy_index.parquet'
+    get_gui_cache_dir().mkdir(parents=True, exist_ok=True)
+    cache_path = get_gui_cache_dir().joinpath(filename)
+    dst = tmp_path.joinpath('out.csv')
+    try:
+        df.write_parquet(cache_path)  # simulate a raw legacy file placed in the cache by session load
+        stream_cached_parquet_to_csv(filename, dst)
+        assert dst.exists()
+        expected = tmp_path.joinpath('expected.csv')
+        save_table(load_table(cache_path), expected)  # the reference output the old eager path produced
+        assert dst.read_bytes() == expected.read_bytes()
+        assert b'__index_level_0__' not in dst.read_bytes()
+    finally:
+        if cache_path.exists():
+            cache_path.unlink()
+
+
+def test_stream_cached_parquet_to_csv_falls_back_to_eager(gui_cache_writer, tmp_path, monkeypatch):
+    df = pl.DataFrame({'a': [1, 2, 3], 'b': [4, 5, 6]})
+    filename = 'stream_fallback.parquet'
+    cache_path = get_gui_cache_dir().joinpath(filename)
+    dst = tmp_path.joinpath('out.csv')
+
+    def boom(*args, **kwargs):
+        raise RuntimeError('streaming engine rejected the file')
+
+    try:
+        cache_gui_file(df, filename)
+        flush_gui_cache_writes()
+        monkeypatch.setattr(pl, 'scan_parquet', boom)
+        stream_cached_parquet_to_csv(filename, dst)  # scan raises -> eager fallback still writes the csv
+        assert dst.exists()
+        assert load_table(dst).equals(df)
+    finally:
+        if cache_path.exists():
+            cache_path.unlink()
+
+
 def test_flush_surfaces_error_from_superseded_write(gui_cache_writer, monkeypatch):
     # an earlier failed write to a path must still surface at the barrier even when a later write to
     # the same path was queued before the flush (guards against dropping the superseded future).

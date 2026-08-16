@@ -1,3 +1,4 @@
+import polars as pl
 import pytest
 
 from rnalysis.gui.gui_report import *
@@ -105,3 +106,36 @@ def test_generate_report(report_generator, tmp_path):
     report_file = tmp_path / 'report.html'
     assert report_file.exists()
     assert len(report_generator.graph.nodes) == 9
+
+
+def test_generate_report_streams_parquet_to_csv(report_generator, tmp_path, monkeypatch):
+    monkeypatch.setattr(webbrowser, 'open', lambda *a, **k: None)
+    calls = []
+    real = io.stream_cached_parquet_to_csv
+
+    def spy(cached_filename, dst_path):
+        calls.append((cached_filename, dst_path))
+        return real(cached_filename, dst_path)
+
+    monkeypatch.setattr(io, 'stream_cached_parquet_to_csv', spy)
+
+    df = pl.DataFrame({'': ['g1', 'g2', 'g3'], 'a': [1, 2, 3], 'b': [4.5, None, 6.5]})
+    filename = Path('999_report_stream.parquet')
+    io.cache_gui_file(df, str(filename))
+    io.flush_gui_cache_writes()
+    cache_path = io.get_gui_cache_dir().joinpath(filename)
+    try:
+        report_generator.add_node('Streamed table', 999, [0], 'desc', 'Count matrix', filename)
+        report_generator.generate_report(tmp_path)
+
+        out_csv = tmp_path / 'data' / '999_report_stream.csv'
+        assert calls, 'report export must transcode parquet->csv via the streaming helper'
+        assert out_csv.exists()
+        # the streamed csv must be byte-identical to the eager read_parquet -> write_csv path
+        expected = tmp_path / 'expected.csv'
+        pl.read_parquet(cache_path).write_csv(expected)
+        assert out_csv.read_bytes() == expected.read_bytes()
+    finally:
+        if cache_path.exists():
+            cache_path.unlink()
+        io._reset_gui_cache_writer()
