@@ -10,7 +10,13 @@ import platformdirs
 import pytest
 import requests_mock
 
-from rnalysis.exceptions import CorruptSessionError, InternalError, InvalidTypeError
+from rnalysis.exceptions import (
+    CorruptSessionError,
+    IDMappingJobFailedError,
+    IDMappingTimeoutError,
+    InternalError,
+    InvalidTypeError,
+)
 from rnalysis.utils import io
 from rnalysis.utils.io import *
 from rnalysis.utils.io import _ensembl_lookup_post_request, _format_ids_iter
@@ -418,6 +424,90 @@ def test_get_mapping_results_caches_negatives_and_does_not_requery(tmp_path, mon
     third = translator.get_mapping_results('UniProtKB', 'WormBase', ('B', 'C'), session=Mock())
     assert fetched_batches == [('A', 'B'), ('C',)]
     assert third is None
+
+
+def test_get_mapping_results_degrades_on_job_timeout_without_poisoning_cache(tmp_path, monkeypatch):
+    # If a UniProt idmapping job never becomes ready (IDMappingTimeoutError from the poll loop), the
+    # mapping must degrade gracefully: warn, return whatever is already cached (here nothing), and --
+    # crucially -- NOT record the un-fetched miss ids as negatives. Caching them as negatives would
+    # wrongly mark them permanently unmappable for the rest of the day, so a re-run must instead retry
+    # them. This distinguishes "UniProt says these don't map" (cache negative) from "UniProt never
+    # answered" (retry).
+    monkeypatch.setattr(io, 'get_todays_cache_dir', lambda: tmp_path)
+    monkeypatch.setattr(io, '_get_id_abbreviation_dicts', _mock_gene_id_abbrev_dict)
+    translator = GeneIDTranslator('WormBase', 'UniProtKB', verbose=True)
+
+    calls = []
+
+    def flaky_fetch(self, to_db, from_db, ids, session):
+        calls.append(tuple(ids))
+        if len(calls) == 1:
+            raise IDMappingTimeoutError('UniProt job wedged in RUNNING')
+        return _translation_rows(
+            {'From': list(ids), 'To': [f'UP{i}' for i in ids], 'annotation_score': [5.0] * len(ids)}
+        ).lazy()
+
+    monkeypatch.setattr(GeneIDTranslator, '_fetch_mapping_results', flaky_fetch)
+
+    # first run: the job times out -> warn (naming UniProt), return nothing, cache nothing
+    with pytest.warns(Warning, match='UniProt'):
+        first = translator.get_mapping_results('UniProtKB', 'WormBase', ('A', 'B'), session=Mock())
+    assert first is None
+    assert calls == [('A', 'B')]
+
+    # second run: the same ids are retried (they were NOT silently cached as negatives) and now succeed
+    second = translator.get_mapping_results('UniProtKB', 'WormBase', ('A', 'B'), session=Mock())
+    assert calls == [('A', 'B'), ('A', 'B')]
+    assert {f: t for f, t in second.collect().select('From', 'To').iter_rows()} == {'A': 'UPA', 'B': 'UPB'}
+
+
+def test_get_mapping_results_degrades_on_job_failure_without_poisoning_cache(tmp_path, monkeypatch):
+    # A job that reaches a terminal FAILED status (IDMappingJobFailedError) must degrade exactly like
+    # a timed-out job (see the test above): warn, don't cache the miss ids as negatives, so a re-run
+    # retries them instead of treating a possibly-transient failure as a permanent "doesn't map".
+    monkeypatch.setattr(io, 'get_todays_cache_dir', lambda: tmp_path)
+    monkeypatch.setattr(io, '_get_id_abbreviation_dicts', _mock_gene_id_abbrev_dict)
+    translator = GeneIDTranslator('WormBase', 'UniProtKB', verbose=True)
+
+    def failing_fetch(self, to_db, from_db, ids, session):
+        raise IDMappingJobFailedError("UniProt ID mapping job (id=123) finished with status 'FAILED'.")
+
+    monkeypatch.setattr(GeneIDTranslator, '_fetch_mapping_results', failing_fetch)
+
+    with pytest.warns(Warning, match='UniProt'):
+        result = translator.get_mapping_results('UniProtKB', 'WormBase', ('A', 'B'), session=Mock())
+    assert result is None
+
+
+def test_get_mapping_results_warning_distinguishes_partial_from_no_results(tmp_path, monkeypatch):
+    # The degradation warning must say "no results" when nothing at all was resolved this run, and
+    # "partial results" when some of the requested ids were already resolved from a previous run's
+    # cache -- saying "partial results" when the true result is empty would mislead the user into
+    # thinking some ids mapped when none did.
+    monkeypatch.setattr(io, 'get_todays_cache_dir', lambda: tmp_path)
+    monkeypatch.setattr(io, '_get_id_abbreviation_dicts', _mock_gene_id_abbrev_dict)
+    translator = GeneIDTranslator('WormBase', 'UniProtKB', verbose=True)
+    monkeypatch.setattr(
+        GeneIDTranslator,
+        '_fetch_mapping_results',
+        lambda self, to_db, from_db, ids, session: (_ for _ in ()).throw(
+            IDMappingTimeoutError('UniProt job wedged in RUNNING')
+        ),
+    )
+
+    # nothing was ever cached -> every id is unresolved this run -> "no results"
+    with pytest.warns(Warning, match='no results'):
+        result = translator.get_mapping_results('UniProtKB', 'WormBase', ('A',), session=Mock())
+    assert result is None
+
+    # seed the cache with an already-resolved id, then request it alongside a fresh miss -> some ids
+    # ARE resolved (from cache) even though the fresh one times out -> "partial results"
+    io._write_translation_cache_fragment(
+        'WormBase', 'UniProtKB', _translation_rows({'From': ['Z'], 'To': ['UPZ'], 'annotation_score': [5.0]})
+    )
+    with pytest.warns(Warning, match='partial results'):
+        result = translator.get_mapping_results('UniProtKB', 'WormBase', ('Z', 'B'), session=Mock())
+    assert {f: t for f, t in result.collect().select('From', 'To').iter_rows()} == {'Z': 'UPZ'}
 
 
 def _fake_up_fetch(self, to_db, from_db, ids, session):
@@ -2216,15 +2306,15 @@ def test_check_id_mapping_results_ready_running():
 
 def test_check_id_mapping_results_ready_error():
     with requests_mock.Mocker() as m:
-        # A 200 response whose jobStatus is ERROR must raise (this exercises the ERROR branch;
-        # note check_id_mapping_results_ready's signature is (session, job_id, polling_interval)).
+        # A 200 response whose jobStatus is a terminal non-success status (ERROR) must raise the
+        # typed IDMappingJobFailedError -- not a bare Exception -- so callers (get_mapping_results)
+        # can catch it specifically and degrade gracefully instead of crashing (note
+        # check_id_mapping_results_ready's signature is (session, job_id, polling_interval)).
         m.get('https://rest.uniprot.org/idmapping/status/123', json={'jobStatus': 'ERROR'})
 
-        # Call the function
         session = requests.Session()
 
-        # Check that an exception is raised
-        with pytest.raises(Exception):
+        with pytest.raises(IDMappingJobFailedError, match='ERROR'):
             GeneIDTranslator.check_id_mapping_results_ready(session, '123', 0.1)
 
 
@@ -2292,6 +2382,91 @@ def test_check_id_mapping_results_ready_uses_adaptive_backoff(monkeypatch):
 
     assert ready
     assert sleeps == [0.25, 0.5, 1.0, 2.0]
+
+
+def test_check_id_mapping_results_ready_waiting_message_is_not_misleading(monkeypatch, capsys):
+    # While a UniProt idmapping job is still RUNNING the poll loop prints a status line every poll. It
+    # must read as "we are waiting on UniProt", not "Retrying in Ns" -- the latter reads like a failed
+    # request being retried and has made users think the mapping is erroring when it is only slow on
+    # UniProt's side (idmapping job latency is server-side and can reach minutes). The line must still
+    # name UniProt and disclose when the next check happens.
+    monkeypatch.setattr(io.time, 'sleep', lambda *args, **kwargs: None)  # don't actually wait
+    with requests_mock.Mocker() as m:
+        count = 0
+
+        def request_callback(request, context):
+            nonlocal count
+            count += 1
+            return {'jobStatus': 'RUNNING'} if count < 4 else {'results': ['data']}
+
+        m.get('https://rest.uniprot.org/idmapping/status/123', json=request_callback)
+        ready = GeneIDTranslator.check_id_mapping_results_ready(requests.Session(), '123', 3.0, verbose=True)
+
+    out = capsys.readouterr().out
+    assert ready
+    assert 'Retrying' not in out  # the misleading wording is gone
+    assert 'UniProt' in out  # it's clear who we're waiting on
+    assert '0.25' in out  # the next-check interval (first backoff step) is still disclosed
+
+
+def test_check_id_mapping_results_ready_silent_when_not_verbose(monkeypatch, capsys):
+    # verbose=False must suppress the per-poll waiting line entirely.
+    monkeypatch.setattr(io.time, 'sleep', lambda *args, **kwargs: None)
+    with requests_mock.Mocker() as m:
+        count = 0
+
+        def request_callback(request, context):
+            nonlocal count
+            count += 1
+            return {'jobStatus': 'RUNNING'} if count < 4 else {'results': ['data']}
+
+        m.get('https://rest.uniprot.org/idmapping/status/123', json=request_callback)
+        GeneIDTranslator.check_id_mapping_results_ready(requests.Session(), '123', 3.0, verbose=False)
+
+    assert capsys.readouterr().out == ''
+
+
+def _fake_monotonic_clock(monkeypatch):
+    """Patch io.time.sleep/monotonic with a fake clock: sleep(x) advances the clock by x instead of
+    actually blocking, and monotonic() reads it back. Keeps timeout-loop tests fast, deterministic,
+    and accurate to production (which measures elapsed time via time.monotonic(), not accumulated
+    sleep args -- see check_id_mapping_results_ready)."""
+    now = [0.0]
+    monkeypatch.setattr(io.time, 'monotonic', lambda: now[0])
+    monkeypatch.setattr(io.time, 'sleep', lambda seconds: now.__setitem__(0, now[0] + seconds))
+    return now
+
+
+def test_check_id_mapping_results_ready_times_out_when_job_never_ready(monkeypatch):
+    # A UniProt job stuck in RUNNING must not hang the analysis forever: after JOB_READY_TIMEOUT worth
+    # of elapsed (wall-clock) time, the loop raises IDMappingTimeoutError instead of looping without
+    # end. The fake clock advances exactly as far as the loop's own sleep calls, so this stays fast.
+    _fake_monotonic_clock(monkeypatch)
+    monkeypatch.setattr(GeneIDTranslator, 'JOB_READY_TIMEOUT', 5.0)
+    with requests_mock.Mocker() as m:
+        adapter = m.get('https://rest.uniprot.org/idmapping/status/123', json={'jobStatus': 'RUNNING'})
+        with pytest.raises(IDMappingTimeoutError):
+            GeneIDTranslator.check_id_mapping_results_ready(requests.Session(), '123', 3.0, verbose=False)
+    # it polled a few times then gave up -- bounded, not infinite
+    assert 2 <= adapter.call_count < 20
+
+
+def test_check_id_mapping_results_ready_does_not_time_out_a_job_that_finishes_in_time(monkeypatch):
+    # A job that is slow but finishes before the bound must still succeed -- the timeout is a hang-guard
+    # and must never pre-empt a legitimately-completing job.
+    _fake_monotonic_clock(monkeypatch)
+    monkeypatch.setattr(GeneIDTranslator, 'JOB_READY_TIMEOUT', 1000.0)  # generous
+    with requests_mock.Mocker() as m:
+        count = 0
+
+        def request_callback(request, context):
+            nonlocal count
+            count += 1
+            return {'jobStatus': 'RUNNING'} if count < 8 else {'results': ['data']}
+
+        m.get('https://rest.uniprot.org/idmapping/status/123', json=request_callback)
+        ready = GeneIDTranslator.check_id_mapping_results_ready(requests.Session(), '123', 3.0, verbose=False)
+    assert ready
 
 
 @pytest.mark.unit

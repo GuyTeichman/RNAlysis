@@ -1,6 +1,15 @@
 import pytest
 
-from rnalysis.exceptions import InternalError, InvalidTypeError, InvalidValueError, RNAlysisError, RNAlysisInputError
+from rnalysis.exceptions import (
+    ExternalServiceError,
+    IDMappingJobFailedError,
+    IDMappingTimeoutError,
+    InternalError,
+    InvalidTypeError,
+    InvalidValueError,
+    RNAlysisError,
+    RNAlysisInputError,
+)
 
 BUG_REPORT_SUFFIX = (
     'This is likely a bug in RNAlysis - please report it at https://github.com/GuyTeichman/RNAlysis/issues'
@@ -11,9 +20,34 @@ def test_root_is_an_exception():
     assert issubclass(RNAlysisError, Exception)
 
 
-@pytest.mark.parametrize('cls', [RNAlysisInputError, InvalidTypeError, InvalidValueError, InternalError])
+@pytest.mark.parametrize(
+    'cls',
+    [
+        RNAlysisInputError,
+        InvalidTypeError,
+        InvalidValueError,
+        InternalError,
+        ExternalServiceError,
+        IDMappingTimeoutError,
+        IDMappingJobFailedError,
+    ],
+)
 def test_everything_inherits_the_root(cls):
     assert issubclass(cls, RNAlysisError)
+
+
+def test_external_service_error_is_its_own_family():
+    # An external-service failure (UniProt/Ensembl/... slow, changed, or down) is neither the user's
+    # fault nor an RNAlysis bug, so it must sit in its own family -- not under the input-error or
+    # internal-error roots.
+    assert issubclass(ExternalServiceError, RNAlysisError)
+    assert not issubclass(ExternalServiceError, RNAlysisInputError)
+    assert not issubclass(ExternalServiceError, InternalError)
+
+
+@pytest.mark.parametrize('cls', [IDMappingTimeoutError, IDMappingJobFailedError])
+def test_idmapping_errors_are_external_service_errors(cls):
+    assert issubclass(cls, ExternalServiceError)
 
 
 @pytest.mark.parametrize(
@@ -43,7 +77,19 @@ def test_message_is_preserved(cls):
     assert str(err) == 'some message'
 
 
-@pytest.mark.parametrize('cls', [RNAlysisError, RNAlysisInputError, InvalidTypeError, InvalidValueError, InternalError])
+@pytest.mark.parametrize(
+    'cls',
+    [
+        RNAlysisError,
+        RNAlysisInputError,
+        InvalidTypeError,
+        InvalidValueError,
+        InternalError,
+        ExternalServiceError,
+        IDMappingTimeoutError,
+        IDMappingJobFailedError,
+    ],
+)
 def test_nothing_inherits_assertionerror(cls):
     """The exception-type change is a clean break: no compat shim through AssertionError."""
     assert not issubclass(cls, AssertionError)
