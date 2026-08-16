@@ -368,17 +368,19 @@ def parse_power_transform(power_transform: Union[bool, str]) -> str:
     """
     Normalize a ``power_transform`` argument into one of the names in ``param_typing.POWER_TRANSFORMS``.
 
-    ``power_transform`` used to be a boolean. ``True``/``False`` are therefore still accepted, and always
-    will be, so that Pipelines and exported parameter files saved by older versions of *RNAlysis* keep
-    running with exactly the behavior they had when they were saved.
+    ``power_transform`` used to be a boolean. ``True``/``False`` (in their Python and numpy spellings alike)
+    are therefore still accepted, and always will be, so that Pipelines and exported parameter files saved by
+    older versions of *RNAlysis* keep running with exactly the behavior they had when they were saved.
 
     :param power_transform: the transform to apply: 'box-cox', 'log', 'none', or the legacy True/False.
     :type power_transform: 'box-cox', 'log', 'none', or bool
     :return: the normalized transform name.
     :rtype: str
     """
-    # np.bool_ stopped being a bool in numpy 2, but the pre-4.3 code was a truthiness test and so accepted it:
-    # "True/False stay valid indefinitely" has to keep covering the numpy flavour too.
+    # numpy's boolean scalar is accepted alongside Python's, because that is what a comparison over a numpy or
+    # polars column yields, and passing one straight in worked before 4.3 (np.bool_ stopped being a bool in numpy
+    # 2, and the pre-4.3 code tested truthiness rather than the type). Other truthy/falsey values are not accepted
+    # -- 1, 0 and 1.0 are not spellings of a transform, and are rejected below.
     if isinstance(power_transform, (bool, np.bool_)):
         return 'box-cox' if power_transform else 'none'
     if isinstance(power_transform, str) and power_transform.lower() in POWER_TRANSFORMS:
@@ -472,6 +474,7 @@ def standardize(data: Union[np.ndarray, pl.DataFrame]) -> Union[np.ndarray, pl.D
     :rtype:
     """
     if isinstance(data, pl.DataFrame):
+        numeric_columns = data.select(cs.numeric()).columns
         array = data.select(cs.numeric()).to_numpy()
     else:
         array = data
@@ -479,9 +482,7 @@ def standardize(data: Union[np.ndarray, pl.DataFrame]) -> Union[np.ndarray, pl.D
     if isinstance(data, pl.DataFrame):
         # only the numeric columns were transformed, so only their names may label the result -- passing every
         # column name (the gene-ID one included) raised a shape mismatch on any real RNAlysis table
-        return data.select(~cs.numeric()).with_columns(
-            pl.DataFrame(res_array, schema=data.select(cs.numeric()).columns)
-        )
+        return data.select(~cs.numeric()).with_columns(pl.DataFrame(res_array, schema=numeric_columns))
     return res_array
 
 

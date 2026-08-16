@@ -74,6 +74,11 @@ def _davies_bouldin_score(*args, **kwargs):
 # it. Default (None) means "no memoization" so every other caller keeps its original, unchanged behaviour.
 _TRANSFORM_CACHE: contextvars.ContextVar = contextvars.ContextVar('clustering_transform_cache', default=None)
 
+# The transforms that already existed when CLICOM's cluster-expression plot was found to be drawn from plainly
+# standardized data whatever transform was asked for (see the NOTE in CLICOMRunner._run). Rule 5 freezes that
+# plot output for exactly these; anything added later gets the plot the user actually asked for.
+_LEGACY_CLICOM_PLOT_TRANSFORMS = frozenset({'box-cox', 'none'})
+
 
 class BinaryFormatClusters:
     __slots__ = {
@@ -1434,25 +1439,39 @@ class CLICOMRunner(ClusteringRunner):
             # get cluster centers
             # generate standardized data for plots.
             #
-            # NOTE: the `True in parsing.data_to_set(self.transform)` condition below has *always* been False --
-            # `self.transform` is a callable, never a boolean -- so a CLICOM run's cluster-expression plot has
-            # always been drawn from plainly-standardized data, whatever power transform was requested. That is
-            # preserved deliberately: rule 5 (a given analysis must keep reproducing between versions) covers this
-            # plot for the transforms that already existed ('box-cox'/True and 'none'/False), so "fixing" the
-            # condition would silently change figures that users have already published. Leave it as it is.
+            # NOTE: this used to read
+            #     generic.standard_box_cox(self.data) if True in parsing.data_to_set(self.transform)
+            #     else generic.standardize(self.data)
+            # whose condition has *always* been False -- `self.transform` is a callable, never a boolean -- so a
+            # CLICOM run's cluster-expression plot has always been drawn from plainly standardized data, whatever
+            # power transform was requested. Rule 5 (a given analysis must keep reproducing between versions)
+            # covers that plot for the transforms that already existed ('box-cox'/True and 'none'/False), so they
+            # keep that output, bit for bit -- do not "fix" it into a Box-Cox plot. The dead condition itself is
+            # deliberately *not* kept: were `self.transform` ever to hold a boolean again, it would quietly go
+            # live and change figures users have already published.
             #
-            # 'log' is new in 4.3.0 and therefore has no legacy plot output to preserve -- and it is the very
-            # transform the Box-Cox instability error tells blocked users to switch to, so its plot must show the
-            # values the user actually asked for. It is routed through the real transform below.
+            # A transform introduced after those -- 'log', today -- has no legacy plot output to preserve, and
+            # 'log' is the very transform the Box-Cox instability error tells blocked users to switch to, so its
+            # plot must show the values the user actually asked for. CLICOM runs one clustering setup per
+            # transform and so accepts several at once; a mixed run has no single transform its plot could show,
+            # and keeps the neutral standardized view regardless of the order the transforms were listed in.
             # Either way this is plot-only (data_for_plot -> centers -> plot_clustering); no returned table changes.
-            if self.transform_method == 'log':
-                self.data_for_plot = generic.get_transform_function(self.transform_method)(self.data)
+            plot_transform = self._plot_transform_method()
+            if plot_transform is None:
+                self.data_for_plot = generic.standardize(self.data)
             else:
-                self.data_for_plot = (
-                    generic.standard_box_cox(self.data)
-                    if True in parsing.data_to_set(self.transform)
-                    else generic.standardize(self.data)
-                )
+                try:
+                    self.data_for_plot = generic.get_transform_function(plot_transform)(self.data)
+                except RNAlysisInputError as e:
+                    # the plot transform is applied to the whole table, while the clustering setups only ever saw
+                    # the columns named in `replicate_grouping` -- so it can fail on a column no setup touched,
+                    # at the very end of an expensive run. The plot degrades; the ensemble result is not lost.
+                    warnings.warn(
+                        f"Could not apply the '{plot_transform}' transform to the data for plotting ({e}) - "
+                        f'the cluster-expression plots below show standardized data instead. '
+                        f'The clustering results themselves are unaffected.'
+                    )
+                    self.data_for_plot = generic.standardize(self.data)
             data_np = self.data_for_plot.to_numpy()
             centers = np.array([data_np[clusterer.labels_ == i, :].T.mean(axis=1) for i in range(n_clusters)])
             # plot results
@@ -1466,6 +1485,27 @@ class CLICOMRunner(ClusteringRunner):
                 self.plot_clustering()
 
         return self.clusterers
+
+    def _plot_transform_method(self) -> Union[str, None]:
+        """Return the transform whose values the cluster-expression plot should show, or None for the plainly
+        standardized view.
+
+        None covers three cases: a transform that predates 4.3.0 (whose plot output rule 5 freezes as it was --
+        see the NOTE in ``_run``), a run that mixes several transforms (which has no single transform to show),
+        and a transform that cannot be parsed at all. The last one is not this method's to complain about:
+        ``find_valid_clustering_setups`` silently skips a setup it cannot build, so an unparseable transform never
+        stops a run, and must not start doing so at the very end of one.
+        """
+        methods = set()
+        for transform in parsing.data_to_list(self.power_transform):
+            try:
+                methods.add(generic.parse_power_transform(transform))
+            except RNAlysisInputError:
+                continue
+        if len(methods) != 1:
+            return None
+        method = methods.pop()
+        return None if method in _LEGACY_CLICOM_PLOT_TRANSFORMS else method
 
     def find_valid_clustering_setups(self) -> list:
         valid_setups = []

@@ -43,6 +43,17 @@ def test_standardize_dataframe_with_a_gene_id_column():
     assert np.array_equal(res_df.select(cs.numeric()).to_numpy(), StandardScaler().fit_transform(array))
 
 
+def test_standardize_lays_columns_out_like_the_other_transforms():
+    # all three transforms gather the non-numeric columns first (an RNAlysis table's gene-ID column already is
+    # first, so this is only visible on a table where it is not). Interchangeable means interchangeable: pin
+    # standardize's layout against its siblings' rather than against the input's, which is not what any of them
+    # promises.
+    data_df = pl.DataFrame({'cond1': [10.0, 50.0], 'gene': ['gene1', 'gene2'], 'cond2': [3.0, 90.0]})
+
+    assert standardize(data_df).columns == standard_log(data_df).columns
+    assert standardize(data_df).columns == standard_box_cox(data_df).columns
+
+
 def test_standard_box_cox():
     np.random.seed(42)
     data = np.random.randint(-200, 100000, (100, 5))
