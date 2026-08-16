@@ -4,13 +4,14 @@
 #     pre-commit install
 #
 # After that the hooks run automatically on `git commit`, but ONLY on the files that commit
-# touches. Adding this file does not reformat the repository — a single repo-wide `ruff format` /
-# `ruff check --fix` sweep is planned separately, when `development` is next merged into
-# `master`. To run everything by hand: `pre-commit run -a`.
+# touches. A repo-wide `ruff format` / `ruff check --fix` sweep has already been applied once
+# (see the "Repo-wide Ruff format + import-sort sweep" commit); going forward these hooks keep
+# the tree in that state incrementally. To run everything by hand: `pre-commit run -a`.
 #
 # CI (.github/workflows/pre-commit.yml) runs these same hooks on every pull request, scoped to
-# just the files the PR changed (`pre-commit run --from-ref <base> --to-ref <head>`) — NOT
-# `--all-files`, since the repo-wide sweep above hasn't happened yet.
+# just the files the PR changed (`pre-commit run --from-ref <base> --to-ref <head>`), not
+# `--all-files` — a full-repo run is for a deliberate, one-off sweep only (see above), not routine
+# PR checks.
 #
 # `exclude` below keeps every hook off content that must not be hand-normalized:
 #   - docs/build/       : ~600 MB of committed, generated Sphinx HTML, regenerated at release time.
@@ -18,7 +19,15 @@
 #     hand-edit them") — same story, regenerated on every docs build.
 #   - tests/test_files/ : test fixtures and "truth" reference files compared verbatim by tests;
 #     normalizing their line endings/whitespace risks silently changing what a test asserts against.
-exclude: '^(docs/build/|docs/source/rnalysis\..*\.rst$|tests/test_files/)'
+#   - rnalysis/data_files/r_templates/ : R script templates read and echoed verbatim (via string
+#     substitution, not re-rendered) into generated DESeq2/limma/featureCounts scripts, which are
+#     then compared byte-for-byte against tests/test_files/*/expected_*.R truth files. A hygiene
+#     fix here (e.g. end-of-file-fixer trimming a trailing blank line) changes generated output
+#     without changing the excluded truth files to match, breaking that comparison — this exact
+#     failure mode broke CI on the sweep's first attempt (logging.R lost a trailing blank line).
+#   - rnalysis/data_files/report_templates/ : vendored third-party libraries (Bootstrap, vis-network
+#     minified JS/CSS) — not ours to reformat.
+exclude: '^(docs/build/|docs/source/rnalysis\..*\.rst$|tests/test_files/|rnalysis/data_files/r_templates/|rnalysis/data_files/report_templates/)'
 
 default_language_version:
   python: python3
