@@ -18,8 +18,9 @@ matplotlib.use('Agg')
 
 def _df_to_dict(df, null_mode: bool = True):
     if null_mode:
-        return {attr: set(df.filter(pl.col(attr).is_not_null()).select(pl.first()).to_series()) for attr in
-                df.columns[1:]}
+        return {
+            attr: set(df.filter(pl.col(attr).is_not_null()).select(pl.first()).to_series()) for attr in df.columns[1:]
+        }
     return {attr: set(df.filter(pl.col(attr)).select(pl.first()).to_series()) for attr in df.columns[1:]}
 
 
@@ -36,13 +37,16 @@ def test_enrichment_runner_from_results():
     assert runner.set_name == set_name
 
 
-@pytest.mark.parametrize("pval, alpha, expected", [
-    (0.6, None, ('ns', 'normal')),
-    (0.001, 0.00099, ('ns', 'normal')),
-    (0.04, None, (u'\u2217', 'bold')),
-    (0.0099, None, (u'\u2217' * 2, 'bold')),
-    (0, None, (u'\u2217' * 4, 'bold'))
-])
+@pytest.mark.parametrize(
+    'pval, alpha, expected',
+    [
+        (0.6, None, ('ns', 'normal')),
+        (0.001, 0.00099, ('ns', 'normal')),
+        (0.04, None, ('\u2217', 'bold')),
+        (0.0099, None, ('\u2217' * 2, 'bold')),
+        (0, None, ('\u2217' * 4, 'bold')),
+    ],
+)
 def test_get_pval_asterisk(pval, alpha, expected):
     if alpha is not None:
         result = EnrichmentPlotter._get_pval_asterisk(pval, alpha)
@@ -61,25 +65,50 @@ def test_calc_randomization_pval():
     assert np.isclose(avg_pval, hypergeom_pval, atol=0.02)
 
 
-@pytest.mark.parametrize('M,n,N,X,truth', [
-    (13588, 59, 611, 19, 4.989682834519698 * 10 ** -12),
-    (20000, 430, 700, 6, 0.006249179131697138),
-    (20000, 43, 300, 3, 0.0265186938062861)
-])
+@pytest.mark.parametrize(
+    'M,n,N,X,truth',
+    [
+        (13588, 59, 611, 19, 4.989682834519698 * 10**-12),
+        (20000, 430, 700, 6, 0.006249179131697138),
+        (20000, 43, 300, 3, 0.0265186938062861),
+    ],
+)
 def test_calc_hypergeometric_pvalues(M, n, N, X, truth):
     pval = HypergeometricTest._calc_hg_pval(M, n, N, X)
     assert np.isclose(truth, pval, atol=0, rtol=0.00001)
 
 
-@pytest.mark.parametrize('attributes,truth', [
-    ([0, 2, 3], ['attribute1', 'attribute3', 'attribute4']),
-    (1, ['attribute2'])
-])
+@pytest.mark.parametrize(
+    'attributes,truth', [([0, 2, 3], ['attribute1', 'attribute3', 'attribute4']), (1, ['attribute2'])]
+)
 def test_enrichment_get_attrs_int_index_attributes(attributes, truth):
-    genes = {'WBGene00000041', 'WBGene00002074', 'WBGene00000105', 'WBGene00000106', 'WBGene00199484',
-             'WBGene00001436', 'WBGene00000137', 'WBGene00001996', 'WBGene00014208', 'WBGene00001133'}
-    e = EnrichmentRunner(genes, attributes, 0.05, __attr_ref__, True, False, '', False, True, 'test_set', False,
-                         HypergeometricTest(), None)
+    genes = {
+        'WBGene00000041',
+        'WBGene00002074',
+        'WBGene00000105',
+        'WBGene00000106',
+        'WBGene00199484',
+        'WBGene00001436',
+        'WBGene00000137',
+        'WBGene00001996',
+        'WBGene00014208',
+        'WBGene00001133',
+    }
+    e = EnrichmentRunner(
+        genes,
+        attributes,
+        0.05,
+        __attr_ref__,
+        True,
+        False,
+        '',
+        False,
+        True,
+        'test_set',
+        False,
+        HypergeometricTest(),
+        None,
+    )
     e.fetch_annotations()
     e.get_attribute_names()
     e.get_background_set()
@@ -89,10 +118,33 @@ def test_enrichment_get_attrs_int_index_attributes(attributes, truth):
 
 
 def test_enrichment_get_attrs_all_attributes():
-    genes = {'WBGene00000041', 'WBGene00002074', 'WBGene00000105', 'WBGene00000106', 'WBGene00199484',
-             'WBGene00001436', 'WBGene00000137', 'WBGene00001996', 'WBGene00014208', 'WBGene00001133'}
-    e = EnrichmentRunner(genes, 'all', 0.05, __attr_ref__, True, False, '', False, True, 'test_set', False,
-                         HypergeometricTest(), None, )
+    genes = {
+        'WBGene00000041',
+        'WBGene00002074',
+        'WBGene00000105',
+        'WBGene00000106',
+        'WBGene00199484',
+        'WBGene00001436',
+        'WBGene00000137',
+        'WBGene00001996',
+        'WBGene00014208',
+        'WBGene00001133',
+    }
+    e = EnrichmentRunner(
+        genes,
+        'all',
+        0.05,
+        __attr_ref__,
+        True,
+        False,
+        '',
+        False,
+        True,
+        'test_set',
+        False,
+        HypergeometricTest(),
+        None,
+    )
     e.fetch_annotations()
     e.get_attribute_names()
     e.get_background_set()
@@ -105,8 +157,9 @@ def test_enrichment_get_attrs_all_attributes():
 
 
 def test_enrichment_get_attrs_bad_path():
-    e = EnrichmentRunner({'_'}, 'attribute1', 0.05, 'fakepath', True, False, '', False, True, 'test_set', False,
-                         HypergeometricTest())
+    e = EnrichmentRunner(
+        {'_'}, 'attribute1', 0.05, 'fakepath', True, False, '', False, True, 'test_set', False, HypergeometricTest()
+    )
     with pytest.raises((FileNotFoundError, InvalidValueError)):
         e.fetch_annotations()
         e.get_attribute_names()
@@ -116,11 +169,34 @@ def test_enrichment_get_attrs_bad_path():
 
 
 def _enrichment_get_ref_tests_setup(truth, bg_genes, **kwargs):
-    genes = {'WBGene00000041', 'WBGene00002074', 'WBGene00000019', 'WBGene00000105', 'WBGene00000106', 'WBGene00199484',
-             'WBGene00001436', 'WBGene00000137', 'WBGene00001996', 'WBGene00014208'}
+    genes = {
+        'WBGene00000041',
+        'WBGene00002074',
+        'WBGene00000019',
+        'WBGene00000105',
+        'WBGene00000106',
+        'WBGene00199484',
+        'WBGene00001436',
+        'WBGene00000137',
+        'WBGene00001996',
+        'WBGene00014208',
+    }
     background = None if isinstance(bg_genes, str) else bg_genes
-    e = EnrichmentRunner(genes, 'all', 0.05, __attr_ref__, True, False, '', False, 'test_set', False,
-                         HypergeometricTest(), background, **kwargs)
+    e = EnrichmentRunner(
+        genes,
+        'all',
+        0.05,
+        __attr_ref__,
+        True,
+        False,
+        '',
+        False,
+        'test_set',
+        False,
+        HypergeometricTest(),
+        background,
+        **kwargs,
+    )
     e.fetch_annotations()
     e.get_attribute_names()
     e.get_background_set()
@@ -133,28 +209,76 @@ def _enrichment_get_ref_tests_setup(truth, bg_genes, **kwargs):
 
 def test_enrichment_get_ref():
     truth = io.load_table('tests/test_files/attr_ref_table_for_tests_specified_bg.csv')
-    bg_genes = {'WBGene00003902', 'WBGene00000106', 'WBGene00001436', 'WBGene00000864', 'WBGene00011910',
-                'WBGene00000859', 'WBGene00268189', 'WBGene00000865', 'WBGene00003864', 'WBGene00048863',
-                'WBGene00000369', 'WBGene00000863', 'WBGene00002074', 'WBGene00000041', 'WBGene00199486',
-                'WBGene00000105', 'WBGene00001131'}
+    bg_genes = {
+        'WBGene00003902',
+        'WBGene00000106',
+        'WBGene00001436',
+        'WBGene00000864',
+        'WBGene00011910',
+        'WBGene00000859',
+        'WBGene00268189',
+        'WBGene00000865',
+        'WBGene00003864',
+        'WBGene00048863',
+        'WBGene00000369',
+        'WBGene00000863',
+        'WBGene00002074',
+        'WBGene00000041',
+        'WBGene00199486',
+        'WBGene00000105',
+        'WBGene00001131',
+    }
     _enrichment_get_ref_tests_setup(truth, bg_genes)
 
 
 def test_enrichment_get_ref_include_unannotated():
     truth = io.load_table('tests/test_files/attr_ref_table_for_tests_specified_bg_unannotated.csv')
-    bg_genes = {'WBGene00003902', 'WBGene00000106', 'WBGene00001436', 'WBGene00000864', 'WBGene00011910',
-                'WBGene00000859', 'WBGene00268189', 'WBGene00000865', 'WBGene00003864', 'WBGene00048863',
-                'WBGene00000369', 'WBGene00000863', 'WBGene00002074', 'WBGene00000041', 'WBGene00199486',
-                'WBGene00000105', 'WBGene00001131', 'gene1', 'gene2', 'gene3'}
+    bg_genes = {
+        'WBGene00003902',
+        'WBGene00000106',
+        'WBGene00001436',
+        'WBGene00000864',
+        'WBGene00011910',
+        'WBGene00000859',
+        'WBGene00268189',
+        'WBGene00000865',
+        'WBGene00003864',
+        'WBGene00048863',
+        'WBGene00000369',
+        'WBGene00000863',
+        'WBGene00002074',
+        'WBGene00000041',
+        'WBGene00199486',
+        'WBGene00000105',
+        'WBGene00001131',
+        'gene1',
+        'gene2',
+        'gene3',
+    }
     _enrichment_get_ref_tests_setup(truth, bg_genes, exclude_unannotated_genes=False)
 
 
 def test_enrichment_get_ref_from_featureset_object():
     truth = io.load_table('tests/test_files/attr_ref_table_for_tests_specified_bg.csv')
-    bg_genes = {'WBGene00003902', 'WBGene00000106', 'WBGene00001436', 'WBGene00000864', 'WBGene00011910',
-                'WBGene00000859', 'WBGene00268189', 'WBGene00000865', 'WBGene00003864', 'WBGene00048863',
-                'WBGene00000369', 'WBGene00000863', 'WBGene00002074', 'WBGene00000041', 'WBGene00199486',
-                'WBGene00000105', 'WBGene00001131'}
+    bg_genes = {
+        'WBGene00003902',
+        'WBGene00000106',
+        'WBGene00001436',
+        'WBGene00000864',
+        'WBGene00011910',
+        'WBGene00000859',
+        'WBGene00268189',
+        'WBGene00000865',
+        'WBGene00003864',
+        'WBGene00048863',
+        'WBGene00000369',
+        'WBGene00000863',
+        'WBGene00002074',
+        'WBGene00000041',
+        'WBGene00199486',
+        'WBGene00000105',
+        'WBGene00001131',
+    }
     _enrichment_get_ref_tests_setup(truth, bg_genes)
 
 
@@ -166,8 +290,21 @@ def test_enrichment_get_ref_from_filter_object():
 
 def test_results_to_csv():
     try:
-        en = EnrichmentRunner({''}, 'all', 0.05, __attr_ref__, True, True, 'tests/test_files/tmp_enrichment_csv.csv',
-                              False, True, 'test_set', False, HypergeometricTest(), None)
+        en = EnrichmentRunner(
+            {''},
+            'all',
+            0.05,
+            __attr_ref__,
+            True,
+            True,
+            'tests/test_files/tmp_enrichment_csv.csv',
+            False,
+            True,
+            'test_set',
+            False,
+            HypergeometricTest(),
+            None,
+        )
         df = io.load_table('tests/test_files/enrichment_hypergeometric_res.csv')
         en.results = df
         en.results_to_csv()
@@ -185,7 +322,7 @@ def test_results_to_csv():
 def _compare_go_result_dfs(res, truth):
     res = res.sort(pl.first())
     truth = truth.sort(pl.first())
-    assert_frame_equal(res.select(pl.col('GO ID', 'n', 'obs')),truth.select(pl.col('GO ID', 'n', 'obs')))
+    assert_frame_equal(res.select(pl.col('GO ID', 'n', 'obs')), truth.select(pl.col('GO ID', 'n', 'obs')))
     assert np.allclose(res.select(pl.col('exp', 'log2fc', 'pval')), res.select(pl.col('exp', 'log2fc', 'pval')), atol=0)
 
 
@@ -205,13 +342,36 @@ def test_classic_pvals(monkeypatch):
 
     monkeypatch.setattr(ontology, 'fetch_go_basic', lambda: DummyDAGTree())
 
-    e = GOEnrichmentRunner(gene_set, 'elegans', 'WBGene', 0.05, 'classic', 'any', 'any', None, 'any', None, 'any', None,
-                           False, False, '', False, False, '', False, HypergeometricTest(), background)
+    e = GOEnrichmentRunner(
+        gene_set,
+        'elegans',
+        'WBGene',
+        0.05,
+        'classic',
+        'any',
+        'any',
+        None,
+        'any',
+        None,
+        'any',
+        None,
+        False,
+        False,
+        '',
+        False,
+        False,
+        '',
+        False,
+        HypergeometricTest(),
+        background,
+    )
     e.annotations = annotations
-    e.mutable_annotations = annotations,
+    e.mutable_annotations = (annotations,)
     e.attributes = list(annotations.keys())
-    res = pl.DataFrame([i for i in e._go_classic_on_batch(tuple(annotations.keys()), 0).values()],
-                       schema=['GO ID', 'n', 'obs', 'exp', 'log2fc', 'pval'])
+    res = pl.DataFrame(
+        [i for i in e._go_classic_on_batch(tuple(annotations.keys()), 0).values()],
+        schema=['GO ID', 'n', 'obs', 'exp', 'log2fc', 'pval'],
+    )
     _compare_go_result_dfs(res, truth)
 
 
@@ -225,15 +385,37 @@ def test_elim_pvals(monkeypatch):
         dag_tree = ontology.DAGTree(f, ['is_a'])
     monkeypatch.setattr(ontology, 'fetch_go_basic', lambda: dag_tree)
 
-    e = GOEnrichmentRunner(gene_set, 'elegans', 'WBGene', threshold, 'classic', 'any', 'any', None, 'any', None, 'any',
-                           None, False, False, '', False, False, '', False, HypergeometricTest(), background)
+    e = GOEnrichmentRunner(
+        gene_set,
+        'elegans',
+        'WBGene',
+        threshold,
+        'classic',
+        'any',
+        'any',
+        None,
+        'any',
+        None,
+        'any',
+        None,
+        False,
+        False,
+        '',
+        False,
+        False,
+        '',
+        False,
+        HypergeometricTest(),
+        background,
+    )
     e.annotations = annotations
-    e.mutable_annotations = deepcopy(annotations),
+    e.mutable_annotations = (deepcopy(annotations),)
     e.attributes = list(annotations.keys())
     e.attributes_set = set(e.attributes)
 
-    res = pl.DataFrame([i for i in e._go_elim_on_aspect('all').values()],
-                       schema=['GO ID', 'n', 'obs', 'exp', 'log2fc', 'pval'])
+    res = pl.DataFrame(
+        [i for i in e._go_elim_on_aspect('all').values()], schema=['GO ID', 'n', 'obs', 'exp', 'log2fc', 'pval']
+    )
 
     _compare_go_result_dfs(res, truth)
 
@@ -267,10 +449,11 @@ def test_go_elim_serial_keeps_original_annotations_pristine():
     expected = deepcopy(annotations)
     e._calculate_enrichment_serial()
 
-    assert e.annotations == expected, "elim mutated the original annotations (should mutate only its copy)"
+    assert e.annotations == expected, 'elim mutated the original annotations (should mutate only its copy)'
     assert e.mutable_annotations[0] is not e.annotations
-    assert all(e.mutable_annotations[0][go_id] is not e.annotations[go_id] for go_id in e.annotations), \
+    assert all(e.mutable_annotations[0][go_id] is not e.annotations[go_id] for go_id in e.annotations), (
         "elim's working copy shares set objects with the original annotations"
+    )
 
 
 def test_go_elim_parallel_uses_independent_annotation_copies(monkeypatch):
@@ -302,8 +485,9 @@ def test_go_elim_parallel_uses_independent_annotation_copies(monkeypatch):
     for namespace_copy in captured['mutable']:
         for go_id, genes in namespace_copy.items():
             assert genes == e.annotations[go_id]
-            assert genes is not e.annotations[go_id], \
-                "parallel elim working copy shares set objects with the original annotations"
+            assert genes is not e.annotations[go_id], (
+                'parallel elim working copy shares set objects with the original annotations'
+            )
 
     # concretely: mutating a copy must leave the original untouched
     for namespace_copy in captured['mutable']:
@@ -311,8 +495,9 @@ def test_go_elim_parallel_uses_independent_annotation_copies(monkeypatch):
             if genes:
                 before = set(e.annotations[go_id])
                 genes.pop()
-                assert e.annotations[go_id] == before, \
-                    "mutating the parallel elim copy changed the original annotations"
+                assert e.annotations[go_id] == before, (
+                    'mutating the parallel elim copy changed the original annotations'
+                )
                 return
 
 
@@ -325,16 +510,37 @@ def test_weight_pvals(monkeypatch):
 
     monkeypatch.setattr(ontology, 'fetch_go_basic', lambda: dag_tree)
 
-    e = GOEnrichmentRunner(gene_set, 'elegans', 'WBGene', 0.05, 'classic', 'any', 'any', None, 'any', None, 'any', None,
-                           False, False, '', False, False, '', False, HypergeometricTest())
+    e = GOEnrichmentRunner(
+        gene_set,
+        'elegans',
+        'WBGene',
+        0.05,
+        'classic',
+        'any',
+        'any',
+        None,
+        'any',
+        None,
+        'any',
+        None,
+        False,
+        False,
+        '',
+        False,
+        False,
+        '',
+        False,
+        HypergeometricTest(),
+    )
     e.annotations = _df_to_dict(goa_df, null_mode=False)
-    e.mutable_annotations = {attr: {v: 1 for v in val} for attr, val in e.annotations.items()},
+    e.mutable_annotations = ({attr: {v: 1 for v in val} for attr, val in e.annotations.items()},)
     e.attributes = list(goa_df.columns)
     e.attributes_set = set(e.attributes)
     e.background_set = set.union(*e.annotations.values())
 
-    res = pl.DataFrame([i for i in e._go_weight_on_aspect('all').values()],
-                       schema=['GO ID', 'n', 'obs', 'exp', 'log2fc', 'pval'])
+    res = pl.DataFrame(
+        [i for i in e._go_weight_on_aspect('all').values()], schema=['GO ID', 'n', 'obs', 'exp', 'log2fc', 'pval']
+    )
     _compare_go_result_dfs(res, truth)
 
 
@@ -348,15 +554,37 @@ def test_allm_pvals(monkeypatch):
         dag_tree = ontology.DAGTree(f, ['is_a'])
     monkeypatch.setattr(ontology, 'fetch_go_basic', lambda: dag_tree)
 
-    e = GOEnrichmentRunner(gene_set, 'elegans', 'WBGene', threshold, 'classic', 'any', 'any', None, 'any', None, 'any',
-                           None, False, False, '', False, False, '', False, HypergeometricTest(), background)
+    e = GOEnrichmentRunner(
+        gene_set,
+        'elegans',
+        'WBGene',
+        threshold,
+        'classic',
+        'any',
+        'any',
+        None,
+        'any',
+        None,
+        'any',
+        None,
+        False,
+        False,
+        '',
+        False,
+        False,
+        '',
+        False,
+        HypergeometricTest(),
+        background,
+    )
     e.annotations = annotations
-    e.mutable_annotations = deepcopy(annotations),
+    e.mutable_annotations = (deepcopy(annotations),)
     e.attributes = list(annotations.keys())
     e.attributes_set = set(e.attributes)
 
-    res = pl.DataFrame([val for val in e._go_allm_pvalues_serial().values()],
-                       schema=['GO ID', 'n', 'obs', 'exp', 'log2fc', 'pval'])
+    res = pl.DataFrame(
+        [val for val in e._go_allm_pvalues_serial().values()], schema=['GO ID', 'n', 'obs', 'exp', 'log2fc', 'pval']
+    )
     _compare_go_result_dfs(res, truth)
 
 
@@ -369,27 +597,42 @@ def test_enrichment_runner_update_ranked_genes():
     assert np.all(truth == runner.ranked_genes)
 
 
-@pytest.mark.parametrize("attr,truth",
-                         [('attribute1', (38, 6, 11, 3, 3, 1.736842105263158, 0.7884958948062882)),
-                          ('attribute3', (38, 6, 14, 4, 4, 2.2105263157894735, 0.8556100906648252)),
-                          ('attribute4', (38, 6, 13, 4, 4, 2.0526315789473686, 0.962525294581337))])
+@pytest.mark.parametrize(
+    'attr,truth',
+    [
+        ('attribute1', (38, 6, 11, 3, 3, 1.736842105263158, 0.7884958948062882)),
+        ('attribute3', (38, 6, 14, 4, 4, 2.2105263157894735, 0.8556100906648252)),
+        ('attribute4', (38, 6, 13, 4, 4, 2.0526315789473686, 0.962525294581337)),
+    ],
+)
 def test_get_hypergeometric_parameters(attr, truth):
     df = io.load_table('tests/test_files/attr_ref_table_for_tests.csv')
     background = parsing.data_to_set(df.select(pl.first()))
     annotation = _df_to_dict(df)
-    gene_set = {'WBGene00000019', 'WBGene00000041', 'WBGene00000106', 'WBGene00001133', 'WBGene00003915',
-                'WBGene00268195'}
+    gene_set = {
+        'WBGene00000019',
+        'WBGene00000041',
+        'WBGene00000106',
+        'WBGene00001133',
+        'WBGene00003915',
+        'WBGene00268195',
+    }
 
     pval_func = HypergeometricTest()
     res = pval_func.get_hypergeometric_params(annotation[attr], gene_set, background)
     assert res == truth
 
 
-@pytest.mark.parametrize('params,truth',
-                         [((38, 11, 6, 5, 5, (6 / 38) * 11, np.log2(5 / ((6 / 38) * 11))),
-                           ['attribute', 11, 5, (6 / 38) * 11, np.log2(5 / ((6 / 38) * 11)), 0.05]),
-                          ((40, 10, 15, 0, 0, (15 / 40) * 10, -np.inf),
-                           ['attribute', 10, 0, (15 / 40) * 10, -np.inf, 0.05])])
+@pytest.mark.parametrize(
+    'params,truth',
+    [
+        (
+            (38, 11, 6, 5, 5, (6 / 38) * 11, np.log2(5 / ((6 / 38) * 11))),
+            ['attribute', 11, 5, (6 / 38) * 11, np.log2(5 / ((6 / 38) * 11)), 0.05],
+        ),
+        ((40, 10, 15, 0, 0, (15 / 40) * 10, -np.inf), ['attribute', 10, 0, (15 / 40) * 10, -np.inf, 0.05]),
+    ],
+)
 def test_enrichment_runner_hypergeometric_enrichment(monkeypatch, params, truth):
     stats_test = HypergeometricTest()
     monkeypatch.setattr(HypergeometricTest, 'get_hypergeometric_params', lambda self, *args: params)
@@ -402,17 +645,29 @@ def test_enrichment_runner_hypergeometric_enrichment(monkeypatch, params, truth)
     assert stats_test.run('attribute', set(), set(), set()) == truth
 
 
-@pytest.mark.parametrize('truth', [(['attribute1', 6, 3, (11 / 38) * 6, np.log2(3 / ((11 / 38) * 6)), 0.05]),
-                                   (['attribute4', 6, 4, (13 / 38) * 6, np.log2(4 / ((13 / 38) * 6)), 0.05])])
+@pytest.mark.parametrize(
+    'truth',
+    [
+        (['attribute1', 6, 3, (11 / 38) * 6, np.log2(3 / ((11 / 38) * 6)), 0.05]),
+        (['attribute4', 6, 4, (13 / 38) * 6, np.log2(4 / ((13 / 38) * 6)), 0.05]),
+    ],
+)
 def test_enrichment_runner_randomization_enrichment(monkeypatch, truth):
     reps_truth = 100
     annotations = _df_to_dict(io.load_table('tests/test_files/attr_ref_table_for_tests.csv'))
     bg_array_truth = io.load_table('tests/test_files/annotation_df_bg_array_truth.csv')[truth[0]]
-    gene_set_truth = {'WBGene00000019', 'WBGene00000041', 'WBGene00000106',
-                      'WBGene00001133', 'WBGene00003915', 'WBGene00268195'}
+    gene_set_truth = {
+        'WBGene00000019',
+        'WBGene00000041',
+        'WBGene00000106',
+        'WBGene00001133',
+        'WBGene00003915',
+        'WBGene00268195',
+    }
 
-    def alt_calc_pval(self, log2fc: float, reps: int, obs_frac: float, bg_size: int, en_size: int, attr_size: int,
-                      random_seed: int):
+    def alt_calc_pval(
+        self, log2fc: float, reps: int, obs_frac: float, bg_size: int, en_size: int, attr_size: int, random_seed: int
+    ):
         assert reps == reps_truth
         assert en_size == len(gene_set_truth)
         assert log2fc == truth[4]
@@ -424,25 +679,62 @@ def test_enrichment_runner_randomization_enrichment(monkeypatch, truth):
     monkeypatch.setattr(PermutationTest, '_calc_permutation_pval', alt_calc_pval)
     gene_set = gene_set_truth
     stats_test = PermutationTest(reps_truth)
-    background_set = {'WBGene00268190', 'WBGene00048865', 'WBGene00000019', 'WBGene00048864', 'WBGene00003864',
-                      'WBGene00000865', 'WBGene00000864', 'WBGene00048863', 'WBGene00003865', 'WBGene00000041',
-                      'WBGene00001132', 'WBGene00001133', 'WBGene00004920', 'WBGene00001996', 'WBGene00001134',
-                      'WBGene00011910', 'WBGene00199486', 'WBGene00000369', 'WBGene00000861', 'WBGene00014208',
-                      'WBGene00003902', 'WBGene00001436', 'WBGene00000105', 'WBGene00268195', 'WBGene00003915',
-                      'WBGene00255735', 'WBGene00001131', 'WBGene00000106', 'WBGene00268189', 'WBGene00268191',
-                      'WBGene00000860', 'WBGene00002074', 'WBGene00000137', 'WBGene00000863', 'WBGene00199484',
-                      'WBGene00000859', 'WBGene00199485', 'WBGene00255734'}
+    background_set = {
+        'WBGene00268190',
+        'WBGene00048865',
+        'WBGene00000019',
+        'WBGene00048864',
+        'WBGene00003864',
+        'WBGene00000865',
+        'WBGene00000864',
+        'WBGene00048863',
+        'WBGene00003865',
+        'WBGene00000041',
+        'WBGene00001132',
+        'WBGene00001133',
+        'WBGene00004920',
+        'WBGene00001996',
+        'WBGene00001134',
+        'WBGene00011910',
+        'WBGene00199486',
+        'WBGene00000369',
+        'WBGene00000861',
+        'WBGene00014208',
+        'WBGene00003902',
+        'WBGene00001436',
+        'WBGene00000105',
+        'WBGene00268195',
+        'WBGene00003915',
+        'WBGene00255735',
+        'WBGene00001131',
+        'WBGene00000106',
+        'WBGene00268189',
+        'WBGene00268191',
+        'WBGene00000860',
+        'WBGene00002074',
+        'WBGene00000137',
+        'WBGene00000863',
+        'WBGene00199484',
+        'WBGene00000859',
+        'WBGene00199485',
+        'WBGene00255734',
+    }
 
     attr = truth[0]
     res = stats_test.run(attr, annotations[attr], gene_set, background_set)
     assert res == truth
 
 
-@pytest.mark.parametrize('params,truth',
-                         [((38, 11, 6, 5, 5, (6 / 38) * 11, np.log2(5 / ((6 / 38) * 11))),
-                           ['attribute', 11, 5, (6 / 38) * 11, np.log2(5 / ((6 / 38) * 11)), 0.05]),
-                          ((40, 10, 15, 0, 0, (15 / 40) * 10, -np.inf),
-                           ['attribute', 10, 0, (15 / 40) * 10, -np.inf, 0.05])])
+@pytest.mark.parametrize(
+    'params,truth',
+    [
+        (
+            (38, 11, 6, 5, 5, (6 / 38) * 11, np.log2(5 / ((6 / 38) * 11))),
+            ['attribute', 11, 5, (6 / 38) * 11, np.log2(5 / ((6 / 38) * 11)), 0.05],
+        ),
+        ((40, 10, 15, 0, 0, (15 / 40) * 10, -np.inf), ['attribute', 10, 0, (15 / 40) * 10, -np.inf, 0.05]),
+    ],
+)
 def test_enrichment_runner_fisher_enrichment(monkeypatch, params, truth):
     stats_test = FishersExactTest()
     monkeypatch.setattr(FishersExactTest, 'get_hypergeometric_params', lambda self, *args: params)
@@ -461,9 +753,16 @@ def test_enrichment_runner_update_gene_set(exclude_unannotated):
     runner.single_set = False
     runner.exclude_unannotated_genes = exclude_unannotated
     runner.background_set = parsing.data_to_set(
-        io.load_table('tests/test_files/attr_ref_table_for_tests.csv').select(pl.first()))
-    runner.gene_set = {'WBGene00000019', 'WBGene00000041', 'WBGene00000106', 'WBGene00001133', 'WBGene00003915',
-                       'WBGene99991111'}
+        io.load_table('tests/test_files/attr_ref_table_for_tests.csv').select(pl.first())
+    )
+    runner.gene_set = {
+        'WBGene00000019',
+        'WBGene00000041',
+        'WBGene00000106',
+        'WBGene00001133',
+        'WBGene00003915',
+        'WBGene99991111',
+    }
     updated_gene_set_truth = {'WBGene00000019', 'WBGene00000041', 'WBGene00000106', 'WBGene00001133', 'WBGene00003915'}
     runner.update_gene_set()
     assert runner.gene_set == updated_gene_set_truth
@@ -474,8 +773,14 @@ def test_enrichment_runner_update_gene_set_single_list(monkeypatch):
     runner = EnrichmentRunner.__new__(EnrichmentRunner)
     runner.single_set = True
     runner.annotations = _df_to_dict(io.load_table('tests/test_files/attr_ref_table_for_tests.csv'))
-    runner.gene_set = {'WBGene00000019', 'WBGene00000041', 'WBGene00000106', 'WBGene00001133', 'WBGene00003915',
-                       'WBGene99991111'}
+    runner.gene_set = {
+        'WBGene00000019',
+        'WBGene00000041',
+        'WBGene00000106',
+        'WBGene00001133',
+        'WBGene00003915',
+        'WBGene99991111',
+    }
     updated_gene_set_truth = {'WBGene00000019', 'WBGene00000041', 'WBGene00000106', 'WBGene00001133', 'WBGene00003915'}
     runner.update_gene_set()
     assert runner.gene_set == updated_gene_set_truth
@@ -487,16 +792,45 @@ def test_enrichment_runner_update_gene_set_single_list(monkeypatch):
 @pytest.mark.parametrize('fname', ['fname', None])
 @pytest.mark.parametrize(
     'single_list,genes,pval_func,background_set',
-    [(True, np.array(['WBGene1', 'WBGene2'], dtype=str), XlmhgTest(), None),
-     (False, {'WBGene00000001', 'WBGene00000002'}, PermutationTest(100, 42),
-      {'WBGene00000001', 'WBGene00000002', 'EBGene00000003'})])
-def test_enrichment_runner_api(exclude_unannotated, return_nonsignificant, save_csv, fname, single_list, genes,
-                               pval_func, background_set, monkeypatch):
+    [
+        (True, np.array(['WBGene1', 'WBGene2'], dtype=str), XlmhgTest(), None),
+        (
+            False,
+            {'WBGene00000001', 'WBGene00000002'},
+            PermutationTest(100, 42),
+            {'WBGene00000001', 'WBGene00000002', 'EBGene00000003'},
+        ),
+    ],
+)
+def test_enrichment_runner_api(
+    exclude_unannotated,
+    return_nonsignificant,
+    save_csv,
+    fname,
+    single_list,
+    genes,
+    pval_func,
+    background_set,
+    monkeypatch,
+):
     monkeypatch.setattr('builtins.input', lambda x: 'fname')
 
-    runner = EnrichmentRunner(genes, ['attr1', 'attr2'], 0.05, 'path/to/attr/ref', return_nonsignificant, save_csv,
-                              fname, False, 'set_name', False, pval_func, background_set,
-                              exclude_unannotated, single_list)
+    runner = EnrichmentRunner(
+        genes,
+        ['attr1', 'attr2'],
+        0.05,
+        'path/to/attr/ref',
+        return_nonsignificant,
+        save_csv,
+        fname,
+        False,
+        'set_name',
+        False,
+        pval_func,
+        background_set,
+        exclude_unannotated,
+        single_list,
+    )
     if save_csv:
         assert runner.fname == 'fname'
     else:
@@ -530,13 +864,35 @@ def test_enrichment_runner_format_results_single_list(monkeypatch):
     assert truth.equals(runner.results.fill_nan(None))
 
 
-@pytest.mark.parametrize('attr,index_vector, pval_kwargs,p_values,e_scores,params_truth',
-                         [('attr1', [3, 5, 2], {}, (0.05, 0.9), (2, 1.5),
-                           {'L': 1, 'X': 10, 'N': 10, 'table': np.empty((3 + 1, 10 - 3 + 1), dtype=np.longdouble)}),
-                          ('attr 2', [1, 2, 3, 4], {'l_fraction': 0.2, 'x': 7}, (0, 0), (0, 0),
-                           {'L': 2, 'X': 7, 'N': 10, 'table': np.empty((4 + 1, 10 - 4 + 1), dtype=np.longdouble)}),
-                          ('attr,3', [2, 9], {'other_arg': 13}, (0.8, 0.1), (1, 1.2),
-                           {'L': 1, 'X': 10, 'N': 10, 'table': np.empty((2 + 1, 10 - 2 + 1), dtype=np.longdouble)})])
+@pytest.mark.parametrize(
+    'attr,index_vector, pval_kwargs,p_values,e_scores,params_truth',
+    [
+        (
+            'attr1',
+            [3, 5, 2],
+            {},
+            (0.05, 0.9),
+            (2, 1.5),
+            {'L': 1, 'X': 10, 'N': 10, 'table': np.empty((3 + 1, 10 - 3 + 1), dtype=np.longdouble)},
+        ),
+        (
+            'attr 2',
+            [1, 2, 3, 4],
+            {'l_fraction': 0.2, 'x': 7},
+            (0, 0),
+            (0, 0),
+            {'L': 2, 'X': 7, 'N': 10, 'table': np.empty((4 + 1, 10 - 4 + 1), dtype=np.longdouble)},
+        ),
+        (
+            'attr,3',
+            [2, 9],
+            {'other_arg': 13},
+            (0.8, 0.1),
+            (1, 1.2),
+            {'L': 1, 'X': 10, 'N': 10, 'table': np.empty((2 + 1, 10 - 2 + 1), dtype=np.longdouble)},
+        ),
+    ],
+)
 def test_xlmhg_enrichment(monkeypatch, attr, index_vector, pval_kwargs, p_values, e_scores, params_truth):
     n_calls_xlmhg_test = [0]
     params_truth['indices'] = index_vector
@@ -552,8 +908,9 @@ def test_xlmhg_enrichment(monkeypatch, attr, index_vector, pval_kwargs, p_values
             self.N = 10
             self.cutoff = 0.5
 
-    monkeypatch.setattr(XlmhgTest, '_generate_xlmhg_index_vectors',
-                        lambda self, rankedgenes, ann_set: (index_vector, index_vector))
+    monkeypatch.setattr(
+        XlmhgTest, '_generate_xlmhg_index_vectors', lambda self, rankedgenes, ann_set: (index_vector, index_vector)
+    )
 
     def _xlmhg_test_validate_parameters(**kwargs):
         for key in ['X', 'L', 'N', 'indices']:
@@ -569,7 +926,8 @@ def test_xlmhg_enrichment(monkeypatch, attr, index_vector, pval_kwargs, p_values
     monkeypatch.setattr(xlmhglite, 'get_xlmhg_test_result', _xlmhg_test_validate_parameters)
 
     ranked_genes = np.array(
-        ['gene0', 'gene1', 'gene2', 'gene3', 'gene4', 'gene5', 'gene6', 'gene7', 'gene8', 'gene9'], dtype='str')
+        ['gene0', 'gene1', 'gene2', 'gene3', 'gene4', 'gene5', 'gene6', 'gene7', 'gene8', 'gene9'], dtype='str'
+    )
 
     log2fc = np.log2(e_scores[0] if p_values[0] <= p_values[1] else (1 / e_scores[1]))
     output_truth = [attr, len(ranked_genes), obs, exp, log2fc, min(p_values)]
@@ -579,9 +937,13 @@ def test_xlmhg_enrichment(monkeypatch, attr, index_vector, pval_kwargs, p_values
     assert result == output_truth
 
 
-@pytest.mark.parametrize('attribute,truth, truth_rev',
-                         [('attribute1', np.array([0, 1], dtype='uint16'), np.array([2, 3], dtype='uint16')),
-                          ('attribute4', np.array([0, 2], dtype='uint16'), np.array([1, 3], dtype='uint16'))])
+@pytest.mark.parametrize(
+    'attribute,truth, truth_rev',
+    [
+        ('attribute1', np.array([0, 1], dtype='uint16'), np.array([2, 3], dtype='uint16')),
+        ('attribute4', np.array([0, 2], dtype='uint16'), np.array([1, 3], dtype='uint16')),
+    ],
+)
 def test_generate_xlmhg_index_vectors(attribute, truth, truth_rev):
     ranked_genes = np.array(['WBGene00000106', 'WBGene00000019', 'WBGene00000865', 'WBGene00001131'], dtype='str')
     annotations = _df_to_dict(io.load_table('tests/test_files/attr_ref_table_for_tests.csv'))
@@ -599,12 +961,16 @@ def test_enrichment_runner_fetch_annotations(monkeypatch):
     assert truth == runner.annotations
 
 
-@pytest.mark.parametrize('attributes,truth,annotation_df_cols',
-                         [(['all', ['col1', 'col2', 'col3'], ['col1', 'col2', 'col3']]),
-                          (['col2', 'col3'], ['col2', 'col3'], ['col1', 'col2', 'col3']),
-                          ([0, 2], ['col1', 'col3'], ['col1', 'col2', 'col3']),
-                          ({0, 2}, ['col1', 'col3'], ['col1', 'col2', 'col3']),
-                          ({'col2', 'col3'}, ['col2', 'col3'], ['col1', 'col2', 'col3'])])
+@pytest.mark.parametrize(
+    'attributes,truth,annotation_df_cols',
+    [
+        (['all', ['col1', 'col2', 'col3'], ['col1', 'col2', 'col3']]),
+        (['col2', 'col3'], ['col2', 'col3'], ['col1', 'col2', 'col3']),
+        ([0, 2], ['col1', 'col3'], ['col1', 'col2', 'col3']),
+        ({0, 2}, ['col1', 'col3'], ['col1', 'col2', 'col3']),
+        ({'col2', 'col3'}, ['col2', 'col3'], ['col1', 'col2', 'col3']),
+    ],
+)
 def test_enrichment_runner_fetch_attributes(attributes, truth, annotation_df_cols, monkeypatch):
     monkeypatch.setattr(EnrichmentRunner, '_validate_attributes', lambda self, attrs, all_attrs: None)
     runner = EnrichmentRunner.__new__(EnrichmentRunner)
@@ -614,15 +980,19 @@ def test_enrichment_runner_fetch_attributes(attributes, truth, annotation_df_col
     assert sorted(runner.attributes) == sorted(truth)
 
 
-@pytest.mark.parametrize('attibute_list,all_attrs,is_legal',
-                         [(['a', 'b', 'c'], {'c', 'a', 'b', 'd', 'A', 'f'}, True),
-                          (['a', 'c', 1], ['c', 'b', 'a'], True),
-                          ([3, 2, 1], {'a', 'b', 'c'}, False),
-                          (['a', -1, 2], ['a', 'b', 'c'], False),
-                          (['A', 'b', 'c'], {'c', 'b', 'a'}, False),
-                          (['a', 'b', True], {'a', 'b', True}, False),
-                          (['a', 'b', 'c'], 'abc', False),
-                          ('abc', {'a', 'b', 'c', 'abc'}, False)])
+@pytest.mark.parametrize(
+    'attibute_list,all_attrs,is_legal',
+    [
+        (['a', 'b', 'c'], {'c', 'a', 'b', 'd', 'A', 'f'}, True),
+        (['a', 'c', 1], ['c', 'b', 'a'], True),
+        ([3, 2, 1], {'a', 'b', 'c'}, False),
+        (['a', -1, 2], ['a', 'b', 'c'], False),
+        (['A', 'b', 'c'], {'c', 'b', 'a'}, False),
+        (['a', 'b', True], {'a', 'b', True}, False),
+        (['a', 'b', 'c'], 'abc', False),
+        ('abc', {'a', 'b', 'c', 'abc'}, False),
+    ],
+)
 def test_enrichment_runner_validate_attributes(attibute_list, all_attrs, is_legal):
     runner = EnrichmentRunner.__new__(EnrichmentRunner)
     if is_legal:
@@ -636,8 +1006,15 @@ def test_enrichment_runner_filter_annotations():
     truth = _df_to_dict(io.load_table('tests/test_files/enrichment_runner_filter_annotations_truth.csv'))
     runner = EnrichmentRunner.__new__(EnrichmentRunner)
     runner.annotations = _df_to_dict(io.load_table('tests/test_files/attr_ref_table_for_tests.csv'))
-    runner.background_set = {'WBGene00000019', 'WBGene00000106', 'WBGene00000137', 'WBGene00000369', 'WBGene00000860',
-                             'WBGene00048865', 'WBGene00268195'}
+    runner.background_set = {
+        'WBGene00000019',
+        'WBGene00000106',
+        'WBGene00000137',
+        'WBGene00000369',
+        'WBGene00000860',
+        'WBGene00048865',
+        'WBGene00268195',
+    }
     runner.attributes = ['attribute1', 'attribute3', 'attribute4']
     runner.single_set = False
     runner.filter_annotations()
@@ -673,20 +1050,27 @@ def test_enrichment_runner_calculate_enrichment(monkeypatch):
 def test_enrichment_runner_correct_multiple_comparisons():
     runner = EnrichmentRunner.__new__(EnrichmentRunner)
 
-    runner.results = pl.DataFrame([[0, 0, 0, 0, 0, 0.005],
-                                   [0, 0, 0, 0, 0, 0.017],
-                                   [0, 0, 0, 0, 0, np.nan],
-                                   [0, 0, 0, 0, -3, np.nan],
-                                   [0, 0, 0, 0, 0, 0.92]],
-                                  schema=['name', 'samples', 'obs', 'exp', 'colName', 'pval'])
+    runner.results = pl.DataFrame(
+        [
+            [0, 0, 0, 0, 0, 0.005],
+            [0, 0, 0, 0, 0, 0.017],
+            [0, 0, 0, 0, 0, np.nan],
+            [0, 0, 0, 0, -3, np.nan],
+            [0, 0, 0, 0, 0, 0.92],
+        ],
+        schema=['name', 'samples', 'obs', 'exp', 'colName', 'pval'],
+    )
     runner.alpha = 0.02
-    truth = pl.DataFrame([[0, 0, 0, 0, 0, 0.005, 0.015, True],
-                          [0, 0, 0, 0, 0, 0.017, 0.0255, False],
-                          [0, 0, 0, 0, 0, 0.92, 0.92, False],
-                          [0, 0, 0, 0, 0, np.nan, None, None],
-                          [0, 0, 0, 0, -3, np.nan, None, None],
-                          ],
-                         schema=['name', 'samples', 'obs', 'exp', 'colName', 'pval', 'padj', 'significant'])
+    truth = pl.DataFrame(
+        [
+            [0, 0, 0, 0, 0, 0.005, 0.015, True],
+            [0, 0, 0, 0, 0, 0.017, 0.0255, False],
+            [0, 0, 0, 0, 0, 0.92, 0.92, False],
+            [0, 0, 0, 0, 0, np.nan, None, None],
+            [0, 0, 0, 0, -3, np.nan, None, None],
+        ],
+        schema=['name', 'samples', 'obs', 'exp', 'colName', 'pval', 'padj', 'significant'],
+    )
     runner._correct_multiple_comparisons()
     truth = truth.sort(pl.col('padj', 'colName'))
     res = runner.results.sort(pl.col('padj', 'colName'))
@@ -695,8 +1079,11 @@ def test_enrichment_runner_correct_multiple_comparisons():
     for val, val_truth in zip(res['significant'], truth['significant']):
         assert val == val_truth
     compared_cols = ('name', 'samples', 'obs', 'exp', 'colName', 'pval')
-    assert truth.sort(pl.col('padj', 'colName')).select(compared_cols).equals(
-        res.sort(pl.col('padj', 'colName')).select(compared_cols))
+    assert (
+        truth.sort(pl.col('padj', 'colName'))
+        .select(compared_cols)
+        .equals(res.sort(pl.col('padj', 'colName')).select(compared_cols))
+    )
 
 
 @pytest.mark.parametrize('bad_style', ['barr', 'Lollipop', '', 5, None])
@@ -755,19 +1142,31 @@ def test_enrichment_runner_enrichment_bar_plot(plot_horizontal, n_bars, plot_sty
 
 
 def test_noncategorical_enrichment_runner_api():
-    NonCategoricalEnrichmentRunner({'gene1', 'gene2', 'gene4'}, ['attr1', 'attr2'], 0.05,
-                                   {'gene1', 'gene2', 'gene3', 'gene4'}, 'path/to/attr/ref',
-                                   False, 'fname', False, 'overlap', 5,
-                                   'set_name', False, True)
+    NonCategoricalEnrichmentRunner(
+        {'gene1', 'gene2', 'gene4'},
+        ['attr1', 'attr2'],
+        0.05,
+        {'gene1', 'gene2', 'gene3', 'gene4'},
+        'path/to/attr/ref',
+        False,
+        'fname',
+        False,
+        'overlap',
+        5,
+        'set_name',
+        False,
+        True,
+    )
 
 
-@pytest.mark.parametrize("attr,gene_set,truth",
-                         [('attr5', {f'WBGene0000000{i + 1}' for i in range(4)},
-                           ['attr5', 4, 16.85912542, 6.986579003, 0.05]),
-                          ('attr4', {f'WBGene0000000{i + 1}' for i in range(4)},
-                           ['attr4', 4, 15.5, 14, 0.05]),
-                          ('attr1', {'WBGene00000001', 'WBGene00000029', 'WBGene00000030'},
-                           ['attr1', 3, np.nan, 3, np.nan])])
+@pytest.mark.parametrize(
+    'attr,gene_set,truth',
+    [
+        ('attr5', {f'WBGene0000000{i + 1}' for i in range(4)}, ['attr5', 4, 16.85912542, 6.986579003, 0.05]),
+        ('attr4', {f'WBGene0000000{i + 1}' for i in range(4)}, ['attr4', 4, 15.5, 14, 0.05]),
+        ('attr1', {'WBGene00000001', 'WBGene00000029', 'WBGene00000030'}, ['attr1', 3, np.nan, 3, np.nan]),
+    ],
+)
 def test_sign_test_enrichment(monkeypatch, attr, gene_set, truth):
     df = io.load_table('tests/test_files/attr_ref_table_for_non_categorical.csv')
     background_set = {f'WBGene000000{i + 1:02d}' for i in range(30)}
@@ -792,13 +1191,14 @@ def test_sign_test_enrichment(monkeypatch, attr, gene_set, truth):
             assert truth_val == res_val
 
 
-@pytest.mark.parametrize("attr,gene_set,truth",
-                         [('attr5', {f'WBGene0000000{i + 1}' for i in range(4)},
-                           ['attr5', 4, 14.93335321, 7.709139128, 0.05]),
-                          ('attr4', {f'WBGene0000000{i + 1}' for i in range(4)},
-                           ['attr4', 4, 14.25, 13.60714286, 0.05]),
-                          ('attr1', {'WBGene00000001', 'WBGene00000029', 'WBGene00000030'},
-                           ['attr1', 3, np.nan, 4.75, np.nan])])
+@pytest.mark.parametrize(
+    'attr,gene_set,truth',
+    [
+        ('attr5', {f'WBGene0000000{i + 1}' for i in range(4)}, ['attr5', 4, 14.93335321, 7.709139128, 0.05]),
+        ('attr4', {f'WBGene0000000{i + 1}' for i in range(4)}, ['attr4', 4, 14.25, 13.60714286, 0.05]),
+        ('attr1', {'WBGene00000001', 'WBGene00000029', 'WBGene00000030'}, ['attr1', 3, np.nan, 4.75, np.nan]),
+    ],
+)
 def test_one_sample_t_test_enrichment(monkeypatch, attr, gene_set, truth):
     df = io.load_table('tests/test_files/attr_ref_table_for_non_categorical.csv')
     background_set = {f'WBGene000000{i + 1:02d}' for i in range(30)}
@@ -886,15 +1286,45 @@ def test_noncategorical_enrichment_runner_enrichment_histogram(plot_style, plot_
 
 
 @pytest.mark.parametrize('exclude_unannotated', [True, False])
-@pytest.mark.parametrize('single_list,genes,pval_func,background_set',
-                         [(True, np.array(['WBGene1', 'WBGene2'], dtype=str), XlmhgTest(), None),
-                          (False, {'WBGene00000001', 'WBGene00000002'}, PermutationTest(100, 42),
-                           {'WBGene00000001', 'WBGene00000002', 'EBGene00000003'},)])
+@pytest.mark.parametrize(
+    'single_list,genes,pval_func,background_set',
+    [
+        (True, np.array(['WBGene1', 'WBGene2'], dtype=str), XlmhgTest(), None),
+        (
+            False,
+            {'WBGene00000001', 'WBGene00000002'},
+            PermutationTest(100, 42),
+            {'WBGene00000001', 'WBGene00000002', 'EBGene00000003'},
+        ),
+    ],
+)
 def test_go_enrichment_runner_api(monkeypatch, single_list, genes, pval_func, background_set, exclude_unannotated):
     monkeypatch.setattr(ontology, 'fetch_go_basic', lambda: 'dag_tree')
-    runner = GOEnrichmentRunner(genes, 'organism', 'gene_id_type', 0.05, 'elim', 'any', 'any', None, 'any', None, 'any',
-                                None, False, False, 'fname', False, False, 'set_name', False, pval_func,
-                                background_set, exclude_unannotated, single_list)
+    runner = GOEnrichmentRunner(
+        genes,
+        'organism',
+        'gene_id_type',
+        0.05,
+        'elim',
+        'any',
+        'any',
+        None,
+        'any',
+        None,
+        'any',
+        None,
+        False,
+        False,
+        'fname',
+        False,
+        False,
+        'set_name',
+        False,
+        pval_func,
+        background_set,
+        exclude_unannotated,
+        single_list,
+    )
 
     assert runner.dag_tree == 'dag_tree'
 
@@ -919,8 +1349,9 @@ def test_enrichment_runner_run_no_stats_test_returns_tuple():
     # every caller in enrichment.py does `results, plotter = runner.run()`. Returning a bare DataFrame
     # there raised "ValueError: not enough values to unpack (expected 2, got 0)". run() must always
     # return a (results, plotter) tuple, and the plotter must not crash when asked for a figure.
-    runner = EnrichmentRunner({'WBGene00000041'}, 'all', 0.05, __attr_ref__, True, False, '', False,
-                              'test_set', 'sequential', None)
+    runner = EnrichmentRunner(
+        {'WBGene00000041'}, 'all', 0.05, __attr_ref__, True, False, '', False, 'test_set', 'sequential', None
+    )
     results, plotter = runner.run()
     assert isinstance(results, pl.DataFrame)
     assert results.is_empty()
@@ -933,8 +1364,21 @@ def test_enrichment_runner_run_empty_gene_set_returns_tuple():
     # Same contract for the other short-circuit: when the enrichment gene set becomes empty (e.g. a web
     # service maps 0 genes to the target ID type, or every gene is filtered out), run() must still
     # return (empty_df, plotter) rather than a bare DataFrame that crashes the caller's unpacking.
-    runner = EnrichmentRunner({'not_in_background'}, 'all', 0.05, __attr_ref__, True, False, '', False,
-                              'test_set', 'sequential', HypergeometricTest(), {'WBGene00000041'}, False)
+    runner = EnrichmentRunner(
+        {'not_in_background'},
+        'all',
+        0.05,
+        __attr_ref__,
+        True,
+        False,
+        '',
+        False,
+        'test_set',
+        'sequential',
+        HypergeometricTest(),
+        {'WBGene00000041'},
+        False,
+    )
     with pytest.warns(UserWarning, match='enrichment set is empty'):
         results, plotter = runner.run()
     assert isinstance(results, pl.DataFrame)
@@ -959,8 +1403,17 @@ def test_go_enrichment_runner_fetch_annotations(monkeypatch):
 
 
 def test_go_enrichment_runner_get_annotation_iterator(monkeypatch):
-    def alt_init(self, taxon_id, aspects, evidence_types, excluded_evidence_types, databases, excluded_databases,
-                 qualifiers, excluded_qualifiers):
+    def alt_init(
+        self,
+        taxon_id,
+        aspects,
+        evidence_types,
+        excluded_evidence_types,
+        databases,
+        excluded_databases,
+        qualifiers,
+        excluded_qualifiers,
+    ):
         assert taxon_id == 'taxon_id'
         assert aspects == 'aspects'
         assert evidence_types == 'evidence_types'
@@ -985,17 +1438,35 @@ def test_go_enrichment_runner_get_annotation_iterator(monkeypatch):
 
 
 @pytest.mark.parametrize('propagate', ['other', 'no'])
-@pytest.mark.parametrize("gene_id,go_id,truth",
-                         [('gene1', 'GO1',
-                           {'GO2': {'gene3', 'gene1'}, 'GO3': {'gene1'}, 'GO5': {'gene1'}, 'GO4': {'gene1'},
-                            'GO1': {'gene2', 'gene1'}}),
-                          ('gene2', 'GO1',
-                           {'GO1': {'gene2', 'gene1'}, 'GO2': {'gene3', 'gene1'}, 'GO3': {'gene2'}, 'GO5': {'gene2'},
-                            'GO4': {'gene2'}}
-                           ),
-                          ('gene1', 'GO2', {'GO1': {'gene2', 'gene1'}, 'GO2': {'gene3', 'gene1'}}),
-                          ('gene3', 'GO2', {'GO1': {'gene2', 'gene1'}, 'GO2': {'gene3', 'gene1'}}),
-                          ])
+@pytest.mark.parametrize(
+    'gene_id,go_id,truth',
+    [
+        (
+            'gene1',
+            'GO1',
+            {
+                'GO2': {'gene3', 'gene1'},
+                'GO3': {'gene1'},
+                'GO5': {'gene1'},
+                'GO4': {'gene1'},
+                'GO1': {'gene2', 'gene1'},
+            },
+        ),
+        (
+            'gene2',
+            'GO1',
+            {
+                'GO1': {'gene2', 'gene1'},
+                'GO2': {'gene3', 'gene1'},
+                'GO3': {'gene2'},
+                'GO5': {'gene2'},
+                'GO4': {'gene2'},
+            },
+        ),
+        ('gene1', 'GO2', {'GO1': {'gene2', 'gene1'}, 'GO2': {'gene3', 'gene1'}}),
+        ('gene3', 'GO2', {'GO1': {'gene2', 'gene1'}, 'GO2': {'gene3', 'gene1'}}),
+    ],
+)
 def test_go_enrichment_runner_propagate_annotation(monkeypatch, propagate, gene_id, go_id, truth):
     annotation_dict = {'GO1': {'gene1', 'gene2'}, 'GO2': {'gene1', 'gene3'}}
     if propagate == 'no':
@@ -1016,12 +1487,20 @@ def test_go_enrichment_runner_propagate_annotation(monkeypatch, propagate, gene_
     assert annotation_dict == truth
 
 
-@pytest.mark.parametrize("mapping_dict,truth", [
-    ({}, {'GO1': set(), 'GO2': set()}),
-    ({'gene1': 'gene1_translated', 'gene3': 'gene3_translated'},
-     {'GO1': {'gene1_translated'}, 'GO2': {'gene1_translated', 'gene3_translated'}}),
-    ({'gene1': 'gene1_translated', 'gene2': 'gene2_translated', 'gene3': 'gene3_translated'},
-     {'GO1': {'gene1_translated', 'gene2_translated'}, 'GO2': {'gene1_translated', 'gene3_translated'}})])
+@pytest.mark.parametrize(
+    'mapping_dict,truth',
+    [
+        ({}, {'GO1': set(), 'GO2': set()}),
+        (
+            {'gene1': 'gene1_translated', 'gene3': 'gene3_translated'},
+            {'GO1': {'gene1_translated'}, 'GO2': {'gene1_translated', 'gene3_translated'}},
+        ),
+        (
+            {'gene1': 'gene1_translated', 'gene2': 'gene2_translated', 'gene3': 'gene3_translated'},
+            {'GO1': {'gene1_translated', 'gene2_translated'}, 'GO2': {'gene1_translated', 'gene3_translated'}},
+        ),
+    ],
+)
 def test_go_enrichment_runner_translate_gene_ids(monkeypatch, mapping_dict, truth):
     monkeypatch.setattr(io.GeneIDTranslator, '__init__', lambda *args: None)
     monkeypatch.setattr(io.GeneIDTranslator, 'run', lambda *args: mapping_dict)
@@ -1100,6 +1579,7 @@ def test_go_enrichment_runner_init_overlaps_dag_fetch_with_organism_resolution(m
     # different threads; if they run sequentially, fetch_go_basic blocks first, get_taxon is never
     # reached, and the barrier times out (BrokenBarrierError).
     import threading
+
     barrier = threading.Barrier(2, timeout=10)
     sentinel_dag = object()
 
@@ -1114,8 +1594,29 @@ def test_go_enrichment_runner_init_overlaps_dag_fetch_with_organism_resolution(m
     monkeypatch.setattr(ontology, 'fetch_go_basic', fake_fetch_go_basic)
     monkeypatch.setattr(io, 'get_taxon_and_id_type', fake_get_taxon)
 
-    e = GOEnrichmentRunner({'gene1'}, 'auto', 'auto', 0.05, 'classic', 'any', 'any', None, 'any', None, 'any',
-                           None, False, False, '', False, False, '', False, HypergeometricTest(), {'gene1', 'gene2'})
+    e = GOEnrichmentRunner(
+        {'gene1'},
+        'auto',
+        'auto',
+        0.05,
+        'classic',
+        'any',
+        'any',
+        None,
+        'any',
+        None,
+        'any',
+        None,
+        False,
+        False,
+        '',
+        False,
+        False,
+        '',
+        False,
+        HypergeometricTest(),
+        {'gene1', 'gene2'},
+    )
     assert e.dag_tree is sentinel_dag
     assert e.taxon_id == 6239
 
@@ -1131,11 +1632,31 @@ def test_go_enrichment_runner_init_resolves_dag_not_future(monkeypatch):
         return sentinel_dag
 
     monkeypatch.setattr(ontology, 'fetch_go_basic', fake_fetch_go_basic)
-    monkeypatch.setattr(io, 'get_taxon_and_id_type',
-                        lambda *a, **k: ((6239, 'Caenorhabditis elegans'), 'WBGene'))
+    monkeypatch.setattr(io, 'get_taxon_and_id_type', lambda *a, **k: ((6239, 'Caenorhabditis elegans'), 'WBGene'))
 
-    e = GOEnrichmentRunner({'gene1'}, 'auto', 'auto', 0.05, 'classic', 'any', 'any', None, 'any', None, 'any',
-                           None, False, False, '', False, False, '', False, HypergeometricTest(), {'gene1', 'gene2'})
+    e = GOEnrichmentRunner(
+        {'gene1'},
+        'auto',
+        'auto',
+        0.05,
+        'classic',
+        'any',
+        'any',
+        None,
+        'any',
+        None,
+        'any',
+        None,
+        False,
+        False,
+        '',
+        False,
+        False,
+        '',
+        False,
+        HypergeometricTest(),
+        {'gene1', 'gene2'},
+    )
     assert e.dag_tree is sentinel_dag
     assert calls == [1]
     assert (e.taxon_id, e.organism, e.gene_id_type) == (6239, 'Caenorhabditis elegans', 'WBGene')
@@ -1158,8 +1679,17 @@ def test_go_enrichment_runner_get_query_key(propagate_annotations):
     propagate = True if propagate_annotations != 'no' else False
 
     truth = (
-        'taxon_id', 'id_type', ('aspect1', 'aspect2'), ('ev1', 'ev2', 'ev5'), ('ev3',), ('db1',), tuple(), ('qual1',),
-        tuple(), propagate)
+        'taxon_id',
+        'id_type',
+        ('aspect1', 'aspect2'),
+        ('ev1', 'ev2', 'ev5'),
+        ('ev3',),
+        ('db1',),
+        tuple(),
+        ('qual1',),
+        tuple(),
+        propagate,
+    )
     key = runner._get_query_key()
     assert key == truth
     try:
@@ -1181,19 +1711,27 @@ def test_go_enrichment_runner_fetch_attributes():
 def test_go_enrichment_runner_correct_multiple_comparisons():
     runner = GOEnrichmentRunner.__new__(GOEnrichmentRunner)
 
-    runner.results = pl.DataFrame([[0, 0, 0, 0, 0, 0.005],
-                                   [0, 0, 0, 0, 0, 0.017],
-                                   [0, 0, 0, 0, 0, np.nan],
-                                   [0, 0, 0, 0, -3, np.nan],
-                                   [0, 0, 0, 0, 0, 0.92]],
-                                  schema=['GO ID', 'samples', 'obs', 'exp', 'colName', 'pval'])
+    runner.results = pl.DataFrame(
+        [
+            [0, 0, 0, 0, 0, 0.005],
+            [0, 0, 0, 0, 0, 0.017],
+            [0, 0, 0, 0, 0, np.nan],
+            [0, 0, 0, 0, -3, np.nan],
+            [0, 0, 0, 0, 0, 0.92],
+        ],
+        schema=['GO ID', 'samples', 'obs', 'exp', 'colName', 'pval'],
+    )
     runner.alpha = 0.04
-    truth = pl.DataFrame([[0, 0, 0, 0, 0, 0.005, 0.0275, True],
-                          [0, 0, 0, 0, 0, 0.017, 0.04675, False],
-                          [0, 0, 0, 0, 0, np.nan, None, None],
-                          [0, 0, 0, 0, -3, np.nan, None, None],
-                          [0, 0, 0, 0, 0, 0.92, 1.0, False]],
-                         schema=['GO ID', 'samples', 'obs', 'exp', 'colName', 'pval', 'padj', 'significant'])
+    truth = pl.DataFrame(
+        [
+            [0, 0, 0, 0, 0, 0.005, 0.0275, True],
+            [0, 0, 0, 0, 0, 0.017, 0.04675, False],
+            [0, 0, 0, 0, 0, np.nan, None, None],
+            [0, 0, 0, 0, -3, np.nan, None, None],
+            [0, 0, 0, 0, 0, 0.92, 1.0, False],
+        ],
+        schema=['GO ID', 'samples', 'obs', 'exp', 'colName', 'pval', 'padj', 'significant'],
+    )
 
     runner._correct_multiple_comparisons()
     truth = truth.sort(pl.col('padj', 'colName'))
@@ -1203,8 +1741,11 @@ def test_go_enrichment_runner_correct_multiple_comparisons():
     for val, val_truth in zip(res['significant'], truth['significant']):
         assert val == val_truth
     compared_cols = ('GO ID', 'samples', 'obs', 'exp', 'colName', 'pval')
-    assert truth.sort(pl.col('padj', 'colName')).select(compared_cols).equals(
-        res.sort(pl.col('padj', 'colName')).select(compared_cols))
+    assert (
+        truth.sort(pl.col('padj', 'colName'))
+        .select(compared_cols)
+        .equals(res.sort(pl.col('padj', 'colName')).select(compared_cols))
+    )
 
 
 @pytest.mark.parametrize('single_list', [True, False])
@@ -1244,13 +1785,20 @@ def test_go_enrichment_runner_plot_results(monkeypatch, single_list, results, n_
         assert dag_plotted == [True]
 
 
-@pytest.mark.parametrize('return_nonsignificant,truth_file',
-                         [(True, 'tests/test_files/go_enrichment_runner_format_results_with_nonsignificant_truth.csv'),
-                          (False, 'tests/test_files/go_enrichment_runner_format_results_truth.csv')])
+@pytest.mark.parametrize(
+    'return_nonsignificant,truth_file',
+    [
+        (True, 'tests/test_files/go_enrichment_runner_format_results_with_nonsignificant_truth.csv'),
+        (False, 'tests/test_files/go_enrichment_runner_format_results_truth.csv'),
+    ],
+)
 def test_go_enrichment_runner_format_results(monkeypatch, return_nonsignificant, truth_file):
     truth = io.load_table(truth_file)
-    results_dict = {'name1': ['name1', 50, 10, 5, 2.3, None], 'name2': ['name2', 17, 0, 3, 0, 1],
-                    'name3': ['name3', 1, 1.3, -2, -0.7, 0.04]}
+    results_dict = {
+        'name1': ['name1', 50, 10, 5, 2.3, None],
+        'name2': ['name2', 17, 0, 3, 0, 1],
+        'name3': ['name3', 1, 1.3, -2, -0.7, 0.04],
+    }
 
     def add_sig(self):
         self.results = self.results.with_columns(significant=pl.Series([False, True, True]))
@@ -1276,12 +1824,10 @@ def test_go_enrichment_runner_format_results(monkeypatch, return_nonsignificant,
     assert_frame_equal(truth, runner.results)
 
 
-@pytest.mark.parametrize("propagate_annotations,truth",
-                         [('no', 'classic'),
-                          ('classic', 'classic'),
-                          ('elim', 'elim'),
-                          ('weight', 'weight'),
-                          ('all.m', 'all.m')])
+@pytest.mark.parametrize(
+    'propagate_annotations,truth',
+    [('no', 'classic'), ('classic', 'classic'), ('elim', 'elim'), ('weight', 'weight'), ('all.m', 'all.m')],
+)
 def test_go_enrichment_runner_calculate_enrichment_serial(monkeypatch, propagate_annotations, truth):
     class DAGTreePlaceHolder:
         def __init__(self):
@@ -1315,41 +1861,72 @@ def test_go_enrichment_runner_calculate_enrichment_serial(monkeypatch, propagate
         assert runner.annotations is not runner.mutable_annotations[0]
     elif propagate_annotations == 'weight':
         assert len(runner.mutable_annotations) == 1
-        assert runner.mutable_annotations == ({
-                                                  'attribute1': {'WBGene00000105': 1.0, 'WBGene00004920': 1.0,
-                                                                 'WBGene00000137': 1.0, 'WBGene00001996': 1.0,
-                                                                 'WBGene00014208': 1.0, 'WBGene00000106': 1.0,
-                                                                 'WBGene00000019': 1.0, 'WBGene00002074': 1.0,
-                                                                 'WBGene00000041': 1.0, 'WBGene00011910': 1.0,
-                                                                 'WBGene00001436': 1.0},
-                                                  'attribute2': {'WBGene00003902': 1.0, 'WBGene00014208': 1.0,
-                                                                 'WBGene00003864': 1.0, 'WBGene00000369': 1.0,
-                                                                 'WBGene00003865': 1.0, 'WBGene00011910': 1.0,
-                                                                 'WBGene00003915': 1.0, 'WBGene00004920': 1.0},
-                                                  'attribute3': {'WBGene00001996': 1.0, 'WBGene00000369': 1.0,
-                                                                 'WBGene00000106': 1.0, 'WBGene00000019': 1.0,
-                                                                 'WBGene00002074': 1.0, 'WBGene00268189': 1.0,
-                                                                 'WBGene00000860': 1.0, 'WBGene00048864': 1.0,
-                                                                 'WBGene00000859': 1.0, 'WBGene00001132': 1.0,
-                                                                 'WBGene00199484': 1.0, 'WBGene00003915': 1.0,
-                                                                 'WBGene00199486': 1.0, 'WBGene00001133': 1.0},
-                                                  'attribute4': {'WBGene00000865': 1.0, 'WBGene00003902': 1.0,
-                                                                 'WBGene00000137': 1.0, 'WBGene00001134': 1.0,
-                                                                 'WBGene00000106': 1.0, 'WBGene00048865': 1.0,
-                                                                 'WBGene00003865': 1.0, 'WBGene00268189': 1.0,
-                                                                 'WBGene00268195': 1.0, 'WBGene00199485': 1.0,
-                                                                 'WBGene00001132': 1.0, 'WBGene00003915': 1.0,
-                                                                 'WBGene00001133': 1.0}},)
+        assert runner.mutable_annotations == (
+            {
+                'attribute1': {
+                    'WBGene00000105': 1.0,
+                    'WBGene00004920': 1.0,
+                    'WBGene00000137': 1.0,
+                    'WBGene00001996': 1.0,
+                    'WBGene00014208': 1.0,
+                    'WBGene00000106': 1.0,
+                    'WBGene00000019': 1.0,
+                    'WBGene00002074': 1.0,
+                    'WBGene00000041': 1.0,
+                    'WBGene00011910': 1.0,
+                    'WBGene00001436': 1.0,
+                },
+                'attribute2': {
+                    'WBGene00003902': 1.0,
+                    'WBGene00014208': 1.0,
+                    'WBGene00003864': 1.0,
+                    'WBGene00000369': 1.0,
+                    'WBGene00003865': 1.0,
+                    'WBGene00011910': 1.0,
+                    'WBGene00003915': 1.0,
+                    'WBGene00004920': 1.0,
+                },
+                'attribute3': {
+                    'WBGene00001996': 1.0,
+                    'WBGene00000369': 1.0,
+                    'WBGene00000106': 1.0,
+                    'WBGene00000019': 1.0,
+                    'WBGene00002074': 1.0,
+                    'WBGene00268189': 1.0,
+                    'WBGene00000860': 1.0,
+                    'WBGene00048864': 1.0,
+                    'WBGene00000859': 1.0,
+                    'WBGene00001132': 1.0,
+                    'WBGene00199484': 1.0,
+                    'WBGene00003915': 1.0,
+                    'WBGene00199486': 1.0,
+                    'WBGene00001133': 1.0,
+                },
+                'attribute4': {
+                    'WBGene00000865': 1.0,
+                    'WBGene00003902': 1.0,
+                    'WBGene00000137': 1.0,
+                    'WBGene00001134': 1.0,
+                    'WBGene00000106': 1.0,
+                    'WBGene00048865': 1.0,
+                    'WBGene00003865': 1.0,
+                    'WBGene00268189': 1.0,
+                    'WBGene00268195': 1.0,
+                    'WBGene00199485': 1.0,
+                    'WBGene00001132': 1.0,
+                    'WBGene00003915': 1.0,
+                    'WBGene00001133': 1.0,
+                },
+            },
+        )
 
     assert res == truth
 
 
-@pytest.mark.parametrize("propagate_annotations,truth",
-                         [('no', 'classic'),
-                          ('classic', 'classic'),
-                          ('elim', 'elim'),
-                          ('weight', 'weight'),
-                          ('all.m', 'all.m')])
+@pytest.mark.parametrize(
+    'propagate_annotations,truth',
+    [('no', 'classic'), ('classic', 'classic'), ('elim', 'elim'), ('weight', 'weight'), ('all.m', 'all.m')],
+)
 def test_go_enrichment_runner_calculate_enrichment_parallel(monkeypatch, propagate_annotations, truth):
     monkeypatch.setattr(GOEnrichmentRunner, '_go_classic_pvalues_parallel', lambda self, desc: 'classic')
     monkeypatch.setattr(GOEnrichmentRunner, '_go_elim_pvalues_parallel', lambda self, desc: 'elim')
@@ -1385,30 +1962,66 @@ def test_go_enrichment_runner_calculate_enrichment_parallel(monkeypatch, propaga
             assert {go_id: runner.annotations[go_id] for go_id in go_level_iter(None, namespace)} == mod_ann
     elif propagate_annotations == 'weight':
         assert len(runner.mutable_annotations) == len(runner.dag_tree.namespaces)
-        assert runner.mutable_annotations == ({'attribute1': {'WBGene00000105': 1.0, 'WBGene00001436': 1.0,
-                                                              'WBGene00004920': 1.0, 'WBGene00000137': 1.0,
-                                                              'WBGene00014208': 1.0, 'WBGene00000041': 1.0,
-                                                              'WBGene00002074': 1.0, 'WBGene00000019': 1.0,
-                                                              'WBGene00001996': 1.0, 'WBGene00000106': 1.0,
-                                                              'WBGene00011910': 1.0},
-                                               'attribute4': {'WBGene00003865': 1.0, 'WBGene00001134': 1.0,
-                                                              'WBGene00268189': 1.0, 'WBGene00048865': 1.0,
-                                                              'WBGene00000137': 1.0, 'WBGene00001133': 1.0,
-                                                              'WBGene00003902': 1.0, 'WBGene00001132': 1.0,
-                                                              'WBGene00000865': 1.0, 'WBGene00199485': 1.0,
-                                                              'WBGene00000106': 1.0, 'WBGene00003915': 1.0,
-                                                              'WBGene00268195': 1.0}}, {
-                                                  'attribute2': {'WBGene00003865': 1.0, 'WBGene00003864': 1.0,
-                                                                 'WBGene00004920': 1.0, 'WBGene00014208': 1.0,
-                                                                 'WBGene00003902': 1.0, 'WBGene00011910': 1.0,
-                                                                 'WBGene00000369': 1.0, 'WBGene00003915': 1.0},
-                                                  'attribute3': {'WBGene00268189': 1.0, 'WBGene00199484': 1.0,
-                                                                 'WBGene00002074': 1.0, 'WBGene00001133': 1.0,
-                                                                 'WBGene00048864': 1.0, 'WBGene00000859': 1.0,
-                                                                 'WBGene00000369': 1.0, 'WBGene00000019': 1.0,
-                                                                 'WBGene00001132': 1.0, 'WBGene00000860': 1.0,
-                                                                 'WBGene00001996': 1.0, 'WBGene00000106': 1.0,
-                                                                 'WBGene00003915': 1.0, 'WBGene00199486': 1.0}})
+        assert runner.mutable_annotations == (
+            {
+                'attribute1': {
+                    'WBGene00000105': 1.0,
+                    'WBGene00001436': 1.0,
+                    'WBGene00004920': 1.0,
+                    'WBGene00000137': 1.0,
+                    'WBGene00014208': 1.0,
+                    'WBGene00000041': 1.0,
+                    'WBGene00002074': 1.0,
+                    'WBGene00000019': 1.0,
+                    'WBGene00001996': 1.0,
+                    'WBGene00000106': 1.0,
+                    'WBGene00011910': 1.0,
+                },
+                'attribute4': {
+                    'WBGene00003865': 1.0,
+                    'WBGene00001134': 1.0,
+                    'WBGene00268189': 1.0,
+                    'WBGene00048865': 1.0,
+                    'WBGene00000137': 1.0,
+                    'WBGene00001133': 1.0,
+                    'WBGene00003902': 1.0,
+                    'WBGene00001132': 1.0,
+                    'WBGene00000865': 1.0,
+                    'WBGene00199485': 1.0,
+                    'WBGene00000106': 1.0,
+                    'WBGene00003915': 1.0,
+                    'WBGene00268195': 1.0,
+                },
+            },
+            {
+                'attribute2': {
+                    'WBGene00003865': 1.0,
+                    'WBGene00003864': 1.0,
+                    'WBGene00004920': 1.0,
+                    'WBGene00014208': 1.0,
+                    'WBGene00003902': 1.0,
+                    'WBGene00011910': 1.0,
+                    'WBGene00000369': 1.0,
+                    'WBGene00003915': 1.0,
+                },
+                'attribute3': {
+                    'WBGene00268189': 1.0,
+                    'WBGene00199484': 1.0,
+                    'WBGene00002074': 1.0,
+                    'WBGene00001133': 1.0,
+                    'WBGene00048864': 1.0,
+                    'WBGene00000859': 1.0,
+                    'WBGene00000369': 1.0,
+                    'WBGene00000019': 1.0,
+                    'WBGene00001132': 1.0,
+                    'WBGene00000860': 1.0,
+                    'WBGene00001996': 1.0,
+                    'WBGene00000106': 1.0,
+                    'WBGene00003915': 1.0,
+                    'WBGene00199486': 1.0,
+                },
+            },
+        )
 
     assert res == truth
 
@@ -1427,18 +2040,27 @@ def test_go_enrichment_runner_process_annotations_no_annotations(monkeypatch):
     monkeypatch.setattr(GOEnrichmentRunner, '_get_annotation_iterator', _get_annotation_iter_zero)
     with pytest.raises(InvalidValueError) as e:
         runner = GOEnrichmentRunner.__new__(GOEnrichmentRunner)
-        runner.propagate_annotations = "no"
-        runner.organism = "organism"
-        runner.taxon_id = "taxon id"
+        runner.propagate_annotations = 'no'
+        runner.organism = 'organism'
+        runner.taxon_id = 'taxon id'
         runner._process_annotations()
 
 
 def test_go_enrichment_runner_process_annotations(monkeypatch):
     propagated_annotations = set()
-    propagated_annotations_truth = {('gene_id1', 'go_id1'), ('gene_id1', 'go_id2'), ('gene_id2', 'go_id1'),
-                                    ('gene_id2', 'go_id3'), ('gene_id3', 'go_id4')}
-    annotation_dict_truth = {'go_id1': {'gene_id1', 'gene_id2'}, 'go_id2': {'gene_id1'}, 'go_id3': {'gene_id2'},
-                             'go_id4': {'gene_id3'}}
+    propagated_annotations_truth = {
+        ('gene_id1', 'go_id1'),
+        ('gene_id1', 'go_id2'),
+        ('gene_id2', 'go_id1'),
+        ('gene_id2', 'go_id3'),
+        ('gene_id3', 'go_id4'),
+    }
+    annotation_dict_truth = {
+        'go_id1': {'gene_id1', 'gene_id2'},
+        'go_id2': {'gene_id1'},
+        'go_id3': {'gene_id2'},
+        'go_id4': {'gene_id3'},
+    }
     source_dict_truth = {'source1': {'gene_id1', 'gene_id3'}, 'source2': {'gene_id2'}}
 
     def get_annotation_iter(self):
@@ -1447,11 +2069,13 @@ def test_go_enrichment_runner_process_annotations(monkeypatch):
         return iterator
 
     def annotation_iter(self):
-        annotations = [{'bioentity_internal_id': 'gene_id1', 'annotation_class': 'go_id1', 'source': 'source1'},
-                       {'bioentity_internal_id': 'gene_id1', 'annotation_class': 'go_id2', 'source': 'source1'},
-                       {'bioentity_internal_id': 'gene_id2', 'annotation_class': 'go_id1', 'source': 'source2'},
-                       {'bioentity_internal_id': 'gene_id2', 'annotation_class': 'go_id3', 'source': 'source2'},
-                       {'bioentity_internal_id': 'gene_id3', 'annotation_class': 'go_id4', 'source': 'source1'}]
+        annotations = [
+            {'bioentity_internal_id': 'gene_id1', 'annotation_class': 'go_id1', 'source': 'source1'},
+            {'bioentity_internal_id': 'gene_id1', 'annotation_class': 'go_id2', 'source': 'source1'},
+            {'bioentity_internal_id': 'gene_id2', 'annotation_class': 'go_id1', 'source': 'source2'},
+            {'bioentity_internal_id': 'gene_id2', 'annotation_class': 'go_id3', 'source': 'source2'},
+            {'bioentity_internal_id': 'gene_id3', 'annotation_class': 'go_id4', 'source': 'source1'},
+        ]
         for annotation in annotations:
             yield annotation
 
@@ -1464,8 +2088,12 @@ def test_go_enrichment_runner_process_annotations(monkeypatch):
 
     dag = ontology.DAGTree.__new__(ontology.DAGTree)
     dag.alt_ids = {}
-    dag.go_terms = {'go_id1': ontology.GOTerm(), 'go_id2': ontology.GOTerm(), 'go_id3': ontology.GOTerm(),
-                    'go_id4': ontology.GOTerm()}
+    dag.go_terms = {
+        'go_id1': ontology.GOTerm(),
+        'go_id2': ontology.GOTerm(),
+        'go_id3': ontology.GOTerm(),
+        'go_id4': ontology.GOTerm(),
+    }
     dag.go_terms['go_id1'].set_id('go_id1')
     dag.go_terms['go_id2'].set_id('go_id2')
     dag.go_terms['go_id3'].set_id('go_id3')
@@ -1665,16 +2293,26 @@ def test_go_enrichment_runner_go_allm_pvalues_parallel_error_state(monkeypatch):
         assert runner.propagate_annotations == 'all.m'
 
 
-@pytest.mark.parametrize('attrs,output_dict,truth_dict',
-                         [(['attr1', 'attr2'],
-                           {'classic': {'attr1': ['classic_val1', 'classic_val2', 0.05],
-                                        'attr2': ['classic_val3', 'classic_val4', 1]},
-                            'elim': {'attr1': ['elim_val1', 'elim_val2', 0.3],
-                                     'attr2': ['elim_val3', 'elim_val4', 0.9999]},
-                            'weight': {'attr1': ['weight_val1', 'weight_val2', 0.12],
-                                       'attr2': ['weight_val3', 'weight_val4', 0.5]}},
-                           {'attr1': ('classic_val1', 'classic_val2', 0.12164404),
-                            'attr2': ('classic_val3', 'classic_val4', 0.793674068)})])
+@pytest.mark.parametrize(
+    'attrs,output_dict,truth_dict',
+    [
+        (
+            ['attr1', 'attr2'],
+            {
+                'classic': {
+                    'attr1': ['classic_val1', 'classic_val2', 0.05],
+                    'attr2': ['classic_val3', 'classic_val4', 1],
+                },
+                'elim': {'attr1': ['elim_val1', 'elim_val2', 0.3], 'attr2': ['elim_val3', 'elim_val4', 0.9999]},
+                'weight': {'attr1': ['weight_val1', 'weight_val2', 0.12], 'attr2': ['weight_val3', 'weight_val4', 0.5]},
+            },
+            {
+                'attr1': ('classic_val1', 'classic_val2', 0.12164404),
+                'attr2': ('classic_val3', 'classic_val4', 0.793674068),
+            },
+        )
+    ],
+)
 def test_go_enrichment_runner_calculate_allm(monkeypatch, attrs, output_dict, truth_dict):
     runner = GOEnrichmentRunner.__new__(GOEnrichmentRunner)
     runner.attributes = attrs
@@ -1708,9 +2346,16 @@ def test_go_enrichment_runner_go_level_iterator(monkeypatch):
     assert list(runner._go_level_iterator(this_namespace)) == go_ids_by_level_truth
 
 
-@pytest.mark.parametrize('grouping,inds,truth',
-                         [([['a', 'b', 'c'], ['d', 'e', 'f'], ['g', 'h']], [1, 2, 1],
-                           {'a': 1, 'b': 1, 'c': 1, 'd': 2, 'e': 2, 'f': 2, 'g': 1, 'h': 1})])
+@pytest.mark.parametrize(
+    'grouping,inds,truth',
+    [
+        (
+            [['a', 'b', 'c'], ['d', 'e', 'f'], ['g', 'h']],
+            [1, 2, 1],
+            {'a': 1, 'b': 1, 'c': 1, 'd': 2, 'e': 2, 'f': 2, 'g': 1, 'h': 1},
+        )
+    ],
+)
 def test_go_enrichment_runner_parallel_over_grouping(monkeypatch, grouping, inds, truth):
     monkeypatch.setattr(validation, 'is_method_of_class', lambda func, obj_type: True)
 
@@ -1724,11 +2369,13 @@ def test_go_enrichment_runner_parallel_over_grouping(monkeypatch, grouping, inds
 
 
 @pytest.mark.parametrize('obs_truth,exp_truth', [(5, 2.3), (7, 92)])
-@pytest.mark.parametrize('pval_fwd,pval_rev,escore_fwd,escore_rev,pval_truth,log2escore_truth',
-                         [(0.05, 0.7, 2, 0.5, 0.05, 1), (0.6, 0.3, 1.2, 4, 0.3, -2),
-                          (np.nan, np.nan, 2, np.inf, 1, -np.inf)])
-def test_extract_xlmhg_results(pval_fwd, pval_rev, escore_fwd, escore_rev, pval_truth,
-                               log2escore_truth, obs_truth, exp_truth):
+@pytest.mark.parametrize(
+    'pval_fwd,pval_rev,escore_fwd,escore_rev,pval_truth,log2escore_truth',
+    [(0.05, 0.7, 2, 0.5, 0.05, 1), (0.6, 0.3, 1.2, 4, 0.3, -2), (np.nan, np.nan, 2, np.inf, 1, -np.inf)],
+)
+def test_extract_xlmhg_results(
+    pval_fwd, pval_rev, escore_fwd, escore_rev, pval_truth, log2escore_truth, obs_truth, exp_truth
+):
     class XLmHGResultObject:
         def __init__(self, pval, escore):
             self.pval = pval
@@ -1738,8 +2385,9 @@ def test_extract_xlmhg_results(pval_fwd, pval_rev, escore_fwd, escore_rev, pval_
             self.K = exp_truth
             self.N = 1
 
-    obs, exp, log2escore, pval = XlmhgTest._extract_xlmhg_results(XLmHGResultObject(pval_fwd, escore_fwd),
-                                                                  XLmHGResultObject(pval_rev, escore_rev))
+    obs, exp, log2escore, pval = XlmhgTest._extract_xlmhg_results(
+        XLmHGResultObject(pval_fwd, escore_fwd), XLmHGResultObject(pval_rev, escore_rev)
+    )
 
     assert pval == pval_truth
     assert log2escore == log2escore_truth
@@ -1750,14 +2398,39 @@ def test_extract_xlmhg_results(pval_fwd, pval_rev, escore_fwd, escore_rev, pval_
 @pytest.mark.parametrize('exclude_unannotated', [True, False])
 @pytest.mark.parametrize(
     'single_list,genes,pval_func,background_set,graph_format',
-    [(True, np.array(['WBGene1', 'WBGene2'], dtype=str), XlmhgTest(), None, 'none'),
-     (False, {'WBGene00000001', 'WBGene00000002'}, PermutationTest(100, 42),
-      {'WBGene00000001', 'WBGene00000002', 'EBGene00000003'}, 'pdf')])
-def test_kegg_enrichment_runner_api(monkeypatch, single_list, genes, pval_func, background_set, graph_format,
-                                    exclude_unannotated):
+    [
+        (True, np.array(['WBGene1', 'WBGene2'], dtype=str), XlmhgTest(), None, 'none'),
+        (
+            False,
+            {'WBGene00000001', 'WBGene00000002'},
+            PermutationTest(100, 42),
+            {'WBGene00000001', 'WBGene00000002', 'EBGene00000003'},
+            'pdf',
+        ),
+    ],
+)
+def test_kegg_enrichment_runner_api(
+    monkeypatch, single_list, genes, pval_func, background_set, graph_format, exclude_unannotated
+):
     monkeypatch.setattr(io, 'get_taxon_and_id_type', lambda *args: (('a', 'b'), 'gene_id_type'))
-    KEGGEnrichmentRunner(genes, 'organism', 'gene_id_type', 0.05, True, False, 'fname', False, False, 'set_name',
-                         False, pval_func, background_set, exclude_unannotated, single_list, graph_format)
+    KEGGEnrichmentRunner(
+        genes,
+        'organism',
+        'gene_id_type',
+        0.05,
+        True,
+        False,
+        'fname',
+        False,
+        False,
+        'set_name',
+        False,
+        pval_func,
+        background_set,
+        exclude_unannotated,
+        single_list,
+        graph_format,
+    )
 
 
 def test_kegg_enrichment_runner_format_results(monkeypatch):
@@ -1766,8 +2439,7 @@ def test_kegg_enrichment_runner_format_results(monkeypatch):
 
     monkeypatch.setattr(KEGGEnrichmentRunner, '_correct_multiple_comparisons', mock_correct_multiple_comparisons)
     runner = KEGGEnrichmentRunner.__new__(KEGGEnrichmentRunner)
-    results_dict = [['name1', 50, 10, 5.5, 2.3, 0.05], ['name2', 17, 0, 3, 0, 1],
-                    ['name3', 1, 2, -2, -0.7, 0.04]]
+    results_dict = [['name1', 50, 10, 5.5, 2.3, 0.05], ['name2', 17, 0, 3, 0, 1], ['name3', 1, 2, -2, -0.7, 0.04]]
     truth = io.load_table('tests/test_files/kegg_enrichment_runner_format_results_truth.csv')
     runner.en_score_col = 'colName'
     runner.single_set = False
@@ -1795,8 +2467,12 @@ def test_kegg_enrichment_runner_fetch_annotations(monkeypatch):
 
 
 def test_kegg_enrichment_runner_process_annotations(monkeypatch):
-    annotation_dict_truth = {'go_id1': {'gene_id1', 'gene_id2'}, 'go_id2': {'gene_id1'}, 'go_id3': {'gene_id2'},
-                             'go_id4': {'gene_id3'}}
+    annotation_dict_truth = {
+        'go_id1': {'gene_id1', 'gene_id2'},
+        'go_id2': {'gene_id1'},
+        'go_id3': {'gene_id2'},
+        'go_id4': {'gene_id3'},
+    }
 
     name_dict_truth = {'go_id1': 'name1', 'go_id2': 'name2', 'go_id3': 'name3', 'go_id4': 'name4'}
 
@@ -1806,10 +2482,12 @@ def test_kegg_enrichment_runner_process_annotations(monkeypatch):
         return iterator
 
     def annotation_iter(self):
-        annotations = [['go_id1', 'name1', {'gene_id1', 'gene_id2'}],
-                       ['go_id2', 'name2', {'gene_id1'}],
-                       ['go_id3', 'name3', {'gene_id2'}],
-                       ['go_id4', 'name4', {'gene_id3'}]]
+        annotations = [
+            ['go_id1', 'name1', {'gene_id1', 'gene_id2'}],
+            ['go_id2', 'name2', {'gene_id1'}],
+            ['go_id3', 'name3', {'gene_id2'}],
+            ['go_id4', 'name4', {'gene_id3'}],
+        ]
         for annotation in annotations:
             yield annotation
 
@@ -1826,13 +2504,20 @@ def test_kegg_enrichment_runner_process_annotations(monkeypatch):
     assert name_dict == name_dict_truth
 
 
-@pytest.mark.parametrize("mapping_dict,truth", [
-    ({}, {'GO1': set(), 'GO2': set()}),
-    ({'gene1': 'gene1_translated', 'gene3': 'gene3_translated'},
-     {'GO1': {'gene1_translated'}, 'GO2': {'gene1_translated', 'gene3_translated'}}),
-    ({'gene1': 'gene1_translated', 'gene2': 'gene2_translated', 'gene3': 'gene3_translated'},
-     {'GO1': {'gene1_translated', 'gene2_translated'}, 'GO2': {'gene1_translated', 'gene3_translated'}}
-     )])
+@pytest.mark.parametrize(
+    'mapping_dict,truth',
+    [
+        ({}, {'GO1': set(), 'GO2': set()}),
+        (
+            {'gene1': 'gene1_translated', 'gene3': 'gene3_translated'},
+            {'GO1': {'gene1_translated'}, 'GO2': {'gene1_translated', 'gene3_translated'}},
+        ),
+        (
+            {'gene1': 'gene1_translated', 'gene2': 'gene2_translated', 'gene3': 'gene3_translated'},
+            {'GO1': {'gene1_translated', 'gene2_translated'}, 'GO2': {'gene1_translated', 'gene3_translated'}},
+        ),
+    ],
+)
 def test_kegg_enrichment_runner_translate_gene_ids(monkeypatch, mapping_dict, truth):
     monkeypatch.setattr(io.GeneIDTranslator, '__init__', lambda *args: None)
     monkeypatch.setattr(io.GeneIDTranslator, 'run', lambda *args: mapping_dict)

@@ -52,6 +52,7 @@ Each item of ``INPUTS`` (or the list returned by ``make_inputs()``) is either:
 
 Exit code is the number of inputs that failed to match (0 == every input was safe).
 """
+
 from __future__ import annotations
 
 import argparse
@@ -75,9 +76,11 @@ _NUMBER_TYPES = (bool, int, float, np.bool_, np.integer, np.floating)
 # Timing
 # ============================================================================================
 
+
 @dataclass(frozen=True)
 class Timing:
     """Wall-clock durations (seconds) collected over one or more repeats of a single call."""
+
     times: tuple
 
     @property
@@ -96,8 +99,9 @@ class Timing:
         return statistics.median(self.times)
 
 
-def time_call(func: Callable, args: Sequence = (), kwargs: Optional[Mapping] = None, *,
-              repeats: int = 5, warmup: int = 1):
+def time_call(
+    func: Callable, args: Sequence = (), kwargs: Optional[Mapping] = None, *, repeats: int = 5, warmup: int = 1
+):
     """Call ``func(*args, **kwargs)`` ``repeats`` times, timing each call.
 
     ``warmup`` untimed calls run first (JIT warm-up for numba, import caching, first-call
@@ -140,8 +144,8 @@ def speedup(baseline: Timing, candidate: Timing) -> float:
 # Equality
 # ============================================================================================
 
-def assert_equal(actual: Any, expected: Any, *, rtol: float = 0.0, atol: float = 0.0,
-                  _path: str = 'root') -> None:
+
+def assert_equal(actual: Any, expected: Any, *, rtol: float = 0.0, atol: float = 0.0, _path: str = 'root') -> None:
     """Recursively assert ``actual == expected``, raising ``AssertionError`` with a precise
     location on the first mismatch.
 
@@ -178,8 +182,9 @@ def assert_equal(actual: Any, expected: Any, *, rtol: float = 0.0, atol: float =
 
     if isinstance(actual, Mapping) and isinstance(expected, Mapping):
         if actual.keys() != expected.keys():
-            raise AssertionError(f'dict keys differ at {_path}: {sorted(actual.keys())!r} != '
-                                  f'{sorted(expected.keys())!r}')
+            raise AssertionError(
+                f'dict keys differ at {_path}: {sorted(actual.keys())!r} != {sorted(expected.keys())!r}'
+            )
         for key in actual:
             assert_equal(actual[key], expected[key], rtol=rtol, atol=atol, _path=f'{_path}[{key!r}]')
         return
@@ -219,8 +224,9 @@ def _assert_ndarray_equal(a: np.ndarray, b: np.ndarray, rtol: float, atol: float
     if a.shape != b.shape:
         raise AssertionError(f'array shape differs at {path}: {a.shape} != {b.shape}')
     if a.dtype != b.dtype:
-        raise AssertionError(f'array dtype differs at {path}: {a.dtype} != {b.dtype} '
-                              f'(cast explicitly if this is expected)')
+        raise AssertionError(
+            f'array dtype differs at {path}: {a.dtype} != {b.dtype} (cast explicitly if this is expected)'
+        )
     try:
         matches = np.allclose(a, b, rtol=rtol, atol=atol, equal_nan=True)
     except TypeError:
@@ -228,8 +234,9 @@ def _assert_ndarray_equal(a: np.ndarray, b: np.ndarray, rtol: float, atol: float
         matches = bool(np.array_equal(a, b))
     if not matches:
         max_diff = _safe_max_abs_diff(a, b)
-        raise AssertionError(f'array values differ at {path} beyond tolerance '
-                              f'(rtol={rtol}, atol={atol}); max abs diff={max_diff}')
+        raise AssertionError(
+            f'array values differ at {path} beyond tolerance (rtol={rtol}, atol={atol}); max abs diff={max_diff}'
+        )
 
 
 def _safe_max_abs_diff(a: np.ndarray, b: np.ndarray):
@@ -254,8 +261,9 @@ def _assert_series_equal(a: pl.Series, b: pl.Series, rtol: float, atol: float, p
     if a.len() != b.len():
         raise AssertionError(f'series length differs at {path}: {a.len()} != {b.len()}')
     if a.dtype != b.dtype:
-        raise AssertionError(f'series dtype differs at {path}: {a.dtype} != {b.dtype} '
-                              f'(cast explicitly if this is expected)')
+        raise AssertionError(
+            f'series dtype differs at {path}: {a.dtype} != {b.dtype} (cast explicitly if this is expected)'
+        )
     if (rtol or atol) and a.dtype.is_numeric():
         if not np.allclose(a.to_numpy(), b.to_numpy(), rtol=rtol, atol=atol, equal_nan=True):
             raise AssertionError(f'series values differ at {path} beyond tolerance (rtol={rtol}, atol={atol})')
@@ -268,6 +276,7 @@ def _assert_series_equal(a: pl.Series, b: pl.Series, rtol: float, atol: float, p
 # compare(): the timing + equality combinator
 # ============================================================================================
 
+
 @dataclass(frozen=True)
 class BenchmarkResult:
     result: Any
@@ -279,9 +288,17 @@ class BenchmarkResult:
         return speedup(self.baseline_timing, self.candidate_timing)
 
 
-def compare(baseline: Callable, candidate: Callable, args: Sequence = (),
-            kwargs: Optional[Mapping] = None, *, repeats: int = 5, warmup: int = 1,
-            rtol: float = 0.0, atol: float = 0.0) -> BenchmarkResult:
+def compare(
+    baseline: Callable,
+    candidate: Callable,
+    args: Sequence = (),
+    kwargs: Optional[Mapping] = None,
+    *,
+    repeats: int = 5,
+    warmup: int = 1,
+    rtol: float = 0.0,
+    atol: float = 0.0,
+) -> BenchmarkResult:
     """Time both implementations on the same input and ASSERT their outputs are equal.
 
     Raises ``AssertionError`` (via :func:`assert_equal`) if the candidate's output does not
@@ -298,6 +315,7 @@ def compare(baseline: Callable, candidate: Callable, args: Sequence = (),
 # ============================================================================================
 # CLI
 # ============================================================================================
+
 
 def _load_spec(path: Path):
     spec = importlib.util.spec_from_file_location(path.stem, path)
@@ -330,23 +348,26 @@ def _normalize_input(item) -> tuple:
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
-        description="Benchmark two implementations of a function and assert their outputs are "
-                    "equal, reporting the speedup. See the 'safe-optimization' skill for the "
-                    "full safe-performance-optimization workflow this supports.",
+        description='Benchmark two implementations of a function and assert their outputs are '
+        "equal, reporting the speedup. See the 'safe-optimization' skill for the "
+        'full safe-performance-optimization workflow this supports.',
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog=__doc__,
     )
-    parser.add_argument('spec', type=Path,
-                        help="path to a bench-spec .py file defining BASELINE, CANDIDATE, and "
-                             "INPUTS (or make_inputs()) -- see this script's module docstring")
-    parser.add_argument('--repeats', type=int, default=5,
-                        help="timed calls per input, per implementation (default: 5)")
-    parser.add_argument('--warmup', type=int, default=1,
-                        help="untimed warm-up calls before timing (default: 1)")
-    parser.add_argument('--rtol', type=float, default=0.0,
-                        help="relative tolerance for numeric comparisons (default: 0.0, i.e. exact)")
-    parser.add_argument('--atol', type=float, default=0.0,
-                        help="absolute tolerance for numeric comparisons (default: 0.0, i.e. exact)")
+    parser.add_argument(
+        'spec',
+        type=Path,
+        help='path to a bench-spec .py file defining BASELINE, CANDIDATE, and '
+        "INPUTS (or make_inputs()) -- see this script's module docstring",
+    )
+    parser.add_argument('--repeats', type=int, default=5, help='timed calls per input, per implementation (default: 5)')
+    parser.add_argument('--warmup', type=int, default=1, help='untimed warm-up calls before timing (default: 1)')
+    parser.add_argument(
+        '--rtol', type=float, default=0.0, help='relative tolerance for numeric comparisons (default: 0.0, i.e. exact)'
+    )
+    parser.add_argument(
+        '--atol', type=float, default=0.0, help='absolute tolerance for numeric comparisons (default: 0.0, i.e. exact)'
+    )
     return parser
 
 
@@ -365,11 +386,21 @@ def main(argv=None) -> int:
     failures = 0
     for i, (call_args, call_kwargs) in enumerate(inputs):
         try:
-            result = compare(baseline, candidate, call_args, call_kwargs, repeats=args.repeats,
-                              warmup=args.warmup, rtol=args.rtol, atol=args.atol)
-            print(f'[ok]   input {i}: outputs equal, {result.speedup:.2f}x faster '
-                  f'(baseline {result.baseline_timing.best * 1000:.3f} ms -> '
-                  f'candidate {result.candidate_timing.best * 1000:.3f} ms)')
+            result = compare(
+                baseline,
+                candidate,
+                call_args,
+                call_kwargs,
+                repeats=args.repeats,
+                warmup=args.warmup,
+                rtol=args.rtol,
+                atol=args.atol,
+            )
+            print(
+                f'[ok]   input {i}: outputs equal, {result.speedup:.2f}x faster '
+                f'(baseline {result.baseline_timing.best * 1000:.3f} ms -> '
+                f'candidate {result.candidate_timing.best * 1000:.3f} ms)'
+            )
         except AssertionError as exc:
             failures += 1
             print(f'[FAIL] input {i}: outputs differ -- NOT safe to ship: {exc}', file=sys.stderr)

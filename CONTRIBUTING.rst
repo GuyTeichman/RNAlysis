@@ -141,6 +141,10 @@ Before you submit a pull request, check that it meets these guidelines:
    on Windows, macOS, and Linux. GitHub Actions runs this matrix automatically on every pull
    request; make sure all jobs pass. Coverage is reported at
    https://coveralls.io/github/GuyTeichman/RNAlysis.
+5. The files your pull request touches must pass the pre-commit hooks (Ruff formatting/import
+   sorting, end-of-file/whitespace fixups, YAML/TOML validity). GitHub Actions checks this
+   automatically, scoped to just the files the PR changed. Installing the git hook with
+   ``pre-commit install`` (see "Get Started!" above) catches this before you push.
 
 Tips
 ----

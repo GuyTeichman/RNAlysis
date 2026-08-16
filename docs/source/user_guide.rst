@@ -1995,4 +1995,3 @@ For example, we could extract all WBGene indices from the following string::
             '''
     >>> general.parse_wbgene_string(my_string)
     {'WBGene00000001','WBGene000000002','WBGene00000003','WBGene00000004'}
-

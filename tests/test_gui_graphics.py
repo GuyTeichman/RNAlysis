@@ -55,9 +55,7 @@ def test_get_icon_blank(qtbot):
     assert icon.pixmap(32, 32).toImage() == truth
 
 
-@pytest.mark.parametrize("name,path", [
-    ('yellow', 'yellow_icon.png'),
-    ('Filter', 'filter_icon.png')])
+@pytest.mark.parametrize('name,path', [('yellow', 'yellow_icon.png'), ('Filter', 'filter_icon.png')])
 def test_get_icon(qtbot, name, path):
     full_path = 'gui/icons/' + path
     icon = get_icon(name)
@@ -107,10 +105,9 @@ def test_VennInteractiveCanvas_deselect(qtbot, three_gene_sets_with_disjoint):
     assert widget.get_custom_selection() == {'e', 'f'}
 
 
-@pytest.mark.parametrize('clicked,expected', [({'011'}, {'e', 'f'}),
-                                              ({'100', '011'}, {'b', 'e', 'f'}),
-                                              (set(), set()),
-                                              ({'111'}, set())])
+@pytest.mark.parametrize(
+    'clicked,expected', [({'011'}, {'e', 'f'}), ({'100', '011'}, {'b', 'e', 'f'}), (set(), set()), ({'111'}, set())]
+)
 def test_VennInteractiveCanvas_on_click(qtbot, monkeypatch, three_gene_sets_with_disjoint, clicked, expected):
     def mock_contains_point(patch, point, radius=None):
         for this_id in clicked:
@@ -128,10 +125,15 @@ def test_VennInteractiveCanvas_on_click(qtbot, monkeypatch, three_gene_sets_with
     assert widget.get_custom_selection() == set()
 
 
-@pytest.mark.parametrize('clicked,expected', [({'011'}, [0, 0, 0, 0, 0, 2, 0]),
-                                              ({'100', '011'}, [2, 0, 0, 0, 0, 2, 0]),
-                                              (set(), [0, 0, 0, 0, 0, 0, 0]),
-                                              ({'111'}, [0, 0, 0, 0, 0, 0, 2])])
+@pytest.mark.parametrize(
+    'clicked,expected',
+    [
+        ({'011'}, [0, 0, 0, 0, 0, 2, 0]),
+        ({'100', '011'}, [2, 0, 0, 0, 0, 2, 0]),
+        (set(), [0, 0, 0, 0, 0, 0, 0]),
+        ({'111'}, [0, 0, 0, 0, 0, 0, 2]),
+    ],
+)
 def test_VennInteractiveCanvas_on_hover(qtbot, monkeypatch, three_gene_sets, clicked, expected):
     def mock_contains_point(patch, point, radius=None):
         for this_id in clicked:
@@ -165,13 +167,13 @@ def test_VennInteractiveCanvas_intersection(qtbot, three_gene_sets, three_gene_s
     assert widget.get_custom_selection() == set()
 
 
-@pytest.mark.parametrize('primary_set,expected,expected_disjoint', [
-    ('first', {'b'}, {'b'}),
-    ('second', {'d'}, {'d'}),
-    ('third', {'f'}, set())
-])
-def test_VennInteractiveCanvas_difference(qtbot, three_gene_sets, three_gene_sets_with_disjoint, primary_set, expected,
-                                          expected_disjoint):
+@pytest.mark.parametrize(
+    'primary_set,expected,expected_disjoint',
+    [('first', {'b'}, {'b'}), ('second', {'d'}, {'d'}), ('third', {'f'}, set())],
+)
+def test_VennInteractiveCanvas_difference(
+    qtbot, three_gene_sets, three_gene_sets_with_disjoint, primary_set, expected, expected_disjoint
+):
     qtbot, widget = widget_setup(qtbot, VennInteractiveCanvas, three_gene_sets)
     widget.difference(primary_set)
     assert widget.get_custom_selection() == expected
@@ -186,15 +188,19 @@ def test_VennInteractiveCanvas_symmetric_difference(qtbot, two_gene_sets):
     assert widget.get_custom_selection() == {'b', 'e', 'f'}
 
 
-@pytest.mark.parametrize('threshold,expected,expected_disjoint', [
-    (0, {'a', 'b', 'c', 'd', 'e', 'f'}, {'a', 'b', 'c', 'd', 'e', 'f'}),
-    (1, {'c'}, set()),
-    (0.3, {'a', 'b', 'c', 'd', 'e', 'f'}, {'a', 'b', 'c', 'd', 'e', 'f'}),
-    (0.5, {'a', 'c', 'e'}, {'a', 'c', 'e', 'f'}),
-    (0.8, {'c'}, set()),
-])
-def test_VennInteractiveCanvas_majority_vote_intersection(qtbot, three_gene_sets, three_gene_sets_with_disjoint,
-                                                          threshold, expected, expected_disjoint):
+@pytest.mark.parametrize(
+    'threshold,expected,expected_disjoint',
+    [
+        (0, {'a', 'b', 'c', 'd', 'e', 'f'}, {'a', 'b', 'c', 'd', 'e', 'f'}),
+        (1, {'c'}, set()),
+        (0.3, {'a', 'b', 'c', 'd', 'e', 'f'}, {'a', 'b', 'c', 'd', 'e', 'f'}),
+        (0.5, {'a', 'c', 'e'}, {'a', 'c', 'e', 'f'}),
+        (0.8, {'c'}, set()),
+    ],
+)
+def test_VennInteractiveCanvas_majority_vote_intersection(
+    qtbot, three_gene_sets, three_gene_sets_with_disjoint, threshold, expected, expected_disjoint
+):
     qtbot, widget = widget_setup(qtbot, VennInteractiveCanvas, three_gene_sets)
     widget.majority_vote_intersection(threshold)
     assert widget.get_custom_selection() == expected
@@ -238,10 +244,9 @@ def test_UpSetInteractiveCanvas_deselect(qtbot, three_gene_sets_with_disjoint):
     assert widget.get_custom_selection() == {'e', 'f'}
 
 
-@pytest.mark.parametrize('clicked,expected', [({5}, {'e', 'f'}),
-                                              ({0, 5}, {'b', 'e', 'f'}),
-                                              (set(), set()),
-                                              ({6}, set())])
+@pytest.mark.parametrize(
+    'clicked,expected', [({5}, {'e', 'f'}), ({0, 5}, {'b', 'e', 'f'}), (set(), set()), ({6}, set())]
+)
 def test_UpSetInteractiveCanvas_on_click(qtbot, monkeypatch, three_gene_sets_with_disjoint, clicked, expected):
     qtbot, widget = widget_setup(qtbot, UpSetInteractiveCanvas, three_gene_sets_with_disjoint)
 
@@ -260,10 +265,15 @@ def test_UpSetInteractiveCanvas_on_click(qtbot, monkeypatch, three_gene_sets_wit
     assert widget.get_custom_selection() == set()
 
 
-@pytest.mark.parametrize('clicked,expected', [({5}, {0: 0, 1: 0, 2: 0, 3: 0, 4: 0, 5: 2, 6: 0}),
-                                              ({0, 5}, {0: 2, 1: 0, 2: 0, 3: 0, 4: 0, 5: 2, 6: 0}),
-                                              (set(), {0: 0, 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0}),
-                                              ({6}, {0: 0, 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 2})])
+@pytest.mark.parametrize(
+    'clicked,expected',
+    [
+        ({5}, {0: 0, 1: 0, 2: 0, 3: 0, 4: 0, 5: 2, 6: 0}),
+        ({0, 5}, {0: 2, 1: 0, 2: 0, 3: 0, 4: 0, 5: 2, 6: 0}),
+        (set(), {0: 0, 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0}),
+        ({6}, {0: 0, 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 2}),
+    ],
+)
 def test_UpSetInteractiveCanvas_on_hover(qtbot, monkeypatch, three_gene_sets, clicked, expected):
     qtbot, widget = widget_setup(qtbot, UpSetInteractiveCanvas, three_gene_sets)
 
@@ -297,13 +307,13 @@ def test_UpSetInteractiveCanvas_intersection(qtbot, four_gene_sets, three_gene_s
     assert widget.get_custom_selection() == set()
 
 
-@pytest.mark.parametrize('primary_set,expected,expected_disjoint', [
-    ('first', {'b'}, {'b'}),
-    ('second', {'d'}, {'d'}),
-    ('third', {'g'}, set())
-])
-def test_UpSetInteractiveCanvas_difference(qtbot, four_gene_sets, three_gene_sets_with_disjoint, primary_set, expected,
-                                           expected_disjoint):
+@pytest.mark.parametrize(
+    'primary_set,expected,expected_disjoint',
+    [('first', {'b'}, {'b'}), ('second', {'d'}, {'d'}), ('third', {'g'}, set())],
+)
+def test_UpSetInteractiveCanvas_difference(
+    qtbot, four_gene_sets, three_gene_sets_with_disjoint, primary_set, expected, expected_disjoint
+):
     qtbot, widget = widget_setup(qtbot, UpSetInteractiveCanvas, four_gene_sets)
     widget.difference(primary_set)
     assert widget.get_custom_selection() == expected
@@ -312,15 +322,19 @@ def test_UpSetInteractiveCanvas_difference(qtbot, four_gene_sets, three_gene_set
     assert widget.get_custom_selection() == expected_disjoint
 
 
-@pytest.mark.parametrize('threshold,expected,expected_disjoint', [
-    (0, {'a', 'b', 'c', 'd', 'e', 'f', 'g'}, {'a', 'b', 'c', 'd', 'e', 'f'}),
-    (1, {'c'}, set()),
-    (0.3, {'a', 'c', 'e'}, {'a', 'b', 'c', 'd', 'e', 'f'}),
-    (0.55, {'a', 'c'}, {'a', 'c', 'e', 'f'}),
-    (0.8, {'c'}, set()),
-])
-def test_UpSetInteractiveCanvas_majority_vote_intersection(qtbot, four_gene_sets, three_gene_sets_with_disjoint,
-                                                           threshold, expected, expected_disjoint):
+@pytest.mark.parametrize(
+    'threshold,expected,expected_disjoint',
+    [
+        (0, {'a', 'b', 'c', 'd', 'e', 'f', 'g'}, {'a', 'b', 'c', 'd', 'e', 'f'}),
+        (1, {'c'}, set()),
+        (0.3, {'a', 'c', 'e'}, {'a', 'b', 'c', 'd', 'e', 'f'}),
+        (0.55, {'a', 'c'}, {'a', 'c', 'e', 'f'}),
+        (0.8, {'c'}, set()),
+    ],
+)
+def test_UpSetInteractiveCanvas_majority_vote_intersection(
+    qtbot, four_gene_sets, three_gene_sets_with_disjoint, threshold, expected, expected_disjoint
+):
     qtbot, widget = widget_setup(qtbot, UpSetInteractiveCanvas, four_gene_sets)
     widget.majority_vote_intersection(threshold)
     assert widget.get_custom_selection() == expected

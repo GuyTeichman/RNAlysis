@@ -1,6 +1,5 @@
 from pathlib import Path
 
-
 DOCS_DIR = Path('docs/source')
 USER_GUIDE = DOCS_DIR / 'user_guide.rst'
 GUI_GUIDE = DOCS_DIR / 'user_guide_gui.rst'

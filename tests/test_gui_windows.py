@@ -94,21 +94,24 @@ def test_HowToCiteWindow(qtbot, monkeypatch):
     assert exit_calls == [1]
 
 
-@pytest.mark.parametrize('df,shape_truth', [
-    (pl.DataFrame([[1, 2, 3], [4, 5, 6], [7, 8, 9]]), (3, 3)),
-    (pl.DataFrame([[1, 2, 3, 0], [4, 5, 6, 0]]), (3, 2)),
-    (pl.DataFrame([[1, 2, 3], [4, 5, 6], [7, 8, 9], [10, 11, 12], [13, 14, 15]]), (3, 5)),
-    (pl.DataFrame([[1, 2, 3], [4, 5, 6], [7, 8, 9], [10, 11, 12], [13, 14, 15], [16, 17, 18]]), (3, 5)),
-    (pl.DataFrame(), (0, 0))
-])
+@pytest.mark.parametrize(
+    'df,shape_truth',
+    [
+        (pl.DataFrame([[1, 2, 3], [4, 5, 6], [7, 8, 9]]), (3, 3)),
+        (pl.DataFrame([[1, 2, 3, 0], [4, 5, 6, 0]]), (3, 2)),
+        (pl.DataFrame([[1, 2, 3], [4, 5, 6], [7, 8, 9], [10, 11, 12], [13, 14, 15]]), (3, 5)),
+        (pl.DataFrame([[1, 2, 3], [4, 5, 6], [7, 8, 9], [10, 11, 12], [13, 14, 15], [16, 17, 18]]), (3, 5)),
+        (pl.DataFrame(), (0, 0)),
+    ],
+)
 def test_DataFramePreviewModel(qtbot, df, shape_truth):
     model = DataFramePreviewModel(df)
 
     assert model._dataframe.shape == shape_truth
     if shape_truth[0] > 2:
-        assert np.all(model._dataframe[-1, :].to_pandas() == "...")
+        assert np.all(model._dataframe[-1, :].to_pandas() == '...')
     if shape_truth[1] > 3:
-        assert np.all(model._dataframe[:, -1].to_pandas() == "...")
+        assert np.all(model._dataframe[:, -1].to_pandas() == '...')
 
 
 @pytest.mark.parametrize('gene_set', [{1, 2, 3}, {'a', 'b', 'c', 'd'}, set()])
@@ -119,10 +122,7 @@ def test_GeneSetView_init(qtbot, gene_set):
     assert dialog.data_view.count() == len(gene_set)
 
 
-@pytest.mark.parametrize('gene_set,truth', [
-    ({1, 2, 3}, '1\n2\n3'),
-    ({'a', 'b', 'c', 'd'}, 'a\nb\nc\nd'),
-    (set(), '')])
+@pytest.mark.parametrize('gene_set,truth', [({1, 2, 3}, '1\n2\n3'), ({'a', 'b', 'c', 'd'}, 'a\nb\nc\nd'), (set(), '')])
 def test_GeneSetView_save(qtbot, gene_set, truth, monkeypatch):
     pth = 'tests/test_files/my_gene_set_saved_file.txt'
 
@@ -142,12 +142,15 @@ def test_GeneSetView_save(qtbot, gene_set, truth, monkeypatch):
             Path(pth).unlink()
 
 
-@pytest.mark.parametrize('df,shape_truth', [
-    (pl.DataFrame([[1, 2, 3], [4, 5, 6], [7, 8, 9]]), (3, 2)),
-    (pl.DataFrame([[1, 2, 3, 0], [4, 5, 6, 0]]), (4, 1)),
-    (pl.DataFrame([[1, 2, 3], [4, 5, 6], [7, 8, 9], [10, 11, 12], [13, 14, 15]]), (3, 4)),
-    (pl.DataFrame([[], []]), (0, 1))
-])
+@pytest.mark.parametrize(
+    'df,shape_truth',
+    [
+        (pl.DataFrame([[1, 2, 3], [4, 5, 6], [7, 8, 9]]), (3, 2)),
+        (pl.DataFrame([[1, 2, 3, 0], [4, 5, 6, 0]]), (4, 1)),
+        (pl.DataFrame([[1, 2, 3], [4, 5, 6], [7, 8, 9], [10, 11, 12], [13, 14, 15]]), (3, 4)),
+        (pl.DataFrame([[], []]), (0, 1)),
+    ],
+)
 def test_DataFrameView_init(qtbot, df, shape_truth):
     qtbot, dialog = widget_setup(qtbot, DataFrameView, df, 'my df name')
     assert 'my df name' in dialog.label.text()
@@ -157,12 +160,15 @@ def test_DataFrameView_init(qtbot, df, shape_truth):
     assert dialog.data_view.model().columnCount() == shape_truth[1]
 
 
-@pytest.mark.parametrize('df,shape_truth', [
-    (pl.DataFrame([[1, 2, 3], [4, 5, 6], [7, 8, 9]], schema=['a', 'b', 'c']), (3, 3)),
-    (pl.DataFrame([[1, 2, 3, 0], [4, 5, 6, 0]], schema=['a', 'b', 'c', 'd']), (2, 4)),
-    (pl.DataFrame([[1, 2, 3], [4, 5, 6], [7, 8, 9], [10, 11, 12], [13, 14, 15]], schema=['a', 'b', 'c']), (5, 3)),
-    (pl.DataFrame([]), (0, 0))
-])
+@pytest.mark.parametrize(
+    'df,shape_truth',
+    [
+        (pl.DataFrame([[1, 2, 3], [4, 5, 6], [7, 8, 9]], schema=['a', 'b', 'c']), (3, 3)),
+        (pl.DataFrame([[1, 2, 3, 0], [4, 5, 6, 0]], schema=['a', 'b', 'c', 'd']), (2, 4)),
+        (pl.DataFrame([[1, 2, 3], [4, 5, 6], [7, 8, 9], [10, 11, 12], [13, 14, 15]], schema=['a', 'b', 'c']), (5, 3)),
+        (pl.DataFrame([]), (0, 0)),
+    ],
+)
 def test_DataFrameView_save(qtbot, monkeypatch, df, shape_truth):
     pth = 'tests/test_files/my_dataframe_saved_file.csv'
 
@@ -211,8 +217,9 @@ def test_SettingsWindow_get_defaults(qtbot, use_temp_settings_file):
     attr_truth = os.path.abspath('tests/test_files/counted.tsv')
     biotype_truth = os.path.abspath('tests/test_files/counted.csv')
 
-    settings.set_gui_settings(font_truth, int(font_size_truth), theme_truth.lower(), dbs_truth, show_tutorial_truth,
-                              auto_report_truth)
+    settings.set_gui_settings(
+        font_truth, int(font_size_truth), theme_truth.lower(), dbs_truth, show_tutorial_truth, auto_report_truth
+    )
     settings.set_table_settings(attr_truth, biotype_truth)
 
     qtbot, dialog = widget_setup(qtbot, SettingsWindow)
@@ -310,7 +317,7 @@ def test_SettingsWindow_cancel(qtbot, monkeypatch, use_temp_settings_file):
     monkeypatch.setattr(settings, 'set_gui_settings', mock_save)
     monkeypatch.setattr(settings, 'set_table_settings', mock_save)
     qtbot, dialog = widget_setup(qtbot, SettingsWindow)
-    dialog.appearance_widgets['app_font'].setCurrentText("David")
+    dialog.appearance_widgets['app_font'].setCurrentText('David')
     qtbot.mouseClick(dialog.button_box.button(QtWidgets.QDialogButtonBox.StandardButton.Cancel), LEFT_CLICK)
 
     assert len(save_done) == 0
@@ -339,7 +346,7 @@ def func_external_window(qtbot):
     def func_to_apply(x: int, y: float, z: int):
         return x + y + z
 
-    qtbot, window = widget_setup(qtbot, FuncExternalWindow, "Test Function", func_to_apply, None, set())
+    qtbot, window = widget_setup(qtbot, FuncExternalWindow, 'Test Function', func_to_apply, None, set())
     window.init_ui()
     return window
 
@@ -347,10 +354,10 @@ def func_external_window(qtbot):
 def test_import_parameters(func_external_window, tmp_path, monkeypatch):
     params = {'x': 1, 'y': 2, 'z': 3}
     data = {'args': [], 'kwargs': params, 'name': 'Test Function'}
-    filename = tmp_path / "params.yaml"
-    monkeypatch.setattr(QtWidgets.QFileDialog, "getOpenFileName", lambda *args, filter='': (filename, ""))
-    monkeypatch.setattr(QtWidgets.QFileDialog, "getSaveFileName", lambda *args, filter='': (filename, ""))
-    with open(filename, "w") as f:
+    filename = tmp_path / 'params.yaml'
+    monkeypatch.setattr(QtWidgets.QFileDialog, 'getOpenFileName', lambda *args, filter='': (filename, ''))
+    monkeypatch.setattr(QtWidgets.QFileDialog, 'getSaveFileName', lambda *args, filter='': (filename, ''))
+    with open(filename, 'w') as f:
         yaml.dump(data, f)
 
     func_external_window.import_parameters()
@@ -363,11 +370,11 @@ def test_export_parameters(func_external_window, tmp_path, monkeypatch):
     func_external_window.param_widgets['x'].setValue(1)
     func_external_window.param_widgets['y'].setValue(2)
     func_external_window.param_widgets['z'].setValue(3)
-    filename = tmp_path / "params.yaml"
-    monkeypatch.setattr(QtWidgets.QFileDialog, "getOpenFileName", lambda *args, filter='': (filename, ""))
-    monkeypatch.setattr(QtWidgets.QFileDialog, "getSaveFileName", lambda *args, filter='': (filename, ""))
+    filename = tmp_path / 'params.yaml'
+    monkeypatch.setattr(QtWidgets.QFileDialog, 'getOpenFileName', lambda *args, filter='': (filename, ''))
+    monkeypatch.setattr(QtWidgets.QFileDialog, 'getSaveFileName', lambda *args, filter='': (filename, ''))
     func_external_window.export_parameters()
-    with open(filename, "r") as f:
+    with open(filename, 'r') as f:
         exported_params = yaml.safe_load(f)
     print(exported_params)
     assert exported_params['kwargs']['x'] == 1
@@ -384,7 +391,7 @@ def test_run_function_in_main_loop(qtbot):
         assert x == 1 and y == 2 and z == 3
         done.append(True)
 
-    qtbot, window = widget_setup(qtbot, FuncExternalWindow, "Test Function", func_to_apply, None, set())
+    qtbot, window = widget_setup(qtbot, FuncExternalWindow, 'Test Function', func_to_apply, None, set())
     window.init_ui()
 
     window.param_widgets['x'].setValue(1)
@@ -395,7 +402,6 @@ def test_run_function_in_main_loop(qtbot):
 
 
 class TestStatusBar:
-
     @pytest.fixture
     def main_window(self, qtbot):
         window = QtWidgets.QMainWindow()
@@ -418,10 +424,13 @@ class TestStatusBar:
         assert not status_bar.elapsed_label.isVisible()
         assert not status_bar.remaining_label.isVisible()
 
-    @pytest.mark.parametrize("n_tasks, expected_visibility, expected_text", [
-        (0, False, None),
-        (5, True, '5 tasks running... '),
-    ])
+    @pytest.mark.parametrize(
+        'n_tasks, expected_visibility, expected_text',
+        [
+            (0, False, None),
+            (5, True, '5 tasks running... '),
+        ],
+    )
     def test_update_n_tasks(self, status_bar, n_tasks, expected_visibility, expected_text):
         """Test the update_n_tasks method."""
         status_bar.update_n_tasks(n_tasks)
@@ -431,14 +440,14 @@ class TestStatusBar:
 
     def test_update_desc(self, status_bar):
         """Test the update_desc method."""
-        desc = "Processing"
+        desc = 'Processing'
         status_bar.update_desc(desc)
         assert status_bar.desc_label.isVisible()
         assert status_bar.desc_label.text() == f'{desc}:'
 
     def test_reset_progress(self, status_bar):
         """Test the reset_progress method."""
-        status_bar.start_progress(10, "Task")
+        status_bar.start_progress(10, 'Task')
         status_bar.reset_progress()
         assert not status_bar._is_running
         assert not status_bar.n_tasks_button.isVisible()
@@ -450,7 +459,7 @@ class TestStatusBar:
     def test_start_progress(self, status_bar, qtbot):
         """Test the start_progress method."""
         total = 10
-        description = "Loading"
+        description = 'Loading'
         status_bar.start_progress(total, description)
         qtbot.wait(500)
         assert status_bar._is_running
@@ -461,18 +470,18 @@ class TestStatusBar:
         assert status_bar.progress_bar.value() == 0
         assert status_bar.desc_label.text() == f'{description}:'
 
-    @pytest.mark.parametrize("total", [0, 10, 17, 1])
+    @pytest.mark.parametrize('total', [0, 10, 17, 1])
     def test_update_bar_total(self, status_bar, total):
         """Test the update_bar_total method."""
         status_bar.update_bar_total(total)
         assert status_bar.progbar_total == total
         assert status_bar.progress_bar.maximum() == total
 
-    @pytest.mark.parametrize("completed_items", [0, 5, 10, 17])
+    @pytest.mark.parametrize('completed_items', [0, 5, 10, 17])
     def test_move_progress_bar(self, status_bar, completed_items):
         """Test the move_progress_bar method."""
         total = 20
-        status_bar.start_progress(total, "Task")
+        status_bar.start_progress(total, 'Task')
         status_bar.move_progress_bar(completed_items)
         assert status_bar.progress_bar.value() == completed_items
         assert status_bar.progbar_completed_items == completed_items
@@ -490,14 +499,14 @@ class TestStatusBar:
     def test_update_time(self, status_bar, qtbot):
         """Test the update_time method."""
         total = 10
-        status_bar.start_progress(total, "Task")
+        status_bar.start_progress(total, 'Task')
         qtbot.wait(1000)
         status_bar.move_progress_bar(2)
 
         elapsed_text = status_bar.elapsed_label.text()
         remaining_text = status_bar.remaining_label.text()
 
-        assert "elapsed" in elapsed_text
-        assert "remaining" in remaining_text
+        assert 'elapsed' in elapsed_text
+        assert 'remaining' in remaining_text
         assert status_bar.elapsed_label.isVisible()
         assert status_bar.remaining_label.isVisible()

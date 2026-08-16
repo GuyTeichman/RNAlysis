@@ -10,6 +10,7 @@ rnalysis/utils/param_typing.py), so its assembly logic is worth pinning: metadat
 file auto-generated, fetch order preserved (UniProt's gene-ID-type order is meaningful), retries,
 and the carry-over that keeps a temporarily-dead service from silently emptying a dropdown.
 """
+
 import importlib.util
 import json
 from datetime import datetime
@@ -40,9 +41,13 @@ def test_build_snapshot_marks_the_file_auto_generated():
 
 
 def test_build_snapshot_records_source_and_values_per_vocabulary():
-    entries = {'panther_taxons': gav.VocabularyEntry(source='PantherDB (https://example.org)',
-                                                     values=('Homo sapiens', 'Mus musculus'),
-                                                     generated_at='2026-01-02T03:04:05+00:00')}
+    entries = {
+        'panther_taxons': gav.VocabularyEntry(
+            source='PantherDB (https://example.org)',
+            values=('Homo sapiens', 'Mus musculus'),
+            generated_at='2026-01-02T03:04:05+00:00',
+        )
+    }
     payload = gav.build_snapshot(entries, version='9.9.9', generated_at='2026-01-02T03:04:05+00:00')
 
     vocab = payload['vocabularies']['panther_taxons']
@@ -55,8 +60,11 @@ def test_build_snapshot_preserves_fetch_order():
     # UniProt returns gene-ID types in a deliberate priority order (io.get_legal_gene_id_types'
     # GROUP_PRIORITIZATION) that drives the order of the GUI dropdown -- never re-sort it.
     values = ('UniProtKB AC/ID', 'UniParc', 'Ensembl', 'ArrayExpress')
-    entries = {'gene_id_types': gav.VocabularyEntry(source='UniProtKB', values=values,
-                                                    generated_at='2026-01-02T03:04:05+00:00')}
+    entries = {
+        'gene_id_types': gav.VocabularyEntry(
+            source='UniProtKB', values=values, generated_at='2026-01-02T03:04:05+00:00'
+        )
+    }
     payload = gav.build_snapshot(entries, version='9.9.9', generated_at='2026-01-02T03:04:05+00:00')
 
     assert payload['vocabularies']['gene_id_types']['values'] == list(values)
@@ -99,9 +107,11 @@ def test_collect_vocabularies_reports_a_service_that_stays_down():
 
 
 def test_collect_vocabularies_keeps_going_after_one_service_fails():
-    specs = {'gene_id_types': gav.VocabularySpec(source='A', fetch=lambda: ('a',)),
-             'panther_taxons': gav.VocabularySpec(source='B', fetch=_raise_connection_error),
-             'ensembl_taxons': gav.VocabularySpec(source='C', fetch=lambda: ('c',))}
+    specs = {
+        'gene_id_types': gav.VocabularySpec(source='A', fetch=lambda: ('a',)),
+        'panther_taxons': gav.VocabularySpec(source='B', fetch=_raise_connection_error),
+        'ensembl_taxons': gav.VocabularySpec(source='C', fetch=lambda: ('c',)),
+    }
 
     entries, failures = gav.collect_vocabularies(specs, retries=1, retry_delay=0)
 
@@ -126,10 +136,20 @@ def test_collect_vocabularies_warns_about_an_empty_but_successful_fetch(capsys):
 def test_carry_over_previous_keeps_values_of_a_dead_service():
     # A service being down at release time must not silently ship an empty dropdown -- keep the
     # previous release's values and mark them stale, so the maintainer sees what happened.
-    previous = {'vocabularies': {'panther_taxons': {'source': 'PantherDB', 'values': ['Homo sapiens'],
-                                                    'generated_at': '2025-01-01T00:00:00+00:00'}}}
-    entries = {'gene_id_types': gav.VocabularyEntry(source='UniProtKB', values=('a',),
-                                                    generated_at='2026-01-02T03:04:05+00:00')}
+    previous = {
+        'vocabularies': {
+            'panther_taxons': {
+                'source': 'PantherDB',
+                'values': ['Homo sapiens'],
+                'generated_at': '2025-01-01T00:00:00+00:00',
+            }
+        }
+    }
+    entries = {
+        'gene_id_types': gav.VocabularyEntry(
+            source='UniProtKB', values=('a',), generated_at='2026-01-02T03:04:05+00:00'
+        )
+    }
 
     merged, carried = gav.carry_over_previous(entries, previous, ['panther_taxons'])
 
@@ -148,8 +168,11 @@ def test_carry_over_previous_ignores_a_vocabulary_missing_from_the_previous_file
 
 
 def test_build_snapshot_flags_a_stale_entry():
-    entries = {'panther_taxons': gav.VocabularyEntry(source='PantherDB', values=('Homo sapiens',),
-                                                     generated_at='2025-01-01T00:00:00+00:00', stale=True)}
+    entries = {
+        'panther_taxons': gav.VocabularyEntry(
+            source='PantherDB', values=('Homo sapiens',), generated_at='2025-01-01T00:00:00+00:00', stale=True
+        )
+    }
     payload = gav.build_snapshot(entries, version='9.9.9', generated_at='2026-01-02T03:04:05+00:00')
 
     assert payload['vocabularies']['panther_taxons']['stale'] is True
@@ -158,8 +181,11 @@ def test_build_snapshot_flags_a_stale_entry():
 def test_write_snapshot_round_trips_non_ascii_values(tmp_path):
     # Species names carry non-ASCII characters; the file is written and read as UTF-8 everywhere
     # (Windows' default cp1252 would mangle them).
-    entries = {'phylomedb_taxons': gav.VocabularyEntry(source='PhylomeDB', values=('Ceratitis capitata "Bréal"',),
-                                                       generated_at='2026-01-02T03:04:05+00:00')}
+    entries = {
+        'phylomedb_taxons': gav.VocabularyEntry(
+            source='PhylomeDB', values=('Ceratitis capitata "Bréal"',), generated_at='2026-01-02T03:04:05+00:00'
+        )
+    }
     payload = gav.build_snapshot(entries, version='9.9.9', generated_at='2026-01-02T03:04:05+00:00')
     out_path = tmp_path / 'api_vocabularies.json'
 
@@ -185,8 +211,10 @@ def test_default_specs_cover_every_getter_in_param_typing():
 
 def test_main_writes_a_snapshot_and_reports_failures(tmp_path, monkeypatch, capsys):
     out_path = tmp_path / 'api_vocabularies.json'
-    specs = {'gene_id_types': gav.VocabularySpec(source='A', fetch=lambda: ('a',)),
-             'panther_taxons': gav.VocabularySpec(source='B', fetch=_raise_connection_error)}
+    specs = {
+        'gene_id_types': gav.VocabularySpec(source='A', fetch=lambda: ('a',)),
+        'panther_taxons': gav.VocabularySpec(source='B', fetch=_raise_connection_error),
+    }
     monkeypatch.setattr(gav, 'default_specs', lambda: specs)
 
     exit_code = gav.main(['--out', str(out_path), '--retries', '1', '--retry-delay', '0'])

@@ -1,0 +1,40 @@
+name: Pre-commit
+
+# Runs the hooks defined in .pre-commit-config.yaml (Ruff format + import sort, end-of-file
+# fixer, trailing whitespace, LF line-ending enforcement, YAML/TOML checks, merge-conflict
+# markers, large-file check -- see that file for the authoritative, up-to-date hook list) against
+# only the files a PR actually touches -- NOT the whole repository. The tree has not had its
+# one-time reformat sweep yet (see the comments atop .pre-commit-config.yaml / ruff.toml), so a
+# `--all-files` gate would fail on every PR until that sweep lands. `--from-ref`/`--to-ref` scopes
+# the run to the PR's diff, matching what `pre-commit install` already does locally on
+# `git commit` (hooks run only on the files that commit touches).
+on:
+    pull_request:
+
+permissions:
+    contents: read
+
+jobs:
+    pre-commit:
+        runs-on: ubuntu-latest
+        steps:
+            -   name: Get repository
+                uses: actions/checkout@v7
+                with:
+                    # Full history is needed so both the PR's base and head commits are present
+                    # locally for the --from-ref/--to-ref diff below.
+                    fetch-depth: 0
+                    # docs/build/ is ~600 MB of committed, generated Sphinx output that no hook
+                    # needs to see; excluding it from the sparse checkout speeds this up.
+                    sparse-checkout: |
+                        /*
+                        !/docs/build
+                    sparse-checkout-cone-mode: false
+            -   name: Set up Python
+                uses: actions/setup-python@v7
+                with:
+                    python-version: '3.13'
+            -   name: Run pre-commit on the PR's changed files
+                uses: pre-commit/action@v3.0.1
+                with:
+                    extra_args: --from-ref ${{ github.event.pull_request.base.sha }} --to-ref ${{ github.event.pull_request.head.sha }}

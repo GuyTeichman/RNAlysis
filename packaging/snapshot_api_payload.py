@@ -43,6 +43,7 @@ Notes
   capture an error payload (e.g. PANTHER's empty-200 quirk, or a 404 body), that's a case this
   script does not special-case; inspect the response and adapt as needed.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -81,10 +82,10 @@ def parse_key_value_pairs(pairs: Sequence[str], flag_name: str) -> Dict[str, str
     result: Dict[str, str] = {}
     for pair in pairs:
         if '=' not in pair:
-            raise ValueError(f"{flag_name} value {pair!r} is not in key=value form")
+            raise ValueError(f'{flag_name} value {pair!r} is not in key=value form')
         key, _, value = pair.partition('=')
         if not key:
-            raise ValueError(f"{flag_name} value {pair!r} has an empty key")
+            raise ValueError(f'{flag_name} value {pair!r} has an empty key')
         result[key] = value
     return result
 
@@ -103,7 +104,7 @@ def parse_headers(pairs: Sequence[str]) -> Dict[str, str]:
         key = key.strip()
         value = value.strip()
         if not key:
-            raise ValueError(f"--header value {pair!r} has an empty key")
+            raise ValueError(f'--header value {pair!r} has an empty key')
         result[key] = value
     return result
 
@@ -132,8 +133,9 @@ def derive_filename(url: str, content_type: Optional[str] = None) -> str:
     return f'{stem}{guess_extension(content_type)}'
 
 
-def resolve_output_path(url: str, out: Optional[str], content_type: Optional[str] = None,
-                         default_dir: Path = DEFAULT_OUTPUT_DIR) -> Path:
+def resolve_output_path(
+    url: str, out: Optional[str], content_type: Optional[str] = None, default_dir: Path = DEFAULT_OUTPUT_DIR
+) -> Path:
     """Decide where the payload should be written.
 
     - ``out`` is ``None``: ``<default_dir>/<filename derived from the URL>``.
@@ -167,20 +169,29 @@ def fetch(url: str, params: Dict[str, str], headers: Dict[str, str], timeout: fl
 def build_arg_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         description='Fetch a URL and save its raw response body to disk as a test fixture '
-                     '(e.g. to mock an external web API in a test without hitting the live service).',
+        '(e.g. to mock an external web API in a test without hitting the live service).',
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
     parser.add_argument('url', help='URL to GET, e.g. https://rest.uniprot.org/idmapping/status/abc123')
-    parser.add_argument('--param', action='append', default=[], metavar='KEY=VALUE',
-                         help='query parameter to add to the request; may be repeated')
-    parser.add_argument('--header', action='append', default=[], metavar='"Key: value"',
-                         help='HTTP header to send; may be repeated')
-    parser.add_argument('--out', default=None, metavar='PATH',
-                         help='output file path. A bare filename (no directory) lands under '
-                              'tests/test_files/; a path with a directory is used as-is. '
-                              'Default: a filename derived from the URL.')
-    parser.add_argument('--timeout', type=float, default=30.0,
-                         help='request timeout in seconds (default: 30)')
+    parser.add_argument(
+        '--param',
+        action='append',
+        default=[],
+        metavar='KEY=VALUE',
+        help='query parameter to add to the request; may be repeated',
+    )
+    parser.add_argument(
+        '--header', action='append', default=[], metavar='"Key: value"', help='HTTP header to send; may be repeated'
+    )
+    parser.add_argument(
+        '--out',
+        default=None,
+        metavar='PATH',
+        help='output file path. A bare filename (no directory) lands under '
+        'tests/test_files/; a path with a directory is used as-is. '
+        'Default: a filename derived from the URL.',
+    )
+    parser.add_argument('--timeout', type=float, default=30.0, help='request timeout in seconds (default: 30)')
     return parser
 
 
@@ -205,8 +216,10 @@ def main(argv=None) -> int:
     write_payload(out_path, response.content)
 
     print(f'[ok] {args.url} -> {out_path} ({len(response.content)} bytes, status {response.status_code})')
-    print('Remember: commit this fixture and mock the request against it (e.g. requests_mock) -- '
-          'do not let a test depend on the live service.')
+    print(
+        'Remember: commit this fixture and mock the request against it (e.g. requests_mock) -- '
+        'do not let a test depend on the live service.'
+    )
     return 0
 
 

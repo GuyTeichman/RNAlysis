@@ -13,8 +13,13 @@ def test_get_stylesheet_names(monkeypatch):
     assert gui_style.get_stylesheet_names() == truth
 
 
-@pytest.mark.parametrize('fontsize,fontname,truth', [
-    (18, 'Arial', """QWidget {
+@pytest.mark.parametrize(
+    'fontsize,fontname,truth',
+    [
+        (
+            18,
+            'Arial',
+            """QWidget {
 font: Arial;
 font-size: 18pt;
 }
@@ -27,8 +32,12 @@ font-size: 36pt;
 QToolButton {
 font: bold;
 font-size: 27pt;
-}"""),
-    (7, 'Times New Roman', """QWidget {
+}""",
+        ),
+        (
+            7,
+            'Times New Roman',
+            """QWidget {
 font: Times New Roman;
 font-size: 7pt;
 }
@@ -41,8 +50,12 @@ font-size: 14pt;
 QToolButton {
 font: bold;
 font-size: 10pt;
-}"""),
-    (50, 'David', """QWidget {
+}""",
+        ),
+        (
+            50,
+            'David',
+            """QWidget {
 font: David;
 font-size: 50pt;
 }
@@ -55,8 +68,10 @@ font-size: 100pt;
 QToolButton {
 font: bold;
 font-size: 75pt;
-}""")
-])
+}""",
+        ),
+    ],
+)
 def test_get_parametric_stylesheet(monkeypatch, fontsize, fontname, truth):
     param_stylesheet = """QWidget {
 font: $FONTPLACEHOLDER;
@@ -95,10 +110,11 @@ font-size: $FONTSIZEPLACEHOLDER*1.5;
 
 
 def test_get_stylesheet(monkeypatch):
-    param_stylesheet = "1\n2\n3\n\n"
+    param_stylesheet = '1\n2\n3\n\n'
     monkeypatch.setattr(gui_style, 'get_parametric_stylesheet', lambda size, name: param_stylesheet)
-    monkeypatch.setattr(settings, 'get_gui_settings',
-                        lambda: ('Arial', 18, 'light', ['UniProtKB', 'PomBase'], True, None))
+    monkeypatch.setattr(
+        settings, 'get_gui_settings', lambda: ('Arial', 18, 'light', ['UniProtKB', 'PomBase'], True, None)
+    )
 
     stylesheet = gui_style.get_stylesheet()
 
