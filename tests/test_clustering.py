@@ -344,6 +344,40 @@ def test_clustering_transform_cache_separates_power_transform(monkeypatch, basic
     assert counter['n'] == 1
 
 
+@pytest.mark.parametrize(
+    'power_transform,truth_transform',
+    [
+        # the legacy transforms keep drawing their cluster-expression plot from plainly-standardized data: the
+        # condition at the CLICOM plot site has always evaluated to False (it tests a callable against True), and
+        # rule 5 protects that output. See the NOTE in CLICOMRunner._run.
+        ('box-cox', generic.standardize),
+        (True, generic.standardize),
+        ('none', generic.standardize),
+        (False, generic.standardize),
+        # 'log' is new in 4.3.0, has no legacy plot output to preserve, and is the transform the Box-Cox
+        # instability error tells blocked users to switch to -- so its plot must show log-transformed values.
+        ('log', generic.standard_log),
+    ],
+)
+def test_clicom_data_for_plot_matches_the_chosen_transform(power_transform, truth_transform):
+    np.random.seed(42)
+    df = pl.DataFrame(np.random.random((40, 6)), schema=[f'sample{i}' for i in range(6)])
+    runner = CLICOMRunner(
+        df,
+        [list(df.columns)],
+        power_transform,
+        1 / 3,
+        False,
+        1,
+        dict(method='kmeans', n_clusters=[2, 3], n_init=1),
+        plot_style='none',
+        parallel_backend='sequential',
+    )
+    runner._run(plot=False)
+    assert runner.data_for_plot is not None
+    assert runner.data_for_plot.equals(truth_transform(df))
+
+
 def test_clicom_run_memoizes_transform_across_setups(monkeypatch):
     np.random.seed(42)
     df = pl.DataFrame(np.random.random((40, 6)), schema=[f'sample{i}' for i in range(6)])

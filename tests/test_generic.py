@@ -28,6 +28,21 @@ def test_standardize():
     assert np.isclose(res.std(axis=0), 1).all()
 
 
+def test_standardize_dataframe_with_a_gene_id_column():
+    # get_transform_function hands 'box-cox', 'log' and 'none' out as interchangeable, and every RNAlysis table
+    # carries a non-numeric gene-ID column -- so 'none' has to survive the same input the other two already handle.
+    # standardize() used to label its result frame with *all* the column names while holding only the numeric ones.
+    array = np.array([[10.0, 3.0], [50.0, 90.0], [200.0, 40.0], [1000.0, 7.0]])
+    data_df = pl.DataFrame([f'gene{i}' for i in range(4)]).with_columns(pl.DataFrame(array, schema=['cond1', 'cond2']))
+
+    res_df = standardize(data_df)
+
+    assert isinstance(res_df, pl.DataFrame)
+    assert res_df.columns == data_df.columns
+    assert np.all(res_df.select(pl.first()) == data_df.select(pl.first()))
+    assert np.array_equal(res_df.select(cs.numeric()).to_numpy(), StandardScaler().fit_transform(array))
+
+
 def test_standard_box_cox():
     np.random.seed(42)
     data = np.random.randint(-200, 100000, (100, 5))
@@ -148,7 +163,9 @@ def test_standard_box_cox_raises_on_absurdly_large_output(monkeypatch):
     monkeypatch.setattr(generic, '_box_cox_fit_transform', fake_box_cox)
     with pytest.raises(InvalidValueError) as err:
         standard_box_cox(array, feature_names=['good1', 'GFP', 'good2'])
-    assert 'GFP' in str(err.value)
+    msg = str(err.value)
+    assert 'GFP' in msg
+    assert 'good1' not in msg and 'good2' not in msg  # only the offending gene is named
 
 
 def test_standard_box_cox_well_behaved_data_is_unaffected():
@@ -171,6 +188,14 @@ def test_standard_box_cox_well_behaved_data_is_unaffected():
     ],
 )
 def test_parse_power_transform(value, truth):
+    assert parse_power_transform(value) == truth
+
+
+@pytest.mark.parametrize('value,truth', [(np.True_, 'box-cox'), (np.False_, 'none')])
+def test_parse_power_transform_accepts_numpy_booleans(value, truth):
+    # `isinstance(np.True_, bool)` is False on numpy >= 2, but the pre-4.3 code was a plain truthiness test, so a
+    # numpy boolean (which is what a comparison over a numpy/polars column yields) used to work. The promise that
+    # True/False stay valid indefinitely has to keep covering the numpy flavour too.
     assert parse_power_transform(value) == truth
 
 

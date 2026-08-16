@@ -377,7 +377,9 @@ def parse_power_transform(power_transform: Union[bool, str]) -> str:
     :return: the normalized transform name.
     :rtype: str
     """
-    if isinstance(power_transform, bool):
+    # np.bool_ stopped being a bool in numpy 2, but the pre-4.3 code was a truthiness test and so accepted it:
+    # "True/False stay valid indefinitely" has to keep covering the numpy flavour too.
+    if isinstance(power_transform, (bool, np.bool_)):
         return 'box-cox' if power_transform else 'none'
     if isinstance(power_transform, str) and power_transform.lower() in POWER_TRANSFORMS:
         return power_transform.lower()
@@ -475,7 +477,11 @@ def standardize(data: Union[np.ndarray, pl.DataFrame]) -> Union[np.ndarray, pl.D
         array = data
     res_array = _sklearn.preprocessing.StandardScaler().fit_transform(array)
     if isinstance(data, pl.DataFrame):
-        return data.select(~cs.numeric()).with_columns(pl.DataFrame(res_array, schema=data.columns))
+        # only the numeric columns were transformed, so only their names may label the result -- passing every
+        # column name (the gene-ID one included) raised a shape mismatch on any real RNAlysis table
+        return data.select(~cs.numeric()).with_columns(
+            pl.DataFrame(res_array, schema=data.select(cs.numeric()).columns)
+        )
     return res_array
 
 

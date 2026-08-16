@@ -1432,12 +1432,27 @@ class CLICOMRunner(ClusteringRunner):
         n_clusters = clusterer.n_clusters_
         if n_clusters != 0:
             # get cluster centers
-            # generate standardized data for plots
-            self.data_for_plot = (
-                generic.standard_box_cox(self.data)
-                if True in parsing.data_to_set(self.transform)
-                else generic.standardize(self.data)
-            )
+            # generate standardized data for plots.
+            #
+            # NOTE: the `True in parsing.data_to_set(self.transform)` condition below has *always* been False --
+            # `self.transform` is a callable, never a boolean -- so a CLICOM run's cluster-expression plot has
+            # always been drawn from plainly-standardized data, whatever power transform was requested. That is
+            # preserved deliberately: rule 5 (a given analysis must keep reproducing between versions) covers this
+            # plot for the transforms that already existed ('box-cox'/True and 'none'/False), so "fixing" the
+            # condition would silently change figures that users have already published. Leave it as it is.
+            #
+            # 'log' is new in 4.3.0 and therefore has no legacy plot output to preserve -- and it is the very
+            # transform the Box-Cox instability error tells blocked users to switch to, so its plot must show the
+            # values the user actually asked for. It is routed through the real transform below.
+            # Either way this is plot-only (data_for_plot -> centers -> plot_clustering); no returned table changes.
+            if self.transform_method == 'log':
+                self.data_for_plot = generic.get_transform_function(self.transform_method)(self.data)
+            else:
+                self.data_for_plot = (
+                    generic.standard_box_cox(self.data)
+                    if True in parsing.data_to_set(self.transform)
+                    else generic.standardize(self.data)
+                )
             data_np = self.data_for_plot.to_numpy()
             centers = np.array([data_np[clusterer.labels_ == i, :].T.mean(axis=1) for i in range(n_clusters)])
             # plot results
