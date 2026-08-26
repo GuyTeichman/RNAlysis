@@ -24,13 +24,15 @@ from PyQt6 import QtCore, QtGui, QtWidgets
 
 from rnalysis import __version__, enrichment, fastq, filtering
 from rnalysis.exceptions import InternalError, InvalidValueError
-from rnalysis.gui import (gui_graphics, gui_quickstart, gui_style, gui_widgets,
-                          gui_windows)
-from rnalysis.utils import (clustering, generic, io, parsing, settings,
-                            validation)
+from rnalysis.gui import gui_graphics, gui_quickstart, gui_style, gui_widgets, gui_windows
+from rnalysis.utils import clustering, generic, io, parsing, settings, validation
 
-FILTER_OBJ_TYPES = {'Count matrix': filtering.CountFilter, 'Differential expression': filtering.DESeqFilter,
-                    'Fold change': filtering.FoldChangeFilter, 'Other table': filtering.Filter}
+FILTER_OBJ_TYPES = {
+    'Count matrix': filtering.CountFilter,
+    'Differential expression': filtering.DESeqFilter,
+    'Fold change': filtering.FoldChangeFilter,
+    'Other table': filtering.Filter,
+}
 FILTER_OBJ_TYPES_INV = {val.__name__: key for key, val in FILTER_OBJ_TYPES.items()}
 INIT_EXCLUDED_PARAMS = {'self', 'fname', 'suppress_warnings'}
 
@@ -51,7 +53,7 @@ class BarPlotWindow(gui_windows.FuncExternalWindow):
 
     def __init__(self, parent=None):
         func = enrichment.enrichment_bar_plot
-        help_link = f"https://guyteichman.github.io/RNAlysis/build/rnalysis.enrichment.{func.__name__}.html"
+        help_link = f'https://guyteichman.github.io/RNAlysis/build/rnalysis.enrichment.{func.__name__}.html'
         super().__init__('Enrichment bar-plot', func, help_link, self.EXCLUDED_PARAMS, threaded=False, parent=parent)
         self.init_ui()
         self.setWindowTitle('Create enrichment bar-plot')
@@ -63,7 +65,7 @@ class OntologyGraphWindow(gui_windows.FuncExternalWindow):
 
     def __init__(self, parent=None):
         func = enrichment.gene_ontology_graph
-        help_link = f"https://guyteichman.github.io/RNAlysis/build/rnalysis.fastq.{func.__name__}.html"
+        help_link = f'https://guyteichman.github.io/RNAlysis/build/rnalysis.fastq.{func.__name__}.html'
         super().__init__('Gene Ontology graph', func, help_link, self.EXCLUDED_PARAMS, threaded=False, parent=parent)
         self.init_ui()
         self.setWindowTitle('Plot Gene Ontology Graph')
@@ -75,7 +77,7 @@ class PathwayGraphWindow(gui_windows.FuncExternalWindow):
 
     def __init__(self, parent=None):
         func = enrichment.kegg_pathway_graph
-        help_link = f"https://guyteichman.github.io/RNAlysis/build/rnalysis.fastq.{func.__name__}.html"
+        help_link = f'https://guyteichman.github.io/RNAlysis/build/rnalysis.fastq.{func.__name__}.html'
         super().__init__('KEGG Pathway graph', func, help_link, self.EXCLUDED_PARAMS, threaded=False, parent=parent)
         self.init_ui()
         self.setWindowTitle('Plot KEGG Pathway Graph')
@@ -87,7 +89,7 @@ class FeatureCountsSingleWindow(gui_windows.FuncExternalWindow):
 
     def __init__(self, parent=None):
         func = fastq.featurecounts_single_end
-        help_link = f"https://guyteichman.github.io/RNAlysis/build/rnalysis.fastq.{func.__name__}.html"
+        help_link = f'https://guyteichman.github.io/RNAlysis/build/rnalysis.fastq.{func.__name__}.html'
         super().__init__(func.readable_name, func, help_link, self.EXCLUDED_PARAMS, parent=parent)
         self.init_ui()
         self.setWindowTitle('featureCounts single-end counting setup')
@@ -99,7 +101,7 @@ class SamToFastqSingleWindow(gui_windows.FuncExternalWindow):
 
     def __init__(self, parent=None):
         func = fastq.sam_to_fastq_single
-        help_link = f"https://guyteichman.github.io/RNAlysis/build/rnalysis.fastq.{func.__name__}.html"
+        help_link = f'https://guyteichman.github.io/RNAlysis/build/rnalysis.fastq.{func.__name__}.html'
         super().__init__(func.readable_name, func, help_link, self.EXCLUDED_PARAMS, parent=parent)
         self.init_ui()
         self.setWindowTitle('Convert SAM/BAM to FASTQ (single-end)')
@@ -111,7 +113,7 @@ class SamToFastqPairedWindow(gui_windows.FuncExternalWindow):
 
     def __init__(self, parent=None):
         func = fastq.sam_to_fastq_paired
-        help_link = f"https://guyteichman.github.io/RNAlysis/build/rnalysis.fastq.{func.__name__}.html"
+        help_link = f'https://guyteichman.github.io/RNAlysis/build/rnalysis.fastq.{func.__name__}.html'
         super().__init__(func.readable_name, func, help_link, self.EXCLUDED_PARAMS, parent=parent)
         self.init_ui()
         self.setWindowTitle('Convert SAM/BAM to FASTQ (paired-end)')
@@ -123,7 +125,7 @@ class FastqToSamSingleWindow(gui_windows.FuncExternalWindow):
 
     def __init__(self, parent=None):
         func = fastq.fastq_to_sam_single
-        help_link = f"https://guyteichman.github.io/RNAlysis/build/rnalysis.fastq.{func.__name__}.html"
+        help_link = f'https://guyteichman.github.io/RNAlysis/build/rnalysis.fastq.{func.__name__}.html'
 
         super().__init__(func.readable_name, func, help_link, self.EXCLUDED_PARAMS, parent=parent)
         self.init_ui()
@@ -135,7 +137,7 @@ class FastqToSamPairedWindow(gui_windows.PairedFuncExternalWindow):
 
     def __init__(self, parent=None):
         func = fastq.fastq_to_sam_paired
-        help_link = f"https://guyteichman.github.io/RNAlysis/build/rnalysis.fastq.{func.__name__}.html"
+        help_link = f'https://guyteichman.github.io/RNAlysis/build/rnalysis.fastq.{func.__name__}.html'
 
         super().__init__(func.readable_name, func, help_link, self.EXCLUDED_PARAMS, parent=parent)
         self.init_ui()
@@ -148,7 +150,7 @@ class ConvertSamFormatWindow(gui_windows.FuncExternalWindow):
 
     def __init__(self, parent=None):
         func = fastq.convert_sam_format
-        help_link = f"https://guyteichman.github.io/RNAlysis/build/rnalysis.fastq.{func.__name__}.html"
+        help_link = f'https://guyteichman.github.io/RNAlysis/build/rnalysis.fastq.{func.__name__}.html'
         super().__init__(func.readable_name, func, help_link, self.EXCLUDED_PARAMS, parent=parent)
         self.init_ui()
         self.setWindowTitle('Convert SAM/BAM format')
@@ -160,7 +162,7 @@ class BamIndexWindow(gui_windows.FuncExternalWindow):
 
     def __init__(self, parent=None):
         func = fastq.create_bam_index
-        help_link = f"https://guyteichman.github.io/RNAlysis/build/rnalysis.fastq.{func.__name__}.html"
+        help_link = f'https://guyteichman.github.io/RNAlysis/build/rnalysis.fastq.{func.__name__}.html'
 
         super().__init__('Create BAM index', func, help_link, self.EXCLUDED_PARAMS, parent=parent)
         self.init_ui()
@@ -173,7 +175,7 @@ class ValidateSamWindow(gui_windows.FuncExternalWindow):
 
     def __init__(self, parent=None):
         func = fastq.validate_sam
-        help_link = f"https://guyteichman.github.io/RNAlysis/build/rnalysis.fastq.{func.__name__}.html"
+        help_link = f'https://guyteichman.github.io/RNAlysis/build/rnalysis.fastq.{func.__name__}.html'
 
         super().__init__('Validate SAM/BAM file', func, help_link, self.EXCLUDED_PARAMS, parent=parent)
         self.init_ui()
@@ -186,7 +188,7 @@ class SortSamWindow(gui_windows.FuncExternalWindow):
 
     def __init__(self, parent=None):
         func = fastq.sort_sam
-        help_link = f"https://guyteichman.github.io/RNAlysis/build/rnalysis.fastq.{func.__name__}.html"
+        help_link = f'https://guyteichman.github.io/RNAlysis/build/rnalysis.fastq.{func.__name__}.html'
 
         super().__init__('Sort SAM/BAM file', func, help_link, self.EXCLUDED_PARAMS, parent=parent)
         self.init_ui()
@@ -199,7 +201,7 @@ class FindDuplicatesWindow(gui_windows.FuncExternalWindow):
 
     def __init__(self, parent=None):
         func = fastq.find_duplicates
-        help_link = f"https://guyteichman.github.io/RNAlysis/build/rnalysis.fastq.{func.__name__}.html"
+        help_link = f'https://guyteichman.github.io/RNAlysis/build/rnalysis.fastq.{func.__name__}.html'
 
         super().__init__('Find duplicate reads', func, help_link, self.EXCLUDED_PARAMS, parent=parent)
         self.init_ui()
@@ -212,7 +214,7 @@ class FeatureCountsPairedWindow(gui_windows.FuncExternalWindow):
 
     def __init__(self, parent=None):
         func = fastq.featurecounts_paired_end
-        help_link = f"https://guyteichman.github.io/RNAlysis/build/rnalysis.fastq.{func.__name__}.html"
+        help_link = f'https://guyteichman.github.io/RNAlysis/build/rnalysis.fastq.{func.__name__}.html'
         super().__init__(func.readable_name, func, help_link, self.EXCLUDED_PARAMS, parent=parent)
         self.init_ui()
         self.setWindowTitle('featureCounts paired-end counting setup')
@@ -224,7 +226,7 @@ class Bowtie2IndexWindow(gui_windows.FuncExternalWindow):
 
     def __init__(self, parent=None):
         func = fastq.bowtie2_create_index
-        help_link = f"https://guyteichman.github.io/RNAlysis/build/rnalysis.fastq.{func.__name__}.html"
+        help_link = f'https://guyteichman.github.io/RNAlysis/build/rnalysis.fastq.{func.__name__}.html'
         super().__init__(func.readable_name, func, help_link, self.EXCLUDED_PARAMS, parent=parent)
         self.init_ui()
         self.setWindowTitle('Bowtie2 - build genome index')
@@ -236,7 +238,7 @@ class Bowtie2SingleWindow(gui_windows.FuncExternalWindow):
 
     def __init__(self, parent=None):
         func = fastq.bowtie2_align_single_end
-        help_link = f"https://guyteichman.github.io/RNAlysis/build/rnalysis.fastq.{func.__name__}.html"
+        help_link = f'https://guyteichman.github.io/RNAlysis/build/rnalysis.fastq.{func.__name__}.html'
         super().__init__(func.readable_name, func, help_link, self.EXCLUDED_PARAMS, parent=parent)
         self.init_ui()
         self.setWindowTitle('Bowtie2 single-end alignment setup')
@@ -247,7 +249,7 @@ class Bowtie2PairedWindow(gui_windows.PairedFuncExternalWindow):
 
     def __init__(self, parent=None):
         func = fastq.bowtie2_align_paired_end
-        help_link = f"https://guyteichman.github.io/RNAlysis/build/rnalysis.fastq.{func.__name__}.html"
+        help_link = f'https://guyteichman.github.io/RNAlysis/build/rnalysis.fastq.{func.__name__}.html'
         super().__init__(func.readable_name, func, help_link, self.EXCLUDED_PARAMS, parent)
         self.init_ui()
         self.setWindowTitle('Bowtie2 paired-end alignment setup')
@@ -259,7 +261,7 @@ class ShortStackWindow(gui_windows.FuncExternalWindow):
 
     def __init__(self, parent=None):
         func = fastq.shortstack_align_smallrna
-        help_link = f"https://guyteichman.github.io/RNAlysis/build/rnalysis.fastq.{func.__name__}.html"
+        help_link = f'https://guyteichman.github.io/RNAlysis/build/rnalysis.fastq.{func.__name__}.html'
         super().__init__(func.readable_name, func, help_link, self.EXCLUDED_PARAMS, parent=parent)
         self.init_ui()
         self.setWindowTitle('ShortStack small RNA alignment setup')
@@ -272,7 +274,7 @@ class KallistoIndexWindow(gui_windows.FuncExternalWindow):
 
     def __init__(self, parent=None):
         func = fastq.kallisto_create_index
-        help_link = f"https://guyteichman.github.io/RNAlysis/build/rnalysis.fastq.{func.__name__}.html"
+        help_link = f'https://guyteichman.github.io/RNAlysis/build/rnalysis.fastq.{func.__name__}.html'
         super().__init__(func.readable_name, func, help_link, self.EXCLUDED_PARAMS, parent=parent)
         self.init_ui()
         self.setWindowTitle('Kallisto - build transcriptome index')
@@ -284,7 +286,7 @@ class KallistoSingleWindow(gui_windows.FuncExternalWindow):
 
     def __init__(self, parent=None):
         func = fastq.kallisto_quantify_single_end
-        help_link = f"https://guyteichman.github.io/RNAlysis/build/rnalysis.fastq.{func.__name__}.html"
+        help_link = f'https://guyteichman.github.io/RNAlysis/build/rnalysis.fastq.{func.__name__}.html'
         super().__init__(func.readable_name, func, help_link, self.EXCLUDED_PARAMS, parent=parent)
         self.init_ui()
         self.setWindowTitle('Kallisto single-end quantification setup')
@@ -296,10 +298,9 @@ class KallistoPairedWindow(gui_windows.PairedFuncExternalWindow):
 
     def __init__(self, parent=None):
         func = fastq.kallisto_quantify_paired_end
-        help_link = f"https://guyteichman.github.io/RNAlysis/build/rnalysis.fastq.{func.__name__}.html"
+        help_link = f'https://guyteichman.github.io/RNAlysis/build/rnalysis.fastq.{func.__name__}.html'
 
-        super().__init__(func.readable_name, func, help_link, self.EXCLUDED_PARAMS,
-                         parent)
+        super().__init__(func.readable_name, func, help_link, self.EXCLUDED_PARAMS, parent)
         self.init_ui()
         self.setWindowTitle('Kallisto paired-end quantification setup')
 
@@ -310,7 +311,7 @@ class CutAdaptSingleWindow(gui_windows.FuncExternalWindow):
 
     def __init__(self, parent=None):
         func = fastq.trim_adapters_single_end
-        help_link = f"https://guyteichman.github.io/RNAlysis/build/rnalysis.fastq.{func.__name__}.html"
+        help_link = f'https://guyteichman.github.io/RNAlysis/build/rnalysis.fastq.{func.__name__}.html'
         super().__init__(func.readable_name, func, help_link, self.EXCLUDED_PARAMS, parent=parent)
         self.init_ui()
         self.setWindowTitle('CutAdapt single-end adapter trimming setup')
@@ -324,27 +325,37 @@ class CutAdaptPairedWindow(gui_windows.PairedFuncExternalWindow):
 
     def __init__(self, parent=None):
         func = fastq.trim_adapters_paired_end
-        help_link = f"https://guyteichman.github.io/RNAlysis/build/rnalysis.fastq.{func.__name__}.html"
+        help_link = f'https://guyteichman.github.io/RNAlysis/build/rnalysis.fastq.{func.__name__}.html'
         super().__init__(func.readable_name, func, help_link, self.EXCLUDED_PARAMS, parent)
         self.init_ui()
         self.setWindowTitle('CutAdapt paired-end adapter trimming setup')
 
 
 class DiffExpWindow(gui_windows.FuncExternalWindow):
-    EXCLUDED_PARAMS = {'self', 'comparisons', 'covariates', 'lrt_factors', 'model_factors', 'return_design_matrix',
-                       'return_code', 'return_log'}
+    EXCLUDED_PARAMS = {
+        'self',
+        'comparisons',
+        'covariates',
+        'lrt_factors',
+        'model_factors',
+        'return_design_matrix',
+        'return_code',
+        'return_log',
+    }
     IGNORED_WIDGETS = gui_windows.FuncExternalWindow.IGNORED_WIDGETS | {'load_design'}
 
-    __slots__ = {'comparisons': 'list of comparisons to make',
-                 'design_mat': 'design matrix',
-                 'comparisons_group': 'widget group for choosing comparisons',
-                 'comparisons_grid': 'layout for choosing comparisons',
-                 'comparisons_widgets': 'widgets for choosing comparisons',
-                 'simplified': 'show simplified view'}
+    __slots__ = {
+        'comparisons': 'list of comparisons to make',
+        'design_mat': 'design matrix',
+        'comparisons_group': 'widget group for choosing comparisons',
+        'comparisons_grid': 'layout for choosing comparisons',
+        'comparisons_widgets': 'widgets for choosing comparisons',
+        'simplified': 'show simplified view',
+    }
 
     def __init__(self, func: Callable, name: str, parent=None, simplified: bool = False):
         self.name = name
-        help_link = f"https://guyteichman.github.io/RNAlysis/build/rnalysis.filtering.CountFilter.{func.__name__}.html"
+        help_link = f'https://guyteichman.github.io/RNAlysis/build/rnalysis.filtering.CountFilter.{func.__name__}.html'
         super().__init__(name, func, help_link, self.EXCLUDED_PARAMS, parent=parent)
 
         self.simplified = simplified
@@ -355,16 +366,16 @@ class DiffExpWindow(gui_windows.FuncExternalWindow):
         self.righthand_widget = QtWidgets.QWidget(self)
         self.righthand_layout = QtWidgets.QVBoxLayout(self.righthand_widget)
 
-        cmp_title = "2. Choose pairwise comparisons" if self.simplified else "2. Choose pairwise comparisons (optional)"
+        cmp_title = '2. Choose pairwise comparisons' if self.simplified else '2. Choose pairwise comparisons (optional)'
         self.comparisons_group = QtWidgets.QGroupBox(cmp_title)
         self.comparisons_grid = QtWidgets.QGridLayout(self.comparisons_group)
         self.comparisons_widgets = {}
 
-        self.covariates_group = QtWidgets.QGroupBox("3. Choose covariates to test (optional)")
+        self.covariates_group = QtWidgets.QGroupBox('3. Choose covariates to test (optional)')
         self.covariates_grid = QtWidgets.QGridLayout(self.covariates_group)
         self.covariates_widgets = {}
 
-        self.lrt_group = QtWidgets.QGroupBox("4. Choose factors for Likelihood Ratio tests (optional)")
+        self.lrt_group = QtWidgets.QGroupBox('4. Choose factors for Likelihood Ratio tests (optional)')
         self.lrt_grid = QtWidgets.QGridLayout(self.lrt_group)
         self.lrt_widgets = {}
 
@@ -407,8 +418,10 @@ class DiffExpWindow(gui_windows.FuncExternalWindow):
         design_mat = io.load_table(self.param_widgets['design_matrix'].text())
         for factor in design_mat.columns:
             if parsing.slugify(factor) != factor:
-                raise InvalidValueError(f"Invalid factor name '{factor}': contains invalid characters."
-                                        f" \nSuggested alternative name: '{parsing.slugify(factor)}'. ")
+                raise InvalidValueError(
+                    f"Invalid factor name '{factor}': contains invalid characters."
+                    f" \nSuggested alternative name: '{parsing.slugify(factor)}'. "
+                )
         self.design_mat = design_mat
 
     def init_model_ui(self):
@@ -466,13 +479,17 @@ class DiffExpWindow(gui_windows.FuncExternalWindow):
             # a parameter file exported from the full window is a user-supplied artifact, so an
             # unsupported entry in it is bad input - not an RNAlysis bug
             if not (covariates is None or len(covariates) == 0):
-                raise InvalidValueError("This parameter file contains covariates, which the simplified window "
-                                        "does not support. Open the full version of this window to use it, "
-                                        "or remove the covariates from the file.")
+                raise InvalidValueError(
+                    'This parameter file contains covariates, which the simplified window '
+                    'does not support. Open the full version of this window to use it, '
+                    'or remove the covariates from the file.'
+                )
             if not (lrt_factors is None or len(lrt_factors) == 0):
-                raise InvalidValueError("This parameter file contains Likelihood Ratio Test factors, which the "
-                                        "simplified window does not support. Open the full version of this window "
-                                        "to use it, or remove those factors from the file.")
+                raise InvalidValueError(
+                    'This parameter file contains Likelihood Ratio Test factors, which the '
+                    'simplified window does not support. Open the full version of this window '
+                    'to use it, or remove those factors from the file.'
+                )
         else:
             if 'picker' in self.covariates_widgets:
                 self.covariates_widgets['picker'].set_comparison_values(covariates)
@@ -512,21 +529,28 @@ class SimpleLimmaWindow(DiffExpWindow):
 
 class ClicomWindow(gui_windows.FuncExternalWindow):
     EXCLUDED_PARAMS = {'self', 'parameter_dicts', 'gui_mode'}
-    ADDITIONAL_EXCLUDED_PARAMS = {'power_transform', 'plot_style', 'split_plots', 'return_probabilities', 'gui_mode',
-                                  'parallel_backend'}
+    ADDITIONAL_EXCLUDED_PARAMS = {
+        'power_transform',
+        'plot_style',
+        'split_plots',
+        'return_probabilities',
+        'gui_mode',
+        'parallel_backend',
+    }
 
     def __init__(self, funcs: dict, filter_obj: filtering.Filter, parent=None):
         func = filtering.CountFilter.split_clicom
-        help_link = f"https://guyteichman.github.io/RNAlysis/build/rnalysis.filtering.CountFilter.{func.__name__}.html"
+        help_link = f'https://guyteichman.github.io/RNAlysis/build/rnalysis.filtering.CountFilter.{func.__name__}.html'
         super().__init__('CLICOM', func, help_link, self.EXCLUDED_PARAMS, parent=parent)
         self.parameter_dicts: List[dict] = []
         self.funcs = funcs
         self.setups_counter = {key: 0 for key in self.funcs.keys()}
         self.filter_obj = filter_obj
-        self.stack = FuncTypeStack(self.funcs, self.filter_obj, self,
-                                   additional_excluded_params=self.ADDITIONAL_EXCLUDED_PARAMS)
+        self.stack = FuncTypeStack(
+            self.funcs, self.filter_obj, self, additional_excluded_params=self.ADDITIONAL_EXCLUDED_PARAMS
+        )
 
-        self.setups_group = QtWidgets.QGroupBox("2. Choose clustering setups for CLICOM")
+        self.setups_group = QtWidgets.QGroupBox('2. Choose clustering setups for CLICOM')
         self.setups_grid = QtWidgets.QGridLayout(self.setups_group)
         self.setups_widgets = {}
 
@@ -543,8 +567,9 @@ class ClicomWindow(gui_windows.FuncExternalWindow):
         # they now stand for -- the API accepts both, but the drop-down can only display the names.
         kwargs = super().migrate_legacy_parameters(kwargs)
         if 'power_transform' in kwargs:
-            transforms = [generic.parse_power_transform(value)
-                          for value in parsing.data_to_list(kwargs['power_transform'])]
+            transforms = [
+                generic.parse_power_transform(value) for value in parsing.data_to_list(kwargs['power_transform'])
+            ]
             kwargs['power_transform'] = transforms[0] if len(transforms) == 1 else transforms
         return kwargs
 
@@ -579,52 +604,74 @@ class ClicomWindow(gui_windows.FuncExternalWindow):
         func_params['method'] = func_name.lstrip('split_').lower()
         self.parameter_dicts.append(func_params)
         self.setups_counter[func_name] += 1
-        self.setups_widgets['list'].add_item(f"{func_params['method']}_{self.setups_counter[func_name]}")
+        self.setups_widgets['list'].add_item(f'{func_params["method"]}_{self.setups_counter[func_name]}')
 
     def get_analysis_args(self):
         return self.parameter_dicts
 
 
 class EnrichmentWindow(gui_widgets.MinMaxDialog):
-    EXCLUDED_PARAMS = {'self', 'save_csv', 'fname', 'return_fig', 'biotype', 'background_genes',
-                       'statistical_test', 'parametric_test', 'biotype_ref_path', 'gui_mode'}
+    EXCLUDED_PARAMS = {
+        'self',
+        'save_csv',
+        'fname',
+        'return_fig',
+        'biotype',
+        'background_genes',
+        'statistical_test',
+        'parametric_test',
+        'biotype_ref_path',
+        'gui_mode',
+    }
 
-    ANALYSIS_TYPES = {'Gene Ontology (GO)': 'go',
-                      'Kyoto Encyclopedia of Genes and Genomes (KEGG)': 'kegg',
-                      'Categorical attributes': 'user_defined', 'Non-categorical attributes': 'non_categorical'}
+    ANALYSIS_TYPES = {
+        'Gene Ontology (GO)': 'go',
+        'Kyoto Encyclopedia of Genes and Genomes (KEGG)': 'kegg',
+        'Categorical attributes': 'user_defined',
+        'Non-categorical attributes': 'non_categorical',
+    }
 
-    ANALYSIS_TYPES_BUTTONS = (('External datasets:', ('Gene Ontology (GO)',
-                                                      'Kyoto Encyclopedia of Genes and Genomes (KEGG)')),
-                              ('Custom dataset:', ('Categorical attributes', 'Non-categorical attributes')))
+    ANALYSIS_TYPES_BUTTONS = (
+        ('External datasets:', ('Gene Ontology (GO)', 'Kyoto Encyclopedia of Genes and Genomes (KEGG)')),
+        ('Custom dataset:', ('Categorical attributes', 'Non-categorical attributes')),
+    )
 
-    ANALYSIS_FUNCS = {('go', False): enrichment.FeatureSet.go_enrichment,
-                      ('go', True): enrichment.RankedSet.single_set_go_enrichment,
-                      ('kegg', False): enrichment.FeatureSet.kegg_enrichment,
-                      ('kegg', True): enrichment.RankedSet.single_set_kegg_enrichment,
-                      ('user_defined', False): enrichment.FeatureSet.user_defined_enrichment,
-                      ('user_defined', True): enrichment.RankedSet.single_set_enrichment,
-                      ('non_categorical', False): enrichment.FeatureSet.non_categorical_enrichment}
+    ANALYSIS_FUNCS = {
+        ('go', False): enrichment.FeatureSet.go_enrichment,
+        ('go', True): enrichment.RankedSet.single_set_go_enrichment,
+        ('kegg', False): enrichment.FeatureSet.kegg_enrichment,
+        ('kegg', True): enrichment.RankedSet.single_set_kegg_enrichment,
+        ('user_defined', False): enrichment.FeatureSet.user_defined_enrichment,
+        ('user_defined', True): enrichment.RankedSet.single_set_enrichment,
+        ('non_categorical', False): enrichment.FeatureSet.non_categorical_enrichment,
+    }
 
-    STATISTICAL_TESTS = {'Randomization test': 'randomization', "Fisher's Exact test": 'fisher',
-                         'Hypergeometric test': 'hypergeometric', 'Single-set enrichment (XL-mHG test)': 'single_set'}
+    STATISTICAL_TESTS = {
+        'Randomization test': 'randomization',
+        "Fisher's Exact test": 'fisher',
+        'Hypergeometric test': 'hypergeometric',
+        'Single-set enrichment (XL-mHG test)': 'single_set',
+    }
 
     ORDINAL_STATISTICAL_TESTS = {'One-sample T-test (parametric)': True, 'Sign test (non-parametric)': False}
 
-    STATISTICAL_TEST_ARGS = {'randomization': {'alpha', 'randomization_reps', 'random_seed'},
-                             'fisher': {'alpha'},
-                             'hypergeometric': {'alpha'},
-                             'single_set': {'alpha', 'min_positive_genes', 'lowest_cutoff'},
-                             'non_categorical': {'alpha'},
-                             None: {},
-                             True: {'alpha'},
-                             False: {'alpha'}}
+    STATISTICAL_TEST_ARGS = {
+        'randomization': {'alpha', 'randomization_reps', 'random_seed'},
+        'fisher': {'alpha'},
+        'hypergeometric': {'alpha'},
+        'single_set': {'alpha', 'min_positive_genes', 'lowest_cutoff'},
+        'non_categorical': {'alpha'},
+        None: {},
+        True: {'alpha'},
+        False: {'alpha'},
+    }
 
-    PLOT_ARGS = {'user_defined': {'plot_horizontal', 'plot_style', 'show_expected'},
-                 'go': {'plot_horizontal', 'plot_style', 'show_expected', 'plot_ontology_graph',
-                        'ontology_graph_format'},
-                 'kegg': {'plot_horizontal', 'plot_style', 'show_expected', 'plot_pathway_graphs',
-                          'pathway_graphs_format'},
-                 'non_categorical': {'plot_log_scale', 'plot_style', 'n_bins'}}
+    PLOT_ARGS = {
+        'user_defined': {'plot_horizontal', 'plot_style', 'show_expected'},
+        'go': {'plot_horizontal', 'plot_style', 'show_expected', 'plot_ontology_graph', 'ontology_graph_format'},
+        'kegg': {'plot_horizontal', 'plot_style', 'show_expected', 'plot_pathway_graphs', 'pathway_graphs_format'},
+        'non_categorical': {'plot_log_scale', 'plot_style', 'n_bins'},
+    }
 
     enrichmentStarted = QtCore.pyqtSignal(object, object)
     geneSetsRequested = QtCore.pyqtSignal(object)
@@ -692,8 +739,9 @@ class EnrichmentWindow(gui_widgets.MinMaxDialog):
             self.widgets[lst].boxOpened.connect(functools.partial(self.geneSetsRequested.emit, self.widgets[lst]))
             self.widgets[lst].currentTextChanged.connect(self._verify_inputs)
 
-        self.widgets['dataset_radiobox'] = gui_widgets.RadioButtonBox('Choose enrichment dataset',
-                                                                      self.ANALYSIS_TYPES_BUTTONS)
+        self.widgets['dataset_radiobox'] = gui_widgets.RadioButtonBox(
+            'Choose enrichment dataset', self.ANALYSIS_TYPES_BUTTONS
+        )
         self.widgets['dataset_radiobox'].buttonClicked.connect(self.update_uis)
 
         self.list_grid.addWidget(self.widgets['dataset_radiobox'], 0, 0, 6, 1)
@@ -776,10 +824,14 @@ class EnrichmentWindow(gui_widgets.MinMaxDialog):
             self.widgets['help_link'].deleteLater()
         chosen_func_name = self.get_current_func().__name__
         obj_type = enrichment.RankedSet if self.is_single_set() else enrichment.FeatureSet
-        help_address = f"https://guyteichman.github.io/RNAlysis/build/rnalysis.enrichment." \
-                       f"{obj_type.__name__}.{chosen_func_name}.html"
-        self.widgets['help_link'] = QtWidgets.QLabel(f'<a href="{help_address}">Open documentation for function '
-                                                     f'<b>{obj_type.__name__}.{chosen_func_name}</b></a>')
+        help_address = (
+            f'https://guyteichman.github.io/RNAlysis/build/rnalysis.enrichment.'
+            f'{obj_type.__name__}.{chosen_func_name}.html'
+        )
+        self.widgets['help_link'] = QtWidgets.QLabel(
+            f'<a href="{help_address}">Open documentation for function '
+            f'<b>{obj_type.__name__}.{chosen_func_name}</b></a>'
+        )
         self.widgets['help_link'].setOpenExternalLinks(True)
         self.scroll_layout.insertWidget(4, self.widgets['help_link'])
 
@@ -859,8 +911,9 @@ class EnrichmentWindow(gui_widgets.MinMaxDialog):
         self.stats_widgets = {}
         gui_widgets.clear_layout(self.stats_grid)
 
-        radio_options = parsing.data_to_list(self.STATISTICAL_TESTS.keys() if self.is_categorical() else \
-                                                 self.ORDINAL_STATISTICAL_TESTS.keys())
+        radio_options = parsing.data_to_list(
+            self.STATISTICAL_TESTS.keys() if self.is_categorical() else self.ORDINAL_STATISTICAL_TESTS.keys()
+        )
         self.stats_widgets['stats_radiobox'] = gui_widgets.RadioButtonBox('Choose statistical test:', radio_options)
         self.stats_widgets['stats_radiobox'].selectionChanged.connect(self._verify_inputs)
         self.stats_widgets['stats_radiobox'].buttonClicked.connect(self._verify_inputs)
@@ -906,8 +959,9 @@ class EnrichmentWindow(gui_widgets.MinMaxDialog):
         pred_ids.append(self.widgets['enrichment_list'].current_id())
         gene_set_name = self.widgets['enrichment_list'].currentText()
 
-        for param_name, widget in itertools.chain(self.parameter_widgets.items(), self.plot_widgets.items(),
-                                                  self.stats_widgets.items()):
+        for param_name, widget in itertools.chain(
+            self.parameter_widgets.items(), self.plot_widgets.items(), self.stats_widgets.items()
+        ):
             if param_name in {'help_link', 'dataset_radiobox', 'stats_radiobox'}:
                 continue
             val = gui_widgets.get_val_from_widget(widget)
@@ -926,7 +980,7 @@ class EnrichmentWindow(gui_widgets.MinMaxDialog):
         func = self.get_current_func()
         gene_set, bg_set, set_name, kwargs, pred_ids = self.get_analysis_params()
         kwargs['gui_mode'] = True
-        print("Enrichment analysis started")
+        print('Enrichment analysis started')
         self.showMinimized()
         try:
             is_single_set = self.is_single_set()
@@ -934,8 +988,9 @@ class EnrichmentWindow(gui_widgets.MinMaxDialog):
                 bg_set_obj = None
             else:
                 bg_set_obj = enrichment.FeatureSet(bg_set, 'background_set')
-            feature_set_obj = enrichment.RankedSet(gene_set, set_name) if is_single_set \
-                else enrichment.FeatureSet(gene_set, set_name)
+            feature_set_obj = (
+                enrichment.RankedSet(gene_set, set_name) if is_single_set else enrichment.FeatureSet(gene_set, set_name)
+            )
 
             if is_single_set:
                 partial = functools.partial(func, feature_set_obj, **kwargs)
@@ -953,9 +1008,14 @@ class EnrichmentWindow(gui_widgets.MinMaxDialog):
 
 
 class SetOperationWindow(gui_widgets.MinMaxDialog):
-    SET_OPERATIONS = {'Union': 'union', 'Majority-Vote Intersection': 'majority_vote_intersection',
-                      'Intersection': 'intersection', 'Difference': 'difference',
-                      'Symmetric Difference': 'symmetric_difference', 'Other': 'other'}
+    SET_OPERATIONS = {
+        'Union': 'union',
+        'Majority-Vote Intersection': 'majority_vote_intersection',
+        'Intersection': 'intersection',
+        'Difference': 'difference',
+        'Symmetric Difference': 'symmetric_difference',
+        'Other': 'other',
+    }
     EXCLUDED_PARAMS = {'self', 'other', 'others', 'return_type', 'legacy_args'}
 
     geneSetReturned = QtCore.pyqtSignal(set, str, list, dict)
@@ -1041,7 +1101,8 @@ class SetOperationWindow(gui_widgets.MinMaxDialog):
 
         if isinstance(canvas, gui_graphics.VennInteractiveCanvas):
             self.widgets['radio_button_box'].radio_buttons['Symmetric Difference'].clicked.connect(
-                canvas.symmetric_difference)
+                canvas.symmetric_difference
+            )
         this_button = self.widgets['radio_button_box'].checkedButton()
         if this_button is not None:
             self.widgets['radio_button_box'].set_selection(this_button.text())
@@ -1061,13 +1122,16 @@ class SetOperationWindow(gui_widgets.MinMaxDialog):
         self.init_operations_ui()
 
     def init_sets_ui(self):
-        self.widgets['set_list'] = gui_widgets.MultiChoiceListWithReorder(self.available_objects,
-                                                                          [val[1] for val in
-                                                                           self.available_objects.values()],
-                                                                          self)
+        self.widgets['set_list'] = gui_widgets.MultiChoiceListWithReorder(
+            self.available_objects, [val[1] for val in self.available_objects.values()], self
+        )
 
-        for func in [self.create_canvas, self._check_legal_operations, self._validate_input,
-                     self._toggle_choose_primary_set]:
+        for func in [
+            self.create_canvas,
+            self._check_legal_operations,
+            self._validate_input,
+            self._toggle_choose_primary_set,
+        ]:
             self.widgets['set_list'].itemSelectionChanged.connect(func)
             self.widgets['set_list'].itemOrderChanged.connect(func)
         self.list_grid.addWidget(self.widgets['set_list'], 0, 0)
@@ -1079,7 +1143,8 @@ class SetOperationWindow(gui_widgets.MinMaxDialog):
 
             self.widgets['choose_primary_set'].clear()
             self.widgets['choose_primary_set'].addItems(
-                [item.text() for item in self.widgets['set_list'].get_sorted_selection()])
+                [item.text() for item in self.widgets['set_list'].get_sorted_selection()]
+            )
             self.widgets['canvas'].clear_selection()
         else:
             self.widgets['choose_primary_set'].setVisible(False)
@@ -1089,14 +1154,16 @@ class SetOperationWindow(gui_widgets.MinMaxDialog):
         self.widgets['set_op_box'] = QtWidgets.QWidget(self)
         self.widgets['set_op_box_layout'] = QtWidgets.QVBoxLayout(self.widgets['set_op_box'])
         self.operations_grid.addWidget((self.widgets['set_op_box']), 1, 0, 3, 1)
-        self.widgets['radio_button_box'] = gui_widgets.RadioButtonBox('Choose set operation',
-                                                                      self.SET_OPERATIONS.keys())
+        self.widgets['radio_button_box'] = gui_widgets.RadioButtonBox(
+            'Choose set operation', self.SET_OPERATIONS.keys()
+        )
 
         for func in [self.update_paremeter_ui, self._validate_input, self._toggle_choose_primary_set]:
             self.widgets['radio_button_box'].buttonClicked.connect(func)
             self.widgets['radio_button_box'].selectionChanged.connect(func)
         self.widgets['radio_button_box'].radio_buttons['Majority-Vote Intersection'].clicked.connect(
-            self._majority_vote_intersection)
+            self._majority_vote_intersection
+        )
         self.widgets['set_op_box_layout'].addWidget(self.widgets['radio_button_box'], stretch=1)
 
         self.widgets['choose_primary_set'] = gui_widgets.MandatoryComboBox('Choose primary set...', self)
@@ -1155,7 +1222,8 @@ class SetOperationWindow(gui_widgets.MinMaxDialog):
                 continue
             self.parameter_widgets[name] = gui_widgets.param_to_widget(param, name)
             self.parameter_grid.addWidget(
-                QtWidgets.QLabel(f'{generic.get_param_readable_name(name, func)}:', self.parameter_widgets[name]), i, 0)
+                QtWidgets.QLabel(f'{generic.get_param_readable_name(name, func)}:', self.parameter_widgets[name]), i, 0
+            )
             self.parameter_grid.addWidget(self.parameter_widgets[name], i, 1)
             if chosen_func_name == 'majority_vote_intersection':
                 self.parameter_widgets[name].valueChanged.connect(self._majority_vote_intersection)
@@ -1165,11 +1233,15 @@ class SetOperationWindow(gui_widgets.MinMaxDialog):
         self.parameter_group.setVisible(i > 0)
 
         if chosen_func_name != 'other':
-            help_address = f"https://guyteichman.github.io/RNAlysis/build/rnalysis.filtering." \
-                           f"{filtering.Filter.__name__}.{chosen_func_name}.html"
+            help_address = (
+                f'https://guyteichman.github.io/RNAlysis/build/rnalysis.filtering.'
+                f'{filtering.Filter.__name__}.{chosen_func_name}.html'
+            )
             self.parameter_widgets['help_link'] = QtWidgets.QLabel(
                 f'<a href="{help_address}">Open documentation for function '
-                f'<b>{filtering.Filter.__name__}.{chosen_func_name}</b></a>', self)
+                f'<b>{filtering.Filter.__name__}.{chosen_func_name}</b></a>',
+                self,
+            )
             self.parameter_widgets['help_link'].setOpenExternalLinks(True)
             self.operations_grid.addWidget(self.parameter_widgets['help_link'], 5, 0, 1, 6)
 
@@ -1228,7 +1300,7 @@ class SetOperationWindow(gui_widgets.MinMaxDialog):
         ancestor_ids = [self.available_objects[name][0].tab_id for name in self._get_set_names()]
         if func_name == 'other':
             output_set = self.widgets['canvas'].get_custom_selection()
-            output_name = "Other set operation output"
+            output_name = 'Other set operation output'
             kwargs = {}
         else:
             set_names, primary_set_name, kwargs = self._get_function_params()
@@ -1240,11 +1312,17 @@ class SetOperationWindow(gui_widgets.MinMaxDialog):
             for name in set_names:
                 if name != primary_set_name:
                     other_objs.append(self.available_objects[name][0].obj())
-            output_name = f"{func_name} output"
+            output_name = f'{func_name} output'
 
             if kwargs.get('inplace', False):
-                command = SetOpInplacCommand(self.available_objects[primary_set_name][0], func_name, other_objs, kwargs,
-                                             f'Apply "{func_name}"', ancestor_ids)
+                command = SetOpInplacCommand(
+                    self.available_objects[primary_set_name][0],
+                    func_name,
+                    other_objs,
+                    kwargs,
+                    f'Apply "{func_name}"',
+                    ancestor_ids,
+                )
                 self.available_objects[primary_set_name][0].undo_stack.push(command)
                 output_set = None
             else:
@@ -1294,10 +1372,9 @@ class SetVisualizationWindow(gui_widgets.MinMaxDialog):
         self.init_visualization_ui()
 
     def init_list_ui(self):
-        self.widgets['set_list'] = gui_widgets.MultiChoiceListWithReorder(self.available_objects,
-                                                                          [val[1] for val in
-                                                                           self.available_objects.values()],
-                                                                          self)
+        self.widgets['set_list'] = gui_widgets.MultiChoiceListWithReorder(
+            self.available_objects, [val[1] for val in self.available_objects.values()], self
+        )
 
         for func in [self._check_legal_operations, self._validate_input, self.create_canvas]:
             self.widgets['set_list'].itemSelectionChanged.connect(func)
@@ -1306,8 +1383,9 @@ class SetVisualizationWindow(gui_widgets.MinMaxDialog):
         self.list_grid.addWidget(self.widgets['set_list'], 0, 0)
 
     def init_visualization_ui(self):
-        self.widgets['radio_button_box'] = gui_widgets.RadioButtonBox('Choose visualization type:',
-                                                                      self.VISUALIZATION_FUNCS, parent=self)
+        self.widgets['radio_button_box'] = gui_widgets.RadioButtonBox(
+            'Choose visualization type:', self.VISUALIZATION_FUNCS, parent=self
+        )
         for func in [self.update_parameter_ui, self._validate_input, self.create_canvas]:
             self.widgets['radio_button_box'].buttonClicked.connect(func)
             self.widgets['radio_button_box'].selectionChanged.connect(func)
@@ -1340,14 +1418,15 @@ class SetVisualizationWindow(gui_widgets.MinMaxDialog):
         if len(set_names) < 2:
             canvas = gui_graphics.EmptyCanvas('Please select 2 or more gene sets to continue', self)
         elif func_name is None:
-            canvas = gui_graphics.EmptyCanvas("Please choose a visualization function to continue", self)
+            canvas = gui_graphics.EmptyCanvas('Please choose a visualization function to continue', self)
         else:
             objs_to_plot, kwargs, _ = self._get_function_params()
             try:
-                canvas = gui_graphics.BasePreviewCanvas(getattr(enrichment, func_name), self, objs=objs_to_plot,
-                                                        **kwargs)
+                canvas = gui_graphics.BasePreviewCanvas(
+                    getattr(enrichment, func_name), self, objs=objs_to_plot, **kwargs
+                )
             except Exception:
-                canvas = gui_graphics.EmptyCanvas("Invalid input; please change one or more of your parameters")
+                canvas = gui_graphics.EmptyCanvas('Invalid input; please change one or more of your parameters')
         if 'canvas' in self.widgets:
             # detach the old canvas from the layout and reparent it to None *before* scheduling
             # deletion, so no queued paint/draw event can fire against a widget whose C++ object is
@@ -1399,17 +1478,19 @@ class SetVisualizationWindow(gui_widgets.MinMaxDialog):
         for name, param in signature.items():
             if name in self.EXCLUDED_PARAMS:
                 continue
-            self.parameter_widgets[name] = gui_widgets.param_to_widget(param, name,
-                                                                       actions_to_connect=self.create_canvas)
+            self.parameter_widgets[name] = gui_widgets.param_to_widget(
+                param, name, actions_to_connect=self.create_canvas
+            )
             self.parameter_grid.addWidget(
-                QtWidgets.QLabel(f'{generic.get_param_readable_name(name, func)}:', self.parameter_widgets[name]), i, 0)
+                QtWidgets.QLabel(f'{generic.get_param_readable_name(name, func)}:', self.parameter_widgets[name]), i, 0
+            )
             self.parameter_grid.addWidget(self.parameter_widgets[name], i, 1)
             i += 1
 
-        help_address = f"https://guyteichman.github.io/RNAlysis/build/rnalysis.enrichment.{chosen_func_name}.html"
+        help_address = f'https://guyteichman.github.io/RNAlysis/build/rnalysis.enrichment.{chosen_func_name}.html'
         self.parameter_widgets['help_link'] = QtWidgets.QLabel(
-            f'<a href="{help_address}">Open documentation for function '
-            f'<b>enrichment.{chosen_func_name}</b></a>', self)
+            f'<a href="{help_address}">Open documentation for function <b>enrichment.{chosen_func_name}</b></a>', self
+        )
         self.parameter_widgets['help_link'].setOpenExternalLinks(True)
         self.visualization_grid.addWidget(self.parameter_widgets['help_link'], 5, 0, 1, 4)
 
@@ -1423,10 +1504,16 @@ class SetVisualizationWindow(gui_widgets.MinMaxDialog):
 
     def _get_function_params(self):
         set_names = [item.text() for item in self.widgets['set_list'].get_sorted_selection()]
-        objs_to_plot = {name: self.available_objects[name][0].obj() for name in set_names if
-                        not self.available_objects[name][0].is_empty()}
-        ancestor_ids = [self.available_objects[name][0].tab_id for name in set_names if
-                        not self.available_objects[name][0].is_empty()]
+        objs_to_plot = {
+            name: self.available_objects[name][0].obj()
+            for name in set_names
+            if not self.available_objects[name][0].is_empty()
+        }
+        ancestor_ids = [
+            self.available_objects[name][0].tab_id
+            for name in set_names
+            if not self.available_objects[name][0].is_empty()
+        ]
 
         kwargs = {}
         for param_name, widget in self.parameter_widgets.items():
@@ -1555,10 +1642,10 @@ class TabPage(QtWidgets.QWidget):
         for i, action_type in enumerate(sorted_actions):
             bttn = QtWidgets.QPushButton(action_type)
             bttn.setCheckable(True)
-            bttn.setStyleSheet('''QPushButton::checked {background-color : purple;
+            bttn.setStyleSheet("""QPushButton::checked {background-color : purple;
                                                         color: white;
                                                         border: 1px solid #ba32ba;
-                                                        border-radius: 4px;}''')
+                                                        border-radius: 4px;}""")
             bttn.setEnabled(len(sorted_actions[action_type]) > 0)  # disable the button if there are no relevant actions
 
             self.stack_widgets[action_type] = FuncTypeStack(sorted_actions[action_type], self.obj())
@@ -1582,11 +1669,15 @@ class TabPage(QtWidgets.QWidget):
 
     def get_all_actions(self):
         if self.obj() is None:
-            raise InternalError("No object was loaded!")
+            raise InternalError('No object was loaded!')
         all_methods = dir(self.obj())
-        public_methods = [mthd for mthd in all_methods if
-                          (not mthd.startswith('_')) and (callable(getattr(type(self.obj()), mthd))) and (
-                              mthd not in self.EXCLUDED_FUNCS)]
+        public_methods = [
+            mthd
+            for mthd in all_methods
+            if (not mthd.startswith('_'))
+            and (callable(getattr(type(self.obj()), mthd)))
+            and (mthd not in self.EXCLUDED_FUNCS)
+        ]
         sorted_methods = {'Filter': [], 'Normalize': [], 'Summarize': [], 'Visualize': [], 'Cluster': [], 'General': []}
 
         for method in public_methods:
@@ -1612,17 +1703,30 @@ class TabPage(QtWidgets.QWidget):
         predecessors = this_stack.get_function_predecessors()
         if func_params.get('inplace', False):
             if func_name in self.THREADED_FUNCS:
-                command = InplaceCachedCommand(self, func_name, args=[], kwargs=func_params,
-                                               description=f'Apply "{func_name}"', predecessors=predecessors)
+                command = InplaceCachedCommand(
+                    self,
+                    func_name,
+                    args=[],
+                    kwargs=func_params,
+                    description=f'Apply "{func_name}"',
+                    predecessors=predecessors,
+                )
             else:
-                command = InplaceCommand(self, func_name, args=[], kwargs=func_params,
-                                         description=f'Apply "{func_name}"', predecessors=predecessors)
+                command = InplaceCommand(
+                    self,
+                    func_name,
+                    args=[],
+                    kwargs=func_params,
+                    description=f'Apply "{func_name}"',
+                    predecessors=predecessors,
+                )
             self.undo_stack.push(command)
         else:
             self._apply_function_from_params(func_name, args=[], kwargs=func_params, predecessors=predecessors)
 
-    def _apply_function_from_params(self, func_name, args: list, kwargs: dict, finish_slot=None, job_id: int = None,
-                                    predecessors: list = None):
+    def _apply_function_from_params(
+        self, func_name, args: list, kwargs: dict, finish_slot=None, job_id: int = None, predecessors: list = None
+    ):
         partial = functools.partial(getattr(self.obj(), func_name), *args, **kwargs)
         source_name = generic.get_method_readable_name(partial.func)
         job_id = JOB_COUNTER.get_id() if job_id is None else job_id
@@ -1667,8 +1771,9 @@ class TabPage(QtWidgets.QWidget):
             new_id = JOB_COUNTER.get_id()
             self.itemSpawned.emit(f"'{source_name}'\ngraph", new_id, job_id, outputs)
         elif isinstance(outputs, (tuple, list)):
-            if validation.isinstanceiter_inh(outputs,
-                                             (filtering.Filter, fastq.filtering.Filter, enrichment.FeatureSet)):
+            if validation.isinstanceiter_inh(
+                outputs, (filtering.Filter, fastq.filtering.Filter, enrichment.FeatureSet)
+            ):
                 dialog = MultiKeepWindow(outputs, job_id, self)
                 dialog.accepted.connect(functools.partial(self._multi_keep_window_accepted, dialog, source_name))
                 dialog.exec()
@@ -1678,7 +1783,7 @@ class TabPage(QtWidgets.QWidget):
         elif isinstance(outputs, dict):
             tab_name = self.get_tab_name()
             for this_src_name, output in outputs.items():
-                self.process_outputs(output, job_id, f"{this_src_name} {tab_name}")
+                self.process_outputs(output, job_id, f'{this_src_name} {tab_name}')
         elif isinstance(outputs, Path):
             new_id = JOB_COUNTER.get_id()
             self.itemSpawned.emit(f"'{source_name}'\noutput", new_id, job_id, outputs)
@@ -1715,8 +1820,9 @@ class TabPage(QtWidgets.QWidget):
         self.overview_widgets['table_name'].setText('')
         self.name = new_name.rstrip('*')
         if job_id is not None:
-            worker_output = gui_widgets.WorkerOutput(self.obj(), functools.partial(self.rename, new_name=new_name),
-                                                     job_id, [prev_id])
+            worker_output = gui_widgets.WorkerOutput(
+                self.obj(), functools.partial(self.rename, new_name=new_name), job_id, [prev_id]
+            )
             self.functionApplied.emit(worker_output)
             self.itemSpawned.emit(self.name, self.tab_id, job_id, self.obj())
 
@@ -1724,7 +1830,7 @@ class TabPage(QtWidgets.QWidget):
         raise NotImplementedError
 
     def get_tab_name(self):
-        return self.name.rstrip("*")
+        return self.name.rstrip('*')
 
     # custom method to write anything printed out to console/terminal to my QTextEdit widget via append function.
     def output_terminal_written(self, text):
@@ -1734,15 +1840,35 @@ class TabPage(QtWidgets.QWidget):
 class SetTabPage(TabPage):
     EXCLUDED_FUNCS = {'union', 'intersection', 'majority_vote_intersection', 'difference', 'symmetric_difference'}
     SUMMARY_FUNCS = {'biotypes_from_ref_table', 'biotypes_from_gtf'}
-    GENERAL_FUNCS = {'translate_gene_ids', 'map_orthologs_phylomedb', 'map_orthologs_orthoinspector',
-                     'map_orthologs_ensembl', 'map_orthologs_panther', 'find_paralogs_panther', 'find_paralogs_ensembl'}
-    THREADED_FUNCS = {'translate_gene_ids', 'filter_by_kegg_annotations', 'filter_by_go_annotations',
-                      'map_orthologs_phylomedb', 'map_orthologs_orthoinspector',
-                      'map_orthologs_ensembl', 'map_orthologs_panther', 'find_paralogs_panther', 'find_paralogs_ensembl'
-                      }
+    GENERAL_FUNCS = {
+        'translate_gene_ids',
+        'map_orthologs_phylomedb',
+        'map_orthologs_orthoinspector',
+        'map_orthologs_ensembl',
+        'map_orthologs_panther',
+        'find_paralogs_panther',
+        'find_paralogs_ensembl',
+    }
+    THREADED_FUNCS = {
+        'translate_gene_ids',
+        'filter_by_kegg_annotations',
+        'filter_by_go_annotations',
+        'map_orthologs_phylomedb',
+        'map_orthologs_orthoinspector',
+        'map_orthologs_ensembl',
+        'map_orthologs_panther',
+        'find_paralogs_panther',
+        'find_paralogs_ensembl',
+    }
 
-    def __init__(self, set_name: str, gene_set: typing.Union[set, enrichment.FeatureSet] = None, parent=None,
-                 undo_stack: QtGui.QUndoStack = None, tab_id: int = None):
+    def __init__(
+        self,
+        set_name: str,
+        gene_set: typing.Union[set, enrichment.FeatureSet] = None,
+        parent=None,
+        undo_stack: QtGui.QUndoStack = None,
+        tab_id: int = None,
+    ):
         super().__init__(parent, undo_stack, tab_id)
         if gene_set is None:
             gene_set = enrichment.FeatureSet(set(), set_name)
@@ -1767,7 +1893,7 @@ class SetTabPage(TabPage):
         return type(self.gene_set)
 
     def get_index_string(self):
-        return "\n".join(self.obj())
+        return '\n'.join(self.obj())
 
     def start_from_gene_set(self, tab_id: int, gene_set: set):
         self.tab_id = tab_id
@@ -1816,14 +1942,13 @@ class SetTabPage(TabPage):
         set_window.show()
 
     def save_file(self):
-        default_name = parsing.slugify(self.get_tab_name().rstrip("*")) + '.txt'
-        filename, _ = QtWidgets.QFileDialog.getSaveFileName(self, "Save gene set",
-                                                            str(Path.home().joinpath(default_name)),
-                                                            "Text document (*.txt);;"
-                                                            "All Files (*)")
+        default_name = parsing.slugify(self.get_tab_name().rstrip('*')) + '.txt'
+        filename, _ = QtWidgets.QFileDialog.getSaveFileName(
+            self, 'Save gene set', str(Path.home().joinpath(default_name)), 'Text document (*.txt);;All Files (*)'
+        )
         if filename:
             self.gene_set.save_txt(filename)
-            print(f"Successfully saved at {io.get_datetime()} under {filename}")
+            print(f'Successfully saved at {io.get_datetime()} under {filename}')
             self.tabSaved.emit()
 
     @QtCore.pyqtSlot()
@@ -1834,7 +1959,7 @@ class SetTabPage(TabPage):
     def cache(self) -> str:
         base_str = str(time.time_ns()) + self.get_tab_name() + str(len(self.gene_set))
         hex_hash = hashlib.sha1(base_str.encode('utf-8')).hexdigest()
-        filename = f"{hex_hash}.txt"
+        filename = f'{hex_hash}.txt'
         io.cache_gui_file(self.gene_set.gene_set, filename)
         return filename
 
@@ -1876,22 +2001,30 @@ class SetTabPage(TabPage):
 class FuncTypeStack(QtWidgets.QWidget):
     EXCLUDED_PARAMS = {'self', 'backend', 'gui_mode', 'legacy_args', 'function_kwargs'}
 
-    NO_FUNC_CHOSEN_TEXT = "Choose a function..."
+    NO_FUNC_CHOSEN_TEXT = 'Choose a function...'
     funcSelected = QtCore.pyqtSignal(bool)
     geneSetsRequested = QtCore.pyqtSignal(object)
-    __slots__ = {'parameter_widgets': 'widgets for function parameters',
-                 'layout': 'layout',
-                 'parameter_grid': 'layout for function parameters',
-                 'func_combo': 'combo box for choosing functions',
-                 'func_help_button': 'help button for function combo box',
-                 'func_combo_layout': 'layout for function combo box',
-                 'func': 'dict of functions',
-                 'filter_obj': 'filtering.Filter object to apply functions to',
-                 'excluded_params': 'parameters to be excluded from functions',
-                 'pipeline_mode': 'indicating if in the function selector is in Pipeline mode'}
+    __slots__ = {
+        'parameter_widgets': 'widgets for function parameters',
+        'layout': 'layout',
+        'parameter_grid': 'layout for function parameters',
+        'func_combo': 'combo box for choosing functions',
+        'func_help_button': 'help button for function combo box',
+        'func_combo_layout': 'layout for function combo box',
+        'func': 'dict of functions',
+        'filter_obj': 'filtering.Filter object to apply functions to',
+        'excluded_params': 'parameters to be excluded from functions',
+        'pipeline_mode': 'indicating if in the function selector is in Pipeline mode',
+    }
 
-    def __init__(self, funcs: typing.Iterable, filter_obj: filtering.Filter, parent=None,
-                 additional_excluded_params: set = None, pipeline_mode: bool = False):
+    def __init__(
+        self,
+        funcs: typing.Iterable,
+        filter_obj: filtering.Filter,
+        parent=None,
+        additional_excluded_params: set = None,
+        pipeline_mode: bool = False,
+    ):
         super().__init__(parent)
         self.parameter_widgets = {}
         self.layout = QtWidgets.QVBoxLayout(self)
@@ -1922,7 +2055,7 @@ class FuncTypeStack(QtWidgets.QWidget):
         self.func_combo.currentTextChanged.connect(self.update_parameter_ui)
 
     def _set_empty_tooltip(self):
-        txt = "Choose a function from this list to read its description. "
+        txt = 'Choose a function from this list to read its description. '
         self.func_combo.setToolTip(txt)
         self.func_help_button.set_desc_help(txt)
 
@@ -1968,11 +2101,14 @@ class FuncTypeStack(QtWidgets.QWidget):
 
             i += 1
 
-        help_address = f"https://guyteichman.github.io/RNAlysis/build/rnalysis.filtering." \
-                       f"{type(self.filter_obj).__name__}.{chosen_func_name}.html"
+        help_address = (
+            f'https://guyteichman.github.io/RNAlysis/build/rnalysis.filtering.'
+            f'{type(self.filter_obj).__name__}.{chosen_func_name}.html'
+        )
         self.parameter_widgets['help_link'] = QtWidgets.QLabel(
             text=f'<a href="{help_address}">Open documentation for function '
-                 f'<b>{type(self.filter_obj).__name__}.{chosen_func_name}</b></a>')
+            f'<b>{type(self.filter_obj).__name__}.{chosen_func_name}</b></a>'
+        )
         self.parameter_widgets['help_link'].setOpenExternalLinks(True)
         self.parameter_grid.addWidget(self.parameter_widgets['help_link'], i + 1, 0, 1, 2)
         self.parameter_grid.setColumnStretch(1, 1)
@@ -2022,26 +2158,65 @@ class FuncTypeStack(QtWidgets.QWidget):
 
 
 class FilterTabPage(TabPage):
-    EXCLUDED_FUNCS = {'union', 'intersection', 'majority_vote_intersection', 'difference', 'symmetric_difference',
-                      'from_folder', 'from_folder_htseqcount', 'save_txt', 'save_csv', 'save_table', 'save_parquet',
-                      'from_dataframe', 'print_features'}
-    CLUSTERING_FUNCS = {'split_kmeans': 'K-Means', 'split_kmedoids': 'K-Medoids',
-                        'split_hierarchical': 'Hierarchical (Agglomerative)', 'split_hdbscan': 'HDBSCAN',
-                        'split_clicom': 'CLICOM (Ensemble)'}
+    EXCLUDED_FUNCS = {
+        'union',
+        'intersection',
+        'majority_vote_intersection',
+        'difference',
+        'symmetric_difference',
+        'from_folder',
+        'from_folder_htseqcount',
+        'save_txt',
+        'save_csv',
+        'save_table',
+        'save_parquet',
+        'from_dataframe',
+        'print_features',
+    }
+    CLUSTERING_FUNCS = {
+        'split_kmeans': 'K-Means',
+        'split_kmedoids': 'K-Medoids',
+        'split_hierarchical': 'Hierarchical (Agglomerative)',
+        'split_hdbscan': 'HDBSCAN',
+        'split_clicom': 'CLICOM (Ensemble)',
+    }
     SUMMARY_FUNCS = {'describe', 'head', 'tail', 'biotypes_from_ref_table', 'biotypes_from_gtf', 'print_features'}
-    GENERAL_FUNCS = {'concatenate', 'sort', 'sort_by_principal_component', 'transform', 'translate_gene_ids',
-                     'annotate_from_gtf',
-                     'differential_expression_deseq2', 'differential_expression_deseq2_simplified', 'fold_change',
-                     'average_replicate_samples', 'drop_columns',
-                     'differential_expression_limma_voom', 'differential_expression_limma_voom_simplified',
-                     'map_orthologs_phylomedb', 'map_orthologs_orthoinspector',
-                     'map_orthologs_ensembl', 'map_orthologs_panther', 'find_paralogs_panther', 'find_paralogs_ensembl'}
-    THREADED_FUNCS = {'translate_gene_ids', 'differential_expression_deseq2',
-                      'differential_expression_deseq2_simplified', 'filter_by_kegg_annotations',
-                      'filter_by_go_annotations', 'differential_expression_limma_voom',
-                      'differential_expression_limma_voom_simplified', 'map_orthologs_phylomedb',
-                      'map_orthologs_orthoinspector', 'map_orthologs_ensembl', 'map_orthologs_panther',
-                      'find_paralogs_panther', 'find_paralogs_ensembl'}
+    GENERAL_FUNCS = {
+        'concatenate',
+        'sort',
+        'sort_by_principal_component',
+        'transform',
+        'translate_gene_ids',
+        'annotate_from_gtf',
+        'differential_expression_deseq2',
+        'differential_expression_deseq2_simplified',
+        'fold_change',
+        'average_replicate_samples',
+        'drop_columns',
+        'differential_expression_limma_voom',
+        'differential_expression_limma_voom_simplified',
+        'map_orthologs_phylomedb',
+        'map_orthologs_orthoinspector',
+        'map_orthologs_ensembl',
+        'map_orthologs_panther',
+        'find_paralogs_panther',
+        'find_paralogs_ensembl',
+    }
+    THREADED_FUNCS = {
+        'translate_gene_ids',
+        'differential_expression_deseq2',
+        'differential_expression_deseq2_simplified',
+        'filter_by_kegg_annotations',
+        'filter_by_go_annotations',
+        'differential_expression_limma_voom',
+        'differential_expression_limma_voom_simplified',
+        'map_orthologs_phylomedb',
+        'map_orthologs_orthoinspector',
+        'map_orthologs_ensembl',
+        'map_orthologs_panther',
+        'find_paralogs_panther',
+        'find_paralogs_ensembl',
+    }
     startedClustering = QtCore.pyqtSignal(object, object, object)
     widthChanged = QtCore.pyqtSignal()
 
@@ -2087,8 +2262,11 @@ class FilterTabPage(TabPage):
         if self.obj_type() == filtering.CountFilter:
             return dict(is_normalized=self.filter_obj.is_normalized)
         elif self.obj_type() == filtering.DESeqFilter:
-            return dict(log2fc_col=self.filter_obj.log2fc_col, padj_col=self.filter_obj.padj_col,
-                        pval_col=self.filter_obj.pval_col)
+            return dict(
+                log2fc_col=self.filter_obj.log2fc_col,
+                padj_col=self.filter_obj.padj_col,
+                pval_col=self.filter_obj.pval_col,
+            )
         elif self.obj_type() == filtering.FoldChangeFilter:
             return dict(numerator_name=self.filter_obj.numerator, denominator_name=self.filter_obj.denominator)
         else:
@@ -2097,13 +2275,14 @@ class FilterTabPage(TabPage):
     @QtCore.pyqtSlot()
     def _rename(self, new_name: str = None, job_id: int = None):
         self.filter_obj.fname = Path(
-            os.path.join(str(self.filter_obj.fname.parent), f"{new_name}{self.filter_obj.fname.suffix}"))
+            os.path.join(str(self.filter_obj.fname.parent), f'{new_name}{self.filter_obj.fname.suffix}')
+        )
         super()._rename(new_name, job_id)
 
     def cache(self):
         base_str = str(time.time_ns()) + str(self.filter_obj.fname) + str(len(self.filter_obj.shape))
         hex_hash = hashlib.sha1(base_str.encode('utf-8')).hexdigest()
-        filename = f"{hex_hash}.parquet"
+        filename = f'{hex_hash}.parquet'
         io.cache_gui_file(self.filter_obj.df, filename)
         return filename
 
@@ -2120,8 +2299,7 @@ class FilterTabPage(TabPage):
     def init_overview_ui(self):
         this_row = 0
         self.layout.insertWidget(1, self.overview_group)
-        self.overview_widgets['table_type_label'] = QtWidgets.QLabel(
-            f"Table type: {self.get_table_type()}")
+        self.overview_widgets['table_type_label'] = QtWidgets.QLabel(f'Table type: {self.get_table_type()}')
         self.overview_widgets['table_name_label'] = QtWidgets.QLabel()
         self.overview_widgets['table_name_label'].setWordWrap(True)
 
@@ -2222,10 +2400,9 @@ class FilterTabPage(TabPage):
         self.basic_widgets['start_button'].setEnabled(False)
         gui_widgets.mark_primary(self.basic_widgets['start_button'])
 
-        self.basic_widgets['file_path'] = gui_widgets.PathLineEdit(button_text='Choose table',
-                                                                     file_types="Data table "
-                                                                                "(*.csv;*.tsv;*.txt;*.parquet);;"
-                                                                                "All Files (*)")
+        self.basic_widgets['file_path'] = gui_widgets.PathLineEdit(
+            button_text='Choose table', file_types='Data table (*.csv;*.tsv;*.txt;*.parquet);;All Files (*)'
+        )
         self.basic_widgets['file_path'].textChanged.connect(self._change_start_button_state)
         self.basic_widgets['file_path'].textChanged.connect(self._autodetect_table_type)
 
@@ -2264,8 +2441,7 @@ class FilterTabPage(TabPage):
             other_clustering_funcs.pop('split_clicom')
             this_stack.deselect()
             self.clicom_window = ClicomWindow(other_clustering_funcs, self.filter_obj, self)
-            self.clicom_window.paramsAccepted.connect(
-                functools.partial(self._apply_function_from_params, func_name))
+            self.clicom_window.paramsAccepted.connect(functools.partial(self._apply_function_from_params, func_name))
             self.clicom_window.show()
         elif func_name.startswith('differential_expression_deseq2'):
             this_stack.deselect()
@@ -2298,13 +2474,17 @@ class FilterTabPage(TabPage):
         self.overview_widgets['preview'].resizeColumnsToContents()
         self.overview_widgets['preview'].resizeRowsToContents()
 
-        new_width = min(self.overview_widgets['preview'].horizontalHeader().length() + self.overview_widgets[
-            'preview'].verticalHeader().width(), self.width() - 100)
+        new_width = min(
+            self.overview_widgets['preview'].horizontalHeader().length()
+            + self.overview_widgets['preview'].verticalHeader().width(),
+            self.width() - 100,
+        )
         self.overview_widgets['preview'].setFixedWidth(new_width)
 
         self.overview_widgets['preview'].setFixedHeight(
-            self.overview_widgets['preview'].verticalHeader().length() + self.overview_widgets[
-                'preview'].horizontalHeader().height())
+            self.overview_widgets['preview'].verticalHeader().length()
+            + self.overview_widgets['preview'].horizontalHeader().height()
+        )
 
     def resizeEvent(self, a0: QtGui.QResizeEvent) -> None:
         if a0.size().width() != a0.oldSize().width():
@@ -2319,8 +2499,9 @@ class FilterTabPage(TabPage):
         self.tabNameChange.emit(self.name, is_unsaved)
         self.update_table_name_label()
 
-    def _apply_function_from_params(self, func_name, args: list, kwargs: dict, finish_slot=None, job_id: int = None,
-                                    predecessors: list = None):
+    def _apply_function_from_params(
+        self, func_name, args: list, kwargs: dict, finish_slot=None, job_id: int = None, predecessors: list = None
+    ):
         # since clustering functions can be computationally intensive, start them in another thread.
         # furthermode, make sure they use the 'multiprocessing' backend instead of the 'loky' backend -
         # otherwise this could cause issues in Pyinstaller-frozen versions of RNAlysis
@@ -2338,14 +2519,16 @@ class FilterTabPage(TabPage):
     def apply_pipeline(self, pipeline: filtering.Pipeline, pipeline_name: str, pipeline_id: int, inplace: bool):
         predecessors = [pipeline_id]
         if inplace:
-            command = PipelineInplaceCommand(self, pipeline, pipeline_name, f'Apply Pipeline "{pipeline_name}"',
-                                             predecessors)
+            command = PipelineInplaceCommand(
+                self, pipeline, pipeline_name, f'Apply Pipeline "{pipeline_name}"', predecessors
+            )
             self.undo_stack.push(command)
         else:
             self._apply_pipeline(pipeline, pipeline_name, False, JOB_COUNTER.get_id(), predecessors)
 
-    def _apply_pipeline(self, pipeline, pipeline_name: str, inplace: bool, job_id: int = None,
-                        predecessors: list = None):
+    def _apply_pipeline(
+        self, pipeline, pipeline_name: str, inplace: bool, job_id: int = None, predecessors: list = None
+    ):
 
         job_name = f'Pipeline {pipeline_name} on {self.get_tab_name()}'
         partial = functools.partial(pipeline.apply_to, self.filter_obj, inplace)
@@ -2366,19 +2549,19 @@ class FilterTabPage(TabPage):
 
     def save_file(self):
         if self.filter_obj is None:
-            warnings.warn("Cannot save an empty tab!")
+            warnings.warn('Cannot save an empty tab!')
             return
-        default_name = parsing.slugify(str(self.filter_obj.fname.stem).rstrip("*")) + '.csv'
-        filename, _ = QtWidgets.QFileDialog.getSaveFileName(self, "Save filtering result",
-                                                            str(Path.home().joinpath(default_name)),
-                                                            "Comma-Separated Values (*.csv);;"
-                                                            "Tab-Separated Values (*.tsv);;"
-                                                            "Parquet file (*.parquet);;"
-                                                            "All Files (*)")
+        default_name = parsing.slugify(str(self.filter_obj.fname.stem).rstrip('*')) + '.csv'
+        filename, _ = QtWidgets.QFileDialog.getSaveFileName(
+            self,
+            'Save filtering result',
+            str(Path.home().joinpath(default_name)),
+            'Comma-Separated Values (*.csv);;Tab-Separated Values (*.tsv);;Parquet file (*.parquet);;All Files (*)',
+        )
         if filename:
             suffix = Path(filename).suffix
             self.filter_obj.save_table(suffix, filename)
-            print(f"Successfully saved at {io.get_datetime()} under {filename}")
+            print(f'Successfully saved at {io.get_datetime()} under {filename}')
             self.tabSaved.emit()
 
     def start(self):
@@ -2428,11 +2611,14 @@ class CreatePipelineWindow(gui_widgets.MinMaxDialog, FilterTabPage):
     widthChanged = QtCore.pyqtSignal()
     geneSetsRequested = QtCore.pyqtSignal()
     PIPELINE_TYPES = {name: filtering.Pipeline for name in FILTER_OBJ_TYPES.keys()}
-    PIPELINE_TYPES.update({'Sequence files (paired-end)': fastq.PairedEndPipeline,
-                           'Sequence files (single-end)': fastq.SingleEndPipeline})
+    PIPELINE_TYPES.update(
+        {'Sequence files (paired-end)': fastq.PairedEndPipeline, 'Sequence files (single-end)': fastq.SingleEndPipeline}
+    )
     INV_PIPELINE_TYPES = {val.__name__: key for key, val in PIPELINE_TYPES.items()}
-    __slots__ = {'pipeline': 'Pipeline object',
-                 'is_unsaved': 'indicates whether the Pipeline was saved since changes were last made'}
+    __slots__ = {
+        'pipeline': 'Pipeline object',
+        'is_unsaved': 'indicates whether the Pipeline was saved since changes were last made',
+    }
 
     def __init__(self, parent=None):
         super().__init__(parent=parent)
@@ -2461,7 +2647,7 @@ class CreatePipelineWindow(gui_widgets.MinMaxDialog, FilterTabPage):
 
     def init_basic_ui(self):
         self.layout.insertWidget(0, self.basic_group)
-        self.basic_group.setTitle("Choose data table type for Pipeline")
+        self.basic_group.setTitle('Choose data table type for Pipeline')
 
         self.basic_widgets['table_type_combo'] = QtWidgets.QComboBox()
         self.basic_widgets['table_type_combo'].addItems(self.PIPELINE_TYPES.keys())
@@ -2522,9 +2708,13 @@ class CreatePipelineWindow(gui_widgets.MinMaxDialog, FilterTabPage):
             actions = self.get_all_fastq_actions()
             for func in actions:
                 self.funcs[generic.get_method_readable_name(func, fastq)] = func
-            self.stack_widgets['main'] = FuncTypeStack(actions, fastq, self,
-                                                       {'input_folder', 'fastq_folder', 'output_folder', 'r1_files',
-                                                        'r2_files', 'return_new_filenames'}, True)
+            self.stack_widgets['main'] = FuncTypeStack(
+                actions,
+                fastq,
+                self,
+                {'input_folder', 'fastq_folder', 'output_folder', 'r1_files', 'r2_files', 'return_new_filenames'},
+                True,
+            )
             self.stack_widgets['main'].funcSelected.connect(self.apply_button.setVisible)
 
             self.stack.addWidget(self.stack_widgets['main'])
@@ -2536,7 +2726,7 @@ class CreatePipelineWindow(gui_widgets.MinMaxDialog, FilterTabPage):
                 self.stack_widgets[action_type].pipeline_mode = True
                 self.stack_widgets[action_type].excluded_params.add('inplace')
 
-        self.function_group.setTitle("Add functions to Pipeline")
+        self.function_group.setTitle('Add functions to Pipeline')
 
     def apply_function(self):
         this_stack: FuncTypeStack = self.stack.currentWidget()
@@ -2580,19 +2770,20 @@ class CreatePipelineWindow(gui_widgets.MinMaxDialog, FilterTabPage):
         self.is_unsaved = True
 
     def init_overview_ui(self):
-        self.overview_group.setTitle("Pipeline preview")
+        self.overview_group.setTitle('Pipeline preview')
         self.layout.insertWidget(1, self.overview_group)
         self.overview_widgets['preview'] = QtWidgets.QPlainTextEdit()
         self.overview_widgets['preview'].setReadOnly(True)
         self.update_pipeline_preview()
 
-        self.overview_grid.addWidget(QtWidgets.QLabel(f"Pipeline name: "
-                                                      f"'<b>{self._get_pipeline_name()}</b>'"), 0, 0, 1, 6)
+        self.overview_grid.addWidget(
+            QtWidgets.QLabel(f"Pipeline name: '<b>{self._get_pipeline_name()}</b>'"), 0, 0, 1, 6
+        )
         self.overview_grid.addWidget(self.overview_widgets['preview'], 2, 0, 2, 6)
 
-        self.overview_grid.addWidget(QtWidgets.QLabel(f"Pipeline type: "
-                                                      f"{self.basic_widgets['table_type_combo'].currentText()}"),
-                                     5, 0, 1, 3)
+        self.overview_grid.addWidget(
+            QtWidgets.QLabel(f'Pipeline type: {self.basic_widgets["table_type_combo"].currentText()}'), 5, 0, 1, 3
+        )
 
         self.overview_widgets['remove_button'] = QtWidgets.QPushButton('Remove last function')
         self.overview_widgets['remove_button'].clicked.connect(self.remove_last_function)
@@ -2628,17 +2819,23 @@ class CreatePipelineWindow(gui_widgets.MinMaxDialog, FilterTabPage):
             self.pipelineSaved.emit(self._get_pipeline_name(), self.pipeline)
             self.is_unsaved = False
         except Exception as e:
-            print("Failed to save Pipeline")
+            print('Failed to save Pipeline')
             raise e
 
     def closeEvent(self, event):  # pragma: no cover
         if self.is_unsaved:
-            quit_msg = "Are you sure you want to close this window without saving your Pipeline?\n" \
-                       "All unsaved progress will be lost"
+            quit_msg = (
+                'Are you sure you want to close this window without saving your Pipeline?\n'
+                'All unsaved progress will be lost'
+            )
 
-            reply = QtWidgets.QMessageBox.question(self, "Close 'Create Pipeline' window?",
-                                                   quit_msg, QtWidgets.QMessageBox.StandardButton.No,
-                                                   QtWidgets.QMessageBox.StandardButton.Yes)
+            reply = QtWidgets.QMessageBox.question(
+                self,
+                "Close 'Create Pipeline' window?",
+                quit_msg,
+                QtWidgets.QMessageBox.StandardButton.No,
+                QtWidgets.QMessageBox.StandardButton.Yes,
+            )
 
             if reply == QtWidgets.QMessageBox.StandardButton.Yes:
                 event.accept()
@@ -2649,18 +2846,20 @@ class CreatePipelineWindow(gui_widgets.MinMaxDialog, FilterTabPage):
 
 
 class MultiKeepWindow(gui_widgets.MinMaxDialog):
-    __slots__ = {'objs': 'objects to keep or discard',
-                 'job_id': 'job ID',
-                 'files': 'filenames of the objects to keep',
-                 'button_box': 'button box for selecting objects to keep',
-                 'labels': 'labels for the objects',
-                 'keep_marks': 'check boxes for the objects',
-                 'names': 'potential new names for the objects',
-                 'select_all': 'select all checkbox',
-                 'scroll': 'scroll area widget',
-                 'scroll_layout': 'layout for scroll area',
-                 'scroll_widget': 'widget containing scroll area',
-                 'main_layout': 'main layout for the window'}
+    __slots__ = {
+        'objs': 'objects to keep or discard',
+        'job_id': 'job ID',
+        'files': 'filenames of the objects to keep',
+        'button_box': 'button box for selecting objects to keep',
+        'labels': 'labels for the objects',
+        'keep_marks': 'check boxes for the objects',
+        'names': 'potential new names for the objects',
+        'select_all': 'select all checkbox',
+        'scroll': 'scroll area widget',
+        'scroll_layout': 'layout for scroll area',
+        'scroll_widget': 'widget containing scroll area',
+        'main_layout': 'main layout for the window',
+    }
 
     def __init__(self, objs: List[Union[filtering.Filter, enrichment.FeatureSet]], job_id: int, parent=None):
         super().__init__(parent)
@@ -2668,8 +2867,11 @@ class MultiKeepWindow(gui_widgets.MinMaxDialog):
         # make sure there are no two objects with the same name
         self.objs = {}
         for obj in objs:
-            key = str(obj.fname.stem) if validation.isinstanceinh(obj, (
-                filtering.Filter, fastq.filtering.Filter)) else obj.set_name
+            key = (
+                str(obj.fname.stem)
+                if validation.isinstanceinh(obj, (filtering.Filter, fastq.filtering.Filter))
+                else obj.set_name
+            )
             if key in self.objs:
                 i = 1
                 key += '_{i}'
@@ -2680,11 +2882,12 @@ class MultiKeepWindow(gui_widgets.MinMaxDialog):
 
         self.files = list(self.objs.keys())
         self.button_box = QtWidgets.QDialogButtonBox(
-            QtWidgets.QDialogButtonBox.StandardButton.Ok | QtWidgets.QDialogButtonBox.StandardButton.Cancel)
+            QtWidgets.QDialogButtonBox.StandardButton.Ok | QtWidgets.QDialogButtonBox.StandardButton.Cancel
+        )
         self.labels = dict()
         self.keep_marks = dict()
         self.names = dict()
-        self.select_all = QtWidgets.QCheckBox("Select all")
+        self.select_all = QtWidgets.QCheckBox('Select all')
 
         self.scroll = QtWidgets.QScrollArea()
         self.scroll_layout = QtWidgets.QGridLayout(self.scroll)
@@ -2708,14 +2911,20 @@ class MultiKeepWindow(gui_widgets.MinMaxDialog):
         self.scroll_layout.addWidget(
             QtWidgets.QLabel(
                 'Please choose which tables to keep (mandatory) out of the tables generated by the last function call, '
-                'and rename them (optional):\n\n'), 0, 0, 1, 3)
+                'and rename them (optional):\n\n'
+            ),
+            0,
+            0,
+            1,
+            3,
+        )
         self.scroll_layout.addWidget(QtWidgets.QLabel('<b>Tables:</b>'), 1, 0)
         self.scroll_layout.addWidget(QtWidgets.QLabel('<b>Choose tables to keep</b>'), 1, 1)
         self.scroll_layout.addWidget(QtWidgets.QLabel('<b>Rename tables (optional):</b>'), 1, 2)
         self.scroll_layout.addWidget(self.select_all, 2, 1)
         for i, file in enumerate(self.files, start=3):
             self.labels[file] = QtWidgets.QLabel(file)
-            self.keep_marks[file] = QtWidgets.QCheckBox("Keep table?")
+            self.keep_marks[file] = QtWidgets.QCheckBox('Keep table?')
             self.names[file] = QtWidgets.QLineEdit()
 
             self.scroll_layout.addWidget(self.labels[file], i, 0)
@@ -2738,7 +2947,7 @@ class MultiKeepWindow(gui_widgets.MinMaxDialog):
                 obj = self.objs[file]
                 if new_names[file] != '':
                     if validation.isinstanceinh(obj, (filtering.Filter, fastq.filtering.Filter)):
-                        obj.fname = Path(f"{new_names[file]}.csv")
+                        obj.fname = Path(f'{new_names[file]}.csv')
                     else:
                         obj.set_name = new_names[file]
                 out.append(obj)
@@ -2746,23 +2955,26 @@ class MultiKeepWindow(gui_widgets.MinMaxDialog):
 
 
 class MultiOpenWindow(QtWidgets.QDialog):
-    __slots__ = {'files': 'filenames of the objects to open',
-                 'button_box': 'button box for selecting objects to open',
-                 'paths': 'paths for the objects to open',
-                 'table_types': 'table types for the objects',
-                 'names': 'potential new names for the objects',
-                 'kwargs': 'kwargs for the objects to open',
-                 'kwargs_widgets': 'widgets representing kwargs for the objects',
-                 'scroll': 'scroll area widget',
-                 'scroll_layout': 'layout for scroll area',
-                 'scroll_widget': 'widget containing scroll area',
-                 'main_layout': 'main layout for the window'}
+    __slots__ = {
+        'files': 'filenames of the objects to open',
+        'button_box': 'button box for selecting objects to open',
+        'paths': 'paths for the objects to open',
+        'table_types': 'table types for the objects',
+        'names': 'potential new names for the objects',
+        'kwargs': 'kwargs for the objects to open',
+        'kwargs_widgets': 'widgets representing kwargs for the objects',
+        'scroll': 'scroll area widget',
+        'scroll_layout': 'layout for scroll area',
+        'scroll_widget': 'widget containing scroll area',
+        'main_layout': 'main layout for the window',
+    }
 
     def __init__(self, files: List[str], parent=None):
         super().__init__(parent)
         self.files = files
         self.button_box = QtWidgets.QDialogButtonBox(
-            QtWidgets.QDialogButtonBox.StandardButton.Ok | QtWidgets.QDialogButtonBox.StandardButton.Cancel)
+            QtWidgets.QDialogButtonBox.StandardButton.Ok | QtWidgets.QDialogButtonBox.StandardButton.Cancel
+        )
         self.all_types_combo = QtWidgets.QComboBox(self)
         self.paths = dict()
         self.table_types = dict()
@@ -2789,8 +3001,14 @@ class MultiOpenWindow(QtWidgets.QDialog):
         self.button_box.rejected.connect(self.reject)
         self.setWindowTitle('Choose table types and names')
         self.scroll_layout.addWidget(
-            QtWidgets.QLabel('Please choose a table type (mandatory) and table name (optional) '
-                             'for each loaded table\n\n'), 0, 0, 1, 3)
+            QtWidgets.QLabel(
+                'Please choose a table type (mandatory) and table name (optional) for each loaded table\n\n'
+            ),
+            0,
+            0,
+            1,
+            3,
+        )
         self.scroll_layout.addWidget(QtWidgets.QLabel('Table paths:'), 1, 0)
         self.scroll_layout.addWidget(QtWidgets.QLabel('Table types:'), 1, 1)
         self.scroll_layout.addWidget(QtWidgets.QLabel('Table names (optional):'), 1, 2)
@@ -2856,8 +3074,10 @@ class MultiOpenWindow(QtWidgets.QDialog):
         paths = {file: gui_widgets.get_val_from_widget(widget) for file, widget in self.paths.items()}
         types = {file: gui_widgets.get_val_from_widget(widget) for file, widget in self.table_types.items()}
         names = {file: gui_widgets.get_val_from_widget(widget) for file, widget in self.names.items()}
-        kwargs = {file: {key: gui_widgets.get_val_from_widget(val) for key, val in widget_dict.items()} for
-                  file, widget_dict in self.kwargs_widgets.items()}
+        kwargs = {
+            file: {key: gui_widgets.get_val_from_widget(val) for key, val in widget_dict.items()}
+            for file, widget_dict in self.kwargs_widgets.items()
+        }
         return paths, types, names, kwargs
 
 
@@ -2916,11 +3136,13 @@ class ReactiveTabWidget(QtWidgets.QTabWidget):
 
 
 class RenameCommand(QtGui.QUndoCommand):
-    __slots__ = {'prev_name': 'previous name of the tab',
-                 'new_name': 'new name of the tab',
-                 'prev_id': 'previous ID',
-                 'job_id': 'job ID of the rename command',
-                 'tab': 'tab widget'}
+    __slots__ = {
+        'prev_name': 'previous name of the tab',
+        'new_name': 'new name of the tab',
+        'prev_id': 'previous ID',
+        'job_id': 'job ID of the rename command',
+        'tab': 'tab widget',
+    }
 
     def __init__(self, prev_name: str, new_name: str, tab: TabPage, description: str):
         super().__init__(description)
@@ -2941,13 +3163,15 @@ class RenameCommand(QtGui.QUndoCommand):
 
 
 class CloseTabCommand(QtGui.QUndoCommand):
-    __slots__ = {'tab_container': 'ReactiveTabWidget containing the tabs',
-                 'tab_index': 'index of the tab to be closed',
-                 'tab_icon': 'icon of the tab',
-                 'tab_name': 'name of the tab',
-                 'obj_type': "object type of the tab's underlying object",
-                 'filename': "filename to cache the tab's underlying object under",
-                 'kwargs': 'kwargs for the underlying object'}
+    __slots__ = {
+        'tab_container': 'ReactiveTabWidget containing the tabs',
+        'tab_index': 'index of the tab to be closed',
+        'tab_icon': 'icon of the tab',
+        'tab_name': 'name of the tab',
+        'obj_type': "object type of the tab's underlying object",
+        'filename': "filename to cache the tab's underlying object under",
+        'kwargs': 'kwargs for the underlying object',
+    }
 
     def __init__(self, tab_container: ReactiveTabWidget, tab_index: int, description: str):
         super().__init__(description)
@@ -2974,17 +3198,20 @@ class CloseTabCommand(QtGui.QUndoCommand):
 
 
 class InplaceCommand(QtGui.QUndoCommand):
-    __slots__ = {'tab': 'tab widget',
-                 'prev_job_id': 'previous job ID',
-                 'new_job_id': 'new job ID',
-                 'func_name': 'name of the function to apply/undo',
-                 'args': 'function args',
-                 'kwargs': 'function kwargs',
-                 'obj_copy': 'copy of the original object',
-                 'predecessors': 'ancestor job IDs for the action'}
+    __slots__ = {
+        'tab': 'tab widget',
+        'prev_job_id': 'previous job ID',
+        'new_job_id': 'new job ID',
+        'func_name': 'name of the function to apply/undo',
+        'args': 'function args',
+        'kwargs': 'function kwargs',
+        'obj_copy': 'copy of the original object',
+        'predecessors': 'ancestor job IDs for the action',
+    }
 
-    def __init__(self, tab: TabPage, func_name: str, args: list, kwargs: dict, description: str,
-                 predecessors: List[int]):
+    def __init__(
+        self, tab: TabPage, func_name: str, args: list, kwargs: dict, description: str, predecessors: List[int]
+    ):
         super().__init__(description)
         self.tab = tab
         self.prev_job_id = tab.tab_id
@@ -3005,15 +3232,22 @@ class InplaceCommand(QtGui.QUndoCommand):
 
     def redo(self):
         self.new_job_id = JOB_COUNTER.get_id() if self.new_job_id is None else self.new_job_id
-        self.tab._apply_function_from_params(self.func_name, self.args, self.kwargs, job_id=self.new_job_id,
-                                             predecessors=self.predecessors,
-                                             finish_slot=functools.partial(self.tab.update_tab, is_unsaved=True))
+        self.tab._apply_function_from_params(
+            self.func_name,
+            self.args,
+            self.kwargs,
+            job_id=self.new_job_id,
+            predecessors=self.predecessors,
+            finish_slot=functools.partial(self.tab.update_tab, is_unsaved=True),
+        )
 
 
 class InplaceCachedCommand(InplaceCommand):
-    __slots__ = {'first_pass': 'indicates whether the command was already applied once',
-                 'processed_obj': 'object after application of the function',
-                 'new_spawn_id': 'tab id of the tab after running redo()'}
+    __slots__ = {
+        'first_pass': 'indicates whether the command was already applied once',
+        'processed_obj': 'object after application of the function',
+        'new_spawn_id': 'tab id of the tab after running redo()',
+    }
 
     def __init__(self, tab: TabPage, func_name: str, args: list, kwargs: dict, description: str, predecessors: list):
         super().__init__(tab, func_name, args, kwargs, description, predecessors)
@@ -3034,11 +3268,13 @@ class InplaceCachedCommand(InplaceCommand):
             self.tab.update_tab(is_unsaved=True)
             self.tab.tab_id = self.new_spawn_id
             mock_partial = functools.partial(lambda *args, **kwargs: None, self.args, self.kwargs)
-            worker_output = gui_widgets.WorkerOutput(self.tab.obj(), mock_partial, self.new_job_id,
-                                                     self.predecessors + [self.prev_job_id])
+            worker_output = gui_widgets.WorkerOutput(
+                self.tab.obj(), mock_partial, self.new_job_id, self.predecessors + [self.prev_job_id]
+            )
             self.tab.functionApplied.emit(worker_output)
-            self.tab.itemSpawned.emit(f"'{source_name}'\noutput", self.new_spawn_id, self.new_job_id,
-                                      self.processed_obj)
+            self.tab.itemSpawned.emit(
+                f"'{source_name}'\noutput", self.new_spawn_id, self.new_job_id, self.processed_obj
+            )
 
     def undo(self):
         processed_obj = self.tab.obj()
@@ -3073,16 +3309,24 @@ class SetOpInplacCommand(InplaceCommand):
 
 
 class PipelineInplaceCommand(QtGui.QUndoCommand):
-    __slots__ = {'tab': 'tab object',
-                 'pipeline': 'Pipeline to apply',
-                 'pipeline_name': 'Pipeline name',
-                 'obj_copy': 'copy of the original Filter object of the tab',
-                 'prev_job_id': 'previous job ID',
-                 'new_job_id': 'new job ID',
-                 'predecessors': 'ancestor job IDs for the action'}
+    __slots__ = {
+        'tab': 'tab object',
+        'pipeline': 'Pipeline to apply',
+        'pipeline_name': 'Pipeline name',
+        'obj_copy': 'copy of the original Filter object of the tab',
+        'prev_job_id': 'previous job ID',
+        'new_job_id': 'new job ID',
+        'predecessors': 'ancestor job IDs for the action',
+    }
 
-    def __init__(self, tab: FilterTabPage, pipeline: filtering.Pipeline, pipeline_name: str, description: str,
-                 predecessors: List[int]):
+    def __init__(
+        self,
+        tab: FilterTabPage,
+        pipeline: filtering.Pipeline,
+        pipeline_name: str,
+        description: str,
+        predecessors: List[int],
+    ):
         super().__init__(description)
         self.tab = tab
         self.prev_job_id = tab.tab_id
@@ -3108,10 +3352,14 @@ class MainWindow(QtWidgets.QMainWindow):
     USER_GUIDE_URL = 'https://guyteichman.github.io/RNAlysis/build/user_guide_gui.html'
     TUTORIAL_URL = 'https://guyteichman.github.io/RNAlysis/build/tutorial.html'
     FAQ_URL = 'https://guyteichman.github.io/RNAlysis/build/faq.html'
-    BUGS_URL = 'https://github.com/GuyTeichman/RNAlysis/issues/new?assignees=&labels=bug+report&projects=' \
-               '&template=bug_report.yaml&title=Bug+Report%3A+'
-    FEATURE_URL = 'https://github.com/GuyTeichman/RNAlysis/issues/new?assignees=&labels=feature+request&projects=' \
-                  '&template=feature_request.yaml&title=Feature+Request%3A+'
+    BUGS_URL = (
+        'https://github.com/GuyTeichman/RNAlysis/issues/new?assignees=&labels=bug+report&projects='
+        '&template=bug_report.yaml&title=Bug+Report%3A+'
+    )
+    FEATURE_URL = (
+        'https://github.com/GuyTeichman/RNAlysis/issues/new?assignees=&labels=feature+request&projects='
+        '&template=feature_request.yaml&title=Feature+Request%3A+'
+    )
     QUESTION_URL = 'https://github.com/GuyTeichman/RNAlysis/discussions'
 
     jobQueued = QtCore.pyqtSignal()
@@ -3138,7 +3386,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.add_tab_button = QtWidgets.QToolButton()
         self.add_tab_button.setToolTip('Add New Tab')
         self.add_tab_button.clicked.connect(functools.partial(self.add_new_tab, name=None))
-        self.add_tab_button.setText("+")
+        self.add_tab_button.setText('+')
         self.status_bar = gui_windows.StatusBar(self)
         self.error_window = None
 
@@ -3206,34 +3454,38 @@ class MainWindow(QtWidgets.QMainWindow):
             self.report = None
         else:
             from rnalysis.gui import gui_report
+
             self.report = gui_report.ReportGenerator()
 
     @QtCore.pyqtSlot(bool)
     def _toggle_reporting(self, state: bool):
         if state:
-            print("Turning on report generation...")
+            print('Turning on report generation...')
             try:
                 from rnalysis.gui import gui_report
+
                 self._generate_report = True
                 self.report = gui_report.ReportGenerator()
                 cleared = self.clear_session(not (self.tabs.count() == 1 and self.tabs.currentWidget().is_empty()))
                 if not cleared:
                     raise InternalError
                 self.toggle_report_action.setChecked(True)
-                print("Report generation turned on. ")
+                print('Report generation turned on. ')
             except ImportError:
                 warnings.warn("The RNAlysis 'reports' module is not installed. Please install it and try again. ")
                 self._toggle_reporting(False)
             except InternalError:
-                warnings.warn("You must clear the current session before turning report generation on. "
-                              "Please clear your current session and try again. ")
+                warnings.warn(
+                    'You must clear the current session before turning report generation on. '
+                    'Please clear your current session and try again. '
+                )
                 self._toggle_reporting(False)
 
         else:
             self._generate_report = False
             self.report = None
             self.toggle_report_action.setChecked(False)
-            print("Report generation turned off. ")
+            print('Report generation turned off. ')
 
     def prompt_auto_report_gen(self):
         preset = settings.get_report_gen_settings()
@@ -3276,9 +3528,13 @@ class MainWindow(QtWidgets.QMainWindow):
         if confirm_action:
             clear_msg = """Are you sure you want to clear all command history?
             This cannot be undone!"""
-            reply = QtWidgets.QMessageBox.question(self, 'Clear history',
-                                                   clear_msg, QtWidgets.QMessageBox.StandardButton.No,
-                                                   QtWidgets.QMessageBox.StandardButton.Yes)
+            reply = QtWidgets.QMessageBox.question(
+                self,
+                'Clear history',
+                clear_msg,
+                QtWidgets.QMessageBox.StandardButton.No,
+                QtWidgets.QMessageBox.StandardButton.Yes,
+            )
         else:
             reply = QtWidgets.QMessageBox.StandardButton.Yes
 
@@ -3291,13 +3547,14 @@ class MainWindow(QtWidgets.QMainWindow):
     def init_tab_contextmenu(self, ind: int):
         self.tab_contextmenu = QtWidgets.QMenu(self)
 
-        new_to_right_action = QtGui.QAction("New tab to the right")
+        new_to_right_action = QtGui.QAction('New tab to the right')
         new_to_right_action.triggered.connect(
-            functools.partial(self.add_new_tab_at, index=ind + 1, name=None, is_set=False))
+            functools.partial(self.add_new_tab_at, index=ind + 1, name=None, is_set=False)
+        )
         self.tab_contextmenu.addAction(new_to_right_action)
         self.tab_contextmenu.addSeparator()
 
-        color_menu = self.tab_contextmenu.addMenu("Change tab &color")
+        color_menu = self.tab_contextmenu.addMenu('Change tab &color')
         actions = []
         for color in gui_graphics.COLOR_ICONS:
             this_action = QtGui.QAction(color.capitalize())
@@ -3305,31 +3562,31 @@ class MainWindow(QtWidgets.QMainWindow):
             this_action.triggered.connect(functools.partial(self.set_tab_icon, ind, icon_name=color))
             actions.append(this_action)
             color_menu.addAction(this_action)
-        reset_action = QtGui.QAction("Reset color")
+        reset_action = QtGui.QAction('Reset color')
         reset_action.triggered.connect(functools.partial(self.set_tab_icon, ind, icon_name=None))
         color_menu.addAction(reset_action)
         self.tab_contextmenu.addSeparator()
         # sort_menu = self.tab_contextmenu.addMenu("Sort tabs")
-        sort_by_name = QtGui.QAction("Sort by tab &name")
+        sort_by_name = QtGui.QAction('Sort by tab &name')
         sort_by_name.triggered.connect(self.sort_tabs_by_name)
-        sort_by_time = QtGui.QAction("Sort by creation &time")
+        sort_by_time = QtGui.QAction('Sort by creation &time')
         sort_by_time.triggered.connect(self.sort_tabs_by_creation_time)
-        sort_by_type = QtGui.QAction("Sort by tab type")
+        sort_by_type = QtGui.QAction('Sort by tab type')
         sort_by_type.triggered.connect(self.sort_tabs_by_type)
-        sort_by_size = QtGui.QAction("Sort by number of features")
+        sort_by_size = QtGui.QAction('Sort by number of features')
         sort_by_size.triggered.connect(self.sort_tabs_by_n_features)
-        reverse = QtGui.QAction("Reverse tab order")
+        reverse = QtGui.QAction('Reverse tab order')
         reverse.triggered.connect(self.sort_reverse)
         self.tab_contextmenu.addActions([sort_by_name, sort_by_time, sort_by_type, sort_by_size, reverse])
         self.tab_contextmenu.addSeparator()
 
-        close_this_action = QtGui.QAction("Close")
+        close_this_action = QtGui.QAction('Close')
         close_this_action.triggered.connect(functools.partial(self.close_tab, ind))
-        close_others_action = QtGui.QAction("Close other tabs")
+        close_others_action = QtGui.QAction('Close other tabs')
         close_others_action.triggered.connect(functools.partial(self.close_other_tabs, ind))
-        close_right_action = QtGui.QAction("Close tabs to the right")
+        close_right_action = QtGui.QAction('Close tabs to the right')
         close_right_action.triggered.connect(functools.partial(self.close_tabs_to_the_right, ind))
-        close_left_action = QtGui.QAction("Close tabs to the left")
+        close_left_action = QtGui.QAction('Close tabs to the left')
         close_left_action.triggered.connect(functools.partial(self.close_tabs_to_the_left, ind))
         self.tab_contextmenu.addActions([close_this_action, close_others_action, close_right_action, close_left_action])
 
@@ -3393,8 +3650,14 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def sort_tabs_by_type(self):
         widgets = [self.tabs.widget(i) for i in range(self.tabs.count())]
-        type_to_order = {filtering.CountFilter: 1, filtering.DESeqFilter: 2, filtering.FoldChangeFilter: 3,
-                         filtering.Filter: 4, enrichment.FeatureSet: 5, type(None): 6}
+        type_to_order = {
+            filtering.CountFilter: 1,
+            filtering.DESeqFilter: 2,
+            filtering.FoldChangeFilter: 3,
+            filtering.Filter: 4,
+            enrichment.FeatureSet: 5,
+            type(None): 6,
+        }
         tab_types = {}
         for widget in widgets:
             if isinstance(widget, FilterTabPage):
@@ -3468,7 +3731,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.tabs.setTabText(self.tab.currentIndex(), current_name.rstrip('*'))
 
     def new_table_from_folder(self):
-        folder_name = QtWidgets.QFileDialog.getExistingDirectory(self, "Choose directory")
+        folder_name = QtWidgets.QFileDialog.getExistingDirectory(self, 'Choose directory')
         if folder_name:
             filter_obj = filtering.CountFilter.from_folder(folder_name)
             if self.tabs.currentWidget().is_empty():
@@ -3476,12 +3739,14 @@ class MainWindow(QtWidgets.QMainWindow):
             self.new_tab_from_filter_obj(filter_obj, JOB_COUNTER.get_id())
 
     def new_table_from_folder_htseqcount(self):
-        folder_name = QtWidgets.QFileDialog.getExistingDirectory(self, "Choose directory")
+        folder_name = QtWidgets.QFileDialog.getExistingDirectory(self, 'Choose directory')
         if folder_name:
-            normalize_answer = QtWidgets.QMessageBox.question(self, 'Normalize values?',
-                                                              "Do you want to normalize your count table to "
-                                                              "reads-per-million (RPM)?",
-                                                              QtWidgets.QMessageBox.StandardButton.Yes | QtWidgets.QMessageBox.StandardButton.No)
+            normalize_answer = QtWidgets.QMessageBox.question(
+                self,
+                'Normalize values?',
+                'Do you want to normalize your count table to reads-per-million (RPM)?',
+                QtWidgets.QMessageBox.StandardButton.Yes | QtWidgets.QMessageBox.StandardButton.No,
+            )
             to_normalize = normalize_answer == QtWidgets.QMessageBox.StandardButton.Yes
 
             filter_obj = filtering.CountFilter.from_folder_htseqcount(folder_name, norm_to_rpm=to_normalize)
@@ -3490,7 +3755,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self.new_tab_from_filter_obj(filter_obj, JOB_COUNTER.get_id())
 
     def load_multiple_files(self):
-        filenames, _ = QtWidgets.QFileDialog.getOpenFileNames(self, "Choose files")
+        filenames, _ = QtWidgets.QFileDialog.getOpenFileNames(self, 'Choose files')
         if len(filenames) > 0:
             window = MultiOpenWindow(filenames, self)
             accepted = window.exec()
@@ -3547,14 +3812,15 @@ class MainWindow(QtWidgets.QMainWindow):
         if self._generate_report:
             self.add_loaded_item_to_report(tab_id, self.tabs.currentWidget().name, self.tabs.currentWidget().obj())
 
-    def add_loaded_item_to_report(self, item_id: int, item_name: str,
-                                  obj: Union[filtering.Filter, enrichment.FeatureSet, generic.GenericPipeline]):
+    def add_loaded_item_to_report(
+        self, item_id: int, item_name: str, obj: Union[filtering.Filter, enrichment.FeatureSet, generic.GenericPipeline]
+    ):
         if not self._generate_report:
             return
         if item_id in self.report.nodes:
             if self.report.nodes[item_id].is_active:
                 return
-            self.report.add_node("reactivate node", item_id, [0], '', '', '')
+            self.report.add_node('reactivate node', item_id, [0], '', '', '')
             return
         obj_type = self._get_spawn_type(obj)
         prefix = f'{item_id}_{item_name}' if obj_type in ('Other output', 'Pipeline') else str(item_id)
@@ -3567,8 +3833,15 @@ class MainWindow(QtWidgets.QMainWindow):
         if self._generate_report:
             self.report.trim_node(tab_id)
 
-    def update_report(self, name: str, job_id: int, predecessor_ids: List[int], description: str,
-                      node_type: str = 'Other table', filename: Union[str, Path] = None):
+    def update_report(
+        self,
+        name: str,
+        job_id: int,
+        predecessor_ids: List[int],
+        description: str,
+        node_type: str = 'Other table',
+        filename: Union[str, Path] = None,
+    ):
         self.report.add_node(name, job_id, predecessor_ids, description, node_type, filename)
 
     @QtCore.pyqtSlot(gui_widgets.WorkerOutput)
@@ -3583,9 +3856,13 @@ class MainWindow(QtWidgets.QMainWindow):
         desc = f'{partial.func.__name__}({parsing.format_dict_for_display(kwargs)})'.replace('\n', '<br>')
         self.update_report(name, worker_output.job_id, worker_output.predecessor_ids, desc, 'Function')
 
-    def update_report_spawn(self, name: str, spawn_id: int, predecessor_id: int,
-                            spawn: Union[filtering.Filter, enrichment.FeatureSet,
-                            pl.DataFrame, plt.Figure, generic.GenericPipeline]):
+    def update_report_spawn(
+        self,
+        name: str,
+        spawn_id: int,
+        predecessor_id: int,
+        spawn: Union[filtering.Filter, enrichment.FeatureSet, pl.DataFrame, plt.Figure, generic.GenericPipeline],
+    ):
         if not self._generate_report:
             return
         if spawn is None:
@@ -3600,10 +3877,12 @@ class MainWindow(QtWidgets.QMainWindow):
 
     @staticmethod
     def is_valid_spawn(spawn: object):
-        if validation.isinstanceinh(spawn, filtering.Filter) \
-            or validation.isinstanceinh(spawn, enrichment.FeatureSet) \
-            or isinstance(spawn, (pl.Series, pl.DataFrame, plt.Figure, Path)) \
-            or validation.isinstanceinh(spawn, generic.GenericPipeline):
+        if (
+            validation.isinstanceinh(spawn, filtering.Filter)
+            or validation.isinstanceinh(spawn, enrichment.FeatureSet)
+            or isinstance(spawn, (pl.Series, pl.DataFrame, plt.Figure, Path))
+            or validation.isinstanceinh(spawn, generic.GenericPipeline)
+        ):
             return True
         return False
 
@@ -3644,8 +3923,9 @@ class MainWindow(QtWidgets.QMainWindow):
         return filename
 
     @staticmethod
-    def _format_report_desc(obj: Union[filtering.Filter, enrichment.FeatureSet, pl.DataFrame], filename: str,
-                            obj_type: str):
+    def _format_report_desc(
+        obj: Union[filtering.Filter, enrichment.FeatureSet, pl.DataFrame], filename: str, obj_type: str
+    ):
         href = Path('data').joinpath(filename).as_posix()
         if validation.isinstanceinh(obj, filtering.Filter):
             html = parsing.df_to_html(obj.df)
@@ -3658,8 +3938,9 @@ class MainWindow(QtWidgets.QMainWindow):
                     break
                 items.append(item)
             items.append('...')
-            desc = f'{obj_type}:<br>"{obj.set_name}"<br>{parsing.items_to_html_table(items)}' \
-                   f'{len(obj.gene_set)} features'
+            desc = (
+                f'{obj_type}:<br>"{obj.set_name}"<br>{parsing.items_to_html_table(items)}{len(obj.gene_set)} features'
+            )
         elif isinstance(obj, (pl.DataFrame, pl.Series)):
             desc = parsing.df_to_html(obj)
         elif isinstance(obj, plt.Figure):
@@ -3681,12 +3962,15 @@ class MainWindow(QtWidgets.QMainWindow):
             return
 
         pipeline_name, status = QtWidgets.QInputDialog.getItem(
-            self, 'Delete Pipeline', 'Choose Pipeline to delete:', self.pipelines.keys())
+            self, 'Delete Pipeline', 'Choose Pipeline to delete:', self.pipelines.keys()
+        )
         if status:
-            reply = QtWidgets.QMessageBox.question(self, 'Delete Pipeline?',
-                                                   "Are you sure you want to delete this Pipeline? "
-                                                   "This action cannot be undone!",
-                                                   QtWidgets.QMessageBox.StandardButton.No | QtWidgets.QMessageBox.StandardButton.Yes)
+            reply = QtWidgets.QMessageBox.question(
+                self,
+                'Delete Pipeline?',
+                'Are you sure you want to delete this Pipeline? This action cannot be undone!',
+                QtWidgets.QMessageBox.StandardButton.No | QtWidgets.QMessageBox.StandardButton.Yes,
+            )
             if reply == QtWidgets.QMessageBox.StandardButton.Yes:
                 self.pipelines.pop(pipeline_name)
                 print(f"Pipeline '{pipeline_name}' deleted successfully")
@@ -3697,19 +3981,20 @@ class MainWindow(QtWidgets.QMainWindow):
             return
 
         pipeline_name, status = QtWidgets.QInputDialog.getItem(
-            self, 'Export Pipeline', 'Choose Pipeline to export:', self.pipelines.keys())
+            self, 'Export Pipeline', 'Choose Pipeline to export:', self.pipelines.keys()
+        )
         if status:
             pipeline = self.pipelines[pipeline_name][0]
             self._export_pipeline_from_obj(pipeline_name, pipeline)
 
     def _export_pipeline_from_obj(self, pipeline_name: str, pipeline: filtering.Pipeline):
         default_name = parsing.slugify(pipeline_name) + '.yaml'
-        filename, _ = QtWidgets.QFileDialog.getSaveFileName(self, "Save Pipeline",
-                                                            str(Path.home().joinpath(default_name)),
-                                                            "YAML file (*.yaml)")
+        filename, _ = QtWidgets.QFileDialog.getSaveFileName(
+            self, 'Save Pipeline', str(Path.home().joinpath(default_name)), 'YAML file (*.yaml)'
+        )
         if filename:
             pipeline.export_pipeline(filename)
-            print(f"Successfully saved at {io.get_datetime()} under {filename}")
+            print(f'Successfully saved at {io.get_datetime()} under {filename}')
 
     def _import_pipeline_from_str(self, pipeline_name: str, content: str):
         d = yaml.safe_load(content)
@@ -3727,8 +4012,9 @@ class MainWindow(QtWidgets.QMainWindow):
             self.add_loaded_item_to_report(pipeline_id, pipeline_name, pipeline)
 
     def import_pipeline(self):
-        filename, _ = QtWidgets.QFileDialog.getOpenFileName(self, "Choose a Pipeline file", str(Path.home()),
-                                                            "YAML file (*.yaml)")
+        filename, _ = QtWidgets.QFileDialog.getOpenFileName(
+            self, 'Choose a Pipeline file', str(Path.home()), 'YAML file (*.yaml)'
+        )
         if filename:
             pipeline_name = str(Path(filename).stem)
             with open(filename) as f:
@@ -3736,7 +4022,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self._import_pipeline_from_str(pipeline_name, content)
 
     def import_multiple_gene_sets(self):
-        filenames, _ = QtWidgets.QFileDialog.getOpenFileNames(self, "Choose files")
+        filenames, _ = QtWidgets.QFileDialog.getOpenFileNames(self, 'Choose files')
         tabs_to_close = None
         if len(filenames) > 0 and self.tabs.currentWidget().is_empty():
             tabs_to_close = self.tabs.currentIndex()
@@ -3747,11 +4033,11 @@ class MainWindow(QtWidgets.QMainWindow):
             self.tabs.removeTab(tabs_to_close)
 
     def import_gene_set(self):
-        filename, _ = QtWidgets.QFileDialog.getOpenFileName(self, "Choose a file", filter=
-        "Text Document (*.txt);;"
-        "Comma-Separated Values (*.csv);;"
-        "Tab-Separated Values (*.tsv);;"
-        "All Files (*)")
+        filename, _ = QtWidgets.QFileDialog.getOpenFileName(
+            self,
+            'Choose a file',
+            filter='Text Document (*.txt);;Comma-Separated Values (*.csv);;Tab-Separated Values (*.tsv);;All Files (*)',
+        )
         if filename:
             tabs_to_close = None
             if self.tabs.currentWidget().is_empty():
@@ -3845,10 +4131,12 @@ class MainWindow(QtWidgets.QMainWindow):
     def save_pipeline(self, pipeline_name: str, pipeline: filtering.Pipeline):
         if pipeline_name in self.pipelines:
             is_new = False
-            response = QtWidgets.QMessageBox.question(self, 'Overwrite Pipeline?',
-                                                      'A Pipeline with this name already exists. '
-                                                      'Are you sure you want to overwrite it?',
-                                                      defaultButton=QtWidgets.QMessageBox.StandardButton.No)
+            response = QtWidgets.QMessageBox.question(
+                self,
+                'Overwrite Pipeline?',
+                'A Pipeline with this name already exists. Are you sure you want to overwrite it?',
+                defaultButton=QtWidgets.QMessageBox.StandardButton.No,
+            )
 
         else:
             is_new = True
@@ -3880,165 +4168,203 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def init_actions(self):
         # Table Actions
-        self.new_table_action = self.create_action("&New table", functools.partial(self.add_new_tab, name=None),
-                                                   shortcut="Ctrl+N")
-        self.new_table_from_folder_action = self.create_action("New table from &folder", self.new_table_from_folder)
-        self.new_table_from_folder_htseq_action = self.create_action("New table from folder (HTSeq-count output)",
-                                                                     self.new_table_from_folder_htseqcount)
-        self.new_multiple_action = self.create_action("&Multiple new tables", self.load_multiple_files,
-                                                      shortcut="Ctrl+Shift+N")
+        self.new_table_action = self.create_action(
+            '&New table', functools.partial(self.add_new_tab, name=None), shortcut='Ctrl+N'
+        )
+        self.new_table_from_folder_action = self.create_action('New table from &folder', self.new_table_from_folder)
+        self.new_table_from_folder_htseq_action = self.create_action(
+            'New table from folder (HTSeq-count output)', self.new_table_from_folder_htseqcount
+        )
+        self.new_multiple_action = self.create_action(
+            '&Multiple new tables', self.load_multiple_files, shortcut='Ctrl+Shift+N'
+        )
 
         # File Actions
-        self.save_action = self.create_action("&Save...", self.save_file, shortcut="Ctrl+S")
-        self.load_session_action = self.create_action("&Load session...", self.load_session)
-        self.save_session_action = self.create_action("Sa&ve session...", self.save_session)
-        self.clear_session_action = self.create_action("Clea&r session...", self.clear_session)
+        self.save_action = self.create_action('&Save...', self.save_file, shortcut='Ctrl+S')
+        self.load_session_action = self.create_action('&Load session...', self.load_session)
+        self.save_session_action = self.create_action('Sa&ve session...', self.save_session)
+        self.clear_session_action = self.create_action('Clea&r session...', self.clear_session)
 
         # Settings and Updates
-        self.clear_cache_action = self.create_action("&Clear cache...", self.clear_cache)
-        self.settings_action = self.create_action("&Settings...", self.settings)
-        self.exit_action = self.create_action("&Exit", self.close)
-        self.check_update_action = self.create_action("Check for &updates...", self.check_for_updates)
+        self.clear_cache_action = self.create_action('&Clear cache...', self.clear_cache)
+        self.settings_action = self.create_action('&Settings...', self.settings)
+        self.exit_action = self.create_action('&Exit', self.close)
+        self.check_update_action = self.create_action('Check for &updates...', self.check_for_updates)
 
         # Report Actions
-        self.toggle_report_action = self.create_action("&Enable report generation", self._toggle_reporting, True, False)
-        self.generate_report_action = self.create_action("&Create session report", self.generate_report)
+        self.toggle_report_action = self.create_action('&Enable report generation', self._toggle_reporting, True, False)
+        self.generate_report_action = self.create_action('&Create session report', self.generate_report)
 
         # Undo and Redo Actions
-        self.undo_action = self.undo_group.createUndoAction(self, "Ctrl+Z")
-        self.redo_action = self.undo_group.createRedoAction(self, "Ctrl+Shift+Z")
-        self.restore_tab_action = self.create_action("Restore tab", self.closed_tabs_stack.undo,
-                                                     shortcut="Ctrl+Shift+T")
-        self.close_current_action = self.create_action("&Close current tab", self.close_current_tab, shortcut="Ctrl+W")
+        self.undo_action = self.undo_group.createUndoAction(self, 'Ctrl+Z')
+        self.redo_action = self.undo_group.createRedoAction(self, 'Ctrl+Shift+Z')
+        self.restore_tab_action = self.create_action(
+            'Restore tab', self.closed_tabs_stack.undo, shortcut='Ctrl+Shift+T'
+        )
+        self.close_current_action = self.create_action('&Close current tab', self.close_current_tab, shortcut='Ctrl+W')
 
         # View and History Actions
-        self.close_figs_action = self.create_action("Close all &Figures", functools.partial(plt.close, 'all'))
-        self.task_queue_action = self.create_action("Task &queue", self.task_queue_window.show)
+        self.close_figs_action = self.create_action('Close all &Figures', functools.partial(plt.close, 'all'))
+        self.task_queue_action = self.create_action('Task &queue', self.task_queue_window.show)
         self.status_bar.taskQueueRequested.connect(self.task_queue_action.trigger)
-        self.show_history_action = self.create_action("Command &History", self.toggle_history_window, checkable=True,
-                                                      checked=True)
-        self.clear_history_action = self.create_action("Clea&r command history", self.clear_history)
+        self.show_history_action = self.create_action(
+            'Command &History', self.toggle_history_window, checkable=True, checked=True
+        )
+        self.clear_history_action = self.create_action('Clea&r command history', self.clear_history)
 
         # Gene Set Actions
-        self.copy_action = self.create_action("&Copy Gene Set", self.copy_gene_set, shortcut="Ctrl+C")
-        self.import_set_action = self.create_action("&Import Gene Set...", self.import_gene_set,
-                                                    shortcut="Ctrl+Shift+I")
-        self.import_multiple_sets_action = self.create_action("Import &Multiple Gene Sets...",
-                                                              self.import_multiple_gene_sets, shortcut="Ctrl+Shift+M")
-        self.export_set_action = self.create_action("&Export Gene Set...", self.export_gene_set,
-                                                    shortcut="Ctrl+Shift+E")
-        self.set_op_action = self.create_action("Set &Operations...", self.choose_set_op, shortcut="Ctrl+Shift+O")
-        self.enrichment_action = self.create_action("Enrichment &Analysis...", self.open_enrichment_analysis,
-                                                    shortcut="Ctrl+Shift+A")
-        self.set_vis_action = self.create_action("&Visualize Gene Sets...", self.visualize_gene_sets,
-                                                 shortcut="Ctrl+Shift+V")
+        self.copy_action = self.create_action('&Copy Gene Set', self.copy_gene_set, shortcut='Ctrl+C')
+        self.import_set_action = self.create_action(
+            '&Import Gene Set...', self.import_gene_set, shortcut='Ctrl+Shift+I'
+        )
+        self.import_multiple_sets_action = self.create_action(
+            'Import &Multiple Gene Sets...', self.import_multiple_gene_sets, shortcut='Ctrl+Shift+M'
+        )
+        self.export_set_action = self.create_action(
+            '&Export Gene Set...', self.export_gene_set, shortcut='Ctrl+Shift+E'
+        )
+        self.set_op_action = self.create_action('Set &Operations...', self.choose_set_op, shortcut='Ctrl+Shift+O')
+        self.enrichment_action = self.create_action(
+            'Enrichment &Analysis...', self.open_enrichment_analysis, shortcut='Ctrl+Shift+A'
+        )
+        self.set_vis_action = self.create_action(
+            '&Visualize Gene Sets...', self.visualize_gene_sets, shortcut='Ctrl+Shift+V'
+        )
 
         # External Tool Actions
-        self.cutadapt_single_action = self.create_action("&Single-end adapter trimming...",
-                                                         functools.partial(self.start_external_window,
-                                                                           CutAdaptSingleWindow))
-        self.cutadapt_paired_action = self.create_action("&Paired-end adapter trimming...",
-                                                         functools.partial(self.start_external_window,
-                                                                           CutAdaptPairedWindow))
-        self.kallisto_index_action = self.create_action("kallisto build &index...",
-                                                        functools.partial(self.start_external_window,
-                                                                          KallistoIndexWindow))
-        self.kallisto_single_action = self.create_action("&kallisto Single-end RNA-seq quantification...",
-                                                         functools.partial(self.start_external_window,
-                                                                           KallistoSingleWindow))
-        self.kallisto_paired_action = self.create_action("kallisto &Paired-end RNA-seq quantification...",
-                                                         functools.partial(self.start_external_window,
-                                                                           KallistoPairedWindow))
-        self.bowtie2_index_action = self.create_action("Bowtie2 build &index...",
-                                                       functools.partial(self.start_external_window,
-                                                                         Bowtie2IndexWindow))
-        self.bowtie2_single_action = self.create_action("Bowtie2 &Single-end alignment...",
-                                                        functools.partial(self.start_external_window,
-                                                                          Bowtie2SingleWindow))
-        self.bowtie2_paired_action = self.create_action("Bowtie2 &Paired-end alignment...",
-                                                        functools.partial(self.start_external_window,
-                                                                          Bowtie2PairedWindow))
+        self.cutadapt_single_action = self.create_action(
+            '&Single-end adapter trimming...', functools.partial(self.start_external_window, CutAdaptSingleWindow)
+        )
+        self.cutadapt_paired_action = self.create_action(
+            '&Paired-end adapter trimming...', functools.partial(self.start_external_window, CutAdaptPairedWindow)
+        )
+        self.kallisto_index_action = self.create_action(
+            'kallisto build &index...', functools.partial(self.start_external_window, KallistoIndexWindow)
+        )
+        self.kallisto_single_action = self.create_action(
+            '&kallisto Single-end RNA-seq quantification...',
+            functools.partial(self.start_external_window, KallistoSingleWindow),
+        )
+        self.kallisto_paired_action = self.create_action(
+            'kallisto &Paired-end RNA-seq quantification...',
+            functools.partial(self.start_external_window, KallistoPairedWindow),
+        )
+        self.bowtie2_index_action = self.create_action(
+            'Bowtie2 build &index...', functools.partial(self.start_external_window, Bowtie2IndexWindow)
+        )
+        self.bowtie2_single_action = self.create_action(
+            'Bowtie2 &Single-end alignment...', functools.partial(self.start_external_window, Bowtie2SingleWindow)
+        )
+        self.bowtie2_paired_action = self.create_action(
+            'Bowtie2 &Paired-end alignment...', functools.partial(self.start_external_window, Bowtie2PairedWindow)
+        )
 
-        self.featurecounts_single_action = self.create_action("&featureCounts Single-end counting...",
-                                                              functools.partial(self.start_external_window,
-                                                                                FeatureCountsSingleWindow))
-        self.featurecounts_paired_action = self.create_action("featureCounts &Paired-end counting...",
-                                                              functools.partial(self.start_external_window,
-                                                                                FeatureCountsPairedWindow))
-        self.sam2fastq_single_action = self.create_action("Convert SAM/BAM to FASTQ (single-end)...",
-                                                          functools.partial(self.start_external_window,
-                                                                            SamToFastqSingleWindow))
-        self.sam2fastq_paired_action = self.create_action("Convert SAM/BAM to FASTQ (paired-end)...",
-                                                          functools.partial(self.start_external_window,
-                                                                            SamToFastqPairedWindow))
-        self.fastq2sam_single_action = self.create_action("Convert FASTQ to SAM (single-end)...",
-                                                          functools.partial(self.start_external_window,
-                                                                            FastqToSamSingleWindow))
-        self.fastq2sam_paired_action = self.create_action("Convert FASTQ to SAM (paired-end)...",
-                                                          functools.partial(self.start_external_window,
-                                                                            FastqToSamPairedWindow))
-        self.convert_sam_action = self.create_action("Convert SAM/BAM to BAM/SAM...",
-                                                     functools.partial(self.start_external_window,
-                                                                       ConvertSamFormatWindow))
-        self.bam_index_action = self.create_action("Create BAM index...",
-                                                   functools.partial(self.start_external_window, BamIndexWindow))
-        self.sort_sam_action = self.create_action("Sort SAM/BAM...", functools.partial(self.start_external_window,
-                                                                                       SortSamWindow))
-        self.validate_sam_action = self.create_action("Validate SAM/BAM...",
-                                                      functools.partial(self.start_external_window, ValidateSamWindow))
-        self.find_duplicates_action = self.create_action("Find PCR/optical &duplicates...",
-                                                         functools.partial(self.start_external_window,
-                                                                           FindDuplicatesWindow))
+        self.featurecounts_single_action = self.create_action(
+            '&featureCounts Single-end counting...',
+            functools.partial(self.start_external_window, FeatureCountsSingleWindow),
+        )
+        self.featurecounts_paired_action = self.create_action(
+            'featureCounts &Paired-end counting...',
+            functools.partial(self.start_external_window, FeatureCountsPairedWindow),
+        )
+        self.sam2fastq_single_action = self.create_action(
+            'Convert SAM/BAM to FASTQ (single-end)...',
+            functools.partial(self.start_external_window, SamToFastqSingleWindow),
+        )
+        self.sam2fastq_paired_action = self.create_action(
+            'Convert SAM/BAM to FASTQ (paired-end)...',
+            functools.partial(self.start_external_window, SamToFastqPairedWindow),
+        )
+        self.fastq2sam_single_action = self.create_action(
+            'Convert FASTQ to SAM (single-end)...',
+            functools.partial(self.start_external_window, FastqToSamSingleWindow),
+        )
+        self.fastq2sam_paired_action = self.create_action(
+            'Convert FASTQ to SAM (paired-end)...',
+            functools.partial(self.start_external_window, FastqToSamPairedWindow),
+        )
+        self.convert_sam_action = self.create_action(
+            'Convert SAM/BAM to BAM/SAM...', functools.partial(self.start_external_window, ConvertSamFormatWindow)
+        )
+        self.bam_index_action = self.create_action(
+            'Create BAM index...', functools.partial(self.start_external_window, BamIndexWindow)
+        )
+        self.sort_sam_action = self.create_action(
+            'Sort SAM/BAM...', functools.partial(self.start_external_window, SortSamWindow)
+        )
+        self.validate_sam_action = self.create_action(
+            'Validate SAM/BAM...', functools.partial(self.start_external_window, ValidateSamWindow)
+        )
+        self.find_duplicates_action = self.create_action(
+            'Find PCR/optical &duplicates...', functools.partial(self.start_external_window, FindDuplicatesWindow)
+        )
 
         # Conditional Action for Platform-Specific Use
-        action_name = "ShortStack small &RNA alignment..." if platform.system() != 'Windows' else "ShortStack small &RNA alignment (not available on Windows)"
-        self.shortstack_action = self.create_action(action_name,
-                                                    functools.partial(self.start_external_window, ShortStackWindow),
-                                                    enabled=platform.system() != 'Windows')
+        action_name = (
+            'ShortStack small &RNA alignment...'
+            if platform.system() != 'Windows'
+            else 'ShortStack small &RNA alignment (not available on Windows)'
+        )
+        self.shortstack_action = self.create_action(
+            action_name,
+            functools.partial(self.start_external_window, ShortStackWindow),
+            enabled=platform.system() != 'Windows',
+        )
 
         # Visualization Actions
-        self.bar_plot_action = self.create_action("Create enrichment &bar-plot...",
-                                                  functools.partial(self.start_external_window, BarPlotWindow))
-        self.ontology_graph_action = self.create_action("Visualize &Gene Ontology...",
-                                                        functools.partial(self.start_external_window,
-                                                                          OntologyGraphWindow))
-        self.pathway_graph_action = self.create_action("Visualize &KEGG Pathway...",
-                                                       functools.partial(self.start_external_window,
-                                                                         PathwayGraphWindow))
+        self.bar_plot_action = self.create_action(
+            'Create enrichment &bar-plot...', functools.partial(self.start_external_window, BarPlotWindow)
+        )
+        self.ontology_graph_action = self.create_action(
+            'Visualize &Gene Ontology...', functools.partial(self.start_external_window, OntologyGraphWindow)
+        )
+        self.pathway_graph_action = self.create_action(
+            'Visualize &KEGG Pathway...', functools.partial(self.start_external_window, PathwayGraphWindow)
+        )
 
         # Help Actions
-        self.quick_start_action = self.create_action("&Quick-start guide", self.quickstart_window.show)
-        self.user_guide_action = self.create_action("&User Guide",
-                                                    functools.partial(self.open_link, self.USER_GUIDE_URL))
-        self.tutorial_action = self.create_action("&Tutorial", functools.partial(self.open_link, self.TUTORIAL_URL))
-        self.faq_action = self.create_action("&Frequently Asked Questions",
-                                             functools.partial(self.open_link, self.FAQ_URL))
-        self.bug_report_action = self.create_action("Submit an &issue",
-                                                    functools.partial(self.open_link, self.BUGS_URL))
-        self.request_feature_action = self.create_action("&Request a feature",
-                                                         functools.partial(self.open_link, self.FEATURE_URL))
-        self.ask_question_action = self.create_action("Ask a &question",
-                                                      functools.partial(self.open_link, self.QUESTION_URL))
-        self.check_update_action = self.create_action("Check for &updates...", self.check_for_updates)
+        self.quick_start_action = self.create_action('&Quick-start guide', self.quickstart_window.show)
+        self.user_guide_action = self.create_action(
+            '&User Guide', functools.partial(self.open_link, self.USER_GUIDE_URL)
+        )
+        self.tutorial_action = self.create_action('&Tutorial', functools.partial(self.open_link, self.TUTORIAL_URL))
+        self.faq_action = self.create_action(
+            '&Frequently Asked Questions', functools.partial(self.open_link, self.FAQ_URL)
+        )
+        self.bug_report_action = self.create_action(
+            'Submit an &issue', functools.partial(self.open_link, self.BUGS_URL)
+        )
+        self.request_feature_action = self.create_action(
+            '&Request a feature', functools.partial(self.open_link, self.FEATURE_URL)
+        )
+        self.ask_question_action = self.create_action(
+            'Ask a &question', functools.partial(self.open_link, self.QUESTION_URL)
+        )
+        self.check_update_action = self.create_action('Check for &updates...', self.check_for_updates)
         self.whatsnew_action = self.create_action("&What's new in RNAlysis", self.whats_new)
-        self.about_action = self.create_action("&About", self.about)
-        self.cite_action = self.create_action("How to &cite RNAlysis", self.cite)
+        self.about_action = self.create_action('&About', self.about)
+        self.cite_action = self.create_action('How to &cite RNAlysis', self.cite)
 
         # Pipeline Actions
-        self.new_pipeline_action = self.create_action("&New Pipeline...", self.add_pipeline, shortcut="Ctrl+Alt+N")
-        self.import_pipeline_action = self.create_action("&Import Pipeline...", self.import_pipeline,
-                                                         shortcut="Ctrl+Alt+I")
-        self.export_pipeline_action = self.create_action("&Export Pipeline...", self.export_pipeline,
-                                                         shortcut="Ctrl+Alt+E")
-        self.delete_pipeline_action = self.create_action("&Delete Pipeline...", self.delete_pipeline,
-                                                         shortcut="Ctrl+Alt+D")
+        self.new_pipeline_action = self.create_action('&New Pipeline...', self.add_pipeline, shortcut='Ctrl+Alt+N')
+        self.import_pipeline_action = self.create_action(
+            '&Import Pipeline...', self.import_pipeline, shortcut='Ctrl+Alt+I'
+        )
+        self.export_pipeline_action = self.create_action(
+            '&Export Pipeline...', self.export_pipeline, shortcut='Ctrl+Alt+E'
+        )
+        self.delete_pipeline_action = self.create_action(
+            '&Delete Pipeline...', self.delete_pipeline, shortcut='Ctrl+Alt+D'
+        )
 
     @QtCore.pyqtSlot()
     def clear_cache(self):
-        reply = QtWidgets.QMessageBox.question(self, 'Clear cache?',
-                                               'Are you sure you want to clear the <i>RNAlysis</i> cache? '
-                                               'This cannot be undone!',
-                                               defaultButton=QtWidgets.QMessageBox.StandardButton.No)
+        reply = QtWidgets.QMessageBox.question(
+            self,
+            'Clear cache?',
+            'Are you sure you want to clear the <i>RNAlysis</i> cache? This cannot be undone!',
+            defaultButton=QtWidgets.QMessageBox.StandardButton.No,
+        )
         if reply == QtWidgets.QMessageBox.StandardButton.Yes:
             io.clear_gui_cache()
             io.clear_cache()
@@ -4048,29 +4374,37 @@ class MainWindow(QtWidgets.QMainWindow):
         if io.is_rnalysis_outdated():
             # frozen releases of RNAlysis cannot update using pip. new version must be downloaded manually
             if getattr(sys, 'frozen', False) and hasattr(sys, '_MEIPASS'):
-                reply = QtWidgets.QMessageBox.question(self, 'A new version is available',
-                                                       'A new version of <i>RNAlysis</i> is available! '
-                                                       'Do you wish to download it?')
+                reply = QtWidgets.QMessageBox.question(
+                    self,
+                    'A new version is available',
+                    'A new version of <i>RNAlysis</i> is available! Do you wish to download it?',
+                )
                 if reply == QtWidgets.QMessageBox.StandardButton.Yes:
                     url = QtCore.QUrl('https://github.com/GuyTeichman/RNAlysis/releases/latest')
                     if not QtGui.QDesktopServices.openUrl(url):
                         QtWidgets.QMessageBox.warning(self, 'Connection failed', 'Could not download new version')
                 return
 
-            reply = QtWidgets.QMessageBox.question(self, 'A new version is available',
-                                                   'A new version of <i>RNAlysis</i> is available! '
-                                                   'Do you wish to update?')
+            reply = QtWidgets.QMessageBox.question(
+                self,
+                'A new version is available',
+                'A new version of <i>RNAlysis</i> is available! Do you wish to update?',
+            )
             if reply == QtWidgets.QMessageBox.StandardButton.Yes:
                 io.update_rnalysis()
                 QtCore.QCoreApplication.quit()
                 self.deleteLater()
                 QtCore.QProcess.startDetached(
-                    Path(sys.executable).parent.joinpath('Scripts', 'rnalysis-gui').as_posix(), sys.argv)
+                    Path(sys.executable).parent.joinpath('Scripts', 'rnalysis-gui').as_posix(), sys.argv
+                )
 
         else:
             if confirm_updated:
-                _ = QtWidgets.QMessageBox.information(self, 'You are using the latest version of RNAlysis',
-                                                      f'Your version of <i>RNAlysis</i> ({__version__}) is up to date!')
+                _ = QtWidgets.QMessageBox.information(
+                    self,
+                    'You are using the latest version of RNAlysis',
+                    f'Your version of <i>RNAlysis</i> ({__version__}) is up to date!',
+                )
 
     @QtCore.pyqtSlot(bool)
     def toggle_history_window(self, state: bool):
@@ -4085,7 +4419,8 @@ class MainWindow(QtWidgets.QMainWindow):
         func_name = self.external_windows[window_type].func_name
         func = self.external_windows[window_type].func
         self.external_windows[window_type].paramsAccepted.connect(
-            functools.partial(self.start_generic_job_from_params, func_name, func))
+            functools.partial(self.start_generic_job_from_params, func_name, func)
+        )
         self.external_windows[window_type].geneSetsRequested.connect(self.update_gene_sets_widget)
 
         self.external_windows[window_type].show()
@@ -4103,14 +4438,13 @@ class MainWindow(QtWidgets.QMainWindow):
         if gene_set is None:
             warnings.warn('Cannot export an empty gene set')
             return
-        default_name = parsing.slugify(self.tabs.tabText(self.tabs.currentIndex()).rstrip("*")) + '.txt'
-        filename, _ = QtWidgets.QFileDialog.getSaveFileName(self, "Save gene set",
-                                                            str(Path.home().joinpath(default_name)),
-                                                            "Text document (*.txt);;"
-                                                            "All Files (*)")
+        default_name = parsing.slugify(self.tabs.tabText(self.tabs.currentIndex()).rstrip('*')) + '.txt'
+        filename, _ = QtWidgets.QFileDialog.getSaveFileName(
+            self, 'Save gene set', str(Path.home().joinpath(default_name)), 'Text document (*.txt);;All Files (*)'
+        )
         if filename:
             io.save_gene_set(gene_set, filename)
-            print(f"Successfully saved at {io.get_datetime()} under {filename}")
+            print(f'Successfully saved at {io.get_datetime()} under {filename}')
 
     def open_link(self, link: str):
         url = QtCore.QUrl(link)
@@ -4118,8 +4452,11 @@ class MainWindow(QtWidgets.QMainWindow):
             QtGui.QMessageBox.warning(self, 'Connection failed', 'Could not open link. Please try again later. ')
 
     def get_gene_set_by_ind(self, ind: int):
-        gene_set = self.tabs.widget(ind).filter_obj if \
-            isinstance(self.tabs.currentWidget(), FilterTabPage) else self.tabs.widget(ind).gene_set.gene_set
+        gene_set = (
+            self.tabs.widget(ind).filter_obj
+            if isinstance(self.tabs.currentWidget(), FilterTabPage)
+            else self.tabs.widget(ind).gene_set.gene_set
+        )
         return gene_set
 
     def get_available_objects(self):
@@ -4128,7 +4465,7 @@ class MainWindow(QtWidgets.QMainWindow):
         available_objects_unique = {}
         for i, name in enumerate(tab_names):
             if name in checked:
-                key = f"{name}_{checked[name]}"
+                key = f'{name}_{checked[name]}'
 
             else:
                 checked[name] = 1
@@ -4153,10 +4490,16 @@ class MainWindow(QtWidgets.QMainWindow):
         set_op_id = JOB_COUNTER.get_id()
         new_tab_id = JOB_COUNTER.get_id()
         if self._generate_report:
-            self.update_report(output_name.replace(' output', ''), set_op_id, ancestor_ids,
-                               parsing.format_dict_for_display(kwargs), 'Function')
-            self.update_report_spawn('Set operation output', new_tab_id, set_op_id,
-                                     enrichment.FeatureSet(output_set, output_name))
+            self.update_report(
+                output_name.replace(' output', ''),
+                set_op_id,
+                ancestor_ids,
+                parsing.format_dict_for_display(kwargs),
+                'Function',
+            )
+            self.update_report_spawn(
+                'Set operation output', new_tab_id, set_op_id, enrichment.FeatureSet(output_set, output_name)
+            )
 
         self.new_tab_from_gene_set(output_set, new_tab_id, output_name)
 
@@ -4201,9 +4544,12 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def generate_report(self):
         if not self._generate_report:
-            QtWidgets.QMessageBox.warning(self, 'Report generation was not enabled!',
-                                          'Cannot generate a report since report generation was not enabled. '
-                                          'You can enable it from the Settings menu.')
+            QtWidgets.QMessageBox.warning(
+                self,
+                'Report generation was not enabled!',
+                'Cannot generate a report since report generation was not enabled. '
+                'You can enable it from the Settings menu.',
+            )
             return
         dialog = self.report.generate_report_dialog(self)
 
@@ -4222,23 +4568,45 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def init_menus(self):
         self.setMenuBar(self.menu_bar)
-        file_menu = self.menu_bar.addMenu("&File")
-        self.new_menu = file_menu.addMenu("&New...")
-        self.new_menu.addActions([self.new_table_action, self.new_multiple_action, self.new_table_from_folder_action,
-                                  self.new_table_from_folder_htseq_action])
+        file_menu = self.menu_bar.addMenu('&File')
+        self.new_menu = file_menu.addMenu('&New...')
+        self.new_menu.addActions(
+            [
+                self.new_table_action,
+                self.new_multiple_action,
+                self.new_table_from_folder_action,
+                self.new_table_from_folder_htseq_action,
+            ]
+        )
         file_menu.addActions(
-            [self.save_action, self.load_session_action, self.save_session_action, self.clear_session_action,
-             self.clear_cache_action, self.toggle_report_action, self.generate_report_action, self.settings_action,
-             self.exit_action])
+            [
+                self.save_action,
+                self.load_session_action,
+                self.save_session_action,
+                self.clear_session_action,
+                self.clear_cache_action,
+                self.toggle_report_action,
+                self.generate_report_action,
+                self.settings_action,
+                self.exit_action,
+            ]
+        )
 
-        edit_menu = self.menu_bar.addMenu("&Edit")
-        edit_menu.addActions([self.undo_action, self.redo_action, self.restore_tab_action, self.close_current_action,
-                              self.clear_history_action])
+        edit_menu = self.menu_bar.addMenu('&Edit')
+        edit_menu.addActions(
+            [
+                self.undo_action,
+                self.redo_action,
+                self.restore_tab_action,
+                self.close_current_action,
+                self.clear_history_action,
+            ]
+        )
 
-        view_menu = self.menu_bar.addMenu("&View")
+        view_menu = self.menu_bar.addMenu('&View')
         view_menu.addActions([self.show_history_action, self.task_queue_action, self.close_figs_action])
 
-        fastq_menu = self.menu_bar.addMenu("&FASTQ/SAM")
+        fastq_menu = self.menu_bar.addMenu('&FASTQ/SAM')
 
         self.quality_menu = fastq_menu.addMenu('&Quality control')
         self.quality_menu.addActions([self.validate_sam_action])
@@ -4248,55 +4616,90 @@ class MainWindow(QtWidgets.QMainWindow):
         self.trimming_menu = fastq_menu.addMenu('Adapter &trimming')
         self.trimming_menu.addActions([self.cutadapt_single_action, self.cutadapt_paired_action])
 
-        self.kallisto_menu = fastq_menu.addMenu("RNA-sequencing &quantification")
+        self.kallisto_menu = fastq_menu.addMenu('RNA-sequencing &quantification')
         self.kallisto_menu.addActions(
-            [self.kallisto_index_action, self.kallisto_single_action, self.kallisto_paired_action])
+            [self.kallisto_index_action, self.kallisto_single_action, self.kallisto_paired_action]
+        )
 
-        self.alignment_menu = fastq_menu.addMenu("Read &alignment")
+        self.alignment_menu = fastq_menu.addMenu('Read &alignment')
         self.alignment_menu.addActions(
-            [self.bowtie2_index_action, self.bowtie2_single_action, self.bowtie2_paired_action, self.shortstack_action])
+            [self.bowtie2_index_action, self.bowtie2_single_action, self.bowtie2_paired_action, self.shortstack_action]
+        )
 
         self.convert_menu = fastq_menu.addMenu('&Conversion')
         self.convert_menu.addActions(
-            [self.convert_sam_action, self.sam2fastq_single_action, self.sam2fastq_paired_action,
-             self.fastq2sam_single_action, self.fastq2sam_paired_action])
+            [
+                self.convert_sam_action,
+                self.sam2fastq_single_action,
+                self.sam2fastq_paired_action,
+                self.fastq2sam_single_action,
+                self.fastq2sam_paired_action,
+            ]
+        )
 
         self.process_menu = fastq_menu.addMenu('P&ost-processing')
         self.process_menu.addActions([self.sort_sam_action, self.find_duplicates_action, self.bam_index_action])
 
         # self.filtering_menu = fastq_menu.addMenu('&Filtering')
 
-        self.count_menu = fastq_menu.addMenu("&Feature counting")
+        self.count_menu = fastq_menu.addMenu('&Feature counting')
         self.count_menu.addActions([self.featurecounts_single_action, self.featurecounts_paired_action])
 
-        gene_sets_menu = self.menu_bar.addMenu("&Gene sets")
+        gene_sets_menu = self.menu_bar.addMenu('&Gene sets')
         gene_sets_menu.addActions(
-            [self.copy_action, self.import_set_action, self.import_multiple_sets_action,
-             self.export_set_action, self.set_op_action, self.set_vis_action])
+            [
+                self.copy_action,
+                self.import_set_action,
+                self.import_multiple_sets_action,
+                self.export_set_action,
+                self.set_op_action,
+                self.set_vis_action,
+            ]
+        )
 
-        enrichment_menu = self.menu_bar.addMenu("E&nrichment")
-        enrichment_menu.addActions([self.enrichment_action,
-                                    self.ontology_graph_action, self.pathway_graph_action, self.bar_plot_action])
+        enrichment_menu = self.menu_bar.addMenu('E&nrichment')
+        enrichment_menu.addActions(
+            [self.enrichment_action, self.ontology_graph_action, self.pathway_graph_action, self.bar_plot_action]
+        )
 
-        pipeline_menu = self.menu_bar.addMenu("&Pipelines")
-        pipeline_menu.addActions([self.new_pipeline_action, self.import_pipeline_action, self.export_pipeline_action,
-                                  self.delete_pipeline_action])
-        self.edit_pipeline_menu = pipeline_menu.addMenu("&Edit Pipeline")
+        pipeline_menu = self.menu_bar.addMenu('&Pipelines')
+        pipeline_menu.addActions(
+            [
+                self.new_pipeline_action,
+                self.import_pipeline_action,
+                self.export_pipeline_action,
+                self.delete_pipeline_action,
+            ]
+        )
+        self.edit_pipeline_menu = pipeline_menu.addMenu('&Edit Pipeline')
         self.edit_pipeline_menu.aboutToShow.connect(
-            functools.partial(self._populate_pipelines, self.edit_pipeline_menu, self.edit_pipeline,
-                              pipeline_arg=False))
-        self.apply_pipeline_menu = pipeline_menu.addMenu("&Apply Pipeline")
+            functools.partial(self._populate_pipelines, self.edit_pipeline_menu, self.edit_pipeline, pipeline_arg=False)
+        )
+        self.apply_pipeline_menu = pipeline_menu.addMenu('&Apply Pipeline')
         self.apply_pipeline_menu.aboutToShow.connect(
-            functools.partial(self._populate_pipelines, self.apply_pipeline_menu, self.apply_pipeline))
+            functools.partial(self._populate_pipelines, self.apply_pipeline_menu, self.apply_pipeline)
+        )
 
-        help_menu = self.menu_bar.addMenu("&Help")
+        help_menu = self.menu_bar.addMenu('&Help')
         help_menu.addActions(
-            [self.quick_start_action, self.tutorial_action, self.user_guide_action, self.faq_action,
-             self.bug_report_action, self.request_feature_action, self.ask_question_action,
-             self.check_update_action, self.whatsnew_action, self.about_action, self.cite_action])
+            [
+                self.quick_start_action,
+                self.tutorial_action,
+                self.user_guide_action,
+                self.faq_action,
+                self.bug_report_action,
+                self.request_feature_action,
+                self.ask_question_action,
+                self.check_update_action,
+                self.whatsnew_action,
+                self.about_action,
+                self.cite_action,
+            ]
+        )
 
-    def _populate_pipelines(self, menu: QtWidgets.QMenu, func: Callable, pipeline_arg: bool = True,
-                            name_arg: bool = True):
+    def _populate_pipelines(
+        self, menu: QtWidgets.QMenu, func: Callable, pipeline_arg: bool = True, name_arg: bool = True
+    ):
         # Remove the old options from the menu
         menu.clear()
         # Dynamically create the actions
@@ -4320,17 +4723,20 @@ class MainWindow(QtWidgets.QMainWindow):
         elif validation.isinstanceinh(pipeline, fastq._FASTQPipeline):
             self._apply_fastq_pipeline(pipeline, pipeline_name, pipeline_id)
         else:
-            raise TypeError(f"Invalid Pipeline type: {type(pipeline)}")
+            raise TypeError(f'Invalid Pipeline type: {type(pipeline)}')
 
     def _apply_fastq_pipeline(self, pipeline: fastq._FASTQPipeline, pipeline_name: str, pipeline_id: int):
         if isinstance(pipeline, fastq.SingleEndPipeline):
             dialog = gui_windows.FuncExternalWindow('Pipeline', pipeline.apply_to, None, {'self'}, parent=self)
         else:
-            dialog = gui_windows.PairedFuncExternalWindow('Pipeline', pipeline.apply_to, None,
-                                                          {'self', 'r1_files', 'r2_files'}, parent=self)
+            dialog = gui_windows.PairedFuncExternalWindow(
+                'Pipeline', pipeline.apply_to, None, {'self', 'r1_files', 'r2_files'}, parent=self
+            )
         dialog.paramsAccepted.connect(
-            functools.partial(self.start_generic_job_from_params, pipeline_name, pipeline.apply_to,
-                              predecessor=pipeline_id))
+            functools.partial(
+                self.start_generic_job_from_params, pipeline_name, pipeline.apply_to, predecessor=pipeline_id
+            )
+        )
         dialog.paramsAccepted.connect(dialog.deleteLater)
         dialog.init_ui()
         self.external_windows['fastq_pipeline'] = dialog
@@ -4338,10 +4744,14 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def _apply_table_pipeline(self, pipeline: filtering.Pipeline, pipeline_name: str, pipeline_id: int):
         apply_msg = f"Do you want to apply Pipeline '{pipeline_name}' inplace?"
-        reply = QtWidgets.QMessageBox.question(self, f"Apply Pipeline '{pipeline_name}'",
-                                               apply_msg,
-                                               QtWidgets.QMessageBox.StandardButton.Yes | QtWidgets.QMessageBox.StandardButton.No |
-                                               QtWidgets.QMessageBox.StandardButton.Cancel)
+        reply = QtWidgets.QMessageBox.question(
+            self,
+            f"Apply Pipeline '{pipeline_name}'",
+            apply_msg,
+            QtWidgets.QMessageBox.StandardButton.Yes
+            | QtWidgets.QMessageBox.StandardButton.No
+            | QtWidgets.QMessageBox.StandardButton.Cancel,
+        )
         if reply == QtWidgets.QMessageBox.StandardButton.Cancel:
             return
         inplace = reply == QtWidgets.QMessageBox.StandardButton.Yes
@@ -4350,8 +4760,9 @@ class MainWindow(QtWidgets.QMainWindow):
         filtered_available_objs = {}
         for i, (key, val) in enumerate(available_objs.items()):
             if (self.tabs.widget(i).obj_type() == pipeline.filter_type) or (
-                pipeline.filter_type == filtering.Filter and issubclass(self.tabs.widget(i).obj_type(),
-                                                                        filtering.Filter)):
+                pipeline.filter_type == filtering.Filter
+                and issubclass(self.tabs.widget(i).obj_type(), filtering.Filter)
+            ):
                 filtered_available_objs[key] = val
         window = gui_windows.ApplyTablePipelineWindow(filtered_available_objs, self)
         accepted = window.exec()
@@ -4366,10 +4777,12 @@ class MainWindow(QtWidgets.QMainWindow):
     @QtCore.pyqtSlot()
     def clear_session(self, confirm_action: bool = True) -> bool:
         if confirm_action:
-            response = QtWidgets.QMessageBox.question(self, 'Clear session?',
-                                                      'Are you sure you want to clear your session? '
-                                                      'All unsaved changes will be lost!',
-                                                      defaultButton=QtWidgets.QMessageBox.StandardButton.No)
+            response = QtWidgets.QMessageBox.question(
+                self,
+                'Clear session?',
+                'Are you sure you want to clear your session? All unsaved changes will be lost!',
+                defaultButton=QtWidgets.QMessageBox.StandardButton.No,
+            )
         else:
             response = QtWidgets.QMessageBox.StandardButton.Yes
 
@@ -4388,9 +4801,9 @@ class MainWindow(QtWidgets.QMainWindow):
         return response == QtWidgets.QMessageBox.StandardButton.Yes
 
     def load_session(self):
-        session_filename, _ = QtWidgets.QFileDialog.getOpenFileName(self, "Load session",
-                                                                    filter="RNAlysis session files (*.rnal);;"
-                                                                           "All Files (*)")
+        session_filename, _ = QtWidgets.QFileDialog.getOpenFileName(
+            self, 'Load session', filter='RNAlysis session files (*.rnal);;All Files (*)'
+        )
         if session_filename:
             self._load_session_from(session_filename)
 
@@ -4401,10 +4814,16 @@ class MainWindow(QtWidgets.QMainWindow):
         if report_data is None or not self._generate_report:
             load_report = False
         else:
-            load_report = QtWidgets.QMessageBox.question(self, 'Resume previous session report?',
-                                                         'Do you want to resume the previous session report?\n'
-                                                         'This will clear the current session and replace it. ',
-                                                         defaultButton=QtWidgets.QMessageBox.StandardButton.Yes) == QtWidgets.QMessageBox.StandardButton.Yes
+            load_report = (
+                QtWidgets.QMessageBox.question(
+                    self,
+                    'Resume previous session report?',
+                    'Do you want to resume the previous session report?\n'
+                    'This will clear the current session and replace it. ',
+                    defaultButton=QtWidgets.QMessageBox.StandardButton.Yes,
+                )
+                == QtWidgets.QMessageBox.StandardButton.Yes
+            )
         if load_report:
             self.clear_session(confirm_action=False)
             self._toggle_reporting(True)
@@ -4418,8 +4837,11 @@ class MainWindow(QtWidgets.QMainWindow):
 
         for this_file_data in file_data:
             obj = this_file_data.obj
-            tab_id = JOB_COUNTER.get_id() if (this_file_data.item_id is None) or (
-                not load_report) else this_file_data.item_id
+            tab_id = (
+                JOB_COUNTER.get_id()
+                if (this_file_data.item_id is None) or (not load_report)
+                else this_file_data.item_id
+            )
 
             if isinstance(obj, set):
                 self.new_tab_from_gene_set(obj, tab_id, this_file_data.item_name)
@@ -4438,6 +4860,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
         if load_report:
             from rnalysis.gui import gui_report
+
             self.report = gui_report.ReportGenerator.deserialize(report_data)
             JOB_COUNTER.set_total(max(self.report.nodes.keys()))
 
@@ -4454,8 +4877,14 @@ class MainWindow(QtWidgets.QMainWindow):
                 item_property = tab.obj_properties()
                 item_id = tab.tab_id
                 file_data.append(
-                    io.FileData(filename=filename, item_name=item_name, item_type=item_type.__name__,
-                                item_property=item_property, item_id=item_id))
+                    io.FileData(
+                        filename=filename,
+                        item_name=item_name,
+                        item_type=item_type.__name__,
+                        item_property=item_property,
+                        item_id=item_id,
+                    )
+                )
 
         for pipeline_name, (pipeline, _) in self.pipelines.items():
             pipeline_content = pipeline.export_pipeline(filename=None)
@@ -4473,13 +4902,15 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def save_session(self):
         default_name = 'Untitled session.rnal'
-        session_filename, _ = QtWidgets.QFileDialog.getSaveFileName(self, "Save session",
-                                                                    str(Path.home().joinpath(default_name)),
-                                                                    "RNAlysis session files (*.rnal);;"
-                                                                    "All Files (*)")
+        session_filename, _ = QtWidgets.QFileDialog.getSaveFileName(
+            self,
+            'Save session',
+            str(Path.home().joinpath(default_name)),
+            'RNAlysis session files (*.rnal);;All Files (*)',
+        )
         if session_filename:
             self._save_session_to(session_filename)
-            print(f"Session saved successfully at {io.get_datetime()} under {session_filename}")
+            print(f'Session saved successfully at {io.get_datetime()} under {session_filename}')
 
     def about(self):
         self.about_window.exec()
@@ -4526,12 +4957,15 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def closeEvent(self, event):  # pragma: no cover
 
-        quit_msg = "Are you sure you want to close <i>RNAlysis</i>?\n" \
-                   "All unsaved progress will be lost"
+        quit_msg = 'Are you sure you want to close <i>RNAlysis</i>?\nAll unsaved progress will be lost'
 
-        reply = QtWidgets.QMessageBox.question(self, 'Close program',
-                                               quit_msg, QtWidgets.QMessageBox.StandardButton.No,
-                                               QtWidgets.QMessageBox.StandardButton.Yes)
+        reply = QtWidgets.QMessageBox.question(
+            self,
+            'Close program',
+            quit_msg,
+            QtWidgets.QMessageBox.StandardButton.No,
+            QtWidgets.QMessageBox.StandardButton.Yes,
+        )
 
         if reply == QtWidgets.QMessageBox.StandardButton.Yes:
             plt.close('all')
@@ -4564,17 +4998,28 @@ class MainWindow(QtWidgets.QMainWindow):
             pass
 
     @QtCore.pyqtSlot(object, object, object)
-    def start_generic_job(self, parent_tab: Union[FilterTabPage, None], worker: gui_widgets.Worker,
-                          finish_slots: Union[Callable, List[Callable], None]):
+    def start_generic_job(
+        self,
+        parent_tab: Union[FilterTabPage, None],
+        worker: gui_widgets.Worker,
+        finish_slots: Union[Callable, List[Callable], None],
+    ):
         slots = [functools.partial(self.finish_generic_job, parent_tab=parent_tab)] + parsing.data_to_list(finish_slots)
         self.queue_worker(worker, slots)
 
-    def start_generic_job_from_params(self, func_name, func, args, kwargs,
-                                      finish_slots: Union[Callable, List[Callable], None],
-                                      predecessor: Union[int, None] = None):
+    def start_generic_job_from_params(
+        self,
+        func_name,
+        func,
+        args,
+        kwargs,
+        finish_slots: Union[Callable, List[Callable], None],
+        predecessor: Union[int, None] = None,
+    ):
         partial = functools.partial(func, *args, **kwargs)
-        worker = gui_widgets.Worker(partial, JOB_COUNTER.get_id(), [] if predecessor is None else [predecessor],
-                                    func_name)
+        worker = gui_widgets.Worker(
+            partial, JOB_COUNTER.get_id(), [] if predecessor is None else [predecessor], func_name
+        )
         self.start_generic_job(None, worker, finish_slots)
 
     @QtCore.pyqtSlot(gui_widgets.WorkerOutput, object)
@@ -4582,10 +5027,10 @@ class MainWindow(QtWidgets.QMainWindow):
         if worker_output.raised_exception:
             raise worker_output.raised_exception
         if worker_output.result is None or len(worker_output.result) == 0:
-            print("Done")
+            print('Done')
             return
         if not isinstance(worker_output, gui_widgets.WorkerOutput):
-            raise InternalError(f"invalid worker output: {worker_output}")
+            raise InternalError(f'invalid worker output: {worker_output}')
         func_name: str = worker_output.emit_args[0]
         job_id = worker_output.job_id
 
@@ -4605,12 +5050,14 @@ class MainWindow(QtWidgets.QMainWindow):
                     self.new_tab_from_filter_obj(output, output_id)
                 elif isinstance(output, pl.DataFrame):
                     self.tabs.currentWidget().object_views.append(
-                        gui_windows.DataFrameView(output, source_name, self.tabs.currentWidget()))
+                        gui_windows.DataFrameView(output, source_name, self.tabs.currentWidget())
+                    )
                     self.tabs.currentWidget().object_views[-1].show()
 
     @QtCore.pyqtSlot(object, object, object)
-    def start_clustering(self, parent_tab: FilterTabPage, worker: gui_widgets.Worker,
-                         finish_slot: Union[Callable, None]):
+    def start_clustering(
+        self, parent_tab: FilterTabPage, worker: gui_widgets.Worker, finish_slot: Union[Callable, None]
+    ):
         slots = (functools.partial(self.finish_clustering, parent_tab=parent_tab), finish_slot)
         self.queue_worker(worker, slots)
 
@@ -4619,10 +5066,10 @@ class MainWindow(QtWidgets.QMainWindow):
         if worker_output.raised_exception:
             raise worker_output.raised_exception
         if worker_output.result is None or len(worker_output.result) == 0:
-            print("Done")
+            print('Done')
             return
         if not isinstance(worker_output, gui_widgets.WorkerOutput):
-            raise InternalError(f"invalid worker output: {worker_output}")
+            raise InternalError(f'invalid worker output: {worker_output}')
 
         func_name: str = generic.get_method_readable_name(worker_output.partial.func)
         clustering_runner: clustering.ClusteringRunner = worker_output.result[1]
@@ -4643,10 +5090,10 @@ class MainWindow(QtWidgets.QMainWindow):
         if worker_output.raised_exception:
             raise worker_output.raised_exception
         if len(worker_output.result) == 0:
-            print("Done")
+            print('Done')
             return
         if not isinstance(worker_output, gui_widgets.WorkerOutput):
-            raise InternalError(f"invalid worker output: {worker_output}")
+            raise InternalError(f'invalid worker output: {worker_output}')
 
         set_name = worker_output.emit_args[0]
         job_id = worker_output.job_id
@@ -4660,17 +5107,19 @@ class MainWindow(QtWidgets.QMainWindow):
             for item in outputs:
                 self.update_report_spawn(spawn_name, JOB_COUNTER.get_id(), job_id, item)
 
-    def queue_worker(self, worker: gui_widgets.Worker,
-                     output_slots: Union[Callable, Tuple[Callable, ...], None] = None):
+    def queue_worker(
+        self, worker: gui_widgets.Worker, output_slots: Union[Callable, Tuple[Callable, ...], None] = None
+    ):
         self.job_queue.put((worker, output_slots))
         self.jobQueued.emit()
 
     @QtCore.pyqtSlot(int, str)
     def cancel_job(self, index: int, func_name: str):
-        func_name = func_name[0:func_name.find(' ')]
+        func_name = func_name[0 : func_name.find(' ')]
         if index == 0:
-            QtWidgets.QMessageBox.warning(self, "Can't stop a running job!",
-                                          "<i>RNAlysis</i> can't stop a task that is currently running. ")
+            QtWidgets.QMessageBox.warning(
+                self, "Can't stop a running job!", "<i>RNAlysis</i> can't stop a task that is currently running. "
+            )
             return
         print(f'Cancelling job "{func_name}"...')
         index -= 1
@@ -4706,32 +5155,39 @@ class MainWindow(QtWidgets.QMainWindow):
         self.current_worker = worker
 
         @QtCore.pyqtSlot()
-        def alt_tqdm(iter_obj: typing.Iterable = None, desc: str = '', unit: str = '', bar_format: str = '',
-                     total: int = None):
+        def alt_tqdm(
+            iter_obj: typing.Iterable = None, desc: str = '', unit: str = '', bar_format: str = '', total: int = None
+        ):
             self.current_worker.startProgBar.emit(
-                dict(iter_obj=iter_obj, desc=desc, unit=unit, bar_format=bar_format, total=total))
+                dict(iter_obj=iter_obj, desc=desc, unit=unit, bar_format=bar_format, total=total)
+            )
             obj = gui_widgets.AltTQDM(iter_obj, desc=desc, unit=unit, bar_format=bar_format, total=total)
             obj.barUpdate.connect(self.status_bar.move_progress_bar)
             obj.barFinished.connect(self.status_bar.reset_progress)
 
             self.current_worker.startProgBar.emit(
-                dict(iter_obj=iter_obj, desc=desc, unit=unit, bar_format=bar_format, total=total))
+                dict(iter_obj=iter_obj, desc=desc, unit=unit, bar_format=bar_format, total=total)
+            )
             return obj
 
         @QtCore.pyqtSlot()
-        def alt_parallel(n_jobs: int = -1, desc: str = '', unit: str = '', bar_format: str = '',
-                         total: int = None, **kwargs):
+        def alt_parallel(
+            n_jobs: int = -1, desc: str = '', unit: str = '', bar_format: str = '', total: int = None, **kwargs
+        ):
             self.current_worker.startProgBar.emit(
-                dict(iter_obj=None, desc=desc, unit=unit, bar_format=bar_format, total=total))
-            print(f"{desc}: started" + (f" {total} jobs\r" if isinstance(total, int) else "\r"))
-            obj = gui_widgets.AltParallel(n_jobs=n_jobs, desc=desc, unit=unit, bar_format=bar_format,
-                                          total=total, **kwargs)
+                dict(iter_obj=None, desc=desc, unit=unit, bar_format=bar_format, total=total)
+            )
+            print(f'{desc}: started' + (f' {total} jobs\r' if isinstance(total, int) else '\r'))
+            obj = gui_widgets.AltParallel(
+                n_jobs=n_jobs, desc=desc, unit=unit, bar_format=bar_format, total=total, **kwargs
+            )
             obj.barUpdate.connect(self.status_bar.move_progress_bar)
             obj.barFinished.connect(self.status_bar.reset_progress)
             obj.barTotalUpdate.connect(self.status_bar.update_bar_total)
 
             self.current_worker.startProgBar.emit(
-                dict(iter_obj=None, desc=desc, unit=unit, bar_format=bar_format, total=total))
+                dict(iter_obj=None, desc=desc, unit=unit, bar_format=bar_format, total=total)
+            )
             return obj
 
         self._monkeypatch_setup(alt_tqdm, alt_parallel)
@@ -4828,27 +5284,36 @@ async def run():  # pragma: no cover
     if show_app:
         splash = gui_windows.splash_screen()
         app.processEvents()
-        base_message = f"<i>RNAlysis</i> version {__version__}:\t"
-        splash.showMessage(base_message + 'loading dependencies',
-                           QtCore.Qt.AlignmentFlag.AlignBottom | QtCore.Qt.AlignmentFlag.AlignHCenter)
+        base_message = f'<i>RNAlysis</i> version {__version__}:\t'
+        splash.showMessage(
+            base_message + 'loading dependencies',
+            QtCore.Qt.AlignmentFlag.AlignBottom | QtCore.Qt.AlignmentFlag.AlignHCenter,
+        )
 
         gui_widgets.init_color_map_pixmap_cache()
 
         if io.check_changed_version():
             video_files = gui_quickstart.QuickStartWizard.VIDEO_FILES
-            splash.showMessage(base_message + 'validating tutorial videos',
-                               QtCore.Qt.AlignmentFlag.AlignBottom | QtCore.Qt.AlignmentFlag.AlignHCenter)
+            splash.showMessage(
+                base_message + 'validating tutorial videos',
+                QtCore.Qt.AlignmentFlag.AlignBottom | QtCore.Qt.AlignmentFlag.AlignHCenter,
+            )
             async for i in io.get_gui_videos(video_files):
-                splash.showMessage(base_message + f'getting tutorial videos {i + 1}/{len(video_files)}',
-                                   QtCore.Qt.AlignmentFlag.AlignBottom | QtCore.Qt.AlignmentFlag.AlignHCenter)
+                splash.showMessage(
+                    base_message + f'getting tutorial videos {i + 1}/{len(video_files)}',
+                    QtCore.Qt.AlignmentFlag.AlignBottom | QtCore.Qt.AlignmentFlag.AlignHCenter,
+                )
 
-        splash.showMessage(base_message + 'loading application',
-                           QtCore.Qt.AlignmentFlag.AlignBottom | QtCore.Qt.AlignmentFlag.AlignHCenter)
+        splash.showMessage(
+            base_message + 'loading application',
+            QtCore.Qt.AlignmentFlag.AlignBottom | QtCore.Qt.AlignmentFlag.AlignHCenter,
+        )
 
     # set taskbar icon on Windows
     if platform.system() == 'Windows':
         import ctypes
-        myappid = u'RNAlysis.{version}'.format(version=__version__)  # arbitrary string
+
+        myappid = 'RNAlysis.{version}'.format(version=__version__)  # arbitrary string
         ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(myappid)
 
     window = MainWindow()

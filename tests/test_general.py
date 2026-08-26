@@ -6,8 +6,10 @@ from rnalysis.general import *
 
 
 def test_parse_wbgene_string():
-    string = ' WBGene WBGenes WBGene12345678, WBGene98765432WBGene00000000\n the geneWBGene44444444 ' \
-             'daf-16 A5gHB.5 /// WBGene55555555'
+    string = (
+        ' WBGene WBGenes WBGene12345678, WBGene98765432WBGene00000000\n the geneWBGene44444444 '
+        'daf-16 A5gHB.5 /// WBGene55555555'
+    )
     truth = {'WBGene12345678', 'WBGene98765432', 'WBGene00000000', 'WBGene44444444', 'WBGene55555555'}
     assert truth == parse_wbgene_string(string)
 
@@ -103,8 +105,10 @@ def test_reset_settings_file():
 
 
 def test_save_to_csv(monkeypatch):
-    monkeypatch.setattr('rnalysis.utils.io.save_table',
-                        lambda x, y: None if isinstance(x, pl.DataFrame) else (_ for _ in ()).throw(AssertionError))
+    monkeypatch.setattr(
+        'rnalysis.utils.io.save_table',
+        lambda x, y: None if isinstance(x, pl.DataFrame) else (_ for _ in ()).throw(AssertionError),
+    )
     df = pl.DataFrame([[1, 2, 3], [4, 5, 6]])
     save_to_csv(df, 'filename')
     f = Filter.from_dataframe(df, 'filename')

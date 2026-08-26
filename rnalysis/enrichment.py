@@ -4,6 +4,7 @@ These include gene ontology/tissue/phenotype enrichment, enrichment for user-def
 set visualization ,etc. \
 Results of enrichment analyses can be saved to .csv files.
 """
+
 import functools
 import itertools
 import types
@@ -19,16 +20,23 @@ import polars as pl
 
 from rnalysis.exceptions import InvalidTypeError, InvalidValueError
 from rnalysis.filtering import Filter, readable_name
-from rnalysis.utils import (enrichment_runner, generic, io, ontology,
-                            param_typing, parsing, settings, validation)
-from rnalysis.utils.param_typing import (BIOTYPE_ATTRIBUTE_NAMES, BIOTYPES,
-                                         DEFAULT_ORGANISMS, GO_ASPECTS,
-                                         GO_EVIDENCE_TYPES, GO_QUALIFIERS,
-                                         ORTHOLOG_NON_UNIQUE_MODES,
-                                         PARALLEL_BACKENDS, Fraction,
-                                         PositiveInt, get_ensembl_taxons,
-                                         get_gene_id_types, get_panther_taxons,
-                                         get_phylomedb_taxons)
+from rnalysis.utils import enrichment_runner, generic, io, ontology, param_typing, parsing, settings, validation
+from rnalysis.utils.param_typing import (
+    BIOTYPE_ATTRIBUTE_NAMES,
+    BIOTYPES,
+    DEFAULT_ORGANISMS,
+    GO_ASPECTS,
+    GO_EVIDENCE_TYPES,
+    GO_QUALIFIERS,
+    ORTHOLOG_NON_UNIQUE_MODES,
+    PARALLEL_BACKENDS,
+    Fraction,
+    PositiveInt,
+    get_ensembl_taxons,
+    get_gene_id_types,
+    get_panther_taxons,
+    get_phylomedb_taxons,
+)
 
 # The set-visualization stack is only needed by a handful of plotting functions but costs ~1s to
 # import (matplotlib_venn drags in scipy.optimize, upsetplot drags in pandas), so all three are
@@ -41,11 +49,11 @@ upsetplot = lazy.load('upsetplot')
 
 
 class FeatureSet(set):
-    """ Receives a filtered gene set and the set's name (optional) and preforms various enrichment analyses on them. """
+    """Receives a filtered gene set and the set's name (optional) and preforms various enrichment analyses on them."""
+
     __slots__ = {'gene_set': 'set of feature names/indices', 'set_name': 'name of the FeatureSet'}
 
     def __init__(self, gene_set: Union[List[str], Set[str], 'Filter'] = None, set_name: str = ''):
-
         """
         :param gene_set: the set of genomic features to be used in downstream analyses
         :type gene_set: filtering.Filter object, set of strings or list of strings
@@ -64,9 +72,13 @@ class FeatureSet(set):
         if not isinstance(set_name, str):
             raise InvalidTypeError(f"'set_name' must be of type str, instead got {type(set_name)}.")
         if gene_set is None:
-            gene_set = parsing.data_to_set(parsing.from_string(
-                "Please insert genomic features/indices separated by newline \n"
-                "(example: \n'WBGene00000001\nWBGene00000002\nWBGene00000003')", delimiter='\n'))
+            gene_set = parsing.data_to_set(
+                parsing.from_string(
+                    'Please insert genomic features/indices separated by newline \n'
+                    "(example: \n'WBGene00000001\nWBGene00000002\nWBGene00000003')",
+                    delimiter='\n',
+                )
+            )
         elif validation.isinstanceinh(gene_set, Filter):
             gene_set = gene_set.index_set
         # elif isinstance(gene_set,type(self)):
@@ -102,7 +114,7 @@ class FeatureSet(set):
             try:
                 setattr(self, key, val)
             except AttributeError:
-                raise AttributeError(f"Cannot update attribute {key} for {type(self)} object: attribute does not exist")
+                raise AttributeError(f'Cannot update attribute {key} for {type(self)} object: attribute does not exist')
 
     def _inplace(self, func, func_kwargs, inplace: bool, **update_kwargs):
         """
@@ -147,14 +159,20 @@ class FeatureSet(set):
         elif statistical_test.lower() == 'hypergeometric':
             stats_test = enrichment_runner.HypergeometricTest()
         else:
-            raise ValueError(f"statistical_test must be one of 'fisher', 'hypergeometric', or 'randomization'. "
-                             f"Got: {statistical_test}")
+            raise ValueError(
+                f"statistical_test must be one of 'fisher', 'hypergeometric', or 'randomization'. "
+                f'Got: {statistical_test}'
+            )
         return stats_test
 
     @readable_name('Translate gene IDs')
-    def translate_gene_ids(self, translate_to: Union[str, Literal[get_gene_id_types()]],
-                           translate_from: Union[str, Literal['auto'], Literal[get_gene_id_types()]] = 'auto',
-                           remove_unmapped_genes: bool = False, inplace: bool = True) -> 'FeatureSet':
+    def translate_gene_ids(
+        self,
+        translate_to: Union[str, Literal[get_gene_id_types()]],
+        translate_from: Union[str, Literal['auto'], Literal[get_gene_id_types()]] = 'auto',
+        remove_unmapped_genes: bool = False,
+        inplace: bool = True,
+    ) -> 'FeatureSet':
         """
                 Translates gene names/IDs from one type to another. \
                 Mapping is done using the UniProtKB Gene ID Mapping service. \
@@ -173,17 +191,21 @@ class FeatureSet(set):
                 :type remove_unmapped_genes: bool (default=False)
                 :return: returns a new and translated FeatureSet.
     """
-        kwargs = dict(translate_to=translate_to,
-                      translate_from=translate_from,
-                      remove_unmapped_genes=remove_unmapped_genes)
+        kwargs = dict(
+            translate_to=translate_to, translate_from=translate_from, remove_unmapped_genes=remove_unmapped_genes
+        )
         return self._inplace(Filter.translate_gene_ids, kwargs, inplace)
 
     @readable_name('Filter by KEGG Pathways annotations')
-    def filter_by_kegg_annotations(self, kegg_ids: Union[str, List[str]],
-                                   mode: Literal['union', 'intersection'] = 'union',
-                                   organism: Union[str, int, Literal['auto'], Literal[DEFAULT_ORGANISMS]] = 'auto',
-                                   gene_id_type: Union[str, Literal['auto'], Literal[get_gene_id_types()]] = 'auto',
-                                   opposite: bool = False, inplace: bool = True):
+    def filter_by_kegg_annotations(
+        self,
+        kegg_ids: Union[str, List[str]],
+        mode: Literal['union', 'intersection'] = 'union',
+        organism: Union[str, int, Literal['auto'], Literal[DEFAULT_ORGANISMS]] = 'auto',
+        gene_id_type: Union[str, Literal['auto'], Literal[get_gene_id_types()]] = 'auto',
+        opposite: bool = False,
+        inplace: bool = True,
+    ):
         """
         Filters genes according to KEGG pathways, keeping only genes that belong to specific KEGG pathway. \
         When multiple KEGG IDs are given, filtering can be done in 'union' mode \
@@ -220,21 +242,22 @@ class FeatureSet(set):
         return self._inplace(Filter.filter_by_kegg_annotations, kwargs, inplace)
 
     @readable_name('Filter by Gene Ontology (GO) annotation')
-    def filter_by_go_annotations(self, go_ids: Union[str, List[str]], mode: Literal['union', 'intersection'] = 'union',
-                                 organism: Union[str, int, Literal['auto'], Literal[DEFAULT_ORGANISMS]] = 'auto',
-                                 gene_id_type: Union[str, Literal['auto'], Literal[get_gene_id_types()]] = 'auto',
-                                 propagate_annotations: bool = True,
-                                 evidence_types: Union[Literal[('any',) + GO_EVIDENCE_TYPES], Iterable[
-                                     Literal[GO_EVIDENCE_TYPES]]] = 'any',
-                                 excluded_evidence_types: Union[Literal[GO_EVIDENCE_TYPES], Iterable[Literal[
-                                     GO_EVIDENCE_TYPES]]] = (),
-                                 databases: Union[str, Iterable[str]] = 'any',
-                                 excluded_databases: Union[str, Iterable[str]] = (),
-                                 qualifiers: Union[
-                                     Literal[('any',) + GO_QUALIFIERS], Iterable[Literal[GO_QUALIFIERS]]] = 'any',
-                                 excluded_qualifiers: Union[
-                                     Literal[GO_QUALIFIERS], Iterable[Literal[GO_QUALIFIERS]]] = 'not',
-                                 opposite: bool = False, inplace: bool = True):
+    def filter_by_go_annotations(
+        self,
+        go_ids: Union[str, List[str]],
+        mode: Literal['union', 'intersection'] = 'union',
+        organism: Union[str, int, Literal['auto'], Literal[DEFAULT_ORGANISMS]] = 'auto',
+        gene_id_type: Union[str, Literal['auto'], Literal[get_gene_id_types()]] = 'auto',
+        propagate_annotations: bool = True,
+        evidence_types: Union[Literal[('any',) + GO_EVIDENCE_TYPES], Iterable[Literal[GO_EVIDENCE_TYPES]]] = 'any',
+        excluded_evidence_types: Union[Literal[GO_EVIDENCE_TYPES], Iterable[Literal[GO_EVIDENCE_TYPES]]] = (),
+        databases: Union[str, Iterable[str]] = 'any',
+        excluded_databases: Union[str, Iterable[str]] = (),
+        qualifiers: Union[Literal[('any',) + GO_QUALIFIERS], Iterable[Literal[GO_QUALIFIERS]]] = 'any',
+        excluded_qualifiers: Union[Literal[GO_QUALIFIERS], Iterable[Literal[GO_QUALIFIERS]]] = 'not',
+        opposite: bool = False,
+        inplace: bool = True,
+    ):
         """
         Filters genes according to GO annotations, keeping only genes that are annotated with a specific GO term. \
         When multiple GO terms are given, filtering can be done in 'union' mode \
@@ -297,19 +320,31 @@ class FeatureSet(set):
         the function will return a new FeatureSet instance and the current instance will not be affected.
         :return: If 'inplace' is False, returns a new, filtered instance of the FeatureSet object.
         """
-        kwargs = dict(go_ids=go_ids, mode=mode, organism=organism, gene_id_type=gene_id_type,
-                      propagate_annotations=propagate_annotations, evidence_types=evidence_types,
-                      excluded_evidence_types=excluded_evidence_types, databases=databases,
-                      excluded_databases=excluded_databases, qualifiers=qualifiers,
-                      excluded_qualifiers=excluded_qualifiers, opposite=opposite)
+        kwargs = dict(
+            go_ids=go_ids,
+            mode=mode,
+            organism=organism,
+            gene_id_type=gene_id_type,
+            propagate_annotations=propagate_annotations,
+            evidence_types=evidence_types,
+            excluded_evidence_types=excluded_evidence_types,
+            databases=databases,
+            excluded_databases=excluded_databases,
+            qualifiers=qualifiers,
+            excluded_qualifiers=excluded_qualifiers,
+            opposite=opposite,
+        )
         return self._inplace(Filter.filter_by_go_annotations, kwargs, inplace)
 
     @readable_name('Filter by user-defined attribute')
-    def filter_by_attribute(self, attributes: Union[str, List[str]],
-                            mode: Literal['union', 'intersection'] = 'union',
-                            ref: Union[str, Path, Literal['predefined']] = 'predefined',
-                            opposite: bool = False, inplace: bool = True):
-
+    def filter_by_attribute(
+        self,
+        attributes: Union[str, List[str]],
+        mode: Literal['union', 'intersection'] = 'union',
+        ref: Union[str, Path, Literal['predefined']] = 'predefined',
+        opposite: bool = False,
+        inplace: bool = True,
+    ):
         """
         Filters features according to user-defined attributes from an Attribute Reference Table. \
         When multiple attributes are given, filtering can be done in 'union' mode \
@@ -339,11 +374,15 @@ class FeatureSet(set):
         return self._inplace(Filter.filter_by_attribute, kwargs, inplace)
 
     @readable_name('Filter by feature biotype (based on a GTF file)')
-    def filter_biotype_from_gtf(self, gtf_path: Union[str, Path],
-                                biotype: Union[Literal[BIOTYPES], str, List[str]] = 'protein_coding',
-                                attribute_name: Union[Literal[BIOTYPE_ATTRIBUTE_NAMES], str] = 'gene_biotype',
-                                feature_type: Literal['gene', 'transcript'] = 'gene',
-                                opposite: bool = False, inplace: bool = True):
+    def filter_biotype_from_gtf(
+        self,
+        gtf_path: Union[str, Path],
+        biotype: Union[Literal[BIOTYPES], str, List[str]] = 'protein_coding',
+        attribute_name: Union[Literal[BIOTYPE_ATTRIBUTE_NAMES], str] = 'gene_biotype',
+        feature_type: Literal['gene', 'transcript'] = 'gene',
+        opposite: bool = False,
+        inplace: bool = True,
+    ):
         """
         Filters out all features that do not match the indicated biotype/biotypes \
         (for example: 'protein_coding', 'ncRNA', etc). \
@@ -367,15 +406,23 @@ class FeatureSet(set):
         :param inplace: If True (default), filtering will be applied to the current Filter object. If False, \
         the function will return a new Filter instance and the current instance will not be affected.
         """
-        kwargs = dict(gtf_path=gtf_path, biotype=biotype, attribute_name=attribute_name,
-                      feature_type=feature_type, opposite=opposite)
+        kwargs = dict(
+            gtf_path=gtf_path,
+            biotype=biotype,
+            attribute_name=attribute_name,
+            feature_type=feature_type,
+            opposite=opposite,
+        )
         return self._inplace(Filter.filter_biotype_from_gtf, kwargs, inplace)
 
     @readable_name('Filter by feature biotype (based on a reference table)')
-    def filter_biotype_from_ref_table(self, biotype: Union[Literal[BIOTYPES], str, List[str]] = 'protein_coding',
-                                      ref: Union[str, Path, Literal['predefined']] = 'predefined',
-                                      opposite: bool = False, inplace: bool = True):
-
+    def filter_biotype_from_ref_table(
+        self,
+        biotype: Union[Literal[BIOTYPES], str, List[str]] = 'protein_coding',
+        ref: Union[str, Path, Literal['predefined']] = 'predefined',
+        opposite: bool = False,
+        inplace: bool = True,
+    ):
         """
         Filters out all features that do not match the indicated biotype/biotypes \
         (for example: 'protein_coding', 'ncRNA', etc). \
@@ -397,8 +444,11 @@ class FeatureSet(set):
         return self._inplace(Filter.filter_biotype_from_ref_table, kwargs, inplace)
 
     @readable_name('Find paralogs within species (using PantherDB)')
-    def find_paralogs_panther(self, organism: Union[Literal['auto'], str, int, Literal[get_panther_taxons()]] = 'auto',
-                              gene_id_type: Union[str, Literal['auto'], Literal[get_gene_id_types()]] = 'auto'):
+    def find_paralogs_panther(
+        self,
+        organism: Union[Literal['auto'], str, int, Literal[get_panther_taxons()]] = 'auto',
+        gene_id_type: Union[str, Literal['auto'], Literal[get_gene_id_types()]] = 'auto',
+    ):
         """
         Find paralogs within the same species using the PantherDB database.
 
@@ -417,9 +467,12 @@ class FeatureSet(set):
         return filter_obj.find_paralogs_panther(organism, gene_id_type)
 
     @readable_name('Find paralogs within species (using Ensembl)')
-    def find_paralogs_ensembl(self, organism: Union[Literal['auto'], str, int, Literal[get_ensembl_taxons()]] = 'auto',
-                              gene_id_type: Union[str, Literal['auto'], Literal[get_gene_id_types()]] = 'auto',
-                              filter_percent_identity: bool = True):
+    def find_paralogs_ensembl(
+        self,
+        organism: Union[Literal['auto'], str, int, Literal[get_ensembl_taxons()]] = 'auto',
+        gene_id_type: Union[str, Literal['auto'], Literal[get_gene_id_types()]] = 'auto',
+        filter_percent_identity: bool = True,
+    ):
         """
         Find paralogs within the same species using the Ensembl database.
 
@@ -441,13 +494,16 @@ class FeatureSet(set):
         return filter_obj.find_paralogs_ensembl(organism, gene_id_type, filter_percent_identity)
 
     @readable_name('Map genes to nearest orthologs (using PantherDB)')
-    def map_orthologs_panther(self, map_to_organism: Union[str, int, Literal[get_panther_taxons()]],
-                              map_from_organism: Union[
-                                  Literal['auto'], str, int, Literal[get_panther_taxons()]] = 'auto',
-                              gene_id_type: Union[str, Literal['auto'], Literal[get_gene_id_types()]] = 'auto',
-                              filter_least_diverged: bool = True,
-                              non_unique_mode: Literal[ORTHOLOG_NON_UNIQUE_MODES] = 'first',
-                              remove_unmapped_genes: bool = False, inplace: bool = True):
+    def map_orthologs_panther(
+        self,
+        map_to_organism: Union[str, int, Literal[get_panther_taxons()]],
+        map_from_organism: Union[Literal['auto'], str, int, Literal[get_panther_taxons()]] = 'auto',
+        gene_id_type: Union[str, Literal['auto'], Literal[get_gene_id_types()]] = 'auto',
+        filter_least_diverged: bool = True,
+        non_unique_mode: Literal[ORTHOLOG_NON_UNIQUE_MODES] = 'first',
+        remove_unmapped_genes: bool = False,
+        inplace: bool = True,
+    ):
         """
         Map genes to their nearest orthologs in a different species using the PantherDB database. \
         This function generates a table describing all matching discovered ortholog pairs (both unique and non-unique) \
@@ -483,19 +539,27 @@ class FeatureSet(set):
         :return: DataFrame describing all discovered mappings (unique and otherwise). If inplace=True, \
         returns a filtered instance of the Filter object as well.
         """
-        kwargs = dict(map_to_organism=map_to_organism, map_from_organism=map_from_organism,
-                      gene_id_type=gene_id_type, filter_least_diverged=filter_least_diverged,
-                      non_unique_mode=non_unique_mode, remove_unmapped_genes=remove_unmapped_genes)
+        kwargs = dict(
+            map_to_organism=map_to_organism,
+            map_from_organism=map_from_organism,
+            gene_id_type=gene_id_type,
+            filter_least_diverged=filter_least_diverged,
+            non_unique_mode=non_unique_mode,
+            remove_unmapped_genes=remove_unmapped_genes,
+        )
         return self._inplace(Filter.map_orthologs_panther, kwargs, inplace)
 
     @readable_name('Map genes to nearest orthologs (using Ensembl)')
-    def map_orthologs_ensembl(self, map_to_organism: Union[str, int, Literal[get_ensembl_taxons()]],
-                              map_from_organism: Union[
-                                  Literal['auto'], str, int, Literal[get_ensembl_taxons()]] = 'auto',
-                              gene_id_type: Union[str, Literal['auto'], Literal[get_gene_id_types()]] = 'auto',
-                              filter_percent_identity: bool = True,
-                              non_unique_mode: Literal[ORTHOLOG_NON_UNIQUE_MODES] = 'first',
-                              remove_unmapped_genes: bool = False, inplace: bool = True):
+    def map_orthologs_ensembl(
+        self,
+        map_to_organism: Union[str, int, Literal[get_ensembl_taxons()]],
+        map_from_organism: Union[Literal['auto'], str, int, Literal[get_ensembl_taxons()]] = 'auto',
+        gene_id_type: Union[str, Literal['auto'], Literal[get_gene_id_types()]] = 'auto',
+        filter_percent_identity: bool = True,
+        non_unique_mode: Literal[ORTHOLOG_NON_UNIQUE_MODES] = 'first',
+        remove_unmapped_genes: bool = False,
+        inplace: bool = True,
+    ):
         """
         Map genes to their nearest orthologs in a different species using the Ensembl database. \
         This function generates a table describing all matching discovered ortholog pairs (both unique and non-unique) \
@@ -530,19 +594,28 @@ class FeatureSet(set):
         :return: DataFrame describing all discovered mappings (unique and otherwise). If inplace=True, \
         returns a filtered instance of the Filter object as well.
         """
-        kwargs = dict(map_to_organism=map_to_organism, map_from_organism=map_from_organism,
-                      gene_id_type=gene_id_type, filter_percent_identity=filter_percent_identity,
-                      non_unique_mode=non_unique_mode, remove_unmapped_genes=remove_unmapped_genes)
+        kwargs = dict(
+            map_to_organism=map_to_organism,
+            map_from_organism=map_from_organism,
+            gene_id_type=gene_id_type,
+            filter_percent_identity=filter_percent_identity,
+            non_unique_mode=non_unique_mode,
+            remove_unmapped_genes=remove_unmapped_genes,
+        )
         return self._inplace(Filter.map_orthologs_ensembl, kwargs, inplace)
 
     @readable_name('Map genes to nearest orthologs (using PhylomeDB)')
-    def map_orthologs_phylomedb(self, map_to_organism: Union[str, int, Literal[get_phylomedb_taxons()]],
-                                map_from_organism: Union[
-                                    Literal['auto'], str, int, Literal[get_phylomedb_taxons()]] = 'auto',
-                                gene_id_type: Union[str, Literal['auto'], Literal[get_gene_id_types()]] = 'auto',
-                                consistency_score_threshold: Fraction = 0.5, filter_consistency_score: bool = True,
-                                non_unique_mode: Literal[ORTHOLOG_NON_UNIQUE_MODES] = 'first',
-                                remove_unmapped_genes: bool = False, inplace: bool = True):
+    def map_orthologs_phylomedb(
+        self,
+        map_to_organism: Union[str, int, Literal[get_phylomedb_taxons()]],
+        map_from_organism: Union[Literal['auto'], str, int, Literal[get_phylomedb_taxons()]] = 'auto',
+        gene_id_type: Union[str, Literal['auto'], Literal[get_gene_id_types()]] = 'auto',
+        consistency_score_threshold: Fraction = 0.5,
+        filter_consistency_score: bool = True,
+        non_unique_mode: Literal[ORTHOLOG_NON_UNIQUE_MODES] = 'first',
+        remove_unmapped_genes: bool = False,
+        inplace: bool = True,
+    ):
         """
         Map genes to their nearest orthologs in a different species using the PhylomeDB database. \
         This function generates a table describing all matching discovered ortholog pairs (both unique and non-unique) \
@@ -582,19 +655,27 @@ class FeatureSet(set):
         :return: DataFrame describing all discovered mappings (unique and otherwise). If inplace=True, \
         returns a filtered instance of the Filter object as well.
         """
-        kwargs = dict(map_to_organism=map_to_organism, map_from_organism=map_from_organism,
-                      gene_id_type=gene_id_type, consistency_score_threshold=consistency_score_threshold,
-                      filter_consistency_score=filter_consistency_score, non_unique_mode=non_unique_mode,
-                      remove_unmapped_genes=remove_unmapped_genes)
+        kwargs = dict(
+            map_to_organism=map_to_organism,
+            map_from_organism=map_from_organism,
+            gene_id_type=gene_id_type,
+            consistency_score_threshold=consistency_score_threshold,
+            filter_consistency_score=filter_consistency_score,
+            non_unique_mode=non_unique_mode,
+            remove_unmapped_genes=remove_unmapped_genes,
+        )
         return self._inplace(Filter.map_orthologs_phylomedb, kwargs, inplace)
 
     @readable_name('Map genes to nearest orthologs (using OrthoInspector)')
-    def map_orthologs_orthoinspector(self, map_to_organism: Union[str, int, Literal[get_panther_taxons()]],
-                                     map_from_organism: Union[
-                                         Literal['auto'], str, int, Literal[get_panther_taxons()]] = 'auto',
-                                     gene_id_type: Union[str, Literal['auto'], Literal[get_gene_id_types()]] = 'auto',
-                                     non_unique_mode: Literal[ORTHOLOG_NON_UNIQUE_MODES] = 'first',
-                                     remove_unmapped_genes: bool = False, inplace: bool = True):
+    def map_orthologs_orthoinspector(
+        self,
+        map_to_organism: Union[str, int, Literal[get_panther_taxons()]],
+        map_from_organism: Union[Literal['auto'], str, int, Literal[get_panther_taxons()]] = 'auto',
+        gene_id_type: Union[str, Literal['auto'], Literal[get_gene_id_types()]] = 'auto',
+        non_unique_mode: Literal[ORTHOLOG_NON_UNIQUE_MODES] = 'first',
+        remove_unmapped_genes: bool = False,
+        inplace: bool = True,
+    ):
         """
         Map genes to their nearest orthologs in a different species using the OrthoInspector database. \
         This function generates a table describing all matching discovered ortholog pairs (both unique and non-unique) \
@@ -626,9 +707,13 @@ class FeatureSet(set):
         :return: DataFrame describing all discovered mappings (unique and otherwise). If inplace=True, \
         returns a filtered instance of the Filter object as well.
         """
-        kwargs = dict(map_to_organism=map_to_organism, map_from_organism=map_from_organism,
-                      gene_id_type=gene_id_type, non_unique_mode=non_unique_mode,
-                      remove_unmapped_genes=remove_unmapped_genes)
+        kwargs = dict(
+            map_to_organism=map_to_organism,
+            map_from_organism=map_from_organism,
+            gene_id_type=gene_id_type,
+            non_unique_mode=non_unique_mode,
+            remove_unmapped_genes=remove_unmapped_genes,
+        )
         return self._inplace(Filter.map_orthologs_orthoinspector, kwargs, inplace)
 
     def change_set_name(self, new_name: str):
@@ -639,7 +724,7 @@ class FeatureSet(set):
         :type new_name: str
         """
         if not isinstance(new_name, str):
-            raise InvalidTypeError(f"New set name must be of type str. Instead, got {type(new_name)}")
+            raise InvalidTypeError(f'New set name must be of type str. Instead, got {type(new_name)}')
         self.set_name = new_name
 
     def save_txt(self, fname: Union[str, Path]):
@@ -651,20 +736,21 @@ class FeatureSet(set):
 
         """
         if not isinstance(fname, (str, Path)):
-            raise InvalidTypeError("fname must be str or pathlib.Path!")
+            raise InvalidTypeError('fname must be str or pathlib.Path!')
         if isinstance(fname, str):
             if not fname.endswith('.txt'):
                 fname = fname + '.txt'
         elif isinstance(fname, Path):
             if not fname.suffix == '.txt':
-                fname = Path(f"{str(fname.parent)}{fname.name}.txt")
+                fname = Path(f'{str(fname.parent)}{fname.name}.txt')
         with open(fname, 'w') as f:
             for i, gene in enumerate(self.gene_set):
                 line = gene + '\n' if (i + 1) < len(self.gene_set) else gene
                 f.write(line)
 
-    def _set_ops(self, others: Union[set, 'FeatureSet', Tuple[Union[set, 'FeatureSet']]],
-                 op: types.FunctionType) -> set:
+    def _set_ops(
+        self, others: Union[set, 'FeatureSet', Tuple[Union[set, 'FeatureSet']]], op: types.FunctionType
+    ) -> set:
         """
         Performs a given set operation on self and on another object (FeatureSet or set).
         :type others: FeatureSet or set
@@ -687,7 +773,8 @@ class FeatureSet(set):
         except TypeError as e:
             if op == set.symmetric_difference:
                 raise TypeError(
-                    f"Symmetric difference can only be calculated for two objects, {len(others) + 1} were given!")
+                    f'Symmetric difference can only be calculated for two objects, {len(others) + 1} were given!'
+                )
             else:
                 raise e
 
@@ -783,29 +870,37 @@ class FeatureSet(set):
         """
         return FeatureSet(self._set_ops((other,), set.symmetric_difference))
 
-    @readable_name("GO Enrichment")
-    def go_enrichment(self, background_genes: Union[Set[str], Filter, 'FeatureSet'],
-                      organism: Union[str, int, Literal['auto'], Literal[DEFAULT_ORGANISMS]] = 'auto',
-                      gene_id_type: Union[str, Literal['auto'], Literal[get_gene_id_types()]] = 'auto',
-                      alpha: param_typing.Fraction = 0.05,
-                      statistical_test: Literal['fisher', 'hypergeometric', 'randomization'] = 'fisher',
-                      propagate_annotations: Literal['classic', 'elim', 'weight', 'all.m', 'no'] = 'elim',
-                      aspects: Union[Literal[('any',) + GO_ASPECTS], Iterable[Literal[GO_ASPECTS]]] = 'any',
-                      evidence_types: Union[
-                          Literal[('any',) + GO_EVIDENCE_TYPES], Iterable[Literal[GO_EVIDENCE_TYPES]]] = 'any',
-                      excluded_evidence_types: Union[Literal[GO_EVIDENCE_TYPES], Iterable[Literal[
-                          GO_EVIDENCE_TYPES]]] = (), databases: Union[str, Iterable[str], Literal['any']] = 'any',
-                      excluded_databases: Union[str, Iterable[str]] = (),
-                      qualifiers: Union[Literal[('any',) + GO_QUALIFIERS], Iterable[Literal[GO_QUALIFIERS]]] = 'any',
-                      excluded_qualifiers: Union[Literal[GO_QUALIFIERS], Iterable[Literal[GO_QUALIFIERS]]] = 'not',
-                      exclude_unannotated_genes: bool = True, return_nonsignificant: bool = False,
-                      save_csv: bool = False, fname=None, return_fig: bool = False, plot_horizontal: bool = True,
-                      show_expected: bool = False, plot_style: Literal['bar', 'lollipop'] = 'bar',
-                      plot_ontology_graph: bool = True,
-                      ontology_graph_format: Literal[param_typing.GRAPHVIZ_FORMATS] = 'none',
-                      randomization_reps: PositiveInt = 10000, random_seed: Union[int, None] = None,
-                      parallel_backend: Literal[PARALLEL_BACKENDS] = 'loky', gui_mode: bool = False) -> Union[
-        pl.DataFrame, Tuple[pl.DataFrame, plt.Figure]]:
+    @readable_name('GO Enrichment')
+    def go_enrichment(
+        self,
+        background_genes: Union[Set[str], Filter, 'FeatureSet'],
+        organism: Union[str, int, Literal['auto'], Literal[DEFAULT_ORGANISMS]] = 'auto',
+        gene_id_type: Union[str, Literal['auto'], Literal[get_gene_id_types()]] = 'auto',
+        alpha: param_typing.Fraction = 0.05,
+        statistical_test: Literal['fisher', 'hypergeometric', 'randomization'] = 'fisher',
+        propagate_annotations: Literal['classic', 'elim', 'weight', 'all.m', 'no'] = 'elim',
+        aspects: Union[Literal[('any',) + GO_ASPECTS], Iterable[Literal[GO_ASPECTS]]] = 'any',
+        evidence_types: Union[Literal[('any',) + GO_EVIDENCE_TYPES], Iterable[Literal[GO_EVIDENCE_TYPES]]] = 'any',
+        excluded_evidence_types: Union[Literal[GO_EVIDENCE_TYPES], Iterable[Literal[GO_EVIDENCE_TYPES]]] = (),
+        databases: Union[str, Iterable[str], Literal['any']] = 'any',
+        excluded_databases: Union[str, Iterable[str]] = (),
+        qualifiers: Union[Literal[('any',) + GO_QUALIFIERS], Iterable[Literal[GO_QUALIFIERS]]] = 'any',
+        excluded_qualifiers: Union[Literal[GO_QUALIFIERS], Iterable[Literal[GO_QUALIFIERS]]] = 'not',
+        exclude_unannotated_genes: bool = True,
+        return_nonsignificant: bool = False,
+        save_csv: bool = False,
+        fname=None,
+        return_fig: bool = False,
+        plot_horizontal: bool = True,
+        show_expected: bool = False,
+        plot_style: Literal['bar', 'lollipop'] = 'bar',
+        plot_ontology_graph: bool = True,
+        ontology_graph_format: Literal[param_typing.GRAPHVIZ_FORMATS] = 'none',
+        randomization_reps: PositiveInt = 10000,
+        random_seed: Union[int, None] = None,
+        parallel_backend: Literal[PARALLEL_BACKENDS] = 'loky',
+        gui_mode: bool = False,
+    ) -> Union[pl.DataFrame, Tuple[pl.DataFrame, plt.Figure]]:
         """
         Calculates enrichment and depletion of the FeatureSet for Gene Ontology (GO) terms against a background set. \
         The GO terms and annotations are drawn via the GO Solr search engine GOlr, \
@@ -949,15 +1044,33 @@ class FeatureSet(set):
             pass
         stats_test = self._get_stats_test(statistical_test, randomization_reps, random_seed)
 
-        runner = enrichment_runner.GOEnrichmentRunner(self.gene_set, organism, gene_id_type, alpha,
-                                                      propagate_annotations, aspects, evidence_types,
-                                                      excluded_evidence_types, databases, excluded_databases,
-                                                      qualifiers, excluded_qualifiers, return_nonsignificant, save_csv,
-                                                      fname, plot_horizontal, plot_ontology_graph,
-                                                      self.set_name, parallel_backend, stats_test,
-                                                      background_genes, exclude_unannotated_genes,
-                                                      ontology_graph_format=ontology_graph_format,
-                                                      plot_style=plot_style, show_expected=show_expected)
+        runner = enrichment_runner.GOEnrichmentRunner(
+            self.gene_set,
+            organism,
+            gene_id_type,
+            alpha,
+            propagate_annotations,
+            aspects,
+            evidence_types,
+            excluded_evidence_types,
+            databases,
+            excluded_databases,
+            qualifiers,
+            excluded_qualifiers,
+            return_nonsignificant,
+            save_csv,
+            fname,
+            plot_horizontal,
+            plot_ontology_graph,
+            self.set_name,
+            parallel_backend,
+            stats_test,
+            background_genes,
+            exclude_unannotated_genes,
+            ontology_graph_format=ontology_graph_format,
+            plot_style=plot_style,
+            show_expected=show_expected,
+        )
 
         results, plotter = runner.run()
         if gui_mode:
@@ -966,20 +1079,29 @@ class FeatureSet(set):
             return results, plotter.run()
         return results
 
-    @readable_name("Enrichment for KEGG Pathways")
-    def kegg_enrichment(self, background_genes: Union[Set[str], Filter, 'FeatureSet'],
-                        organism: Union[str, int, Literal['auto'], Literal[DEFAULT_ORGANISMS]] = 'auto',
-                        gene_id_type: Union[str, Literal['auto'], Literal[get_gene_id_types()]] = 'auto',
-                        alpha: param_typing.Fraction = 0.05,
-                        statistical_test: Literal['fisher', 'hypergeometric', 'randomization'] = 'fisher',
-                        exclude_unannotated_genes: bool = True, return_nonsignificant: bool = False,
-                        save_csv: bool = False, fname=None, return_fig: bool = False, plot_horizontal: bool = True,
-                        show_expected: bool = False, plot_style: Literal['bar', 'lollipop'] = 'bar',
-                        plot_pathway_graphs: bool = True,
-                        pathway_graphs_format: Literal[param_typing.GRAPHVIZ_FORMATS] = 'none',
-                        randomization_reps: PositiveInt = 10000, random_seed: Union[int, None] = None,
-                        parallel_backend: Literal[PARALLEL_BACKENDS] = 'loky', gui_mode: bool = False) -> Union[
-        pl.DataFrame, Tuple[pl.DataFrame, plt.Figure]]:
+    @readable_name('Enrichment for KEGG Pathways')
+    def kegg_enrichment(
+        self,
+        background_genes: Union[Set[str], Filter, 'FeatureSet'],
+        organism: Union[str, int, Literal['auto'], Literal[DEFAULT_ORGANISMS]] = 'auto',
+        gene_id_type: Union[str, Literal['auto'], Literal[get_gene_id_types()]] = 'auto',
+        alpha: param_typing.Fraction = 0.05,
+        statistical_test: Literal['fisher', 'hypergeometric', 'randomization'] = 'fisher',
+        exclude_unannotated_genes: bool = True,
+        return_nonsignificant: bool = False,
+        save_csv: bool = False,
+        fname=None,
+        return_fig: bool = False,
+        plot_horizontal: bool = True,
+        show_expected: bool = False,
+        plot_style: Literal['bar', 'lollipop'] = 'bar',
+        plot_pathway_graphs: bool = True,
+        pathway_graphs_format: Literal[param_typing.GRAPHVIZ_FORMATS] = 'none',
+        randomization_reps: PositiveInt = 10000,
+        random_seed: Union[int, None] = None,
+        parallel_backend: Literal[PARALLEL_BACKENDS] = 'loky',
+        gui_mode: bool = False,
+    ) -> Union[pl.DataFrame, Tuple[pl.DataFrame, plt.Figure]]:
         """
         Calculates enrichment and depletion of the FeatureSet for Kyoto Encyclopedia of Genes and Genomes (KEGG) \
         curated pathways against a background set. \
@@ -1068,13 +1190,25 @@ class FeatureSet(set):
         except AttributeError:
             pass
         stats_test = self._get_stats_test(statistical_test, randomization_reps, random_seed)
-        runner = enrichment_runner.KEGGEnrichmentRunner(self.gene_set, organism, gene_id_type, alpha,
-                                                        return_nonsignificant, save_csv, fname,
-                                                        plot_horizontal, plot_pathway_graphs, self.set_name,
-                                                        parallel_backend, stats_test, background_genes,
-                                                        exclude_unannotated_genes,
-                                                        pathway_graphs_format=pathway_graphs_format,
-                                                        plot_style=plot_style, show_expected=show_expected)
+        runner = enrichment_runner.KEGGEnrichmentRunner(
+            self.gene_set,
+            organism,
+            gene_id_type,
+            alpha,
+            return_nonsignificant,
+            save_csv,
+            fname,
+            plot_horizontal,
+            plot_pathway_graphs,
+            self.set_name,
+            parallel_backend,
+            stats_test,
+            background_genes,
+            exclude_unannotated_genes,
+            pathway_graphs_format=pathway_graphs_format,
+            plot_style=plot_style,
+            show_expected=show_expected,
+        )
 
         results, plotter = runner.run()
         if gui_mode:
@@ -1083,19 +1217,27 @@ class FeatureSet(set):
             return results, plotter.run()
         return results
 
-    @readable_name("Enrichment for user-defined attributes")
-    def user_defined_enrichment(self, background_genes: Union[Set[str], Filter, 'FeatureSet'],
-                                attributes: Union[List[str], str, List[int], int, Literal['all']],
-                                statistical_test: Literal['fisher', 'hypergeometric', 'randomization'] = 'fisher',
-                                alpha: param_typing.Fraction = 0.05,
-                                attr_ref_path: Union[str, Path, Literal['predefined']] = 'predefined',
-                                exclude_unannotated_genes: bool = True, return_nonsignificant: bool = True,
-                                save_csv: bool = False, fname=None, return_fig: bool = False,
-                                plot_horizontal: bool = True, show_expected: bool = False,
-                                plot_style: Literal['bar', 'lollipop'] = 'bar', randomization_reps: PositiveInt = 10000,
-                                random_seed: Union[int, None] = None,
-                                parallel_backend: Literal[PARALLEL_BACKENDS] = 'loky', gui_mode: bool = False
-                                ) -> Union[pl.DataFrame, Tuple[pl.DataFrame, plt.Figure]]:
+    @readable_name('Enrichment for user-defined attributes')
+    def user_defined_enrichment(
+        self,
+        background_genes: Union[Set[str], Filter, 'FeatureSet'],
+        attributes: Union[List[str], str, List[int], int, Literal['all']],
+        statistical_test: Literal['fisher', 'hypergeometric', 'randomization'] = 'fisher',
+        alpha: param_typing.Fraction = 0.05,
+        attr_ref_path: Union[str, Path, Literal['predefined']] = 'predefined',
+        exclude_unannotated_genes: bool = True,
+        return_nonsignificant: bool = True,
+        save_csv: bool = False,
+        fname=None,
+        return_fig: bool = False,
+        plot_horizontal: bool = True,
+        show_expected: bool = False,
+        plot_style: Literal['bar', 'lollipop'] = 'bar',
+        randomization_reps: PositiveInt = 10000,
+        random_seed: Union[int, None] = None,
+        parallel_backend: Literal[PARALLEL_BACKENDS] = 'loky',
+        gui_mode: bool = False,
+    ) -> Union[pl.DataFrame, Tuple[pl.DataFrame, plt.Figure]]:
         """
         Calculates enrichment and depletion of the FeatureSet for user-defined attributes against a background set.\
         The attributes are drawn from an Attribute Reference Table. \
@@ -1187,12 +1329,24 @@ class FeatureSet(set):
             pass
 
         stats_test = self._get_stats_test(statistical_test, randomization_reps, random_seed)
-        runner = enrichment_runner.EnrichmentRunner(self.gene_set, attributes, alpha, attr_ref_path,
-                                                    return_nonsignificant, save_csv, fname, plot_horizontal,
-                                                    self.set_name, parallel_backend, stats_test,
-                                                    background_genes, exclude_unannotated_genes,
-                                                    single_set=False, plot_style=plot_style,
-                                                    show_expected=show_expected)
+        runner = enrichment_runner.EnrichmentRunner(
+            self.gene_set,
+            attributes,
+            alpha,
+            attr_ref_path,
+            return_nonsignificant,
+            save_csv,
+            fname,
+            plot_horizontal,
+            self.set_name,
+            parallel_backend,
+            stats_test,
+            background_genes,
+            exclude_unannotated_genes,
+            single_set=False,
+            plot_style=plot_style,
+            show_expected=show_expected,
+        )
         results, plotter = runner.run()
         if gui_mode:
             return results, plotter
@@ -1200,16 +1354,22 @@ class FeatureSet(set):
             return results, plotter.run()
         return results
 
-    @readable_name("Enrichment for user-defined non-categorical attributes")
-    def non_categorical_enrichment(self, background_genes: Union[Set[str], Filter, 'FeatureSet'],
-                                   attributes: Union[List[str], str, List[int], int, Literal['all']],
-                                   alpha: param_typing.Fraction = 0.05, parametric_test: bool = False,
-                                   attr_ref_path: Union[str, Path, Literal['predefined']] = 'predefined',
-                                   plot_log_scale: bool = True,
-                                   plot_style: Literal['interleaved', 'overlap'] = 'overlap', n_bins: PositiveInt = 50,
-                                   save_csv: bool = False, fname=None, return_fig: bool = False,
-                                   gui_mode: bool = False) -> Union[
-        pl.DataFrame, Tuple[pl.DataFrame, List[plt.Figure]]]:
+    @readable_name('Enrichment for user-defined non-categorical attributes')
+    def non_categorical_enrichment(
+        self,
+        background_genes: Union[Set[str], Filter, 'FeatureSet'],
+        attributes: Union[List[str], str, List[int], int, Literal['all']],
+        alpha: param_typing.Fraction = 0.05,
+        parametric_test: bool = False,
+        attr_ref_path: Union[str, Path, Literal['predefined']] = 'predefined',
+        plot_log_scale: bool = True,
+        plot_style: Literal['interleaved', 'overlap'] = 'overlap',
+        n_bins: PositiveInt = 50,
+        save_csv: bool = False,
+        fname=None,
+        return_fig: bool = False,
+        gui_mode: bool = False,
+    ) -> Union[pl.DataFrame, Tuple[pl.DataFrame, List[plt.Figure]]]:
         """
         Calculates enrichment and depletion of the FeatureSet for user-defined non-categorical attributes \
         against a background set using either a one-sample T-test or Sign test. \
@@ -1270,11 +1430,21 @@ class FeatureSet(set):
             background_genes = background_genes.gene_set
         except AttributeError:
             pass
-        runner = enrichment_runner.NonCategoricalEnrichmentRunner(self.gene_set, attributes, alpha,
-                                                                  background_genes, attr_ref_path, save_csv, fname,
-                                                                  plot_log_scale, plot_style,
-                                                                  n_bins, self.set_name, parallel_backend='sequential',
-                                                                  parametric_test=parametric_test)
+        runner = enrichment_runner.NonCategoricalEnrichmentRunner(
+            self.gene_set,
+            attributes,
+            alpha,
+            background_genes,
+            attr_ref_path,
+            save_csv,
+            fname,
+            plot_log_scale,
+            plot_style,
+            n_bins,
+            self.set_name,
+            parallel_backend='sequential',
+            parametric_test=parametric_test,
+        )
         results, plotter = runner.run()
         if gui_mode:
             return results, plotter
@@ -1314,10 +1484,12 @@ class FeatureSet(set):
         return filter_obj.biotypes_from_ref_table(ref=ref)
 
     @readable_name('Summarize feature biotypes (based on a GTF file)')
-    def biotypes_from_gtf(self, gtf_path: Union[str, Path],
-                          attribute_name: Union[Literal[BIOTYPE_ATTRIBUTE_NAMES], str] = 'gene_biotype',
-                          feature_type: Literal['gene', 'transcript'] = 'gene') -> pl.DataFrame:
-
+    def biotypes_from_gtf(
+        self,
+        gtf_path: Union[str, Path],
+        attribute_name: Union[Literal[BIOTYPE_ATTRIBUTE_NAMES], str] = 'gene_biotype',
+        feature_type: Literal['gene', 'transcript'] = 'gene',
+    ) -> pl.DataFrame:
         """
         Returns a DataFrame describing the biotypes in the table and their count. \
         The data about feature biotypes is drawn from a GTF (Gene transfer format) file supplied by the user.
@@ -1348,6 +1520,7 @@ class RankedSet(FeatureSet):
      and preforms various enrichment analyses on them. \
      ALl functions that can be applied to FeatureSet objects can also be applied to RankedSet objects.
     """
+
     __slots__ = {'ranked_genes': 'a vector of feature names/indices ordered by rank'}
 
     def __init__(self, ranked_genes: Union[Filter, List[str], Tuple[str], np.ndarray], set_name: str = ''):
@@ -1359,13 +1532,17 @@ class RankedSet(FeatureSet):
         elif isinstance(ranked_genes, np.ndarray):
             self.ranked_genes = ranked_genes.astype('str', copy=True)
         elif isinstance(ranked_genes, set):
-            raise TypeError("'ranked_genes' must be an array, list, tuple or Filter object, sorted by rank. "
-                            "Python sets are not a valid type ofr 'ranked_genes'.")
+            raise TypeError(
+                "'ranked_genes' must be an array, list, tuple or Filter object, sorted by rank. "
+                "Python sets are not a valid type ofr 'ranked_genes'."
+            )
         elif isinstance(ranked_genes, dict):
-            raise TypeError("Generating a RankedSet from a dictionary is not implemented yet.")
+            raise TypeError('Generating a RankedSet from a dictionary is not implemented yet.')
         else:
-            raise TypeError(f"'ranked_genes' must be an array, list, tuple or Filter object, sorted by rank. "
-                            f"Instead got {type(ranked_genes)}.")
+            raise TypeError(
+                f"'ranked_genes' must be an array, list, tuple or Filter object, sorted by rank. "
+                f'Instead got {type(ranked_genes)}.'
+            )
 
         super().__init__(ranked_genes, set_name)
         if len(self.ranked_genes) != len(self.gene_set):
@@ -1432,38 +1609,41 @@ class RankedSet(FeatureSet):
             return new_obj if return_vals is None else (new_obj, *return_vals)
 
     def _set_ops(self, others: Union[set, 'FeatureSet'], op: types.FunctionType):
-        warnings.warn("Warning: when performing set operations with RankedSet objects, "
-                      "the return type will always be FeatureSet and not RankedSet.")
+        warnings.warn(
+            'Warning: when performing set operations with RankedSet objects, '
+            'the return type will always be FeatureSet and not RankedSet.'
+        )
         return super()._set_ops(others, op)
 
-    @readable_name("Single-Set GO Enrichment")
-    def single_set_go_enrichment(self, organism: Union[str, int, Literal['auto'], Literal[DEFAULT_ORGANISMS]] = 'auto',
-                                 gene_id_type: Union[str, Literal['auto'], Literal[get_gene_id_types()]] = 'auto',
-                                 alpha: param_typing.Fraction = 0.05,
-                                 min_positive_genes: param_typing.PositiveInt = 10,
-                                 lowest_cutoff: param_typing.Fraction = 0.25,
-                                 propagate_annotations: Literal['classic', 'elim', 'weight', 'all.m', 'no'] = 'elim',
-                                 aspects: Union[Literal[('any',) + GO_ASPECTS], Iterable[Literal[GO_ASPECTS]]] = 'any',
-                                 evidence_types: Union[
-                                     Literal[('any',) + GO_EVIDENCE_TYPES], Iterable[Literal[
-                                         GO_EVIDENCE_TYPES]]] = 'any',
-                                 excluded_evidence_types: Union[
-                                     Literal[GO_EVIDENCE_TYPES], Iterable[Literal[GO_EVIDENCE_TYPES]]] = (),
-                                 databases: Union[str, Iterable[str], Literal['any']] = 'any',
-                                 excluded_databases: Union[str, Iterable[str]] = (),
-                                 qualifiers: Union[
-                                     Literal[('any',) + GO_QUALIFIERS], Iterable[Literal[GO_QUALIFIERS]]] = 'any',
-                                 excluded_qualifiers: Union[
-                                     Literal[GO_QUALIFIERS], Iterable[Literal[GO_QUALIFIERS]]] = 'not',
-                                 exclude_unannotated_genes: bool = True, return_nonsignificant: bool = False,
-                                 save_csv: bool = False, fname=None,
-                                 return_fig: bool = False, plot_horizontal: bool = True,
-                                 show_expected: bool = False, plot_style: Literal['bar', 'lollipop'] = 'bar',
-                                 plot_ontology_graph: bool = True,
-                                 ontology_graph_format: Literal[param_typing.GRAPHVIZ_FORMATS] = 'none',
-                                 parallel_backend: Literal[PARALLEL_BACKENDS] = 'loky',
-                                 gui_mode: bool = False
-                                 ) -> Union[pl.DataFrame, Tuple[pl.DataFrame, plt.Figure]]:
+    @readable_name('Single-Set GO Enrichment')
+    def single_set_go_enrichment(
+        self,
+        organism: Union[str, int, Literal['auto'], Literal[DEFAULT_ORGANISMS]] = 'auto',
+        gene_id_type: Union[str, Literal['auto'], Literal[get_gene_id_types()]] = 'auto',
+        alpha: param_typing.Fraction = 0.05,
+        min_positive_genes: param_typing.PositiveInt = 10,
+        lowest_cutoff: param_typing.Fraction = 0.25,
+        propagate_annotations: Literal['classic', 'elim', 'weight', 'all.m', 'no'] = 'elim',
+        aspects: Union[Literal[('any',) + GO_ASPECTS], Iterable[Literal[GO_ASPECTS]]] = 'any',
+        evidence_types: Union[Literal[('any',) + GO_EVIDENCE_TYPES], Iterable[Literal[GO_EVIDENCE_TYPES]]] = 'any',
+        excluded_evidence_types: Union[Literal[GO_EVIDENCE_TYPES], Iterable[Literal[GO_EVIDENCE_TYPES]]] = (),
+        databases: Union[str, Iterable[str], Literal['any']] = 'any',
+        excluded_databases: Union[str, Iterable[str]] = (),
+        qualifiers: Union[Literal[('any',) + GO_QUALIFIERS], Iterable[Literal[GO_QUALIFIERS]]] = 'any',
+        excluded_qualifiers: Union[Literal[GO_QUALIFIERS], Iterable[Literal[GO_QUALIFIERS]]] = 'not',
+        exclude_unannotated_genes: bool = True,
+        return_nonsignificant: bool = False,
+        save_csv: bool = False,
+        fname=None,
+        return_fig: bool = False,
+        plot_horizontal: bool = True,
+        show_expected: bool = False,
+        plot_style: Literal['bar', 'lollipop'] = 'bar',
+        plot_ontology_graph: bool = True,
+        ontology_graph_format: Literal[param_typing.GRAPHVIZ_FORMATS] = 'none',
+        parallel_backend: Literal[PARALLEL_BACKENDS] = 'loky',
+        gui_mode: bool = False,
+    ) -> Union[pl.DataFrame, Tuple[pl.DataFrame, plt.Figure]]:
         """
         Calculates enrichment and depletion of the sorted RankedSet for Gene Ontology (GO) terms \
         WITHOUT a background set, using the generalized Minimum Hypergeometric Test (XL-mHG, developed by  \
@@ -1598,16 +1778,33 @@ class RankedSet(FeatureSet):
            Example plot of single_set_go_enrichment(plot_horizontal = False)
         """
         stats_test = enrichment_runner.XlmhgTest(min_positive_genes, lowest_cutoff)
-        runner = enrichment_runner.GOEnrichmentRunner(self.ranked_genes, organism, gene_id_type, alpha,
-                                                      propagate_annotations, aspects, evidence_types,
-                                                      excluded_evidence_types, databases, excluded_databases,
-                                                      qualifiers, excluded_qualifiers, return_nonsignificant, save_csv,
-                                                      fname, plot_horizontal, plot_ontology_graph,
-                                                      self.set_name, parallel_backend=parallel_backend,
-                                                      stats_test=stats_test,
-                                                      exclude_unannotated_genes=exclude_unannotated_genes,
-                                                      single_set=True, ontology_graph_format=ontology_graph_format,
-                                                      plot_style=plot_style, show_expected=show_expected)
+        runner = enrichment_runner.GOEnrichmentRunner(
+            self.ranked_genes,
+            organism,
+            gene_id_type,
+            alpha,
+            propagate_annotations,
+            aspects,
+            evidence_types,
+            excluded_evidence_types,
+            databases,
+            excluded_databases,
+            qualifiers,
+            excluded_qualifiers,
+            return_nonsignificant,
+            save_csv,
+            fname,
+            plot_horizontal,
+            plot_ontology_graph,
+            self.set_name,
+            parallel_backend=parallel_backend,
+            stats_test=stats_test,
+            exclude_unannotated_genes=exclude_unannotated_genes,
+            single_set=True,
+            ontology_graph_format=ontology_graph_format,
+            plot_style=plot_style,
+            show_expected=show_expected,
+        )
 
         results, plotter = runner.run()
         if gui_mode:
@@ -1616,20 +1813,27 @@ class RankedSet(FeatureSet):
             return results, plotter.run()
         return results
 
-    @readable_name("Single-Set Enrichment for KEGG Pathways")
-    def single_set_kegg_enrichment(self,
-                                   organism: Union[str, int, Literal['auto'], Literal[DEFAULT_ORGANISMS]] = 'auto',
-                                   gene_id_type: Union[str, Literal['auto'], Literal[get_gene_id_types()]] = 'auto',
-                                   alpha: param_typing.Fraction = 0.05,
-                                   min_positive_genes: param_typing.PositiveInt = 10,
-                                   lowest_cutoff: param_typing.Fraction = 0.25, exclude_unannotated_genes: bool = True,
-                                   return_nonsignificant: bool = False, save_csv: bool = False,
-                                   fname=None, return_fig: bool = False, plot_horizontal: bool = True,
-                                   show_expected: bool = False, plot_style: Literal['bar', 'lollipop'] = 'bar',
-                                   plot_pathway_graphs: bool = True,
-                                   pathway_graphs_format: Literal[param_typing.GRAPHVIZ_FORMATS] = 'none',
-                                   parallel_backend: Literal[PARALLEL_BACKENDS] = 'loky', gui_mode: bool = False
-                                   ) -> Union[pl.DataFrame, Tuple[pl.DataFrame, plt.Figure]]:
+    @readable_name('Single-Set Enrichment for KEGG Pathways')
+    def single_set_kegg_enrichment(
+        self,
+        organism: Union[str, int, Literal['auto'], Literal[DEFAULT_ORGANISMS]] = 'auto',
+        gene_id_type: Union[str, Literal['auto'], Literal[get_gene_id_types()]] = 'auto',
+        alpha: param_typing.Fraction = 0.05,
+        min_positive_genes: param_typing.PositiveInt = 10,
+        lowest_cutoff: param_typing.Fraction = 0.25,
+        exclude_unannotated_genes: bool = True,
+        return_nonsignificant: bool = False,
+        save_csv: bool = False,
+        fname=None,
+        return_fig: bool = False,
+        plot_horizontal: bool = True,
+        show_expected: bool = False,
+        plot_style: Literal['bar', 'lollipop'] = 'bar',
+        plot_pathway_graphs: bool = True,
+        pathway_graphs_format: Literal[param_typing.GRAPHVIZ_FORMATS] = 'none',
+        parallel_backend: Literal[PARALLEL_BACKENDS] = 'loky',
+        gui_mode: bool = False,
+    ) -> Union[pl.DataFrame, Tuple[pl.DataFrame, plt.Figure]]:
         """
         Calculates enrichment and depletion of the sorted RankedSet for Kyoto Encyclopedia of Genes and Genomes (KEGG) \
         curated pathways WITHOUT a background set, using the generalized Minimum Hypergeometric Test \
@@ -1733,13 +1937,25 @@ class RankedSet(FeatureSet):
            Example plot of single_set_kegg_enrichment(plot_horizontal = False)
         """
         stats_test = enrichment_runner.XlmhgTest(min_positive_genes, lowest_cutoff)
-        runner = enrichment_runner.KEGGEnrichmentRunner(self.ranked_genes, organism, gene_id_type, alpha,
-                                                        return_nonsignificant, save_csv, fname,
-                                                        plot_horizontal, plot_pathway_graphs, self.set_name,
-                                                        parallel_backend=parallel_backend, stats_test=stats_test,
-                                                        exclude_unannotated_genes=exclude_unannotated_genes,
-                                                        single_set=True, pathway_graphs_format=pathway_graphs_format,
-                                                        plot_style=plot_style, show_expected=show_expected)
+        runner = enrichment_runner.KEGGEnrichmentRunner(
+            self.ranked_genes,
+            organism,
+            gene_id_type,
+            alpha,
+            return_nonsignificant,
+            save_csv,
+            fname,
+            plot_horizontal,
+            plot_pathway_graphs,
+            self.set_name,
+            parallel_backend=parallel_backend,
+            stats_test=stats_test,
+            exclude_unannotated_genes=exclude_unannotated_genes,
+            single_set=True,
+            pathway_graphs_format=pathway_graphs_format,
+            plot_style=plot_style,
+            show_expected=show_expected,
+        )
 
         results, plotter = runner.run()
         if gui_mode:
@@ -1748,17 +1964,25 @@ class RankedSet(FeatureSet):
             return results, plotter.run()
         return results
 
-    @readable_name("Single-Set Enrichment for user-defined attributes")
-    def single_set_enrichment(self, attributes: Union[List[str], str, List[int], int, Literal['all']],
-                              alpha: param_typing.Fraction = 0.05, min_positive_genes: param_typing.PositiveInt = 10,
-                              lowest_cutoff: param_typing.Fraction = 0.25,
-                              attr_ref_path: Union[str, Path, Literal['predefined']] = 'predefined',
-                              exclude_unannotated_genes: bool = True, return_nonsignificant: bool = True,
-                              save_csv: bool = False, fname=None, return_fig: bool = False,
-                              plot_horizontal: bool = True,
-                              show_expected: bool = False, plot_style: Literal['bar', 'lollipop'] = 'bar',
-                              parallel_backend: Literal[PARALLEL_BACKENDS] = 'loky',
-                              gui_mode: bool = False):
+    @readable_name('Single-Set Enrichment for user-defined attributes')
+    def single_set_enrichment(
+        self,
+        attributes: Union[List[str], str, List[int], int, Literal['all']],
+        alpha: param_typing.Fraction = 0.05,
+        min_positive_genes: param_typing.PositiveInt = 10,
+        lowest_cutoff: param_typing.Fraction = 0.25,
+        attr_ref_path: Union[str, Path, Literal['predefined']] = 'predefined',
+        exclude_unannotated_genes: bool = True,
+        return_nonsignificant: bool = True,
+        save_csv: bool = False,
+        fname=None,
+        return_fig: bool = False,
+        plot_horizontal: bool = True,
+        show_expected: bool = False,
+        plot_style: Literal['bar', 'lollipop'] = 'bar',
+        parallel_backend: Literal[PARALLEL_BACKENDS] = 'loky',
+        gui_mode: bool = False,
+    ):
         """
         Calculates enrichment and depletion of the sorted RankedSet for user-defined attributes \
         WITHOUT a background set, using the generalized Minimum Hypergeometric Test (XL-mHG, developed by  \
@@ -1837,12 +2061,23 @@ class RankedSet(FeatureSet):
 
         """
         stats_test = enrichment_runner.XlmhgTest(min_positive_genes, lowest_cutoff)
-        runner = enrichment_runner.EnrichmentRunner(self.ranked_genes, attributes, alpha, attr_ref_path,
-                                                    return_nonsignificant, save_csv, fname, plot_horizontal,
-                                                    self.set_name, parallel_backend=parallel_backend,
-                                                    stats_test=stats_test,
-                                                    exclude_unannotated_genes=exclude_unannotated_genes,
-                                                    single_set=True, plot_style=plot_style, show_expected=show_expected)
+        runner = enrichment_runner.EnrichmentRunner(
+            self.ranked_genes,
+            attributes,
+            alpha,
+            attr_ref_path,
+            return_nonsignificant,
+            save_csv,
+            fname,
+            plot_horizontal,
+            self.set_name,
+            parallel_backend=parallel_backend,
+            stats_test=stats_test,
+            exclude_unannotated_genes=exclude_unannotated_genes,
+            single_set=True,
+            plot_style=plot_style,
+            show_expected=show_expected,
+        )
         results, plotter = runner.run()
         if gui_mode:
             return results, plotter
@@ -1851,17 +2086,26 @@ class RankedSet(FeatureSet):
         return results
 
 
-def enrichment_bar_plot(results_table_path: Union[str, Path], alpha: param_typing.Fraction = 0.05,
-                        enrichment_score_column: Union[
-                            str, Literal['log2_fold_enrichment', 'log2_enrichment_score']] = 'log2_fold_enrichment',
-                        n_bars: Union[param_typing.PositiveInt, Literal['all']] = 'all',
-                        title: str = 'Enrichment results', center_bars: bool = True,
-                        plot_horizontal: bool = True, ylabel: Union[str, Literal[
-        "$\\log_2$(Fold Enrichment)", r"$\log_2$(Enrichment Score)"]] = "$\\log_2$(Fold Enrichment)",
-                        ylim: Union[float, Literal['auto']] = 'auto',
-                        plot_style: Literal['bar', 'lollipop'] = 'bar', show_expected: bool = False,
-                        title_fontsize: float = 18, label_fontsize: float = 13, ylabel_fontsize: float = 16
-                        ) -> plt.Figure:
+def enrichment_bar_plot(
+    results_table_path: Union[str, Path],
+    alpha: param_typing.Fraction = 0.05,
+    enrichment_score_column: Union[
+        str, Literal['log2_fold_enrichment', 'log2_enrichment_score']
+    ] = 'log2_fold_enrichment',
+    n_bars: Union[param_typing.PositiveInt, Literal['all']] = 'all',
+    title: str = 'Enrichment results',
+    center_bars: bool = True,
+    plot_horizontal: bool = True,
+    ylabel: Union[
+        str, Literal['$\\log_2$(Fold Enrichment)', r'$\log_2$(Enrichment Score)']
+    ] = '$\\log_2$(Fold Enrichment)',
+    ylim: Union[float, Literal['auto']] = 'auto',
+    plot_style: Literal['bar', 'lollipop'] = 'bar',
+    show_expected: bool = False,
+    title_fontsize: float = 18,
+    label_fontsize: float = 13,
+    ylabel_fontsize: float = 16,
+) -> plt.Figure:
     """
     Generate an enrichment bar-plot based on an enrichment results table. \
     For the clarity of display, complete depletion (linear enrichment = 0) \
@@ -1903,9 +2147,22 @@ def enrichment_bar_plot(results_table_path: Union[str, Path], alpha: param_typin
     :rtype: matplotlib.figure.Figure instance
     """
     results_table = io.load_table(results_table_path)
-    plotter = enrichment_runner.BarPlotter(results_table, enrichment_score_column, n_bars, alpha, ylabel, title, ylim,
-                                           title_fontsize, label_fontsize, ylabel_fontsize, plot_style, plot_horizontal,
-                                           show_expected, center_bars)
+    plotter = enrichment_runner.BarPlotter(
+        results_table,
+        enrichment_score_column,
+        n_bars,
+        alpha,
+        ylabel,
+        title,
+        ylim,
+        title_fontsize,
+        label_fontsize,
+        ylabel_fontsize,
+        plot_style,
+        plot_horizontal,
+        show_expected,
+        center_bars,
+    )
     return plotter.run()
 
 
@@ -1923,7 +2180,7 @@ def _fetch_sets(objs: dict, ref: Union[str, Path, Literal['predefined']] = 'pred
     :return: a dictionary, where the keys are names of sets and the values are python sets of feature indices.
     """
     if not isinstance(objs, dict):
-        raise InvalidTypeError(f"objs must be a dictionary. Instaed got {type(objs)}")
+        raise InvalidTypeError(f'objs must be a dictionary. Instaed got {type(objs)}')
     fetched_sets = dict()
 
     if validation.isinstanceiter_any(objs.values(), str):
@@ -1939,17 +2196,23 @@ def _fetch_sets(objs: dict, ref: Union[str, Path, Literal['predefined']] = 'pred
             fetched_sets[set_name] = set_obj.index_set
         elif isinstance(set_obj, str):
             fetched_sets[set_name] = parsing.data_to_set(
-                attr_ref_table.filter(pl.col(set_obj).is_not_null()).select(pl.first()))
+                attr_ref_table.filter(pl.col(set_obj).is_not_null()).select(pl.first())
+            )
         else:
             raise TypeError(f"Invalid type for the set '{set_name}': {set_obj}.")
 
     return fetched_sets
 
 
-def upset_plot(objs: Dict[str, Union[str, FeatureSet, Set[str]]], set_colors: param_typing.ColorList = ('black',),
-               title: str = 'UpSet Plot', title_fontsize: float = 20, show_percentages: bool = True,
-               attr_ref_table_path: Union[str, Path, Literal['predefined']] = 'predefined', fig: plt.Figure = None
-               ) -> plt.Figure:
+def upset_plot(
+    objs: Dict[str, Union[str, FeatureSet, Set[str]]],
+    set_colors: param_typing.ColorList = ('black',),
+    title: str = 'UpSet Plot',
+    title_fontsize: float = 20,
+    show_percentages: bool = True,
+    attr_ref_table_path: Union[str, Path, Literal['predefined']] = 'predefined',
+    fig: plt.Figure = None,
+) -> plt.Figure:
     """
     Generate an UpSet plot of 2 or more sets, FeatureSets or attributes from the Attribute Reference Table.
 
@@ -1984,9 +2247,10 @@ def upset_plot(objs: Dict[str, Union[str, FeatureSet, Set[str]]], set_colors: pa
     """
 
     upset_df = parsing.generate_upset_series(_fetch_sets(objs=objs, ref=attr_ref_table_path))
-    with pd.option_context("mode.copy_on_write", False):
-        upset_obj = upsetplot.UpSet(upset_df, sort_by='degree', sort_categories_by=None,
-                                    show_percentages=show_percentages)
+    with pd.option_context('mode.copy_on_write', False):
+        upset_obj = upsetplot.UpSet(
+            upset_df, sort_by='degree', sort_categories_by=None, show_percentages=show_percentages
+        )
         axes = upset_obj.plot(fig=fig)
         if fig is None:
             fig = plt.gcf()
@@ -1995,7 +2259,7 @@ def upset_plot(objs: Dict[str, Union[str, FeatureSet, Set[str]]], set_colors: pa
         if len(set_colors) == 1:
             set_colors = [set_colors[0]] * len(objs)
         elif len(set_colors) > len(objs):
-            set_colors = set_colors[0:len(objs)]
+            set_colors = set_colors[0 : len(objs)]
         elif len(set_colors) < len(objs):
             set_colors = set_colors + [(0, 0, 0)] * (len(objs) - len(set_colors))
 
@@ -2040,13 +2304,23 @@ def _get_tuple_patch_ids(n_sets: int) -> List[Tuple[int, ...]]:
     return sorted_ids
 
 
-def venn_diagram(objs: Dict[str, Union[str, FeatureSet, Set[str]]], title: Union[str, Literal['default']] = 'default',
-                 attr_ref_table_path: Union[str, Path, Literal['predefined']] = 'predefined',
-                 set_colors: param_typing.ColorList = ('r', 'g', 'b'),
-                 transparency: param_typing.Fraction = 0.4, weighted: bool = True, add_outline: bool = True,
-                 linecolor: param_typing.Color = 'black', linestyle: Literal['solid', 'dashed'] = 'solid',
-                 linewidth: float = 2.0, title_fontsize: float = 14, set_fontsize: float = 12,
-                 subset_fontsize: float = 10, fig: plt.Figure = None, **legacy_args) -> plt.Figure:
+def venn_diagram(
+    objs: Dict[str, Union[str, FeatureSet, Set[str]]],
+    title: Union[str, Literal['default']] = 'default',
+    attr_ref_table_path: Union[str, Path, Literal['predefined']] = 'predefined',
+    set_colors: param_typing.ColorList = ('r', 'g', 'b'),
+    transparency: param_typing.Fraction = 0.4,
+    weighted: bool = True,
+    add_outline: bool = True,
+    linecolor: param_typing.Color = 'black',
+    linestyle: Literal['solid', 'dashed'] = 'solid',
+    linewidth: float = 2.0,
+    title_fontsize: float = 14,
+    set_fontsize: float = 12,
+    subset_fontsize: float = 10,
+    fig: plt.Figure = None,
+    **legacy_args,
+) -> plt.Figure:
     """
     Generate a Venn diagram of 2 to 3 sets, FeatureSets or attributes from the Attribute Reference Table.
 
@@ -2103,14 +2377,22 @@ def venn_diagram(objs: Dict[str, Union[str, FeatureSet, Set[str]]], title: Union
     # pick plotting functions and parameters depending on # of sets and 'weighted' parameter
     if len(objs) == 2:
         func = vn.venn2
-        kwargs = dict() if weighted else (
-            dict(layout_algorithm=vn.layout.venn2.DefaultLayoutAlgorithm(fixed_subset_sizes=(1, 1, 1))))
+        kwargs = (
+            dict()
+            if weighted
+            else (dict(layout_algorithm=vn.layout.venn2.DefaultLayoutAlgorithm(fixed_subset_sizes=(1, 1, 1))))
+        )
         func_circles = vn.venn2_circles
         set_colors = set_colors[0:2]
     else:
         func = vn.venn3
-        kwargs = dict() if weighted else (
-            dict(layout_algorithm=vn.layout.venn3.DefaultLayoutAlgorithm(fixed_subset_sizes=(1, 1, 1, 1, 1, 1, 1))))
+        kwargs = (
+            dict()
+            if weighted
+            else (
+                dict(layout_algorithm=vn.layout.venn3.DefaultLayoutAlgorithm(fixed_subset_sizes=(1, 1, 1, 1, 1, 1, 1)))
+            )
+        )
         func_circles = vn.venn3_circles
         set_colors = set_colors[0:3]
 
@@ -2136,12 +2418,17 @@ def venn_diagram(objs: Dict[str, Union[str, FeatureSet, Set[str]]], title: Union
     return fig
 
 
-def gene_ontology_graph(aspect: Literal[param_typing.GO_ASPECTS], results_table_path: Union[str, Path],
-                        enrichment_score_column: Union[
-                            str, Literal['log2_enrichment_score', 'log2_fold_enrichment']] = 'log2_fold_enrichment',
-                        title: Union[str, Literal['auto']] = 'auto', ylabel: str = "$\\log_2$(Fold Enrichment)",
-                        graph_format: Literal[param_typing.GRAPHVIZ_FORMATS] = 'none', dpi: PositiveInt = 300
-                        ) -> Union[plt.Figure, None]:
+def gene_ontology_graph(
+    aspect: Literal[param_typing.GO_ASPECTS],
+    results_table_path: Union[str, Path],
+    enrichment_score_column: Union[
+        str, Literal['log2_enrichment_score', 'log2_fold_enrichment']
+    ] = 'log2_fold_enrichment',
+    title: Union[str, Literal['auto']] = 'auto',
+    ylabel: str = '$\\log_2$(Fold Enrichment)',
+    graph_format: Literal[param_typing.GRAPHVIZ_FORMATS] = 'none',
+    dpi: PositiveInt = 300,
+) -> Union[plt.Figure, None]:
     """
     Generate a GO enrichment ontology graph based on an enrichment results table.
 
@@ -2168,11 +2455,15 @@ def gene_ontology_graph(aspect: Literal[param_typing.GO_ASPECTS], results_table_
     return dag_tree.plot_ontology(aspect, results_df, enrichment_score_column, title, ylabel, graph_format, dpi)
 
 
-def kegg_pathway_graph(pathway_id: str, marked_genes: Union[Sequence[str], None],
-                       gene_id_type: Union[str, Literal['auto'], Literal[get_gene_id_types()]] = 'auto',
-                       title: Union[str, Literal['auto']] = 'auto', ylabel: str = '',
-                       graph_format: Literal[param_typing.GRAPHVIZ_FORMATS] = 'none', dpi: PositiveInt = 300
-                       ) -> Union[plt.Figure, None]:
+def kegg_pathway_graph(
+    pathway_id: str,
+    marked_genes: Union[Sequence[str], None],
+    gene_id_type: Union[str, Literal['auto'], Literal[get_gene_id_types()]] = 'auto',
+    title: Union[str, Literal['auto']] = 'auto',
+    ylabel: str = '',
+    graph_format: Literal[param_typing.GRAPHVIZ_FORMATS] = 'none',
+    dpi: PositiveInt = 300,
+) -> Union[plt.Figure, None]:
     """
     Generate a KEGG Pathway graph.
 

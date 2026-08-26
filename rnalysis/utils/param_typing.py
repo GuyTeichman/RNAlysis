@@ -10,9 +10,10 @@ import typing_extensions
 from rnalysis import FROZEN_ENV
 from rnalysis.utils import parsing
 
-PARALLEL_BACKENDS = ('multiprocessing', 'sequential') if FROZEN_ENV else (
-    'multiprocessing', 'loky', 'threading', 'sequential')
-QUANTILE_INTERPOLATION_METHODS = ("nearest", "higher", "lower", "midpoint", "linear")
+PARALLEL_BACKENDS = (
+    ('multiprocessing', 'sequential') if FROZEN_ENV else ('multiprocessing', 'loky', 'threading', 'sequential')
+)
+QUANTILE_INTERPOLATION_METHODS = ('nearest', 'higher', 'lower', 'midpoint', 'linear')
 SUMMATION_METHODS = ('scaled_tpm', 'raw')
 LIMMA_NORM = ('scale', 'quantile', 'cyclicloess')
 K_CRITERIA = ('gap', 'silhouette', 'calinski_harabasz', 'davies_bouldin', 'bic')
@@ -24,7 +25,11 @@ POWER_TRANSFORMS = ('box-cox', 'log', 'none')
 LEGAL_GENE_LENGTH_METHODS = ('mean', 'median', 'max', 'min', 'geometric_mean', 'merged_exons')
 
 LEGAL_FASTQ_SUFFIXES = ('.fastq', '.fastq.gz', '.fq', '.fq.gz')
-LEGAL_ALIGNMENT_SUFFIXES = ('.sam', '.bam', '.cram',)
+LEGAL_ALIGNMENT_SUFFIXES = (
+    '.sam',
+    '.bam',
+    '.cram',
+)
 LEGAL_BOWTIE2_PRESETS = ('very-fast', 'fast', 'sensitive', 'very-sensitive')
 LEGAL_BOWTIE2_MODES = ('end-to-end', 'local')
 LEGAL_QUAL_SCORE_TYPES = ('phred33', 'phred64', 'solexa-quals', 'int-quals')
@@ -39,22 +44,37 @@ TRANSCRIPT_FEATURE_NAMES = ('transcript', 'mRNA', 'primary_transcript')
 # Attribute names suggested in the GUI for filtering/annotating a table from a GTF/GFF file. Free text is also
 # allowed (used as Union[Literal[GTF_ATTRIBUTE_NAMES], str]). 'chromosome'/'source'/'strand' are reserved names that
 # read the fixed GTF/GFF columns; everything else is looked up as a column-9 key=value attribute.
-GTF_ATTRIBUTE_NAMES = ('gene_biotype', 'transcript_biotype', 'biotype', 'gene_name', 'gene_id', 'transcript_id',
-                       'chromosome', 'source', 'strand')
+GTF_ATTRIBUTE_NAMES = (
+    'gene_biotype',
+    'transcript_biotype',
+    'biotype',
+    'gene_name',
+    'gene_id',
+    'transcript_id',
+    'chromosome',
+    'source',
+    'strand',
+)
 
 GO_ASPECTS = ('biological_process', 'cellular_component', 'molecular_function')
 GO_EVIDENCE_TYPES = ('experimental', 'phylogenetic', 'computational', 'author', 'curator', 'electronic')
 GO_QUALIFIERS = ('not', 'contributes_to', 'colocalizes_with')
 
-DEFAULT_ORGANISMS = tuple(sorted(['Caenorhabditis elegans',
-                                  'Mus musculus',
-                                  'Drosophila melanogaster',
-                                  'Homo sapiens',
-                                  'Arabidopsis thaliana',
-                                  'Danio rerio',
-                                  'Escherichia coli',
-                                  'Saccharomyces cerevisiae',
-                                  'Schizosaccharomyces pombe']))
+DEFAULT_ORGANISMS = tuple(
+    sorted(
+        [
+            'Caenorhabditis elegans',
+            'Mus musculus',
+            'Drosophila melanogaster',
+            'Homo sapiens',
+            'Arabidopsis thaliana',
+            'Danio rerio',
+            'Escherichia coli',
+            'Saccharomyces cerevisiae',
+            'Schizosaccharomyces pombe',
+        ]
+    )
+)
 
 ORTHOLOG_NON_UNIQUE_MODES = ('first', 'last', 'random', 'none')
 
@@ -78,9 +98,15 @@ def type_to_supertype(this_type):
 
     args = typing_extensions.get_args(this_type)
     if isinstance(args, tuple) and len(args) > 0:
-        origin_map = {list: typing.List, set: typing.Set, dict: typing.Dict, collections.abc.Iterable: typing.Iterable,
-                      frozenset: typing.FrozenSet, typing.Union: typing.Union,
-                      typing_extensions.Literal: typing_extensions.Literal}
+        origin_map = {
+            list: typing.List,
+            set: typing.Set,
+            dict: typing.Dict,
+            collections.abc.Iterable: typing.Iterable,
+            frozenset: typing.FrozenSet,
+            typing.Union: typing.Union,
+            typing_extensions.Literal: typing_extensions.Literal,
+        }
         components = []
         for component in args:
             components.append(type_to_supertype(component))
@@ -118,7 +144,7 @@ def _load_api_vocabularies() -> typing.Dict[str, dict]:
     with open(API_VOCABULARIES_PATH, encoding='utf-8') as snapshot_file:
         vocabularies = json.load(snapshot_file)['vocabularies']
     if not isinstance(vocabularies, dict):
-        raise TypeError(f"expected a dict of vocabularies, got {type(vocabularies)}")
+        raise TypeError(f'expected a dict of vocabularies, got {type(vocabularies)}')
     return vocabularies
 
 
@@ -131,11 +157,13 @@ def _get_snapshot_vocabulary(key: str, description: str) -> typing.Tuple[str, ..
             raise TypeError(f"expected a list of strings under vocabulary '{key}'")
         return parsing.data_to_tuple(values)
     except _SNAPSHOT_READ_ERRORS:
-        warnings.warn(f'Failed to load the list of {description} from the packaged data file '
-                      f'"{API_VOCABULARIES_PATH}". '
-                      f'Some features may not work as intended, and some drop-down menus will be empty. '
-                      f'This usually means your RNAlysis installation is incomplete or corrupted - '
-                      f'to fix this issue, re-install RNAlysis. ')
+        warnings.warn(
+            f'Failed to load the list of {description} from the packaged data file '
+            f'"{API_VOCABULARIES_PATH}". '
+            f'Some features may not work as intended, and some drop-down menus will be empty. '
+            f'This usually means your RNAlysis installation is incomplete or corrupted - '
+            f'to fix this issue, re-install RNAlysis. '
+        )
         return tuple()
 
 

@@ -22,7 +22,7 @@ def test_public_api_docstrings_use_polars_repr(module):
     assert '<BLANKLINE>' not in text, f"{module} docstrings still contain a pandas '<BLANKLINE>' repr marker"
     assert not PANDAS_REPR_FOOTER.search(text), (
         f"{module} docstrings still contain a pandas '[N rows x M columns]' repr footer; "
-        f"regenerate the :Examples: outputs in polars repr (issue #146)"
+        f'regenerate the :Examples: outputs in polars repr (issue #146)'
     )
 
 
@@ -30,4 +30,6 @@ def test_public_api_docstrings_use_polars_repr(module):
 def test_public_api_docstring_example_paths_exist(module):
     text = (RNALYSIS / module).read_text(encoding='utf-8')
     broken = sorted(set(BROKEN_FIXTURE_PATH.findall(text)))
-    assert not broken, f"{module} docstring examples reference nonexistent fixture paths {broken} (use tests/test_files/)"
+    assert not broken, (
+        f'{module} docstring examples reference nonexistent fixture paths {broken} (use tests/test_files/)'
+    )

@@ -42,7 +42,7 @@ def check_is_df_like(inp):
     elif isinstance(inp, Path):
         if inp.suffix == '.csv':
             return False
-    raise ValueError("The input is neither a pandas DataFrame or a csv file")
+    raise ValueError('The input is neither a pandas DataFrame or a csv file')
 
 
 def is_method_of_class(mthd, cls):
@@ -95,7 +95,7 @@ def isinstanceiter(iterable: Iterable, object_class: Union[type, Tuple[type, ...
     :rtype: bool
     """
     if not isiterable(iterable):
-        raise InvalidTypeError(f"Object of type {type(iterable)} is not iterable.")
+        raise InvalidTypeError(f'Object of type {type(iterable)} is not iterable.')
     return all([isinstance(i, object_class) for i in iterable])
 
 
@@ -113,7 +113,7 @@ def isinstanceiter_inh(iterable: Iterable, parent_class: Union[type, Tuple[type,
     :rtype: bool
     """
     if not isiterable(iterable):
-        raise InvalidTypeError(f"Object of type {type(iterable)} is not iterable.")
+        raise InvalidTypeError(f'Object of type {type(iterable)} is not iterable.')
     return all([isinstanceinh(i, parent_class) for i in iterable])
 
 
@@ -130,7 +130,7 @@ def isinstanceiter_any(iterable: Iterable, object_class: Union[type, Tuple[type,
     :rtype: bool
     """
     if not isiterable(iterable):
-        raise InvalidTypeError(f"Object of type {type(iterable)} is not iterable.")
+        raise InvalidTypeError(f'Object of type {type(iterable)} is not iterable.')
     return any([isinstance(i, object_class) for i in iterable])
 
 
@@ -161,10 +161,12 @@ def validate_biotype_table(biotype_df: pl.DataFrame):
     """
     if biotype_df.shape[1] != 2:
         raise InvalidValueError(
-            f"Invalid number of columns in Biotype Reference Table: found {biotype_df.shape[1]} columns instead of 2!")
+            f'Invalid number of columns in Biotype Reference Table: found {biotype_df.shape[1]} columns instead of 2!'
+        )
     if biotype_df.shape[0] < 2:
         raise InvalidValueError(
-            f"Biotype Reference Table must have at least two rows, found only  {biotype_df.shape[0]}!")
+            f'Biotype Reference Table must have at least two rows, found only  {biotype_df.shape[0]}!'
+        )
 
 
 def validate_attr_table(attr_df: pl.DataFrame):
@@ -176,23 +178,30 @@ def validate_attr_table(attr_df: pl.DataFrame):
     """
     if attr_df.shape[1] < 2:
         raise InvalidValueError(
-            f"Attribute Reference Table must have at least two columns, found only  {attr_df.shape[1]}!")
+            f'Attribute Reference Table must have at least two columns, found only  {attr_df.shape[1]}!'
+        )
     if attr_df.shape[0] < 1:
         raise InvalidValueError(
-            f"Attribute Reference Table must have at least one row, found only  {attr_df.shape[0]}!")
+            f'Attribute Reference Table must have at least one row, found only  {attr_df.shape[0]}!'
+        )
 
 
-def validate_uniprot_dataset_name(dataset_dicts: Tuple[dict, dict], map_to_names: Iterable[str],
-                                  map_from_names: Iterable[str]):
+def validate_uniprot_dataset_name(
+    dataset_dicts: Tuple[dict, dict], map_to_names: Iterable[str], map_from_names: Iterable[str]
+):
     dataset_to, dataset_from = dataset_dicts
     for name in map_to_names:
         if name not in dataset_to:
-            raise InvalidValueError(f"Dataset '{name}' is not a valid Uniprot Dataset to map gene names/IDs to. "
-                                    f"Valid Uniprot Datasets are: {', '.join(dataset_to.keys())}.")
+            raise InvalidValueError(
+                f"Dataset '{name}' is not a valid Uniprot Dataset to map gene names/IDs to. "
+                f'Valid Uniprot Datasets are: {", ".join(dataset_to.keys())}.'
+            )
     for name in map_from_names:
         if name not in dataset_from:
-            raise InvalidValueError(f"Dataset '{name}' is not a valid Uniprot Dataset to map gene names/IDs from. "
-                                    f"Valid Uniprot Datasets are: {', '.join(dataset_from.keys())}.")
+            raise InvalidValueError(
+                f"Dataset '{name}' is not a valid Uniprot Dataset to map gene names/IDs from. "
+                f'Valid Uniprot Datasets are: {", ".join(dataset_from.keys())}.'
+            )
 
 
 def validate_threshold(threshold: float = 1):
@@ -204,11 +213,11 @@ def validate_threshold(threshold: float = 1):
 
     """
     if not isinstance(threshold, (float, int)):
-        raise InvalidTypeError("Threshold must be a number!")
+        raise InvalidTypeError('Threshold must be a number!')
     # written as `not >= 0` rather than `< 0` so NaN is rejected: every comparison against NaN is
     # False, so `threshold < 0` would let a NaN through and silently empty the table downstream
     if not threshold >= 0:
-        raise InvalidValueError("Threshold must be zero or larger!")
+        raise InvalidValueError('Threshold must be zero or larger!')
 
 
 def validate_clustering_parameters(legal_metrics: set, metric: str, linkage: str = None):
@@ -232,16 +241,20 @@ def validate_clustering_parameters(legal_metrics: set, metric: str, linkage: str
 def validate_hdbscan_parameters(min_cluster_size: int, metric: str, cluster_selection_method: str, n_features: int):
     if not isinstance(min_cluster_size, int):
         raise InvalidTypeError(
-            f"'min_cluster_size' must be an integer >=2. Instead got {min_cluster_size}, type={type(min_cluster_size)}.")
+            f"'min_cluster_size' must be an integer >=2. Instead got {min_cluster_size}, type={type(min_cluster_size)}."
+        )
     if min_cluster_size < 2:
         raise InvalidValueError(
-            f"'min_cluster_size' must be an integer >=2. Instead got {min_cluster_size}, type={type(min_cluster_size)}.")
+            f"'min_cluster_size' must be an integer >=2. Instead got {min_cluster_size}, type={type(min_cluster_size)}."
+        )
     if min_cluster_size > n_features:
         raise InvalidValueError(
-            "'min_cluster_size' cannot be larger than the number of features in the CountFilter object. ")
+            "'min_cluster_size' cannot be larger than the number of features in the CountFilter object. "
+        )
     if not isinstance(cluster_selection_method, str):
         raise InvalidTypeError(
-            f"'cluster_selection_method' must be a string. Instead got {type(cluster_selection_method)}.")
+            f"'cluster_selection_method' must be a string. Instead got {type(cluster_selection_method)}."
+        )
     if not isinstance(metric, str):
         raise InvalidTypeError(f"'metric' must be a string. Instead got {type(metric)}.")
 
@@ -287,8 +300,9 @@ def sniff_annotation_format(pth: Union[str, Path]) -> Optional[str]:
     return None
 
 
-def validate_genome_annotation_file(pth: Union[str, Path], accept_gtf: bool = True, accept_gff3: bool = True) -> \
-typing_extensions.Literal['gtf', 'gff3']:
+def validate_genome_annotation_file(
+    pth: Union[str, Path], accept_gtf: bool = True, accept_gff3: bool = True
+) -> typing_extensions.Literal['gtf', 'gff3']:
     """
     Makes sure that the given genome annotation file exists and is a supported type (GTF or GFF3), \
     and returns a string representing the type of file ('gtf' or 'gff3').
@@ -305,10 +319,12 @@ typing_extensions.Literal['gtf', 'gff3']:
         raise InvalidValueError(f"The provided gtf_path doesn't exist: {pth}")
     file_type = sniff_annotation_format(pth) or _annotation_extension_hint(pth)
     if file_type is None:
-        raise ValueError(f"The supplied annotation file has an unsupported format: '{Path(pth).name}'. "
-                         f"Expected a GTF or GFF3 file (optionally gzip-compressed).")
+        raise ValueError(
+            f"The supplied annotation file has an unsupported format: '{Path(pth).name}'. "
+            f'Expected a GTF or GFF3 file (optionally gzip-compressed).'
+        )
     if file_type == 'gtf' and not accept_gtf:
-        raise ValueError(f"The supplied annotation file is a GTF file, but a GFF3 file is required: {Path(pth).name}")
+        raise ValueError(f'The supplied annotation file is a GTF file, but a GFF3 file is required: {Path(pth).name}')
     if file_type == 'gff3' and not accept_gff3:
-        raise ValueError(f"The supplied annotation file is a GFF3 file, but a GTF file is required: {Path(pth).name}")
+        raise ValueError(f'The supplied annotation file is a GFF3 file, but a GTF file is required: {Path(pth).name}')
     return file_type

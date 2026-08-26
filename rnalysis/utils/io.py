@@ -34,8 +34,7 @@ from io import StringIO
 from itertools import chain
 from pathlib import Path
 from sys import executable
-from typing import (List, Literal, NamedTuple, Optional,
-                    Set, Tuple, Union, Callable, Iterable, Dict, Any)
+from typing import Any, Callable, Dict, Iterable, List, Literal, NamedTuple, Optional, Set, Tuple, Union
 from urllib.parse import parse_qs, urlencode, urlparse
 
 import aiohttp
@@ -53,8 +52,14 @@ from requests.adapters import HTTPAdapter, Retry
 from tqdm import tqdm
 
 from rnalysis import __version__
-from rnalysis.exceptions import (CorruptSessionError, InternalError,
-                                 InvalidTypeError, InvalidValueError)
+from rnalysis.exceptions import (
+    CorruptSessionError,
+    IDMappingJobFailedError,
+    IDMappingTimeoutError,
+    InternalError,
+    InvalidTypeError,
+    InvalidValueError,
+)
 from rnalysis.utils import parsing, validation
 
 
@@ -220,13 +225,11 @@ class GuiCacheWriteQueue:
     """
 
     def __init__(self):
-        self._executor = concurrent.futures.ThreadPoolExecutor(max_workers=1,
-                                                               thread_name_prefix='rnalysis-gui-cache')
+        self._executor = concurrent.futures.ThreadPoolExecutor(max_workers=1, thread_name_prefix='rnalysis-gui-cache')
         self._futures = {}  # path -> list of not-yet-flushed write futures
         self._lock = threading.Lock()
 
-    def submit(self, item: Union[pl.DataFrame, pl.Series],
-               file_path: Union[str, Path]) -> concurrent.futures.Future:
+    def submit(self, item: Union[pl.DataFrame, pl.Series], file_path: Union[str, Path]) -> concurrent.futures.Future:
         file_path = Path(file_path)
         future = self._executor.submit(_perform_cache_write, item, file_path)
         with self._lock:
@@ -290,8 +293,9 @@ def clear_gui_cache():
     clear_directory(directory, skip_ok=True)
 
 
-def load_cached_gui_file(filename: Union[str, Path], load_as_obj: bool = True) -> Union[
-    str, set, pl.DataFrame, bytes, None]:
+def load_cached_gui_file(
+    filename: Union[str, Path], load_as_obj: bool = True
+) -> Union[str, set, pl.DataFrame, bytes, None]:
     """
     Load a cached file from the GUI cache directory.
 
@@ -395,8 +399,13 @@ class GUISessionManager:
     def _archive_path(self) -> Path:
         return self.session_filename.with_suffix('.rnal')
 
-    def save_session(self, file_data: List[FileData], pipeline_data: List[PipelineData],
-                     report: dict, report_file_paths: Dict[str, Path]):
+    def save_session(
+        self,
+        file_data: List[FileData],
+        pipeline_data: List[PipelineData],
+        report: dict,
+        report_file_paths: Dict[str, Path],
+    ):
         flush_gui_cache_writes()  # cache files must be fully written before they are moved/copied
         self._prepare_session_folder()
         try:
@@ -426,8 +435,9 @@ class GUISessionManager:
         # the staging path is absolute, since shutil.make_archive temporarily changes the cwd.
         parent_dir = self._archive_path.parent
         parent_dir.mkdir(parents=True, exist_ok=True)
-        self._staging_dir = Path(tempfile.mkdtemp(prefix=f'{self.session_filename.stem}_', suffix='.rnaltmp',
-                                                  dir=parent_dir.resolve()))
+        self._staging_dir = Path(
+            tempfile.mkdtemp(prefix=f'{self.session_filename.stem}_', suffix='.rnaltmp', dir=parent_dir.resolve())
+        )
 
     def _clean_up_staging(self):
         if self._staging_archive is not None:
@@ -438,16 +448,22 @@ class GUISessionManager:
             shutil.rmtree(self._staging_dir, ignore_errors=True)
             self._staging_dir = None
 
-    def _create_session_data(self, file_data: List[FileData], pipeline_data: List[PipelineData], report: dict,
-                             report_item_paths: dict) -> dict:
+    def _create_session_data(
+        self, file_data: List[FileData], pipeline_data: List[PipelineData], report: dict, report_item_paths: dict
+    ) -> dict:
         return {
-            'files': {file.filename:
-                          (file.item_name, file.item_type, file.item_property, file.item_id) for file in file_data},
+            'files': {
+                file.filename: (file.item_name, file.item_type, file.item_property, file.item_id) for file in file_data
+            },
             'pipelines': {},
-            'metadata': self._create_metadata(len(file_data), len(pipeline_data),
-                                              [file.filename for file in file_data]),
-            'session_report_data': {'report': report,
-                                    'item_paths': {k: v.as_posix() for k, v in report_item_paths.items()}}}
+            'metadata': self._create_metadata(
+                len(file_data), len(pipeline_data), [file.filename for file in file_data]
+            ),
+            'session_report_data': {
+                'report': report,
+                'item_paths': {k: v.as_posix() for k, v in report_item_paths.items()},
+            },
+        }
 
     def _create_metadata(self, n_files: int, n_pipelines: int, file_names: List[str]) -> dict:
         return {
@@ -456,13 +472,12 @@ class GUISessionManager:
             'n_tabs': n_files,
             'n_pipelines': n_pipelines,
             'tab_order': file_names,
-            'rnalysis_version': __version__
+            'rnalysis_version': __version__,
         }
 
     def _save_files_to_session(self, file_data: List[FileData]):
         for file in file_data:
-            shutil.move(Path(get_gui_cache_dir().joinpath(file.filename)),
-                        self._staging_dir.joinpath(file.filename))
+            shutil.move(Path(get_gui_cache_dir().joinpath(file.filename)), self._staging_dir.joinpath(file.filename))
 
     def _save_report_files_to_session(self, report_file_paths: Dict[str, Path]) -> Dict[str, Path]:
         cache_dir = get_gui_cache_dir()
@@ -471,7 +486,7 @@ class GUISessionManager:
 
     def _save_pipelines_to_session(self, pipeline_data: List[PipelineData], session_data: dict):
         for i, pipeline in enumerate(pipeline_data):
-            pipeline_filename = self._staging_dir.joinpath(f"pipeline_{i}.yaml")
+            pipeline_filename = self._staging_dir.joinpath(f'pipeline_{i}.yaml')
             Path(pipeline_filename).write_text(pipeline.content)
             session_data['pipelines'][pipeline_filename.name] = pipeline.name
 
@@ -517,9 +532,11 @@ class GUISessionManager:
     def _unpack_session_archive(self):
         archive_path = self._archive_path
         if not (archive_path.exists() and archive_path.is_file()):
-            raise FileNotFoundError(f"Could not find the session file '{archive_path}'. "
-                                    f"Please make sure the file exists, "
-                                    f"and that its path is spelled correctly. ")
+            raise FileNotFoundError(
+                f"Could not find the session file '{archive_path}'. "
+                f'Please make sure the file exists, '
+                f'and that its path is spelled correctly. '
+            )
         try:
             # unpack_archive with an explicit format accepts any file extension, so the user's
             # session file is never renamed - and therefore never modified - in order to load it.
@@ -539,9 +556,11 @@ class GUISessionManager:
 
         mandatory_fields = ('files', 'pipelines', 'metadata')
         if not isinstance(session_data, dict) or not all(
-                isinstance(session_data.get(key), dict) for key in mandatory_fields):
-            raise self._corrupt_session_error("its 'session_data.yaml' file is missing mandatory information",
-                                              session_data)
+            isinstance(session_data.get(key), dict) for key in mandatory_fields
+        ):
+            raise self._corrupt_session_error(
+                "its 'session_data.yaml' file is missing mandatory information", session_data
+            )
         return session_data
 
     @staticmethod
@@ -571,9 +590,11 @@ class GUISessionManager:
         message = f"The session file '{self._archive_path}' is corrupt or incomplete: {detail}. "
         version = self._recorded_version(session_data)
         if version is not None:
-            message += f"This session was saved by RNAlysis {version}. "
-        message += ("RNAlysis cannot load this session. "
-                    "If you have a backup copy of this session file, please try loading it instead. ")
+            message += f'This session was saved by RNAlysis {version}. '
+        message += (
+            'RNAlysis cannot load this session. '
+            'If you have a backup copy of this session file, please try loading it instead. '
+        )
         return CorruptSessionError(message)
 
     def _get_session_dir(self) -> Path:
@@ -589,11 +610,13 @@ class GUISessionManager:
         for file_name in filenames:
             file_path = session_dir.joinpath(file_name)
             if file_name not in session_data['files']:
-                raise self._corrupt_session_error(f"the data file '{file_name}' is not described in the session",
-                                                  session_data)
+                raise self._corrupt_session_error(
+                    f"the data file '{file_name}' is not described in the session", session_data
+                )
             if not (file_path.exists() and file_path.is_file()):
-                raise self._corrupt_session_error(f"the data file '{file_name}' is missing from the session archive",
-                                                  session_data)
+                raise self._corrupt_session_error(
+                    f"the data file '{file_name}' is missing from the session archive", session_data
+                )
             if len(session_data['files'][file_name]) == 3:  # support for legacy session files
                 item_name, item_type, item_property = session_data['files'][file_name]
                 item_id = None
@@ -602,18 +625,23 @@ class GUISessionManager:
 
             obj = load_cached_gui_file(session_dir.joinpath(file_name))
 
-            file_data.append(FileData(filename=file_name,
-                                      item_name=item_name,
-                                      item_type=item_type,
-                                      item_property=item_property,
-                                      item_id=item_id,
-                                      obj=obj))
+            file_data.append(
+                FileData(
+                    filename=file_name,
+                    item_name=item_name,
+                    item_type=item_type,
+                    item_property=item_property,
+                    item_id=item_id,
+                    obj=obj,
+                )
+            )
 
         for pipeline_filename, pipeline_name in session_data['pipelines'].items():
             pipeline_path = session_dir.joinpath(pipeline_filename)
             if not (pipeline_path.exists() and pipeline_path.is_file()):
                 raise self._corrupt_session_error(
-                    f"the Pipeline file '{pipeline_filename}' is missing from the session archive", session_data)
+                    f"the Pipeline file '{pipeline_filename}' is missing from the session archive", session_data
+                )
             pipeline_data.append(PipelineData(name=pipeline_name, content=pipeline_path.read_text()))
         # handle report files, if any by copying them to the cache directory
         cache_dir = get_gui_cache_dir()
@@ -622,14 +650,20 @@ class GUISessionManager:
             new_pth = cache_dir.joinpath(file_path)
             if not session_dir.joinpath(file_path).exists():
                 raise self._corrupt_session_error(
-                    f"the report file '{file_path}' is missing from the session archive", session_data)
+                    f"the report file '{file_path}' is missing from the session archive", session_data
+                )
             shutil.copy(session_dir.joinpath(file_path), new_pth)
 
         return file_data, pipeline_data
 
 
-def load_table(filename: Union[str, Path], drop_columns: Union[str, List[str]] = False,
-               squeeze=False, comment: str = None, nrows: int = None):
+def load_table(
+    filename: Union[str, Path],
+    drop_columns: Union[str, List[str]] = False,
+    squeeze=False,
+    comment: str = None,
+    nrows: int = None,
+):
     """
     Loads a CSV, TSV, or Parquet file into a Polars DataFrame.
 
@@ -649,13 +683,15 @@ def load_table(filename: Union[str, Path], drop_columns: Union[str, List[str]] =
     :return: a Polars DataFrame of the loaded file
     """
     if not isinstance(filename, (str, Path)):
-        raise InvalidTypeError(f"Filename must be of type str or pathlib.Path, is instead {type(filename)}.")
+        raise InvalidTypeError(f'Filename must be of type str or pathlib.Path, is instead {type(filename)}.')
     filename = Path(filename)
     if not (filename.exists() and filename.is_file()):
         raise InvalidValueError(f"File '{filename.as_posix()}' does not exist!")
     if filename.suffix.lower() not in {'.csv', '.tsv', '.txt', '.parquet'}:
-        raise InvalidValueError(f"RNAlysis cannot load files of type '{filename.suffix}'. "
-                                f"Please convert your file to a .csv, .tsv, .txt, or .parquet file and try again.")
+        raise InvalidValueError(
+            f"RNAlysis cannot load files of type '{filename.suffix}'. "
+            f'Please convert your file to a .csv, .tsv, .txt, or .parquet file and try again.'
+        )
 
     kwargs = {}
     if comment is not None:
@@ -667,7 +703,8 @@ def load_table(filename: Union[str, Path], drop_columns: Union[str, List[str]] =
         # handle edge cases of parquet files that were exported from pandas DataFrames
         if '__index_level_0__' in df.columns:
             df = df.select(pl.col('__index_level_0__').alias('')).with_columns(
-                df.select(pl.exclude('__index_level_0__')))
+                df.select(pl.exclude('__index_level_0__'))
+            )
     else:
         if filename.suffix.lower() == '.csv':
             sep = ','
@@ -682,8 +719,14 @@ def load_table(filename: Union[str, Path], drop_columns: Union[str, List[str]] =
         except pl.exceptions.NoDataError:
             return pl.DataFrame()
         except pl.exceptions.ComputeError:
-            df = pl.read_csv(filename, separator=sep, has_header=True, null_values=['nan', 'NaN', 'NA'],
-                             infer_schema_length=None, **kwargs)
+            df = pl.read_csv(
+                filename,
+                separator=sep,
+                has_header=True,
+                null_values=['nan', 'NaN', 'NA'],
+                infer_schema_length=None,
+                **kwargs,
+            )
         if squeeze and df.shape[1] == 1:
             df = df.to_series()
 
@@ -693,12 +736,13 @@ def load_table(filename: Union[str, Path], drop_columns: Union[str, List[str]] =
         df = df.with_columns([pl.col(col).str.strip_chars() for col in string_cols])
 
         # if there remained only empty string "", change to Nan
-        df = df.with_columns([pl.col(col).replace("", None) for col in string_cols])
+        df = df.with_columns([pl.col(col).replace('', None) for col in string_cols])
         if drop_columns:
             drop_columns_lst = parsing.data_to_list(drop_columns)
             if not validation.isinstanceiter(drop_columns_lst, str):
-                raise InvalidTypeError(f"'drop_columns' must be str, list of str, or False; "
-                                       f"is instead {type(drop_columns)}.")
+                raise InvalidTypeError(
+                    f"'drop_columns' must be str, list of str, or False; is instead {type(drop_columns)}."
+                )
             for col in drop_columns_lst:
                 col_stripped = col.strip()
                 if col_stripped in df.columns:
@@ -724,7 +768,7 @@ def save_table(df: pl.DataFrame, filename: Union[str, Path], postfix: str = None
     else:
         if not isinstance(postfix, str):
             raise InvalidTypeError("'postfix' must be either str or None!")
-    new_fname = os.path.join(fname.parent.absolute(), f"{fname.stem}{postfix}{fname.suffix}")
+    new_fname = os.path.join(fname.parent.absolute(), f'{fname.stem}{postfix}{fname.suffix}')
     if fname.suffix.lower() == '.parquet':
         if isinstance(df, pl.Series):
             df = df.to_frame()
@@ -736,8 +780,8 @@ def save_table(df: pl.DataFrame, filename: Union[str, Path], postfix: str = None
 def get_session(retries: Retry):
     session = requests.Session()
     adapter = HTTPAdapter(max_retries=retries)
-    session.mount("http://", adapter)
-    session.mount("https://", adapter)
+    session.mount('http://', adapter)
+    session.mount('https://', adapter)
     return session
 
 
@@ -762,14 +806,18 @@ class KEGGAnnotationIterator:
         else:
             pathways = parsing.data_to_list(pathways)
             if len(pathways) == 0:
-                raise InvalidValueError("No KEGG pathway IDs were given!")
+                raise InvalidValueError('No KEGG pathway IDs were given!')
             self.pathway_names = {pathway: None for pathway in pathways}
             self.n_annotations = len(self.pathway_names)
         self.pathway_annotations = None
 
     @staticmethod
-    def _kegg_request(session: requests.Session, operation: str, arguments: Union[str, List[str]],
-                      cached_filename: Union[str, None] = None, ) -> Tuple[str, bool]:
+    def _kegg_request(
+        session: requests.Session,
+        operation: str,
+        arguments: Union[str, List[str]],
+        cached_filename: Union[str, None] = None,
+    ) -> Tuple[str, bool]:
         if cached_filename is not None:
             cached_file = load_cached_file(cached_filename)
             if cached_file is not None:
@@ -801,10 +849,15 @@ class KEGGAnnotationIterator:
     def get_compounds() -> Dict[str, str]:
         compounds = {}
         session = get_session(KEGGAnnotationIterator.RETRIES)
-        data = KEGGAnnotationIterator._kegg_request(session, 'list', ['compound'],
-                                                    KEGGAnnotationIterator.COMPOUND_LIST_CACHED_FILENAME)[0] + '\n' + \
-               KEGGAnnotationIterator._kegg_request(session, 'list', ['glycan'],
-                                                    KEGGAnnotationIterator.GLYCAN_LIST_CACHED_FILENAME)[0]
+        data = (
+            KEGGAnnotationIterator._kegg_request(
+                session, 'list', ['compound'], KEGGAnnotationIterator.COMPOUND_LIST_CACHED_FILENAME
+            )[0]
+            + '\n'
+            + KEGGAnnotationIterator._kegg_request(
+                session, 'list', ['glycan'], KEGGAnnotationIterator.GLYCAN_LIST_CACHED_FILENAME
+            )[0]
+        )
         data = data.split('\n')
         for line in data:
             split = line.split('\t')
@@ -818,18 +871,24 @@ class KEGGAnnotationIterator:
     @staticmethod
     @functools.lru_cache(1024)
     def get_kegg_organism_code(taxon_id: int, session: requests.Session) -> str:
-        url = f"{KEGGAnnotationIterator.URL}/link/genome/taxid:{taxon_id}/species"
-        data = pl.scan_csv(session.get(url).content, separator='\t', has_header=False,
-                           new_columns=["ncbi_id", "kegg_id"]).select(
-            pl.col("kegg_id").str.extract("gn:(.*)").first()).collect()
+        url = f'{KEGGAnnotationIterator.URL}/link/genome/taxid:{taxon_id}/species'
+        data = (
+            pl.scan_csv(session.get(url).content, separator='\t', has_header=False, new_columns=['ncbi_id', 'kegg_id'])
+            .select(pl.col('kegg_id').str.extract('gn:(.*)').first())
+            .collect()
+        )
         if len(data) == 0:
-            raise ValueError(f"Could not find organism code for taxon ID {taxon_id}. ")
+            raise ValueError(f'Could not find organism code for taxon ID {taxon_id}. ')
         return data.item()
 
     def get_pathways(self) -> Tuple[Dict[str, str], int]:
         pathway_names = {}
-        data, _ = self._kegg_request(self.session, 'list', ['pathway', self.organism_code],
-                                     self.PATHWAY_NAMES_CACHED_FILENAME.format(organism_code=self.organism_code))
+        data, _ = self._kegg_request(
+            self.session,
+            'list',
+            ['pathway', self.organism_code],
+            self.PATHWAY_NAMES_CACHED_FILENAME.format(organism_code=self.organism_code),
+        )
         data = data.split('\n')
         for line in data:
             split = line.split('\t')
@@ -909,18 +968,21 @@ class GOlrAnnotationIterator:
     n_annotations: int
         The number of annotations found on the server that match the user's query.
     """
-    __slots__ = {'taxon_id': 'NCBI Taxon ID for which to fetch GO Annotations',
-                 'iter_size': 'number of annotations to be fetched per request',
-                 'aspects': 'the GO Aspects for which GO Annotations should be fetched',
-                 'qualifiers': 'the evidence types for which GO Annotations should be fetched',
-                 'excluded_qualifiers': 'the evidence types for which GO Annotations should NOT be fetched',
-                 'databases': 'the ontology databases from which GO Annotations should be fetched',
-                 'excluded_databases': 'the ontology databases from which GO Annotations should NOT be fetched',
-                 'evidence_types': 'the evidence types for which GO Annotations should be fetched',
-                 'excluded_evidence_types': 'the evidence types for which GO Annotations should NOT be fetched',
-                 'default_params': 'the default parameters for GET requests',
-                 'n_annotations': 'number of annotations matching the filtering criteria',
-                 'session': 'session'}
+
+    __slots__ = {
+        'taxon_id': 'NCBI Taxon ID for which to fetch GO Annotations',
+        'iter_size': 'number of annotations to be fetched per request',
+        'aspects': 'the GO Aspects for which GO Annotations should be fetched',
+        'qualifiers': 'the evidence types for which GO Annotations should be fetched',
+        'excluded_qualifiers': 'the evidence types for which GO Annotations should NOT be fetched',
+        'databases': 'the ontology databases from which GO Annotations should be fetched',
+        'excluded_databases': 'the ontology databases from which GO Annotations should NOT be fetched',
+        'evidence_types': 'the evidence types for which GO Annotations should be fetched',
+        'excluded_evidence_types': 'the evidence types for which GO Annotations should NOT be fetched',
+        'default_params': 'the default parameters for GET requests',
+        'n_annotations': 'number of annotations matching the filtering criteria',
+        'session': 'session',
+    }
     URL = 'http://golr-aux.geneontology.io/solr/select?'
     RETRIES = RandomExpRetry(total=5, backoff_factor=0.25, status_forcelist=[500, 502, 503, 504])
 
@@ -930,25 +992,40 @@ class GOlrAnnotationIterator:
     _AUTHOR_EVIDENCE = {'TAS', 'NAS'}
     _CURATOR_EVIDENCE = {'IC', 'ND'}
     _ELECTRONIC_EVIDENCE = {'IEA'}
-    _EVIDENCE_TYPE_DICT = {'experimental': _EXPERIMENTAL_EVIDENCE, 'phylogenetic': _PHYLOGENETIC_EVIDENCE,
-                           'computational': _COMPUTATIONAL_EVIDENCE, 'author': _AUTHOR_EVIDENCE,
-                           'curator': _CURATOR_EVIDENCE, 'electronic': _ELECTRONIC_EVIDENCE}
+    _EVIDENCE_TYPE_DICT = {
+        'experimental': _EXPERIMENTAL_EVIDENCE,
+        'phylogenetic': _PHYLOGENETIC_EVIDENCE,
+        'computational': _COMPUTATIONAL_EVIDENCE,
+        'author': _AUTHOR_EVIDENCE,
+        'curator': _CURATOR_EVIDENCE,
+        'electronic': _ELECTRONIC_EVIDENCE,
+    }
 
-    _ASPECTS_DICT = {'biological_process': 'P', 'molecular_function': 'F', 'cellular_component': 'C',
-                     'biological process': 'P', 'molecular function': 'F', 'cellular component': 'C'}
+    _ASPECTS_DICT = {
+        'biological_process': 'P',
+        'molecular_function': 'F',
+        'cellular_component': 'C',
+        'biological process': 'P',
+        'molecular function': 'F',
+        'cellular component': 'C',
+    }
 
     LEGAL_ASPECTS = {'P', 'F', 'C'}
     LEGAL_EVIDENCES = set.union(*[parsing.data_to_set(s) for s in _EVIDENCE_TYPE_DICT.values()])
     LEGAL_QUALIFIERS = {'not', 'contributes_to', 'colocalizes_with'}
 
-    def __init__(self, taxon_id: int, aspects: Union[str, Iterable[str]] = 'any',
-                 evidence_types: Union[str, Iterable[str]] = 'any',
-                 excluded_evidence_types: Union[str, Iterable[str]] = None,
-                 databases: Union[str, Iterable[str]] = 'any',
-                 excluded_databases: Union[str, Iterable[str]] = None,
-                 qualifiers: Union[str, Iterable[str]] = 'any',
-                 excluded_qualifiers: Union[str, Iterable[str]] = None,
-                 iter_size: int = 10000):
+    def __init__(
+        self,
+        taxon_id: int,
+        aspects: Union[str, Iterable[str]] = 'any',
+        evidence_types: Union[str, Iterable[str]] = 'any',
+        excluded_evidence_types: Union[str, Iterable[str]] = None,
+        databases: Union[str, Iterable[str]] = 'any',
+        excluded_databases: Union[str, Iterable[str]] = None,
+        qualifiers: Union[str, Iterable[str]] = 'any',
+        excluded_qualifiers: Union[str, Iterable[str]] = None,
+        iter_size: int = 10000,
+    ):
         """
         :param taxon_id: NCBI Taxon ID to fetch annotations for.
         :type taxon_id: int
@@ -992,12 +1069,14 @@ class GOlrAnnotationIterator:
         self.aspects: Set[str] = self._parse_go_aspects(aspects)
         # parse qualifiers
         self.qualifiers: Set[str] = set() if qualifiers == 'any' else parsing.data_to_set(qualifiers)
-        self.excluded_qualifiers: Set[str] = set() if excluded_qualifiers is None else \
-            parsing.data_to_set(excluded_qualifiers)
+        self.excluded_qualifiers: Set[str] = (
+            set() if excluded_qualifiers is None else parsing.data_to_set(excluded_qualifiers)
+        )
         # parse databases
         self.databases: Set[str] = parsing.data_to_set(databases)
-        self.excluded_databases: Set[str] = set() if excluded_databases is None else \
-            parsing.data_to_set(excluded_databases)
+        self.excluded_databases: Set[str] = (
+            set() if excluded_databases is None else parsing.data_to_set(excluded_databases)
+        )
         # parse evidence types
         self.evidence_types: Set[str] = self._parse_evidence_types(evidence_types)
         self.excluded_evidence_types: Set[str] = self._parse_evidence_types(excluded_evidence_types)
@@ -1005,13 +1084,13 @@ class GOlrAnnotationIterator:
         self._validate_parameters()
         # generate default request parameter dictionary
         self.default_params: dict = {
-            "q": "*:*",
-            "wt": "json",  # return format
-            "rows": 0,  # how many rows to return
+            'q': '*:*',
+            'wt': 'json',  # return format
+            'rows': 0,  # how many rows to return
             # how many annotations to fetch (fetch 0 to find n_annotations, then fetch in iter_size increments
-            "start": None,  # from which annotation number to start fetching
-            "fq": self._generate_query(),  # search query
-            "fl": "source,bioentity_internal_id,annotation_class"  # fields
+            'start': None,  # from which annotation number to start fetching
+            'fq': self._generate_query(),  # search query
+            'fl': 'source,bioentity_internal_id,annotation_class',  # fields
         }
 
         self.session = get_session(self.RETRIES)
@@ -1022,7 +1101,8 @@ class GOlrAnnotationIterator:
         Check and return the number of annotations on the GOlr server matching the user's query.
         """
         return json.loads(self._golr_request(self.default_params, self._generate_cached_filename(None)))['response'][
-            'numFound']
+            'numFound'
+        ]
 
     def _validate_parameters(self):
         """
@@ -1034,12 +1114,17 @@ class GOlrAnnotationIterator:
             raise InvalidTypeError(f"'iter_size' must be an integer. Instead got type {type(self.iter_size)}.")
         if self.iter_size <= 0:
             raise InvalidValueError(f"Invalid value for 'iter_size': {self.iter_size}.")
-        for field, legals in zip((self.aspects, chain(self.evidence_types, self.excluded_evidence_types),
-                                  chain(self.qualifiers, self.excluded_qualifiers)),
-                                 (self.LEGAL_ASPECTS, self.LEGAL_EVIDENCES, self.LEGAL_QUALIFIERS)):
+        for field, legals in zip(
+            (
+                self.aspects,
+                chain(self.evidence_types, self.excluded_evidence_types),
+                chain(self.qualifiers, self.excluded_qualifiers),
+            ),
+            (self.LEGAL_ASPECTS, self.LEGAL_EVIDENCES, self.LEGAL_QUALIFIERS),
+        ):
             for item in field:
                 if item not in legals:
-                    raise InvalidValueError(f"Illegal item {item}. Legal items are {legals}.")
+                    raise InvalidValueError(f'Illegal item {item}. Legal items are {legals}.')
 
     def _golr_request(self, params: dict, cached_filename: Union[str, None] = None) -> str:
         """
@@ -1078,11 +1163,19 @@ class GOlrAnnotationIterator:
             return parsing.data_to_set(GOlrAnnotationIterator._EVIDENCE_TYPE_DICT[evidence_types.lower()])
 
         elif validation.isiterable(evidence_types) and any(
-            [isinstance(ev_type, str) and ev_type.lower() in GOlrAnnotationIterator._EVIDENCE_TYPE_DICT for ev_type in
-             evidence_types]):
-            return set.union(*[parsing.data_to_set(GOlrAnnotationIterator._EVIDENCE_TYPE_DICT[ev_type.lower()])
-                               if ev_type.lower() in GOlrAnnotationIterator._EVIDENCE_TYPE_DICT else
-                               parsing.data_to_set(ev_type) for ev_type in evidence_types])
+            [
+                isinstance(ev_type, str) and ev_type.lower() in GOlrAnnotationIterator._EVIDENCE_TYPE_DICT
+                for ev_type in evidence_types
+            ]
+        ):
+            return set.union(
+                *[
+                    parsing.data_to_set(GOlrAnnotationIterator._EVIDENCE_TYPE_DICT[ev_type.lower()])
+                    if ev_type.lower() in GOlrAnnotationIterator._EVIDENCE_TYPE_DICT
+                    else parsing.data_to_set(ev_type)
+                    for ev_type in evidence_types
+                ]
+            )
 
         else:
             return parsing.data_to_set(evidence_types)
@@ -1102,18 +1195,24 @@ class GOlrAnnotationIterator:
             return set.union(*[parsing.data_to_set(s) for s in GOlrAnnotationIterator._ASPECTS_DICT.values()])
 
         elif any(
-            [isinstance(aspect, str) and aspect.lower() in GOlrAnnotationIterator._ASPECTS_DICT
-             for aspect in aspects]):
-            return {GOlrAnnotationIterator._ASPECTS_DICT[aspect.lower()]
-                    if aspect.lower() in GOlrAnnotationIterator._ASPECTS_DICT else aspect for aspect in aspects}
+            [isinstance(aspect, str) and aspect.lower() in GOlrAnnotationIterator._ASPECTS_DICT for aspect in aspects]
+        ):
+            return {
+                GOlrAnnotationIterator._ASPECTS_DICT[aspect.lower()]
+                if aspect.lower() in GOlrAnnotationIterator._ASPECTS_DICT
+                else aspect
+                for aspect in aspects
+            }
 
         else:
             return aspects
 
     def _generate_cached_filename(self, start: Union[int, None]) -> str:
-        fname = f'{self.taxon_id}' + ''.join(
-            [f'{aspect}' for aspect in parsing.data_to_tuple(self.aspects, True)]) + ''.join(
-            [f'{evidence_type}' for evidence_type in parsing.data_to_tuple(self.evidence_types, True)])
+        fname = (
+            f'{self.taxon_id}'
+            + ''.join([f'{aspect}' for aspect in parsing.data_to_tuple(self.aspects, True)])
+            + ''.join([f'{evidence_type}' for evidence_type in parsing.data_to_tuple(self.evidence_types, True)])
+        )
         # add union of all requested databases to query
         if not self.databases == {'any'}:
             fname += ''.join(f'{db}' for db in parsing.data_to_tuple(self.databases, True))
@@ -1123,7 +1222,8 @@ class GOlrAnnotationIterator:
 
         # exclude all 'excluded' items from query
         fname += 'exc' + ''.join(
-            [f'{evidence_type}' for evidence_type in parsing.data_to_tuple(self.excluded_evidence_types, True)])
+            [f'{evidence_type}' for evidence_type in parsing.data_to_tuple(self.excluded_evidence_types, True)]
+        )
         fname += ''.join([f'{db}' for db in parsing.data_to_tuple(self.excluded_databases, True)])
         fname += ''.join([f'{qual}' for qual in parsing.data_to_tuple(self.excluded_qualifiers, True)])
 
@@ -1134,10 +1234,12 @@ class GOlrAnnotationIterator:
         Generate a Solr filter query (fq=...) to filter annotations based on the user's input.
         """
         # add fields with known legal inputs and cardinality >= 1 to query (taxon ID, aspect, evidence type)
-        query = ['document_category:"annotation"',
-                 f'taxon:"NCBITaxon:{self.taxon_id}"',
-                 ' OR '.join([f'aspect:"{aspect}"' for aspect in self.aspects]),
-                 ' OR '.join([f'evidence_type:"{evidence_type}"' for evidence_type in self.evidence_types])]
+        query = [
+            'document_category:"annotation"',
+            f'taxon:"NCBITaxon:{self.taxon_id}"',
+            ' OR '.join([f'aspect:"{aspect}"' for aspect in self.aspects]),
+            ' OR '.join([f'evidence_type:"{evidence_type}"' for evidence_type in self.evidence_types]),
+        ]
         # exclude all 'excluded' items from query
         query.extend([f'-evidence_type:"{evidence_type}"' for evidence_type in self.excluded_evidence_types])
         query.extend([f'-source:"{db}"' for db in self.excluded_databases])
@@ -1156,7 +1258,7 @@ class GOlrAnnotationIterator:
         """
         max_iters = int(np.ceil(self.n_annotations / self.iter_size))
         params = self.default_params.copy()
-        params['omitHeader'] = "true"  # omit the header from the json response
+        params['omitHeader'] = 'true'  # omit the header from the json response
         param_dicts_list = []
         start = 0
 
@@ -1169,8 +1271,9 @@ class GOlrAnnotationIterator:
         processes = []
         with concurrent.futures.ThreadPoolExecutor() as executor:
             for param_dict in param_dicts_list:
-                processes.append(executor.submit(self._golr_request, param_dict,
-                                                 self._generate_cached_filename(param_dict['start'])))
+                processes.append(
+                    executor.submit(self._golr_request, param_dict, self._generate_cached_filename(param_dict['start']))
+                )
         for task in concurrent.futures.as_completed(processes):
             for record in json.loads(task.result())['response']['docs']:
                 yield record
@@ -1206,7 +1309,7 @@ def _ensembl_lookup_post_request(gene_ids: Tuple[str, ...]) -> Dict[str, Dict[st
         # Pass the body as a dict; the client sends it via aiohttp's json= (which serializes it once).
         # Passing a pre-serialized JSON string here double-encodes it into a quoted literal that
         # Ensembl rejects with a 400 Bad Request.
-        client.queue_action(req_type, endpoint, params={"ids": parsing.data_to_list(chunk)})
+        client.queue_action(req_type, endpoint, params={'ids': parsing.data_to_list(chunk)})
 
     with tqdm('Finding the best-matching species...', total=client.queue.qsize() + 1) as pbar:
         pbar.update()
@@ -1225,8 +1328,9 @@ def infer_sources_from_gene_ids(gene_ids: Iterable[str]) -> Dict[str, Set[str]]:
     :return:
     :rtype:
     """
-    translator, map_from, _ = find_best_gene_mapping(parsing.data_to_tuple(gene_ids), map_from_options=None,
-                                                     map_to_options=('Ensembl', 'Ensembl Genomes'))
+    translator, map_from, _ = find_best_gene_mapping(
+        parsing.data_to_tuple(gene_ids), map_from_options=None, map_to_options=('Ensembl', 'Ensembl Genomes')
+    )
     output = _ensembl_lookup_post_request(parsing.data_to_tuple(translator.mapping_dict.values()))
     sources = {}
     for gene_id in output:
@@ -1250,20 +1354,22 @@ def infer_taxon_from_gene_ids(gene_ids: Iterable[str], gene_id_type: str = None)
     """
     if gene_id_type is not None:
         gene_id_type = parsing.data_to_tuple(gene_id_type)
-    translator, map_from, _ = find_best_gene_mapping(parsing.data_to_tuple(gene_ids), map_from_options=gene_id_type,
-                                                     map_to_options=('Ensembl', 'Ensembl Genomes'))
+    translator, map_from, _ = find_best_gene_mapping(
+        parsing.data_to_tuple(gene_ids), map_from_options=gene_id_type, map_to_options=('Ensembl', 'Ensembl Genomes')
+    )
     output = _ensembl_lookup_post_request(parsing.data_to_tuple(translator.mapping_dict.values()))
     species = dict()
     for gene_id in output:
         if output[gene_id] is not None:
             species[output[gene_id]['species']] = species.setdefault(output[gene_id]['species'], 0) + 1
     if len(species) == 0:
-        raise ValueError("No taxon ID could be matched to any of the given gene IDs.")
+        raise ValueError('No taxon ID could be matched to any of the given gene IDs.')
     chosen_species = list(species.keys())[0]
     chosen_species_n = species[chosen_species]
     if len(species) > 1:
-        warnings.warn("The given gene IDs match more than one species. "
-                      "Picking the species that fits the majority of gene IDs.")
+        warnings.warn(
+            'The given gene IDs match more than one species. Picking the species that fits the majority of gene IDs.'
+        )
         for s in species:
             if species[s] > chosen_species_n:
                 chosen_species = s
@@ -1307,9 +1413,8 @@ def get_taxon_and_id_type(organism, gene_id_type, gene_set, map_to_options=('Ens
         # If organism is known and gene_id_type is 'auto', find the best gene mapping
         if gene_id_type.lower() == 'auto':
             _, gene_id_type, _ = find_best_gene_mapping(
-                parsing.data_to_tuple(gene_set),
-                map_from_options=None,
-                map_to_options=map_to_options)
+                parsing.data_to_tuple(gene_set), map_from_options=None, map_to_options=map_to_options
+            )
 
         # Map taxon ID
         taxon = map_taxon_id(organism)
@@ -1350,7 +1455,8 @@ def map_taxon_id(taxon_name: Union[str, int]) -> Tuple[int, str]:
     if res.shape[0] > 1 and not (taxon_name == taxon_id or taxon_name == scientific_name):
         warnings.warn(
             f"Found {len(res)} taxons matching the search query '{taxon_name}'. "
-            f"Picking the match with the highest score: {scientific_name} (taxonID {taxon_id}).")
+            f'Picking the match with the highest score: {scientific_name} (taxonID {taxon_id}).'
+        )
 
     return taxon_id, scientific_name
 
@@ -1398,6 +1504,7 @@ class GeneIDDict:
         The underlying dictionary that contains mapping from one gene ID type to another. \
         If mapping_dict is None, the GeneIDTranslator will automatically map any given gene ID to itself.
     """
+
     __slots__ = {'mapping_dict': 'dictionary mapping gene IDs from one type to another'}
 
     def __init__(self, mapping_dict: Union[dict, None] = None):
@@ -1431,7 +1538,7 @@ class GeneIDDict:
 class EnsemblRestClient:
     SERVER = 'https://rest.ensembl.org/'
     REQS_PER_SEQ = 10
-    HEADERS = {"Content-Type": "application/json", "Accept": "application/json"}
+    HEADERS = {'Content-Type': 'application/json', 'Accept': 'application/json'}
     LIMITER = aiolimiter.AsyncLimiter(REQS_PER_SEQ, 1)
 
     def __init__(self):
@@ -1462,10 +1569,13 @@ class EnsemblRestClient:
 
             return await asyncio.gather(*tasks)
 
-    @tenacity.retry(stop=tenacity.stop_after_attempt(5),
-                    wait=tenacity.wait_random_exponential(multiplier=1, max=10),
-                    retry=tenacity.retry_if_exception_type(
-                        (aiohttp.ClientConnectorError, aiohttp.ClientResponseError, asyncio.TimeoutError)))
+    @tenacity.retry(
+        stop=tenacity.stop_after_attempt(5),
+        wait=tenacity.wait_random_exponential(multiplier=1, max=10),
+        retry=tenacity.retry_if_exception_type(
+            (aiohttp.ClientConnectorError, aiohttp.ClientResponseError, asyncio.TimeoutError)
+        ),
+    )
     async def perform_api_action(self, req_type: Literal['get', 'post'], endpoint: str, hdrs=None, params=None):
         if self.semaphore is None:
             self.semaphore = asyncio.Semaphore(value=self.REQS_PER_SEQ)
@@ -1483,8 +1593,9 @@ class EnsemblRestClient:
                 kwargs = dict(params=params) if params else {}
             elif req_type == 'post':
                 request_func = self.session.post
-                kwargs = dict(
-                    json=params) if params else {}  # Note: changed data to json for application/json compatibility
+                kwargs = (
+                    dict(json=params) if params else {}
+                )  # Note: changed data to json for application/json compatibility
             else:
                 raise ValueError(f"Invalid request type '{req_type}'. ")
 
@@ -1505,8 +1616,7 @@ class EnsemblRestClient:
         return content
 
 
-def translate_mappings(ids: list, translated_ids: list, mapping_one2one: dict,
-                       mapping_one2many: dict):
+def translate_mappings(ids: list, translated_ids: list, mapping_one2one: dict, mapping_one2many: dict):
     requested = parsing.data_to_set(translated_ids)
     mapping_one2one_translated = {}
     mapping_one2many_translated = {}
@@ -1530,9 +1640,9 @@ class PhylomeDBOrthologMapper:
     def __init__(self, map_to_organism, map_from_organism='auto', gene_id_type='auto'):
         legal_species = self.get_legal_species()
         if map_from_organism not in legal_species[legal_species.columns[0]]:
-            raise InvalidValueError(f"organism with taxon id {map_from_organism} is not supported by PhylomeDB. ")
+            raise InvalidValueError(f'organism with taxon id {map_from_organism} is not supported by PhylomeDB. ')
         if map_to_organism not in legal_species[legal_species.columns[0]]:
-            raise InvalidValueError(f"organism with taxon id {map_to_organism} is not supported by PhylomeDB. ")
+            raise InvalidValueError(f'organism with taxon id {map_to_organism} is not supported by PhylomeDB. ')
         self.gene_id_type = gene_id_type
         self.map_from_organism = map_from_organism
         self.map_to_organism = map_to_organism
@@ -1548,8 +1658,13 @@ class PhylomeDBOrthologMapper:
 
         return ids, translated_ids
 
-    def get_orthologs(self, ids: Tuple[str, ...], non_unique_mode: str, consistency_score_threshold: float,
-                      filter_consistency_score: bool = True):
+    def get_orthologs(
+        self,
+        ids: Tuple[str, ...],
+        non_unique_mode: str,
+        consistency_score_threshold: float,
+        filter_consistency_score: bool = True,
+    ):
         mapping_one2one = {}
         mapping_one2many = {}
 
@@ -1562,8 +1677,9 @@ class PhylomeDBOrthologMapper:
         # ortholog protids that come back.
         conv_table = self._load_id_conversion_table()
         map_fwd = self._build_forward_map(conv_table, set(translated_ids))
-        taxon_map = self._get_taxon_map(self.map_from_organism, self.map_to_organism,
-                                        needed_source_ids=set(map_fwd.values()))
+        taxon_map = self._get_taxon_map(
+            self.map_from_organism, self.map_to_organism, needed_source_ids=set(map_fwd.values())
+        )
         needed_target_protids = set()
         for to_id_conv, _score in taxon_map.values():
             if isinstance(to_id_conv, pl.Series):
@@ -1626,17 +1742,18 @@ class PhylomeDBOrthologMapper:
         mapping_one2one, mapping_one2many = translate_mappings(ids, translated_ids, mapping_one2one, mapping_one2many)
 
         if n_mapped < len(translated_ids):
-            warnings.warn(f"Ortholog mapping found for only {n_mapped} out of {len(translated_ids)} gene IDs.")
+            warnings.warn(f'Ortholog mapping found for only {n_mapped} out of {len(translated_ids)} gene IDs.')
 
         return OrthologDict(mapping_one2one), OrthologDict(
-            {k: [this_v[0] for this_v in v] for k, v in mapping_one2many.items()})
+            {k: [this_v[0] for this_v in v] for k, v in mapping_one2many.items()}
+        )
 
     @staticmethod
     def _get_taxon_map(taxon_id: int, target_id: int, needed_source_ids: Optional[Set[str]] = None):
         cache_dir = get_todays_cache_dir()
         cache_file = cache_dir.joinpath(f'phylomedb_{taxon_id}to{target_id}.parquet')
-        file_path = f"/metaphors/latest/orthologs/{taxon_id}.txt.gz"
-        local_zip_file = cache_dir.joinpath(f"{taxon_id}.txt.gz")
+        file_path = f'/metaphors/latest/orthologs/{taxon_id}.txt.gz'
+        local_zip_file = cache_dir.joinpath(f'{taxon_id}.txt.gz')
         if cache_file.exists():
             df = load_table(cache_file, squeeze=True)
         else:
@@ -1655,16 +1772,20 @@ class PhylomeDBOrthologMapper:
             os.remove(local_zip_file)
 
             # Load into pandas dataframe
-            df = pl.scan_csv(cache_file.with_suffix('.txt'), separator='\t').filter(
-                pl.col('taxid2') == target_id).select(
-                pl.col(['protid1', 'protid2', 'CS'])).collect()
+            df = (
+                pl.scan_csv(cache_file.with_suffix('.txt'), separator='\t')
+                .filter(pl.col('taxid2') == target_id)
+                .select(pl.col(['protid1', 'protid2', 'CS']))
+                .collect()
+            )
 
             # cache file locally
             save_table(df, cache_file)
         # Restrict to the source protids we'll actually look up (the last-wins collapse below stays
         # identical to the full map's -- see _restrict_to_needed).
         sub = PhylomeDBOrthologMapper._restrict_to_needed(
-            df.select('protid1', 'protid2', 'CS'), 'protid1', needed_source_ids)
+            df.select('protid1', 'protid2', 'CS'), 'protid1', needed_source_ids
+        )
         if sub is None:
             return {}
         return {a: (b, c) for (a, b, c) in sub.iter_rows()}
@@ -1682,8 +1803,8 @@ class PhylomeDBOrthologMapper:
         if cache_file.exists():
             return pl.read_parquet(cache_file)
 
-        file_path = "/metaphors/latest/id_conversion.txt.gz"
-        local_zip_file = cache_dir.joinpath("id_conversion.txt.gz")
+        file_path = '/metaphors/latest/id_conversion.txt.gz'
+        local_zip_file = cache_dir.joinpath('id_conversion.txt.gz')
         ftp = PhylomeDBOrthologMapper._connect()
         # Download the file
         with open(local_zip_file, 'wb') as fp:
@@ -1698,8 +1819,14 @@ class PhylomeDBOrthologMapper:
         # Remove the zipped file
         os.remove(local_zip_file)
 
-        df = pl.read_csv(cache_file.with_suffix('.txt'), separator='\t',
-                         columns=[0, 2], new_columns=['#extid', 'protid'], has_header=False, skip_rows=1)
+        df = pl.read_csv(
+            cache_file.with_suffix('.txt'),
+            separator='\t',
+            columns=[0, 2],
+            new_columns=['#extid', 'protid'],
+            has_header=False,
+            skip_rows=1,
+        )
         # cache file locally
         save_table(df, cache_file)
         return df
@@ -1761,9 +1888,9 @@ class PhylomeDBOrthologMapper:
     @lru_cache(maxsize=2)
     def get_legal_species():
         cache_dir = get_todays_cache_dir()
-        file_path = "/metaphors/latest/species.txt.gz"
-        local_zip_file = cache_dir.joinpath("species.txt.gz")
-        cache_file = cache_dir.joinpath("phylomedb_species.parquet")
+        file_path = '/metaphors/latest/species.txt.gz'
+        local_zip_file = cache_dir.joinpath('species.txt.gz')
+        cache_file = cache_dir.joinpath('phylomedb_species.parquet')
 
         if cache_file.exists():
             df = load_table(cache_file)
@@ -1871,8 +1998,10 @@ class OrthoInspectorOrthologMapper:
                 # bug: warn and contribute no organisms, so this database is simply not selectable
                 # while the healthy ones keep working (same degrade-gracefully policy as the
                 # stall/timeout handling in get_orthologs).
-                warnings.warn(f"OrthoInspector database '{database}' reported status '{status}' instead of "
-                              f"'success'. Skipping it - its organisms will not be available.")
+                warnings.warn(
+                    f"OrthoInspector database '{database}' reported status '{status}' instead of "
+                    f"'success'. Skipping it - its organisms will not be available."
+                )
                 return database, frozenset()
             return database, frozenset({d['id'] for d in content['data']})
 
@@ -1908,13 +2037,14 @@ class OrthoInspectorOrthologMapper:
                 if self.map_from_organism in database_organisms[db] and self.map_to_organism in database_organisms[db]:
                     valid_dbs.append(db)
             if len(valid_dbs) == 0:
-                raise ValueError('No database found that supports mapping from '
-                                 f'{self.map_from_organism} to {self.map_to_organism}. ')
+                raise ValueError(
+                    f'No database found that supports mapping from {self.map_from_organism} to {self.map_to_organism}. '
+                )
 
         else:
             databases = self.get_databases()
             if database not in databases:
-                raise InvalidValueError(f"Invalid database: {database}. Valid databases are: {databases}.")
+                raise InvalidValueError(f'Invalid database: {database}. Valid databases are: {databases}.')
             valid_dbs = [database]
 
         mapping_one2one = {}
@@ -1946,7 +2076,7 @@ class OrthoInspectorOrthologMapper:
 
             # If the loop finishes and content is still None, it means all database attempts failed
             if content is None:
-                raise RuntimeError(f"All attempted databases ({', '.join(valid_dbs)}) failed to respond.")
+                raise RuntimeError(f'All attempted databases ({", ".join(valid_dbs)}) failed to respond.')
         else:
             content = json.loads(cached)
 
@@ -1992,7 +2122,7 @@ class OrthoInspectorOrthologMapper:
         mapping_one2one, mapping_one2many = translate_mappings(ids, translated_ids, mapping_one2one, mapping_one2many)
         n_mapped = len(mapping_one2one)
         if n_mapped < len(translated_ids):
-            warnings.warn(f"Ortholog mapping found for only {n_mapped} out of {len(translated_ids)} gene IDs.")
+            warnings.warn(f'Ortholog mapping found for only {n_mapped} out of {len(translated_ids)} gene IDs.')
 
         return OrthologDict(mapping_one2one), OrthologDict(mapping_one2many)
 
@@ -2027,8 +2157,7 @@ class EnsemblOrthologMapper:
         digest = hashlib.sha256(key.encode('utf-8')).hexdigest()[:32]
         return f'ensembl_homology_{digest}.json'
 
-    def _fetch_homologies(self, translated_ids: List[str], species_name: str,
-                          homology_type: str) -> Dict[str, list]:
+    def _fetch_homologies(self, translated_ids: List[str], species_name: str, homology_type: str) -> Dict[str, list]:
         """Return ``{gene_id: homologies}`` for the requested homology type ('orthologues'/'paralogues').
 
         Each gene's homologies are read from the daily disk cache when available; only the cache-missing
@@ -2040,14 +2169,17 @@ class EnsemblOrthologMapper:
         queued_ids = []
         for gene_id in translated_ids:
             cached = load_cached_file(
-                self._homology_cache_filename(species_name, gene_id, self.map_to_organism, homology_type))
+                self._homology_cache_filename(species_name, gene_id, self.map_to_organism, homology_type)
+            )
             if cached is not None:
                 homologies_by_gene[gene_id] = json.loads(cached)
             else:
                 queued_ids.append(gene_id)
-                client.queue_action('get', f'{self.ENDPOINT}{species_name}/{gene_id}',
-                                    params=dict(target_taxon=self.map_to_organism, type=homology_type,
-                                                sequence='none', cigar_line=0))
+                client.queue_action(
+                    'get',
+                    f'{self.ENDPOINT}{species_name}/{gene_id}',
+                    params=dict(target_taxon=self.map_to_organism, type=homology_type, sequence='none', cigar_line=0),
+                )
 
         if queued_ids:
             with tqdm(f'Mapping {homology_type}...', total=len(queued_ids) + 1) as pbar:
@@ -2059,9 +2191,10 @@ class EnsemblOrthologMapper:
                 # served from the cache and reproduces the first run exactly.
                 for gene_id, json_res in zip(queued_ids, client.run()):
                     gene_homologies = json_res['data'][0]['homologies']
-                    cache_file(json.dumps(gene_homologies),
-                               self._homology_cache_filename(species_name, gene_id, self.map_to_organism,
-                                                             homology_type))
+                    cache_file(
+                        json.dumps(gene_homologies),
+                        self._homology_cache_filename(species_name, gene_id, self.map_to_organism, homology_type),
+                    )
                     homologies_by_gene[gene_id] = gene_homologies
                     pbar.update()
         return homologies_by_gene
@@ -2097,12 +2230,13 @@ class EnsemblOrthologMapper:
 
         n_mapped = len(mapping_one2many)
         if n_mapped < len(translated_ids):
-            warnings.warn(f"Paralog mapping found for only {n_mapped} out of {len(translated_ids)} gene IDs.")
+            warnings.warn(f'Paralog mapping found for only {n_mapped} out of {len(translated_ids)} gene IDs.')
 
         return OrthologDict(mapping_one2many)
 
-    def get_orthologs(self, ids: Tuple[str, ...], non_unique_mode: str, filter_percent_identity: bool = True) -> \
-        Tuple[OrthologDict, OrthologDict]:
+    def get_orthologs(
+        self, ids: Tuple[str, ...], non_unique_mode: str, filter_percent_identity: bool = True
+    ) -> Tuple[OrthologDict, OrthologDict]:
         ids, translated_ids = self.translate_ids(ids)
         species_name = self.get_species_name()
         mapping_one2one = {}
@@ -2113,8 +2247,9 @@ class EnsemblOrthologMapper:
             if len(homologies) == 0:
                 continue
 
-            mapping_one2many[this_id] = [(homology['target']['id'], homology['source']['perc_id']) for homology in
-                                         homologies]
+            mapping_one2many[this_id] = [
+                (homology['target']['id'], homology['source']['perc_id']) for homology in homologies
+            ]
 
             if filter_percent_identity:
                 max_score = 0
@@ -2145,10 +2280,11 @@ class EnsemblOrthologMapper:
 
         n_mapped = len(mapping_one2many)
         if n_mapped < len(translated_ids):
-            warnings.warn(f"Ortholog mapping found for only {n_mapped} out of {len(translated_ids)} gene IDs.")
+            warnings.warn(f'Ortholog mapping found for only {n_mapped} out of {len(translated_ids)} gene IDs.')
 
         return OrthologDict(mapping_one2one), OrthologDict(
-            {k: [this_v[0] for this_v in v] for k, v in mapping_one2many.items()})
+            {k: [this_v[0] for this_v in v] for k, v in mapping_one2many.items()}
+        )
 
 
 class PantherOrthologMapper:
@@ -2183,8 +2319,10 @@ class PantherOrthologMapper:
                 if attempt + 1 < self.EMPTY_RESPONSE_RETRIES:
                     time.sleep(self.EMPTY_RESPONSE_BACKOFF * (attempt + 1))
                     continue
-                warnings.warn(f"PantherDB returned an empty response for '{req_data.get('geneInputList')}' after "
-                              f"{self.EMPTY_RESPONSE_RETRIES} attempts; skipping this gene.")
+                warnings.warn(
+                    f"PantherDB returned an empty response for '{req_data.get('geneInputList')}' after "
+                    f'{self.EMPTY_RESPONSE_RETRIES} attempts; skipping this gene.'
+                )
                 break  # retries exhausted on an empty body -> fall through to the empty result below
             try:
                 return payload['search']['mapping']['mapped']
@@ -2212,9 +2350,12 @@ class PantherOrthologMapper:
         ids, translated_ids = self.translate_ids(ids, session)
         n_mapped = 0
         for from_id in tqdm(translated_ids, 'Mapping orthologs', unit='genes'):
-            req_data = dict(geneInputList=from_id, organism=str(self.map_from_organism),
-                            targetOrganism=str(self.map_to_organism),
-                            orthologType='all' if filter_least_diverged else 'LDO')
+            req_data = dict(
+                geneInputList=from_id,
+                organism=str(self.map_from_organism),
+                targetOrganism=str(self.map_to_organism),
+                orthologType='all' if filter_least_diverged else 'LDO',
+            )
             req_output = self._fetch_mapped(session, url, req_data, headers=self.HEADERS)
             try:
                 for mapping in parsing.data_to_list(req_output):
@@ -2249,9 +2390,10 @@ class PantherOrthologMapper:
 
         mapping_one2one, mapping_one2many = translate_mappings(ids, translated_ids, mapping_one2one, mapping_one2many)
         if n_mapped < len(translated_ids):
-            warnings.warn(f"Ortholog mapping found for only {n_mapped} out of {len(translated_ids)} gene IDs.")
+            warnings.warn(f'Ortholog mapping found for only {n_mapped} out of {len(translated_ids)} gene IDs.')
         return OrthologDict(mapping_one2one), OrthologDict(
-            {k: [this_v[0] for this_v in v] for k, v in mapping_one2many.items()})
+            {k: [this_v[0] for this_v in v] for k, v in mapping_one2many.items()}
+        )
 
     def get_paralogs(self, ids: Tuple[str, ...]):
         session = get_session(self.RETRIES)
@@ -2284,7 +2426,7 @@ class PantherOrthologMapper:
         _, mapping_one2many = translate_mappings(ids, translated_ids, {}, mapping_one2many)
 
         if n_mapped < len(translated_ids):
-            warnings.warn(f"Paralog mapping found for only {n_mapped} out of {len(translated_ids)} gene IDs.")
+            warnings.warn(f'Paralog mapping found for only {n_mapped} out of {len(translated_ids)} gene IDs.')
 
         return OrthologDict(mapping_one2many)
 
@@ -2332,9 +2474,14 @@ def _read_translation_cache(from_db: str, to_db: str) -> pl.LazyFrame:
 
 
 class GeneIDTranslator:
-    UNIPROTKB_FROM = "UniProtKB_from"
-    UNIPROTKB_TO = "UniProtKB_to"
-    API_URL = "https://rest.uniprot.org"
+    UNIPROTKB_FROM = 'UniProtKB_from'
+    UNIPROTKB_TO = 'UniProtKB_to'
+    API_URL = 'https://rest.uniprot.org'
+    # (connect, read) timeout applied to every request this class makes. Without it, a UniProt
+    # request that hangs at the transport level (connection accepted, no response ever sent) blocks
+    # forever -- bypassing JOB_READY_TIMEOUT entirely, since that bound is only checked *between*
+    # completed requests. Matches the convention used by OrthoInspectorOrthologMapper.REQUEST_TIMEOUT.
+    REQUEST_TIMEOUT = (10, 30)
     POLLING_INTERVAL = 3
     # A job is usually ready within a fraction of a second, so start polling almost immediately and
     # back off exponentially up to POLLING_INTERVAL, rather than sleeping the full interval up front.
@@ -2351,9 +2498,27 @@ class GeneIDTranslator:
     STATUS_POLL_MAX_RETRIES = 7
     STATUS_POLL_BACKOFF = 0.5
     STATUS_POLL_MAX_BACKOFF = 8
+    # Upper bound (wall-clock seconds since the first poll) on how long we wait for a single UniProt
+    # idmapping job to become ready. Measured against time.monotonic(), so it also covers time spent
+    # in _get_job_json_with_retry's transient-400 backoff, not just the between-poll sleeps. UniProt
+    # job latency is entirely server-side and usually sub-second, but a job can occasionally wedge in
+    # a RUNNING state far longer than any legitimate job takes (measured legitimate worst-case ~3 min
+    # for a normal-sized batch; a single un-chunked job of many thousands of ids -- see
+    # submit_id_mapping -- could legitimately run longer). This is a safety net against an unbounded
+    # hang, NOT a performance knob -- it is set with a wide margin over the measured worst case so it
+    # should not pre-empt a job that would actually finish, but it is a flat bound, not one that
+    # scales with batch size. On timeout the poll raises IDMappingTimeoutError and the mapping
+    # degrades to a partial result: the un-fetched ids are retried on the next run rather than cached
+    # as unmappable (see get_mapping_results).
+    JOB_READY_TIMEOUT = 600
 
-    def __init__(self, map_from: str, map_to: str = 'UniProtKB AC', verbose: bool = True,
-                 session: Union[requests.Session, None] = None):
+    def __init__(
+        self,
+        map_from: str,
+        map_to: str = 'UniProtKB AC',
+        verbose: bool = True,
+        session: Union[requests.Session, None] = None,
+    ):
         """
     :param map_from: identifier type to map from (for example 'UniProtKB AC' or 'WormBase')
     :type map_from: str
@@ -2374,11 +2539,12 @@ class GeneIDTranslator:
         else:
             self.to_from_identical = False
 
-        validation.validate_uniprot_dataset_name(self.id_dicts, parsing.data_to_list(self.map_to),
-                                                 parsing.data_to_list(self.map_from))
-        if self.map_to in ["UniProtKB", "UniProtKB AC/ID"]:
+        validation.validate_uniprot_dataset_name(
+            self.id_dicts, parsing.data_to_list(self.map_to), parsing.data_to_list(self.map_from)
+        )
+        if self.map_to in ['UniProtKB', 'UniProtKB AC/ID']:
             self.map_to = self.UNIPROTKB_TO
-        if self.map_from in ["UniProtKB", "UniProtKB AC/ID"]:
+        if self.map_from in ['UniProtKB', 'UniProtKB AC/ID']:
             self.map_from = self.UNIPROTKB_FROM
 
         self.session = get_session(self.RETRIES) if session is None else session
@@ -2403,7 +2569,7 @@ class GeneIDTranslator:
             return GeneIDDict({})
         if self.map_to not in id_dict_to or self.map_from not in id_dict_from:
             if self.verbose:
-                warnings.warn(f"Cannot map from {self.map_from} to {self.map_to}.")
+                warnings.warn(f'Cannot map from {self.map_from} to {self.map_to}.')
                 return GeneIDDict({})
         # if self.map_from and self.map_to are the same, return an empty GeneIDTranslator (which will map any given gene ID to itself)
         if self.to_from_identical:
@@ -2418,9 +2584,10 @@ class GeneIDTranslator:
         if self.verbose:
             print(f"Mapping {n_queries} entries from '{self.map_from}' to '{self.map_to}'...")
 
-        if id_dict_to[self.map_to] != id_dict_to[self.UNIPROTKB_TO] and \
-            id_dict_from[self.map_from] != id_dict_from[self.UNIPROTKB_FROM]:
-
+        if (
+            id_dict_to[self.map_to] != id_dict_to[self.UNIPROTKB_TO]
+            and id_dict_from[self.map_from] != id_dict_from[self.UNIPROTKB_FROM]
+        ):
             to_translator = GeneIDTranslator(self.map_from, self.UNIPROTKB_TO, self.verbose, self.session)
             to_uniprot = to_translator.run(ids).mapping_dict
             if to_uniprot is None:
@@ -2431,8 +2598,11 @@ class GeneIDTranslator:
             if from_uniprot is None:
                 from_uniprot = {}
 
-            output_dict = {key: from_uniprot[val] for key, val in zip(to_uniprot.keys(), to_uniprot.values()) if
-                           val in from_uniprot}
+            output_dict = {
+                key: from_uniprot[val]
+                for key, val in zip(to_uniprot.keys(), to_uniprot.values())
+                if val in from_uniprot
+            }
 
         # make sure that 'self.map_from' and 'self.map_to' are recognized identifier types
         elif id_dict_to[self.map_to] != 'Null' and id_dict_from[self.map_from] != 'Null':
@@ -2441,7 +2611,7 @@ class GeneIDTranslator:
 
             if results is None:
                 if self.verbose:
-                    warnings.warn("No entries were mapped successfully.")
+                    warnings.warn('No entries were mapped successfully.')
                 return GeneIDDict({})
 
             output_dict, duplicates = self.format_annotations(results)
@@ -2452,13 +2622,15 @@ class GeneIDTranslator:
         if len(output_dict) < n_queries and self.verbose:
             warnings.warn(
                 f"Failed to map {n_queries - len(output_dict)} entries from '{self.map_from}' to '{self.map_to}'. "
-                f"Returning {len(output_dict)} successfully-mapped entries.")
+                f'Returning {len(output_dict)} successfully-mapped entries.'
+            )
 
         self.reformat_ids(output_dict)
         return GeneIDDict(output_dict)
 
-    def get_mapping_results(self, map_to: str, map_from: str, ids: Tuple[str, ...],
-                            session: requests.Session) -> Union[pl.LazyFrame, None]:
+    def get_mapping_results(
+        self, map_to: str, map_from: str, ids: Tuple[str, ...], session: requests.Session
+    ) -> Union[pl.LazyFrame, None]:
         """Map ``ids`` from ``map_from`` to ``map_to``, returning a fixed-schema LazyFrame
         (``From``/``To``/``annotation_score``) of the candidate mappings, or ``None`` when nothing was
         mapped.
@@ -2476,30 +2648,31 @@ class GeneIDTranslator:
             cached = _read_translation_cache(from_db, to_db).collect()
         except Exception as err:  # a corrupt/unreadable cache must never break translation
             if self.verbose:
-                warnings.warn(f"Could not read the gene-ID translation cache ({err}); fetching from UniProt.")
+                warnings.warn(f'Could not read the gene-ID translation cache ({err}); fetching from UniProt.')
             cached = pl.DataFrame(schema=TRANSLATION_CACHE_SCHEMA)
         cached_ids = set(cached['From'].to_list())
         miss_ids = [gene_id for gene_id in dict.fromkeys(ids) if gene_id not in cached_ids]
 
         if miss_ids:
-            fresh = self._fetch_mapping_results(to_db, from_db, tuple(miss_ids), session)
-            fresh_rows = fresh.collect() if fresh is not None else pl.DataFrame(schema=TRANSLATION_CACHE_SCHEMA)
-            # Record a negative marker for every miss id UniProt returned nothing for, so a later
-            # subset re-run doesn't re-query the unmappable ids forever.
-            mapped = set(fresh_rows['From'].to_list())
-            negatives = [gene_id for gene_id in miss_ids if gene_id not in mapped]
-            new_rows = fresh_rows
-            if negatives:
-                new_rows = pl.concat([fresh_rows, pl.DataFrame(
-                    {'From': negatives, 'To': [None] * len(negatives),
-                     'annotation_score': [None] * len(negatives)}, schema=TRANSLATION_CACHE_SCHEMA)])
-            if new_rows.height > 0:
-                try:
-                    _write_translation_cache_fragment(from_db, to_db, new_rows)
-                except Exception as err:  # a failed write (disk full, permission) is non-fatal
-                    if self.verbose:
-                        warnings.warn(f"Could not write to the gene-ID translation cache ({err}).")
-            cached = pl.concat([cached, new_rows])
+            try:
+                fresh = self._fetch_mapping_results(to_db, from_db, tuple(miss_ids), session)
+            except (IDMappingTimeoutError, IDMappingJobFailedError) as err:
+                # UniProt wedged or failed this job. Degrade gracefully: do NOT record the un-fetched
+                # miss ids as negatives -- that would wrongly mark them permanently unmappable for the
+                # rest of the day. Leave the cache untouched so the next run retries them, and return
+                # whatever is already cached. ("UniProt didn't answer" must stay distinct from
+                # "UniProt says these don't map".)
+                if self.verbose:
+                    have_prior_results = (
+                        cached.filter(pl.col('From').is_in(set(ids)) & pl.col('To').is_not_null()).height > 0
+                    )
+                    outcome = 'partial results' if have_prior_results else 'no results'
+                    warnings.warn(
+                        f'{err} Continuing with {outcome} -- {len(miss_ids)} ID(s) were left unmapped '
+                        f'this run and will be retried next time.'
+                    )
+            else:
+                cached = self._merge_fresh_mapping_results(fresh, miss_ids, from_db, to_db, cached)
 
         # Resolve over the requested ids' positive candidate rows (negatives are cache-only markers).
         requested = cached.filter(pl.col('From').is_in(set(ids)) & pl.col('To').is_not_null())
@@ -2507,11 +2680,51 @@ class GeneIDTranslator:
             return None
         return requested.lazy()
 
-    def _fetch_mapping_results(self, to_db: str, from_db: str, ids: Tuple[str, ...],
-                               session: requests.Session) -> Union[pl.LazyFrame, None]:
+    def _merge_fresh_mapping_results(
+        self, fresh: Union[pl.LazyFrame, None], miss_ids: List[str], from_db: str, to_db: str, cached: pl.DataFrame
+    ) -> pl.DataFrame:
+        """Merge freshly-fetched candidate rows into ``cached``, writing the merged rows to the disk
+        cache (best-effort) along the way.
+
+        Records a negative marker for every ``miss_id`` UniProt returned nothing for, so a later
+        subset re-run doesn't re-query the unmappable ids forever."""
+        fresh_rows = fresh.collect() if fresh is not None else pl.DataFrame(schema=TRANSLATION_CACHE_SCHEMA)
+        mapped = set(fresh_rows['From'].to_list())
+        negatives = [gene_id for gene_id in miss_ids if gene_id not in mapped]
+        new_rows = fresh_rows
+        if negatives:
+            new_rows = pl.concat(
+                [
+                    fresh_rows,
+                    pl.DataFrame(
+                        {
+                            'From': negatives,
+                            'To': [None] * len(negatives),
+                            'annotation_score': [None] * len(negatives),
+                        },
+                        schema=TRANSLATION_CACHE_SCHEMA,
+                    ),
+                ]
+            )
+        if new_rows.height > 0:
+            try:
+                _write_translation_cache_fragment(from_db, to_db, new_rows)
+            except Exception as err:  # a failed write (disk full, permission) is non-fatal
+                if self.verbose:
+                    warnings.warn(f'Could not write to the gene-ID translation cache ({err}).')
+        return pl.concat([cached, new_rows])
+
+    def _fetch_mapping_results(
+        self, to_db: str, from_db: str, ids: Tuple[str, ...], session: requests.Session
+    ) -> Union[pl.LazyFrame, None]:
         """Submit a single UniProt id-mapping job for ``ids`` and return its results as a fixed-schema
         LazyFrame (``From``/``To``/``annotation_score``), or ``None`` when nothing usable came back
-        (job not ready, or only a header row / empty response)."""
+        (job not ready, or only a header row / empty response).
+
+        :raises IDMappingTimeoutError: if the job never reaches a terminal status within
+            ``JOB_READY_TIMEOUT``.
+        :raises IDMappingJobFailedError: if the job reaches a terminal status other than success.
+        """
         job_id = self.submit_id_mapping(to_db, from_db, session, ids)
 
         if self.check_id_mapping_results_ready(session, job_id, self.POLLING_INTERVAL, self.verbose):
@@ -2524,16 +2737,19 @@ class GeneIDTranslator:
 
     @staticmethod
     def submit_id_mapping(to_db: str, from_db: str, session: requests.Session, ids: Tuple[str, ...]):
-        req = session.post(f"{GeneIDTranslator.API_URL}/idmapping/run",
-                           data={"to": to_db, "from": from_db, "ids": ",".join(ids)})
+        req = session.post(
+            f'{GeneIDTranslator.API_URL}/idmapping/run',
+            data={'to': to_db, 'from': from_db, 'ids': ','.join(ids)},
+            timeout=GeneIDTranslator.REQUEST_TIMEOUT,
+        )
         req.raise_for_status()
-        return req.json()["jobId"]
+        return req.json()['jobId']
 
     @staticmethod
     def get_next_link(headers: dict):
         re_next_link = re.compile(r'<(.+)>; rel="next"')
-        if "Link" in headers:
-            match = re_next_link.match(headers["Link"])
+        if 'Link' in headers:
+            match = re_next_link.match(headers['Link'])
             if match:
                 return match.group(1)
 
@@ -2547,16 +2763,17 @@ class GeneIDTranslator:
         de-synchronizes many parallel callers that bounced together). Any other error, or a 400 that
         never clears, is re-raised so genuine failures still surface."""
         for attempt in range(GeneIDTranslator.STATUS_POLL_MAX_RETRIES + 1):
-            r = session.get(url)
+            r = session.get(url, timeout=GeneIDTranslator.REQUEST_TIMEOUT)
             try:
                 r.raise_for_status()
             except requests.exceptions.HTTPError:
                 if r.status_code == 400 and attempt < GeneIDTranslator.STATUS_POLL_MAX_RETRIES:
-                    backoff = min(GeneIDTranslator.STATUS_POLL_BACKOFF * (2 ** attempt),
-                                  GeneIDTranslator.STATUS_POLL_MAX_BACKOFF)
+                    backoff = min(
+                        GeneIDTranslator.STATUS_POLL_BACKOFF * (2**attempt), GeneIDTranslator.STATUS_POLL_MAX_BACKOFF
+                    )
                     backoff *= 0.5 + 0.5 * random.random()  # jitter
                     if verbose:
-                        print(f"Transient HTTP 400 from UniProt idmapping ({url}); retrying in {backoff:.1f}s")
+                        print(f'Transient HTTP 400 from UniProt idmapping ({url}); retrying in {backoff:.1f}s')
                     time.sleep(backoff)
                     continue
                 raise
@@ -2565,42 +2782,61 @@ class GeneIDTranslator:
     @staticmethod
     def _poll_mapping_status(session, job_id: str, verbose: bool = True):
         """Fetch the idmapping job status, retrying transient HTTP 400s (see _get_job_json_with_retry)."""
-        url = f"{GeneIDTranslator.API_URL}/idmapping/status/{job_id}"
+        url = f'{GeneIDTranslator.API_URL}/idmapping/status/{job_id}'
         return GeneIDTranslator._get_job_json_with_retry(session, url, verbose)
 
     @staticmethod
     def check_id_mapping_results_ready(session, job_id: str, polling_interval: float, verbose: bool = True):
         interval = min(GeneIDTranslator.INITIAL_POLLING_INTERVAL, polling_interval)
+        start = time.monotonic()  # wall-clock; bounds the loop against a wedged (never-ready) job
         while True:
             r = GeneIDTranslator._poll_mapping_status(session, job_id, verbose)
             j = r.json()
-            if "jobStatus" in j:
-                if j["jobStatus"] in {"RUNNING", "NEW"}:
+            if 'jobStatus' in j:
+                if j['jobStatus'] in {'RUNNING', 'NEW'}:
+                    elapsed = time.monotonic() - start
+                    if elapsed >= GeneIDTranslator.JOB_READY_TIMEOUT:
+                        # The job is still RUNNING after JOB_READY_TIMEOUT of wall-clock time -- treat
+                        # it as wedged and give up instead of polling forever. get_mapping_results
+                        # catches this and degrades to a partial mapping (retried next run).
+                        raise IDMappingTimeoutError(
+                            f'UniProt did not finish the ID mapping job (id={job_id}) after {elapsed:.0f}s '
+                            f'of waiting; giving up on this job.'
+                        )
                     if verbose:
-                        print(f"Retrying in {interval}s")
+                        # NB: this is not an error retry -- the request succeeded and UniProt reported
+                        # the mapping job is still running. Word it as waiting on UniProt so a slow
+                        # (server-side) job doesn't read like a failing request; users previously saw
+                        # "Retrying in 3s" spam and assumed the mapping was broken.
+                        print(f'Waiting for UniProt to finish the ID mapping job (checking again in {interval}s)...')
                     time.sleep(interval)
                     interval = min(interval * 2, polling_interval)
                 else:
-                    raise Exception(j["jobStatus"])
+                    # A terminal status other than success (e.g. FAILED) -- can happen under the same
+                    # heavy-load conditions that cause a job to wedge, so it degrades the same way as
+                    # a timeout (see get_mapping_results) rather than crashing the whole analysis.
+                    raise IDMappingJobFailedError(
+                        f'UniProt ID mapping job (id={job_id}) finished with status {j["jobStatus"]!r}.'
+                    )
             else:
-                return bool(j.get("results", False) or j.get("failedIds", False))
+                return bool(j.get('results', False) or j.get('failedIds', False))
 
     @staticmethod
     def get_batch(session: requests.Session, batch_response: requests.Response, file_format: Literal['json', 'tsv']):
         batch_url = GeneIDTranslator.get_next_link(batch_response.headers)
         while batch_url:
-            batch_response = session.get(batch_url)
+            batch_response = session.get(batch_url, timeout=GeneIDTranslator.REQUEST_TIMEOUT)
             batch_response.raise_for_status()
             yield GeneIDTranslator.decode_results(batch_response, file_format)
             batch_url = GeneIDTranslator.get_next_link(batch_response.headers)
 
     @staticmethod
     def combine_batches(all_results, batch_results, file_format: Literal['json', 'tsv']):
-        if file_format == "json":
-            for key in ("results", "failedIds"):
+        if file_format == 'json':
+            for key in ('results', 'failedIds'):
                 if batch_results[key]:
                     all_results[key] += batch_results[key]
-        elif file_format == "tsv":
+        elif file_format == 'tsv':
             return all_results + batch_results[1:]  # dump the table header line
         else:
             return all_results + batch_results
@@ -2608,16 +2844,16 @@ class GeneIDTranslator:
 
     @staticmethod
     def get_id_mapping_results_link(session: requests.Session, job_id, verbose: bool = True):
-        url = f"{GeneIDTranslator.API_URL}/idmapping/details/{job_id}"
+        url = f'{GeneIDTranslator.API_URL}/idmapping/details/{job_id}'
         r = GeneIDTranslator._get_job_json_with_retry(session, url, verbose)
-        return r.json()["redirectURL"]
+        return r.json()['redirectURL']
 
     @staticmethod
     def decode_results(response: requests.Response, file_format: Literal['json', 'tsv']):
-        if file_format == "json":
+        if file_format == 'json':
             return response.json()
-        elif file_format == "tsv":
-            return [line for line in response.text.split("\n") if line]
+        elif file_format == 'tsv':
+            return [line for line in response.text.split('\n') if line]
         return response.text
 
     # The UniProtKB id-mapping result namespace exposes a /results/stream/ endpoint (verified live);
@@ -2628,8 +2864,8 @@ class GeneIDTranslator:
     def get_id_mapping_results_search(self, session: requests.Session, link):
         parsed = urlparse(link)
         query = parse_qs(parsed.query)
-        query["fields"] = 'accession,annotation_score'
-        query["format"] = "tsv"
+        query['fields'] = 'accession,annotation_score'
+        query['format'] = 'tsv'
         file_format = 'tsv'
         # file_format = query["format"][0] if "format" in query else "json"
 
@@ -2639,23 +2875,23 @@ class GeneIDTranslator:
             stream_path = parsed.path.replace('/results/', '/results/stream/', 1)
             stream_query = {key: val for key, val in query.items() if key != 'size'}
             stream_url = parsed._replace(path=stream_path, query=urlencode(stream_query, doseq=True)).geturl()
-            r = session.get(stream_url)
+            r = session.get(stream_url, timeout=self.REQUEST_TIMEOUT)
             r.raise_for_status()
             return self.decode_results(r, file_format)
 
-        if "size" in query:
-            size = int(query["size"][0])
+        if 'size' in query:
+            size = int(query['size'][0])
         else:
             size = 500
-            query["size"] = size
+            query['size'] = size
 
         parsed = parsed._replace(query=urlencode(query, doseq=True))
         url = parsed.geturl()
-        r = session.get(url)
+        r = session.get(url, timeout=self.REQUEST_TIMEOUT)
         r.raise_for_status()
         results = self.decode_results(r, file_format)
         try:
-            total = int(r.headers["x-total-results"])
+            total = int(r.headers['x-total-results'])
         except KeyError:
             return ''
         if self.verbose:
@@ -2670,7 +2906,7 @@ class GeneIDTranslator:
     @staticmethod
     def print_progress_batches(batch_index: int, size: int, total: int):
         n = min((batch_index + 1) * size, total)
-        print(f"Fetched: {n} / {total}")
+        print(f'Fetched: {n} / {total}')
 
     @staticmethod
     def _parse_id_mapping_tsv(results) -> pl.LazyFrame:
@@ -2752,8 +2988,10 @@ class GeneIDTranslator:
                             output_dict[match_to_rev] = match_from_rev
                             duplicates_chosen[match_to_rev] = match_from_rev
             if self.verbose:
-                warnings.warn(f"Duplicate mappings were found for {len(duplicates)} genes.  The following mapping "
-                              f"was chosen for them based on their annotation score: {duplicates_chosen}")
+                warnings.warn(
+                    f'Duplicate mappings were found for {len(duplicates)} genes.  The following mapping '
+                    f'was chosen for them based on their annotation score: {duplicates_chosen}'
+                )
 
     def reformat_ids(self, output_dict: dict):
         if self.map_to == 'Ensembl':
@@ -2769,12 +3007,13 @@ def _format_ids_iter(ids: Union[str, int, list, set], chunk_size: int = 250):
     else:
         for i in range(0, len(ids), chunk_size):
             j = min(chunk_size, len(ids) - i)
-            yield " ".join((str(item) for item in ids[i:i + j]))
+            yield ' '.join((str(item) for item in ids[i : i + j]))
 
 
 @functools.lru_cache(maxsize=2048)
-def find_best_gene_mapping(ids: Tuple[str, ...], map_from_options: Union[Tuple[str, ...], None],
-                           map_to_options: Union[Tuple[str, ...], None]):
+def find_best_gene_mapping(
+    ids: Tuple[str, ...], map_from_options: Union[Tuple[str, ...], None], map_to_options: Union[Tuple[str, ...], None]
+):
     all_map_to_options, all_map_from_options = _get_id_abbreviation_dicts()
     if map_to_options is None:
         map_to_options = all_map_to_options
@@ -2803,9 +3042,16 @@ def find_best_gene_mapping(ids: Tuple[str, ...], map_from_options: Union[Tuple[s
                 mapping_combs_to.append(map_to)
                 # processes.append(executor.submit(map_gene_ids_ignore_httpexception, ids, map_from, map_to))
 
-        results = list(tqdm(executor.map(functools.partial(map_gene_ids_ignore_httpexception, ids), mapping_combs_from,
-                                         mapping_combs_to),
-                            total=len(mapping_combs_from), desc='Submitting jobs...', unit='jobs'))
+        results = list(
+            tqdm(
+                executor.map(
+                    functools.partial(map_gene_ids_ignore_httpexception, ids), mapping_combs_from, mapping_combs_to
+                ),
+                total=len(mapping_combs_from),
+                desc='Submitting jobs...',
+                unit='jobs',
+            )
+        )
     # best_result = None
     # best_result_len = -1
     parsed_results = {}
@@ -2839,8 +3085,7 @@ def get_legal_panther_taxons():
     # PantherDB returns a single genome dict (not a list) when only one genome is present; normalize
     # to a list the way the ortholog endpoints already do, and skip any entry lacking a long_name.
     entries = parsing.data_to_list(genomes)
-    taxons = tuple(sorted(entry['long_name'] for entry in entries
-                          if isinstance(entry, dict) and 'long_name' in entry))
+    taxons = tuple(sorted(entry['long_name'] for entry in entries if isinstance(entry, dict) and 'long_name' in entry))
     return taxons
 
 
@@ -2870,15 +3115,17 @@ def get_legal_phylomedb_taxons():
 @functools.lru_cache(maxsize=2)
 def get_legal_gene_id_types():
     URL = 'https://rest.uniprot.org/configure/idmapping/fields'
-    GROUP_PRIORITIZATION = ['UniProt',
-                            'Genome annotation databases',
-                            'Organism-specific databases',
-                            'Phylogenomic databases',
-                            'Sequence databases',
-                            'Miscellaneous',
-                            'Gene expression databases',
-                            'Enzyme and pathway databases',
-                            'Proteomic databases']
+    GROUP_PRIORITIZATION = [
+        'UniProt',
+        'Genome annotation databases',
+        'Organism-specific databases',
+        'Phylogenomic databases',
+        'Sequence databases',
+        'Miscellaneous',
+        'Gene expression databases',
+        'Enzyme and pathway databases',
+        'Proteomic databases',
+    ]
     abbrev_dict_to = {}
     abbrev_dict_from = {}
 
@@ -2905,7 +3152,8 @@ def get_legal_gene_id_types():
 
 @functools.lru_cache(maxsize=2)
 def _get_id_abbreviation_dicts(
-    dict_path: str = Path(__file__).parent.parent.joinpath('data_files/uniprot_dataset_abbreviation_dict.json')):
+    dict_path: str = Path(__file__).parent.parent.joinpath('data_files/uniprot_dataset_abbreviation_dict.json'),
+):
     with open(dict_path) as f:
         abbrev_dict_to = json.load(f)
         abbrev_dict_from = abbrev_dict_to.copy()
@@ -2931,8 +3179,7 @@ def get_datetime():
 
 def save_gene_set(gene_set: set, path):
     with open(path, 'w') as f:
-        f.writelines(
-            [f"{item}\n" if (i + 1) < len(gene_set) else f"{item}" for i, item in enumerate(gene_set)])
+        f.writelines([f'{item}\n' if (i + 1) < len(gene_set) else f'{item}' for i, item in enumerate(gene_set)])
 
 
 def calculate_checksum(filename: Union[str, Path]):  # pragma: no cover
@@ -2947,8 +3194,9 @@ def calculate_checksum(filename: Union[str, Path]):  # pragma: no cover
 
 
 async def get_video_remote_checksum(video_name: str, session, semaphore, limiter):  # pragma: no cover
-    url = 'https://github.com/GuyTeichman/RNAlysis/blob/master/rnalysis/gui/videos/checksums/' \
-          f'{Path(video_name).stem}.txt'
+    url = (
+        f'https://github.com/GuyTeichman/RNAlysis/blob/master/rnalysis/gui/videos/checksums/{Path(video_name).stem}.txt'
+    )
     await semaphore.acquire()
     async with limiter:
         async with session.get(url, params=dict(raw='True')) as response:
@@ -3019,22 +3267,24 @@ async def get_gui_videos(video_filenames: Tuple[str, ...]):  # pragma: no cover
 
 def run_r_script(script_path: Union[str, Path], r_installation_folder: Union[str, Path, Literal['auto']] = 'auto'):
     if r_installation_folder == 'auto':
-        prefix = "Rscript"
+        prefix = 'Rscript'
     else:
         prefix = f'{Path(r_installation_folder).as_posix()}/bin/Rscript'
     script_path = Path(script_path).as_posix()
     if not (Path(script_path).exists() and Path(script_path).is_file()):
-        raise InternalError(f"Could not find the requested R script: {script_path}")
+        raise InternalError(f'Could not find the requested R script: {script_path}')
 
     try:
-        return_code, _ = run_subprocess([prefix, "--help"], False, False)
+        return_code, _ = run_subprocess([prefix, '--help'], False, False)
         if return_code:
             raise FileNotFoundError
 
     except FileNotFoundError:
-        raise FileNotFoundError("Failed to find R executable. "
-                                "Please make sure your R installation folder is correct. \n"
-                                "(For example: 'C:/Program Files/R/R-4.2.3')")
+        raise FileNotFoundError(
+            'Failed to find R executable. '
+            'Please make sure your R installation folder is correct. \n'
+            "(For example: 'C:/Program Files/R/R-4.2.3')"
+        )
 
     return_code, stderr = run_subprocess([prefix, script_path])
     if return_code:
@@ -3044,14 +3294,15 @@ def run_r_script(script_path: Union[str, Path], r_installation_folder: Union[str
             if s.startswith('Error'):
                 short_err = s.rstrip() + stderr[i + 1].rstrip()
                 break
-        raise ChildProcessError(f"R script failed to execute: '{short_err}'. See full error report below.") \
-            from RuntimeError(full_err)
+        raise ChildProcessError(
+            f"R script failed to execute: '{short_err}'. See full error report below."
+        ) from RuntimeError(full_err)
 
 
 def stdout_reader(pipe, log_filename, lock, print_output: bool = True):
     with open(log_filename, 'a') if log_filename is not None else contextlib.nullcontext() as logfile:
-        for line in (pipe if isinstance(pipe, list) else iter(pipe.readline, b'')):
-            decoded_line = line.decode('utf8', errors="ignore")
+        for line in pipe if isinstance(pipe, list) else iter(pipe.readline, b''):
+            decoded_line = line.decode('utf8', errors='ignore')
 
             if print_output:
                 print(decoded_line)
@@ -3065,8 +3316,8 @@ def stdout_reader(pipe, log_filename, lock, print_output: bool = True):
 
 def stderr_reader(pipe, stderr_record, log_filename, lock, print_output: bool = True):
     with open(log_filename, 'a') if log_filename is not None else contextlib.nullcontext() as logfile:
-        for line in (pipe if isinstance(pipe, list) else iter(pipe.readline, b'')):
-            decoded_line = line.decode('utf8', errors="ignore")
+        for line in pipe if isinstance(pipe, list) else iter(pipe.readline, b''):
+            decoded_line = line.decode('utf8', errors='ignore')
             stderr_record.append(decoded_line)
 
             if print_output:
@@ -3079,8 +3330,13 @@ def stderr_reader(pipe, stderr_record, log_filename, lock, print_output: bool = 
         pipe.close()
 
 
-def run_subprocess(args: List[str], print_stdout: bool = True, print_stderr: bool = True,
-                   log_filename: Union[str, None] = None, shell: bool = False) -> Tuple[int, List[str]]:
+def run_subprocess(
+    args: List[str],
+    print_stdout: bool = True,
+    print_stderr: bool = True,
+    log_filename: Union[str, None] = None,
+    shell: bool = False,
+) -> Tuple[int, List[str]]:
     # join List of args into a string of args when running in shell mode
     if shell:
         try:
@@ -3096,8 +3352,9 @@ def run_subprocess(args: List[str], print_stdout: bool = True, print_stderr: boo
     process = subprocess.Popen(args, stdout=stdout, stderr=stderr, shell=shell)
 
     stdout_thread = threading.Thread(target=stdout_reader, args=(process.stdout, log_filename, lock, print_stdout))
-    stderr_thread = threading.Thread(target=stderr_reader,
-                                     args=(process.stderr, stderr_record, log_filename, lock, print_stderr))
+    stderr_thread = threading.Thread(
+        target=stderr_reader, args=(process.stderr, stderr_record, log_filename, lock, print_stderr)
+    )
 
     stdout_thread.start()
     stderr_thread.start()
@@ -3139,8 +3396,13 @@ def get_method_docstring(method: Union[str, Callable], obj: object = None) -> Tu
         return '', {}
 
 
-def generate_base_call(command: str, installation_folder: Union[str, Path, Literal['auto']],
-                       version_command: str = '--version', args=tuple(), shell: bool = False):
+def generate_base_call(
+    command: str,
+    installation_folder: Union[str, Path, Literal['auto']],
+    version_command: str = '--version',
+    args=tuple(),
+    shell: bool = False,
+):
     if installation_folder == 'auto':
         call = [command] + parsing.data_to_list(args)
     else:
@@ -3154,15 +3416,18 @@ def generate_base_call(command: str, installation_folder: Union[str, Path, Liter
     try:
         exit_code, stderr = run_subprocess(call + [version_command], shell=shell)
         if not (exit_code == 0 or (len(stderr) >= 1 and 'Version' in stderr[0])):
-            raise InvalidValueError(
-                f"call to {call[0]} exited with exit status {exit_code}: \n'{''.join(stderr)}'")
+            raise InvalidValueError(f"call to {call[0]} exited with exit status {exit_code}: \n'{''.join(stderr)}'")
     except FileNotFoundError:
-        raise FileNotFoundError(f"RNAlysis could not find '{command}'. "
-                                'Please ensure that your installation folder is correct, or add it to PATH. ')
+        raise FileNotFoundError(
+            f"RNAlysis could not find '{command}'. "
+            'Please ensure that your installation folder is correct, or add it to PATH. '
+        )
     except OSError:
-        raise OSError(f"RNAlysis could not run '{call + [version_command]}'. \n"
-                      f"Please ensure that the installed version of {command} "
-                      f"matches your operating system and try again. ")
+        raise OSError(
+            f"RNAlysis could not run '{call + [version_command]}'. \n"
+            f'Please ensure that the installed version of {command} '
+            f'matches your operating system and try again. '
+        )
 
     return call
 

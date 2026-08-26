@@ -4,18 +4,29 @@ import stat
 import warnings
 import zipfile
 from unittest import mock
-from unittest.mock import Mock, MagicMock
+from unittest.mock import MagicMock, Mock
 
 import platformdirs
 import pytest
 import requests_mock
 
-from rnalysis.exceptions import CorruptSessionError, InternalError, InvalidTypeError
+from rnalysis.exceptions import (
+    CorruptSessionError,
+    IDMappingJobFailedError,
+    IDMappingTimeoutError,
+    InternalError,
+    InvalidTypeError,
+)
 from rnalysis.utils import io
 from rnalysis.utils.io import *
 from rnalysis.utils.io import _ensembl_lookup_post_request, _format_ids_iter
-from tests import (is_ensembl_available, is_phylomedb_available,
-                   is_uniprot_available, is_pantherdb_available, is_orthoinspector_available)
+from tests import (
+    is_ensembl_available,
+    is_orthoinspector_available,
+    is_pantherdb_available,
+    is_phylomedb_available,
+    is_uniprot_available,
+)
 
 ENSEMBL_AVAILABLE = is_ensembl_available()
 UNIPROT_AVAILABLE = is_uniprot_available()
@@ -25,8 +36,15 @@ ORTHOINSPECTOR_AVAILABLE = is_orthoinspector_available()
 
 
 class MockResponse(object):
-    def __init__(self, status_code: int = 200, url: str = 'http://httpbin.org/get', headers: dict = 'default',
-                 text: str = '', json_output: dict = dict(), content: str = ''):
+    def __init__(
+        self,
+        status_code: int = 200,
+        url: str = 'http://httpbin.org/get',
+        headers: dict = 'default',
+        text: str = '',
+        json_output: dict = dict(),
+        content: str = '',
+    ):
         self.status_code = status_code
         self.url = url
         self.headers = {'default': 'default'} if headers == 'default' else headers
@@ -67,7 +85,6 @@ def test_load_csv_bad_input():
 
 
 class TestBatchLRUCache:
-
     @pytest.fixture
     def mock_network_func(self):
         """
@@ -76,7 +93,7 @@ class TestBatchLRUCache:
         """
         mock = Mock()
         # Default behavior: return a dictionary where value is '{item_id}_data'
-        mock.side_effect = lambda ids: {item_id: f"{item_id}_data" for item_id in ids}
+        mock.side_effect = lambda ids: {item_id: f'{item_id}_data' for item_id in ids}
         return mock
 
     def test_cache_miss_calls_underlying_function(self, mock_network_func):
@@ -84,43 +101,43 @@ class TestBatchLRUCache:
         cache_decorator = BatchLRUCache(max_size=10)
         decorated_func = cache_decorator(mock_network_func)
 
-        ids = ("gene1", "gene2")
+        ids = ('gene1', 'gene2')
         result = decorated_func(ids)
 
         # Assert correct data is returned
-        assert result == {"gene1": "gene1_data", "gene2": "gene2_data"}
+        assert result == {'gene1': 'gene1_data', 'gene2': 'gene2_data'}
         # Assert the network function was called exactly once with the missing IDs
-        mock_network_func.assert_called_once_with(["gene1", "gene2"])
+        mock_network_func.assert_called_once_with(['gene1', 'gene2'])
         # Assert the cache stored them
-        assert "gene1" in cache_decorator.cache
-        assert "gene2" in cache_decorator.cache
+        assert 'gene1' in cache_decorator.cache
+        assert 'gene2' in cache_decorator.cache
 
     def test_cache_hit_skips_underlying_function(self, mock_network_func):
         """Verify that if IDs are fully cached, the underlying function is bypassed entirely."""
         cache_decorator = BatchLRUCache(max_size=10)
         # Manually prepopulate the cache
-        cache_decorator.cache["gene1"] = "cached_data1"
+        cache_decorator.cache['gene1'] = 'cached_data1'
 
         decorated_func = cache_decorator(mock_network_func)
-        result = decorated_func(("gene1",))
+        result = decorated_func(('gene1',))
 
-        assert result == {"gene1": "cached_data1"}
+        assert result == {'gene1': 'cached_data1'}
         # The network function should never have been executed
         mock_network_func.assert_not_called()
 
     def test_partial_cache_hits(self, mock_network_func):
         """Verify that if some IDs are cached and some are missed, only the misses hit the network."""
         cache_decorator = BatchLRUCache(max_size=10)
-        cache_decorator.cache["gene1"] = "cached_data1"
+        cache_decorator.cache['gene1'] = 'cached_data1'
 
         decorated_func = cache_decorator(mock_network_func)
 
         # 'gene1' is a hit, 'gene2' is a miss
-        result = decorated_func(("gene1", "gene2"))
+        result = decorated_func(('gene1', 'gene2'))
 
-        assert result == {"gene1": "cached_data1", "gene2": "gene2_data"}
+        assert result == {'gene1': 'cached_data1', 'gene2': 'gene2_data'}
         # Network should only have been handed 'gene2'
-        mock_network_func.assert_called_once_with(["gene2"])
+        mock_network_func.assert_called_once_with(['gene2'])
 
     def test_lru_eviction(self, mock_network_func):
         """Verify that exceeding max_size drops the Least Recently Used item."""
@@ -129,45 +146,52 @@ class TestBatchLRUCache:
         decorated_func = cache_decorator(mock_network_func)
 
         # Fill the cache up to capacity (gene1, gene2)
-        decorated_func(("gene1", "gene2"))
+        decorated_func(('gene1', 'gene2'))
 
         # Access 'gene1' again to make it the Most Recently Used (MRU) item
         # This shifts 'gene2' to become the Least Recently Used (LRU) target
-        decorated_func(("gene1",))
+        decorated_func(('gene1',))
 
         # Add a 3rd unique item to force an eviction event
-        decorated_func(("gene3",))
+        decorated_func(('gene3',))
 
         # 'gene1' (recently hit) and 'gene3' (recently added) should remain
-        assert "gene1" in cache_decorator.cache
-        assert "gene3" in cache_decorator.cache
+        assert 'gene1' in cache_decorator.cache
+        assert 'gene3' in cache_decorator.cache
         # 'gene2' should have been cleanly evicted
-        assert "gene2" not in cache_decorator.cache
+        assert 'gene2' not in cache_decorator.cache
 
     def test_dead_ids_cached_as_none(self):
         """Verify that IDs omitted by the API are explicitly cached as None to prevent future queries."""
         cache_decorator = BatchLRUCache(max_size=10)
 
         # Simulate an API that drops bad IDs (e.g., it receives two IDs but only returns one)
-        mock_selective_api = Mock(return_value={"good_gene": "good_data"})
+        mock_selective_api = Mock(return_value={'good_gene': 'good_data'})
         decorated_func = cache_decorator(mock_selective_api)
 
-        result = decorated_func(("good_gene", "bad_gene"))
+        result = decorated_func(('good_gene', 'bad_gene'))
 
-        assert result == {"good_gene": "good_data", "bad_gene": None}
+        assert result == {'good_gene': 'good_data', 'bad_gene': None}
         # Verify the bad gene was logged into the cache dictionary as None
-        assert cache_decorator.cache["bad_gene"] is None
+        assert cache_decorator.cache['bad_gene'] is None
 
         # Re-requesting the bad gene should now hit the cache instead of the network
         mock_selective_api.reset_mock()
-        second_result = decorated_func(("bad_gene",))
+        second_result = decorated_func(('bad_gene',))
 
-        assert second_result == {"bad_gene": None}
+        assert second_result == {'bad_gene': None}
         mock_selective_api.assert_not_called()
 
-@pytest.mark.parametrize('pth', ("tests/test_files/test_load_csv.csv", "tests/test_files/test_load_csv.tsv",
-                                 "tests/test_files/test_load_csv_tabs.txt",
-                                 "tests/test_files/test_load_csv_other_sep.txt"))
+
+@pytest.mark.parametrize(
+    'pth',
+    (
+        'tests/test_files/test_load_csv.csv',
+        'tests/test_files/test_load_csv.tsv',
+        'tests/test_files/test_load_csv_tabs.txt',
+        'tests/test_files/test_load_csv_other_sep.txt',
+    ),
+)
 def test_load_csv(pth):
     truth = pl.DataFrame({'idxcol': ['one', 'two', 'three'], 'othercol': [4, 5, 6]})
     loaded = load_table(pth)
@@ -218,10 +242,7 @@ def test_load_csv_with_comment(tmp_path):
 def test_format_annotations():
     # 'From' -> 'To' mappings, ranked by descending 'Annotation' score; the highest-scored mapping wins,
     # duplicates are collected in score order, and the score column is dropped from the output.
-    results = ['From\tTo\tAnnotation',
-               'geneA\tPa\t3.0',
-               'geneA\tPb\t5.0',
-               'geneB\tPc\t2.0']
+    results = ['From\tTo\tAnnotation', 'geneA\tPa\t3.0', 'geneA\tPb\t5.0', 'geneB\tPc\t2.0']
     output_dict, duplicates = GeneIDTranslator.format_annotations(GeneIDTranslator._parse_id_mapping_tsv(results))
     assert output_dict == {'geneB': 'Pc'}
     assert duplicates == {'geneA': ['Pb', 'Pa']}  # Pb (5.0) ranked above Pa (3.0)
@@ -244,10 +265,12 @@ def test_parse_id_mapping_tsv_typed_schema():
     # fixed-schema frame: 'From' preserved, the accession column ('Entry') becomes 'To', and
     # 'Annotation' becomes a Float64 'annotation_score' (scores can be fractional, e.g. 137.2).
     # It only parses/types -- no sorting or dedup, which stay in format_annotations.
-    results = ['From\tEntry\tAnnotation',
-               'WBGene00000003\tQ19151\t110',
-               'WBGene00000004\tA0A0K3AVL7\t57',
-               'WBGene00000004\tO17395\t137.2']
+    results = [
+        'From\tEntry\tAnnotation',
+        'WBGene00000003\tQ19151\t110',
+        'WBGene00000004\tA0A0K3AVL7\t57',
+        'WBGene00000004\tO17395\t137.2',
+    ]
     lf = GeneIDTranslator._parse_id_mapping_tsv(results)
     assert isinstance(lf, pl.LazyFrame)
     df = lf.collect()
@@ -284,8 +307,7 @@ def _translation_rows(mapping):
 
 def test_translation_cache_write_read_roundtrip(tmp_path, monkeypatch):
     monkeypatch.setattr(io, 'get_todays_cache_dir', lambda: tmp_path)
-    rows = _translation_rows({'From': ['g1', 'g1', 'g2'], 'To': ['A', 'B', 'C'],
-                              'annotation_score': [5.0, 3.0, 1.0]})
+    rows = _translation_rows({'From': ['g1', 'g1', 'g2'], 'To': ['A', 'B', 'C'], 'annotation_score': [5.0, 3.0, 1.0]})
     io._write_translation_cache_fragment('WormBase', 'UniProtKB', rows)
     got = io._read_translation_cache('WormBase', 'UniProtKB').collect()
     assert dict(got.schema) == TRANSLATION_CACHE_SCHEMA
@@ -310,8 +332,9 @@ def test_translation_cache_read_preserves_row_order(tmp_path, monkeypatch):
     # order rather than the arbitrary order of an unordered unique() -- otherwise a subset/overlap
     # re-run could reproduce a different mapping.
     monkeypatch.setattr(io, 'get_todays_cache_dir', lambda: tmp_path)
-    rows = _translation_rows({'From': ['g1', 'g2', 'g3', 'g4'], 'To': ['A', 'B', 'C', 'D'],
-                              'annotation_score': [None, None, None, None]})
+    rows = _translation_rows(
+        {'From': ['g1', 'g2', 'g3', 'g4'], 'To': ['A', 'B', 'C', 'D'], 'annotation_score': [None, None, None, None]}
+    )
     io._write_translation_cache_fragment('WormBase', 'X', rows)
     got = io._read_translation_cache('WormBase', 'X').collect()
     assert got.select('From', 'To').rows() == rows.select('From', 'To').rows()
@@ -320,7 +343,8 @@ def test_translation_cache_read_preserves_row_order(tmp_path, monkeypatch):
 def test_translation_cache_isolated_per_db_pair_and_empty_when_absent(tmp_path, monkeypatch):
     monkeypatch.setattr(io, 'get_todays_cache_dir', lambda: tmp_path)
     io._write_translation_cache_fragment(
-        'WormBase', 'UniProtKB', _translation_rows({'From': ['g1'], 'To': ['A'], 'annotation_score': [5.0]}))
+        'WormBase', 'UniProtKB', _translation_rows({'From': ['g1'], 'To': ['A'], 'annotation_score': [5.0]})
+    )
     # a different (from_db, to_db) store -- and an entirely absent one -- both read back empty, with schema
     other = io._read_translation_cache('WormBase', 'Ensembl').collect()
     assert other.height == 0
@@ -339,8 +363,9 @@ def test_get_mapping_results_fetches_only_cache_misses(tmp_path, monkeypatch):
 
     def fake_fetch(self, to_db, from_db, ids, session):
         fetched_batches.append(tuple(ids))
-        return _translation_rows({'From': list(ids), 'To': [f'UP{i}' for i in ids],
-                                  'annotation_score': [5.0] * len(ids)}).lazy()
+        return _translation_rows(
+            {'From': list(ids), 'To': [f'UP{i}' for i in ids], 'annotation_score': [5.0] * len(ids)}
+        ).lazy()
 
     monkeypatch.setattr(GeneIDTranslator, '_fetch_mapping_results', fake_fetch)
 
@@ -377,8 +402,9 @@ def test_get_mapping_results_caches_negatives_and_does_not_requery(tmp_path, mon
         mappable = [gene_id for gene_id in ids if gene_id == 'A']  # only 'A' maps; the rest are negatives
         if not mappable:
             return None
-        return _translation_rows({'From': mappable, 'To': [f'UP{i}' for i in mappable],
-                                  'annotation_score': [5.0] * len(mappable)}).lazy()
+        return _translation_rows(
+            {'From': mappable, 'To': [f'UP{i}' for i in mappable], 'annotation_score': [5.0] * len(mappable)}
+        ).lazy()
 
     monkeypatch.setattr(GeneIDTranslator, '_fetch_mapping_results', fake_fetch)
 
@@ -400,9 +426,94 @@ def test_get_mapping_results_caches_negatives_and_does_not_requery(tmp_path, mon
     assert third is None
 
 
+def test_get_mapping_results_degrades_on_job_timeout_without_poisoning_cache(tmp_path, monkeypatch):
+    # If a UniProt idmapping job never becomes ready (IDMappingTimeoutError from the poll loop), the
+    # mapping must degrade gracefully: warn, return whatever is already cached (here nothing), and --
+    # crucially -- NOT record the un-fetched miss ids as negatives. Caching them as negatives would
+    # wrongly mark them permanently unmappable for the rest of the day, so a re-run must instead retry
+    # them. This distinguishes "UniProt says these don't map" (cache negative) from "UniProt never
+    # answered" (retry).
+    monkeypatch.setattr(io, 'get_todays_cache_dir', lambda: tmp_path)
+    monkeypatch.setattr(io, '_get_id_abbreviation_dicts', _mock_gene_id_abbrev_dict)
+    translator = GeneIDTranslator('WormBase', 'UniProtKB', verbose=True)
+
+    calls = []
+
+    def flaky_fetch(self, to_db, from_db, ids, session):
+        calls.append(tuple(ids))
+        if len(calls) == 1:
+            raise IDMappingTimeoutError('UniProt job wedged in RUNNING')
+        return _translation_rows(
+            {'From': list(ids), 'To': [f'UP{i}' for i in ids], 'annotation_score': [5.0] * len(ids)}
+        ).lazy()
+
+    monkeypatch.setattr(GeneIDTranslator, '_fetch_mapping_results', flaky_fetch)
+
+    # first run: the job times out -> warn (naming UniProt), return nothing, cache nothing
+    with pytest.warns(Warning, match='UniProt'):
+        first = translator.get_mapping_results('UniProtKB', 'WormBase', ('A', 'B'), session=Mock())
+    assert first is None
+    assert calls == [('A', 'B')]
+
+    # second run: the same ids are retried (they were NOT silently cached as negatives) and now succeed
+    second = translator.get_mapping_results('UniProtKB', 'WormBase', ('A', 'B'), session=Mock())
+    assert calls == [('A', 'B'), ('A', 'B')]
+    assert {f: t for f, t in second.collect().select('From', 'To').iter_rows()} == {'A': 'UPA', 'B': 'UPB'}
+
+
+def test_get_mapping_results_degrades_on_job_failure_without_poisoning_cache(tmp_path, monkeypatch):
+    # A job that reaches a terminal FAILED status (IDMappingJobFailedError) must degrade exactly like
+    # a timed-out job (see the test above): warn, don't cache the miss ids as negatives, so a re-run
+    # retries them instead of treating a possibly-transient failure as a permanent "doesn't map".
+    monkeypatch.setattr(io, 'get_todays_cache_dir', lambda: tmp_path)
+    monkeypatch.setattr(io, '_get_id_abbreviation_dicts', _mock_gene_id_abbrev_dict)
+    translator = GeneIDTranslator('WormBase', 'UniProtKB', verbose=True)
+
+    def failing_fetch(self, to_db, from_db, ids, session):
+        raise IDMappingJobFailedError("UniProt ID mapping job (id=123) finished with status 'FAILED'.")
+
+    monkeypatch.setattr(GeneIDTranslator, '_fetch_mapping_results', failing_fetch)
+
+    with pytest.warns(Warning, match='UniProt'):
+        result = translator.get_mapping_results('UniProtKB', 'WormBase', ('A', 'B'), session=Mock())
+    assert result is None
+
+
+def test_get_mapping_results_warning_distinguishes_partial_from_no_results(tmp_path, monkeypatch):
+    # The degradation warning must say "no results" when nothing at all was resolved this run, and
+    # "partial results" when some of the requested ids were already resolved from a previous run's
+    # cache -- saying "partial results" when the true result is empty would mislead the user into
+    # thinking some ids mapped when none did.
+    monkeypatch.setattr(io, 'get_todays_cache_dir', lambda: tmp_path)
+    monkeypatch.setattr(io, '_get_id_abbreviation_dicts', _mock_gene_id_abbrev_dict)
+    translator = GeneIDTranslator('WormBase', 'UniProtKB', verbose=True)
+    monkeypatch.setattr(
+        GeneIDTranslator,
+        '_fetch_mapping_results',
+        lambda self, to_db, from_db, ids, session: (_ for _ in ()).throw(
+            IDMappingTimeoutError('UniProt job wedged in RUNNING')
+        ),
+    )
+
+    # nothing was ever cached -> every id is unresolved this run -> "no results"
+    with pytest.warns(Warning, match='no results'):
+        result = translator.get_mapping_results('UniProtKB', 'WormBase', ('A',), session=Mock())
+    assert result is None
+
+    # seed the cache with an already-resolved id, then request it alongside a fresh miss -> some ids
+    # ARE resolved (from cache) even though the fresh one times out -> "partial results"
+    io._write_translation_cache_fragment(
+        'WormBase', 'UniProtKB', _translation_rows({'From': ['Z'], 'To': ['UPZ'], 'annotation_score': [5.0]})
+    )
+    with pytest.warns(Warning, match='partial results'):
+        result = translator.get_mapping_results('UniProtKB', 'WormBase', ('Z', 'B'), session=Mock())
+    assert {f: t for f, t in result.collect().select('From', 'To').iter_rows()} == {'Z': 'UPZ'}
+
+
 def _fake_up_fetch(self, to_db, from_db, ids, session):
-    return _translation_rows({'From': list(ids), 'To': [f'UP{i}' for i in ids],
-                              'annotation_score': [5.0] * len(ids)}).lazy()
+    return _translation_rows(
+        {'From': list(ids), 'To': [f'UP{i}' for i in ids], 'annotation_score': [5.0] * len(ids)}
+    ).lazy()
 
 
 @pytest.mark.parametrize('broken', ['_read_translation_cache', '_write_translation_cache_fragment'])
@@ -480,14 +591,17 @@ def test_gene_id_translator_contains():
         assert something in translator
 
 
-@pytest.mark.parametrize("test_input,expected", [
-    ('any', {'aspect a', 'aspect b', 'aspect c'}),
-    ('Asp_B', {'aspect b'}),
-    (['asp_b'], {'aspect b'}),
-    (['a', 'z', 'c'], {'aspect a', 'aspect c', 'z'}),
-    (['asp_b', 'c', 'A'], {'aspect a', 'aspect b', 'aspect c'}),
-    (['aspect z'], {'aspect z'})
-])
+@pytest.mark.parametrize(
+    'test_input,expected',
+    [
+        ('any', {'aspect a', 'aspect b', 'aspect c'}),
+        ('Asp_B', {'aspect b'}),
+        (['asp_b'], {'aspect b'}),
+        (['a', 'z', 'c'], {'aspect a', 'aspect c', 'z'}),
+        (['asp_b', 'c', 'A'], {'aspect a', 'aspect b', 'aspect c'}),
+        (['aspect z'], {'aspect z'}),
+    ],
+)
 def test_golr_annotation_iterator_parse_go_aspects(monkeypatch, test_input, expected):
     go_dict = {'a': 'aspect a', 'asp_b': 'aspect b', 'c': 'aspect c', '_a_': 'aspect a'}
     monkeypatch.setattr(GOlrAnnotationIterator, '_ASPECTS_DICT', go_dict)
@@ -509,15 +623,18 @@ def test_golr_annotation_iterator_api(monkeypatch):
     GOlrAnnotationIterator(1234)
 
 
-@pytest.mark.parametrize("test_input,expected", [
-    ('any', {'eva', 'evb', 'evc', 'evd', 'eve'}),
-    ('bc', {'evb', 'evc'}),
-    ('c', {'evc'}),
-    ({'a', 'bc', 'f'}, {'eva', 'evb', 'evc', 'f'}),
-    ({'a', 'ab'}, {'eva', 'evb'}),
-    ({'z', 'v'}, {'z', 'v'}),
-    (None, set())
-])
+@pytest.mark.parametrize(
+    'test_input,expected',
+    [
+        ('any', {'eva', 'evb', 'evc', 'evd', 'eve'}),
+        ('bc', {'evb', 'evc'}),
+        ('c', {'evc'}),
+        ({'a', 'bc', 'f'}, {'eva', 'evb', 'evc', 'f'}),
+        ({'a', 'ab'}, {'eva', 'evb'}),
+        ({'z', 'v'}, {'z', 'v'}),
+        (None, set()),
+    ],
+)
 def test_golr_annotation_iterator_parse_evidence_types(monkeypatch, test_input, expected):
     ev_dict = {'a': 'eva', 'b': 'evb', 'c': 'evc', 'ab': {'eva', 'evb'}, 'bc': {'evb', 'evc'}, 'de': {'evd', 'eve'}}
     monkeypatch.setattr(GOlrAnnotationIterator, '_EVIDENCE_TYPE_DICT', ev_dict)
@@ -557,11 +674,16 @@ def test_golr_annotation_iterator_generate_query():
     db_iter = iter(golr.databases)
     evidence_iter = iter(golr.evidence_types)
 
-    query_truth = ['document_category:"annotation"', 'taxon:"NCBITaxon:6239"',
-                   f'source:"{next(db_iter)}" OR source:"{next(db_iter)}"',
-                   f'evidence_type:"{next(evidence_iter)}" OR evidence_type:"{next(evidence_iter)}"',
-                   '-qualifier:"not_a"', '-evidence_type:"EXP"',
-                   '-evidence_type:"IDA"', f'aspect:"{next(aspects_iter)}" OR aspect:"{next(aspects_iter)}"']
+    query_truth = [
+        'document_category:"annotation"',
+        'taxon:"NCBITaxon:6239"',
+        f'source:"{next(db_iter)}" OR source:"{next(db_iter)}"',
+        f'evidence_type:"{next(evidence_iter)}" OR evidence_type:"{next(evidence_iter)}"',
+        '-qualifier:"not_a"',
+        '-evidence_type:"EXP"',
+        '-evidence_type:"IDA"',
+        f'aspect:"{next(aspects_iter)}" OR aspect:"{next(aspects_iter)}"',
+    ]
 
     assert sorted(golr._generate_query()) == sorted(query_truth)
 
@@ -601,7 +723,7 @@ def test_golr_annotation_iterator_golr_request(monkeypatch):
     assert golr_it._golr_request(correct_params, cached_filename) == 'the correct text'
 
     def mock_get_uncached(self, url, params: dict):
-        raise AssertionError("This function should not be called if a cached file was found!")
+        raise AssertionError('This function should not be called if a cached file was found!')
 
     monkeypatch.setattr(requests.Session, 'get', mock_get_uncached)
     try:
@@ -624,20 +746,23 @@ def test_golr_annotation_iterator_golr_request(monkeypatch):
 
 def test_golr_annotation_iterator_parsing(monkeypatch):
     truth_params = {
-        "q": "*:*",
-        "wt": "json",  # return format
-        "rows": 5,  # how many rows to return
+        'q': '*:*',
+        'wt': 'json',  # return format
+        'rows': 5,  # how many rows to return
         # how many annotations to fetch (fetch 0 to find n_annotations, then fetch in iter_size increments
-        "start": 0,  # from which annotation number to start fetching
-        "fq": ['document_category:"annotation"', 'taxon:"NCBITaxon:6239"'],  # search query
-        "fl": "source,bioentity_internal_id,annotation_class",  # fields
-        "omitHeader": 'true'}
+        'start': 0,  # from which annotation number to start fetching
+        'fq': ['document_category:"annotation"', 'taxon:"NCBITaxon:6239"'],  # search query
+        'fl': 'source,bioentity_internal_id,annotation_class',  # fields
+        'omitHeader': 'true',
+    }
 
-    records_truth = [{"source": "WB", "bioentity_internal_id": "WBGene00011482", "annotation_class": "GO:0003923"},
-                     {"source": "WB", "bioentity_internal_id": "WBGene00011482", "annotation_class": "GO:0016255"},
-                     {"source": "WB", "bioentity_internal_id": "WBGene00011481", "annotation_class": "GO:0004190"},
-                     {"source": "WB", "bioentity_internal_id": "WBGene00011481", "annotation_class": "GO:0005783"},
-                     {"source": "WB", "bioentity_internal_id": "WBGene00011481", "annotation_class": "GO:0005789"}]
+    records_truth = [
+        {'source': 'WB', 'bioentity_internal_id': 'WBGene00011482', 'annotation_class': 'GO:0003923'},
+        {'source': 'WB', 'bioentity_internal_id': 'WBGene00011482', 'annotation_class': 'GO:0016255'},
+        {'source': 'WB', 'bioentity_internal_id': 'WBGene00011481', 'annotation_class': 'GO:0004190'},
+        {'source': 'WB', 'bioentity_internal_id': 'WBGene00011481', 'annotation_class': 'GO:0005783'},
+        {'source': 'WB', 'bioentity_internal_id': 'WBGene00011481', 'annotation_class': 'GO:0005789'},
+    ]
 
     def fake_request(self, params, cached_filename):
         assert isinstance(self, GOlrAnnotationIterator)
@@ -650,12 +775,13 @@ def test_golr_annotation_iterator_parsing(monkeypatch):
     monkeypatch.setattr(GOlrAnnotationIterator, '_generate_cached_filename', lambda self, start: 'test.json')
 
     request_params = {
-        "q": "*:*",
-        "wt": "json",  # return format
-        "rows": 5,  # how many rows to return
+        'q': '*:*',
+        'wt': 'json',  # return format
+        'rows': 5,  # how many rows to return
         # how many annotations to fetch (fetch 0 to find n_annotations, then fetch in iter_size increments
-        "fq": ['document_category:"annotation"', 'taxon:"NCBITaxon:6239"'],  # search query
-        "fl": "source,bioentity_internal_id,annotation_class"}  # fields
+        'fq': ['document_category:"annotation"', 'taxon:"NCBITaxon:6239"'],  # search query
+        'fl': 'source,bioentity_internal_id,annotation_class',
+    }  # fields
 
     golr = GOlrAnnotationIterator.__new__(GOlrAnnotationIterator)
     golr.default_params = request_params
@@ -680,12 +806,14 @@ def test_map_taxon_id(monkeypatch):
     def mock_requests_get(url, params):
         assert url == 'https://rest.uniprot.org/taxonomy/search?'
         assert params == {'format': 'tsv', 'query': taxon_name}
-        return MockResponse(text='Taxon Id\tMnemonic\tScientific name\tCommon name\tSynonym\tOther Names\tReviewed\t'
-                                 'Rank\tLineage\tParent\tVirus hosts\n6239\tCAEEL\tCaenorhabditis elegans\t\t\t'
-                                 'Caenorhabditis elegans (Maupas, 1900); Rhabditis elegans; Rhabditis elegans Maupas, '
-                                 '1900; roundworm\treviewed\tSpecies\tEukaryota; Metazoa; Ecdysozoa; Nematoda; '
-                                 'Chromadorea; Rhabditida; Rhabditina; Rhabditomorpha; Rhabditoidea; Rhabditidae; '
-                                 'Peloderinae; Caenorhabditis\t6237\t\n')
+        return MockResponse(
+            text='Taxon Id\tMnemonic\tScientific name\tCommon name\tSynonym\tOther Names\tReviewed\t'
+            'Rank\tLineage\tParent\tVirus hosts\n6239\tCAEEL\tCaenorhabditis elegans\t\t\t'
+            'Caenorhabditis elegans (Maupas, 1900); Rhabditis elegans; Rhabditis elegans Maupas, '
+            '1900; roundworm\treviewed\tSpecies\tEukaryota; Metazoa; Ecdysozoa; Nematoda; '
+            'Chromadorea; Rhabditida; Rhabditina; Rhabditomorpha; Rhabditoidea; Rhabditidae; '
+            'Peloderinae; Caenorhabditis\t6237\t\n'
+        )
 
     monkeypatch.setattr(requests, 'get', mock_requests_get)
     assert map_taxon_id(taxon_name) == (6239, 'Caenorhabditis elegans')
@@ -705,7 +833,8 @@ def test_map_taxon_id_multiple_results(monkeypatch):
     def mock_requests_get(url, params):
         return MockResponse(
             text='Taxon Id\tScientific name\n9615\tCanis lupus familiaris\n2509620\t'
-                 'Wlobachia endosymbiont of Canis lupus familiaris\n990119\tCanis lupus x Canis lupus familiaris')
+            'Wlobachia endosymbiont of Canis lupus familiaris\n990119\tCanis lupus x Canis lupus familiaris'
+        )
 
     monkeypatch.setattr(requests, 'get', mock_requests_get)
     assert map_taxon_id('') == (9615, 'Canis lupus familiaris')
@@ -740,16 +869,16 @@ def test_ensmbl_lookup_post_request(monkeypatch):
 
     def mock_post_request(self, url, **kwargs):
         assert url == 'https://rest.ensembl.org/lookup/id'
-        assert kwargs.get('headers') == {"Content-Type": "application/json", "Accept": "application/json"}
+        assert kwargs.get('headers') == {'Content-Type': 'application/json', 'Accept': 'application/json'}
 
         # The body must be handed to aiohttp as a JSON *object* via `json=`, never as a pre-serialized
         # string. aiohttp re-encodes whatever `json=` receives with json.dumps(), so passing a string
         # double-encodes it into a quoted JSON literal ("{\"ids\": [...]}") that Ensembl rejects with a
         # 400 Bad Request. Assert the raw payload is a dict (and nothing was sent via `data=`) so the
         # double-encoding regression can't come back.
-        assert kwargs.get('data') is None, "POST body must be sent via json=, not data="
+        assert kwargs.get('data') is None, 'POST body must be sent via json=, not data='
         payload = kwargs.get('json')
-        assert isinstance(payload, dict), f"POST body must be a dict passed via json=, got {type(payload).__name__}"
+        assert isinstance(payload, dict), f'POST body must be a dict passed via json=, got {type(payload).__name__}'
         assert payload == {'ids': list(ids)}
 
         return AsyncMockResponse(json_output={this_id: {} for this_id in ids})
@@ -759,23 +888,34 @@ def test_ensmbl_lookup_post_request(monkeypatch):
     assert _ensembl_lookup_post_request(ids) == {'id1': {}, 'id2': {}, 'id3': {}}
 
 
-@pytest.mark.parametrize("gene_id_info,truth", [
-    ({'id1': {'source': 'src1'}, 'id2': {'source': 'src1'}}, {'src1': {'id1', 'id2'}}),
-    ({'id1': {'source': 'src1'}, 'id2': {'source': 'src1'}, 'id3': None}, {'src1': {'id1', 'id2'}}),
-    ({'id1': {'source': 'src1'}, 'id2': {'source': 'src1'}, 'id3': {'source': 'src2'}},
-     {'src1': {'id1', 'id2'}, 'src2': {'id3'}}),
-    ({'id1': None, 'id2': None}, {}),
-    ({}, {})
-])
+@pytest.mark.parametrize(
+    'gene_id_info,truth',
+    [
+        ({'id1': {'source': 'src1'}, 'id2': {'source': 'src1'}}, {'src1': {'id1', 'id2'}}),
+        ({'id1': {'source': 'src1'}, 'id2': {'source': 'src1'}, 'id3': None}, {'src1': {'id1', 'id2'}}),
+        (
+            {'id1': {'source': 'src1'}, 'id2': {'source': 'src1'}, 'id3': {'source': 'src2'}},
+            {'src1': {'id1', 'id2'}, 'src2': {'id3'}},
+        ),
+        ({'id1': None, 'id2': None}, {}),
+        ({}, {}),
+    ],
+)
 def test_infer_sources_from_gene_ids(monkeypatch, gene_id_info, truth):
     monkeypatch.setattr(io, '_ensembl_lookup_post_request', lambda x: gene_id_info)
     assert infer_sources_from_gene_ids([]) == truth
 
 
-@pytest.mark.parametrize("gene_id_info,truth", [
-    ({'id1': {'species': 'c_elegans'}, 'id2': {'species': 'c_elegans'}, 'id3': None}, 'c elegans'),
-    ({'id1': {'species': 'c_elegans'}, 'id2': {'species': 'm_musculus'}, 'id3': {'species': 'm_musculus'}},
-     'm musculus')])
+@pytest.mark.parametrize(
+    'gene_id_info,truth',
+    [
+        ({'id1': {'species': 'c_elegans'}, 'id2': {'species': 'c_elegans'}, 'id3': None}, 'c elegans'),
+        (
+            {'id1': {'species': 'c_elegans'}, 'id2': {'species': 'm_musculus'}, 'id3': {'species': 'm_musculus'}},
+            'm musculus',
+        ),
+    ],
+)
 def test_infer_taxon_from_gene_ids(monkeypatch, gene_id_info, truth):
     monkeypatch.setattr(io, 'map_taxon_id', lambda x: x)
     monkeypatch.setattr(io, '_ensembl_lookup_post_request', lambda x: gene_id_info)
@@ -797,9 +937,13 @@ mapped_ids_truth = {uniprot: wb for uniprot, wb in zip(ids_uniprot, ids_wormbase
 mapped_ids_truth_rev = {b: a for a, b in zip(mapped_ids_truth.keys(), mapped_ids_truth.values())}
 
 
-@pytest.mark.parametrize('ids,map_from,map_to,expected_dict',
-                         [(ids_uniprot, 'UniProtKB', 'WormBase', mapped_ids_truth),
-                          (ids_wormbase, 'WormBase', 'UniProtKB', mapped_ids_truth_rev)])
+@pytest.mark.parametrize(
+    'ids,map_from,map_to,expected_dict',
+    [
+        (ids_uniprot, 'UniProtKB', 'WormBase', mapped_ids_truth),
+        (ids_wormbase, 'WormBase', 'UniProtKB', mapped_ids_truth_rev),
+    ],
+)
 @pytest.mark.skipif(not UNIPROT_AVAILABLE, reason='UniProt REST API is not available at the moment')
 def test_map_gene_ids_connectivity(ids, map_from, map_to, expected_dict, tmp_path, monkeypatch):
     # isolate the per-gene translation cache so this stays a true connectivity test (fresh cache -> a
@@ -822,12 +966,21 @@ def test_map_gene_ids_to_same_set(id_type):
 
 
 @pytest.mark.skipif(not UNIPROT_AVAILABLE, reason='UniProt REST API is not available at the moment')
-@pytest.mark.parametrize('ids,map_from,map_to,req_from,req_to,req_query,txt,truth',
-                         [(['P34544', 'Q27395', 'P12844'], 'UniProtKB', 'WormBase', 'ACC', 'WORMBASE_ID',
-                           'P34544 Q27395 P12844',
-                           'From\tTo\nP34544\tWBGene00019883\nQ27395\tWBGene00023497\nP12844\tWBGene00003515\n',
-                           {'P34544': 'WBGene00019883', 'Q27395': 'WBGene00023497', 'P12844': 'WBGene00003515'}
-                           )])
+@pytest.mark.parametrize(
+    'ids,map_from,map_to,req_from,req_to,req_query,txt,truth',
+    [
+        (
+            ['P34544', 'Q27395', 'P12844'],
+            'UniProtKB',
+            'WormBase',
+            'ACC',
+            'WORMBASE_ID',
+            'P34544 Q27395 P12844',
+            'From\tTo\nP34544\tWBGene00019883\nQ27395\tWBGene00023497\nP12844\tWBGene00003515\n',
+            {'P34544': 'WBGene00019883', 'Q27395': 'WBGene00023497', 'P12844': 'WBGene00003515'},
+        )
+    ],
+)
 def test_map_gene_ids_request(monkeypatch, ids, map_from, map_to, req_from, req_to, req_query, txt, truth, tmp_path):
     monkeypatch.setattr(io, 'get_todays_cache_dir', lambda: tmp_path)  # isolate the translation cache
     legal_types = get_legal_gene_id_types()
@@ -836,11 +989,7 @@ def test_map_gene_ids_request(monkeypatch, ids, map_from, map_to, req_from, req_
         if params is None:
             return
         assert url == 'https://www.uniprot.org/uploadlists/'
-        assert params == {'from': req_from,
-                          'to': req_to,
-                          'format': 'tab',
-                          'query': req_query,
-                          'columns': 'id'}
+        assert params == {'from': req_from, 'to': req_to, 'format': 'tab', 'query': req_query, 'columns': 'id'}
         return MockResponse(text=txt)
 
     monkeypatch.setattr(requests, 'get', mock_get)
@@ -850,22 +999,35 @@ def test_map_gene_ids_request(monkeypatch, ids, map_from, map_to, req_from, req_
         assert res[gene_id] == truth[gene_id]
 
 
-@pytest.mark.parametrize('ids,map_from,map_to,txt,rev_txt,truth',
-                         [(['WBGene00000003', 'WBGene00000004'], 'WormBase', 'UniProtKB',
-                           'From\tEntry\tAnnotation\nWBGene00000003\tQ19151\t110\nWBGene00000004\tA0A0K3AVL7\t57\nWBGene00000004\tO17395\t137.2\n'
-                               , '', {'WBGene00000003': 'Q19151', 'WBGene00000004': 'O17395'}),
-                          (
-                                  ['id1', 'id2'], 'UniProtKB', 'WormBase',
-                                  'From\tTo\nid1\tWBID1\nid2\tWBID2.2\nid2\tWBID2.1\n',
-                                  'From\tEntry\tAnnotation\nWBID1\tid1\t112.5\nWBID2.1\tid2\t112.5\nWBID2.2\tid2\t235\n'
-                                  , {'id1': 'WBID1', 'id2': 'WBID2.2'})
-                          ])
+@pytest.mark.parametrize(
+    'ids,map_from,map_to,txt,rev_txt,truth',
+    [
+        (
+            ['WBGene00000003', 'WBGene00000004'],
+            'WormBase',
+            'UniProtKB',
+            'From\tEntry\tAnnotation\nWBGene00000003\tQ19151\t110\nWBGene00000004\tA0A0K3AVL7\t57\nWBGene00000004\tO17395\t137.2\n',
+            '',
+            {'WBGene00000003': 'Q19151', 'WBGene00000004': 'O17395'},
+        ),
+        (
+            ['id1', 'id2'],
+            'UniProtKB',
+            'WormBase',
+            'From\tTo\nid1\tWBID1\nid2\tWBID2.2\nid2\tWBID2.1\n',
+            'From\tEntry\tAnnotation\nWBID1\tid1\t112.5\nWBID2.1\tid2\t112.5\nWBID2.2\tid2\t235\n',
+            {'id1': 'WBID1', 'id2': 'WBID2.2'},
+        ),
+    ],
+)
 def test_map_gene_ids_with_duplicates(monkeypatch, ids, map_from, map_to, txt, rev_txt, truth):
     def mock_abbrev_dict():
-        d = {'WormBase': 'WormBase',
-             'UniProtKB_to': 'UniProtKB',
-             'UniProtKB_from': 'UniProtKB_AC-ID',
-             'UniProtKB': 'UniProtKB'}
+        d = {
+            'WormBase': 'WormBase',
+            'UniProtKB_to': 'UniProtKB',
+            'UniProtKB_from': 'UniProtKB_AC-ID',
+            'UniProtKB': 'UniProtKB',
+        }
         return d, d
 
     def mock_get_mapping_results(self, to_db: str, from_db: str, ids: List[str], session):
@@ -891,11 +1053,13 @@ def test_map_gene_ids_with_duplicates(monkeypatch, ids, map_from, map_to, txt, r
 
 
 def _mock_gene_id_abbrev_dict():
-    d = {'WormBase': 'WormBase',
+    d = {
+        'WormBase': 'WormBase',
         'UniProtKB_to': 'UniProtKB',
         'UniProtKB_from': 'UniProtKB_AC-ID',
         'UniProtKB': 'UniProtKB',
-        'Ensembl': 'Ensembl'}
+        'Ensembl': 'Ensembl',
+    }
     return d, d
 
 
@@ -928,10 +1092,7 @@ def test_handle_duplicates_else_branch_picks_highest_annotation_score(monkeypatc
     assert translator.map_from == GeneIDTranslator.UNIPROTKB_FROM
     assert translator.map_to == 'WormBase'
 
-    rev_results = ['From\tEntry\tAnnotation',
-                  'WB_a\tid2\t50',
-                  'WB_b\tid2\t999',
-                  'WB_c\tid2\t700']
+    rev_results = ['From\tEntry\tAnnotation', 'WB_a\tid2\t50', 'WB_b\tid2\t999', 'WB_c\tid2\t700']
     calls = []
 
     def mock_get_mapping_results(self, map_to, map_from, ids, session):
@@ -1057,8 +1218,9 @@ def test_cache_dir_matches_legacy_appdirs_path(monkeypatch):
 
 def test_get_data_dir_uses_platformdirs(monkeypatch, tmp_path):
     resolved = tmp_path.joinpath('resolved_data_dir')
-    monkeypatch.setattr(io.platformdirs, 'user_data_dir',
-                        lambda appname, *args, **kwargs: str(resolved.joinpath(appname)))
+    monkeypatch.setattr(
+        io.platformdirs, 'user_data_dir', lambda appname, *args, **kwargs: str(resolved.joinpath(appname))
+    )
     # neutralize the macOS legacy-dir migration so this test never touches a real data dir
     monkeypatch.setattr(io, '_get_legacy_macos_data_dir', lambda: tmp_path.joinpath('nonexistent'))
     assert io.get_data_dir() == resolved.joinpath('RNAlysis')
@@ -1130,7 +1292,7 @@ def test_load_cached_file():
     cached_filename = 'test.txt'
     remove_cached_test_file(cached_filename)
 
-    cache_content_truth = "testing\n123"
+    cache_content_truth = 'testing\n123'
     cache_dir = get_todays_cache_dir()
     path = os.path.join(cache_dir, cached_filename)
 
@@ -1149,7 +1311,7 @@ def test_cache_file():
     cached_filename = 'test.txt'
     remove_cached_test_file(cached_filename)
 
-    cache_content_truth = "testing\n123"
+    cache_content_truth = 'testing\n123'
     cache_dir = get_todays_cache_dir()
     path = os.path.join(cache_dir, cached_filename)
 
@@ -1161,10 +1323,10 @@ def test_cache_file():
         remove_cached_test_file(cached_filename)
 
 
-@pytest.mark.parametrize("gene_set,expected_split", [
-    ({1, 2, 3}, ['1', '2', '3']),
-    ({'geneA', 'geneB', 'geneC', 'geneD'}, ["geneA", "geneB", "geneC", "geneD"])
-])
+@pytest.mark.parametrize(
+    'gene_set,expected_split',
+    [({1, 2, 3}, ['1', '2', '3']), ({'geneA', 'geneB', 'geneC', 'geneD'}, ['geneA', 'geneB', 'geneC', 'geneD'])],
+)
 def test_save_gene_set(gene_set, expected_split):
     pth = 'tests/test_files/tmp_saved_gene_set.txt'
     try:
@@ -1179,15 +1341,19 @@ def test_save_gene_set(gene_set, expected_split):
             pass
 
 
-@pytest.mark.parametrize("args", [(6239,), (6239, 'all'), (6239, ['id1', 'id2'])])
+@pytest.mark.parametrize('args', [(6239,), (6239, 'all'), (6239, ['id1', 'id2'])])
 def test_kegg_annotation_iterator_api(args):
     _ = KEGGAnnotationIterator(*args)
 
 
-@pytest.mark.parametrize('arguments,url_truth', [('argument', 'https://rest.kegg.jp/operation/argument'),
-                                                 (['arg1', 'arg2', 'arg3'],
-                                                  'https://rest.kegg.jp/operation/arg1/arg2/arg3'),
-                                                 (['argument'], 'https://rest.kegg.jp/operation/argument')], )
+@pytest.mark.parametrize(
+    'arguments,url_truth',
+    [
+        ('argument', 'https://rest.kegg.jp/operation/argument'),
+        (['arg1', 'arg2', 'arg3'], 'https://rest.kegg.jp/operation/arg1/arg2/arg3'),
+        (['argument'], 'https://rest.kegg.jp/operation/argument'),
+    ],
+)
 def test_kegg_annotation_iterator_kegg_request(monkeypatch, arguments, url_truth):
     truth = '{"sample": "json", "lorem": "ipsum"}'
     cached = []
@@ -1209,12 +1375,14 @@ def test_kegg_annotation_iterator_kegg_request(monkeypatch, arguments, url_truth
     monkeypatch.setattr(io, 'cache_file', mock_cache_file)
     session = get_session(KEGGAnnotationIterator.RETRIES)
     assert KEGGAnnotationIterator._kegg_request(session, 'operation', arguments, 'cached_filename.csv') == (
-        truth, False)
+        truth,
+        False,
+    )
     assert cached == [True]
 
 
 def test_kegg_annotation_iterator_kegg_request_cached(monkeypatch):
-    truth = {"sample": "json", "lorem": "ipsum"}
+    truth = {'sample': 'json', 'lorem': 'ipsum'}
 
     def mock_get_cached_file(filename):
         return truth
@@ -1222,15 +1390,19 @@ def test_kegg_annotation_iterator_kegg_request_cached(monkeypatch):
     monkeypatch.setattr(io, 'load_cached_file', mock_get_cached_file)
     session = get_session(KEGGAnnotationIterator.RETRIES)
     assert KEGGAnnotationIterator._kegg_request(session, 'operation', 'argument', 'cached_filename.csv') == (
-        truth, True)
+        truth,
+        True,
+    )
 
 
-PATHWAY_NAMES_TRUTH = {'cel00010': 'Glycolysis / Gluconeogenesis - Caenorhabditis elegans (nematode)',
-                       'cel00020': 'Citrate cycle (TCA cycle) - Caenorhabditis elegans (nematode)',
-                       'cel00030': 'Pentose phosphate pathway - Caenorhabditis elegans (nematode)',
-                       'cel00040': 'Pentose and glucuronate interconversions - Caenorhabditis elegans (nematode)',
-                       'cel00051': 'Fructose and mannose metabolism - Caenorhabditis elegans (nematode)',
-                       'cel00052': 'Galactose metabolism - Caenorhabditis elegans (nematode)', }
+PATHWAY_NAMES_TRUTH = {
+    'cel00010': 'Glycolysis / Gluconeogenesis - Caenorhabditis elegans (nematode)',
+    'cel00020': 'Citrate cycle (TCA cycle) - Caenorhabditis elegans (nematode)',
+    'cel00030': 'Pentose phosphate pathway - Caenorhabditis elegans (nematode)',
+    'cel00040': 'Pentose and glucuronate interconversions - Caenorhabditis elegans (nematode)',
+    'cel00051': 'Fructose and mannose metabolism - Caenorhabditis elegans (nematode)',
+    'cel00052': 'Galactose metabolism - Caenorhabditis elegans (nematode)',
+}
 
 
 def test_kegg_annotation_iterator_get_pathways(monkeypatch):
@@ -1283,18 +1455,20 @@ def test_kegg_annotation_iterator_get_pathways_cache_is_per_organism(monkeypatch
 
 def test_kegg_annotation_iterator_get_compounds(monkeypatch):
     reqs_made = []
-    truth = {'C00001': 'H2O',
-             'C00002': 'ATP',
-             'C00003': 'NAD+',
-             'C00004': 'NADH',
-             'C00005': 'NADPH',
-             'C00006': 'NADP+',
-             'C00007': 'Oxygen',
-             'C00008': 'ADP',
-             'C00009': 'Orthophosphate',
-             'C00010': 'CoA',
-             'C00011': 'CO2',
-             'C00012': 'Peptide', }
+    truth = {
+        'C00001': 'H2O',
+        'C00002': 'ATP',
+        'C00003': 'NAD+',
+        'C00004': 'NADH',
+        'C00005': 'NADPH',
+        'C00006': 'NADP+',
+        'C00007': 'Oxygen',
+        'C00008': 'ADP',
+        'C00009': 'Orthophosphate',
+        'C00010': 'CoA',
+        'C00011': 'CO2',
+        'C00012': 'Peptide',
+    }
 
     def mock_kegg_request(session, operation, arguments, cached_filename=None):
         assert operation == 'list'
@@ -1317,11 +1491,16 @@ def test_kegg_annotation_iterator_get_compounds(monkeypatch):
 
 
 def are_xml_elements_equal(e1, e2):
-    if e1.tag != e2.tag: return False
-    if e1.text != e2.text: return False
-    if e1.tail != e2.tail: return False
-    if e1.attrib != e2.attrib: return False
-    if len(e1) != len(e2): return False
+    if e1.tag != e2.tag:
+        return False
+    if e1.text != e2.text:
+        return False
+    if e1.tail != e2.tail:
+        return False
+    if e1.attrib != e2.attrib:
+        return False
+    if len(e1) != len(e2):
+        return False
     return all(are_xml_elements_equal(c1, c2) for c1, c2 in zip(e1, e2))
 
 
@@ -1358,17 +1537,29 @@ def test_kegg_annotation_iterator_get_custom_pathways(monkeypatch):
 
 
 def test_kegg_annotation_iterator_get_pathway_annotations(monkeypatch):
-    truth = {'cel00010': ['Glycolysis / Gluconeogenesis - Caenorhabditis elegans (nematode)',
-                          {'cel:CELE_F14B4.2', 'cel:CELE_Y87G2A.8', 'cel:CELE_C50F4.2', 'cel:CELE_Y71H10A.1'}],
-             'cel00020': ['Citrate cycle (TCA cycle) - Caenorhabditis elegans (nematode)',
-                          {'cel:CELE_T20G5.2', 'cel:CELE_B0365.1', 'cel:CELE_D1005.1'}],
-             'cel00030': ['Pentose phosphate pathway - Caenorhabditis elegans (nematode)',
-                          {'cel:CELE_Y87G2A.8', 'cel:CELE_B0035.5'}],
-             'cel00040': ['Pentose and glucuronate interconversions - Caenorhabditis elegans (nematode)',
-                          {'cel:CELE_Y105E8B.9', 'cel:CELE_B0310.5', 'cel:CELE_T04H1.7', 'cel:CELE_T04H1.8'}],
-             'cel00051': ['Fructose and mannose metabolism - Caenorhabditis elegans (nematode)',
-                          {'cel:CELE_C05C8.7', 'cel:CELE_ZK632.4'}],
-             'cel00052': ['Galactose metabolism - Caenorhabditis elegans (nematode)', {'cel:CELE_C01B4.6'}]}
+    truth = {
+        'cel00010': [
+            'Glycolysis / Gluconeogenesis - Caenorhabditis elegans (nematode)',
+            {'cel:CELE_F14B4.2', 'cel:CELE_Y87G2A.8', 'cel:CELE_C50F4.2', 'cel:CELE_Y71H10A.1'},
+        ],
+        'cel00020': [
+            'Citrate cycle (TCA cycle) - Caenorhabditis elegans (nematode)',
+            {'cel:CELE_T20G5.2', 'cel:CELE_B0365.1', 'cel:CELE_D1005.1'},
+        ],
+        'cel00030': [
+            'Pentose phosphate pathway - Caenorhabditis elegans (nematode)',
+            {'cel:CELE_Y87G2A.8', 'cel:CELE_B0035.5'},
+        ],
+        'cel00040': [
+            'Pentose and glucuronate interconversions - Caenorhabditis elegans (nematode)',
+            {'cel:CELE_Y105E8B.9', 'cel:CELE_B0310.5', 'cel:CELE_T04H1.7', 'cel:CELE_T04H1.8'},
+        ],
+        'cel00051': [
+            'Fructose and mannose metabolism - Caenorhabditis elegans (nematode)',
+            {'cel:CELE_C05C8.7', 'cel:CELE_ZK632.4'},
+        ],
+        'cel00052': ['Galactose metabolism - Caenorhabditis elegans (nematode)', {'cel:CELE_C01B4.6'}],
+    }
 
     # Annotations are now fetched with a single 'link/<org>/pathway' request instead of a full
     # flat-file 'get' per pathway-chunk. The mock returns the compact 2-column TSV that endpoint
@@ -1389,12 +1580,25 @@ def test_kegg_annotation_iterator_get_pathway_annotations(monkeypatch):
     assert {key: [name, ann] for key, name, ann in kegg.get_pathway_annotations()} == truth
 
 
-@pytest.mark.parametrize('pathway_id,expected', [
-    ('cel00010', False), ('cel00511', False), ('hsa04010', False), ('cel05010', False),
-    ('cel01100', True), ('cel01200', True), ('cel01210', True), ('hsa01240', True),
-    ('path:cel01100', True), ('path:cel00010', False),
-    ('cel01099', False), ('cel01300', False),  # just outside the 01100-01299 range
-    ('ab101100', True), ('ab100010', False)])  # organism code ending in a digit must not leak
+@pytest.mark.parametrize(
+    'pathway_id,expected',
+    [
+        ('cel00010', False),
+        ('cel00511', False),
+        ('hsa04010', False),
+        ('cel05010', False),
+        ('cel01100', True),
+        ('cel01200', True),
+        ('cel01210', True),
+        ('hsa01240', True),
+        ('path:cel01100', True),
+        ('path:cel00010', False),
+        ('cel01099', False),
+        ('cel01300', False),  # just outside the 01100-01299 range
+        ('ab101100', True),
+        ('ab100010', False),
+    ],
+)  # organism code ending in a digit must not leak
 def test_kegg_annotation_iterator_is_global_or_overview_map(pathway_id, expected):
     assert KEGGAnnotationIterator._is_global_or_overview_map(pathway_id) is expected
 
@@ -1402,11 +1606,13 @@ def test_kegg_annotation_iterator_is_global_or_overview_map(pathway_id, expected
 def test_kegg_annotation_iterator_get_pathway_annotations_degrades_on_bad_input(monkeypatch):
     # The link response is parsed defensively: blank/short/malformed lines are skipped, and a
     # pathway listed in pathway_names but absent from the links is skipped (not crashed on).
-    body = ('\n'  # blank line
-            'path:cel00010\tcel:CELE_A\n'
-            'path:cel00010\tcel:CELE_B\n'
-            'just_one_column\n'  # malformed
-            'path:cel00052\tcel:CELE_C\n')
+    body = (
+        '\n'  # blank line
+        'path:cel00010\tcel:CELE_A\n'
+        'path:cel00010\tcel:CELE_B\n'
+        'just_one_column\n'  # malformed
+        'path:cel00052\tcel:CELE_C\n'
+    )
 
     def mock_kegg_request(self, session, operation, arguments, cached_filename=None):
         return body, False
@@ -1424,8 +1630,11 @@ def test_kegg_annotation_iterator_get_pathway_annotations_degrades_on_bad_input(
 
 def test_kegg_annotation_iterator_get_pathway_annotations_empty_response(monkeypatch):
     # An empty body must yield no annotations rather than raising.
-    monkeypatch.setattr(KEGGAnnotationIterator, '_kegg_request',
-                        lambda self, session, operation, arguments, cached_filename=None: ('', False))
+    monkeypatch.setattr(
+        KEGGAnnotationIterator,
+        '_kegg_request',
+        lambda self, session, operation, arguments, cached_filename=None: ('', False),
+    )
     kegg = KEGGAnnotationIterator.__new__(KEGGAnnotationIterator)
     kegg.pathway_annotations = None
     kegg.organism_code = 'cel'
@@ -1437,10 +1646,12 @@ def test_kegg_annotation_iterator_get_pathway_annotations_empty_response(monkeyp
 def test_kegg_annotation_iterator_get_pathways_excludes_global_overview_maps(monkeypatch):
     # get_pathways must drop KEGG's global/overview maps (01100-01299) -- a ~thousand-gene
     # "Metabolic pathways" term is not a specific enrichment result and only inflates FDR.
-    listing = ('cel00010\tGlycolysis / Gluconeogenesis\n'
-               'cel01100\tMetabolic pathways\n'
-               'cel00052\tGalactose metabolism\n'
-               'cel01200\tCarbon metabolism\n')
+    listing = (
+        'cel00010\tGlycolysis / Gluconeogenesis\n'
+        'cel01100\tMetabolic pathways\n'
+        'cel00052\tGalactose metabolism\n'
+        'cel01200\tCarbon metabolism\n'
+    )
 
     def mock_kegg_request(self, session, operation, arguments, cached_filename=None):
         assert operation == 'list'
@@ -1452,8 +1663,7 @@ def test_kegg_annotation_iterator_get_pathways_excludes_global_overview_maps(mon
     kegg.organism_code = 'cel'
     kegg.session = get_session(kegg.RETRIES)
     pathway_names, n_annotations = kegg.get_pathways()
-    assert pathway_names == {'cel00010': 'Glycolysis / Gluconeogenesis',
-                             'cel00052': 'Galactose metabolism'}
+    assert pathway_names == {'cel00010': 'Glycolysis / Gluconeogenesis', 'cel00052': 'Galactose metabolism'}
     assert n_annotations == 2
 
 
@@ -1467,12 +1677,7 @@ def test_kegg_annotation_iterator_get_pathway_annotations_cached():
     assert {key: [name, ann] for key, name, ann in kegg.get_pathway_annotations()} == truth
 
 
-@pytest.mark.parametrize('taxon_id,truth', [
-    (6239, 'cel'),
-    (270351, 'maqu'),
-    (9606, 'hsa'),
-    (6238, 'cbr')
-])
+@pytest.mark.parametrize('taxon_id,truth', [(6239, 'cel'), (270351, 'maqu'), (9606, 'hsa'), (6238, 'cbr')])
 def test_kegg_annotation_iterator_get_kegg_organism_code(taxon_id, truth):
     session = get_session(KEGGAnnotationIterator.RETRIES)
     assert KEGGAnnotationIterator.get_kegg_organism_code(taxon_id, session) == truth
@@ -1494,39 +1699,48 @@ class MockProcess:
         return
 
 
-@pytest.mark.parametrize("stdout", [True, False])
-@pytest.mark.parametrize("stderr", [True, False])
+@pytest.mark.parametrize('stdout', [True, False])
+@pytest.mark.parametrize('stderr', [True, False])
 def test_run_subprocess(stdout, stderr):
     run_subprocess(['python3', '--version'], stdout, stderr)
 
 
-@pytest.mark.parametrize('this_version,response,expected', [
-    ('3.0.0', MockResponse(status_code=503), False),
-    ('3.0.0', MockResponse(text='{"info":{"author":"Guy Teichman","version":"3.1.0"}}'), True),
-    ('3.1.1', MockResponse(text='{"info":{"author":"Guy Teichman","version":"3.1.0"}}'), False),
-    ('3.1.1', MockResponse(text='{"info":{"author":"Guy Teichman","version":"3.1.1"}}'), False),
-])
+@pytest.mark.parametrize(
+    'this_version,response,expected',
+    [
+        ('3.0.0', MockResponse(status_code=503), False),
+        ('3.0.0', MockResponse(text='{"info":{"author":"Guy Teichman","version":"3.1.0"}}'), True),
+        ('3.1.1', MockResponse(text='{"info":{"author":"Guy Teichman","version":"3.1.0"}}'), False),
+        ('3.1.1', MockResponse(text='{"info":{"author":"Guy Teichman","version":"3.1.1"}}'), False),
+    ],
+)
 def test_is_rnalysis_outdated(monkeypatch, this_version, response, expected):
     monkeypatch.setattr(requests, 'get', lambda *args, **kwargs: response)
     monkeypatch.setattr(io, '__version__', this_version)
     assert is_rnalysis_outdated() == expected
 
 
-@pytest.mark.parametrize('path,expected', [
-    ('tests/test_files/test_fastqs/outdir/paired_1_trimmed_truth.fastq.gz', 95),
-    ('tests/test_files/test_fastqs/outdir/test_fastq_trimmed_truth.fastq.gz', 7396)
-])
+@pytest.mark.parametrize(
+    'path,expected',
+    [
+        ('tests/test_files/test_fastqs/outdir/paired_1_trimmed_truth.fastq.gz', 95),
+        ('tests/test_files/test_fastqs/outdir/test_fastq_trimmed_truth.fastq.gz', 7396),
+    ],
+)
 def test_get_gunzip_size(path, expected):
     res = get_gunzip_size(path)
     assert res == expected
 
 
-@pytest.mark.parametrize('item, filename', [
-    (pl.DataFrame({'A': [1, 2], 'B': [3, 4]}), 'test1.csv'),
-    ({'gene1', 'gene2', 'gene3'}, 'test2.txt'),
-    ('this is a test', 'test3.txt'),
-    (plt.figure(), 'test4.png')
-])
+@pytest.mark.parametrize(
+    'item, filename',
+    [
+        (pl.DataFrame({'A': [1, 2], 'B': [3, 4]}), 'test1.csv'),
+        ({'gene1', 'gene2', 'gene3'}, 'test2.txt'),
+        ('this is a test', 'test3.txt'),
+        (plt.figure(), 'test4.png'),
+    ],
+)
 def test_cache_gui_file(item, filename):
     try:
         cache_gui_file(item, filename)
@@ -1538,17 +1752,28 @@ def test_cache_gui_file(item, filename):
             Path(get_gui_cache_dir(), filename).unlink()
 
 
-@pytest.mark.parametrize("item, filename, load_as_obj, expected_output", [
-    (pl.DataFrame({"": ['h', 'i', 'j'], "a": [1, 2, 3], "b": [4, 5, 6]}), "test.csv", True,
-     pl.DataFrame({"": ['h', 'i', 'j'], "a": [1, 2, 3], "b": [4, 5, 6]})),
-    ({"apple", "banana", "cherry"}, "test.txt", True, {"apple", "banana", "cherry"}),
-    ("test", "test.txt", True, {"test"}),
-    ("test123", "test.txt", False, b"test123"),
-    (pl.DataFrame({"a": [1, 2, 3], "b": [4, 5, 6]}), "test.csv", False, b"a,b\n1,4\n2,5\n3,6\n"),
-    ({"apple", "banana", "cherry"}, "test.txt", False,
-     bytes("\n".join({"apple", "banana", "cherry"}), encoding='utf-8')),
-    ("test", "test.txt", False, b"test")
-])
+@pytest.mark.parametrize(
+    'item, filename, load_as_obj, expected_output',
+    [
+        (
+            pl.DataFrame({'': ['h', 'i', 'j'], 'a': [1, 2, 3], 'b': [4, 5, 6]}),
+            'test.csv',
+            True,
+            pl.DataFrame({'': ['h', 'i', 'j'], 'a': [1, 2, 3], 'b': [4, 5, 6]}),
+        ),
+        ({'apple', 'banana', 'cherry'}, 'test.txt', True, {'apple', 'banana', 'cherry'}),
+        ('test', 'test.txt', True, {'test'}),
+        ('test123', 'test.txt', False, b'test123'),
+        (pl.DataFrame({'a': [1, 2, 3], 'b': [4, 5, 6]}), 'test.csv', False, b'a,b\n1,4\n2,5\n3,6\n'),
+        (
+            {'apple', 'banana', 'cherry'},
+            'test.txt',
+            False,
+            bytes('\n'.join({'apple', 'banana', 'cherry'}), encoding='utf-8'),
+        ),
+        ('test', 'test.txt', False, b'test'),
+    ],
+)
 def test_load_cached_gui_file(item, filename, load_as_obj, expected_output):
     directory = get_gui_cache_dir()
     if not directory.exists():
@@ -1677,14 +1902,14 @@ def test_clear_gui_cache_flushes_pending_writes(monkeypatch):
     calls = []
     monkeypatch.setattr(io, 'flush_gui_cache_writes', lambda *a, **k: calls.append((a, k)))
     clear_gui_cache()
-    assert calls, "clear_gui_cache must flush pending writes before deleting the cache dir"
+    assert calls, 'clear_gui_cache must flush pending writes before deleting the cache dir'
 
 
 def test_load_cached_gui_file_flushes_pending_writes(monkeypatch):
     calls = []
     monkeypatch.setattr(io, 'flush_gui_cache_writes', lambda *a, **k: calls.append((a, k)))
     load_cached_gui_file('some_missing_file.parquet')
-    assert calls, "load_cached_gui_file must flush the pending write for the file before reading it"
+    assert calls, 'load_cached_gui_file must flush the pending write for the file before reading it'
 
 
 def test_save_session_flushes_before_moving_files(monkeypatch, tmp_path):
@@ -1699,7 +1924,7 @@ def test_save_session_flushes_before_moving_files(monkeypatch, tmp_path):
     monkeypatch.setattr(mgr, '_write_session_data_to_file', lambda *a, **k: None)
     monkeypatch.setattr(mgr, '_archive_session_folder', lambda: None)
     mgr.save_session([], [], {}, {})
-    assert order and order[0] == 'flush', "save_session must flush before moving/copying cache files"
+    assert order and order[0] == 'flush', 'save_session must flush before moving/copying cache files'
     assert 'save_files' in order
 
 
@@ -1718,12 +1943,19 @@ def _write_broken_session(path: Path, session_data: dict, extra_files: dict = No
 
 
 def _broken_session_data(version: str = '3.2.2') -> dict:
-    return {'files': {'missing_table.parquet': ('my table', 'CountFilter', {}, 1)},
-            'pipelines': {},
-            'metadata': {'creation_time': '2022/12/01, 16:47:40', 'name': 'broken', 'n_tabs': 1,
-                         'n_pipelines': 0, 'tab_order': ['missing_table.parquet'],
-                         'rnalysis_version': version},
-            'session_report_data': {'report': None, 'item_paths': {}}}
+    return {
+        'files': {'missing_table.parquet': ('my table', 'CountFilter', {}, 1)},
+        'pipelines': {},
+        'metadata': {
+            'creation_time': '2022/12/01, 16:47:40',
+            'name': 'broken',
+            'n_tabs': 1,
+            'n_pipelines': 0,
+            'tab_order': ['missing_table.parquet'],
+            'rnalysis_version': version,
+        },
+        'session_report_data': {'report': None, 'item_paths': {}},
+    }
 
 
 @pytest.mark.unit
@@ -1750,10 +1982,16 @@ def test_save_and_load_session_round_trip(tmp_path):
     report_file = Path('roundtrip_report_item.txt')
     get_gui_cache_dir().joinpath(report_file).write_text('report item contents')
 
-    file_data = [FileData(filename='roundtrip_table.parquet', item_name='my table', item_type='CountFilter',
-                          item_property={}, item_id=3)]
-    pipeline_data = [PipelineData(name='My Pipeline',
-                                  content='filter_type: countfilter\nfunctions: []\nparams: []\n')]
+    file_data = [
+        FileData(
+            filename='roundtrip_table.parquet',
+            item_name='my table',
+            item_type='CountFilter',
+            item_property={},
+            item_id=3,
+        )
+    ]
+    pipeline_data = [PipelineData(name='My Pipeline', content='filter_type: countfilter\nfunctions: []\nparams: []\n')]
 
     try:
         GUISessionManager(target).save_session(file_data, pipeline_data, {'nodes': {}}, {'3': report_file})
@@ -1831,7 +2069,7 @@ def test_save_session_failure_leaves_the_existing_session_file_intact(monkeypatc
         GUISessionManager(target).save_session([], [], None, {})
 
     assert target.read_bytes() == b'previous session contents'
-    assert [pth.name for pth in tmp_path.iterdir()] == ['sess.rnal'], "save must clean up its temporary files"
+    assert [pth.name for pth in tmp_path.iterdir()] == ['sess.rnal'], 'save must clean up its temporary files'
 
 
 @pytest.mark.unit
@@ -1846,7 +2084,7 @@ def test_save_session_failure_before_archiving_leaves_the_existing_session_file_
         mgr.save_session([], [], None, {})
 
     assert target.read_bytes() == b'previous session contents'
-    assert [pth.name for pth in tmp_path.iterdir()] == ['sess.rnal'], "save must clean up its temporary files"
+    assert [pth.name for pth in tmp_path.iterdir()] == ['sess.rnal'], 'save must clean up its temporary files'
 
 
 @pytest.mark.unit
@@ -1905,7 +2143,7 @@ def test_load_session_truncated_archive_reports_corrupt_session(tmp_path):
     target = tmp_path.joinpath('truncated.rnal')
     GUISessionManager(target).save_session([], [], None, {})
     contents = target.read_bytes()
-    target.write_bytes(contents[:len(contents) // 2])
+    target.write_bytes(contents[: len(contents) // 2])
 
     with pytest.raises(CorruptSessionError) as err:
         GUISessionManager(target).load_session()
@@ -1965,33 +2203,35 @@ def test_load_session_leaves_no_extracted_leftovers_on_failure(tmp_path):
 
 
 def test_get_next_link():
-    headers = {"Link": '<https://www.rest.uniprot.org/next-batch>; rel="next"'}
+    headers = {'Link': '<https://www.rest.uniprot.org/next-batch>; rel="next"'}
     result = GeneIDTranslator.get_next_link(headers)
-    assert result == "https://www.rest.uniprot.org/next-batch"
+    assert result == 'https://www.rest.uniprot.org/next-batch'
 
 
 def test_combine_batches_json():
-    all_results = {"results": [], "failedIds": []}
-    batch_results = {"results": [{"accession": "P29307", "identifier": "7157"}], "failedIds": []}
-    file_format = "json"
+    all_results = {'results': [], 'failedIds': []}
+    batch_results = {'results': [{'accession': 'P29307', 'identifier': '7157'}], 'failedIds': []}
+    file_format = 'json'
     assert GeneIDTranslator.combine_batches(all_results, batch_results, file_format) == {
-        "results": [{"accession": "P29307", "identifier": "7157"}], "failedIds": []}
+        'results': [{'accession': 'P29307', 'identifier': '7157'}],
+        'failedIds': [],
+    }
 
 
 def test_combine_batches_tsv():
-    all_results = ["accession\tannotation_score", "P12345\t1.0"]
-    batch_results = ["accession\tannotation_score", "Q67890\t0.8", "P12355\t1.0"]
-    file_format = "tsv"
+    all_results = ['accession\tannotation_score', 'P12345\t1.0']
+    batch_results = ['accession\tannotation_score', 'Q67890\t0.8', 'P12355\t1.0']
+    file_format = 'tsv'
     combined_results = GeneIDTranslator.combine_batches(all_results, batch_results, file_format)
-    assert combined_results == ["accession\tannotation_score", "P12345\t1.0", "Q67890\t0.8", "P12355\t1.0"]
+    assert combined_results == ['accession\tannotation_score', 'P12345\t1.0', 'Q67890\t0.8', 'P12355\t1.0']
 
 
 def test_combine_batches_other():
-    all_results = "some text"
-    batch_results = "more text"
-    file_format = "unknown"
+    all_results = 'some text'
+    batch_results = 'more text'
+    file_format = 'unknown'
     combined_results = GeneIDTranslator.combine_batches(all_results, batch_results, file_format)
-    assert combined_results == "some textmore text"
+    assert combined_results == 'some textmore text'
 
 
 def test_decode_results_json():
@@ -2005,7 +2245,7 @@ def test_decode_results_json():
 
 def test_decode_results_tsv():
     response_mock = MagicMock(spec=requests.Response)
-    response_mock.text = "id\tname\n1\tJohn\n2\tJane\n"
+    response_mock.text = 'id\tname\n1\tJohn\n2\tJane\n'
 
     result = GeneIDTranslator.decode_results(response_mock, 'tsv')
     assert result == ['id\tname', '1\tJohn', '2\tJane']
@@ -2022,10 +2262,10 @@ def test_decode_results_with_invalid_file_format():
 def test_check_id_mapping_results_ready_with_results():
     with requests_mock.Mocker() as m:
         # Mock the response from the server
-        m.get("https://rest.uniprot.org/idmapping/status/123", json={"results": ['content']})
+        m.get('https://rest.uniprot.org/idmapping/status/123', json={'results': ['content']})
         # Call the function
         session = requests.Session()
-        ready = GeneIDTranslator.check_id_mapping_results_ready(session, "123", 0.1)
+        ready = GeneIDTranslator.check_id_mapping_results_ready(session, '123', 0.1)
         # Check the result
         assert ready
 
@@ -2033,10 +2273,10 @@ def test_check_id_mapping_results_ready_with_results():
 def test_check_id_mapping_results_ready_with_failed_ids():
     with requests_mock.Mocker() as m:
         # Mock the response from the server
-        m.get("https://rest.uniprot.org/idmapping/status/123", json={"failedIds": ['content']})
+        m.get('https://rest.uniprot.org/idmapping/status/123', json={'failedIds': ['content']})
         # Call the function
         session = requests.Session()
-        ready = GeneIDTranslator.check_id_mapping_results_ready(session, "123", 0.1)
+        ready = GeneIDTranslator.check_id_mapping_results_ready(session, '123', 0.1)
         # Check the result
         assert ready
 
@@ -2050,15 +2290,15 @@ def test_check_id_mapping_results_ready_running():
             nonlocal count
             count += 1
             if count < 5:
-                return {"jobStatus": "RUNNING"}
+                return {'jobStatus': 'RUNNING'}
             else:
-                return {"results": ['data'], "status_code": 200}
+                return {'results': ['data'], 'status_code': 200}
 
-        m.get("https://rest.uniprot.org/idmapping/status/123", json=request_callback)
+        m.get('https://rest.uniprot.org/idmapping/status/123', json=request_callback)
 
         # Call the function
         session = requests.Session()
-        ready = GeneIDTranslator.check_id_mapping_results_ready(session, "123", 0.1)
+        ready = GeneIDTranslator.check_id_mapping_results_ready(session, '123', 0.1)
         # Check the result
         assert ready
         assert count == 5
@@ -2066,16 +2306,16 @@ def test_check_id_mapping_results_ready_running():
 
 def test_check_id_mapping_results_ready_error():
     with requests_mock.Mocker() as m:
-        # A 200 response whose jobStatus is ERROR must raise (this exercises the ERROR branch;
-        # note check_id_mapping_results_ready's signature is (session, job_id, polling_interval)).
-        m.get("https://rest.uniprot.org/idmapping/status/123", json={"jobStatus": "ERROR"})
+        # A 200 response whose jobStatus is a terminal non-success status (ERROR) must raise the
+        # typed IDMappingJobFailedError -- not a bare Exception -- so callers (get_mapping_results)
+        # can catch it specifically and degrade gracefully instead of crashing (note
+        # check_id_mapping_results_ready's signature is (session, job_id, polling_interval)).
+        m.get('https://rest.uniprot.org/idmapping/status/123', json={'jobStatus': 'ERROR'})
 
-        # Call the function
         session = requests.Session()
 
-        # Check that an exception is raised
-        with pytest.raises(Exception):
-            GeneIDTranslator.check_id_mapping_results_ready(session, "123", 0.1)
+        with pytest.raises(IDMappingJobFailedError, match='ERROR'):
+            GeneIDTranslator.check_id_mapping_results_ready(session, '123', 0.1)
 
 
 def test_check_id_mapping_results_ready_retries_transient_400(monkeypatch):
@@ -2085,10 +2325,12 @@ def test_check_id_mapping_results_ready_retries_transient_400(monkeypatch):
     # hard-fail on the first one.
     monkeypatch.setattr(io.time, 'sleep', lambda *args, **kwargs: None)  # don't actually wait
     with requests_mock.Mocker() as m:
-        adapter = m.get("https://rest.uniprot.org/idmapping/status/123",
-                        [{'status_code': 400}, {'status_code': 400}, {'json': {"results": ['content']}}])
+        adapter = m.get(
+            'https://rest.uniprot.org/idmapping/status/123',
+            [{'status_code': 400}, {'status_code': 400}, {'json': {'results': ['content']}}],
+        )
         session = requests.Session()
-        ready = GeneIDTranslator.check_id_mapping_results_ready(session, "123", 0.1)
+        ready = GeneIDTranslator.check_id_mapping_results_ready(session, '123', 0.1)
         assert ready
         assert adapter.call_count == 3  # two 400s were retried, then the success was used
 
@@ -2098,11 +2340,11 @@ def test_check_id_mapping_results_ready_retries_up_to_the_bound_then_succeeds(mo
     # below: STATUS_POLL_MAX_RETRIES retries -> STATUS_POLL_MAX_RETRIES + 1 total attempts, the last
     # one here being the success).
     monkeypatch.setattr(io.time, 'sleep', lambda *args, **kwargs: None)
-    responses = [{'status_code': 400}] * GeneIDTranslator.STATUS_POLL_MAX_RETRIES + [{'json': {"results": ['x']}}]
+    responses = [{'status_code': 400}] * GeneIDTranslator.STATUS_POLL_MAX_RETRIES + [{'json': {'results': ['x']}}]
     with requests_mock.Mocker() as m:
-        adapter = m.get("https://rest.uniprot.org/idmapping/status/123", responses)
+        adapter = m.get('https://rest.uniprot.org/idmapping/status/123', responses)
         session = requests.Session()
-        ready = GeneIDTranslator.check_id_mapping_results_ready(session, "123", 0.1)
+        ready = GeneIDTranslator.check_id_mapping_results_ready(session, '123', 0.1)
         assert ready
         assert adapter.call_count == GeneIDTranslator.STATUS_POLL_MAX_RETRIES + 1
 
@@ -2112,10 +2354,10 @@ def test_check_id_mapping_results_ready_persistent_400_raises(monkeypatch):
     # retries (pins the bound from above: exactly MAX_RETRIES+1 attempts, no infinite loop).
     monkeypatch.setattr(io.time, 'sleep', lambda *args, **kwargs: None)
     with requests_mock.Mocker() as m:
-        adapter = m.get("https://rest.uniprot.org/idmapping/status/123", status_code=400)
+        adapter = m.get('https://rest.uniprot.org/idmapping/status/123', status_code=400)
         session = requests.Session()
         with pytest.raises(requests.exceptions.HTTPError):
-            GeneIDTranslator.check_id_mapping_results_ready(session, "123", 0.1)
+            GeneIDTranslator.check_id_mapping_results_ready(session, '123', 0.1)
         assert adapter.call_count == GeneIDTranslator.STATUS_POLL_MAX_RETRIES + 1
 
 
@@ -2133,13 +2375,98 @@ def test_check_id_mapping_results_ready_uses_adaptive_backoff(monkeypatch):
             nonlocal count
             count += 1
             # four RUNNING polls, then results -> four adaptive sleeps
-            return {"jobStatus": "RUNNING"} if count < 5 else {"results": ['data']}
+            return {'jobStatus': 'RUNNING'} if count < 5 else {'results': ['data']}
 
-        m.get("https://rest.uniprot.org/idmapping/status/123", json=request_callback)
-        ready = GeneIDTranslator.check_id_mapping_results_ready(requests.Session(), "123", 3.0)
+        m.get('https://rest.uniprot.org/idmapping/status/123', json=request_callback)
+        ready = GeneIDTranslator.check_id_mapping_results_ready(requests.Session(), '123', 3.0)
 
     assert ready
     assert sleeps == [0.25, 0.5, 1.0, 2.0]
+
+
+def test_check_id_mapping_results_ready_waiting_message_is_not_misleading(monkeypatch, capsys):
+    # While a UniProt idmapping job is still RUNNING the poll loop prints a status line every poll. It
+    # must read as "we are waiting on UniProt", not "Retrying in Ns" -- the latter reads like a failed
+    # request being retried and has made users think the mapping is erroring when it is only slow on
+    # UniProt's side (idmapping job latency is server-side and can reach minutes). The line must still
+    # name UniProt and disclose when the next check happens.
+    monkeypatch.setattr(io.time, 'sleep', lambda *args, **kwargs: None)  # don't actually wait
+    with requests_mock.Mocker() as m:
+        count = 0
+
+        def request_callback(request, context):
+            nonlocal count
+            count += 1
+            return {'jobStatus': 'RUNNING'} if count < 4 else {'results': ['data']}
+
+        m.get('https://rest.uniprot.org/idmapping/status/123', json=request_callback)
+        ready = GeneIDTranslator.check_id_mapping_results_ready(requests.Session(), '123', 3.0, verbose=True)
+
+    out = capsys.readouterr().out
+    assert ready
+    assert 'Retrying' not in out  # the misleading wording is gone
+    assert 'UniProt' in out  # it's clear who we're waiting on
+    assert '0.25' in out  # the next-check interval (first backoff step) is still disclosed
+
+
+def test_check_id_mapping_results_ready_silent_when_not_verbose(monkeypatch, capsys):
+    # verbose=False must suppress the per-poll waiting line entirely.
+    monkeypatch.setattr(io.time, 'sleep', lambda *args, **kwargs: None)
+    with requests_mock.Mocker() as m:
+        count = 0
+
+        def request_callback(request, context):
+            nonlocal count
+            count += 1
+            return {'jobStatus': 'RUNNING'} if count < 4 else {'results': ['data']}
+
+        m.get('https://rest.uniprot.org/idmapping/status/123', json=request_callback)
+        GeneIDTranslator.check_id_mapping_results_ready(requests.Session(), '123', 3.0, verbose=False)
+
+    assert capsys.readouterr().out == ''
+
+
+def _fake_monotonic_clock(monkeypatch):
+    """Patch io.time.sleep/monotonic with a fake clock: sleep(x) advances the clock by x instead of
+    actually blocking, and monotonic() reads it back. Keeps timeout-loop tests fast, deterministic,
+    and accurate to production (which measures elapsed time via time.monotonic(), not accumulated
+    sleep args -- see check_id_mapping_results_ready)."""
+    now = [0.0]
+    monkeypatch.setattr(io.time, 'monotonic', lambda: now[0])
+    monkeypatch.setattr(io.time, 'sleep', lambda seconds: now.__setitem__(0, now[0] + seconds))
+    return now
+
+
+def test_check_id_mapping_results_ready_times_out_when_job_never_ready(monkeypatch):
+    # A UniProt job stuck in RUNNING must not hang the analysis forever: after JOB_READY_TIMEOUT worth
+    # of elapsed (wall-clock) time, the loop raises IDMappingTimeoutError instead of looping without
+    # end. The fake clock advances exactly as far as the loop's own sleep calls, so this stays fast.
+    _fake_monotonic_clock(monkeypatch)
+    monkeypatch.setattr(GeneIDTranslator, 'JOB_READY_TIMEOUT', 5.0)
+    with requests_mock.Mocker() as m:
+        adapter = m.get('https://rest.uniprot.org/idmapping/status/123', json={'jobStatus': 'RUNNING'})
+        with pytest.raises(IDMappingTimeoutError):
+            GeneIDTranslator.check_id_mapping_results_ready(requests.Session(), '123', 3.0, verbose=False)
+    # it polled a few times then gave up -- bounded, not infinite
+    assert 2 <= adapter.call_count < 20
+
+
+def test_check_id_mapping_results_ready_does_not_time_out_a_job_that_finishes_in_time(monkeypatch):
+    # A job that is slow but finishes before the bound must still succeed -- the timeout is a hang-guard
+    # and must never pre-empt a legitimately-completing job.
+    _fake_monotonic_clock(monkeypatch)
+    monkeypatch.setattr(GeneIDTranslator, 'JOB_READY_TIMEOUT', 1000.0)  # generous
+    with requests_mock.Mocker() as m:
+        count = 0
+
+        def request_callback(request, context):
+            nonlocal count
+            count += 1
+            return {'jobStatus': 'RUNNING'} if count < 8 else {'results': ['data']}
+
+        m.get('https://rest.uniprot.org/idmapping/status/123', json=request_callback)
+        ready = GeneIDTranslator.check_id_mapping_results_ready(requests.Session(), '123', 3.0, verbose=False)
+    assert ready
 
 
 @pytest.mark.unit
@@ -2149,11 +2476,13 @@ def test_get_id_mapping_results_link_retries_transient_400(monkeypatch):
     # instead of hard-failing on the first 400 -- otherwise the whole mapping fails on a blip that
     # lands on details/ instead of status/.
     monkeypatch.setattr(io.time, 'sleep', lambda *args, **kwargs: None)
-    redirect = "https://rest.uniprot.org/idmapping/uniprotkb/results/123"
+    redirect = 'https://rest.uniprot.org/idmapping/uniprotkb/results/123'
     with requests_mock.Mocker() as m:
-        adapter = m.get("https://rest.uniprot.org/idmapping/details/123",
-                        [{'status_code': 400}, {'status_code': 400}, {'json': {"redirectURL": redirect}}])
-        link = GeneIDTranslator.get_id_mapping_results_link(requests.Session(), "123")
+        adapter = m.get(
+            'https://rest.uniprot.org/idmapping/details/123',
+            [{'status_code': 400}, {'status_code': 400}, {'json': {'redirectURL': redirect}}],
+        )
+        link = GeneIDTranslator.get_id_mapping_results_link(requests.Session(), '123')
         assert link == redirect
         assert adapter.call_count == 3  # two 400s retried, then the success used
 
@@ -2164,9 +2493,9 @@ def test_get_id_mapping_results_link_persistent_400_raises_bounded(monkeypatch):
     # attempts (no infinite loop), same contract as the status/ poll
     monkeypatch.setattr(io.time, 'sleep', lambda *args, **kwargs: None)
     with requests_mock.Mocker() as m:
-        adapter = m.get("https://rest.uniprot.org/idmapping/details/123", status_code=400)
+        adapter = m.get('https://rest.uniprot.org/idmapping/details/123', status_code=400)
         with pytest.raises(requests.exceptions.HTTPError):
-            GeneIDTranslator.get_id_mapping_results_link(requests.Session(), "123")
+            GeneIDTranslator.get_id_mapping_results_link(requests.Session(), '123')
         assert adapter.call_count == GeneIDTranslator.STATUS_POLL_MAX_RETRIES + 1
 
 
@@ -2178,9 +2507,9 @@ def test_idmapping_400_backoff_is_capped(monkeypatch):
     sleeps = []
     monkeypatch.setattr(io.time, 'sleep', lambda seconds: sleeps.append(seconds))
     with requests_mock.Mocker() as m:
-        m.get("https://rest.uniprot.org/idmapping/status/123", status_code=400)
+        m.get('https://rest.uniprot.org/idmapping/status/123', status_code=400)
         with pytest.raises(requests.exceptions.HTTPError):
-            GeneIDTranslator.check_id_mapping_results_ready(requests.Session(), "123", 0.1)
+            GeneIDTranslator.check_id_mapping_results_ready(requests.Session(), '123', 0.1)
     assert sleeps  # retries actually happened
     assert all(s <= GeneIDTranslator.STATUS_POLL_MAX_BACKOFF for s in sleeps)
 
@@ -2195,8 +2524,9 @@ def test_get_id_mapping_results_search_streams_uniprotkb_target():
     tsv = 'From\tEntry\tAnnotation\nWBGene1\tQ1\t5\n'
     with requests_mock.Mocker() as m:
         stream = m.get('https://rest.uniprot.org/idmapping/uniprotkb/results/stream/JOB', text=tsv)
-        paged = m.get('https://rest.uniprot.org/idmapping/uniprotkb/results/JOB', text=tsv,
-                      headers={'x-total-results': '1'})
+        paged = m.get(
+            'https://rest.uniprot.org/idmapping/uniprotkb/results/JOB', text=tsv, headers={'x-total-results': '1'}
+        )
         results = tr.get_id_mapping_results_search(requests.Session(), link)
     assert stream.called
     assert not paged.called
@@ -2212,8 +2542,7 @@ def test_get_id_mapping_results_search_paginates_plain_target():
     tsv = 'From\tTo\nP1\tWB1\n'
     with requests_mock.Mocker() as m:
         stream = m.get('https://rest.uniprot.org/idmapping/results/stream/JOB', status_code=404)
-        paged = m.get('https://rest.uniprot.org/idmapping/results/JOB', text=tsv,
-                      headers={'x-total-results': '1'})
+        paged = m.get('https://rest.uniprot.org/idmapping/results/JOB', text=tsv, headers={'x-total-results': '1'})
         results = tr.get_id_mapping_results_search(requests.Session(), link)
     assert paged.called
     assert not stream.called
@@ -2222,7 +2551,6 @@ def test_get_id_mapping_results_search_paginates_plain_target():
 
 # Test cases for the OrthologDict class
 class TestOrthologDict:
-
     # Test the initialization of OrthologDict
     def test_init(self):
         ortholog_dict = OrthologDict()
@@ -2251,56 +2579,79 @@ class TestOrthologDict:
 
 
 @pytest.mark.parametrize(
-    "translated_ids, mapping_one2one, mapping_one2many, expected_one2one, expected_one2many",
+    'translated_ids, mapping_one2one, mapping_one2many, expected_one2one, expected_one2many',
     [
         # Both mappings are empty
         (['trans1', 'trans2'], {}, {}, {}, {}),
-
         # One-to-one mapping contains keys, one-to-many mapping is empty
         (
-                ['trans1', 'trans2'], {'trans1': 'ortho1', 'trans2': 'ortho2'}, {},
-                {'gene1': 'ortho1', 'gene2': 'ortho2'},
-                {}),
-
+            ['trans1', 'trans2'],
+            {'trans1': 'ortho1', 'trans2': 'ortho2'},
+            {},
+            {'gene1': 'ortho1', 'gene2': 'ortho2'},
+            {},
+        ),
         # One-to-many mapping contains keys, one-to-one mapping is empty
-        (['trans1', 'trans2'], {}, {'trans1': ['ortho1', 'ortho3'], 'trans2': ['ortho2']}, {},
-         {'gene1': ['ortho1', 'ortho3'], 'gene2': ['ortho2']}),
-
+        (
+            ['trans1', 'trans2'],
+            {},
+            {'trans1': ['ortho1', 'ortho3'], 'trans2': ['ortho2']},
+            {},
+            {'gene1': ['ortho1', 'ortho3'], 'gene2': ['ortho2']},
+        ),
         # Both mappings contain the same keys
-        (['trans1', 'trans2'], {'trans1': 'ortho1', 'trans2': 'ortho2'},
-         {'trans1': ['ortho1', 'ortho3'], 'trans2': ['ortho2']},
-         {'gene1': 'ortho1', 'gene2': 'ortho2'}, {'gene1': ['ortho1', 'ortho3'], 'gene2': ['ortho2']}),
-
+        (
+            ['trans1', 'trans2'],
+            {'trans1': 'ortho1', 'trans2': 'ortho2'},
+            {'trans1': ['ortho1', 'ortho3'], 'trans2': ['ortho2']},
+            {'gene1': 'ortho1', 'gene2': 'ortho2'},
+            {'gene1': ['ortho1', 'ortho3'], 'gene2': ['ortho2']},
+        ),
         # One-to-one mapping has extra keys
-        (['trans1', 'trans2'], {'trans1': 'ortho1', 'trans2': 'ortho2', 'trans3': 'ortho3'},
-         {'trans1': ['ortho1', 'ortho3'], 'trans2': ['ortho2']},
-         {'gene1': 'ortho1', 'gene2': 'ortho2'}, {'gene1': ['ortho1', 'ortho3'], 'gene2': ['ortho2']}),
-
+        (
+            ['trans1', 'trans2'],
+            {'trans1': 'ortho1', 'trans2': 'ortho2', 'trans3': 'ortho3'},
+            {'trans1': ['ortho1', 'ortho3'], 'trans2': ['ortho2']},
+            {'gene1': 'ortho1', 'gene2': 'ortho2'},
+            {'gene1': ['ortho1', 'ortho3'], 'gene2': ['ortho2']},
+        ),
         # One-to-many mapping has extra keys
-        (['trans1', 'trans2'], {'trans1': 'ortho1', 'trans2': 'ortho2'},
-         {'trans1': ['ortho1', 'ortho3'], 'trans2': ['ortho2'], 'trans3': ['ortho4']},
-         {'gene1': 'ortho1', 'gene2': 'ortho2'}, {'gene1': ['ortho1', 'ortho3'], 'gene2': ['ortho2']}),
-
+        (
+            ['trans1', 'trans2'],
+            {'trans1': 'ortho1', 'trans2': 'ortho2'},
+            {'trans1': ['ortho1', 'ortho3'], 'trans2': ['ortho2'], 'trans3': ['ortho4']},
+            {'gene1': 'ortho1', 'gene2': 'ortho2'},
+            {'gene1': ['ortho1', 'ortho3'], 'gene2': ['ortho2']},
+        ),
         # Both mappings have extra keys
-        (['trans1', 'trans2'], {'trans1': 'ortho1', 'trans2': 'ortho2', 'trans3': 'ortho3'},
-         {'trans1': ['ortho1', 'ortho3'], 'trans2': ['ortho2'], 'trans4': ['ortho4']},
-         {'gene1': 'ortho1', 'gene2': 'ortho2'}, {'gene1': ['ortho1', 'ortho3'], 'gene2': ['ortho2']}),
-
+        (
+            ['trans1', 'trans2'],
+            {'trans1': 'ortho1', 'trans2': 'ortho2', 'trans3': 'ortho3'},
+            {'trans1': ['ortho1', 'ortho3'], 'trans2': ['ortho2'], 'trans4': ['ortho4']},
+            {'gene1': 'ortho1', 'gene2': 'ortho2'},
+            {'gene1': ['ortho1', 'ortho3'], 'gene2': ['ortho2']},
+        ),
         # Both mappings are empty, translated_ids contain unmapped IDs
         (['trans1', 'trans3'], {}, {}, {}, {}),
-
         # One-to-one mapping contains keys, translated_ids contain unmapped IDs
         (['trans1', 'trans3'], {'trans1': 'ortho1', 'trans2': 'ortho2'}, {}, {'gene1': 'ortho1'}, {}),
-
         # One-to-many mapping contains keys, translated_ids contain unmapped IDs
-        (['trans1', 'trans3'], {}, {'trans1': ['ortho1', 'ortho3'], 'trans2': ['ortho2']}, {},
-         {'gene1': ['ortho1', 'ortho3']}),
-
+        (
+            ['trans1', 'trans3'],
+            {},
+            {'trans1': ['ortho1', 'ortho3'], 'trans2': ['ortho2']},
+            {},
+            {'gene1': ['ortho1', 'ortho3']},
+        ),
         # Both mappings contain the same keys, translated_ids contain unmapped IDs
-        (['trans1', 'trans3'], {'trans1': 'ortho1', 'trans2': 'ortho2'},
-         {'trans1': ['ortho1', 'ortho3'], 'trans2': ['ortho2']},
-         {'gene1': 'ortho1'}, {'gene1': ['ortho1', 'ortho3']}),
-    ]
+        (
+            ['trans1', 'trans3'],
+            {'trans1': 'ortho1', 'trans2': 'ortho2'},
+            {'trans1': ['ortho1', 'ortho3'], 'trans2': ['ortho2']},
+            {'gene1': 'ortho1'},
+            {'gene1': ['ortho1', 'ortho3']},
+        ),
+    ],
 )
 def test_translate_mappings(translated_ids, mapping_one2one, mapping_one2many, expected_one2one, expected_one2many):
     ids = ['gene1', 'gene2']
@@ -2340,10 +2691,11 @@ class TestOrthologDict:
             ortholog_dict['gene1']
 
 
-@pytest.mark.skipif(not PHYLOMEDB_AVAILABLE,
-                    reason="No internet connection or FTP server is down. Skipping PhylomeDBOrthologMapper tests.")
+@pytest.mark.skipif(
+    not PHYLOMEDB_AVAILABLE,
+    reason='No internet connection or FTP server is down. Skipping PhylomeDBOrthologMapper tests.',
+)
 class TestPhylomeDBOrthologMapper:
-
     # Define a fixture to create an instance of PhylomeDBOrthologMapper for testing
     @pytest.fixture
     def ortholog_mapper(self):
@@ -2351,8 +2703,9 @@ class TestPhylomeDBOrthologMapper:
         legal_species = PhylomeDBOrthologMapper.get_legal_species()
         map_to_organism = legal_species[0, 0]  # Use the first legal species
         map_from_organism = legal_species[1, 0]  # Use the second legal species
-        return PhylomeDBOrthologMapper(map_to_organism=map_to_organism, map_from_organism=map_from_organism,
-                                       gene_id_type='gene_type')
+        return PhylomeDBOrthologMapper(
+            map_to_organism=map_to_organism, map_from_organism=map_from_organism, gene_id_type='gene_type'
+        )
 
     @staticmethod
     def mock_translate_ids(self, ids):
@@ -2451,18 +2804,18 @@ class TestPhylomeDBOrthologMapper:
     # picked as "best"/"first"/"last" even though the mapper's own logic hasn't changed. We check
     # structural invariants instead, tolerant of that churn (same treatment as
     # TestEnsemblOrthologMapper, which hit this same class of brittleness).
-    @pytest.mark.parametrize('filter_consistency_score,non_unique_mode', [
-        (False, 'first'),
-        (True, 'last'),
-        (True, 'random')
-    ])
+    @pytest.mark.parametrize(
+        'filter_consistency_score,non_unique_mode', [(False, 'first'), (True, 'last'), (True, 'random')]
+    )
     def test_get_orthologs(self, filter_consistency_score, non_unique_mode):
-        ortholog_mapper = PhylomeDBOrthologMapper(map_to_organism=9606, map_from_organism=6239,
-                                                  gene_id_type='UniProtKB AC/ID')
+        ortholog_mapper = PhylomeDBOrthologMapper(
+            map_to_organism=9606, map_from_organism=6239, gene_id_type='UniProtKB AC/ID'
+        )
         ids = ('G5EDF7', 'P34544')
         consistency_score_threshold = 0.5
         ortholog_one2one, ortholog_one2many = ortholog_mapper.get_orthologs(
-            ids, non_unique_mode, consistency_score_threshold, filter_consistency_score)
+            ids, non_unique_mode, consistency_score_threshold, filter_consistency_score
+        )
 
         assert isinstance(ortholog_one2one, OrthologDict)
         assert isinstance(ortholog_one2many, OrthologDict)
@@ -2485,7 +2838,7 @@ class TestPhylomeDBOrthologMapper:
             # whichever non_unique_mode/filter was requested, the chosen value must always be
             # one of the raw candidates reported for that gene.
             assert target in ortholog_one2many[gene]
-            assert id_pattern.match(target), f"unexpected ortholog ID format: {target}"
+            assert id_pattern.match(target), f'unexpected ortholog ID format: {target}'
 
 
 @pytest.mark.unit
@@ -2532,8 +2885,7 @@ class TestPhylomeDBOrthologMapperOffline:
     def test_forward_map_filtered_matches_reference_subset(self):
         df, ref_fwd, _ = self._reference_maps(self.ID_ROWS)
         needed = {'U1', 'U5', 'absent'}
-        assert PhylomeDBOrthologMapper._build_forward_map(df, needed) == {
-            k: ref_fwd[k] for k in needed if k in ref_fwd}
+        assert PhylomeDBOrthologMapper._build_forward_map(df, needed) == {k: ref_fwd[k] for k in needed if k in ref_fwd}
 
     def test_reverse_map_filtered_matches_reference_subset(self):
         df, _, ref_rev = self._reference_maps(self.ID_ROWS)
@@ -2559,10 +2911,14 @@ class TestPhylomeDBOrthologMapperOffline:
             df, ref_fwd, ref_rev = self._reference_maps(rows)
             ne = set(rng.sample(alphabet, rng.randint(0, len(alphabet))))
             npr = set(rng.sample(prot_alphabet, rng.randint(0, len(prot_alphabet))))
-            assert PhylomeDBOrthologMapper._build_forward_map(df, ne) == {
-                k: ref_fwd[k] for k in ne if k in ref_fwd}, (seed, rows, ne)
+            assert PhylomeDBOrthologMapper._build_forward_map(df, ne) == {k: ref_fwd[k] for k in ne if k in ref_fwd}, (
+                seed,
+                rows,
+                ne,
+            )
             assert PhylomeDBOrthologMapper._build_reverse_map(df, npr) == {
-                k: ref_rev[k] for k in npr if k in ref_rev}, (seed, rows, npr)
+                k: ref_rev[k] for k in npr if k in ref_rev
+            }, (seed, rows, npr)
 
     def test_restrict_to_needed(self):
         df = pl.DataFrame({'c': ['a', 'b', 'c']})
@@ -2581,13 +2937,14 @@ class TestPhylomeDBOrthologMapperOffline:
     @staticmethod
     def _write_id_conversion(cache_dir, rows):
         pl.DataFrame({'#extid': [r[0] for r in rows], 'protid': [r[1] for r in rows]}).write_parquet(
-            cache_dir.joinpath('phylomedb_id_conversion.parquet'))
+            cache_dir.joinpath('phylomedb_id_conversion.parquet')
+        )
 
     @staticmethod
     def _write_taxon_map(cache_dir, rows, taxon_id=1, target_id=2):
-        pl.DataFrame({'protid1': [r[0] for r in rows], 'protid2': [r[1] for r in rows],
-                      'CS': [r[2] for r in rows]}).write_parquet(
-            cache_dir.joinpath(f'phylomedb_{taxon_id}to{target_id}.parquet'))
+        pl.DataFrame(
+            {'protid1': [r[0] for r in rows], 'protid2': [r[1] for r in rows], 'CS': [r[2] for r in rows]}
+        ).write_parquet(cache_dir.joinpath(f'phylomedb_{taxon_id}to{target_id}.parquet'))
 
     def test_load_id_conversion_table_reads_cache(self, cache_dir):
         self._write_id_conversion(cache_dir, self.ID_ROWS)
@@ -2600,12 +2957,14 @@ class TestPhylomeDBOrthologMapperOffline:
         assert PhylomeDBOrthologMapper._get_taxon_map(1, 2) == {'Pf1': ('Pt1', 0.9), 'Pf2': ('Pt3', 0.8)}
 
     def test_taxon_map_filtered_matches_full_subset(self, cache_dir):
-        self._write_taxon_map(cache_dir, [
-            ('Pf1', 'Pt1', 0.9), ('Pf2', 'Pt2', 0.3), ('Pf2', 'Pt3', 0.8), ('Pf4', 'Pt4', 0.7)])
+        self._write_taxon_map(
+            cache_dir, [('Pf1', 'Pt1', 0.9), ('Pf2', 'Pt2', 0.3), ('Pf2', 'Pt3', 0.8), ('Pf4', 'Pt4', 0.7)]
+        )
         full = PhylomeDBOrthologMapper._get_taxon_map(1, 2)
         needed = {'Pf1', 'Pf2'}
         assert PhylomeDBOrthologMapper._get_taxon_map(1, 2, needed_source_ids=needed) == {
-            k: full[k] for k in needed if k in full}
+            k: full[k] for k in needed if k in full
+        }
 
     def test_taxon_map_empty_filter_short_circuits(self, cache_dir):
         self._write_taxon_map(cache_dir, [('Pf1', 'Pt1', 0.9)])
@@ -2615,24 +2974,27 @@ class TestPhylomeDBOrthologMapperOffline:
 
     def _offline_mapper(self, monkeypatch):
         # Keep the species-list lookup (__init__) off the network; translate_ids is patched per test.
-        monkeypatch.setattr(PhylomeDBOrthologMapper, 'get_legal_species',
-                            staticmethod(lambda: pl.DataFrame({'taxid': [1, 2], 'name': ['a', 'b']})))
-        return PhylomeDBOrthologMapper(map_to_organism=2, map_from_organism=1,
-                                       gene_id_type='UniProtKB AC/ID')
+        monkeypatch.setattr(
+            PhylomeDBOrthologMapper,
+            'get_legal_species',
+            staticmethod(lambda: pl.DataFrame({'taxid': [1, 2], 'name': ['a', 'b']})),
+        )
+        return PhylomeDBOrthologMapper(map_to_organism=2, map_from_organism=1, gene_id_type='UniProtKB AC/ID')
 
     def test_get_orthologs_maps_and_filters_by_score(self, cache_dir, monkeypatch):
         # from-genes (Ufrom*) and the target orthologs (Uto*) share one id_conversion table.
-        self._write_id_conversion(cache_dir, [
-            ('Ufrom1', 'Pf1'), ('Ufrom2', 'Pf2'), ('Uto1', 'Pt1'), ('Uto2', 'Pt2')])
+        self._write_id_conversion(cache_dir, [('Ufrom1', 'Pf1'), ('Ufrom2', 'Pf2'), ('Uto1', 'Pt1'), ('Uto2', 'Pt2')])
         self._write_taxon_map(cache_dir, [('Pf1', 'Pt1', 0.9), ('Pf2', 'Pt2', 0.3)])
         mapper = self._offline_mapper(monkeypatch)
-        monkeypatch.setattr(mapper, 'translate_ids',
-                            lambda ids: (['geneA', 'geneB'], ['Ufrom1', 'Ufrom2']))
+        monkeypatch.setattr(mapper, 'translate_ids', lambda ids: (['geneA', 'geneB'], ['Ufrom1', 'Ufrom2']))
 
         with pytest.warns(UserWarning, match='only 1 out of 2'):
             one2one, one2many = mapper.get_orthologs(
-                ('geneA', 'geneB'), non_unique_mode='first',
-                consistency_score_threshold=0.5, filter_consistency_score=True)
+                ('geneA', 'geneB'),
+                non_unique_mode='first',
+                consistency_score_threshold=0.5,
+                filter_consistency_score=True,
+            )
 
         # geneA survives (CS 0.9 >= 0.5); geneB is dropped (CS 0.3 < 0.5). Results are keyed by the
         # original (pre-translation) gene IDs.
@@ -2645,18 +3007,21 @@ class TestPhylomeDBOrthologMapperOffline:
         #   gB: Ufrom2 has no id_conversion row (not in map_fwd)     : skipped
         #   gC: Ufrom3 -> Pf3, but Pf3 is not in the taxon map       : skipped
         #   gD: Ufrom4 -> Pf4 -> (taxon) Ptx, Ptx has no reverse ID  : skipped
-        self._write_id_conversion(cache_dir, [
-            ('Ufrom1', 'Pf1'), ('Ufrom3', 'Pf3'), ('Ufrom4', 'Pf4'), ('Uto1', 'Pt1')])
+        self._write_id_conversion(cache_dir, [('Ufrom1', 'Pf1'), ('Ufrom3', 'Pf3'), ('Ufrom4', 'Pf4'), ('Uto1', 'Pt1')])
         self._write_taxon_map(cache_dir, [('Pf1', 'Pt1', 0.9), ('Pf4', 'Ptx', 0.9)])
         mapper = self._offline_mapper(monkeypatch)
-        monkeypatch.setattr(mapper, 'translate_ids', lambda ids: (
-            ['gA', 'gB', 'gC', 'gD'], ['Ufrom1', 'Ufrom2', 'Ufrom3', 'Ufrom4']))
+        monkeypatch.setattr(
+            mapper, 'translate_ids', lambda ids: (['gA', 'gB', 'gC', 'gD'], ['Ufrom1', 'Ufrom2', 'Ufrom3', 'Ufrom4'])
+        )
 
         with warnings.catch_warnings():
             warnings.simplefilter('ignore')
             one2one, one2many = mapper.get_orthologs(
-                ('gA', 'gB', 'gC', 'gD'), non_unique_mode='first',
-                consistency_score_threshold=0.0, filter_consistency_score=True)
+                ('gA', 'gB', 'gC', 'gD'),
+                non_unique_mode='first',
+                consistency_score_threshold=0.0,
+                filter_consistency_score=True,
+            )
 
         assert one2one.mapping_dict == {'gA': 'Uto1'}
         assert set(one2many.mapping_dict.keys()) == {'gA'}
@@ -2670,21 +3035,21 @@ class TestPhylomeDBOrthologMapperOffline:
         with warnings.catch_warnings(record=True) as caught:
             warnings.simplefilter('always')
             one2one, _ = mapper.get_orthologs(
-                ('geneA',), non_unique_mode='first',
-                consistency_score_threshold=0.5, filter_consistency_score=True)
+                ('geneA',), non_unique_mode='first', consistency_score_threshold=0.5, filter_consistency_score=True
+            )
 
         assert one2one.mapping_dict == {'geneA': 'Uto1'}
         assert not [w for w in caught if 'Ortholog mapping found for only' in str(w.message)]
 
 
 class TestOrthoInspectorOrthologMapper:
-
     # Define a fixture to create an instance of OrthoInspectorOrthologMapper for testing
     @pytest.fixture
     def ortholog_mapper(self):
         # Supply legal species and a valid database for testing
-        return OrthoInspectorOrthologMapper(map_to_organism='organism1', map_from_organism='organism2',
-                                            gene_id_type='gene_type')
+        return OrthoInspectorOrthologMapper(
+            map_to_organism='organism1', map_from_organism='organism2', gene_id_type='gene_type'
+        )
 
     # Test the constructor of OrthoInspectorOrthologMapper
     def test_constructor(self, ortholog_mapper):
@@ -2734,8 +3099,9 @@ class TestOrthoInspectorOrthologMapper:
         db_organisms = ortholog_mapper.get_database_organisms()
         assert isinstance(db_organisms, dict)
         assert len(db_organisms) >= 11  # the current number of OrthoInspector databases
-        assert abs(len(list(db_organisms.values())) - len(
-            set(db_organisms.values()))) <= 2  # check that all databases are unique, with 2 allowed exceptions due to the newly-added databases
+        assert (
+            abs(len(list(db_organisms.values())) - len(set(db_organisms.values()))) <= 2
+        )  # check that all databases are unique, with 2 allowed exceptions due to the newly-added databases
 
     # NOTE ON DB-VERSION-DRIFT ROBUSTNESS: this test used to assert a frozen exact key order and
     # exact 'first'-mode accessions (the same brittle pattern that broke
@@ -2743,13 +3109,13 @@ class TestOrthoInspectorOrthologMapper:
     # change which accession is picked as "first"/"last"/"random" even though the mapper's own
     # logic hasn't changed, so we check structural invariants instead.
     @pytest.mark.skipif(not ORTHOINSPECTOR_AVAILABLE, reason='OrthoInspector API is not available at the moment')
-    @pytest.mark.parametrize('database,non_unique_mode', [
-        ('auto', 'first'),
-        ('Eukaryota2016', 'last'),
-        ('Eukaryota2016', 'random')])
+    @pytest.mark.parametrize(
+        'database,non_unique_mode', [('auto', 'first'), ('Eukaryota2016', 'last'), ('Eukaryota2016', 'random')]
+    )
     def test_get_orthologs(self, database, non_unique_mode):
-        mapper = OrthoInspectorOrthologMapper(map_to_organism=6238, map_from_organism=6239,
-                                              gene_id_type='UniProtKB AC/ID')
+        mapper = OrthoInspectorOrthologMapper(
+            map_to_organism=6238, map_from_organism=6239, gene_id_type='UniProtKB AC/ID'
+        )
         ids = ('G5EDF7', 'P34544')
         ortholog_one2one, ortholog_one2many = mapper.get_orthologs(ids, non_unique_mode, database)
 
@@ -2774,7 +3140,7 @@ class TestOrthoInspectorOrthologMapper:
             # whichever non_unique_mode/database was requested, the chosen value must always be
             # one of the raw candidates reported for that gene.
             assert target in ortholog_one2many[gene]
-            assert id_pattern.match(target), f"unexpected ortholog ID format: {target}"
+            assert id_pattern.match(target), f'unexpected ortholog ID format: {target}'
 
     def test_retry_policy_does_not_retry_read_timeouts(self):
         # Locks in the second half of the fix: a stalled read must fail fast (so get_orthologs can
@@ -2803,17 +3169,23 @@ class TestOrthoInspectorOrthologMapper:
     # A stalled database surfaces as a ReadTimeout (no retries) or, once wrapped by requests through
     # the retry machinery, a ConnectionError; both subclass RequestException. Test the fallback for
     # each so the guard matches whatever the real stack raises.
-    @pytest.mark.parametrize('stall_exception', [
-        requests.exceptions.ReadTimeout("stalled"),
-        requests.exceptions.ConnectionError("Max retries exceeded (Caused by ReadTimeoutError)")])
+    @pytest.mark.parametrize(
+        'stall_exception',
+        [
+            requests.exceptions.ReadTimeout('stalled'),
+            requests.exceptions.ConnectionError('Max retries exceeded (Caused by ReadTimeoutError)'),
+        ],
+    )
     def test_get_orthologs_times_out_and_falls_back_to_next_database(self, monkeypatch, stall_exception):
         # 'auto' tries the largest database first; if that database stalls (a real-world OrthoInspector
         # failure mode), the request must time out so the existing fallback can move on to the next
         # database. Without a timeout the request hangs forever.
-        mapper = OrthoInspectorOrthologMapper(map_to_organism=2, map_from_organism=1,
-                                              gene_id_type='UniProtKB AC/ID')
-        monkeypatch.setattr(OrthoInspectorOrthologMapper, 'get_database_organisms',
-                            staticmethod(lambda session=None: {'BigDB': {1, 2, 3, 4, 5}, 'SmallDB': {1, 2}}))
+        mapper = OrthoInspectorOrthologMapper(map_to_organism=2, map_from_organism=1, gene_id_type='UniProtKB AC/ID')
+        monkeypatch.setattr(
+            OrthoInspectorOrthologMapper,
+            'get_database_organisms',
+            staticmethod(lambda session=None: {'BigDB': {1, 2, 3, 4, 5}, 'SmallDB': {1, 2}}),
+        )
         monkeypatch.setattr(mapper, 'translate_ids', lambda ids, session=None: (['g1'], ['g1']))
         monkeypatch.setattr(io, 'load_cached_file', lambda *a, **k: None)
         monkeypatch.setattr(io, 'cache_file', lambda *a, **k: None)
@@ -2827,8 +3199,9 @@ class TestOrthoInspectorOrthologMapper:
                 raise stall_exception
             resp = MagicMock()
             resp.raise_for_status.return_value = None
-            resp.json.return_value = {'data': [{'type': 'One-to-One', 'species': 2,
-                                                'inparalogs': ['g1'], 'orthologs': ['o1']}]}
+            resp.json.return_value = {
+                'data': [{'type': 'One-to-One', 'species': 2, 'inparalogs': ['g1'], 'orthologs': ['o1']}]
+            }
             return resp
 
         fake_session = MagicMock()
@@ -2838,9 +3211,10 @@ class TestOrthoInspectorOrthologMapper:
         one2one, one2many = mapper.get_orthologs(('g1',), 'first', 'auto')
 
         # every request carried a timeout (otherwise BigDB would hang instead of raising an error)
-        assert calls, "no requests were made"
-        assert all(kwargs.get('timeout') == OrthoInspectorOrthologMapper.REQUEST_TIMEOUT for _, kwargs in calls), \
-            "OrthoInspector ortholog requests must set a timeout"
+        assert calls, 'no requests were made'
+        assert all(kwargs.get('timeout') == OrthoInspectorOrthologMapper.REQUEST_TIMEOUT for _, kwargs in calls), (
+            'OrthoInspector ortholog requests must set a timeout'
+        )
         # the largest DB stalled, so we fell back to the next one and still got a result
         assert any('BigDB' in url for url, _ in calls)
         assert any('SmallDB' in url for url, _ in calls)
@@ -2858,13 +3232,14 @@ class TestOrthoInspectorOrthologMapper:
         # staller, we must skip it entirely (never issue the request) and use the next database --
         # otherwise every 'auto' mapping wastes a full read timeout on a dead endpoint. This is
         # result-preserving because the stalling database never returns anything anyway.
-        mapper = OrthoInspectorOrthologMapper(map_to_organism=2, map_from_organism=1,
-                                              gene_id_type='UniProtKB AC/ID')
+        mapper = OrthoInspectorOrthologMapper(map_to_organism=2, map_from_organism=1, gene_id_type='UniProtKB AC/ID')
         # Eukaryota2023 is the LARGEST valid database and contains both organisms -- current code
         # would try it first.
-        monkeypatch.setattr(OrthoInspectorOrthologMapper, 'get_database_organisms',
-                            staticmethod(lambda session=None: {'Eukaryota2023': {1, 2, 3, 4, 5, 6},
-                                                               'GoodDB': {1, 2}}))
+        monkeypatch.setattr(
+            OrthoInspectorOrthologMapper,
+            'get_database_organisms',
+            staticmethod(lambda session=None: {'Eukaryota2023': {1, 2, 3, 4, 5, 6}, 'GoodDB': {1, 2}}),
+        )
         monkeypatch.setattr(mapper, 'translate_ids', lambda ids, session=None: (['g1'], ['g1']))
         monkeypatch.setattr(io, 'load_cached_file', lambda *a, **k: None)
         monkeypatch.setattr(io, 'cache_file', lambda *a, **k: None)
@@ -2876,8 +3251,9 @@ class TestOrthoInspectorOrthologMapper:
             calls.append(url)
             resp = MagicMock()
             resp.raise_for_status.return_value = None
-            resp.json.return_value = {'data': [{'type': 'One-to-One', 'species': 2,
-                                                'inparalogs': ['g1'], 'orthologs': ['o1']}]}
+            resp.json.return_value = {
+                'data': [{'type': 'One-to-One', 'species': 2, 'inparalogs': ['g1'], 'orthologs': ['o1']}]
+            }
             return resp
 
         fake_session = MagicMock()
@@ -2886,9 +3262,10 @@ class TestOrthoInspectorOrthologMapper:
 
         one2one, one2many = mapper.get_orthologs(('g1',), 'first', 'auto')
 
-        assert calls, "no ortholog requests were made"
-        assert not any('Eukaryota2023' in url for url in calls), \
-            "the known-stalling database must never be requested in auto mode"
+        assert calls, 'no ortholog requests were made'
+        assert not any('Eukaryota2023' in url for url in calls), (
+            'the known-stalling database must never be requested in auto mode'
+        )
         assert any('GoodDB' in url for url in calls)
         assert one2one.mapping_dict == {'g1': 'o1'}
 
@@ -2898,17 +3275,14 @@ class TestOrthoInspectorOrthologMapper:
         api = OrthoInspectorOrthologMapper.API_URL
         with requests_mock.Mocker() as m:
             m.get(f'{api}/databases', json={'data': ['DBone', 'DBtwo', 'DBthree']})
-            m.get(f'{api}/DBone/species',
-                  json={'meta': {'status': 'success'}, 'data': [{'id': 1}, {'id': 2}, {'id': 3}]})
-            m.get(f'{api}/DBtwo/species',
-                  json={'meta': {'status': 'success'}, 'data': [{'id': 2}, {'id': 4}]})
-            m.get(f'{api}/DBthree/species',
-                  json={'meta': {'status': 'success'}, 'data': [{'id': 5}]})
+            m.get(
+                f'{api}/DBone/species', json={'meta': {'status': 'success'}, 'data': [{'id': 1}, {'id': 2}, {'id': 3}]}
+            )
+            m.get(f'{api}/DBtwo/species', json={'meta': {'status': 'success'}, 'data': [{'id': 2}, {'id': 4}]})
+            m.get(f'{api}/DBthree/species', json={'meta': {'status': 'success'}, 'data': [{'id': 5}]})
             result = OrthoInspectorOrthologMapper.get_database_organisms()
 
-        assert result == {'DBone': frozenset({1, 2, 3}),
-                          'DBtwo': frozenset({2, 4}),
-                          'DBthree': frozenset({5})}
+        assert result == {'DBone': frozenset({1, 2, 3}), 'DBtwo': frozenset({2, 4}), 'DBthree': frozenset({5})}
 
     def test_get_database_organisms_degrades_when_one_database_reports_failure(self):
         # A degraded OrthoInspector database (meta.status != 'success') must not crash the whole
@@ -2917,10 +3291,8 @@ class TestOrthoInspectorOrthologMapper:
         api = OrthoInspectorOrthologMapper.API_URL
         with requests_mock.Mocker() as m:
             m.get(f'{api}/databases', json={'data': ['GoodDB', 'DegradedDB']})
-            m.get(f'{api}/GoodDB/species',
-                  json={'meta': {'status': 'success'}, 'data': [{'id': 1}, {'id': 2}]})
-            m.get(f'{api}/DegradedDB/species',
-                  json={'meta': {'status': 'error'}, 'data': []})
+            m.get(f'{api}/GoodDB/species', json={'meta': {'status': 'success'}, 'data': [{'id': 1}, {'id': 2}]})
+            m.get(f'{api}/DegradedDB/species', json={'meta': {'status': 'error'}, 'data': []})
             with pytest.warns(UserWarning, match='DegradedDB'):
                 result = OrthoInspectorOrthologMapper.get_database_organisms()
 
@@ -2951,11 +3323,13 @@ class TestOrthoInspectorOrthologMapper:
     def test_explicitly_requested_stalling_database_is_not_skipped(self, monkeypatch):
         # The skip applies to 'auto' selection only. If a user explicitly asks for a database that
         # happens to be on the stall-list, we still honor the request (and let it fail on its own).
-        mapper = OrthoInspectorOrthologMapper(map_to_organism=2, map_from_organism=1,
-                                              gene_id_type='UniProtKB AC/ID')
+        mapper = OrthoInspectorOrthologMapper(map_to_organism=2, map_from_organism=1, gene_id_type='UniProtKB AC/ID')
         stalling_db = next(iter(OrthoInspectorOrthologMapper.KNOWN_STALLING_DATABASES))
-        monkeypatch.setattr(OrthoInspectorOrthologMapper, 'get_databases',
-                            staticmethod(lambda session=None: frozenset({stalling_db, 'GoodDB'})))
+        monkeypatch.setattr(
+            OrthoInspectorOrthologMapper,
+            'get_databases',
+            staticmethod(lambda session=None: frozenset({stalling_db, 'GoodDB'})),
+        )
         monkeypatch.setattr(mapper, 'translate_ids', lambda ids, session=None: (['g1'], ['g1']))
         monkeypatch.setattr(io, 'load_cached_file', lambda *a, **k: None)
         monkeypatch.setattr(io, 'cache_file', lambda *a, **k: None)
@@ -2967,8 +3341,9 @@ class TestOrthoInspectorOrthologMapper:
             calls.append(url)
             resp = MagicMock()
             resp.raise_for_status.return_value = None
-            resp.json.return_value = {'data': [{'type': 'One-to-One', 'species': 2,
-                                                'inparalogs': ['g1'], 'orthologs': ['o1']}]}
+            resp.json.return_value = {
+                'data': [{'type': 'One-to-One', 'species': 2, 'inparalogs': ['g1'], 'orthologs': ['o1']}]
+            }
             return resp
 
         fake_session = MagicMock()
@@ -2977,19 +3352,20 @@ class TestOrthoInspectorOrthologMapper:
 
         mapper.get_orthologs(('g1',), 'first', stalling_db)
 
-        assert any(stalling_db in url and '/orthologs/' in url for url in calls), \
+        assert any(stalling_db in url and '/orthologs/' in url for url in calls), (
             "an explicitly-requested database must still be queried even if it's on the stall-list"
+        )
 
 
 @pytest.mark.skipif(not PANTHERDB_AVAILABLE, reason='PantherDB not available')
 class TestPantherOrthologMapper:
-
     # Define a fixture to create an instance of PantherOrthologMapper for testing
     @pytest.fixture
     def ortholog_mapper(self):
         # Supply valid parameters for the class constructor
-        return PantherOrthologMapper(map_to_organism='organism1', map_from_organism='organism2',
-                                     gene_id_type='gene_type')
+        return PantherOrthologMapper(
+            map_to_organism='organism1', map_from_organism='organism2', gene_id_type='gene_type'
+        )
 
     # Test the constructor of PantherOrthologMapper
     def test_constructor(self, ortholog_mapper):
@@ -3029,14 +3405,14 @@ class TestPantherOrthologMapper:
     # endpoint currently 404s / is unreachable here, so PANTHERDB_AVAILABLE is False and this
     # class is skipped) -- this hardening is therefore based on the code + test structure alone,
     # matching the same treatment already applied and verified live for Ensembl and PhylomeDB.
-    @pytest.mark.parametrize('filter_least_diverged,non_unique_mode', [
-        (True, 'first'),
-        (False, 'last'),
-        (True, 'random')])
+    @pytest.mark.parametrize(
+        'filter_least_diverged,non_unique_mode', [(True, 'first'), (False, 'last'), (True, 'random')]
+    )
     def test_get_orthologs(self, filter_least_diverged, non_unique_mode):
         ids = ('G5EDF7', 'P34544')
-        ortholog_mapper = PantherOrthologMapper(map_to_organism=9606, map_from_organism=6239,
-                                                gene_id_type='UniProtKB AC/ID')
+        ortholog_mapper = PantherOrthologMapper(
+            map_to_organism=9606, map_from_organism=6239, gene_id_type='UniProtKB AC/ID'
+        )
 
         ortholog_one2one, ortholog_one2many = ortholog_mapper.get_orthologs(ids, non_unique_mode, filter_least_diverged)
 
@@ -3061,14 +3437,15 @@ class TestPantherOrthologMapper:
             # whichever non_unique_mode/filter was requested, the chosen value must always be
             # one of the raw candidates reported for that gene.
             assert target in ortholog_one2many[gene]
-            assert id_pattern.match(target), f"unexpected ortholog ID format: {target}"
+            assert id_pattern.match(target), f'unexpected ortholog ID format: {target}'
 
     # Same drift-robustness treatment as test_get_orthologs above -- PantherDB's paralog
     # classification for these genes can change over time even though the mapper works fine.
     def test_get_paralogs(self):
         ids = ('G5EDF7', 'P34707')
-        ortholog_mapper = PantherOrthologMapper(map_to_organism=6239, map_from_organism=6239,
-                                                gene_id_type='UniProtKB AC/ID')
+        ortholog_mapper = PantherOrthologMapper(
+            map_to_organism=6239, map_from_organism=6239, gene_id_type='UniProtKB AC/ID'
+        )
 
         paralogs = ortholog_mapper.get_paralogs(ids)
 
@@ -3081,7 +3458,7 @@ class TestPantherOrthologMapper:
         id_pattern = re.compile(r'^[A-Z0-9]{6,10}$')  # plausible UniProt-style accession
         for key, values in paralogs.mapping_dict.items():
             assert len(values) > 0
-            assert all(id_pattern.match(v) for v in values), f"unexpected paralog ID format(s): {values}"
+            assert all(id_pattern.match(v) for v in values), f'unexpected paralog ID format(s): {values}'
 
 
 class _PantherIdentityTranslator:
@@ -3120,8 +3497,7 @@ def test_panther_get_orthologs_degrades_gracefully_on_empty_response(monkeypatch
     fake_session = _panther_fake_session(_empty_body_error)
     monkeypatch.setattr(io, 'get_session', lambda retries: fake_session)
 
-    mapper = PantherOrthologMapper(map_to_organism=9606, map_from_organism=6239,
-                                   gene_id_type='UniProtKB AC/ID')
+    mapper = PantherOrthologMapper(map_to_organism=9606, map_from_organism=6239, gene_id_type='UniProtKB AC/ID')
     one2one, one2many = mapper.get_orthologs(('G5EDF7', 'P34544'), 'first', True)
 
     assert isinstance(one2one, OrthologDict) and isinstance(one2many, OrthologDict)
@@ -3138,8 +3514,9 @@ def test_panther_get_orthologs_retries_empty_response_then_succeeds(monkeypatch)
     monkeypatch.setattr(io, 'GeneIDTranslator', _PantherIdentityTranslator)
     monkeypatch.setattr(io.time, 'sleep', lambda *args, **kwargs: None)
 
-    good_payload = {'search': {'mapping': {'mapped': [
-        {'id': 'x', 'target_gene': 'HUMAN|UniProtKB=P12345', 'ortholog': 'LDO'}]}}}
+    good_payload = {
+        'search': {'mapping': {'mapped': [{'id': 'x', 'target_gene': 'HUMAN|UniProtKB=P12345', 'ortholog': 'LDO'}]}}
+    }
     calls = {'n': 0}
 
     def empty_then_good():
@@ -3151,8 +3528,7 @@ def test_panther_get_orthologs_retries_empty_response_then_succeeds(monkeypatch)
     fake_session = _panther_fake_session(empty_then_good)
     monkeypatch.setattr(io, 'get_session', lambda retries: fake_session)
 
-    mapper = PantherOrthologMapper(map_to_organism=9606, map_from_organism=6239,
-                                   gene_id_type='UniProtKB AC/ID')
+    mapper = PantherOrthologMapper(map_to_organism=9606, map_from_organism=6239, gene_id_type='UniProtKB AC/ID')
     one2one, one2many = mapper.get_orthologs(('P34544',), 'first', True)
 
     assert one2one.mapping_dict == {'P34544': 'P12345'}
@@ -3168,8 +3544,7 @@ def test_panther_get_paralogs_degrades_gracefully_on_empty_response(monkeypatch)
     fake_session = _panther_fake_session(_empty_body_error)
     monkeypatch.setattr(io, 'get_session', lambda retries: fake_session)
 
-    mapper = PantherOrthologMapper(map_to_organism=6239, map_from_organism=6239,
-                                   gene_id_type='UniProtKB AC/ID')
+    mapper = PantherOrthologMapper(map_to_organism=6239, map_from_organism=6239, gene_id_type='UniProtKB AC/ID')
     paralogs = mapper.get_paralogs(('G5EDF7', 'P34707'))
 
     assert isinstance(paralogs, OrthologDict)
@@ -3178,20 +3553,18 @@ def test_panther_get_paralogs_degrades_gracefully_on_empty_response(monkeypatch)
 
 
 class TestEnsemblOrthologMapper:
-
     # Define a fixture to create an instance of EnsemblOrthologMapper for testing
     @pytest.fixture
     def ortholog_mapper(self):
         # Supply valid parameters for the class constructor
-        return EnsemblOrthologMapper(map_to_organism='organism1', map_from_organism='organism2',
-                                     gene_id_type='gene_type')
+        return EnsemblOrthologMapper(
+            map_to_organism='organism1', map_from_organism='organism2', gene_id_type='gene_type'
+        )
 
     # Test the constructor of EnsemblOrthologMapper
     def test_constructor(self, ortholog_mapper):
         assert ortholog_mapper.map_to_organism == 'organism1'  # Replace with a valid organism
-        assert (
-            ortholog_mapper.map_from_organism == "organism2"
-        )  # Replace with a valid organism
+        assert ortholog_mapper.map_from_organism == 'organism2'  # Replace with a valid organism
         assert ortholog_mapper.gene_id_type == 'gene_type'  # Replace with a valid gene ID type
 
     # Test the translate_ids method
@@ -3226,8 +3599,9 @@ class TestEnsemblOrthologMapper:
     @pytest.mark.skipif(not ENSEMBL_AVAILABLE, reason='Ensembl API is not available at the moment')
     def test_get_paralogs(self):
         ids = ('G5EDF7', 'P34707')
-        ortholog_mapper = EnsemblOrthologMapper(map_to_organism=6239, map_from_organism=6239,
-                                                gene_id_type='UniProtKB AC/ID')
+        ortholog_mapper = EnsemblOrthologMapper(
+            map_to_organism=6239, map_from_organism=6239, gene_id_type='UniProtKB AC/ID'
+        )
 
         best_match = ortholog_mapper.get_paralogs(ids, filter_percent_identity=True)
         all_matches = ortholog_mapper.get_paralogs(ids, filter_percent_identity=False)
@@ -3253,7 +3627,7 @@ class TestEnsemblOrthologMapper:
             # paralog Ensembl currently considers closest.
             assert key in all_matches
             assert value in all_matches[key]
-            assert id_pattern.match(value), f"unexpected paralog ID format: {value}"
+            assert id_pattern.match(value), f'unexpected paralog ID format: {value}'
 
         for key, values in all_matches.mapping_dict.items():
             assert len(values) > 0
@@ -3274,8 +3648,9 @@ class TestEnsemblOrthologMapper:
         # Mapping within the same collection (elegans -> fly) is still fully functional, so we
         # target that pair to keep this a genuine, currently-working integration test of the
         # mapper's logic, while still tolerating ordinary ID-level churn via the invariants below.
-        ortholog_mapper = EnsemblOrthologMapper(map_to_organism=7227, map_from_organism=6239,
-                                                gene_id_type='UniProtKB AC/ID')
+        ortholog_mapper = EnsemblOrthologMapper(
+            map_to_organism=7227, map_from_organism=6239, gene_id_type='UniProtKB AC/ID'
+        )
 
         ortholog_one2one, ortholog_one2many = ortholog_mapper.get_orthologs(ids, non_unique_mode)
 
@@ -3320,21 +3695,27 @@ class TestEnsemblOrthologMapper:
 
         monkeypatch.setattr(io, 'GeneIDTranslator', MockGeneIDTranslator)
 
-        fake_response = [{'data': [{
-            'id': 'SRC1',
-            'homologies': [
-                {'target': {'id': 'TARGET_A'}, 'source': {'perc_id': 90.0}},
-                {'target': {'id': 'TARGET_B'}, 'source': {'perc_id': 90.0}},
-                {'target': {'id': 'TARGET_C'}, 'source': {'perc_id': 90.0}},
-            ]}]}]
+        fake_response = [
+            {
+                'data': [
+                    {
+                        'id': 'SRC1',
+                        'homologies': [
+                            {'target': {'id': 'TARGET_A'}, 'source': {'perc_id': 90.0}},
+                            {'target': {'id': 'TARGET_B'}, 'source': {'perc_id': 90.0}},
+                            {'target': {'id': 'TARGET_C'}, 'source': {'perc_id': 90.0}},
+                        ],
+                    }
+                ]
+            }
+        ]
         monkeypatch.setattr(io.EnsemblRestClient, 'run', lambda self: fake_response)
         # get_orthologs() calls get_species_name() -> map_taxon_id(), which is a live UniProt
         # request. Stub it so this stays a genuinely offline unit test (the real species name is
         # irrelevant here: EnsemblRestClient.run is already mocked to return fake_response).
         monkeypatch.setattr(io.EnsemblOrthologMapper, 'get_species_name', lambda self: 'caenorhabditis_elegans')
 
-        mapper = EnsemblOrthologMapper(map_to_organism=9606, map_from_organism=6239,
-                                       gene_id_type='UniProtKB AC/ID')
+        mapper = EnsemblOrthologMapper(map_to_organism=9606, map_from_organism=6239, gene_id_type='UniProtKB AC/ID')
 
         one2one_first, one2many = mapper.get_orthologs(('gene1',), 'first')
         one2one_last, _ = mapper.get_orthologs(('gene1',), 'last')
@@ -3367,8 +3748,9 @@ class TestEnsemblOrthologMapper:
         monkeypatch.setattr(io.EnsemblOrthologMapper, 'get_species_name', lambda self: 'caenorhabditis_elegans')
 
         run_calls = []
-        fake_response = [{'data': [{'id': 'gene1', 'homologies': [
-            {'target': {'id': 'TARGET_A'}, 'source': {'perc_id': 90.0}}]}]}]
+        fake_response = [
+            {'data': [{'id': 'gene1', 'homologies': [{'target': {'id': 'TARGET_A'}, 'source': {'perc_id': 90.0}}]}]}
+        ]
 
         def counting_run(self):
             run_calls.append(1)
@@ -3376,8 +3758,7 @@ class TestEnsemblOrthologMapper:
 
         monkeypatch.setattr(io.EnsemblRestClient, 'run', counting_run)
 
-        mapper = EnsemblOrthologMapper(map_to_organism=7227, map_from_organism=6239,
-                                       gene_id_type='UniProtKB AC/ID')
+        mapper = EnsemblOrthologMapper(map_to_organism=7227, map_from_organism=6239, gene_id_type='UniProtKB AC/ID')
 
         first_one2one, _ = mapper.get_orthologs(('gene1',), 'first')
         second_one2one, _ = mapper.get_orthologs(('gene1',), 'first')
@@ -3413,10 +3794,8 @@ class TestEnsemblOrthologMapper:
         # Ensembl echoes a version-suffixed ID ('REQ1.1') that differs from the requested 'REQ1'. Response
         # order matches the queued request order (asyncio.gather preserves order).
         fake_response = [
-            {'data': [{'id': 'REQ1.1', 'homologies': [
-                {'target': {'id': 'ORTH1'}, 'source': {'perc_id': 90.0}}]}]},
-            {'data': [{'id': 'REQ2.1', 'homologies': [
-                {'target': {'id': 'ORTH2'}, 'source': {'perc_id': 88.0}}]}]},
+            {'data': [{'id': 'REQ1.1', 'homologies': [{'target': {'id': 'ORTH1'}, 'source': {'perc_id': 90.0}}]}]},
+            {'data': [{'id': 'REQ2.1', 'homologies': [{'target': {'id': 'ORTH2'}, 'source': {'perc_id': 88.0}}]}]},
         ]
 
         def counting_run(self):
@@ -3425,8 +3804,7 @@ class TestEnsemblOrthologMapper:
 
         monkeypatch.setattr(io.EnsemblRestClient, 'run', counting_run)
 
-        mapper = EnsemblOrthologMapper(map_to_organism=7227, map_from_organism=6239,
-                                       gene_id_type='UniProtKB AC/ID')
+        mapper = EnsemblOrthologMapper(map_to_organism=7227, map_from_organism=6239, gene_id_type='UniProtKB AC/ID')
 
         first_one2one, _ = mapper.get_orthologs(('REQ1', 'REQ2'), 'first')
         second_one2one, _ = mapper.get_orthologs(('REQ1', 'REQ2'), 'first')
@@ -3443,30 +3821,35 @@ class TestRunRScript:
     def test_non_zero_return_code(self, mock_run_subprocess):
         # Set up the mock to return a non-zero return code
         def conditional_return(*args, **kwargs):
-            if args[0][1] == "--help":
+            if args[0][1] == '--help':
                 return 0, ''
             else:
-                return 1, ["warning1", "warning2", "Error: Something went wrong", "traceback"]
+                return 1, ['warning1', 'warning2', 'Error: Something went wrong', 'traceback']
 
         # Set the side_effect to the conditional function
         mock_run_subprocess.side_effect = conditional_return
 
         # Define the script path and R installation folder
-        script_path = "tests/test_files/test_r_script.R"
-        r_installation_folder = "auto"
+        script_path = 'tests/test_files/test_r_script.R'
+        r_installation_folder = 'auto'
 
         # Execute the function with the mock in place
         with pytest.raises(ChildProcessError) as context:
             run_r_script(script_path, r_installation_folder)
 
         # Check if the expected error message is in the exception message
-        expected_error_message = "R script failed to execute: 'Error: Something went wrongtraceback'. See full error report below."
+        expected_error_message = (
+            "R script failed to execute: 'Error: Something went wrongtraceback'. See full error report below."
+        )
         assert expected_error_message in str(context.value)
 
-    @pytest.mark.parametrize('r_path,expected', [
-        ('auto', ['Rscript', "tests/test_files/test_r_script.R"]),
-        ('D:/Program Files/R', ["D:/Program Files/R/bin/Rscript", "tests/test_files/test_r_script.R"])
-    ])
+    @pytest.mark.parametrize(
+        'r_path,expected',
+        [
+            ('auto', ['Rscript', 'tests/test_files/test_r_script.R']),
+            ('D:/Program Files/R', ['D:/Program Files/R/bin/Rscript', 'tests/test_files/test_r_script.R']),
+        ],
+    )
     def test_run_r_script(self, monkeypatch, r_path, expected):
         script_path = 'tests/test_files/test_r_script.R'
 
@@ -3495,15 +3878,20 @@ class TestRunRScript:
             run_r_script('tests/test_files/test_r_script.R')
 
 
-@pytest.mark.parametrize('genome_node,expected', [
-    # PantherDB normally returns a list of genome dicts...
-    ([{'long_name': 'Homo sapiens'}, {'long_name': 'Caenorhabditis elegans'}],
-     ('Caenorhabditis elegans', 'Homo sapiens')),
-    # ...but returns a single dict (not a list) when only one genome is present.
-    ({'long_name': 'Homo sapiens'}, ('Homo sapiens',)),
-    # entries without a long_name are skipped rather than raising.
-    ([{'long_name': 'Homo sapiens'}, {'name': 'no_long_name'}], ('Homo sapiens',)),
-])
+@pytest.mark.parametrize(
+    'genome_node,expected',
+    [
+        # PantherDB normally returns a list of genome dicts...
+        (
+            [{'long_name': 'Homo sapiens'}, {'long_name': 'Caenorhabditis elegans'}],
+            ('Caenorhabditis elegans', 'Homo sapiens'),
+        ),
+        # ...but returns a single dict (not a list) when only one genome is present.
+        ({'long_name': 'Homo sapiens'}, ('Homo sapiens',)),
+        # entries without a long_name are skipped rather than raising.
+        ([{'long_name': 'Homo sapiens'}, {'name': 'no_long_name'}], ('Homo sapiens',)),
+    ],
+)
 def test_get_legal_panther_taxons_handles_list_and_single(monkeypatch, genome_node, expected):
     payload = {'search': {'output': {'genomes': {'genome': genome_node}}}}
 
@@ -3528,14 +3916,17 @@ def test_get_legal_panther_taxons_handles_list_and_single(monkeypatch, genome_no
 # emptied the PhylomeDB organism dropdown silently. These tests pin the per-value filtering, and that
 # a well-formed species table can never again produce nothing.
 @pytest.mark.unit  # fully mocked; opt out of the module's default integration_net tier
-@pytest.mark.parametrize('names,expected', [
-    # sorted, one entry per species name
-    (['Homo sapiens', 'Caenorhabditis elegans'], ('Caenorhabditis elegans', 'Homo sapiens')),
-    # lowercase-initial entries (PhylomeDB lists e.g. unclassified/environmental samples) are dropped
-    (['Homo sapiens', 'uncultured bacterium', 'candidate division TM6'], ('Homo sapiens',)),
-    # duplicate names collapse to one
-    (['Homo sapiens', 'Homo sapiens', 'Mus musculus'], ('Homo sapiens', 'Mus musculus')),
-])
+@pytest.mark.parametrize(
+    'names,expected',
+    [
+        # sorted, one entry per species name
+        (['Homo sapiens', 'Caenorhabditis elegans'], ('Caenorhabditis elegans', 'Homo sapiens')),
+        # lowercase-initial entries (PhylomeDB lists e.g. unclassified/environmental samples) are dropped
+        (['Homo sapiens', 'uncultured bacterium', 'candidate division TM6'], ('Homo sapiens',)),
+        # duplicate names collapse to one
+        (['Homo sapiens', 'Homo sapiens', 'Mus musculus'], ('Homo sapiens', 'Mus musculus')),
+    ],
+)
 def test_get_legal_phylomedb_taxons_filters_per_name(monkeypatch, names, expected):
     species = pl.DataFrame({'taxid': list(range(len(names))), 'name': names})
     monkeypatch.setattr(io.PhylomeDBOrthologMapper, 'get_legal_species', staticmethod(lambda: species))
@@ -3562,8 +3953,9 @@ def test_get_legal_phylomedb_taxons_is_not_empty_for_a_realistic_species_table(m
         io.get_legal_phylomedb_taxons.cache_clear()
 
 
-@pytest.mark.skipif(not PHYLOMEDB_AVAILABLE,
-                    reason="No internet connection or FTP server is down. Skipping PhylomeDB tests.")
+@pytest.mark.skipif(
+    not PHYLOMEDB_AVAILABLE, reason='No internet connection or FTP server is down. Skipping PhylomeDB tests.'
+)
 def test_get_legal_phylomedb_taxons_live_is_populated():
     # The live counterpart of the tests above: catches a future change to PhylomeDB's species table
     # (or to its parsing) that empties the vocabulary again.
@@ -3601,9 +3993,11 @@ def test_get_legal_panther_taxons_passes_request_timeout(monkeypatch):
 @pytest.mark.unit  # fully mocked; opt out of the module's default integration_net tier
 def test_get_legal_gene_id_types_passes_request_timeout(monkeypatch):
     captured = {}
-    payload_text = ('{"groups": [{"groupName": "UniProt", "items": '
-                    '[{"displayName": "UniProtKB AC/ID", "name": "UniProtKB_AC-ID", '
-                    '"from": true, "to": false}]}]}')
+    payload_text = (
+        '{"groups": [{"groupName": "UniProt", "items": '
+        '[{"displayName": "UniProtKB AC/ID", "name": "UniProtKB_AC-ID", '
+        '"from": true, "to": false}]}]}'
+    )
 
     class _FakeResp:
         text = payload_text

@@ -9,6 +9,7 @@ with the ``packaging`` PyPI distribution used elsewhere in this suite -- see
 ``tests/test_packaging.py``), so the module under test is loaded directly from its file path,
 the same way ``test_packaging.py`` loads ``setup.py``.
 """
+
 import importlib.util
 import math
 import sys
@@ -43,6 +44,7 @@ def bench_equal():
 # time_call / Timing
 # ----------------------------------------------------------------------------------------
 
+
 class TestTimeCall:
     def test_returns_the_function_result(self, bench_equal):
         result, timing = bench_equal.time_call(lambda x, y: x + y, args=(2, 3), repeats=2, warmup=0)
@@ -50,8 +52,7 @@ class TestTimeCall:
         assert len(timing.times) == 2
 
     def test_passes_through_kwargs(self, bench_equal):
-        result, _ = bench_equal.time_call(lambda x, y=0: x + y, args=(2,), kwargs={'y': 10},
-                                           repeats=1, warmup=0)
+        result, _ = bench_equal.time_call(lambda x, y=0: x + y, args=(2,), kwargs={'y': 10}, repeats=1, warmup=0)
         assert result == 12
 
     def test_records_one_duration_per_repeat(self, bench_equal):
@@ -92,6 +93,7 @@ class TestTimeCall:
 # speedup
 # ----------------------------------------------------------------------------------------
 
+
 class TestSpeedup:
     def test_candidate_twice_as_fast(self, bench_equal):
         baseline = bench_equal.Timing((0.20,))
@@ -120,6 +122,7 @@ class TestSpeedup:
 # ----------------------------------------------------------------------------------------
 # assert_equal / equal -- plain Python values
 # ----------------------------------------------------------------------------------------
+
 
 class TestAssertEqualScalars:
     def test_equal_ints_pass(self, bench_equal):
@@ -183,6 +186,7 @@ class TestEqualWrapper:
 # assert_equal -- numpy arrays
 # ----------------------------------------------------------------------------------------
 
+
 class TestAssertEqualNumpy:
     def test_identical_arrays_pass(self, bench_equal):
         a = np.array([1.0, 2.0, 3.0])
@@ -211,8 +215,7 @@ class TestAssertEqualNumpy:
 
     def test_dtype_mismatch_fails(self, bench_equal):
         with pytest.raises(AssertionError):
-            bench_equal.assert_equal(np.array([1, 2, 3], dtype=np.int32),
-                                      np.array([1, 2, 3], dtype=np.int64))
+            bench_equal.assert_equal(np.array([1, 2, 3], dtype=np.int32), np.array([1, 2, 3], dtype=np.int64))
 
     def test_nan_in_same_position_is_equal(self, bench_equal):
         a = np.array([1.0, np.nan, 3.0])
@@ -234,6 +237,7 @@ class TestAssertEqualNumpy:
 # ----------------------------------------------------------------------------------------
 # assert_equal -- polars DataFrames / Series
 # ----------------------------------------------------------------------------------------
+
 
 class TestAssertEqualPolars:
     def test_identical_dataframes_pass(self, bench_equal):
@@ -287,6 +291,7 @@ class TestAssertEqualPolars:
 # compare() -- the timing + equality combinator
 # ----------------------------------------------------------------------------------------
 
+
 class TestCompare:
     def test_equal_implementations_report_speedup(self, bench_equal):
         def slow(n):
@@ -330,6 +335,7 @@ class TestCompare:
 # CLI: bench-spec loading and main()
 # ----------------------------------------------------------------------------------------
 
+
 class TestCli:
     def _write_spec(self, tmp_path, body: str) -> Path:
         spec_path = tmp_path / 'spec.py'
@@ -337,7 +343,9 @@ class TestCli:
         return spec_path
 
     def test_main_returns_zero_on_matching_implementations(self, bench_equal, tmp_path, capsys):
-        spec = self._write_spec(tmp_path, """
+        spec = self._write_spec(
+            tmp_path,
+            """
 def _baseline(n):
     return sum(range(n))
 
@@ -347,54 +355,67 @@ def _candidate(n):
 BASELINE = _baseline
 CANDIDATE = _candidate
 INPUTS = [(100,), (1000,)]
-""")
+""",
+        )
         exit_code = bench_equal.main([str(spec), '--repeats', '1', '--warmup', '0'])
         assert exit_code == 0
         out = capsys.readouterr().out
         assert '[ok]' in out
 
     def test_main_returns_nonzero_on_mismatch(self, bench_equal, tmp_path):
-        spec = self._write_spec(tmp_path, """
+        spec = self._write_spec(
+            tmp_path,
+            """
 BASELINE = lambda n: n
 CANDIDATE = lambda n: n + 1
 INPUTS = [(1,), (2,)]
-""")
+""",
+        )
         exit_code = bench_equal.main([str(spec), '--repeats', '1', '--warmup', '0'])
         assert exit_code == 2  # both inputs mismatch
 
     def test_main_supports_make_inputs_callable(self, bench_equal, tmp_path):
-        spec = self._write_spec(tmp_path, """
+        spec = self._write_spec(
+            tmp_path,
+            """
 BASELINE = lambda n: n * 2
 CANDIDATE = lambda n: n + n
 
 def make_inputs():
     return [(3,), (4,)]
-""")
+""",
+        )
         exit_code = bench_equal.main([str(spec), '--repeats', '1', '--warmup', '0'])
         assert exit_code == 0
 
     def test_main_supports_dict_style_inputs_with_kwargs(self, bench_equal, tmp_path):
-        spec = self._write_spec(tmp_path, """
+        spec = self._write_spec(
+            tmp_path,
+            """
 def _baseline(n, offset=0):
     return n + offset
 
 BASELINE = _baseline
 CANDIDATE = _baseline
 INPUTS = [{'args': (5,), 'kwargs': {'offset': 2}}]
-""")
+""",
+        )
         exit_code = bench_equal.main([str(spec), '--repeats', '1', '--warmup', '0'])
         assert exit_code == 0
 
     def test_main_defaults_to_single_no_arg_call_without_inputs(self, bench_equal, tmp_path):
-        spec = self._write_spec(tmp_path, """
+        spec = self._write_spec(
+            tmp_path,
+            """
 BASELINE = lambda: 42
 CANDIDATE = lambda: 42
-""")
+""",
+        )
         exit_code = bench_equal.main([str(spec), '--repeats', '1', '--warmup', '0'])
         assert exit_code == 0
 
     def test_main_reports_missing_baseline_or_candidate(self, bench_equal, tmp_path):
-        spec = self._write_spec(tmp_path, "CANDIDATE = lambda: 1\n")
+        spec = self._write_spec(tmp_path, 'CANDIDATE = lambda: 1\n')
         exit_code = bench_equal.main([str(spec), '--repeats', '1'])
         assert exit_code != 0
 
@@ -406,12 +427,14 @@ CANDIDATE = lambda: 42
         assert 'usage' in out.lower()
 
     def test_rtol_atol_cli_flags_are_forwarded(self, bench_equal, tmp_path):
-        spec = self._write_spec(tmp_path, """
+        spec = self._write_spec(
+            tmp_path,
+            """
 BASELINE = lambda: 1.0
 CANDIDATE = lambda: 1.0 + 1e-10
-""")
+""",
+        )
         # fails without tolerance flags
         assert bench_equal.main([str(spec), '--repeats', '1', '--warmup', '0']) != 0
         # passes with tolerance flags
-        assert bench_equal.main([str(spec), '--repeats', '1', '--warmup', '0',
-                                  '--rtol', '1e-6', '--atol', '1e-6']) == 0
+        assert bench_equal.main([str(spec), '--repeats', '1', '--warmup', '0', '--rtol', '1e-6', '--atol', '1e-6']) == 0

@@ -14,6 +14,7 @@ from rnalysis.gui.gui import *
 LEFT_CLICK = QtCore.Qt.MouseButton.LeftButton
 RIGHT_CLICK = QtCore.Qt.MouseButton.RightButton
 
+
 @pytest.fixture(autouse=True)
 def pytestqt_graceful_shutdown():
     yield
@@ -28,7 +29,9 @@ def pytestqt_graceful_shutdown():
 
 @pytest.fixture(autouse=True)
 def mainwindow_setup(monkeypatch):
-    monkeypatch.setattr(QtWidgets.QMessageBox, 'question', lambda *args, **kwargs: QtWidgets.QMessageBox.StandardButton.Yes)
+    monkeypatch.setattr(
+        QtWidgets.QMessageBox, 'question', lambda *args, **kwargs: QtWidgets.QMessageBox.StandardButton.Yes
+    )
     monkeypatch.setattr(gui_widgets.ThreadStdOutStreamTextQueueReceiver, 'run', lambda self: None)
     monkeypatch.setattr(gui_quickstart.QuickStartWizard, '__init__', lambda *args, **kwargs: None)
 
@@ -64,14 +67,19 @@ def use_temp_settings_file():
 
 @pytest.fixture
 def available_objects_no_tabpages(blank_icon, red_icon, green_icon):
-    return {'first tab': (None, blank_icon), 'second tab': (None, red_icon), 'third tab': (None, green_icon),
-            'fourth tab': (None, red_icon)}
+    return {
+        'first tab': (None, blank_icon),
+        'second tab': (None, red_icon),
+        'third tab': (None, green_icon),
+        'fourth tab': (None, red_icon),
+    }
 
 
 @pytest.fixture
 def available_objects(qtbot, red_icon, green_icon):
-    qtbot, first = widget_setup(qtbot, SetTabPage, 'first tab',
-                                {'WBGene00000002', 'WBGene00000006', 'WBGene00000015', 'WBGene00000017'})
+    qtbot, first = widget_setup(
+        qtbot, SetTabPage, 'first tab', {'WBGene00000002', 'WBGene00000006', 'WBGene00000015', 'WBGene00000017'}
+    )
 
     qtbot, second = widget_setup(qtbot, FilterTabPage, undo_stack=QtGui.QUndoStack())
     second.start_from_filter_obj(filtering.DESeqFilter('tests/test_files/test_deseq.csv'), 1)
@@ -86,8 +94,9 @@ def available_objects(qtbot, red_icon, green_icon):
 
 @pytest.fixture
 def four_available_objects_and_empty(qtbot, red_icon, green_icon, blank_icon):
-    qtbot, first = widget_setup(qtbot, SetTabPage, 'first tab',
-                                {'WBGene00008447', 'WBGene00044258', 'WBGene00045410', 'WBGene00010100'})
+    qtbot, first = widget_setup(
+        qtbot, SetTabPage, 'first tab', {'WBGene00008447', 'WBGene00044258', 'WBGene00045410', 'WBGene00010100'}
+    )
 
     qtbot, second = widget_setup(qtbot, FilterTabPage, undo_stack=QtGui.QUndoStack())
     second.start_from_filter_obj(filtering.DESeqFilter('tests/test_files/test_deseq_set_ops_1.csv'), 2)
@@ -103,8 +112,13 @@ def four_available_objects_and_empty(qtbot, red_icon, green_icon, blank_icon):
 
     qtbot, empty = widget_setup(qtbot, FilterTabPage, undo_stack=QtGui.QUndoStack())
 
-    yield {'first tab': (first, red_icon), 'second tab': (second, red_icon), 'third tab': (third, red_icon),
-           'fourth tab': (fourth, green_icon), 'empty tab': (empty, blank_icon)}
+    yield {
+        'first tab': (first, red_icon),
+        'second tab': (second, red_icon),
+        'third tab': (third, red_icon),
+        'fourth tab': (fourth, green_icon),
+        'empty tab': (empty, blank_icon),
+    }
 
 
 @pytest.fixture
@@ -121,8 +135,11 @@ def main_window(qtbot, monkeypatch, use_temp_settings_file):
 
 @pytest.fixture
 def main_window_with_tabs(main_window, monkeypatch):
-    monkeypatch.setattr(QtWidgets.QFileDialog, 'getOpenFileName',
-                        lambda *args, **kwargs: ('tests/test_files/test_session.rnal', '.rnal'))
+    monkeypatch.setattr(
+        QtWidgets.QFileDialog,
+        'getOpenFileName',
+        lambda *args, **kwargs: ('tests/test_files/test_session.rnal', '.rnal'),
+    )
     monkeypatch.setattr(QtWidgets.QApplication, 'processEvents', lambda *args, **kwargs: None)
     main_window.load_session_action.trigger()
     return main_window
@@ -137,9 +154,11 @@ def tab_widget(qtbot):
 
 @pytest.fixture
 def multi_keep_window(qtbot):
-    objs = [filtering.DESeqFilter('tests/test_files/test_deseq.csv'),
-            filtering.CountFilter('tests/test_files/counted.tsv'),
-            filtering.Filter('tests/test_files/test_deseq_biotype.csv')]
+    objs = [
+        filtering.DESeqFilter('tests/test_files/test_deseq.csv'),
+        filtering.CountFilter('tests/test_files/counted.tsv'),
+        filtering.Filter('tests/test_files/test_deseq_biotype.csv'),
+    ]
     qtbot, window = widget_setup(qtbot, MultiKeepWindow, objs, -1)
     yield window
     window.close()
@@ -187,8 +206,12 @@ def pipeline():
 
 @pytest.fixture
 def clicom_window(qtbot):
-    funcs = {'split_kmeans': 'K-Means', 'split_kmedoids': 'K-Medoids',
-             'split_hierarchical': 'Hierarchical (Agglomerative)', 'split_hdbscan': 'HDBSCAN'}
+    funcs = {
+        'split_kmeans': 'K-Means',
+        'split_kmedoids': 'K-Medoids',
+        'split_hierarchical': 'Hierarchical (Agglomerative)',
+        'split_hdbscan': 'HDBSCAN',
+    }
     qtbot, window = widget_setup(qtbot, ClicomWindow, funcs, filtering.CountFilter('tests/test_files/counted.csv'))
     yield window
     window.close()
@@ -355,10 +378,9 @@ def test_KallistoPairedWindow_init(kallisto_paired_window):
 def test_KallistoIndexWindow_start_analysis(qtbot, kallisto_index_window):
     truth_args = []
     fa_file = 'path/to/fa/file'
-    truth_kwargs = dict(transcriptome_fasta=fa_file,
-                        kallisto_installation_folder='auto',
-                        kmer_length=31,
-                        make_unique=False)
+    truth_kwargs = dict(
+        transcriptome_fasta=fa_file, kallisto_installation_folder='auto', kmer_length=31, make_unique=False
+    )
 
     kallisto_index_window.param_widgets['transcriptome_fasta'].setText(fa_file)
 
@@ -376,16 +398,19 @@ def test_KallistoSingleWindow_start_analysis(qtbot, kallisto_single_window):
     gtf_file = 'path/to/gtf.gtf'
     average_fragment_length = 175
     stdev_fragment_length = 25.5
-    truth_kwargs = dict(fastq_folder=fq_folder, output_folder=out_folder,
-                        gtf_file=gtf_file,
-                        index_file=index_file,
-                        average_fragment_length=average_fragment_length,
-                        stdev_fragment_length=stdev_fragment_length,
-                        kallisto_installation_folder='auto',
-                        new_sample_names='auto',
-                        stranded='no',
-                        bootstrap_samples=None,
-                        summation_method='scaled_tpm')
+    truth_kwargs = dict(
+        fastq_folder=fq_folder,
+        output_folder=out_folder,
+        gtf_file=gtf_file,
+        index_file=index_file,
+        average_fragment_length=average_fragment_length,
+        stdev_fragment_length=stdev_fragment_length,
+        kallisto_installation_folder='auto',
+        new_sample_names='auto',
+        stranded='no',
+        bootstrap_samples=None,
+        summation_method='scaled_tpm',
+    )
 
     kallisto_single_window.param_widgets['fastq_folder'].setText(fq_folder)
     kallisto_single_window.param_widgets['output_folder'].setText(out_folder)
@@ -407,15 +432,18 @@ def test_KallistoPairedWindow_start_analysis(qtbot, kallisto_paired_window):
     index_file = 'path/to/index/file.idx'
     gtf_file = 'path/to/gtf.gtf'
     truth_args = []
-    truth_kwargs = dict(r1_files=r1_files, r2_files=r2_files,
-                        output_folder=out_folder,
-                        gtf_file=gtf_file,
-                        index_file=index_file,
-                        kallisto_installation_folder='auto',
-                        new_sample_names='smart',
-                        stranded='no',
-                        bootstrap_samples=None,
-                        summation_method='scaled_tpm')
+    truth_kwargs = dict(
+        r1_files=r1_files,
+        r2_files=r2_files,
+        output_folder=out_folder,
+        gtf_file=gtf_file,
+        index_file=index_file,
+        kallisto_installation_folder='auto',
+        new_sample_names='smart',
+        stranded='no',
+        bootstrap_samples=None,
+        summation_method='scaled_tpm',
+    )
 
     kallisto_paired_window.pairs_widgets['r1_files'].add_items(r1_files)
     kallisto_paired_window.pairs_widgets['r2_files'].add_items(r2_files)
@@ -442,14 +470,24 @@ def test_CutAdaptSingleWindow_start_analysis(qtbot, cutadapt_single_window):
     fq_folder = 'path/to/fq/folder'
     out_folder = 'path/to/out/dir'
     adapter = 'ATGGA'
-    truth_kwargs = dict(fastq_folder=fq_folder, output_folder=out_folder,
-                        three_prime_adapters=adapter,
-                        five_prime_adapters=None,
-                        any_position_adapters=None,
-                        quality_trimming=20, trim_n=True,
-                        minimum_read_length=10, maximum_read_length=None,
-                        discard_untrimmed_reads=True, error_tolerance=0.1,
-                        minimum_overlap=3, allow_indels=True, parallel=True, gzip_output=False, new_sample_names='auto')
+    truth_kwargs = dict(
+        fastq_folder=fq_folder,
+        output_folder=out_folder,
+        three_prime_adapters=adapter,
+        five_prime_adapters=None,
+        any_position_adapters=None,
+        quality_trimming=20,
+        trim_n=True,
+        minimum_read_length=10,
+        maximum_read_length=None,
+        discard_untrimmed_reads=True,
+        error_tolerance=0.1,
+        minimum_overlap=3,
+        allow_indels=True,
+        parallel=True,
+        gzip_output=False,
+        new_sample_names='auto',
+    )
 
     cutadapt_single_window.param_widgets['fastq_folder'].setText(fq_folder)
     cutadapt_single_window.param_widgets['output_folder'].setText(out_folder)
@@ -468,14 +506,29 @@ def test_CutAdaptPairedWindow_start_analysis(qtbot, cutadapt_paired_window):
     adapter1 = 'ATGGA'
     adapter2 = 'CATC'
     truth_args = []
-    truth_kwargs = dict(r1_files=r1_files, r2_files=r2_files,
-                        output_folder=out_folder,
-                        three_prime_adapters_r1=adapter1, three_prime_adapters_r2=adapter2,
-                        five_prime_adapters_r1=None, five_prime_adapters_r2=None,
-                        any_position_adapters_r1=None, any_position_adapters_r2=None,
-                        quality_trimming=20, trim_n=True, minimum_read_length=10, maximum_read_length=None,
-                        discard_untrimmed_reads=True, pair_filter_if='both', new_sample_names='auto',
-                        error_tolerance=0.1, minimum_overlap=3, allow_indels=True, parallel=True, gzip_output=False)
+    truth_kwargs = dict(
+        r1_files=r1_files,
+        r2_files=r2_files,
+        output_folder=out_folder,
+        three_prime_adapters_r1=adapter1,
+        three_prime_adapters_r2=adapter2,
+        five_prime_adapters_r1=None,
+        five_prime_adapters_r2=None,
+        any_position_adapters_r1=None,
+        any_position_adapters_r2=None,
+        quality_trimming=20,
+        trim_n=True,
+        minimum_read_length=10,
+        maximum_read_length=None,
+        discard_untrimmed_reads=True,
+        pair_filter_if='both',
+        new_sample_names='auto',
+        error_tolerance=0.1,
+        minimum_overlap=3,
+        allow_indels=True,
+        parallel=True,
+        gzip_output=False,
+    )
     cutadapt_paired_window.pairs_widgets['r1_files'].add_items(r1_files)
     cutadapt_paired_window.pairs_widgets['r2_files'].add_items(r2_files)
     cutadapt_paired_window.param_widgets['output_folder'].setText(out_folder)
@@ -492,12 +545,16 @@ def test_SimpleDESeqWindow_init(simple_deseq_window):
     _ = simple_deseq_window
 
 
-@pytest.mark.parametrize('unsupported_key,expected_text', [
-    ('covariates', 'covariates'),
-    ('lrt_factors', 'Likelihood Ratio Test'),
-])
-def test_SimpleDESeqWindow_import_parameters_rejects_unsupported_keys(monkeypatch, simple_deseq_window,
-                                                                     unsupported_key, expected_text):
+@pytest.mark.parametrize(
+    'unsupported_key,expected_text',
+    [
+        ('covariates', 'covariates'),
+        ('lrt_factors', 'Likelihood Ratio Test'),
+    ],
+)
+def test_SimpleDESeqWindow_import_parameters_rejects_unsupported_keys(
+    monkeypatch, simple_deseq_window, unsupported_key, expected_text
+):
     """Importing a parameter file exported from the full DESeq window into the simplified window is a
     user action on a serialized artifact, so it must raise a user-input error with actionable advice -
     not an InternalError telling the scientist to report an RNAlysis bug."""
@@ -526,9 +583,15 @@ def test_SimpleDESeqWindow_load_design_mat(qtbot, simple_deseq_window):
 
 def test_SimpleDESeqWindow_get_analysis_params(qtbot, simple_deseq_window):
     design_mat_path = 'tests/test_files/test_design_matrix.csv'
-    truth = dict(r_installation_folder='auto', design_matrix=design_mat_path, output_folder=None,
-                 comparisons=[('replicate', 'rep3', 'rep2'), ('condition', 'cond1', 'cond2')], return_code=True,
-                 return_design_matrix=True, return_log=True)
+    truth = dict(
+        r_installation_folder='auto',
+        design_matrix=design_mat_path,
+        output_folder=None,
+        comparisons=[('replicate', 'rep3', 'rep2'), ('condition', 'cond1', 'cond2')],
+        return_code=True,
+        return_design_matrix=True,
+        return_log=True,
+    )
 
     simple_deseq_window.param_widgets['design_matrix'].setText(design_mat_path)
     qtbot.mouseClick(simple_deseq_window.param_widgets['load_design'], LEFT_CLICK)
@@ -546,9 +609,15 @@ def test_SimpleDESeqWindow_start_analysis(qtbot, simple_deseq_window):
     design_mat_path = 'tests/test_files/test_design_matrix.csv'
 
     truth_args = []
-    truth_kwargs = dict(r_installation_folder='auto', design_matrix=design_mat_path, output_folder=None,
-                        comparisons=[('replicate', 'rep3', 'rep2'), ('condition', 'cond1', 'cond2')], return_code=True,
-                        return_design_matrix=True, return_log=True)
+    truth_kwargs = dict(
+        r_installation_folder='auto',
+        design_matrix=design_mat_path,
+        output_folder=None,
+        comparisons=[('replicate', 'rep3', 'rep2'), ('condition', 'cond1', 'cond2')],
+        return_code=True,
+        return_design_matrix=True,
+        return_log=True,
+    )
 
     simple_deseq_window.param_widgets['design_matrix'].setText(design_mat_path)
     qtbot.mouseClick(simple_deseq_window.param_widgets['load_design'], LEFT_CLICK)
@@ -580,9 +649,17 @@ def test_SimpleLimmaWindow_load_design_mat(qtbot, simple_limma_window):
 
 def test_SimpleLimmaWindow_get_analysis_params(qtbot, simple_limma_window):
     design_mat_path = 'tests/test_files/test_design_matrix.csv'
-    truth = dict(r_installation_folder='auto', design_matrix=design_mat_path, output_folder=None,
-                 comparisons=[('replicate', 'rep3', 'rep2'), ('condition', 'cond1', 'cond2')], random_effect=None,
-                 quality_weights=False, return_code=True, return_design_matrix=True, return_log=True)
+    truth = dict(
+        r_installation_folder='auto',
+        design_matrix=design_mat_path,
+        output_folder=None,
+        comparisons=[('replicate', 'rep3', 'rep2'), ('condition', 'cond1', 'cond2')],
+        random_effect=None,
+        quality_weights=False,
+        return_code=True,
+        return_design_matrix=True,
+        return_log=True,
+    )
 
     simple_limma_window.param_widgets['design_matrix'].setText(design_mat_path)
     qtbot.mouseClick(simple_limma_window.param_widgets['load_design'], LEFT_CLICK)
@@ -600,10 +677,17 @@ def test_SimpleLimmaWindow_start_analysis(qtbot, simple_limma_window):
     design_mat_path = 'tests/test_files/test_design_matrix.csv'
 
     truth_args = []
-    truth_kwargs = dict(r_installation_folder='auto', design_matrix=design_mat_path, output_folder=None,
-                        comparisons=[('replicate', 'rep3', 'rep2'), ('condition', 'cond1', 'cond2')],
-                        random_effect=None, quality_weights=False, return_code=True,
-                        return_design_matrix=True, return_log=True)
+    truth_kwargs = dict(
+        r_installation_folder='auto',
+        design_matrix=design_mat_path,
+        output_folder=None,
+        comparisons=[('replicate', 'rep3', 'rep2'), ('condition', 'cond1', 'cond2')],
+        random_effect=None,
+        quality_weights=False,
+        return_code=True,
+        return_design_matrix=True,
+        return_log=True,
+    )
 
     simple_limma_window.param_widgets['design_matrix'].setText(design_mat_path)
     qtbot.mouseClick(simple_limma_window.param_widgets['load_design'], LEFT_CLICK)
@@ -625,8 +709,9 @@ def test_ClicomWindow_init(clicom_window):
 
 
 def test_ClicomWindow_add_setup(qtbot, clicom_window):
-    truth = dict(method='kmeans', n_clusters=3, n_init=3, max_iter=300, random_seed=None,
-                 max_n_clusters_estimate='auto')
+    truth = dict(
+        method='kmeans', n_clusters=3, n_init=3, max_iter=300, random_seed=None, max_n_clusters_estimate='auto'
+    )
 
     qtbot.keyClicks(clicom_window.stack.func_combo, filtering.CountFilter.split_kmeans.readable_name)
     clicom_window.stack.parameter_widgets['n_clusters'].other.setValue(3)
@@ -648,9 +733,16 @@ def test_ClicomWindow_remove_setup(qtbot, monkeypatch, clicom_window):
 
 
 def test_ClicomWindow_get_analysis_params(qtbot, clicom_window):
-    truth = dict(replicate_grouping='ungrouped', power_transform=['box-cox', 'none'], evidence_threshold=0.35,
-                 cluster_unclustered_features=True, parallel_backend='loky',
-                 min_cluster_size=15, plot_style='all', split_plots=False)
+    truth = dict(
+        replicate_grouping='ungrouped',
+        power_transform=['box-cox', 'none'],
+        evidence_threshold=0.35,
+        cluster_unclustered_features=True,
+        parallel_backend='loky',
+        min_cluster_size=15,
+        plot_style='all',
+        split_plots=False,
+    )
 
     # CLICOM can test several transforms in one ensemble: picking "Other..." reveals a multi-value picker
     clicom_window.param_widgets['power_transform'].setValue(['box-cox', 'none'])
@@ -662,13 +754,27 @@ def test_ClicomWindow_get_analysis_params(qtbot, clicom_window):
 
 
 def test_ClicomWindow_start_analysis(qtbot, clicom_window):
-    truth_setups = [dict(method='kmeans', n_clusters=3, n_init=3, max_iter=300, random_seed=None,
-                         max_n_clusters_estimate='auto'),
-                    dict(method='hierarchical', n_clusters='silhouette', metric='Euclidean', linkage='Average',
-                         distance_threshold=None, max_n_clusters_estimate='auto')]
-    truth_params = dict(replicate_grouping='ungrouped', power_transform='log', evidence_threshold=0.35,
-                        cluster_unclustered_features=True, min_cluster_size=15, plot_style='all', split_plots=False,
-                        parallel_backend='loky')
+    truth_setups = [
+        dict(method='kmeans', n_clusters=3, n_init=3, max_iter=300, random_seed=None, max_n_clusters_estimate='auto'),
+        dict(
+            method='hierarchical',
+            n_clusters='silhouette',
+            metric='Euclidean',
+            linkage='Average',
+            distance_threshold=None,
+            max_n_clusters_estimate='auto',
+        ),
+    ]
+    truth_params = dict(
+        replicate_grouping='ungrouped',
+        power_transform='log',
+        evidence_threshold=0.35,
+        cluster_unclustered_features=True,
+        min_cluster_size=15,
+        plot_style='all',
+        split_plots=False,
+        parallel_backend='loky',
+    )
 
     clicom_window.stack.func_combo.setCurrentText(filtering.CountFilter.split_kmeans.readable_name)
     clicom_window.stack.parameter_widgets['n_clusters'].other.setValue(3)
@@ -689,13 +795,15 @@ def test_ClicomWindow_start_analysis(qtbot, clicom_window):
     assert blocker.args[1] == truth_params
 
 
-@pytest.mark.parametrize('legacy_value,truth', [
-    (True, 'box-cox'),
-    (False, 'none'),
-    ([True, False], ['box-cox', 'none']),
-])
-def test_ClicomWindow_imports_legacy_power_transform(qtbot, monkeypatch, tmp_path, clicom_window, legacy_value,
-                                                     truth):
+@pytest.mark.parametrize(
+    'legacy_value,truth',
+    [
+        (True, 'box-cox'),
+        (False, 'none'),
+        ([True, False], ['box-cox', 'none']),
+    ],
+)
+def test_ClicomWindow_imports_legacy_power_transform(qtbot, monkeypatch, tmp_path, clicom_window, legacy_value, truth):
     # rule 4: a parameter file exported before 'power_transform' became a menu of named transforms stores the
     # old booleans. It must keep loading, showing (and running) the transform those booleans stand for.
     param_file = tmp_path / 'parameters CLICOM.yaml'
@@ -714,28 +822,37 @@ def test_EnrichmentWindow_init(enrichment_window):
     assert enrichment_window.widgets['run_button'].property('class') == 'primary'
 
 
-@pytest.mark.parametrize('button_name,truth', [
-    ('Gene Ontology (GO)', 'go'),
-    ('Kyoto Encyclopedia of Genes and Genomes (KEGG)', 'kegg'),
-    ('Categorical attributes', 'user_defined'),
-    ('Non-categorical attributes', 'non_categorical')
-])
+@pytest.mark.parametrize(
+    'button_name,truth',
+    [
+        ('Gene Ontology (GO)', 'go'),
+        ('Kyoto Encyclopedia of Genes and Genomes (KEGG)', 'kegg'),
+        ('Categorical attributes', 'user_defined'),
+        ('Non-categorical attributes', 'non_categorical'),
+    ],
+)
 def test_EnrichmentWindow_get_analysis_type(enrichment_window, button_name, truth):
     enrichment_window.widgets['dataset_radiobox'].radio_buttons[button_name].click()
     assert enrichment_window.get_current_analysis_type() == truth
 
 
-@pytest.mark.parametrize('button_name', [
-    'Gene Ontology (GO)',
-    'Kyoto Encyclopedia of Genes and Genomes (KEGG)',
-    'Categorical attributes',
-])
-@pytest.mark.parametrize('test_name,truth', [
-    ("Fisher's Exact test", False),
-    ('Hypergeometric test', False),
-    ('Randomization test', False),
-    ('Single-set enrichment (XL-mHG test)', True)
-])
+@pytest.mark.parametrize(
+    'button_name',
+    [
+        'Gene Ontology (GO)',
+        'Kyoto Encyclopedia of Genes and Genomes (KEGG)',
+        'Categorical attributes',
+    ],
+)
+@pytest.mark.parametrize(
+    'test_name,truth',
+    [
+        ("Fisher's Exact test", False),
+        ('Hypergeometric test', False),
+        ('Randomization test', False),
+        ('Single-set enrichment (XL-mHG test)', True),
+    ],
+)
 def test_EnrichmentWindow_is_single_set(enrichment_window, button_name, test_name, truth):
     enrichment_window.widgets['dataset_radiobox'].radio_buttons[button_name].click()
     enrichment_window.stats_widgets['stats_radiobox'].radio_buttons[test_name].click()
@@ -743,9 +860,9 @@ def test_EnrichmentWindow_is_single_set(enrichment_window, button_name, test_nam
     assert enrichment_window.is_single_set() == truth
 
 
-@pytest.mark.parametrize('test_name,truth', [
-    ("One-sample T-test (parametric)", False),
-    ('Sign test (non-parametric)', False)])
+@pytest.mark.parametrize(
+    'test_name,truth', [('One-sample T-test (parametric)', False), ('Sign test (non-parametric)', False)]
+)
 def test_EnrichmentWindow_is_single_set_non_categorical(enrichment_window, test_name, truth):
     enrichment_window.widgets['dataset_radiobox'].radio_buttons['Non-categorical attributes'].click()
     enrichment_window.stats_widgets['stats_radiobox'].radio_buttons[test_name].click()
@@ -753,23 +870,41 @@ def test_EnrichmentWindow_is_single_set_non_categorical(enrichment_window, test_
     assert enrichment_window.is_single_set() == truth
 
 
-@pytest.mark.parametrize('button_name,test_name,func_truth', [
-    ('Gene Ontology (GO)', "Fisher's Exact test", enrichment.FeatureSet.go_enrichment),
-    ('Gene Ontology (GO)', 'Hypergeometric test', enrichment.FeatureSet.go_enrichment),
-    ('Gene Ontology (GO)', 'Randomization test', enrichment.FeatureSet.go_enrichment),
-    ('Gene Ontology (GO)', 'Single-set enrichment (XL-mHG test)', enrichment.RankedSet.single_set_go_enrichment),
-    ('Kyoto Encyclopedia of Genes and Genomes (KEGG)', "Fisher's Exact test", enrichment.FeatureSet.kegg_enrichment),
-    ('Kyoto Encyclopedia of Genes and Genomes (KEGG)', 'Hypergeometric test', enrichment.FeatureSet.kegg_enrichment),
-    ('Kyoto Encyclopedia of Genes and Genomes (KEGG)', 'Randomization test', enrichment.FeatureSet.kegg_enrichment),
-    ('Kyoto Encyclopedia of Genes and Genomes (KEGG)', 'Single-set enrichment (XL-mHG test)',
-     enrichment.RankedSet.single_set_kegg_enrichment),
-    ('Categorical attributes', "Fisher's Exact test", enrichment.FeatureSet.user_defined_enrichment),
-    ('Categorical attributes', 'Hypergeometric test', enrichment.FeatureSet.user_defined_enrichment),
-    ('Categorical attributes', 'Randomization test', enrichment.FeatureSet.user_defined_enrichment),
-    ('Categorical attributes', 'Single-set enrichment (XL-mHG test)', enrichment.RankedSet.single_set_enrichment),
-    ('Non-categorical attributes', "One-sample T-test (parametric)", enrichment.FeatureSet.non_categorical_enrichment),
-    ('Non-categorical attributes', "Sign test (non-parametric)", enrichment.FeatureSet.non_categorical_enrichment)
-])
+@pytest.mark.parametrize(
+    'button_name,test_name,func_truth',
+    [
+        ('Gene Ontology (GO)', "Fisher's Exact test", enrichment.FeatureSet.go_enrichment),
+        ('Gene Ontology (GO)', 'Hypergeometric test', enrichment.FeatureSet.go_enrichment),
+        ('Gene Ontology (GO)', 'Randomization test', enrichment.FeatureSet.go_enrichment),
+        ('Gene Ontology (GO)', 'Single-set enrichment (XL-mHG test)', enrichment.RankedSet.single_set_go_enrichment),
+        (
+            'Kyoto Encyclopedia of Genes and Genomes (KEGG)',
+            "Fisher's Exact test",
+            enrichment.FeatureSet.kegg_enrichment,
+        ),
+        (
+            'Kyoto Encyclopedia of Genes and Genomes (KEGG)',
+            'Hypergeometric test',
+            enrichment.FeatureSet.kegg_enrichment,
+        ),
+        ('Kyoto Encyclopedia of Genes and Genomes (KEGG)', 'Randomization test', enrichment.FeatureSet.kegg_enrichment),
+        (
+            'Kyoto Encyclopedia of Genes and Genomes (KEGG)',
+            'Single-set enrichment (XL-mHG test)',
+            enrichment.RankedSet.single_set_kegg_enrichment,
+        ),
+        ('Categorical attributes', "Fisher's Exact test", enrichment.FeatureSet.user_defined_enrichment),
+        ('Categorical attributes', 'Hypergeometric test', enrichment.FeatureSet.user_defined_enrichment),
+        ('Categorical attributes', 'Randomization test', enrichment.FeatureSet.user_defined_enrichment),
+        ('Categorical attributes', 'Single-set enrichment (XL-mHG test)', enrichment.RankedSet.single_set_enrichment),
+        (
+            'Non-categorical attributes',
+            'One-sample T-test (parametric)',
+            enrichment.FeatureSet.non_categorical_enrichment,
+        ),
+        ('Non-categorical attributes', 'Sign test (non-parametric)', enrichment.FeatureSet.non_categorical_enrichment),
+    ],
+)
 def test_EnrichmentWindow_get_func(enrichment_window, button_name, test_name, func_truth):
     enrichment_window.widgets['dataset_radiobox'].radio_buttons[button_name].click()
     enrichment_window.stats_widgets['stats_radiobox'].radio_buttons[test_name].click()
@@ -777,38 +912,65 @@ def test_EnrichmentWindow_get_func(enrichment_window, button_name, test_name, fu
     assert enrichment_window.get_current_func() == func_truth
 
 
-@pytest.mark.parametrize('button_name,truth', [
-    ('Gene Ontology (GO)', True),
-    ('Kyoto Encyclopedia of Genes and Genomes (KEGG)', True),
-    ('Categorical attributes', True),
-    ('Non-categorical attributes', False)
-])
+@pytest.mark.parametrize(
+    'button_name,truth',
+    [
+        ('Gene Ontology (GO)', True),
+        ('Kyoto Encyclopedia of Genes and Genomes (KEGG)', True),
+        ('Categorical attributes', True),
+        ('Non-categorical attributes', False),
+    ],
+)
 def test_EnrichmentWindow_is_categorical(enrichment_window, button_name, truth):
     enrichment_window.widgets['dataset_radiobox'].radio_buttons[button_name].click()
     assert enrichment_window.is_categorical() == truth
 
 
-@pytest.mark.parametrize('en_set,bg_set,en_set_truth,bg_set_truth,', [
-    ('first tab', 'second tab', 'first tab', 'second tab'),
-    ('third tab', 'first tab', 'third tab', 'first tab'),
-    ('second tab', 'third tab', 'second tab', 'third tab'),
-])
-@pytest.mark.parametrize('button_name,dataset_kwargs', [
-    ('Gene Ontology (GO)',
-     dict(plot_horizontal=True, plot_ontology_graph=False, organism='auto', excluded_evidence_types='experimental')),
-    ('Kyoto Encyclopedia of Genes and Genomes (KEGG)',
-     dict(plot_horizontal=True, gene_id_type='auto')),
-    ('Categorical attributes', dict(attributes='all', plot_horizontal=False))
-])
-@pytest.mark.parametrize('test_name,is_single_set,test_arg_truth,stats_kwargs', [
-    ("Fisher's Exact test", False, 'fisher', dict(alpha=0.05)),
-    ('Hypergeometric test', False, 'hypergeometric', dict(alpha=0.5)),
-    ('Randomization test', False, 'randomization', dict(alpha=0.13, random_seed=42)),
-    ('Single-set enrichment (XL-mHG test)', True, 'single_set', dict(alpha=0.01))
-])
-def test_EnrichmentWindow_get_analysis_params(qtbot, enrichment_window, button_name, test_name, test_arg_truth, en_set,
-                                              en_set_truth, bg_set, bg_set_truth, is_single_set, available_objects,
-                                              stats_kwargs, dataset_kwargs):
+@pytest.mark.parametrize(
+    'en_set,bg_set,en_set_truth,bg_set_truth,',
+    [
+        ('first tab', 'second tab', 'first tab', 'second tab'),
+        ('third tab', 'first tab', 'third tab', 'first tab'),
+        ('second tab', 'third tab', 'second tab', 'third tab'),
+    ],
+)
+@pytest.mark.parametrize(
+    'button_name,dataset_kwargs',
+    [
+        (
+            'Gene Ontology (GO)',
+            dict(
+                plot_horizontal=True, plot_ontology_graph=False, organism='auto', excluded_evidence_types='experimental'
+            ),
+        ),
+        ('Kyoto Encyclopedia of Genes and Genomes (KEGG)', dict(plot_horizontal=True, gene_id_type='auto')),
+        ('Categorical attributes', dict(attributes='all', plot_horizontal=False)),
+    ],
+)
+@pytest.mark.parametrize(
+    'test_name,is_single_set,test_arg_truth,stats_kwargs',
+    [
+        ("Fisher's Exact test", False, 'fisher', dict(alpha=0.05)),
+        ('Hypergeometric test', False, 'hypergeometric', dict(alpha=0.5)),
+        ('Randomization test', False, 'randomization', dict(alpha=0.13, random_seed=42)),
+        ('Single-set enrichment (XL-mHG test)', True, 'single_set', dict(alpha=0.01)),
+    ],
+)
+def test_EnrichmentWindow_get_analysis_params(
+    qtbot,
+    enrichment_window,
+    button_name,
+    test_name,
+    test_arg_truth,
+    en_set,
+    en_set_truth,
+    bg_set,
+    bg_set_truth,
+    is_single_set,
+    available_objects,
+    stats_kwargs,
+    dataset_kwargs,
+):
     kwargs_truth = dict()
     kwargs_truth.update(stats_kwargs)
     kwargs_truth.update(dataset_kwargs)
@@ -854,21 +1016,41 @@ def test_EnrichmentWindow_get_analysis_params(qtbot, enrichment_window, button_n
     assert gene_set_name == set_name_truth
 
 
-@pytest.mark.parametrize('en_set,bg_set,en_set_truth,bg_set_truth,', [
-    ('first tab', 'second tab', 'first tab', 'second tab'),
-    ('third tab', 'first tab', 'third tab', 'first tab'),
-    ('second tab', 'third tab', 'second tab', 'third tab'),
-])
-@pytest.mark.parametrize('button_name,dataset_kwargs', [
-    ('Non-categorical attributes', dict(plot_log_scale=False, attributes='all')),
-])
-@pytest.mark.parametrize('test_name,test_arg_truth,stats_kwargs', [
-    ("One-sample T-test (parametric)", True, dict(alpha=0.08)),
-    ('Sign test (non-parametric)', False, dict(alpha=0.5))
-])
-def test_EnrichmentWindow_get_analysis_params_single_set(qtbot, enrichment_window, button_name, test_name,
-                                                         test_arg_truth, en_set, en_set_truth, bg_set, bg_set_truth,
-                                                         available_objects, stats_kwargs, dataset_kwargs):
+@pytest.mark.parametrize(
+    'en_set,bg_set,en_set_truth,bg_set_truth,',
+    [
+        ('first tab', 'second tab', 'first tab', 'second tab'),
+        ('third tab', 'first tab', 'third tab', 'first tab'),
+        ('second tab', 'third tab', 'second tab', 'third tab'),
+    ],
+)
+@pytest.mark.parametrize(
+    'button_name,dataset_kwargs',
+    [
+        ('Non-categorical attributes', dict(plot_log_scale=False, attributes='all')),
+    ],
+)
+@pytest.mark.parametrize(
+    'test_name,test_arg_truth,stats_kwargs',
+    [
+        ('One-sample T-test (parametric)', True, dict(alpha=0.08)),
+        ('Sign test (non-parametric)', False, dict(alpha=0.5)),
+    ],
+)
+def test_EnrichmentWindow_get_analysis_params_single_set(
+    qtbot,
+    enrichment_window,
+    button_name,
+    test_name,
+    test_arg_truth,
+    en_set,
+    en_set_truth,
+    bg_set,
+    bg_set_truth,
+    available_objects,
+    stats_kwargs,
+    dataset_kwargs,
+):
     kwargs_truth = dict()
     kwargs_truth.update(stats_kwargs)
     kwargs_truth.update(dataset_kwargs)
@@ -907,42 +1089,72 @@ def test_EnrichmentWindow_get_analysis_params_single_set(qtbot, enrichment_windo
     assert gene_set_name == set_name_truth
 
 
-@pytest.mark.parametrize('en_set,bg_set,en_set_truth,bg_set_truth,', [
-    ('third tab', 'first tab', 'third tab', 'first tab'),
-    ('second tab', 'third tab', 'second tab', 'third tab'),
-])
-@pytest.mark.parametrize('button_name,dataset_name_truth,dataset_kwargs', [
-    ('Gene Ontology (GO)', 'go',
-     dict(plot_horizontal=True, plot_ontology_graph=False, organism='auto', excluded_evidence_types='experimental')),
-    ('Kyoto Encyclopedia of Genes and Genomes (KEGG)', 'kegg',
-     dict(plot_horizontal=True, gene_id_type='auto')),
-    ('Categorical attributes', 'user_defined', dict(attributes='all', plot_horizontal=False))
-])
-@pytest.mark.parametrize('test_name,is_single_set,test_arg_truth,stats_kwargs', [
-    ("Fisher's Exact test", False, 'fisher', dict(alpha=0.05)),
-    ('Hypergeometric test', False, 'hypergeometric', dict(alpha=0.5)),
-    ('Randomization test', False, 'randomization', dict(alpha=0.13, random_seed=42)),
-    ('Single-set enrichment (XL-mHG test)', True, 'single_set', dict(alpha=0.01))
-])
-def test_EnrichmentWindow_run_analysis(qtbot, enrichment_window, button_name, test_name,
-                                       test_arg_truth, en_set, en_set_truth, bg_set, bg_set_truth, dataset_name_truth,
-                                       available_objects, stats_kwargs, dataset_kwargs, is_single_set):
+@pytest.mark.parametrize(
+    'en_set,bg_set,en_set_truth,bg_set_truth,',
+    [
+        ('third tab', 'first tab', 'third tab', 'first tab'),
+        ('second tab', 'third tab', 'second tab', 'third tab'),
+    ],
+)
+@pytest.mark.parametrize(
+    'button_name,dataset_name_truth,dataset_kwargs',
+    [
+        (
+            'Gene Ontology (GO)',
+            'go',
+            dict(
+                plot_horizontal=True, plot_ontology_graph=False, organism='auto', excluded_evidence_types='experimental'
+            ),
+        ),
+        ('Kyoto Encyclopedia of Genes and Genomes (KEGG)', 'kegg', dict(plot_horizontal=True, gene_id_type='auto')),
+        ('Categorical attributes', 'user_defined', dict(attributes='all', plot_horizontal=False)),
+    ],
+)
+@pytest.mark.parametrize(
+    'test_name,is_single_set,test_arg_truth,stats_kwargs',
+    [
+        ("Fisher's Exact test", False, 'fisher', dict(alpha=0.05)),
+        ('Hypergeometric test', False, 'hypergeometric', dict(alpha=0.5)),
+        ('Randomization test', False, 'randomization', dict(alpha=0.13, random_seed=42)),
+        ('Single-set enrichment (XL-mHG test)', True, 'single_set', dict(alpha=0.01)),
+    ],
+)
+def test_EnrichmentWindow_run_analysis(
+    qtbot,
+    enrichment_window,
+    button_name,
+    test_name,
+    test_arg_truth,
+    en_set,
+    en_set_truth,
+    bg_set,
+    bg_set_truth,
+    dataset_name_truth,
+    available_objects,
+    stats_kwargs,
+    dataset_kwargs,
+    is_single_set,
+):
     func_truth = {
         ('go', False): enrichment.FeatureSet.go_enrichment,
         ('go', True): enrichment.RankedSet.single_set_go_enrichment,
         ('kegg', False): enrichment.FeatureSet.kegg_enrichment,
         ('kegg', True): enrichment.RankedSet.single_set_kegg_enrichment,
         ('user_defined', False): enrichment.FeatureSet.user_defined_enrichment,
-        ('user_defined', True): enrichment.RankedSet.single_set_enrichment}
+        ('user_defined', True): enrichment.RankedSet.single_set_enrichment,
+    }
 
     set_name_truth = available_objects[en_set_truth][0].name
 
     if is_single_set:
         gene_set_truth = enrichment.RankedSet(available_objects[en_set_truth][0].obj(), set_name_truth)
     else:
-        gene_set_truth = enrichment.FeatureSet(available_objects[en_set_truth][0].obj() if isinstance(
-            available_objects[en_set_truth][0].obj(), set) else available_objects[en_set_truth][0].obj().index_set,
-                                               set_name_truth)
+        gene_set_truth = enrichment.FeatureSet(
+            available_objects[en_set_truth][0].obj()
+            if isinstance(available_objects[en_set_truth][0].obj(), set)
+            else available_objects[en_set_truth][0].obj().index_set,
+            set_name_truth,
+        )
 
     kwargs_truth = dict()
     kwargs_truth.update(stats_kwargs)
@@ -983,9 +1195,11 @@ def test_EnrichmentWindow_run_analysis(qtbot, enrichment_window, button_name, te
         pass
     else:
         assert worker.partial.keywords['statistical_test'] == test_arg_truth
-        assert worker.partial.keywords['background_genes'].gene_set == available_objects[bg_set_truth][
-            0].obj() if isinstance(available_objects[bg_set_truth][0].obj(), set) else available_objects[bg_set_truth][
-            0].obj().index_set
+        assert (
+            worker.partial.keywords['background_genes'].gene_set == available_objects[bg_set_truth][0].obj()
+            if isinstance(available_objects[bg_set_truth][0].obj(), set)
+            else available_objects[bg_set_truth][0].obj().index_set
+        )
 
     for kw in kwargs_truth:
         assert worker.partial.keywords[kw] == kwargs_truth[kw]
@@ -994,25 +1208,48 @@ def test_EnrichmentWindow_run_analysis(qtbot, enrichment_window, button_name, te
     assert worker.partial.args[0] == gene_set_truth
 
 
-@pytest.mark.parametrize('en_set,bg_set,en_set_truth,bg_set_truth,', [
-    ('first tab', 'second tab', 'first tab', 'second tab'),
-    ('third tab', 'first tab', 'third tab', 'first tab'),
-    ('second tab', 'third tab', 'second tab', 'third tab'),
-])
-@pytest.mark.parametrize('button_name,dataset_kwargs', [
-    ('Non-categorical attributes', dict(plot_log_scale=False, attributes='all')),
-])
-@pytest.mark.parametrize('test_name,test_arg_truth,stats_kwargs', [
-    ("One-sample T-test (parametric)", True, dict(alpha=0.08)),
-    ('Sign test (non-parametric)', False, dict(alpha=0.5))
-])
-def test_EnrichmentWindow_run_analysis_non_categorical(qtbot, enrichment_window, button_name, test_name,
-                                                       test_arg_truth, en_set, en_set_truth, bg_set, bg_set_truth,
-                                                       available_objects, stats_kwargs, dataset_kwargs):
+@pytest.mark.parametrize(
+    'en_set,bg_set,en_set_truth,bg_set_truth,',
+    [
+        ('first tab', 'second tab', 'first tab', 'second tab'),
+        ('third tab', 'first tab', 'third tab', 'first tab'),
+        ('second tab', 'third tab', 'second tab', 'third tab'),
+    ],
+)
+@pytest.mark.parametrize(
+    'button_name,dataset_kwargs',
+    [
+        ('Non-categorical attributes', dict(plot_log_scale=False, attributes='all')),
+    ],
+)
+@pytest.mark.parametrize(
+    'test_name,test_arg_truth,stats_kwargs',
+    [
+        ('One-sample T-test (parametric)', True, dict(alpha=0.08)),
+        ('Sign test (non-parametric)', False, dict(alpha=0.5)),
+    ],
+)
+def test_EnrichmentWindow_run_analysis_non_categorical(
+    qtbot,
+    enrichment_window,
+    button_name,
+    test_name,
+    test_arg_truth,
+    en_set,
+    en_set_truth,
+    bg_set,
+    bg_set_truth,
+    available_objects,
+    stats_kwargs,
+    dataset_kwargs,
+):
     set_name_truth = available_objects[en_set_truth][0].name
-    gene_set_truth = enrichment.FeatureSet(available_objects[en_set_truth][0].obj() if isinstance(
-        available_objects[en_set_truth][0].obj(), set) else available_objects[en_set_truth][0].obj().index_set,
-                                           set_name_truth)
+    gene_set_truth = enrichment.FeatureSet(
+        available_objects[en_set_truth][0].obj()
+        if isinstance(available_objects[en_set_truth][0].obj(), set)
+        else available_objects[en_set_truth][0].obj().index_set,
+        set_name_truth,
+    )
 
     kwargs_truth = dict()
     kwargs_truth.update(stats_kwargs)
@@ -1055,9 +1292,11 @@ def test_EnrichmentWindow_run_analysis_non_categorical(qtbot, enrichment_window,
     assert worker.partial.func == enrichment.FeatureSet.non_categorical_enrichment
     assert worker.partial.args[0] == gene_set_truth
 
-    assert worker.partial.keywords['background_genes'].gene_set == available_objects[bg_set_truth][
-        0].obj() if isinstance(available_objects[bg_set_truth][0].obj(), set) else available_objects[bg_set_truth][
-        0].obj().index_set
+    assert (
+        worker.partial.keywords['background_genes'].gene_set == available_objects[bg_set_truth][0].obj()
+        if isinstance(available_objects[bg_set_truth][0].obj(), set)
+        else available_objects[bg_set_truth][0].obj().index_set
+    )
 
 
 def test_SetOperationWindow_init(set_op_window):
@@ -1066,20 +1305,26 @@ def test_SetOperationWindow_init(set_op_window):
     assert set_op_window.widgets['apply_button'].property('class') == 'primary'
 
 
-@pytest.mark.parametrize('op_name,truth', [
-    ('Intersection', 'intersection'),
-    ('Union', 'union'),
-    ('Symmetric Difference', 'symmetric_difference'),
-    ('Majority-Vote Intersection', 'majority_vote_intersection'),
-    ('Other', 'other')
-])
-@pytest.mark.parametrize('second_op_name,second_truth', [
-    ('Intersection', 'intersection'),
-    ('Union', 'union'),
-    ('Symmetric Difference', 'symmetric_difference'),
-    ('Majority-Vote Intersection', 'majority_vote_intersection'),
-    ('Other', 'other')
-])
+@pytest.mark.parametrize(
+    'op_name,truth',
+    [
+        ('Intersection', 'intersection'),
+        ('Union', 'union'),
+        ('Symmetric Difference', 'symmetric_difference'),
+        ('Majority-Vote Intersection', 'majority_vote_intersection'),
+        ('Other', 'other'),
+    ],
+)
+@pytest.mark.parametrize(
+    'second_op_name,second_truth',
+    [
+        ('Intersection', 'intersection'),
+        ('Union', 'union'),
+        ('Symmetric Difference', 'symmetric_difference'),
+        ('Majority-Vote Intersection', 'majority_vote_intersection'),
+        ('Other', 'other'),
+    ],
+)
 def test_SetOperationWindow_get_current_func_name(set_op_window, op_name, truth, second_op_name, second_truth):
     assert set_op_window.get_current_func_name() is None
     set_op_window.widgets['radio_button_box'].radio_buttons[op_name].click()
@@ -1154,48 +1399,202 @@ def test_SetOperationWindow_primary_set_change(qtbot, set_op_window, n_selected)
 
 
 apply_set_ops_parametrize = [
-    ('Union', [0, 2],
-     {'WBGene00018199', 'WBGene00020407', 'WBGene00045366', 'WBGene00044258', 'WBGene00010100', 'WBGene00018193',
-      'WBGene00219307', 'WBGene00021019', 'WBGene00045410', 'WBGene00194708', 'WBGene00021589', 'WBGene00219304',
-      'WBGene00023036', 'WBGene00021375', 'WBGene00008447', 'WBGene00044799', 'WBGene00001118', 'WBGene00077437',
-      'WBGene00010755', 'WBGene00012919', 'WBGene00021654', 'WBGene00013816', 'WBGene00022486', 'WBGene00019174',
-      'WBGene00007674', 'WBGene00012648', 'WBGene00021605'}
-     ),
-    ('Union', [1, 2, 3],
-     {'WBGene00018199', 'WBGene00007064', 'WBGene00020407', 'WBGene00007079', 'WBGene00044478', 'WBGene00045366',
-      'WBGene00043989', 'WBGene00007075', 'WBGene00044258', 'WBGene00010100', 'WBGene00043987', 'WBGene00007066',
-      'WBGene00018193', 'WBGene00022730', 'WBGene00044022', 'WBGene00077504', 'WBGene00219307', 'WBGene00014997',
-      'WBGene00021019', 'WBGene00043990', 'WBGene00045410', 'WBGene00021018', 'WBGene00194708', 'WBGene00007078',
-      'WBGene00021589', 'WBGene00219304', 'WBGene00023036', 'WBGene00007069', 'WBGene00021375', 'WBGene00007076',
-      'WBGene00008447', 'WBGene00044799', 'WBGene00001118', 'WBGene00077502', 'WBGene00007067', 'WBGene00077503',
-      'WBGene00007071', 'WBGene00012961', 'WBGene00077437', 'WBGene00022438', 'WBGene00010755', 'WBGene00007063',
-      'WBGene00012919', 'WBGene00021654', 'WBGene00013816', 'WBGene00007074', 'WBGene00010507', 'WBGene00016635',
-      'WBGene00022486', 'WBGene00043988', 'WBGene00007077', 'WBGene00019174', 'WBGene00012452', 'WBGene00007674',
-      'WBGene00012648', 'WBGene00044951', 'WBGene00021605'}
-     ),
+    (
+        'Union',
+        [0, 2],
+        {
+            'WBGene00018199',
+            'WBGene00020407',
+            'WBGene00045366',
+            'WBGene00044258',
+            'WBGene00010100',
+            'WBGene00018193',
+            'WBGene00219307',
+            'WBGene00021019',
+            'WBGene00045410',
+            'WBGene00194708',
+            'WBGene00021589',
+            'WBGene00219304',
+            'WBGene00023036',
+            'WBGene00021375',
+            'WBGene00008447',
+            'WBGene00044799',
+            'WBGene00001118',
+            'WBGene00077437',
+            'WBGene00010755',
+            'WBGene00012919',
+            'WBGene00021654',
+            'WBGene00013816',
+            'WBGene00022486',
+            'WBGene00019174',
+            'WBGene00007674',
+            'WBGene00012648',
+            'WBGene00021605',
+        },
+    ),
+    (
+        'Union',
+        [1, 2, 3],
+        {
+            'WBGene00018199',
+            'WBGene00007064',
+            'WBGene00020407',
+            'WBGene00007079',
+            'WBGene00044478',
+            'WBGene00045366',
+            'WBGene00043989',
+            'WBGene00007075',
+            'WBGene00044258',
+            'WBGene00010100',
+            'WBGene00043987',
+            'WBGene00007066',
+            'WBGene00018193',
+            'WBGene00022730',
+            'WBGene00044022',
+            'WBGene00077504',
+            'WBGene00219307',
+            'WBGene00014997',
+            'WBGene00021019',
+            'WBGene00043990',
+            'WBGene00045410',
+            'WBGene00021018',
+            'WBGene00194708',
+            'WBGene00007078',
+            'WBGene00021589',
+            'WBGene00219304',
+            'WBGene00023036',
+            'WBGene00007069',
+            'WBGene00021375',
+            'WBGene00007076',
+            'WBGene00008447',
+            'WBGene00044799',
+            'WBGene00001118',
+            'WBGene00077502',
+            'WBGene00007067',
+            'WBGene00077503',
+            'WBGene00007071',
+            'WBGene00012961',
+            'WBGene00077437',
+            'WBGene00022438',
+            'WBGene00010755',
+            'WBGene00007063',
+            'WBGene00012919',
+            'WBGene00021654',
+            'WBGene00013816',
+            'WBGene00007074',
+            'WBGene00010507',
+            'WBGene00016635',
+            'WBGene00022486',
+            'WBGene00043988',
+            'WBGene00007077',
+            'WBGene00019174',
+            'WBGene00012452',
+            'WBGene00007674',
+            'WBGene00012648',
+            'WBGene00044951',
+            'WBGene00021605',
+        },
+    ),
     ('Intersection', [0, 2], {'WBGene00044258', 'WBGene00045410', 'WBGene00010100'}),
     ('Intersection', [1, 2, 3], set()),
     ('Difference', [0, 2], {'WBGene00008447'}),
-    ('Difference', [1, 2, 3],
-     {'WBGene00044478', 'WBGene00008447', 'WBGene00021018', 'WBGene00010507', 'WBGene00016635', 'WBGene00012452',
-      'WBGene00022730', 'WBGene00012961', 'WBGene00022438'}
-     ),
-    ('Symmetric Difference', [0, 1],
-     {'WBGene00018199', 'WBGene00044478', 'WBGene00045366', 'WBGene00022730', 'WBGene00219307', 'WBGene00021019',
-      'WBGene00021018', 'WBGene00194708', 'WBGene00219304', 'WBGene00023036', 'WBGene00021375', 'WBGene00012961',
-      'WBGene00077437', 'WBGene00022438', 'WBGene00013816', 'WBGene00010507', 'WBGene00016635', 'WBGene00022486',
-      'WBGene00019174', 'WBGene00012452', 'WBGene00007674', 'WBGene00012648'}
-     ),
-    ('Symmetric Difference', [2, 3],
-     {'WBGene00018199', 'WBGene00045366', 'WBGene00043989', 'WBGene00043987', 'WBGene00007066', 'WBGene00219307',
-      'WBGene00021019', 'WBGene00043990', 'WBGene00007078', 'WBGene00219304', 'WBGene00023036', 'WBGene00044799',
-      'WBGene00077502', 'WBGene00001118', 'WBGene00007067', 'WBGene00077437', 'WBGene00010755', 'WBGene00007063',
-      'WBGene00021654', 'WBGene00013816', 'WBGene00007674', 'WBGene00012648', 'WBGene00007064', 'WBGene00020407',
-      'WBGene00007079', 'WBGene00007075', 'WBGene00044258', 'WBGene00010100', 'WBGene00021605', 'WBGene00018193',
-      'WBGene00044022', 'WBGene00077504', 'WBGene00045410', 'WBGene00194708', 'WBGene00021589', 'WBGene00007069',
-      'WBGene00021375', 'WBGene00007076', 'WBGene00077503', 'WBGene00007071', 'WBGene00012919', 'WBGene00007074',
-      'WBGene00043988', 'WBGene00007077', 'WBGene00022486', 'WBGene00019174', 'WBGene00044951', 'WBGene00014997'}
-     )
+    (
+        'Difference',
+        [1, 2, 3],
+        {
+            'WBGene00044478',
+            'WBGene00008447',
+            'WBGene00021018',
+            'WBGene00010507',
+            'WBGene00016635',
+            'WBGene00012452',
+            'WBGene00022730',
+            'WBGene00012961',
+            'WBGene00022438',
+        },
+    ),
+    (
+        'Symmetric Difference',
+        [0, 1],
+        {
+            'WBGene00018199',
+            'WBGene00044478',
+            'WBGene00045366',
+            'WBGene00022730',
+            'WBGene00219307',
+            'WBGene00021019',
+            'WBGene00021018',
+            'WBGene00194708',
+            'WBGene00219304',
+            'WBGene00023036',
+            'WBGene00021375',
+            'WBGene00012961',
+            'WBGene00077437',
+            'WBGene00022438',
+            'WBGene00013816',
+            'WBGene00010507',
+            'WBGene00016635',
+            'WBGene00022486',
+            'WBGene00019174',
+            'WBGene00012452',
+            'WBGene00007674',
+            'WBGene00012648',
+        },
+    ),
+    (
+        'Symmetric Difference',
+        [2, 3],
+        {
+            'WBGene00018199',
+            'WBGene00045366',
+            'WBGene00043989',
+            'WBGene00043987',
+            'WBGene00007066',
+            'WBGene00219307',
+            'WBGene00021019',
+            'WBGene00043990',
+            'WBGene00007078',
+            'WBGene00219304',
+            'WBGene00023036',
+            'WBGene00044799',
+            'WBGene00077502',
+            'WBGene00001118',
+            'WBGene00007067',
+            'WBGene00077437',
+            'WBGene00010755',
+            'WBGene00007063',
+            'WBGene00021654',
+            'WBGene00013816',
+            'WBGene00007674',
+            'WBGene00012648',
+            'WBGene00007064',
+            'WBGene00020407',
+            'WBGene00007079',
+            'WBGene00007075',
+            'WBGene00044258',
+            'WBGene00010100',
+            'WBGene00021605',
+            'WBGene00018193',
+            'WBGene00044022',
+            'WBGene00077504',
+            'WBGene00045410',
+            'WBGene00194708',
+            'WBGene00021589',
+            'WBGene00007069',
+            'WBGene00021375',
+            'WBGene00007076',
+            'WBGene00077503',
+            'WBGene00007071',
+            'WBGene00012919',
+            'WBGene00007074',
+            'WBGene00043988',
+            'WBGene00007077',
+            'WBGene00022486',
+            'WBGene00019174',
+            'WBGene00044951',
+            'WBGene00014997',
+        },
+    ),
 ]
 
 
@@ -1206,7 +1605,8 @@ def test_SetOperationWindow_apply_set_op(qtbot, set_op_window, operation, set_in
     set_op_window.widgets['radio_button_box'].radio_buttons[operation].click()
     if operation in ['Difference', 'Intersection']:
         set_op_window.widgets['choose_primary_set'].setCurrentText(
-            set_op_window.widgets['set_list'].items[set_indices[0]])
+            set_op_window.widgets['set_list'].items[set_indices[0]]
+        )
     with qtbot.waitSignal(set_op_window.geneSetReturned) as blocker:
         set_op_window.widgets['apply_button'].click()
     assert blocker.args[0] == truth
@@ -1219,7 +1619,8 @@ def test_SetOperationWindow_apply_set_op_other(qtbot, set_op_window, operation, 
     set_op_window.widgets['radio_button_box'].radio_buttons[operation].click()
     if operation in ['Difference', 'Intersection']:
         set_op_window.widgets['choose_primary_set'].setCurrentText(
-            set_op_window.widgets['set_list'].items[set_indices[0]])
+            set_op_window.widgets['set_list'].items[set_indices[0]]
+        )
 
     set_op_window.widgets['radio_button_box'].radio_buttons['Other'].click()
     with qtbot.waitSignal(set_op_window.geneSetReturned) as blocker:
@@ -1227,28 +1628,68 @@ def test_SetOperationWindow_apply_set_op_other(qtbot, set_op_window, operation, 
     assert blocker.args[0] == truth
 
 
-@pytest.mark.parametrize('operation,set_indices,primary_set,truth',
-                         [('Intersection', [0, 2], 2, {'WBGene00044258', 'WBGene00045410', 'WBGene00010100'}),
-                          ('Intersection', [1, 2, 3], 1, set()),
-                          ('Difference', [0, 2], 2,
-                           {'WBGene00001118', 'WBGene00007674', 'WBGene00010755', 'WBGene00012648', 'WBGene00012919',
-                            'WBGene00013816', 'WBGene00018193', 'WBGene00018199', 'WBGene00019174', 'WBGene00020407',
-                            'WBGene00021019', 'WBGene00021375', 'WBGene00021589', 'WBGene00021605', 'WBGene00021654',
-                            'WBGene00022486', 'WBGene00023036', 'WBGene00044799', 'WBGene00045366', 'WBGene00077437',
-                            'WBGene00194708', 'WBGene00219304', 'WBGene00219307'}),
-                          ('Difference', [1, 2, 3], 1,
-                           {'WBGene00044478', 'WBGene00008447', 'WBGene00021018', 'WBGene00010507', 'WBGene00016635',
-                            'WBGene00012452',
-                            'WBGene00022730', 'WBGene00012961', 'WBGene00022438'})])
-def test_SetOperationWindow_apply_set_op_inplace(qtbot, four_available_objects_and_empty, set_op_window, operation,
-                                                 set_indices, primary_set, truth):
+@pytest.mark.parametrize(
+    'operation,set_indices,primary_set,truth',
+    [
+        ('Intersection', [0, 2], 2, {'WBGene00044258', 'WBGene00045410', 'WBGene00010100'}),
+        ('Intersection', [1, 2, 3], 1, set()),
+        (
+            'Difference',
+            [0, 2],
+            2,
+            {
+                'WBGene00001118',
+                'WBGene00007674',
+                'WBGene00010755',
+                'WBGene00012648',
+                'WBGene00012919',
+                'WBGene00013816',
+                'WBGene00018193',
+                'WBGene00018199',
+                'WBGene00019174',
+                'WBGene00020407',
+                'WBGene00021019',
+                'WBGene00021375',
+                'WBGene00021589',
+                'WBGene00021605',
+                'WBGene00021654',
+                'WBGene00022486',
+                'WBGene00023036',
+                'WBGene00044799',
+                'WBGene00045366',
+                'WBGene00077437',
+                'WBGene00194708',
+                'WBGene00219304',
+                'WBGene00219307',
+            },
+        ),
+        (
+            'Difference',
+            [1, 2, 3],
+            1,
+            {
+                'WBGene00044478',
+                'WBGene00008447',
+                'WBGene00021018',
+                'WBGene00010507',
+                'WBGene00016635',
+                'WBGene00012452',
+                'WBGene00022730',
+                'WBGene00012961',
+                'WBGene00022438',
+            },
+        ),
+    ],
+)
+def test_SetOperationWindow_apply_set_op_inplace(
+    qtbot, four_available_objects_and_empty, set_op_window, operation, set_indices, primary_set, truth
+):
     primary_set_name = set_op_window.widgets['set_list'].items[primary_set]
 
     for ind in set_indices:
         set_op_window.widgets['set_list'].list_items[ind].setSelected(True)
     set_op_window.widgets['radio_button_box'].radio_buttons[operation].click()
-    set_op_window.widgets['choose_primary_set'].setCurrentText(
-        primary_set_name)
+    set_op_window.widgets['choose_primary_set'].setCurrentText(primary_set_name)
 
     with qtbot.waitSignal(set_op_window.geneSetReturned) as blocker:
         set_op_window.widgets['apply_button'].click()
@@ -1258,8 +1699,7 @@ def test_SetOperationWindow_apply_set_op_inplace(qtbot, four_available_objects_a
     obj_names = [set_op_window.widgets['set_list'].items[ind] for ind in set_indices if ind != primary_set]
     objs_for_operation = [four_available_objects_and_empty[name][0].obj() for name in obj_names]
     if operation == 'Difference':
-        inplace_truth.difference(
-            *objs_for_operation, inplace=True)
+        inplace_truth.difference(*objs_for_operation, inplace=True)
     else:
         inplace_truth.intersection(*objs_for_operation, inplace=True)
     set_op_window.parameter_widgets['inplace'].switch.click()
@@ -1268,31 +1708,138 @@ def test_SetOperationWindow_apply_set_op_inplace(qtbot, four_available_objects_a
     assert four_available_objects_and_empty[primary_set_name][0].obj() == inplace_truth
 
 
-@pytest.mark.parametrize('threshold,truth', [
-    (0, {'WBGene00194708', 'WBGene00044951', 'WBGene00018193', 'WBGene00022730', 'WBGene00012919', 'WBGene00044022',
-         'WBGene00044799', 'WBGene00001118', 'WBGene00007069', 'WBGene00021375', 'WBGene00021654', 'WBGene00077437',
-         'WBGene00010507', 'WBGene00043987', 'WBGene00010755', 'WBGene00012648', 'WBGene00077503', 'WBGene00007079',
-         'WBGene00010100', 'WBGene00012452', 'WBGene00013816', 'WBGene00022438', 'WBGene00012961', 'WBGene00016635',
-         'WBGene00007064', 'WBGene00219307', 'WBGene00043989', 'WBGene00007063', 'WBGene00023036', 'WBGene00007078',
-         'WBGene00043988', 'WBGene00077504', 'WBGene00007066', 'WBGene00007674', 'WBGene00044258', 'WBGene00021589',
-         'WBGene00021605', 'WBGene00021019', 'WBGene00007071', 'WBGene00219304', 'WBGene00043990', 'WBGene00014997',
-         'WBGene00045410', 'WBGene00077502', 'WBGene00020407', 'WBGene00007075', 'WBGene00018199', 'WBGene00045366',
-         'WBGene00007067', 'WBGene00044478', 'WBGene00022486', 'WBGene00007074', 'WBGene00007076', 'WBGene00007077',
-         'WBGene00008447', 'WBGene00019174', 'WBGene00021018'}),
-    (0.25, {'WBGene00194708', 'WBGene00044951', 'WBGene00018193', 'WBGene00022730', 'WBGene00012919', 'WBGene00044022',
-            'WBGene00044799', 'WBGene00001118', 'WBGene00007069', 'WBGene00021375', 'WBGene00021654', 'WBGene00077437',
-            'WBGene00010507', 'WBGene00043987', 'WBGene00010755', 'WBGene00012648', 'WBGene00077503', 'WBGene00007079',
-            'WBGene00010100', 'WBGene00012452', 'WBGene00013816', 'WBGene00022438', 'WBGene00012961', 'WBGene00016635',
-            'WBGene00007064', 'WBGene00219307', 'WBGene00043989', 'WBGene00007063', 'WBGene00023036', 'WBGene00007078',
-            'WBGene00043988', 'WBGene00077504', 'WBGene00007066', 'WBGene00007674', 'WBGene00044258', 'WBGene00021589',
-            'WBGene00021605', 'WBGene00021019', 'WBGene00007071', 'WBGene00219304', 'WBGene00043990', 'WBGene00014997',
-            'WBGene00045410', 'WBGene00077502', 'WBGene00020407', 'WBGene00007075', 'WBGene00018199', 'WBGene00045366',
-            'WBGene00007067', 'WBGene00044478', 'WBGene00022486', 'WBGene00007074', 'WBGene00007076', 'WBGene00007077',
-            'WBGene00008447', 'WBGene00019174', 'WBGene00021018'}),
-    (0.57, {'WBGene00044258', 'WBGene00010100', 'WBGene00045410'}),
-    (0.99, set()),
-    (1, set())
-])
+@pytest.mark.parametrize(
+    'threshold,truth',
+    [
+        (
+            0,
+            {
+                'WBGene00194708',
+                'WBGene00044951',
+                'WBGene00018193',
+                'WBGene00022730',
+                'WBGene00012919',
+                'WBGene00044022',
+                'WBGene00044799',
+                'WBGene00001118',
+                'WBGene00007069',
+                'WBGene00021375',
+                'WBGene00021654',
+                'WBGene00077437',
+                'WBGene00010507',
+                'WBGene00043987',
+                'WBGene00010755',
+                'WBGene00012648',
+                'WBGene00077503',
+                'WBGene00007079',
+                'WBGene00010100',
+                'WBGene00012452',
+                'WBGene00013816',
+                'WBGene00022438',
+                'WBGene00012961',
+                'WBGene00016635',
+                'WBGene00007064',
+                'WBGene00219307',
+                'WBGene00043989',
+                'WBGene00007063',
+                'WBGene00023036',
+                'WBGene00007078',
+                'WBGene00043988',
+                'WBGene00077504',
+                'WBGene00007066',
+                'WBGene00007674',
+                'WBGene00044258',
+                'WBGene00021589',
+                'WBGene00021605',
+                'WBGene00021019',
+                'WBGene00007071',
+                'WBGene00219304',
+                'WBGene00043990',
+                'WBGene00014997',
+                'WBGene00045410',
+                'WBGene00077502',
+                'WBGene00020407',
+                'WBGene00007075',
+                'WBGene00018199',
+                'WBGene00045366',
+                'WBGene00007067',
+                'WBGene00044478',
+                'WBGene00022486',
+                'WBGene00007074',
+                'WBGene00007076',
+                'WBGene00007077',
+                'WBGene00008447',
+                'WBGene00019174',
+                'WBGene00021018',
+            },
+        ),
+        (
+            0.25,
+            {
+                'WBGene00194708',
+                'WBGene00044951',
+                'WBGene00018193',
+                'WBGene00022730',
+                'WBGene00012919',
+                'WBGene00044022',
+                'WBGene00044799',
+                'WBGene00001118',
+                'WBGene00007069',
+                'WBGene00021375',
+                'WBGene00021654',
+                'WBGene00077437',
+                'WBGene00010507',
+                'WBGene00043987',
+                'WBGene00010755',
+                'WBGene00012648',
+                'WBGene00077503',
+                'WBGene00007079',
+                'WBGene00010100',
+                'WBGene00012452',
+                'WBGene00013816',
+                'WBGene00022438',
+                'WBGene00012961',
+                'WBGene00016635',
+                'WBGene00007064',
+                'WBGene00219307',
+                'WBGene00043989',
+                'WBGene00007063',
+                'WBGene00023036',
+                'WBGene00007078',
+                'WBGene00043988',
+                'WBGene00077504',
+                'WBGene00007066',
+                'WBGene00007674',
+                'WBGene00044258',
+                'WBGene00021589',
+                'WBGene00021605',
+                'WBGene00021019',
+                'WBGene00007071',
+                'WBGene00219304',
+                'WBGene00043990',
+                'WBGene00014997',
+                'WBGene00045410',
+                'WBGene00077502',
+                'WBGene00020407',
+                'WBGene00007075',
+                'WBGene00018199',
+                'WBGene00045366',
+                'WBGene00007067',
+                'WBGene00044478',
+                'WBGene00022486',
+                'WBGene00007074',
+                'WBGene00007076',
+                'WBGene00007077',
+                'WBGene00008447',
+                'WBGene00019174',
+                'WBGene00021018',
+            },
+        ),
+        (0.57, {'WBGene00044258', 'WBGene00010100', 'WBGene00045410'}),
+        (0.99, set()),
+        (1, set()),
+    ],
+)
 def test_SetOperationWindow_apply_set_op_majority_vote(qtbot, set_op_window, threshold, truth):
     for ind in range(4):
         set_op_window.widgets['set_list'].list_items[ind].setSelected(True)
@@ -1309,16 +1856,11 @@ def test_SetVisualizationWindow_init(set_vis_window):
     assert set_vis_window.widgets['generate_button'].property('class') == 'primary'
 
 
-@pytest.mark.parametrize('op_name,truth', [
-    ('Venn Diagram', 'venn_diagram'),
-    ('UpSet Plot', 'upset_plot')
-])
-@pytest.mark.parametrize('second_op_name,second_truth', [
-    ('Venn Diagram', 'venn_diagram'),
-    ('UpSet Plot', 'upset_plot')
-])
-def test_SetVisualizationWindow_get_current_func_name(set_vis_window, op_name, truth, second_op_name,
-                                                      second_truth):
+@pytest.mark.parametrize('op_name,truth', [('Venn Diagram', 'venn_diagram'), ('UpSet Plot', 'upset_plot')])
+@pytest.mark.parametrize(
+    'second_op_name,second_truth', [('Venn Diagram', 'venn_diagram'), ('UpSet Plot', 'upset_plot')]
+)
+def test_SetVisualizationWindow_get_current_func_name(set_vis_window, op_name, truth, second_op_name, second_truth):
     assert set_vis_window.get_current_func_name() is None
     set_vis_window.widgets['radio_button_box'].radio_buttons[op_name].click()
     assert set_vis_window.get_current_func_name() == truth
@@ -1371,16 +1913,11 @@ def test_SetVisualizationWindow_replacing_canvas_detaches_old_canvas(set_vis_win
     assert old_canvas.parentWidget() is None
 
 
-@pytest.mark.parametrize('op_name', [
-    'Venn Diagram',
-    'UpSet Plot'
-])
-@pytest.mark.parametrize('second_op_name', [
-    'Venn Diagram',
-    'UpSet Plot'
-])
-def test_SetVisualizationWindow_function_change_canvas(monkeypatch_create_canvas, set_vis_window, op_name,
-                                                       second_op_name):
+@pytest.mark.parametrize('op_name', ['Venn Diagram', 'UpSet Plot'])
+@pytest.mark.parametrize('second_op_name', ['Venn Diagram', 'UpSet Plot'])
+def test_SetVisualizationWindow_function_change_canvas(
+    monkeypatch_create_canvas, set_vis_window, op_name, second_op_name
+):
     n_sets = 3
     for i in range(n_sets):
         set_vis_window.widgets['set_list'].list_items[i].setSelected(True)
@@ -1394,12 +1931,12 @@ def test_SetVisualizationWindow_function_change_canvas(monkeypatch_create_canvas
     assert monkeypatch_create_canvas == [True, True]
 
 
-@pytest.mark.parametrize('op_name,n_sets,sample_bool_param', [
-    ('Venn Diagram', 2, 'weighted'),
-    ('UpSet Plot', 4, 'show_percentages')
-])
-def test_SetVisualizationWindow_parameter_change_canvas(monkeypatch, qtbot, set_vis_window, op_name, n_sets,
-                                                        sample_bool_param):
+@pytest.mark.parametrize(
+    'op_name,n_sets,sample_bool_param', [('Venn Diagram', 2, 'weighted'), ('UpSet Plot', 4, 'show_percentages')]
+)
+def test_SetVisualizationWindow_parameter_change_canvas(
+    monkeypatch, qtbot, set_vis_window, op_name, n_sets, sample_bool_param
+):
     canvas_created = []
 
     def mock_create_canvas(self):
@@ -1420,15 +1957,18 @@ def test_SetVisualizationWindow_parameter_change_canvas(monkeypatch, qtbot, set_
     assert canvas_created == [True, True]
 
 
-@pytest.mark.parametrize('func_name,op_name,n_sets,kwargs_truth', [
-    ('venn_diagram', 'Venn Diagram', 2, {'title': 'default', 'weighted': True, 'transparency': 0.4}),
-    ('venn_diagram', 'Venn Diagram', 3, {'title': 'default', 'weighted': True, 'linestyle': 'solid'}),
-    ('upset_plot', 'UpSet Plot', 2, {'title': 'UpSet Plot', 'title_fontsize': 20}),
-    ('upset_plot', 'UpSet Plot', 4, {'title': 'UpSet Plot', 'show_percentages': True}),
-
-])
-def test_SetVisualizationWindow_generate_graph(qtbot, set_vis_window, monkeypatch, func_name, op_name, n_sets,
-                                               kwargs_truth, four_available_objects_and_empty):
+@pytest.mark.parametrize(
+    'func_name,op_name,n_sets,kwargs_truth',
+    [
+        ('venn_diagram', 'Venn Diagram', 2, {'title': 'default', 'weighted': True, 'transparency': 0.4}),
+        ('venn_diagram', 'Venn Diagram', 3, {'title': 'default', 'weighted': True, 'linestyle': 'solid'}),
+        ('upset_plot', 'UpSet Plot', 2, {'title': 'UpSet Plot', 'title_fontsize': 20}),
+        ('upset_plot', 'UpSet Plot', 4, {'title': 'UpSet Plot', 'show_percentages': True}),
+    ],
+)
+def test_SetVisualizationWindow_generate_graph(
+    qtbot, set_vis_window, monkeypatch, func_name, op_name, n_sets, kwargs_truth, four_available_objects_and_empty
+):
     called = []
 
     def mock_func(*args, **kwargs):
@@ -1437,9 +1977,11 @@ def test_SetVisualizationWindow_generate_graph(qtbot, set_vis_window, monkeypatc
         assert 'fig' not in kwargs
         assert len(args) == 1
         objs_truth = {
-            list(four_available_objects_and_empty.keys())[i]:
-                four_available_objects_and_empty[list(four_available_objects_and_empty.keys())[i]][
-                    0].obj() for i in range(n_sets)}
+            list(four_available_objects_and_empty.keys())[i]: four_available_objects_and_empty[
+                list(four_available_objects_and_empty.keys())[i]
+            ][0].obj()
+            for i in range(n_sets)
+        }
         assert args[0] == objs_truth
 
         called.append(True)
@@ -1462,18 +2004,20 @@ def test_FilterTabPage_init(qtbot):
     assert window.apply_button.property('class') == 'primary'
 
 
-@pytest.mark.parametrize('outputs,exp_signals', [
-    ([], []),
-    (tuple(), []),
-    (filtering.CountFilter('tests/test_files/counted.csv'), ['itemSpawned', 'filterObjectCreated']),
-    (enrichment.FeatureSet({'a', 'b', 'c'}, 'set name'), ['itemSpawned', 'featureSetCreated']),
-    (pl.DataFrame([1, 2, 3]), ['itemSpawned']),
-    (plt.Figure(), ['itemSpawned']),
-    ('filterlist', []),
-    ('dict', []),
-    ('mix', []),
-
-])
+@pytest.mark.parametrize(
+    'outputs,exp_signals',
+    [
+        ([], []),
+        (tuple(), []),
+        (filtering.CountFilter('tests/test_files/counted.csv'), ['itemSpawned', 'filterObjectCreated']),
+        (enrichment.FeatureSet({'a', 'b', 'c'}, 'set name'), ['itemSpawned', 'featureSetCreated']),
+        (pl.DataFrame([1, 2, 3]), ['itemSpawned']),
+        (plt.Figure(), ['itemSpawned']),
+        ('filterlist', []),
+        ('dict', []),
+        ('mix', []),
+    ],
+)
 def test_FilterTabPage_process_outputs_signals(qtbot, outputs, exp_signals):
     qtbot, tabpage = widget_setup(qtbot, FilterTabPage)
     job_id = -1
@@ -1490,30 +2034,47 @@ def test_FilterTabPage_process_outputs_signals(qtbot, outputs, exp_signals):
             tabpage.process_outputs(outputs, job_id, source_name)
 
 
-@pytest.mark.parametrize('outputs,exp_filts,exp_sets,exp_items', [
-    (filtering.CountFilter('tests/test_files/counted.csv'),
-     [(filtering.CountFilter('tests/test_files/counted.csv'), 42)],
-     [], [("'source name'\noutput", 42, -1, filtering.CountFilter('tests/test_files/counted.csv'))]),
-
-    (enrichment.FeatureSet({'a', 'b', 'c'}, 'set name'), [], [(enrichment.FeatureSet({'a', 'b', 'c'}, 'set name'), 42)],
-     [("'source name'\noutput", 42, -1, enrichment.FeatureSet({'a', 'b', 'c'}, 'set name'))]),
-
-    (pl.DataFrame([1, 2, 3]), [], [], [("'source name'\noutput", 42, -1, pl.DataFrame([1, 2, 3]))]),
-
-    (plt.Figure(), [], [], [("'source name'\ngraph", 42, -1, plt.gcf())]),
-
-    ([filtering.Filter('tests/test_files/counted.csv'), filtering.DESeqFilter('tests/test_files/test_deseq.csv')],
-     [(filtering.Filter('tests/test_files/counted.csv'), 42),
-      (filtering.DESeqFilter('tests/test_files/test_deseq.csv'), 42)], [],
-     [("'source name'\noutput", 42, -1, filtering.Filter('tests/test_files/counted.csv')),
-      ("'source name'\noutput", 42, -1, filtering.DESeqFilter('tests/test_files/test_deseq.csv'))]),
-
-    ({'out1': plt.Figure(), 'out2': pl.DataFrame(), 'other': 'some str'}, [], [],
-     [("'source name'\ngraph", 42, -1, plt.gcf()), ("'source name'\noutput", 42, -1, pl.DataFrame())]),
-
-    ([], [], [], []),
-
-])
+@pytest.mark.parametrize(
+    'outputs,exp_filts,exp_sets,exp_items',
+    [
+        (
+            filtering.CountFilter('tests/test_files/counted.csv'),
+            [(filtering.CountFilter('tests/test_files/counted.csv'), 42)],
+            [],
+            [("'source name'\noutput", 42, -1, filtering.CountFilter('tests/test_files/counted.csv'))],
+        ),
+        (
+            enrichment.FeatureSet({'a', 'b', 'c'}, 'set name'),
+            [],
+            [(enrichment.FeatureSet({'a', 'b', 'c'}, 'set name'), 42)],
+            [("'source name'\noutput", 42, -1, enrichment.FeatureSet({'a', 'b', 'c'}, 'set name'))],
+        ),
+        (pl.DataFrame([1, 2, 3]), [], [], [("'source name'\noutput", 42, -1, pl.DataFrame([1, 2, 3]))]),
+        (plt.Figure(), [], [], [("'source name'\ngraph", 42, -1, plt.gcf())]),
+        (
+            [
+                filtering.Filter('tests/test_files/counted.csv'),
+                filtering.DESeqFilter('tests/test_files/test_deseq.csv'),
+            ],
+            [
+                (filtering.Filter('tests/test_files/counted.csv'), 42),
+                (filtering.DESeqFilter('tests/test_files/test_deseq.csv'), 42),
+            ],
+            [],
+            [
+                ("'source name'\noutput", 42, -1, filtering.Filter('tests/test_files/counted.csv')),
+                ("'source name'\noutput", 42, -1, filtering.DESeqFilter('tests/test_files/test_deseq.csv')),
+            ],
+        ),
+        (
+            {'out1': plt.Figure(), 'out2': pl.DataFrame(), 'other': 'some str'},
+            [],
+            [],
+            [("'source name'\ngraph", 42, -1, plt.gcf()), ("'source name'\noutput", 42, -1, pl.DataFrame())],
+        ),
+        ([], [], [], []),
+    ],
+)
 def test_FilterTabPage_process_outputs_signal_contents(monkeypatch, qtbot, outputs, exp_filts, exp_sets, exp_items):
     monkeypatch.setattr(JOB_COUNTER, 'get_id', lambda *args: 42)
 
@@ -1571,12 +2132,15 @@ def test_FilterTabPage_load_file(qtbot):
     assert window.get_table_type() == 'Count matrix'
 
 
-@pytest.mark.parametrize('path,expected_type', [
-    ('tests/test_files/counted.csv', 'Count matrix'),
-    ('tests/test_files/test_deseq.csv', 'Differential expression'),
-    ('tests/test_files/fc_1.csv', 'Fold change'),
-    ('tests/test_files/biotype_ref_table_for_tests.csv', 'Other table'),
-])
+@pytest.mark.parametrize(
+    'path,expected_type',
+    [
+        ('tests/test_files/counted.csv', 'Count matrix'),
+        ('tests/test_files/test_deseq.csv', 'Differential expression'),
+        ('tests/test_files/fc_1.csv', 'Fold change'),
+        ('tests/test_files/biotype_ref_table_for_tests.csv', 'Other table'),
+    ],
+)
 def test_FilterTabPage_autodetect_table_type_on_load(qtbot, path, expected_type):
     qtbot, window = widget_setup(qtbot, FilterTabPage)
     # combo starts on the conservative default
@@ -1589,8 +2153,7 @@ def test_FilterTabPage_autodetect_table_type_on_load(qtbot, path, expected_type)
 def test_FilterTabPage_autodetect_table_type_is_overridable(qtbot):
     qtbot, window = widget_setup(qtbot, FilterTabPage)
     window.basic_widgets['file_path'].clear()
-    qtbot.keyClicks(window.basic_widgets['file_path'].file_path,
-                    str(Path('tests/test_files/counted.csv').absolute()))
+    qtbot.keyClicks(window.basic_widgets['file_path'].file_path, str(Path('tests/test_files/counted.csv').absolute()))
     # auto-detected as a count matrix, but the user can still override the choice
     assert window.basic_widgets['table_type_combo'].currentText() == 'Count matrix'
     window.basic_widgets['table_type_combo'].setCurrentText('Other table')
@@ -1634,15 +2197,23 @@ def test_FilterTabPage_cache(qtbot, monkeypatch):
     assert fname != fname2
 
 
-@pytest.mark.parametrize('filter_obj,truth', [
-    (filtering.DESeqFilter('tests/test_files/test_deseq.csv', log2fc_col='my log2fc col', padj_col='my padj col'),
-     {'log2fc_col': 'my log2fc col', 'padj_col': 'my padj col', 'pval_col': 'pvalue'}),
-    (filtering.CountFilter('tests/test_files/counted.tsv'), {'is_normalized': False}),
-    (filtering.FoldChangeFilter('tests/test_files/fc_1.csv', 'num_name', 'denom_name'),
-     {'numerator_name': 'num_name', 'denominator_name': 'denom_name'}),
-    (filtering.Filter('tests/test_files/test_deseq.csv'), {})
-
-])
+@pytest.mark.parametrize(
+    'filter_obj,truth',
+    [
+        (
+            filtering.DESeqFilter(
+                'tests/test_files/test_deseq.csv', log2fc_col='my log2fc col', padj_col='my padj col'
+            ),
+            {'log2fc_col': 'my log2fc col', 'padj_col': 'my padj col', 'pval_col': 'pvalue'},
+        ),
+        (filtering.CountFilter('tests/test_files/counted.tsv'), {'is_normalized': False}),
+        (
+            filtering.FoldChangeFilter('tests/test_files/fc_1.csv', 'num_name', 'denom_name'),
+            {'numerator_name': 'num_name', 'denominator_name': 'denom_name'},
+        ),
+        (filtering.Filter('tests/test_files/test_deseq.csv'), {}),
+    ],
+)
 def test_FilterTabPage_obj_properties(qtbot, filter_obj, truth):
     qtbot, window = widget_setup(qtbot, FilterTabPage)
     window.start_from_filter_obj(filter_obj, 1, 'table name')
@@ -1763,8 +2334,9 @@ def test_FilterTabPage_apply_split_clustering_function(qtbot, monkeypatch, count
     qtbot.keyClicks(window.stack.currentWidget().func_combo, filtering.CountFilter.split_kmeans.readable_name)
     window.stack.currentWidget().parameter_widgets['n_clusters'].other.setValue(3)
     window.stack.currentWidget().parameter_widgets['random_seed'].setValue(42)
-    with qtbot.waitSignals([window.filterObjectCreated, window.filterObjectCreated, window.filterObjectCreated],
-                           timeout=15000) as blocker:
+    with qtbot.waitSignals(
+        [window.filterObjectCreated, window.filterObjectCreated, window.filterObjectCreated], timeout=15000
+    ) as blocker:
         qtbot.mouseClick(window.apply_button, LEFT_CLICK)
 
     res = [sig.args[0] for sig in blocker.all_signals_and_args]
@@ -1865,7 +2437,8 @@ def test_FilterTabPage_open_deseq(countfiltertabpage_with_undo_stack, monkeypatc
 
     tabpage.stack_buttons[5].click()
     tabpage.stack_widgets['General'].func_combo.setCurrentText(
-        filtering.CountFilter.differential_expression_deseq2.readable_name)
+        filtering.CountFilter.differential_expression_deseq2.readable_name
+    )
 
     assert opened == [True]
 
@@ -1881,7 +2454,8 @@ def test_FilterTabPage_open_limma(countfiltertabpage_with_undo_stack, monkeypatc
 
     tabpage.stack_buttons[5].click()
     tabpage.stack_widgets['General'].func_combo.setCurrentText(
-        filtering.CountFilter.differential_expression_limma_voom.readable_name)
+        filtering.CountFilter.differential_expression_limma_voom.readable_name
+    )
 
     assert opened == [True]
 
@@ -2033,9 +2607,14 @@ def test_SetTabPage_view_full_set(qtbot):
 @pytest.mark.parametrize('exc_params', [None, ['self', 'other']])
 @pytest.mark.parametrize('pipeline_mode', [True, False])
 def test_FuncTypeStack_init(qtbot, pipeline_mode, exc_params):
-    _ = widget_setup(qtbot, FuncTypeStack, ['filter_biotype_from_ref_table', 'number_filters', 'describe'],
-                     filtering.Filter('tests/test_files/test_deseq.csv'),
-                     additional_excluded_params=exc_params, pipeline_mode=pipeline_mode)
+    _ = widget_setup(
+        qtbot,
+        FuncTypeStack,
+        ['filter_biotype_from_ref_table', 'number_filters', 'describe'],
+        filtering.Filter('tests/test_files/test_deseq.csv'),
+        additional_excluded_params=exc_params,
+        pipeline_mode=pipeline_mode,
+    )
 
 
 def test_CreatePipelineWindow_init(qtbot):
@@ -2059,14 +2638,17 @@ def test_CreatePipelineWindow_from_pipeline(qtbot):
     assert window._get_pipeline_name() == name
 
 
-@pytest.mark.parametrize('pipeline_type,exp_pipeline,exp_filter_type', [
-    ('Differential expression', filtering.Pipeline, filtering.DESeqFilter),
-    ('Other table', filtering.Pipeline, filtering.Filter),
-    ('Sequence files (single-end)', fastq.SingleEndPipeline, False),
-    ('Sequence files (paired-end)', fastq.PairedEndPipeline, False)
-])
+@pytest.mark.parametrize(
+    'pipeline_type,exp_pipeline,exp_filter_type',
+    [
+        ('Differential expression', filtering.Pipeline, filtering.DESeqFilter),
+        ('Other table', filtering.Pipeline, filtering.Filter),
+        ('Sequence files (single-end)', fastq.SingleEndPipeline, False),
+        ('Sequence files (paired-end)', fastq.PairedEndPipeline, False),
+    ],
+)
 def test_CreatePipelineWindow_create_pipeline(qtbot, monkeypatch, pipeline_type, exp_pipeline, exp_filter_type):
-    monkeypatch.setattr(QtWidgets.QMessageBox, "question", lambda *args: QtWidgets.QMessageBox.StandardButton.Yes)
+    monkeypatch.setattr(QtWidgets.QMessageBox, 'question', lambda *args: QtWidgets.QMessageBox.StandardButton.Yes)
     pipeline_name = 'my pipeline name'
     qtbot, window = widget_setup(qtbot, CreatePipelineWindow)
     window.basic_widgets['pipeline_name'].clear()
@@ -2085,7 +2667,7 @@ def test_CreatePipelineWindow_add_function(qtbot, monkeypatch):
     pipeline_truth = filtering.Pipeline('DESeqFilter')
     pipeline_truth.add_function('split_fold_change_direction')
 
-    monkeypatch.setattr(QtWidgets.QMessageBox, "question", lambda *args: QtWidgets.QMessageBox.StandardButton.Yes)
+    monkeypatch.setattr(QtWidgets.QMessageBox, 'question', lambda *args: QtWidgets.QMessageBox.StandardButton.Yes)
 
     qtbot, window = widget_setup(qtbot, CreatePipelineWindow)
     window.basic_widgets['pipeline_name'].clear()
@@ -2094,8 +2676,9 @@ def test_CreatePipelineWindow_add_function(qtbot, monkeypatch):
     qtbot.mouseClick(window.basic_widgets['start_button'], LEFT_CLICK)
 
     qtbot.mouseClick(window.stack_buttons[0], LEFT_CLICK)
-    qtbot.keyClicks(window.stack.currentWidget().func_combo,
-                    filtering.DESeqFilter.split_fold_change_direction.readable_name)
+    qtbot.keyClicks(
+        window.stack.currentWidget().func_combo, filtering.DESeqFilter.split_fold_change_direction.readable_name
+    )
     qtbot.mouseClick(window.apply_button, LEFT_CLICK)
 
     assert window.pipeline == pipeline_truth
@@ -2103,7 +2686,7 @@ def test_CreatePipelineWindow_add_function(qtbot, monkeypatch):
 
 def test_CreatePipelineWindow_remove_function(qtbot, monkeypatch):
     warned = []
-    monkeypatch.setattr(QtWidgets.QMessageBox, "question", lambda *args: QtWidgets.QMessageBox.StandardButton.Yes)
+    monkeypatch.setattr(QtWidgets.QMessageBox, 'question', lambda *args: QtWidgets.QMessageBox.StandardButton.Yes)
     monkeypatch.setattr(QtWidgets.QMessageBox, 'exec', lambda *args, **kwargs: warned.append(True))
 
     qtbot, window = widget_setup(qtbot, CreatePipelineWindow)
@@ -2113,8 +2696,9 @@ def test_CreatePipelineWindow_remove_function(qtbot, monkeypatch):
     qtbot.mouseClick(window.basic_widgets['start_button'], LEFT_CLICK)
 
     qtbot.mouseClick(window.stack_buttons[0], LEFT_CLICK)
-    qtbot.keyClicks(window.stack.currentWidget().func_combo,
-                    filtering.DESeqFilter.split_fold_change_direction.readable_name)
+    qtbot.keyClicks(
+        window.stack.currentWidget().func_combo, filtering.DESeqFilter.split_fold_change_direction.readable_name
+    )
     qtbot.mouseClick(window.apply_button, LEFT_CLICK)
 
     assert len(window.pipeline) == 1
@@ -2132,7 +2716,7 @@ def test_CreatePipelineWindow_add_function_with_args(qtbot, monkeypatch):
     pipeline_truth = filtering.Pipeline('DESeqFilter')
     pipeline_truth.add_function('filter_significant', alpha=0.01, opposite=True)
 
-    monkeypatch.setattr(QtWidgets.QMessageBox, "question", lambda *args: QtWidgets.QMessageBox.StandardButton.Yes)
+    monkeypatch.setattr(QtWidgets.QMessageBox, 'question', lambda *args: QtWidgets.QMessageBox.StandardButton.Yes)
 
     qtbot, window = widget_setup(qtbot, CreatePipelineWindow)
     window.basic_widgets['pipeline_name'].clear()
@@ -2152,7 +2736,8 @@ def test_CreatePipelineWindow_add_function_with_args(qtbot, monkeypatch):
     pipeline_truth.add_function('split_fold_change_direction')
 
     window.stack.currentWidget().func_combo.setCurrentText(
-        filtering.DESeqFilter.split_fold_change_direction.readable_name)
+        filtering.DESeqFilter.split_fold_change_direction.readable_name
+    )
     qtbot.mouseClick(window.apply_button, LEFT_CLICK)
     assert window.pipeline == pipeline_truth
 
@@ -2162,7 +2747,7 @@ def test_CreatePipelineWindow_save_pipeline(qtbot, monkeypatch):
     pipeline_truth.add_function('describe', percentiles=[0.01, 0.25, 0.5, 0.75, 0.99])
     pipeline_name = 'my pipeline name'
 
-    monkeypatch.setattr(QtWidgets.QMessageBox, "question", lambda *args: QtWidgets.QMessageBox.StandardButton.Yes)
+    monkeypatch.setattr(QtWidgets.QMessageBox, 'question', lambda *args: QtWidgets.QMessageBox.StandardButton.Yes)
 
     qtbot, window = widget_setup(qtbot, CreatePipelineWindow)
     window.basic_widgets['pipeline_name'].clear()
@@ -2185,7 +2770,7 @@ def test_CreatePipelineWindow_export_pipeline(qtbot, monkeypatch):
     pipeline_truth.add_function('describe', percentiles=[0.01, 0.25, 0.5, 0.75, 0.99])
     pipeline_name = 'my pipeline name'
 
-    monkeypatch.setattr(QtWidgets.QMessageBox, "question", lambda *args: QtWidgets.QMessageBox.StandardButton.Yes)
+    monkeypatch.setattr(QtWidgets.QMessageBox, 'question', lambda *args: QtWidgets.QMessageBox.StandardButton.Yes)
 
     qtbot, window = widget_setup(qtbot, CreatePipelineWindow)
     window.basic_widgets['pipeline_name'].clear()
@@ -2207,19 +2792,37 @@ def test_MultiKeepWindow_init(multi_keep_window):
     _ = multi_keep_window
 
 
-@pytest.mark.parametrize('keep_ops,name_ops,truth', [
-    ({}, {}, []),
-    ({'all': True}, {}, [filtering.DESeqFilter('tests/test_files/test_deseq.csv'),
-                         filtering.CountFilter('tests/test_files/counted.tsv'),
-                         filtering.Filter('tests/test_files/test_deseq_biotype.csv')]),
-    ({'test_deseq': True, 'test_deseq_biotype': True}, {},
-     [filtering.DESeqFilter('tests/test_files/test_deseq.csv'),
-      filtering.Filter('tests/test_files/test_deseq_biotype.csv')]),
-    ({'test_deseq': True, 'test_deseq_biotype': True},
-     {'test_deseq': 'new name1', 'test_deseq_biotype': 'new name 2', 'counted': 'new name 3'},
-     [filtering.DESeqFilter('tests/test_files/test_deseq.csv'),
-      filtering.Filter('tests/test_files/test_deseq_biotype.csv')])
-])
+@pytest.mark.parametrize(
+    'keep_ops,name_ops,truth',
+    [
+        ({}, {}, []),
+        (
+            {'all': True},
+            {},
+            [
+                filtering.DESeqFilter('tests/test_files/test_deseq.csv'),
+                filtering.CountFilter('tests/test_files/counted.tsv'),
+                filtering.Filter('tests/test_files/test_deseq_biotype.csv'),
+            ],
+        ),
+        (
+            {'test_deseq': True, 'test_deseq_biotype': True},
+            {},
+            [
+                filtering.DESeqFilter('tests/test_files/test_deseq.csv'),
+                filtering.Filter('tests/test_files/test_deseq_biotype.csv'),
+            ],
+        ),
+        (
+            {'test_deseq': True, 'test_deseq_biotype': True},
+            {'test_deseq': 'new name1', 'test_deseq_biotype': 'new name 2', 'counted': 'new name 3'},
+            [
+                filtering.DESeqFilter('tests/test_files/test_deseq.csv'),
+                filtering.Filter('tests/test_files/test_deseq_biotype.csv'),
+            ],
+        ),
+    ],
+)
 def test_MultiKeepWindow_result(qtbot, multi_keep_window, keep_ops, name_ops, truth):
     for ind, op in keep_ops.items():
         if ind == 'all':
@@ -2240,61 +2843,136 @@ def test_MultiOpenWindow_init(multi_open_window):
     _ = multi_open_window
 
 
-@pytest.mark.parametrize('path_ops,type_ops,name_ops,truth', [
-    ({}, {}, {}, ({'tests/counted.csv': 'tests/counted.csv', 'tests/test_deseq.csv': 'tests/test_deseq.csv',
-                   'tests/counted.tsv': 'tests/counted.tsv'},
-                  {'tests/counted.csv': 'Other table', 'tests/test_deseq.csv': 'Other table',
-                   'tests/counted.tsv': 'Other table'},
-                  {'tests/counted.csv': '', 'tests/test_deseq.csv': '', 'tests/counted.tsv': ''},
-                  {'tests/counted.csv': {'drop_columns': []},
-                   'tests/counted.tsv': {'drop_columns': []},
-                   'tests/test_deseq.csv': {'drop_columns': []}})),
-    (
-        {}, {}, {1: 'new name', 2: 'second new name'},
-        ({'tests/counted.csv': 'tests/counted.csv', 'tests/test_deseq.csv': 'tests/test_deseq.csv',
-          'tests/counted.tsv': 'tests/counted.tsv'},
-         {'tests/counted.csv': 'Other table', 'tests/test_deseq.csv': 'Other table',
-          'tests/counted.tsv': 'Other table'},
-         {'tests/counted.csv': '', 'tests/test_deseq.csv': 'new name', 'tests/counted.tsv': 'second new name'},
-         {'tests/counted.csv': {'drop_columns': []},
-          'tests/counted.tsv': {'drop_columns': []},
-          'tests/test_deseq.csv': {'drop_columns': []}})),
-
-    ({}, {0: 'Count matrix', 1: 'Differential expression'}, {},
-     ({'tests/counted.csv': 'tests/counted.csv', 'tests/test_deseq.csv': 'tests/test_deseq.csv',
-       'tests/counted.tsv': 'tests/counted.tsv'},
-      {'tests/counted.csv': 'Count matrix', 'tests/test_deseq.csv': 'Differential expression',
-       'tests/counted.tsv': 'Other table'},
-      {'tests/counted.csv': '', 'tests/test_deseq.csv': '', 'tests/counted.tsv': ''},
-      {'tests/counted.csv': {'drop_columns': [], 'is_normalized': False},
-       'tests/counted.tsv': {'drop_columns': []},
-       'tests/test_deseq.csv': {'drop_columns': [],
-                                'log2fc_col': 'log2FoldChange',
-                                'padj_col': 'padj',
-                                'pval_col': 'pvalue'}})),
-
-    ({1: 'tests/big_counted.csv'}, {}, {},
-     ({'tests/counted.csv': 'tests/counted.csv', 'tests/test_deseq.csv': 'tests/big_counted.csv',
-       'tests/counted.tsv': 'tests/counted.tsv'},
-      {'tests/counted.csv': 'Other table', 'tests/test_deseq.csv': 'Other table', 'tests/counted.tsv': 'Other table'},
-      {'tests/counted.csv': '', 'tests/test_deseq.csv': '', 'tests/counted.tsv': ''},
-      {'tests/counted.csv': {'drop_columns': []},
-       'tests/counted.tsv': {'drop_columns': []},
-       'tests/test_deseq.csv': {'drop_columns': []}})),
-
-    ({}, {0: 'Count matrix', 1: 'Differential expression'}, {1: 'new name', 2: 'second new name'},
-     ({'tests/counted.csv': 'tests/counted.csv', 'tests/test_deseq.csv': 'tests/test_deseq.csv',
-       'tests/counted.tsv': 'tests/counted.tsv'},
-      {'tests/counted.csv': 'Count matrix', 'tests/test_deseq.csv': 'Differential expression',
-       'tests/counted.tsv': 'Other table'},
-      {'tests/counted.csv': '', 'tests/test_deseq.csv': 'new name', 'tests/counted.tsv': 'second new name'},
-      {'tests/counted.csv': {'drop_columns': [], 'is_normalized': False},
-       'tests/counted.tsv': {'drop_columns': []},
-       'tests/test_deseq.csv': {'drop_columns': [],
-                                'log2fc_col': 'log2FoldChange',
-                                'padj_col': 'padj',
-                                'pval_col': 'pvalue'}})),
-])
+@pytest.mark.parametrize(
+    'path_ops,type_ops,name_ops,truth',
+    [
+        (
+            {},
+            {},
+            {},
+            (
+                {
+                    'tests/counted.csv': 'tests/counted.csv',
+                    'tests/test_deseq.csv': 'tests/test_deseq.csv',
+                    'tests/counted.tsv': 'tests/counted.tsv',
+                },
+                {
+                    'tests/counted.csv': 'Other table',
+                    'tests/test_deseq.csv': 'Other table',
+                    'tests/counted.tsv': 'Other table',
+                },
+                {'tests/counted.csv': '', 'tests/test_deseq.csv': '', 'tests/counted.tsv': ''},
+                {
+                    'tests/counted.csv': {'drop_columns': []},
+                    'tests/counted.tsv': {'drop_columns': []},
+                    'tests/test_deseq.csv': {'drop_columns': []},
+                },
+            ),
+        ),
+        (
+            {},
+            {},
+            {1: 'new name', 2: 'second new name'},
+            (
+                {
+                    'tests/counted.csv': 'tests/counted.csv',
+                    'tests/test_deseq.csv': 'tests/test_deseq.csv',
+                    'tests/counted.tsv': 'tests/counted.tsv',
+                },
+                {
+                    'tests/counted.csv': 'Other table',
+                    'tests/test_deseq.csv': 'Other table',
+                    'tests/counted.tsv': 'Other table',
+                },
+                {'tests/counted.csv': '', 'tests/test_deseq.csv': 'new name', 'tests/counted.tsv': 'second new name'},
+                {
+                    'tests/counted.csv': {'drop_columns': []},
+                    'tests/counted.tsv': {'drop_columns': []},
+                    'tests/test_deseq.csv': {'drop_columns': []},
+                },
+            ),
+        ),
+        (
+            {},
+            {0: 'Count matrix', 1: 'Differential expression'},
+            {},
+            (
+                {
+                    'tests/counted.csv': 'tests/counted.csv',
+                    'tests/test_deseq.csv': 'tests/test_deseq.csv',
+                    'tests/counted.tsv': 'tests/counted.tsv',
+                },
+                {
+                    'tests/counted.csv': 'Count matrix',
+                    'tests/test_deseq.csv': 'Differential expression',
+                    'tests/counted.tsv': 'Other table',
+                },
+                {'tests/counted.csv': '', 'tests/test_deseq.csv': '', 'tests/counted.tsv': ''},
+                {
+                    'tests/counted.csv': {'drop_columns': [], 'is_normalized': False},
+                    'tests/counted.tsv': {'drop_columns': []},
+                    'tests/test_deseq.csv': {
+                        'drop_columns': [],
+                        'log2fc_col': 'log2FoldChange',
+                        'padj_col': 'padj',
+                        'pval_col': 'pvalue',
+                    },
+                },
+            ),
+        ),
+        (
+            {1: 'tests/big_counted.csv'},
+            {},
+            {},
+            (
+                {
+                    'tests/counted.csv': 'tests/counted.csv',
+                    'tests/test_deseq.csv': 'tests/big_counted.csv',
+                    'tests/counted.tsv': 'tests/counted.tsv',
+                },
+                {
+                    'tests/counted.csv': 'Other table',
+                    'tests/test_deseq.csv': 'Other table',
+                    'tests/counted.tsv': 'Other table',
+                },
+                {'tests/counted.csv': '', 'tests/test_deseq.csv': '', 'tests/counted.tsv': ''},
+                {
+                    'tests/counted.csv': {'drop_columns': []},
+                    'tests/counted.tsv': {'drop_columns': []},
+                    'tests/test_deseq.csv': {'drop_columns': []},
+                },
+            ),
+        ),
+        (
+            {},
+            {0: 'Count matrix', 1: 'Differential expression'},
+            {1: 'new name', 2: 'second new name'},
+            (
+                {
+                    'tests/counted.csv': 'tests/counted.csv',
+                    'tests/test_deseq.csv': 'tests/test_deseq.csv',
+                    'tests/counted.tsv': 'tests/counted.tsv',
+                },
+                {
+                    'tests/counted.csv': 'Count matrix',
+                    'tests/test_deseq.csv': 'Differential expression',
+                    'tests/counted.tsv': 'Other table',
+                },
+                {'tests/counted.csv': '', 'tests/test_deseq.csv': 'new name', 'tests/counted.tsv': 'second new name'},
+                {
+                    'tests/counted.csv': {'drop_columns': [], 'is_normalized': False},
+                    'tests/counted.tsv': {'drop_columns': []},
+                    'tests/test_deseq.csv': {
+                        'drop_columns': [],
+                        'log2fc_col': 'log2FoldChange',
+                        'padj_col': 'padj',
+                        'pval_col': 'pvalue',
+                    },
+                },
+            ),
+        ),
+    ],
+)
 def test_MultiOpenWindow_result(qtbot, multi_open_window, path_ops, type_ops, name_ops, truth):
     files = multi_open_window_files
     for ind, op in path_ops.items():
@@ -2425,7 +3103,7 @@ def test_MainWindow_shutdown_worker_threads_waits_for_running_job(main_window, q
 
     main_window._shutdown_worker_threads()
 
-    assert finished == [True]           # the in-flight job ran to completion -> we actually waited
+    assert finished == [True]  # the in-flight job ran to completion -> we actually waited
     assert not thread.isRunning()
 
 
@@ -2578,8 +3256,9 @@ def test_MainWindow_new_table_from_folder_htseqcount(main_window_with_tabs, norm
 
     main_window_with_tabs.new_table_from_folder_htseq_action.trigger()
     assert main_window_with_tabs.tabs.count() == 6
-    assert main_window_with_tabs.tabs.currentWidget().obj() == filtering.CountFilter.from_folder_htseqcount(dir_path,
-                                                                                                            normalize)
+    assert main_window_with_tabs.tabs.currentWidget().obj() == filtering.CountFilter.from_folder_htseqcount(
+        dir_path, normalize
+    )
 
 
 def test_MainWindow_new_table_from_folder(main_window_with_tabs, monkeypatch):
@@ -2597,8 +3276,11 @@ def test_MainWindow_new_table_from_folder(main_window_with_tabs, monkeypatch):
 
 def test_MainWindow_multiple_new_tables(main_window, monkeypatch):
     filenames = ['tests/test_files/test_deseq.csv', 'tests/test_files/counted.tsv', 'tests/test_files/fc_1.csv']
-    objs_truth = [filtering.DESeqFilter(filenames[0]), filtering.CountFilter(filenames[1], drop_columns='cond2'),
-                  filtering.FoldChangeFilter(filenames[2], 'num', 'denom')]
+    objs_truth = [
+        filtering.DESeqFilter(filenames[0]),
+        filtering.CountFilter(filenames[1], drop_columns='cond2'),
+        filtering.FoldChangeFilter(filenames[2], 'num', 'denom'),
+    ]
     objs_truth[1].fname = Path('new name')
 
     def mock_exec(self):
@@ -2609,11 +3291,17 @@ def test_MainWindow_multiple_new_tables(main_window, monkeypatch):
 
     def mock_multi_open_result(self):
         filename_dict = {fname: fname for fname in filenames}
-        types_dict = {filenames[0]: 'Differential expression', filenames[1]: 'Count matrix',
-                      filenames[2]: 'Fold change'}
+        types_dict = {
+            filenames[0]: 'Differential expression',
+            filenames[1]: 'Count matrix',
+            filenames[2]: 'Fold change',
+        }
         names_dict = {filenames[0]: '', filenames[1]: 'new name', filenames[2]: ''}
-        kwargs_dict = {filenames[0]: {}, filenames[1]: {'drop_columns': ['cond2']},
-                       filenames[2]: {'numerator_name': 'num', 'denominator_name': 'denom'}}
+        kwargs_dict = {
+            filenames[0]: {},
+            filenames[1]: {'drop_columns': ['cond2']},
+            filenames[2]: {'numerator_name': 'num', 'denominator_name': 'denom'},
+        }
         return filename_dict, types_dict, names_dict, kwargs_dict
 
     monkeypatch.setattr(MultiOpenWindow, 'exec', mock_exec)
@@ -2645,10 +3333,14 @@ def test_MainWindow_export_pipeline(use_temp_settings_file, main_window, monkeyp
     assert pipeline_exported == [True]
 
 
-@pytest.mark.parametrize('name,exp_class', [('test_pipeline', filtering.Pipeline),
-                                            ('test_single_end_pipeline', fastq.SingleEndPipeline),
-                                            ('test_paired_end_pipeline', fastq.PairedEndPipeline)
-                                            ])
+@pytest.mark.parametrize(
+    'name,exp_class',
+    [
+        ('test_pipeline', filtering.Pipeline),
+        ('test_single_end_pipeline', fastq.SingleEndPipeline),
+        ('test_paired_end_pipeline', fastq.PairedEndPipeline),
+    ],
+)
 def test_MainWindow_import_pipeline(use_temp_settings_file, main_window, monkeypatch, name, exp_class):
     fname = f'tests/test_files/{name}.yaml'
     monkeypatch.setattr(QtWidgets.QFileDialog, 'getOpenFileName', lambda *args, **kwargs: (fname, '.yaml'))
@@ -2658,8 +3350,11 @@ def test_MainWindow_import_pipeline(use_temp_settings_file, main_window, monkeyp
 
 
 def test_MainWindow_import_multiple_gene_sets(main_window_with_tabs, monkeypatch):
-    filenames = ['tests/test_files/counted.tsv', 'tests/test_files/test_deseq.csv',
-                 'tests/test_files/test_gene_set.txt']
+    filenames = [
+        'tests/test_files/counted.tsv',
+        'tests/test_files/test_deseq.csv',
+        'tests/test_files/test_gene_set.txt',
+    ]
     truth = []
     for filename in filenames:
         if filename.endswith('.txt'):
@@ -2717,8 +3412,10 @@ def test_MainWindow_filename_to_gene_set_whitespace_only_cell_dropped(tmp_path):
     assert MainWindow._filename_to_gene_set(str(path)) == {'WBGene01', 'WBGene02'}
 
 
-@pytest.mark.parametrize('filename', ['tests/test_files/counted.tsv', 'tests/test_files/test_deseq.csv',
-                                      'tests/test_files/test_gene_set.txt'])
+@pytest.mark.parametrize(
+    'filename',
+    ['tests/test_files/counted.tsv', 'tests/test_files/test_deseq.csv', 'tests/test_files/test_gene_set.txt'],
+)
 def test_MainWindow_import_gene_set(main_window_with_tabs, monkeypatch, filename):
     if filename.endswith('.txt'):
         with open(filename) as f:
@@ -2762,18 +3459,65 @@ def test_MainWindow_export_gene_set(use_temp_settings_file, main_window_with_tab
     assert save_called == [True]
 
 
-@pytest.mark.parametrize('ind,gene_set', [
-    (4, {'WBGene00007069', 'WBGene00007064', 'WBGene00007063', 'WBGene00007074', 'WBGene00077502',
-         'WBGene00007076', 'WBGene00044951', 'WBGene00007067', 'WBGene00044022', 'WBGene00043990',
-         'WBGene00077504', 'WBGene00007066', 'WBGene00043987', 'WBGene00014997', 'WBGene00043989',
-         'WBGene00007071', 'WBGene00007075', 'WBGene00007078', 'WBGene00007079', 'WBGene00007077',
-         'WBGene00077503', 'WBGene00043988'}),
-    (1, {'WBGene00007066', 'WBGene00007076', 'WBGene00044022', 'WBGene00007067', 'WBGene00043987',
-         'WBGene00007077', 'WBGene00044951', 'WBGene00007075', 'WBGene00077502', 'WBGene00077504',
-         'WBGene00007069', 'WBGene00007079', 'WBGene00043990', 'WBGene00043989', 'WBGene00014997',
-         'WBGene00007074', 'WBGene00007071', 'WBGene00077503', 'WBGene00007063', 'WBGene00043988',
-         'WBGene00007064', 'WBGene00007078'})
-])
+@pytest.mark.parametrize(
+    'ind,gene_set',
+    [
+        (
+            4,
+            {
+                'WBGene00007069',
+                'WBGene00007064',
+                'WBGene00007063',
+                'WBGene00007074',
+                'WBGene00077502',
+                'WBGene00007076',
+                'WBGene00044951',
+                'WBGene00007067',
+                'WBGene00044022',
+                'WBGene00043990',
+                'WBGene00077504',
+                'WBGene00007066',
+                'WBGene00043987',
+                'WBGene00014997',
+                'WBGene00043989',
+                'WBGene00007071',
+                'WBGene00007075',
+                'WBGene00007078',
+                'WBGene00007079',
+                'WBGene00007077',
+                'WBGene00077503',
+                'WBGene00043988',
+            },
+        ),
+        (
+            1,
+            {
+                'WBGene00007066',
+                'WBGene00007076',
+                'WBGene00044022',
+                'WBGene00007067',
+                'WBGene00043987',
+                'WBGene00007077',
+                'WBGene00044951',
+                'WBGene00007075',
+                'WBGene00077502',
+                'WBGene00077504',
+                'WBGene00007069',
+                'WBGene00007079',
+                'WBGene00043990',
+                'WBGene00043989',
+                'WBGene00014997',
+                'WBGene00007074',
+                'WBGene00007071',
+                'WBGene00077503',
+                'WBGene00007063',
+                'WBGene00043988',
+                'WBGene00007064',
+                'WBGene00007078',
+            },
+        ),
+    ],
+)
 def test_MainWindow_copy_gene_set(main_window_with_tabs, ind, gene_set):
     main_window_with_tabs.tabs.setCurrentIndex(1)
     main_window_with_tabs.copy_action.trigger()
@@ -2811,20 +3555,39 @@ def test_MainWindow_apply_function(qtbot, main_window_with_tabs):
 
 
 def test_MainWindow_get_available_objects(use_temp_settings_file, main_window_with_tabs):
-    objs_truth = {'my table': filtering.FoldChangeFilter('tests/test_files/fc_1.csv', 'a', 'b'),
-                  'counted': filtering.CountFilter('tests/test_files/counted.tsv'),
-                  'counted_6cols': filtering.Filter('tests/test_files/counted_6cols.csv'),
-                  'test_deseq': filtering.DESeqFilter('tests/test_files/test_deseq.csv'),
-                  'majority_vote_intersection output': enrichment.FeatureSet(
-                      {'WBGene00007069', 'WBGene00007064', 'WBGene00007063',
-                       'WBGene00007074', 'WBGene00077502',
-                       'WBGene00007076', 'WBGene00044951', 'WBGene00007067',
-                       'WBGene00044022', 'WBGene00043990',
-                       'WBGene00077504', 'WBGene00007066', 'WBGene00043987',
-                       'WBGene00014997', 'WBGene00043989',
-                       'WBGene00007071', 'WBGene00007075', 'WBGene00007078',
-                       'WBGene00007079', 'WBGene00007077',
-                       'WBGene00077503', 'WBGene00043988'}, 'majority_vote_intersection output')}
+    objs_truth = {
+        'my table': filtering.FoldChangeFilter('tests/test_files/fc_1.csv', 'a', 'b'),
+        'counted': filtering.CountFilter('tests/test_files/counted.tsv'),
+        'counted_6cols': filtering.Filter('tests/test_files/counted_6cols.csv'),
+        'test_deseq': filtering.DESeqFilter('tests/test_files/test_deseq.csv'),
+        'majority_vote_intersection output': enrichment.FeatureSet(
+            {
+                'WBGene00007069',
+                'WBGene00007064',
+                'WBGene00007063',
+                'WBGene00007074',
+                'WBGene00077502',
+                'WBGene00007076',
+                'WBGene00044951',
+                'WBGene00007067',
+                'WBGene00044022',
+                'WBGene00043990',
+                'WBGene00077504',
+                'WBGene00007066',
+                'WBGene00043987',
+                'WBGene00014997',
+                'WBGene00043989',
+                'WBGene00007071',
+                'WBGene00007075',
+                'WBGene00007078',
+                'WBGene00007079',
+                'WBGene00007077',
+                'WBGene00077503',
+                'WBGene00043988',
+            },
+            'majority_vote_intersection output',
+        ),
+    }
     objs_truth['my table'].fname = Path('my table')
     objs_truth['counted'].fname = Path('counted')
     objs_truth['counted_6cols'].fname = Path('counted_6cols')
@@ -2835,9 +3598,11 @@ def test_MainWindow_get_available_objects(use_temp_settings_file, main_window_wi
     for name in res.keys():
         assert isinstance(res[name][0], TabPage)
         assert (res[name][0].obj() == objs_truth[name]) or (
-            np.allclose(np.squeeze(res[name][0].obj().df.drop(cs.first())),
-                        np.squeeze(objs_truth[name].df.drop(cs.first()))) and (
-                    res[name][0].obj().fname == objs_truth[name].fname))
+            np.allclose(
+                np.squeeze(res[name][0].obj().df.drop(cs.first())), np.squeeze(objs_truth[name].df.drop(cs.first()))
+            )
+            and (res[name][0].obj().fname == objs_truth[name].fname)
+        )
 
         assert isinstance(res[name][1], QtGui.QIcon)
 
@@ -2923,8 +3688,11 @@ def test_MainWindow_toggle_history(state, use_temp_settings_file, main_window):
 
 
 def test_MainWindow_save_session(use_temp_settings_file, main_window, monkeypatch):
-    monkeypatch.setattr(QtWidgets.QFileDialog, 'getOpenFileName',
-                        lambda *args, **kwargs: ('tests/test_files/test_session.rnal', '.rnal'))
+    monkeypatch.setattr(
+        QtWidgets.QFileDialog,
+        'getOpenFileName',
+        lambda *args, **kwargs: ('tests/test_files/test_session.rnal', '.rnal'),
+    )
     monkeypatch.setattr(QtWidgets.QApplication, 'processEvents', lambda *args, **kwargs: None)
 
     main_window.load_session()
@@ -2933,22 +3701,31 @@ def test_MainWindow_save_session(use_temp_settings_file, main_window, monkeypatc
     n_files = main_window.tabs.count()
     n_pipelines = len(main_window.pipelines)
     item_types_truth = ['FoldChangeFilter', 'CountFilter', 'Filter', 'DESeqFilter', 'set']
-    item_properties_truth = [{'numerator_name': 'a', 'denominator_name': 'b'}, {'is_normalized': False}, {},
-                             {'log2fc_col': 'log2FoldChange', 'padj_col': 'padj', 'pval_col': 'pvalue'}, {}]
+    item_properties_truth = [
+        {'numerator_name': 'a', 'denominator_name': 'b'},
+        {'is_normalized': False},
+        {},
+        {'log2fc_col': 'log2FoldChange', 'padj_col': 'padj', 'pval_col': 'pvalue'},
+        {},
+    ]
     pipeline_names_truth = ['New Pipeline', 'Other Pipeline']
-    pipeline_files_truth = [re.sub('\d\d:\d\d:\d\d', '$EXPORTTIME', pipeline.export_pipeline(filename=None)) for
-                            pipeline, p_id in main_window.pipelines.values()]
+    pipeline_files_truth = [
+        re.sub('\d\d:\d\d:\d\d', '$EXPORTTIME', pipeline.export_pipeline(filename=None))
+        for pipeline, p_id in main_window.pipelines.values()
+    ]
     func_called = []
 
-    def mock_save_session(self, file_data: List[io.FileData], pipeline_data: List[io.PipelineData], report: dict,
-                          report_file_paths: dict):
+    def mock_save_session(
+        self, file_data: List[io.FileData], pipeline_data: List[io.PipelineData], report: dict, report_file_paths: dict
+    ):
         assert len(file_data) == n_files
         assert [file.item_type for file in file_data] == item_types_truth
         assert [file.item_property for file in file_data] == item_properties_truth
         assert len(pipeline_data) == n_pipelines
         assert [pipeline.name for pipeline in pipeline_data] == pipeline_names_truth
-        assert [re.sub('\d\d:\d\d:\d\d', '$EXPORTTIME', pipeline.content) for pipeline in
-                pipeline_data] == pipeline_files_truth
+        assert [
+            re.sub('\d\d:\d\d:\d\d', '$EXPORTTIME', pipeline.content) for pipeline in pipeline_data
+        ] == pipeline_files_truth
 
         func_called.append(True)
 
@@ -2965,31 +3742,56 @@ def test_MainWindow_load_session(use_temp_settings_file, main_window, monkeypatc
         session_file = 'tests/test_files/test_legacy_session.rnal'
     else:
         session_file = 'tests/test_files/test_session.rnal'
-    pipelines_truth = {'New Pipeline': filtering.Pipeline('Filter'),
-                       'Other Pipeline': filtering.Pipeline('DESeqFilter')}
-    pipelines_truth['New Pipeline'].add_function('filter_top_n', by='log2FoldChange', n=99, ascending=True,
-                                                 na_position='last', opposite=False)
+    pipelines_truth = {
+        'New Pipeline': filtering.Pipeline('Filter'),
+        'Other Pipeline': filtering.Pipeline('DESeqFilter'),
+    }
+    pipelines_truth['New Pipeline'].add_function(
+        'filter_top_n', by='log2FoldChange', n=99, ascending=True, na_position='last', opposite=False
+    )
     pipelines_truth['New Pipeline'].add_function('describe', percentiles=[0.01, 0.25, 0.5, 0.75, 0.99])
     pipelines_truth['Other Pipeline'].add_function('split_fold_change_direction')
     pipelines_truth['Other Pipeline'].add_function('volcano_plot', alpha=0.1)
 
-    objs_truth = [filtering.FoldChangeFilter('tests/test_files/fc_1.csv', 'a', 'b'),
-                  filtering.CountFilter('tests/test_files/counted.tsv'),
-                  filtering.Filter('tests/test_files/counted_6cols.csv'),
-                  filtering.DESeqFilter('tests/test_files/test_deseq.csv'),
-                  enrichment.FeatureSet(
-                      {'WBGene00007069', 'WBGene00007064', 'WBGene00007063', 'WBGene00007074', 'WBGene00077502',
-                       'WBGene00007076', 'WBGene00044951', 'WBGene00007067', 'WBGene00044022', 'WBGene00043990',
-                       'WBGene00077504', 'WBGene00007066', 'WBGene00043987', 'WBGene00014997', 'WBGene00043989',
-                       'WBGene00007071', 'WBGene00007075', 'WBGene00007078', 'WBGene00007079', 'WBGene00007077',
-                       'WBGene00077503', 'WBGene00043988'}, 'majority_vote_intersection output')]
+    objs_truth = [
+        filtering.FoldChangeFilter('tests/test_files/fc_1.csv', 'a', 'b'),
+        filtering.CountFilter('tests/test_files/counted.tsv'),
+        filtering.Filter('tests/test_files/counted_6cols.csv'),
+        filtering.DESeqFilter('tests/test_files/test_deseq.csv'),
+        enrichment.FeatureSet(
+            {
+                'WBGene00007069',
+                'WBGene00007064',
+                'WBGene00007063',
+                'WBGene00007074',
+                'WBGene00077502',
+                'WBGene00007076',
+                'WBGene00044951',
+                'WBGene00007067',
+                'WBGene00044022',
+                'WBGene00043990',
+                'WBGene00077504',
+                'WBGene00007066',
+                'WBGene00043987',
+                'WBGene00014997',
+                'WBGene00043989',
+                'WBGene00007071',
+                'WBGene00007075',
+                'WBGene00007078',
+                'WBGene00007079',
+                'WBGene00007077',
+                'WBGene00077503',
+                'WBGene00043988',
+            },
+            'majority_vote_intersection output',
+        ),
+    ]
     objs_truth[0].fname = Path('my table')
     objs_truth[1].fname = Path('counted')
     objs_truth[2].fname = Path('counted_6cols')
     objs_truth[3].fname = Path('test_deseq')
 
-    monkeypatch.setattr(QtWidgets.QFileDialog, 'getOpenFileName',
-                        lambda *args, **kwargs: (session_file, '.rnal'))
+    monkeypatch.setattr(QtWidgets.QFileDialog, 'getOpenFileName', lambda *args, **kwargs: (session_file, '.rnal'))
     main_window.load_session_action.trigger()
     assert main_window.tabs.count() == 5
     assert len(main_window.pipelines) == 2
@@ -2998,8 +3800,10 @@ def test_MainWindow_load_session(use_temp_settings_file, main_window, monkeypatc
     for i in range(1, main_window.tabs.count()):
         obj = main_window.tabs.widget(i).obj()
 
-        assert (obj == objs_truth[i]) or (np.allclose(obj.df.drop(cs.first()), objs_truth[i].df.drop(cs.first())) and (
-            obj.fname == objs_truth[i].fname))
+        assert (obj == objs_truth[i]) or (
+            np.allclose(obj.df.drop(cs.first()), objs_truth[i].df.drop(cs.first()))
+            and (obj.fname == objs_truth[i].fname)
+        )
 
 
 def test_MainWindow_about(main_window, monkeypatch):
@@ -3046,8 +3850,9 @@ def test_MainWindow_context_menu(qtbot, main_window_with_tabs, monkeypatch):
         opened.append(True)
 
     monkeypatch.setattr(QtWidgets.QMenu, 'exec', mock_exec)
-    qtbot.mouseClick(main_window_with_tabs.tabs.tabBar(), RIGHT_CLICK,
-                     pos=main_window_with_tabs.tabs.tabBar().tabRect(1).center())
+    qtbot.mouseClick(
+        main_window_with_tabs.tabs.tabBar(), RIGHT_CLICK, pos=main_window_with_tabs.tabs.tabBar().tabRect(1).center()
+    )
     assert opened == [True]
 
 
@@ -3074,15 +3879,37 @@ def test_MainWindow_clear_session(main_window_with_tabs):
 NO_WINOS_ACTIONS = ['shortstack_action']
 
 
-@pytest.mark.parametrize('action_name', ['ontology_graph_action', 'pathway_graph_action', 'featurecounts_single_action',
-                                         'featurecounts_paired_action', 'bowtie2_index_action', 'shortstack_action',
-                                         'bowtie2_single_action', 'bowtie2_paired_action', 'kallisto_index_action',
-                                         'kallisto_single_action', 'kallisto_paired_action', 'cutadapt_single_action',
-                                         'cutadapt_paired_action', 'set_op_action', 'enrichment_action',
-                                         'set_vis_action', 'bar_plot_action', 'validate_sam_action',
-                                         'convert_sam_action', 'sam2fastq_single_action', 'sam2fastq_paired_action',
-                                         'fastq2sam_single_action', 'fastq2sam_paired_action', 'sort_sam_action',
-                                         'find_duplicates_action', 'bam_index_action'])
+@pytest.mark.parametrize(
+    'action_name',
+    [
+        'ontology_graph_action',
+        'pathway_graph_action',
+        'featurecounts_single_action',
+        'featurecounts_paired_action',
+        'bowtie2_index_action',
+        'shortstack_action',
+        'bowtie2_single_action',
+        'bowtie2_paired_action',
+        'kallisto_index_action',
+        'kallisto_single_action',
+        'kallisto_paired_action',
+        'cutadapt_single_action',
+        'cutadapt_paired_action',
+        'set_op_action',
+        'enrichment_action',
+        'set_vis_action',
+        'bar_plot_action',
+        'validate_sam_action',
+        'convert_sam_action',
+        'sam2fastq_single_action',
+        'sam2fastq_paired_action',
+        'fastq2sam_single_action',
+        'fastq2sam_paired_action',
+        'sort_sam_action',
+        'find_duplicates_action',
+        'bam_index_action',
+    ],
+)
 def test_MainWindow_open_windows(main_window_with_tabs, action_name):
     action = getattr(main_window_with_tabs, action_name)
     if platform.system() == 'Windows' and action_name in NO_WINOS_ACTIONS:
@@ -3092,11 +3919,15 @@ def test_MainWindow_open_windows(main_window_with_tabs, action_name):
         action.trigger()
 
 
-@pytest.mark.parametrize('action_name, window_attr_name',
-                         [('new_pipeline_action', 'pipeline_window'),
-                          ('cite_action', 'cite_window'),
-                          ('about_action', 'about_window'),
-                          ('settings_action', 'settings_window')])
+@pytest.mark.parametrize(
+    'action_name, window_attr_name',
+    [
+        ('new_pipeline_action', 'pipeline_window'),
+        ('cite_action', 'cite_window'),
+        ('about_action', 'about_window'),
+        ('settings_action', 'settings_window'),
+    ],
+)
 def test_MainWindow_open_dialogs(main_window_with_tabs, action_name, window_attr_name, monkeypatch):
     action = getattr(main_window_with_tabs, action_name)
 
@@ -3205,10 +4036,12 @@ class TestMainWindowToggleReporting:
 
 
 class TestPromptAutoReportGen:
-    @pytest.mark.parametrize("choice_truth, dont_ask_again_truth", [
-        (True, True), (True, False), (False, True), (False, False)])
-    def test_no_preset(self, use_temp_settings_file, main_window, caplog, monkeypatch, choice_truth,
-                       dont_ask_again_truth):
+    @pytest.mark.parametrize(
+        'choice_truth, dont_ask_again_truth', [(True, True), (True, False), (False, True), (False, False)]
+    )
+    def test_no_preset(
+        self, use_temp_settings_file, main_window, caplog, monkeypatch, choice_truth, dont_ask_again_truth
+    ):
         # Simulate no preset settings
         def mock_get_settings():
             return None
@@ -3285,8 +4118,9 @@ class TestLimmaWindow:
     @pytest.fixture(autouse=True)
     def test_init(self, qtbot, monkeypatch, limma_window):
         assert limma_window.windowTitle() == 'Limma-Voom differential expression setup'
-        monkeypatch.setattr(QtWidgets.QFileDialog, 'getOpenFileName',
-                            lambda *args, **kwargs: (self.design_mat_path, ''))
+        monkeypatch.setattr(
+            QtWidgets.QFileDialog, 'getOpenFileName', lambda *args, **kwargs: (self.design_mat_path, '')
+        )
         qtbot.mouseClick(limma_window.param_widgets['design_matrix'].open_button, LEFT_CLICK)
         qtbot.mouseClick(limma_window.param_widgets['load_design'], LEFT_CLICK)
 
@@ -3296,10 +4130,19 @@ class TestLimmaWindow:
         assert limma_window.comparisons_widgets['picker'].design_mat.equals(design_mat_truth)
 
     def test_get_analysis_params(self, limma_window):
-        truth = dict(r_installation_folder='auto', design_matrix=self.design_mat_path, output_folder=None,
-                     comparisons=[('replicate', 'rep3', 'rep2'), ('condition', 'cond1', 'cond2')],
-                     covariates=['covariate1'], lrt_factors=['factor1'], random_effect=None, quality_weights=False,
-                     return_code=True, return_design_matrix=True, return_log=True)
+        truth = dict(
+            r_installation_folder='auto',
+            design_matrix=self.design_mat_path,
+            output_folder=None,
+            comparisons=[('replicate', 'rep3', 'rep2'), ('condition', 'cond1', 'cond2')],
+            covariates=['covariate1'],
+            lrt_factors=['factor1'],
+            random_effect=None,
+            quality_weights=False,
+            return_code=True,
+            return_design_matrix=True,
+            return_log=True,
+        )
 
         limma_window.comparisons_widgets['picker'].add_comparison_widget()
         limma_window.comparisons_widgets['picker'].inputs[0].factor.setCurrentText('replicate')
@@ -3316,10 +4159,19 @@ class TestLimmaWindow:
 
     def test_start_analysis(self, qtbot, monkeypatch, limma_window):
         truth_args = []
-        truth_kwargs = dict(r_installation_folder='auto', design_matrix=self.design_mat_path, output_folder=None,
-                            comparisons=[('replicate', 'rep3', 'rep2'), ('condition', 'cond1', 'cond2')],
-                            covariates=['covariate1'], lrt_factors=['factor1'], random_effect=None,
-                            quality_weights=False, return_code=True, return_design_matrix=True, return_log=True)
+        truth_kwargs = dict(
+            r_installation_folder='auto',
+            design_matrix=self.design_mat_path,
+            output_folder=None,
+            comparisons=[('replicate', 'rep3', 'rep2'), ('condition', 'cond1', 'cond2')],
+            covariates=['covariate1'],
+            lrt_factors=['factor1'],
+            random_effect=None,
+            quality_weights=False,
+            return_code=True,
+            return_design_matrix=True,
+            return_log=True,
+        )
 
         limma_window.comparisons_widgets['picker'].add_comparison_widget()
         limma_window.comparisons_widgets['picker'].inputs[0].factor.setCurrentText('replicate')
@@ -3344,8 +4196,9 @@ class TestDESeqWindow:
     @pytest.fixture(autouse=True)
     def test_init(self, deseq_window, qtbot, monkeypatch):
         assert deseq_window.windowTitle() == 'DESeq2 differential expression setup'
-        monkeypatch.setattr(QtWidgets.QFileDialog, 'getOpenFileName',
-                            lambda *args, **kwargs: (self.design_mat_path, ''))
+        monkeypatch.setattr(
+            QtWidgets.QFileDialog, 'getOpenFileName', lambda *args, **kwargs: (self.design_mat_path, '')
+        )
         qtbot.mouseClick(deseq_window.param_widgets['design_matrix'].open_button, LEFT_CLICK)
         qtbot.mouseClick(deseq_window.param_widgets['load_design'], LEFT_CLICK)
 
@@ -3355,10 +4208,19 @@ class TestDESeqWindow:
         assert deseq_window.comparisons_widgets['picker'].design_mat.equals(design_mat_truth)
 
     def test_get_analysis_params(self, deseq_window):
-        truth = dict(r_installation_folder='auto', design_matrix=self.design_mat_path, output_folder=None,
-                     comparisons=[('replicate', 'rep3', 'rep2'), ('condition', 'cond1', 'cond2')],
-                     covariates=['covariate1'], lrt_factors=['factor1'], return_code=True, return_design_matrix=True,
-                     cooks_cutoff=True, scaling_factors=None, return_log=True)
+        truth = dict(
+            r_installation_folder='auto',
+            design_matrix=self.design_mat_path,
+            output_folder=None,
+            comparisons=[('replicate', 'rep3', 'rep2'), ('condition', 'cond1', 'cond2')],
+            covariates=['covariate1'],
+            lrt_factors=['factor1'],
+            return_code=True,
+            return_design_matrix=True,
+            cooks_cutoff=True,
+            scaling_factors=None,
+            return_log=True,
+        )
 
         deseq_window.comparisons_widgets['picker'].add_comparison_widget()
         deseq_window.comparisons_widgets['picker'].inputs[0].factor.setCurrentText('replicate')
@@ -3375,10 +4237,19 @@ class TestDESeqWindow:
 
     def test_start_analysis(self, qtbot, monkeypatch, deseq_window):
         truth_args = []
-        truth_kwargs = dict(r_installation_folder='auto', design_matrix=self.design_mat_path, output_folder=None,
-                            comparisons=[('replicate', 'rep3', 'rep2'), ('condition', 'cond1', 'cond2')],
-                            covariates=['covariate1'], lrt_factors=['factor1'], return_code=True, return_log=True,
-                            return_design_matrix=True, cooks_cutoff=True, scaling_factors=None)
+        truth_kwargs = dict(
+            r_installation_folder='auto',
+            design_matrix=self.design_mat_path,
+            output_folder=None,
+            comparisons=[('replicate', 'rep3', 'rep2'), ('condition', 'cond1', 'cond2')],
+            covariates=['covariate1'],
+            lrt_factors=['factor1'],
+            return_code=True,
+            return_log=True,
+            return_design_matrix=True,
+            cooks_cutoff=True,
+            scaling_factors=None,
+        )
 
         deseq_window.comparisons_widgets['picker'].add_comparison_widget()
         deseq_window.comparisons_widgets['picker'].inputs[0].factor.setCurrentText('replicate')
@@ -3411,8 +4282,8 @@ class TestMainWindowJobRunning:
     def test_finish_generic_job(self, main_window, mocker, monkeypatch):
         worker_output = mocker.Mock(spec=gui_widgets.WorkerOutput)
         worker_output.raised_exception = None
-        worker_output.result = ["result"]
-        worker_output.emit_args = ["func_name"]
+        worker_output.result = ['result']
+        worker_output.emit_args = ['func_name']
         worker_output.job_id = 1
 
         parent_tab = mocker.Mock(spec=TabPage)
@@ -3424,13 +4295,13 @@ class TestMainWindowJobRunning:
         main_window.finish_generic_job(worker_output, parent_tab)
 
         parent_tab.update_tab.assert_called_once()
-        parent_tab.process_outputs.assert_called_once_with(worker_output.result, worker_output.job_id, "func_name")
+        parent_tab.process_outputs.assert_called_once_with(worker_output.result, worker_output.job_id, 'func_name')
 
     def test_start_generic_job_from_params(self, main_window, mocker, monkeypatch):
-        func_name = "func_name"
+        func_name = 'func_name'
         func = mocker.Mock()
-        args = ["arg1", "arg2"]
-        kwargs = {"kwarg1": "value1"}
+        args = ['arg1', 'arg2']
+        kwargs = {'kwarg1': 'value1'}
         finish_slots = mocker.Mock()
         predecessor = 1
 
@@ -3460,9 +4331,11 @@ class TestMainWindowJobRunning:
     def test_finish_enrichment(self, main_window, mocker, monkeypatch):
         worker_output = mocker.Mock(spec=gui_widgets.WorkerOutput)
         worker_output.raised_exception = None
-        worker_output.result = [mocker.Mock(spec=pl.DataFrame),
-                                mocker.Mock(spec=enrichment.enrichment_runner.EnrichmentPlotter)]
-        worker_output.emit_args = ["set_name"]
+        worker_output.result = [
+            mocker.Mock(spec=pl.DataFrame),
+            mocker.Mock(spec=enrichment.enrichment_runner.EnrichmentPlotter),
+        ]
+        worker_output.emit_args = ['set_name']
         worker_output.job_id = 1
 
         monkeypatch.setattr(main_window, 'update_report_spawn', mocker.Mock())
@@ -3472,9 +4345,10 @@ class TestMainWindowJobRunning:
         main_window.finish_enrichment(worker_output)
 
         main_window.show.assert_called_once()
-        main_window.display_enrichment_results.assert_called_once_with(worker_output.result[0], "set_name")
-        main_window.update_report_spawn.assert_any_call(mocker.ANY, mocker.ANY, worker_output.job_id,
-                                                        worker_output.result[0])
+        main_window.display_enrichment_results.assert_called_once_with(worker_output.result[0], 'set_name')
+        main_window.update_report_spawn.assert_any_call(
+            mocker.ANY, mocker.ANY, worker_output.job_id, worker_output.result[0]
+        )
 
     def test_queue_worker(self, main_window, mocker, monkeypatch):
         worker = mocker.Mock(spec=gui_widgets.Worker)
@@ -3491,9 +4365,9 @@ class TestMainWindowJobRunning:
 
     def test_finish_generic_job_with_exception(self, main_window, mocker, monkeypatch):
         worker_output = mocker.Mock(spec=gui_widgets.WorkerOutput)
-        worker_output.raised_exception = Exception("Test Exception")
+        worker_output.raised_exception = Exception('Test Exception')
         worker_output.result = []
-        worker_output.emit_args = ["func_name"]
+        worker_output.emit_args = ['func_name']
         worker_output.job_id = 1
 
         parent_tab = mocker.Mock(spec=TabPage)
@@ -3503,7 +4377,7 @@ class TestMainWindowJobRunning:
         monkeypatch.setattr(main_window, 'new_tab_from_filter_obj', mocker.Mock())
         monkeypatch.setattr(main_window, 'run_threaded_workers', lambda *args, **kwargs: None)
 
-        with pytest.raises(Exception, match="Test Exception"):
+        with pytest.raises(Exception, match='Test Exception'):
             main_window.finish_generic_job(worker_output, parent_tab)
 
         parent_tab.update_tab.assert_not_called()
@@ -3511,7 +4385,7 @@ class TestMainWindowJobRunning:
 
     def test_cancel_job_running(self, main_window, mocker, monkeypatch):
         index = 0
-        func_name = "func_name"
+        func_name = 'func_name'
         worker = mocker.Mock(spec=gui_widgets.Worker)
         monkeypatch.setattr(main_window, 'run_threaded_workers', mocker.Mock())
         monkeypatch.setattr(main_window, 'job_queue', mocker.Mock(spec=Queue, queue=[worker]))
@@ -3530,7 +4404,7 @@ class TestMainWindowJobRunning:
 
     def test_cancel_job_queued(self, main_window, mocker, monkeypatch):
         index = 2
-        func_name = "func_name"
+        func_name = 'func_name'
 
         worker1 = mocker.Mock(spec=gui_widgets.Worker)
         worker2 = mocker.Mock(spec=gui_widgets.Worker)
@@ -3564,9 +4438,11 @@ class TestMainWindowJobRunning:
     def test_finish_enrichment_report_enabled(self, main_window, mocker, monkeypatch):
         worker_output = mocker.Mock(spec=gui_widgets.WorkerOutput)
         worker_output.raised_exception = None
-        worker_output.result = [mocker.Mock(spec=pl.DataFrame),
-                                mocker.Mock(spec=enrichment.enrichment_runner.EnrichmentPlotter)]
-        worker_output.emit_args = ["set_name"]
+        worker_output.result = [
+            mocker.Mock(spec=pl.DataFrame),
+            mocker.Mock(spec=enrichment.enrichment_runner.EnrichmentPlotter),
+        ]
+        worker_output.emit_args = ['set_name']
         worker_output.job_id = 1
 
         monkeypatch.setattr(main_window, 'update_report_spawn', mocker.Mock())
@@ -3577,15 +4453,17 @@ class TestMainWindowJobRunning:
         main_window.finish_enrichment(worker_output)
 
         main_window.show.assert_called_once()
-        main_window.display_enrichment_results.assert_called_once_with(worker_output.result[0], "set_name")
+        main_window.display_enrichment_results.assert_called_once_with(worker_output.result[0], 'set_name')
         main_window.update_report_spawn.assert_called()
 
     def test_finish_enrichment_report_disabled(self, main_window, mocker, monkeypatch):
         worker_output = mocker.Mock(spec=gui_widgets.WorkerOutput)
         worker_output.raised_exception = None
-        worker_output.result = [mocker.Mock(spec=pl.DataFrame),
-                                mocker.Mock(spec=enrichment.enrichment_runner.EnrichmentPlotter)]
-        worker_output.emit_args = ["set_name"]
+        worker_output.result = [
+            mocker.Mock(spec=pl.DataFrame),
+            mocker.Mock(spec=enrichment.enrichment_runner.EnrichmentPlotter),
+        ]
+        worker_output.emit_args = ['set_name']
         worker_output.job_id = 1
 
         monkeypatch.setattr(main_window, 'update_report_spawn', mocker.Mock())
@@ -3596,14 +4474,14 @@ class TestMainWindowJobRunning:
         main_window.finish_enrichment(worker_output)
 
         main_window.show.assert_called_once()
-        main_window.display_enrichment_results.assert_called_once_with(worker_output.result[0], "set_name")
+        main_window.display_enrichment_results.assert_called_once_with(worker_output.result[0], 'set_name')
         main_window.update_report_spawn.assert_not_called()
 
     def test_finish_generic_job_empty_result(self, main_window, mocker, monkeypatch):
         worker_output = mocker.Mock(spec=gui_widgets.WorkerOutput)
         worker_output.raised_exception = None
         worker_output.result = None
-        worker_output.emit_args = ["func_name"]
+        worker_output.emit_args = ['func_name']
         worker_output.job_id = 1
 
         parent_tab = mocker.Mock(spec=TabPage)
@@ -3620,8 +4498,8 @@ class TestMainWindowJobRunning:
     def test_finish_generic_job_no_parent_tab(self, main_window, mocker, monkeypatch):
         worker_output = mocker.Mock(spec=gui_widgets.WorkerOutput)
         worker_output.raised_exception = None
-        worker_output.result = ["result"]
-        worker_output.emit_args = ["func_name"]
+        worker_output.result = ['result']
+        worker_output.emit_args = ['func_name']
         worker_output.job_id = 1
 
         monkeypatch.setattr(main_window, 'update_report_from_worker', mocker.Mock())
@@ -3638,7 +4516,7 @@ class TestMainWindowJobRunning:
         worker_output = mocker.Mock(spec=gui_widgets.WorkerOutput)
         worker_output.raised_exception = None
         worker_output.result = []
-        worker_output.partial.func.__name__ = "func_name"
+        worker_output.partial.func.__name__ = 'func_name'
         worker_output.job_id = 1
 
         parent_tab = mocker.Mock(spec=FilterTabPage)
@@ -3650,14 +4528,14 @@ class TestMainWindowJobRunning:
 
     def test_finish_clustering_exception_raised(self, main_window, mocker, monkeypatch):
         worker_output = mocker.Mock(spec=gui_widgets.WorkerOutput)
-        worker_output.raised_exception = Exception("Test Exception")
+        worker_output.raised_exception = Exception('Test Exception')
         worker_output.result = []
-        worker_output.partial.func.__name__ = "func_name"
+        worker_output.partial.func.__name__ = 'func_name'
         worker_output.job_id = 1
 
         parent_tab = mocker.Mock(spec=FilterTabPage)
 
-        with pytest.raises(Exception, match="Test Exception"):
+        with pytest.raises(Exception, match='Test Exception'):
             main_window.finish_clustering(worker_output, parent_tab)
 
         parent_tab.update_tab.assert_not_called()
@@ -3667,7 +4545,7 @@ class TestMainWindowJobRunning:
         worker_output = mocker.Mock(spec=gui_widgets.WorkerOutput)
         worker_output.raised_exception = None
         worker_output.result = []
-        worker_output.emit_args = ["set_name"]
+        worker_output.emit_args = ['set_name']
         worker_output.job_id = 1
 
         monkeypatch.setattr(main_window, 'update_report_spawn', mocker.Mock())
@@ -3682,9 +4560,9 @@ class TestMainWindowJobRunning:
 
     def test_finish_enrichment_exception_raised(self, main_window, mocker, monkeypatch):
         worker_output = mocker.Mock(spec=gui_widgets.WorkerOutput)
-        worker_output.raised_exception = Exception("Test Exception")
+        worker_output.raised_exception = Exception('Test Exception')
         worker_output.result = []
-        worker_output.emit_args = ["set_name"]
+        worker_output.emit_args = ['set_name']
         worker_output.job_id = 1
 
         monkeypatch.setattr(main_window, 'update_report_spawn', mocker.Mock())
@@ -3692,7 +4570,7 @@ class TestMainWindowJobRunning:
         monkeypatch.setattr(main_window, 'show', mocker.Mock())
         monkeypatch.setattr(main_window, '_generate_report', True)
 
-        with pytest.raises(Exception, match="Test Exception"):
+        with pytest.raises(Exception, match='Test Exception'):
             main_window.finish_enrichment(worker_output)
 
         main_window.show.assert_not_called()

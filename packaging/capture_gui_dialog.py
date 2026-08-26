@@ -31,6 +31,7 @@ display:
 
 Exit code is the number of targets that failed to capture (0 == all good).
 """
+
 from __future__ import annotations
 
 import argparse
@@ -43,7 +44,13 @@ from pathlib import Path
 # by the app (the object being operated on, the parallel backend, etc.), not chosen in the
 # dialog, so a faithful screenshot hides them.
 DEFAULT_EXCLUDED_PARAMS = {
-    'self', 'backend', 'gui_mode', 'legacy_args', 'function_kwargs', 'fname', 'suppress_warnings',
+    'self',
+    'backend',
+    'gui_mode',
+    'legacy_args',
+    'function_kwargs',
+    'fname',
+    'suppress_warnings',
 }
 
 
@@ -69,7 +76,7 @@ def resolve_target(dotted: str):
     for attr in parts[consumed:]:
         obj = getattr(obj, attr)
     if not callable(obj):
-        raise TypeError(f"target {dotted!r} resolved to a non-callable {type(obj).__name__}")
+        raise TypeError(f'target {dotted!r} resolved to a non-callable {type(obj).__name__}')
     return obj
 
 
@@ -94,32 +101,41 @@ def capture_dialog(dotted: str, out_dir: Path, excluded: set, help_link, app) ->
     app.processEvents()
     app.processEvents()  # a second pass lets the form settle at its full size
 
-    out_path = out_dir / f"{dotted}.png"
+    out_path = out_dir / f'{dotted}.png'
     pixmap = form.grab()
     ok = pixmap.save(str(out_path))
     win.close()
     if not ok:
-        raise RuntimeError(f"QPixmap.save() returned False for {out_path}")
+        raise RuntimeError(f'QPixmap.save() returned False for {out_path}')
     return out_path
 
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
-        description="Capture PNG screenshots of RNAlysis GUI parameter dialogs from the public API.",
+        description='Capture PNG screenshots of RNAlysis GUI parameter dialogs from the public API.',
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
-    parser.add_argument('targets', nargs='+', metavar='TARGET',
-                        help="dotted path(s), e.g. filtering.CountFilter.filter_low_reads")
-    parser.add_argument('--out', default='gui_screenshots', type=Path,
-                        help="output directory (created if missing; default: ./gui_screenshots)")
-    parser.add_argument('--exclude', default='', metavar='a,b,c',
-                        help="extra parameter names to hide, on top of the defaults")
-    parser.add_argument('--show-all', action='store_true',
-                        help="do not apply the default parameter exclusions (show self/backend/...)")
-    parser.add_argument('--help-link', default=None, metavar='URL',
-                        help="add the 'Open documentation' link label the real dialog shows")
-    parser.add_argument('--offscreen', action='store_true',
-                        help="force Qt's offscreen platform (layout only -- text may be tofu)")
+    parser.add_argument(
+        'targets', nargs='+', metavar='TARGET', help='dotted path(s), e.g. filtering.CountFilter.filter_low_reads'
+    )
+    parser.add_argument(
+        '--out',
+        default='gui_screenshots',
+        type=Path,
+        help='output directory (created if missing; default: ./gui_screenshots)',
+    )
+    parser.add_argument(
+        '--exclude', default='', metavar='a,b,c', help='extra parameter names to hide, on top of the defaults'
+    )
+    parser.add_argument(
+        '--show-all', action='store_true', help='do not apply the default parameter exclusions (show self/backend/...)'
+    )
+    parser.add_argument(
+        '--help-link', default=None, metavar='URL', help="add the 'Open documentation' link label the real dialog shows"
+    )
+    parser.add_argument(
+        '--offscreen', action='store_true', help="force Qt's offscreen platform (layout only -- text may be tofu)"
+    )
     return parser
 
 
@@ -144,13 +160,13 @@ def main(argv=None) -> int:
     for target in args.targets:
         try:
             path = capture_dialog(target, out_dir, excluded, args.help_link, app)
-            print(f"[ok]   {target} -> {path}")
+            print(f'[ok]   {target} -> {path}')
         except Exception as exc:  # keep going; one bad target shouldn't sink the batch
             failures += 1
-            print(f"[FAIL] {target}: {type(exc).__name__}: {exc}", file=sys.stderr)
+            print(f'[FAIL] {target}: {type(exc).__name__}: {exc}', file=sys.stderr)
 
     if failures:
-        print(f"\n{failures} of {len(args.targets)} target(s) failed.", file=sys.stderr)
+        print(f'\n{failures} of {len(args.targets)} target(s) failed.', file=sys.stderr)
     return failures
 
 

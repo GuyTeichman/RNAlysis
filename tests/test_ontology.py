@@ -64,52 +64,144 @@ def test_render_graphviz_plot_binary_missing(monkeypatch):
 
 
 def test_kegg_pathway_parser_construction():
-    empty_rel = {'activation': set(), 'binding/association': set(), 'compound': set(), 'dephosphorylation': set(),
-                 'dissociation': set(), 'expression': set(), 'glycosylation': set(), 'indirect effect': set(),
-                 'inhibition': set(), 'irreversible reaction': set(), 'methylation': set(),
-                 'missing interaction': set(),
-                 'phosphorylation': set(), 'repression': set(), 'reversible reaction': set(), 'state change': set(),
-                 'ubiquitination': set(), 'unknown': set()}
-    truth_attrs = {1: dict(id=1, name='hsa:1029', display_name='CDKN2A', type='gene',
-                           children_relationships=empty_rel,
-                           relationships={'activation': set(), 'binding/association': set(), 'compound': set(),
-                                          'dephosphorylation': set(), 'dissociation': set(), 'expression': {(2, 'A')},
-                                          'glycosylation': set(), 'indirect effect': set(), 'inhibition': {(3, 'B')},
-                                          'irreversible reaction': set(), 'methylation': set(),
-                                          'missing interaction': set(), 'phosphorylation': {(3, 'C')},
-                                          'repression': set(), 'reversible reaction': set(), 'state change': set(),
-                                          'ubiquitination': set(), 'unknown': set()}),
-                   2: dict(id=2, name='hsa:1030', display_name='ARF', type='gene', relationships=empty_rel,
-                           children_relationships={'activation': set(), 'binding/association': set(),
-                                                   'compound': {(4, '->')}, 'dephosphorylation': set(),
-                                                   'dissociation': set(), 'expression': {(1, 'A')},
-                                                   'glycosylation': set(), 'indirect effect': set(),
-                                                   'inhibition': set(), 'irreversible reaction': set(),
-                                                   'methylation': set(), 'missing interaction': set(),
-                                                   'phosphorylation': set(), 'repression': set(),
-                                                   'reversible reaction': set(), 'state change': set(),
-                                                   'ubiquitination': set(), 'unknown': set()}),
-                   3: dict(id=3, name='hsa:51343', display_name='FZR1', type='gene', relationships=empty_rel,
-                           children_relationships={'activation': set(), 'binding/association': set(),
-                                                   'compound': set(), 'dephosphorylation': set(),
-                                                   'dissociation': set(), 'expression': set(),
-                                                   'glycosylation': set(), 'indirect effect': set(),
-                                                   'inhibition': {(1, 'B')}, 'irreversible reaction': set(),
-                                                   'methylation': set(), 'missing interaction': set(),
-                                                   'phosphorylation': {(1, 'C')}, 'repression': set(),
-                                                   'reversible reaction': set(), 'state change': set(),
-                                                   'ubiquitination': set(), 'unknown': set()}),
-                   4: dict(id=4, name='hsa:4171', display_name='MCM2',
-                           type='gene', children_relationships=empty_rel,
-                           relationships={'activation': set(), 'binding/association': set(), 'compound': {(2, '->')},
-                                          'dephosphorylation': set(), 'dissociation': set(), 'expression': set(),
-                                          'glycosylation': set(), 'indirect effect': set(), 'inhibition': set(),
-                                          'irreversible reaction': set(), 'methylation': set(),
-                                          'missing interaction': set(), 'phosphorylation': set(), 'repression': set(),
-                                          'reversible reaction': set(), 'state change': set(), 'ubiquitination': set(),
-                                          'unknown': set()}),
-                   5: dict(id=5, name='undefined', display_name=['3', '4'], type='group', relationships=empty_rel,
-                           children_relationships=empty_rel, )}
+    empty_rel = {
+        'activation': set(),
+        'binding/association': set(),
+        'compound': set(),
+        'dephosphorylation': set(),
+        'dissociation': set(),
+        'expression': set(),
+        'glycosylation': set(),
+        'indirect effect': set(),
+        'inhibition': set(),
+        'irreversible reaction': set(),
+        'methylation': set(),
+        'missing interaction': set(),
+        'phosphorylation': set(),
+        'repression': set(),
+        'reversible reaction': set(),
+        'state change': set(),
+        'ubiquitination': set(),
+        'unknown': set(),
+    }
+    truth_attrs = {
+        1: dict(
+            id=1,
+            name='hsa:1029',
+            display_name='CDKN2A',
+            type='gene',
+            children_relationships=empty_rel,
+            relationships={
+                'activation': set(),
+                'binding/association': set(),
+                'compound': set(),
+                'dephosphorylation': set(),
+                'dissociation': set(),
+                'expression': {(2, 'A')},
+                'glycosylation': set(),
+                'indirect effect': set(),
+                'inhibition': {(3, 'B')},
+                'irreversible reaction': set(),
+                'methylation': set(),
+                'missing interaction': set(),
+                'phosphorylation': {(3, 'C')},
+                'repression': set(),
+                'reversible reaction': set(),
+                'state change': set(),
+                'ubiquitination': set(),
+                'unknown': set(),
+            },
+        ),
+        2: dict(
+            id=2,
+            name='hsa:1030',
+            display_name='ARF',
+            type='gene',
+            relationships=empty_rel,
+            children_relationships={
+                'activation': set(),
+                'binding/association': set(),
+                'compound': {(4, '->')},
+                'dephosphorylation': set(),
+                'dissociation': set(),
+                'expression': {(1, 'A')},
+                'glycosylation': set(),
+                'indirect effect': set(),
+                'inhibition': set(),
+                'irreversible reaction': set(),
+                'methylation': set(),
+                'missing interaction': set(),
+                'phosphorylation': set(),
+                'repression': set(),
+                'reversible reaction': set(),
+                'state change': set(),
+                'ubiquitination': set(),
+                'unknown': set(),
+            },
+        ),
+        3: dict(
+            id=3,
+            name='hsa:51343',
+            display_name='FZR1',
+            type='gene',
+            relationships=empty_rel,
+            children_relationships={
+                'activation': set(),
+                'binding/association': set(),
+                'compound': set(),
+                'dephosphorylation': set(),
+                'dissociation': set(),
+                'expression': set(),
+                'glycosylation': set(),
+                'indirect effect': set(),
+                'inhibition': {(1, 'B')},
+                'irreversible reaction': set(),
+                'methylation': set(),
+                'missing interaction': set(),
+                'phosphorylation': {(1, 'C')},
+                'repression': set(),
+                'reversible reaction': set(),
+                'state change': set(),
+                'ubiquitination': set(),
+                'unknown': set(),
+            },
+        ),
+        4: dict(
+            id=4,
+            name='hsa:4171',
+            display_name='MCM2',
+            type='gene',
+            children_relationships=empty_rel,
+            relationships={
+                'activation': set(),
+                'binding/association': set(),
+                'compound': {(2, '->')},
+                'dephosphorylation': set(),
+                'dissociation': set(),
+                'expression': set(),
+                'glycosylation': set(),
+                'indirect effect': set(),
+                'inhibition': set(),
+                'irreversible reaction': set(),
+                'methylation': set(),
+                'missing interaction': set(),
+                'phosphorylation': set(),
+                'repression': set(),
+                'reversible reaction': set(),
+                'state change': set(),
+                'ubiquitination': set(),
+                'unknown': set(),
+            },
+        ),
+        5: dict(
+            id=5,
+            name='undefined',
+            display_name=['3', '4'],
+            type='group',
+            relationships=empty_rel,
+            children_relationships=empty_rel,
+        ),
+    }
     with open('tests/test_files/test_kgml.xml') as f:
         tree = ElementTree.parse(f)
 
@@ -168,11 +260,11 @@ def test_kegg_entry_set_get_display_name():
 
 
 def test_parse_go_id():
-    line = "is_a: 123456 GO1234567 GO:123456 GO:7654321! primary alcohol metabolic process"
-    truth = "GO:7654321"
+    line = 'is_a: 123456 GO1234567 GO:123456 GO:7654321! primary alcohol metabolic process'
+    truth = 'GO:7654321'
     assert parse_go_id(line) == truth
-    line_2 = "is_a: GO:1234567 GO:0034308 ! primary alcohol metabolic process"
-    truth_2 = "GO:1234567"
+    line_2 = 'is_a: GO:1234567 GO:0034308 ! primary alcohol metabolic process'
+    truth_2 = 'GO:1234567'
     assert parse_go_id(line_2) == truth_2
 
 
@@ -186,9 +278,11 @@ def test_dag_tree_parser_api():
 
 def test_dag_tree_parser_construction():
     file = 'tests/test_files/go_mini.obo'
-    levels_truth = [{'GO:0034308': 0, 'GO:0051125': 0},
-                    {'GO:0034315': 0, 'GO:0006040': 0, 'GO:0006793': 0, 'GO:0009225': 0, 'GO:0009226': 0},
-                    {'GO:2001315': 0, 'GO:2001313': 0}]
+    levels_truth = [
+        {'GO:0034308': 0, 'GO:0051125': 0},
+        {'GO:0034315': 0, 'GO:0006040': 0, 'GO:0006793': 0, 'GO:0009225': 0, 'GO:0009226': 0},
+        {'GO:2001315': 0, 'GO:2001313': 0},
+    ]
     data_version_truth = 'releases/2020-07-16'
     with open(file, 'r') as f:
         dag_tree = DAGTree(f, ['is_a', 'part_of', 'regulates'])
@@ -249,10 +343,17 @@ def test_go_term_get_parents():
     file = 'tests/test_files/go_mini.obo'
     with open(file, 'r') as f:
         dag_tree = DAGTree(f, ['is_a', 'part_of', 'regulates'])
-    parents_truth = {'GO:0034308': [], 'GO:0051125': [], 'GO:0034315': ['GO:0051125'], 'GO:0006040': ['GO:0034308'],
-                     'GO:0006793': ['GO:0034308'], 'GO:0009225': ['GO:0034308'], 'GO:0009226': ['GO:0034308'],
-                     'GO:2001315': ['GO:0009226', 'GO:0006793'],
-                     'GO:2001313': ['GO:0009225', 'GO:0006793', 'GO:0006040']}
+    parents_truth = {
+        'GO:0034308': [],
+        'GO:0051125': [],
+        'GO:0034315': ['GO:0051125'],
+        'GO:0006040': ['GO:0034308'],
+        'GO:0006793': ['GO:0034308'],
+        'GO:0009225': ['GO:0034308'],
+        'GO:0009226': ['GO:0034308'],
+        'GO:2001315': ['GO:0009226', 'GO:0006793'],
+        'GO:2001313': ['GO:0009225', 'GO:0006793', 'GO:0006040'],
+    }
     for node in dag_tree.go_terms:
         assert node in parents_truth
         assert dag_tree[node].get_parents(dag_tree.parent_relationship_types).sort() == parents_truth[node].sort()
@@ -262,22 +363,33 @@ def test_go_term_get_children():
     file = 'tests/test_files/go_mini.obo'
     with open(file, 'r') as f:
         dag_tree = DAGTree(f, ['is_a', 'part_of', 'regulates'])
-    children_truth = {'GO:0034308': ['GO:0006040', 'GO:0006793', 'GO:0009225', 'GO:0009226'],
-                      'GO:0051125': ['GO:0034315'], 'GO:0034315': [], 'GO:0006040': ['GO:2001313'],
-                      'GO:0006793': ['GO:2001313', 'GO:2001315'], 'GO:0009225': ['GO:2001313'],
-                      'GO:0009226': ['GO:2001315'], 'GO:2001315': [], 'GO:2001313': []}
+    children_truth = {
+        'GO:0034308': ['GO:0006040', 'GO:0006793', 'GO:0009225', 'GO:0009226'],
+        'GO:0051125': ['GO:0034315'],
+        'GO:0034315': [],
+        'GO:0006040': ['GO:2001313'],
+        'GO:0006793': ['GO:2001313', 'GO:2001315'],
+        'GO:0009225': ['GO:2001313'],
+        'GO:0009226': ['GO:2001315'],
+        'GO:2001315': [],
+        'GO:2001313': [],
+    }
     for node in dag_tree.go_terms:
         assert node in children_truth
         assert dag_tree[node].get_children(dag_tree.parent_relationship_types).sort() == children_truth[node].sort()
 
 
 def test_dag_tree_parser_level_iterator():
-    levels_truth = [{'GO:0034308', 'GO:0051125'},
-                    {'GO:0034315', 'GO:0006040', 'GO:0006793', 'GO:0009225', 'GO:0009226'},
-                    {'GO:2001315', 'GO:2001313'}]
-    levels_truth_bioprocess = [{'GO:0034308'},
-                               {'GO:0034315', 'GO:0006040', 'GO:0006793', 'GO:0009225', 'GO:0009226'},
-                               {'GO:2001315', 'GO:2001313'}]
+    levels_truth = [
+        {'GO:0034308', 'GO:0051125'},
+        {'GO:0034315', 'GO:0006040', 'GO:0006793', 'GO:0009225', 'GO:0009226'},
+        {'GO:2001315', 'GO:2001313'},
+    ]
+    levels_truth_bioprocess = [
+        {'GO:0034308'},
+        {'GO:0034315', 'GO:0006040', 'GO:0006793', 'GO:0009225', 'GO:0009226'},
+        {'GO:2001315', 'GO:2001313'},
+    ]
     levels_truth.reverse()
     levels_truth_bioprocess.reverse()
     file = 'tests/test_files/go_mini.obo'
@@ -300,10 +412,17 @@ def test_dag_tree_parser_level_iterator():
 
 
 def test_dag_tree_parser_upper_induced_tree_iterator():
-    parents_truth = {'GO:0034308': [], 'GO:0051125': [], 'GO:0034315': ['GO:0051125'], 'GO:0006040': ['GO:0034308'],
-                     'GO:0006793': ['GO:0034308'], 'GO:0009225': ['GO:0034308'], 'GO:0009226': ['GO:0034308'],
-                     'GO:2001315': ['GO:0009226', 'GO:0006793', 'GO:0034308'],
-                     'GO:2001313': ['GO:0009225', 'GO:0006793', 'GO:0006040', 'GO:0034308']}
+    parents_truth = {
+        'GO:0034308': [],
+        'GO:0051125': [],
+        'GO:0034315': ['GO:0051125'],
+        'GO:0006040': ['GO:0034308'],
+        'GO:0006793': ['GO:0034308'],
+        'GO:0009225': ['GO:0034308'],
+        'GO:0009226': ['GO:0034308'],
+        'GO:2001315': ['GO:0009226', 'GO:0006793', 'GO:0034308'],
+        'GO:2001313': ['GO:0009225', 'GO:0006793', 'GO:0006040', 'GO:0034308'],
+    }
     file = 'tests/test_files/go_mini.obo'
     with open(file, 'r') as f:
         dag_tree = DAGTree(f, ['is_a', 'part_of', 'regulates'])
@@ -322,14 +441,26 @@ def test_dag_tree_parser_upper_induced_tree_iterator():
     file = 'tests/test_files/obo_for_go_tests.obo'
     with open(file, 'r') as f:
         dag_tree = DAGTree(f, ['is_a'])
-    parents_truth_file_2 = {'GO:0008150': [], 'GO:0050896': ['GO:0008150'], 'GO:0007610': ['GO:0008150'],
-                            'GO:0042221': ['GO:0008150', 'GO:0050896'], 'GO:0009605': ['GO:0050896', 'GO:0008150'],
-                            'GO:0009991': ['GO:0008150', 'GO:0050896', 'GO:0009605'],
-                            'GO:0031667': ['GO:0008150', 'GO:0050896', 'GO:0009605', 'GO:0009991'],
-                            'GO:0007584': ['GO:0042221', 'GO:0031667', 'GO:0008150', 'GO:0050896', 'GO:0009605',
-                                           'GO:0009991'],
-                            'GO:0051780': ['GO:0007584', 'GO:0007610', 'GO:0042221', 'GO:0031667', 'GO:0008150',
-                                           'GO:0050896', 'GO:0009605', 'GO:0009991']}
+    parents_truth_file_2 = {
+        'GO:0008150': [],
+        'GO:0050896': ['GO:0008150'],
+        'GO:0007610': ['GO:0008150'],
+        'GO:0042221': ['GO:0008150', 'GO:0050896'],
+        'GO:0009605': ['GO:0050896', 'GO:0008150'],
+        'GO:0009991': ['GO:0008150', 'GO:0050896', 'GO:0009605'],
+        'GO:0031667': ['GO:0008150', 'GO:0050896', 'GO:0009605', 'GO:0009991'],
+        'GO:0007584': ['GO:0042221', 'GO:0031667', 'GO:0008150', 'GO:0050896', 'GO:0009605', 'GO:0009991'],
+        'GO:0051780': [
+            'GO:0007584',
+            'GO:0007610',
+            'GO:0042221',
+            'GO:0031667',
+            'GO:0008150',
+            'GO:0050896',
+            'GO:0009605',
+            'GO:0009991',
+        ],
+    }
     for node in parents_truth_file_2:
         parents_truth_file_2[node].sort()
         ui_tree = list(dag_tree.upper_induced_graph_iter(node))

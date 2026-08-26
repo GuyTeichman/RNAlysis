@@ -25,8 +25,7 @@ from scipy.special import comb
 from tqdm.auto import tqdm
 
 from rnalysis import FROZEN_ENV, __version__
-from rnalysis.exceptions import (InternalError, InvalidTypeError,
-                                 InvalidValueError)
+from rnalysis.exceptions import InternalError, InvalidTypeError, InvalidValueError
 from rnalysis.utils.param_typing import POWER_TRANSFORMS
 
 # scikit-learn costs ~1s to import and is only needed once a transform actually runs, so it is loaded
@@ -37,10 +36,11 @@ _sklearn = lazy.load('sklearn')
 try:
     import numba
 except ImportError:  # pragma: no cover
-    warnings.warn("RNAlysis can perform faster when package 'numba' is installed. \n"
-                  "If you want to improve the performance of slow operations on RNAlysis, "
-                  "please install package 'numba'. ")
-
+    warnings.warn(
+        "RNAlysis can perform faster when package 'numba' is installed. \n"
+        'If you want to improve the performance of slow operations on RNAlysis, '
+        "please install package 'numba'. "
+    )
 
     class numba:  # pragma: no cover
         @staticmethod
@@ -207,8 +207,9 @@ class ProgressParallel(joblib.Parallel):
 
     def __call__(self, *args, **kwargs):
         fmt = '{desc}: {percentage:3.0f}%|{bar}| [{elapsed}<{remaining}, {rate_fmt}{postfix}]'
-        with tqdm(disable=not self._use_tqdm, total=self._total, desc=self._desc, unit=self._unit,
-                  bar_format=fmt) as self._pbar:
+        with tqdm(
+            disable=not self._use_tqdm, total=self._total, desc=self._desc, unit=self._unit, bar_format=fmt
+        ) as self._pbar:
             return joblib.Parallel.__call__(self, *args, **kwargs)
 
     def print_progress(self):
@@ -253,7 +254,8 @@ def _parallel_box_cox(array: np.ndarray, backend: str, n_jobs: int) -> np.ndarra
     n_columns = array.shape[1]
     column_chunks = np.array_split(np.arange(n_columns), min(n_jobs, n_columns))
     transformed_chunks = joblib.Parallel(n_jobs=len(column_chunks), backend=backend)(
-        joblib.delayed(_box_cox_fit_transform)(array[:, chunk]) for chunk in column_chunks)
+        joblib.delayed(_box_cox_fit_transform)(array[:, chunk]) for chunk in column_chunks
+    )
     return np.concatenate(transformed_chunks, axis=1)
 
 
@@ -271,7 +273,8 @@ def _validate_box_cox_stability(box_cox_array: np.ndarray, feature_names: Option
     with warnings.catch_warnings():  # comparing NaNs is exactly what we are here to detect
         warnings.simplefilter('ignore')
         unstable = ~np.isfinite(box_cox_array).all(axis=0) | (
-            np.abs(np.nan_to_num(box_cox_array)).max(axis=0) > BOX_COX_MAX_ABS_VALUE)
+            np.abs(np.nan_to_num(box_cox_array)).max(axis=0) > BOX_COX_MAX_ABS_VALUE
+        )
     if not unstable.any():
         return
     unstable_indices = np.nonzero(unstable)[0]
@@ -284,13 +287,18 @@ def _validate_box_cox_stability(box_cox_array: np.ndarray, feature_names: Option
     if n_unstable > _MAX_NAMES_IN_ERROR:
         listed += f', and {n_unstable - _MAX_NAMES_IN_ERROR} more'
     noun, these = ('gene', 'this gene') if n_unstable == 1 else ('genes', 'these genes')
-    raise InvalidValueError(f"Box-Cox transformation is numerically unstable for {n_unstable} {noun} in this "
-                            f"table ({listed}): their values are near-constant at high magnitude. "
-                            f"Filter {these} out, or choose a different transform (e.g. 'log').")
+    raise InvalidValueError(
+        f'Box-Cox transformation is numerically unstable for {n_unstable} {noun} in this '
+        f'table ({listed}): their values are near-constant at high magnitude. '
+        f"Filter {these} out, or choose a different transform (e.g. 'log')."
+    )
 
 
-def standard_box_cox(data: Union[np.ndarray, pl.DataFrame], parallel_backend: str = 'sequential',
-                     feature_names: Optional[typing.Sequence[str]] = None) -> Union[np.ndarray, pl.DataFrame]:
+def standard_box_cox(
+    data: Union[np.ndarray, pl.DataFrame],
+    parallel_backend: str = 'sequential',
+    feature_names: Optional[typing.Sequence[str]] = None,
+) -> Union[np.ndarray, pl.DataFrame]:
     """
     Apply a per-column Box-Cox power transform followed by standardization.
 
@@ -342,14 +350,17 @@ def standard_log(data: Union[np.ndarray, pl.DataFrame]) -> Union[np.ndarray, pl.
     else:
         array = data
     if np.nanmin(array) <= -1:
-        raise InvalidValueError("The 'log' transform is only defined for values greater than -1 "
-                                "(it computes log2(x+1)), but this table contains smaller values. "
-                                "Choose a different transform, or filter out the offending values.")
+        raise InvalidValueError(
+            "The 'log' transform is only defined for values greater than -1 "
+            '(it computes log2(x+1)), but this table contains smaller values. '
+            'Choose a different transform, or filter out the offending values.'
+        )
     log_array = np.log2(array + 1)
     res_array = _sklearn.preprocessing.StandardScaler().fit_transform(log_array)
     if isinstance(data, pl.DataFrame):
         return data.select(~cs.numeric()).with_columns(
-            pl.DataFrame(res_array, schema=data.select(cs.numeric()).columns))
+            pl.DataFrame(res_array, schema=data.select(cs.numeric()).columns)
+        )
     return res_array
 
 
@@ -357,21 +368,27 @@ def parse_power_transform(power_transform: Union[bool, str]) -> str:
     """
     Normalize a ``power_transform`` argument into one of the names in ``param_typing.POWER_TRANSFORMS``.
 
-    ``power_transform`` used to be a boolean. ``True``/``False`` are therefore still accepted, and always
-    will be, so that Pipelines and exported parameter files saved by older versions of *RNAlysis* keep
-    running with exactly the behavior they had when they were saved.
+    ``power_transform`` used to be a boolean. ``True``/``False`` (in their Python and numpy spellings alike)
+    are therefore still accepted, and always will be, so that Pipelines and exported parameter files saved by
+    older versions of *RNAlysis* keep running with exactly the behavior they had when they were saved.
 
     :param power_transform: the transform to apply: 'box-cox', 'log', 'none', or the legacy True/False.
     :type power_transform: 'box-cox', 'log', 'none', or bool
     :return: the normalized transform name.
     :rtype: str
     """
-    if isinstance(power_transform, bool):
+    # numpy's boolean scalar is accepted alongside Python's, because that is what a comparison over a numpy or
+    # polars column yields, and passing one straight in worked before 4.3 (np.bool_ stopped being a bool in numpy
+    # 2, and the pre-4.3 code tested truthiness rather than the type). Other truthy/falsey values are not accepted
+    # -- 1, 0 and 1.0 are not spellings of a transform, and are rejected below.
+    if isinstance(power_transform, (bool, np.bool_)):
         return 'box-cox' if power_transform else 'none'
     if isinstance(power_transform, str) and power_transform.lower() in POWER_TRANSFORMS:
         return power_transform.lower()
-    raise InvalidValueError(f"Invalid value for 'power_transform': {power_transform!r}. "
-                            f"'power_transform' must be one of {list(POWER_TRANSFORMS)}.")
+    raise InvalidValueError(
+        f"Invalid value for 'power_transform': {power_transform!r}. "
+        f"'power_transform' must be one of {list(POWER_TRANSFORMS)}."
+    )
 
 
 def get_transform_function(power_transform: Union[bool, str]) -> Callable:
@@ -389,10 +406,12 @@ def get_transform_function(power_transform: Union[bool, str]) -> Callable:
     return standardize
 
 
-def transform_and_standardize(data: Union[np.ndarray, pl.DataFrame], power_transform: Union[bool, str] = 'box-cox',
-                              parallel_backend: str = 'sequential',
-                              feature_names: Optional[typing.Sequence[str]] = None
-                              ) -> Union[np.ndarray, pl.DataFrame]:
+def transform_and_standardize(
+    data: Union[np.ndarray, pl.DataFrame],
+    power_transform: Union[bool, str] = 'box-cox',
+    parallel_backend: str = 'sequential',
+    feature_names: Optional[typing.Sequence[str]] = None,
+) -> Union[np.ndarray, pl.DataFrame]:
     """
     Standardize the data, optionally applying a power/log transform to it first.
 
@@ -434,7 +453,7 @@ def shift_to_baseline(data: Union[np.ndarray, pl.DataFrame], baseline: float = 0
     """
     if isinstance(data, pl.DataFrame):
         array = data.select(cs.numeric()).to_numpy()
-    elif isinstance(data,pl.Series):
+    elif isinstance(data, pl.Series):
         array = data.to_numpy()
     else:
         array = data
@@ -455,12 +474,15 @@ def standardize(data: Union[np.ndarray, pl.DataFrame]) -> Union[np.ndarray, pl.D
     :rtype:
     """
     if isinstance(data, pl.DataFrame):
+        numeric_columns = data.select(cs.numeric()).columns
         array = data.select(cs.numeric()).to_numpy()
     else:
         array = data
     res_array = _sklearn.preprocessing.StandardScaler().fit_transform(array)
     if isinstance(data, pl.DataFrame):
-        return data.select(~cs.numeric()).with_columns(pl.DataFrame(res_array, schema=data.columns))
+        # only the numeric columns were transformed, so only their names may label the result -- passing every
+        # column name (the gene-ID one included) raised a shape mismatch on any real RNAlysis table
+        return data.select(~cs.numeric()).with_columns(pl.DataFrame(res_array, schema=numeric_columns))
     return res_array
 
 
@@ -476,16 +498,32 @@ def color_generator():
     or a numpy.ndarray of size (3,) containing three random values each between 0 and 1.
 
     """
-    preset_colors = ['tab:blue', 'tab:red', 'tab:green', 'tab:orange', 'tab:purple', 'tab:brown', 'tab:pink',
-                     'tab:gray', 'tab:olive', 'tab:cyan', 'gold', 'maroon', 'mediumslateblue', 'fuchsia',
-                     'lawngreen', 'moccasin', 'thistle']
+    preset_colors = [
+        'tab:blue',
+        'tab:red',
+        'tab:green',
+        'tab:orange',
+        'tab:purple',
+        'tab:brown',
+        'tab:pink',
+        'tab:gray',
+        'tab:olive',
+        'tab:cyan',
+        'gold',
+        'maroon',
+        'mediumslateblue',
+        'fuchsia',
+        'lawngreen',
+        'moccasin',
+        'thistle',
+    ]
     for color in preset_colors:
         yield color
     while True:
         yield np.random.random(3)
 
 
-@lru_cache(maxsize=2 ** 16)
+@lru_cache(maxsize=2**16)
 def combination(a: int, b: int) -> int:
     return int(comb(a, b))
 
@@ -539,7 +577,7 @@ def mix_colors(*colors: Tuple[float, float, float]):
         return colors[0]
 
     colors = np.array(colors)
-    multiplier = (1 / n_colors) + (1.6 / (2 ** n_colors)) / n_colors
+    multiplier = (1 / n_colors) + (1.6 / (2**n_colors)) / n_colors
 
     mix_color = multiplier * np.sum(colors, axis=0)
     mix_color = np.min([mix_color, [1.0, 1.0, 1.0]], 0)
@@ -562,11 +600,11 @@ def sum_intervals_inclusive(intervals: typing.List[typing.Tuple[int, int]]) -> i
 
 def bic_score(X: np.ndarray, labels: np.ndarray):
     """
-      BIC score for the goodness of fit of clusters.
-      This Python function is translated from the Golang implementation by the author of the paper.
-      The original code is available here:
-      https://github.com/bobhancock/goxmeans/blob/a78e909e374c6f97ddd04a239658c7c5b7365e5c/km.go#L778
-      """
+    BIC score for the goodness of fit of clusters.
+    This Python function is translated from the Golang implementation by the author of the paper.
+    The original code is available here:
+    https://github.com/bobhancock/goxmeans/blob/a78e909e374c6f97ddd04a239658c7c5b7365e5c/km.go#L778
+    """
 
     n_points = len(labels)
     n_clusters = len(set(labels))
@@ -580,9 +618,12 @@ def bic_score(X: np.ndarray, labels: np.ndarray):
         n_points_cluster = len(X_cluster)
         centroid = np.mean(X_cluster, axis=0)
         variance = np.sum((X_cluster - centroid) ** 2) / (len(X_cluster) - 1)
-        loglikelihood += \
-            n_points_cluster * (np.log(n_points_cluster) - np.log(n_points) - (n_dimensions / 2) * np.log(
-                2 * math.pi * variance) - (n_points_cluster - 1) / 2)
+        loglikelihood += n_points_cluster * (
+            np.log(n_points_cluster)
+            - np.log(n_points)
+            - (n_dimensions / 2) * np.log(2 * math.pi * variance)
+            - (n_points_cluster - 1) / 2
+        )
 
     bic = loglikelihood - (n_parameters / 2) * np.log(n_points)
 
@@ -617,8 +658,9 @@ def sanitize_variable_name(name: str) -> str:
 
 
 class InteractiveScatterFigure(figure.Figure):
-    def __init__(self, labels: typing.List[str], annotation_fontsize: float = 10, show_cursor: bool = True, *args,
-                 **kwargs):
+    def __init__(
+        self, labels: typing.List[str], annotation_fontsize: float = 10, show_cursor: bool = True, *args, **kwargs
+    ):
         super().__init__(*args, **kwargs)
         self.ax = self.add_subplot()
         self.labels = labels
@@ -653,10 +695,13 @@ class InteractiveScatterFigure(figure.Figure):
                 ann = self.is_labeled.pop(this_ind)
                 ann.remove()
             else:
-                self.is_labeled[this_ind] = plt.annotate(self.labels[this_ind],
-                                                         (np.take(xdata, this_ind), np.take(ydata, this_ind)),
-                                                         xytext=(3, 3), textcoords='offset points',
-                                                         fontsize=self.annotation_fontsize)
+                self.is_labeled[this_ind] = plt.annotate(
+                    self.labels[this_ind],
+                    (np.take(xdata, this_ind), np.take(ydata, this_ind)),
+                    xytext=(3, 3),
+                    textcoords='offset points',
+                    fontsize=self.annotation_fontsize,
+                )
 
             self.canvas.draw()
 
@@ -675,8 +720,9 @@ def _coerce_yaml_scalar_subclass(value):
     :return: the equivalent plain built-in value
     """
     if isinstance(value, datetime):  # datetime subclasses date, so it must be checked first
-        return datetime(value.year, value.month, value.day, value.hour, value.minute, value.second,
-                        value.microsecond, value.tzinfo)
+        return datetime(
+            value.year, value.month, value.day, value.hour, value.minute, value.second, value.microsecond, value.tzinfo
+        )
     if isinstance(value, date):
         return date(value.year, value.month, value.day)
     for base in (bool, int, float, str, bytes):  # bool subclasses int, so it must be checked first
@@ -709,8 +755,10 @@ def _sanitize_for_yaml(value, context: str):
         return _sanitize_for_yaml(value.value, context)
 
     if isinstance(value, dict):
-        return {_sanitize_hashable(key, context, 'dictionary key'): _sanitize_for_yaml(val, context)
-                for key, val in value.items()}
+        return {
+            _sanitize_hashable(key, context, 'dictionary key'): _sanitize_for_yaml(val, context)
+            for key, val in value.items()
+        }
     if isinstance(value, (list, tuple)):
         # YAML has no tuple type - tuples are stored (and re-loaded) as lists
         return [_sanitize_for_yaml(item, context) for item in value]
@@ -724,10 +772,11 @@ def _sanitize_for_yaml(value, context: str):
     try:
         yaml.safe_dump(value)
     except yaml.YAMLError as err:
-        raise InvalidTypeError(f"Cannot export Pipeline: the value of {context} (of type "
-                               f"'{type(value).__name__}') cannot be saved to a Pipeline YAML file. "
-                               f"Please replace it with a simple value, such as a number, a string, or a list. ") \
-            from err
+        raise InvalidTypeError(
+            f'Cannot export Pipeline: the value of {context} (of type '
+            f"'{type(value).__name__}') cannot be saved to a Pipeline YAML file. "
+            f'Please replace it with a simple value, such as a number, a string, or a list. '
+        ) from err
     return value
 
 
@@ -746,9 +795,11 @@ def _sanitize_hashable(value, context: str, kind: str):
     try:
         hash(sanitized)
     except TypeError as err:
-        raise InvalidTypeError(f"Cannot export Pipeline: the {kind} {value!r} of {context} "
-                               f"cannot be saved to a Pipeline YAML file. "
-                               f"Please use a simple value such as a string or a number. ") from err
+        raise InvalidTypeError(
+            f'Cannot export Pipeline: the {kind} {value!r} of {context} '
+            f'cannot be saved to a Pipeline YAML file. '
+            f'Please use a simple value such as a string or a number. '
+        ) from err
     return sanitized
 
 
@@ -791,7 +842,6 @@ class GenericPipeline(abc.ABC):
 
     @staticmethod
     def _param_string(args: tuple, kwargs: dict):
-
         """
         Returns a formatted string of the given arguments and keyworded arguments.
 
@@ -803,18 +853,18 @@ class GenericPipeline(abc.ABC):
         :rtype: str
 
         """
-        args_str = ', '.join([f"'{arg}'" if isinstance(arg, str) else f"{arg}" for arg in args])
+        args_str = ', '.join([f"'{arg}'" if isinstance(arg, str) else f'{arg}' for arg in args])
         kwargs_str = ', '.join(
-            [f"{key}='{arg}'" if isinstance(arg, str) else f"{key}={arg}" for key, arg in kwargs.items()])
+            [f"{key}='{arg}'" if isinstance(arg, str) else f'{key}={arg}' for key, arg in kwargs.items()]
+        )
         if len(args_str) == 0:
             return kwargs_str
         elif len(kwargs_str) == 0:
             return args_str
         else:
-            return f"{args_str}, {kwargs_str}"
+            return f'{args_str}, {kwargs_str}'
 
     def remove_last_function(self):
-
         """
         Removes from the Pipeline the last function that was added to it. Removal is in-place.
 
@@ -828,11 +878,12 @@ class GenericPipeline(abc.ABC):
 
         """
         if not (len(self.functions) > 0 and len(self.params) > 0):
-            raise InvalidValueError("Pipeline is empty, no functions to remove!")
+            raise InvalidValueError('Pipeline is empty, no functions to remove!')
         func = self.functions.pop(-1)
         args, kwargs = self.params.pop(-1)
         print(
-            f"Removed function {func.__name__} with parameters [{self._param_string(args, kwargs)}] from the pipeline.")
+            f'Removed function {func.__name__} with parameters [{self._param_string(args, kwargs)}] from the pipeline.'
+        )
 
     def _readable_func_signature(self, func: types.FunctionType, args: tuple, kwargs: dict):
         """
@@ -847,7 +898,7 @@ class GenericPipeline(abc.ABC):
         :return: function signature string
         :rtype: str
         """
-        return f"{get_method_readable_name(func)}: ({self._param_string(args, kwargs)})"
+        return f'{get_method_readable_name(func)}: ({self._param_string(args, kwargs)})'
 
     def export_pipeline(self, filename: Union[str, Path, None]) -> Union[None, str]:
         """
@@ -888,15 +939,24 @@ class GenericPipeline(abc.ABC):
         :type kwargs: dict
         :return: a [args, kwargs] list that ``yaml.safe_dump`` can represent
         """
-        sanitized_args = [_sanitize_for_yaml(arg, f"positional argument #{i + 1} of function '{func_name}'")
-                          for i, arg in enumerate(args)]
-        sanitized_kwargs = {key: _sanitize_for_yaml(val, f"parameter '{key}' of function '{func_name}'")
-                            for key, val in kwargs.items()}
+        sanitized_args = [
+            _sanitize_for_yaml(arg, f"positional argument #{i + 1} of function '{func_name}'")
+            for i, arg in enumerate(args)
+        ]
+        sanitized_kwargs = {
+            key: _sanitize_for_yaml(val, f"parameter '{key}' of function '{func_name}'") for key, val in kwargs.items()
+        }
         return [sanitized_args, sanitized_kwargs]
 
     def _get_pipeline_dict(self):
-        d = dict(functions=[], params=[], metadata={'rnalysis_version': f'{__version__}',
-                                                    'export_time': datetime.today().strftime('%Y/%m/%d, %H:%M:%S')})
+        d = dict(
+            functions=[],
+            params=[],
+            metadata={
+                'rnalysis_version': f'{__version__}',
+                'export_time': datetime.today().strftime('%Y/%m/%d, %H:%M:%S'),
+            },
+        )
         return d
 
     @classmethod
@@ -933,20 +993,23 @@ class GenericPipeline(abc.ABC):
                     return yaml.safe_load(f)
                 except yaml.YAMLError as err:
                     raise cls._pipeline_load_error(
-                        None, f"the file '{filename}' is not a valid YAML document ({err}).") from err
+                        None, f"the file '{filename}' is not a valid YAML document ({err})."
+                    ) from err
         except OSError as err:
             if isinstance(filename, str):
                 is_yaml_string, pipeline_dict, parse_error = _parse_pipeline_yaml_string(filename)
                 if is_yaml_string:
                     if parse_error is not None:
                         raise cls._pipeline_load_error(
-                            None, f"the given Pipeline is not a valid YAML document "
-                                  f"({parse_error}).") from parse_error
+                            None, f'the given Pipeline is not a valid YAML document ({parse_error}).'
+                        ) from parse_error
                     return pipeline_dict
             if isinstance(err, FileNotFoundError):
-                raise FileNotFoundError(f"Could not find the Pipeline file '{filename}'. "
-                                        f"Please make sure the file exists, "
-                                        f"and that its path is spelled correctly. ") from err
+                raise FileNotFoundError(
+                    f"Could not find the Pipeline file '{filename}'. "
+                    f'Please make sure the file exists, '
+                    f'and that its path is spelled correctly. '
+                ) from err
             raise
 
     @staticmethod
@@ -978,9 +1041,11 @@ class GenericPipeline(abc.ABC):
         :return: the error to raise
         :rtype: InvalidValueError
         """
-        return InvalidValueError(f"Failed to load Pipeline: {reason} "
-                                 f"({cls._exported_version_string(pipeline_dict)}, "
-                                 f"and the current version is RNAlysis {__version__})")
+        return InvalidValueError(
+            f'Failed to load Pipeline: {reason} '
+            f'({cls._exported_version_string(pipeline_dict)}, '
+            f'and the current version is RNAlysis {__version__})'
+        )
 
     @classmethod
     def _validate_pipeline_dict(cls, pipeline_dict):
@@ -991,18 +1056,24 @@ class GenericPipeline(abc.ABC):
         """
         if not isinstance(pipeline_dict, dict):
             raise cls._pipeline_load_error(
-                pipeline_dict, f"expected a Pipeline YAML file or YAML-like string, but got "
-                               f"'{type(pipeline_dict).__name__}' instead.")
+                pipeline_dict,
+                f"expected a Pipeline YAML file or YAML-like string, but got '{type(pipeline_dict).__name__}' instead.",
+            )
         for key in ('functions', 'params'):
             if key not in pipeline_dict:
                 raise cls._pipeline_load_error(pipeline_dict, f"the Pipeline is missing the mandatory '{key}' field.")
             if not isinstance(pipeline_dict[key], list):
-                raise cls._pipeline_load_error(pipeline_dict, f"the Pipeline's '{key}' field must be a list, "
-                                                              f"but is '{type(pipeline_dict[key]).__name__}' instead.")
+                raise cls._pipeline_load_error(
+                    pipeline_dict,
+                    f"the Pipeline's '{key}' field must be a list, "
+                    f"but is '{type(pipeline_dict[key]).__name__}' instead.",
+                )
         if len(pipeline_dict['functions']) != len(pipeline_dict['params']):
-            raise cls._pipeline_load_error(pipeline_dict,
-                                           f"the Pipeline lists {len(pipeline_dict['functions'])} functions, "
-                                           f"but {len(pipeline_dict['params'])} sets of parameters.")
+            raise cls._pipeline_load_error(
+                pipeline_dict,
+                f'the Pipeline lists {len(pipeline_dict["functions"])} functions, '
+                f'but {len(pipeline_dict["params"])} sets of parameters.',
+            )
 
     @classmethod
     def _params_from_dict(cls, pipeline_dict: dict) -> list:
@@ -1016,21 +1087,24 @@ class GenericPipeline(abc.ABC):
         params = []
         for entry in pipeline_dict['params']:
             if not isinstance(entry, (list, tuple)) or len(entry) != 2:
-                raise cls._pipeline_load_error(pipeline_dict, f"the function parameters {entry} are malformed - "
-                                                              f"expected a pair of [arguments, keyword arguments].")
+                raise cls._pipeline_load_error(
+                    pipeline_dict,
+                    f'the function parameters {entry} are malformed - '
+                    f'expected a pair of [arguments, keyword arguments].',
+                )
             args, kwargs = entry
             if kwargs is None:
                 kwargs = {}
             if not isinstance(kwargs, dict):
-                raise cls._pipeline_load_error(pipeline_dict, f"the keyword arguments {kwargs} are malformed - "
-                                                              f"expected a dictionary.")
+                raise cls._pipeline_load_error(
+                    pipeline_dict, f'the keyword arguments {kwargs} are malformed - expected a dictionary.'
+                )
             args = tuple(args) if isinstance(args, (list, tuple, set)) else (args,)
             params.append((args, kwargs))
         return params
 
     @classmethod
-    def _resolve_function(cls, func_name, namespace, namespace_name: str,
-                          pipeline_dict: dict) -> types.FunctionType:
+    def _resolve_function(cls, func_name, namespace, namespace_name: str, pipeline_dict: dict) -> types.FunctionType:
         """
         Look up a Pipeline function by the name recorded in a Pipeline YAML document.
 
@@ -1048,8 +1122,10 @@ class GenericPipeline(abc.ABC):
         func = getattr(namespace, func_name, None)
         if not isinstance(func, types.FunctionType):
             raise cls._pipeline_load_error(
-                pipeline_dict, f"function '{func_name}' does not exist in {namespace_name}. "
-                               f"It may have been renamed or removed since this Pipeline was exported.")
+                pipeline_dict,
+                f"function '{func_name}' does not exist in {namespace_name}. "
+                f'It may have been renamed or removed since this Pipeline was exported.',
+            )
         return func
 
     def _init_from_dict(self, pipeline_dict: dict):
@@ -1068,7 +1144,7 @@ class GenericPipeline(abc.ABC):
         :return: function signature string
         :rtype: str
         """
-        return f"{func.__name__}({self._param_string(args, kwargs)})"
+        return f'{func.__name__}({self._param_string(args, kwargs)})'
 
     def add_function(self, func: types.FunctionType, *args, **kwargs):
         if not isinstance(func, types.FunctionType):
@@ -1080,10 +1156,9 @@ class GenericPipeline(abc.ABC):
 
     def _validate_pipeline(self):
         if not (len(self.functions) > 0 and len(self.params) > 0):
-            raise InvalidValueError("Cannot apply an empty pipeline!")
+            raise InvalidValueError('Cannot apply an empty pipeline!')
         if len(self.functions) != len(self.params):
-            raise InvalidValueError("Cannot apply Pipeline: "
-                                    "length of 'functions' different from length of 'params'!")
+            raise InvalidValueError("Cannot apply Pipeline: length of 'functions' different from length of 'params'!")
 
     @abc.abstractmethod
     def apply_to(self, *args, **kwargs):

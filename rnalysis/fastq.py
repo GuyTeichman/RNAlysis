@@ -21,16 +21,19 @@ from tqdm.auto import tqdm
 
 from rnalysis import filtering
 from rnalysis.exceptions import InvalidTypeError, InvalidValueError
-from rnalysis.utils import (feature_counting, generic, genome_annotation,
-                            installs, io, parsing, validation)
+from rnalysis.utils import feature_counting, generic, genome_annotation, installs, io, parsing, validation
 from rnalysis.utils.generic import param_readable_names, readable_name
-from rnalysis.utils.param_typing import (LEGAL_ALIGNMENT_SUFFIXES,
-                                         LEGAL_BOWTIE2_MODES,
-                                         LEGAL_BOWTIE2_PRESETS,
-                                         LEGAL_FASTQ_SUFFIXES,
-                                         LEGAL_QUAL_SCORE_TYPES,
-                                         SUMMATION_METHODS, Fraction,
-                                         NonNegativeInt, PositiveInt)
+from rnalysis.utils.param_typing import (
+    LEGAL_ALIGNMENT_SUFFIXES,
+    LEGAL_BOWTIE2_MODES,
+    LEGAL_BOWTIE2_PRESETS,
+    LEGAL_FASTQ_SUFFIXES,
+    LEGAL_QUAL_SCORE_TYPES,
+    SUMMATION_METHODS,
+    Fraction,
+    NonNegativeInt,
+    PositiveInt,
+)
 
 try:
     from cutadapt.cli import main as cutadapt_main
@@ -39,7 +42,6 @@ try:
 
 except ImportError:  # pragma: no cover
     HAS_CUTADAPT = False
-
 
     def cutadapt_main(x):
         return None
@@ -57,16 +59,18 @@ class _FASTQPipeline(generic.GenericPipeline, abc.ABC):
     def __str__(self):
         string = ''
         if len(self) > 0:
-            string += ":\n\t" + '\n\t'.join(
-                self._readable_func_signature(func, params[0], params[1]) for func, params in
-                zip(self.functions, self.params))
+            string += ':\n\t' + '\n\t'.join(
+                self._readable_func_signature(func, params[0], params[1])
+                for func, params in zip(self.functions, self.params)
+            )
         return string
 
     def __repr__(self):
         string = ''
         if len(self) > 0:
-            string += ": " + "-->".join(
-                self._func_signature(func, params[0], params[1]) for func, params in zip(self.functions, self.params))
+            string += ': ' + '-->'.join(
+                self._func_signature(func, params[0], params[1]) for func, params in zip(self.functions, self.params)
+            )
         return string
 
     @property
@@ -95,9 +99,10 @@ class _FASTQPipeline(generic.GenericPipeline, abc.ABC):
 
         if self._is_paired_end_func(func, self.is_paired_end) != self.is_paired_end:
             raise InvalidValueError(
-                f"{'paired' * (not self.is_paired_end) + 'single' * self.is_paired_end}-end function "
-                f"cannot be added to "
-                f"{'single' * (not self.is_paired_end) + 'paired' * self.is_paired_end}-end Pipeline!")
+                f'{"paired" * (not self.is_paired_end) + "single" * self.is_paired_end}-end function '
+                f'cannot be added to '
+                f'{"single" * (not self.is_paired_end) + "paired" * self.is_paired_end}-end Pipeline!'
+            )
 
         super().add_function(func, *args, **kwargs)
 
@@ -105,16 +110,18 @@ class _FASTQPipeline(generic.GenericPipeline, abc.ABC):
         self._validate_pipeline_dict(pipeline_dict)
         self.params = self._params_from_dict(pipeline_dict)
         thismodule = sys.modules[__name__]
-        self.functions = [self._resolve_function(func, thismodule, "the 'fastq' module", pipeline_dict)
-                          for func in pipeline_dict['functions']]
+        self.functions = [
+            self._resolve_function(func, thismodule, "the 'fastq' module", pipeline_dict)
+            for func in pipeline_dict['functions']
+        ]
 
 
 class SingleEndPipeline(_FASTQPipeline):
     def __str__(self):
-        return "Pipeline for sequence files (single-end)" + super().__str__()
+        return 'Pipeline for sequence files (single-end)' + super().__str__()
 
     def __repr__(self):
-        return "SingleEndPipeline()" + super().__repr__()
+        return 'SingleEndPipeline()' + super().__repr__()
 
     def _get_pipeline_dict(self):
         d = super()._get_pipeline_dict()
@@ -128,9 +135,9 @@ class SingleEndPipeline(_FASTQPipeline):
         return_values = []
 
         if not (input_folder.exists() and input_folder.is_dir()):
-            raise InvalidValueError("input_folder does not exist!")
+            raise InvalidValueError('input_folder does not exist!')
         if not (output_folder.exists() and output_folder.is_dir()):
-            raise InvalidValueError("output_folder does not exist!")
+            raise InvalidValueError('output_folder does not exist!')
 
         current_in_dir = input_folder
         for i, (func, (args, kwargs)) in enumerate(zip(self.functions, self.params)):
@@ -160,10 +167,10 @@ class SingleEndPipeline(_FASTQPipeline):
 
 class PairedEndPipeline(_FASTQPipeline):
     def __str__(self):
-        return "Pipeline for sequence files (paired-end)" + super().__str__()
+        return 'Pipeline for sequence files (paired-end)' + super().__str__()
 
     def __repr__(self):
-        return "PairedEndPipeline()" + super().__repr__()
+        return 'PairedEndPipeline()' + super().__repr__()
 
     def _get_pipeline_dict(self):
         d = super()._get_pipeline_dict()
@@ -180,7 +187,7 @@ class PairedEndPipeline(_FASTQPipeline):
         return_values = []
 
         if not (output_folder.exists() and output_folder.is_dir()):
-            raise InvalidValueError("output_folder does not exist!")
+            raise InvalidValueError('output_folder does not exist!')
 
         current_r1, current_r2 = r1_files, r2_files
         current_in_dir = output_folder.joinpath('00_input')
@@ -193,7 +200,7 @@ class PairedEndPipeline(_FASTQPipeline):
             except OSError:
                 pass
             with tqdm(total=len(r1_files) + len(r2_files), desc='Copying files', unit='files') as pbar:
-                for file in (itertools.chain(r1_files, r2_files)):
+                for file in itertools.chain(r1_files, r2_files):
                     shutil.copy(file, current_in_dir)
                     pbar.update(1)
 
@@ -216,8 +223,9 @@ class PairedEndPipeline(_FASTQPipeline):
             else:
                 raise NotImplementedError(f"Cannot run function '{func.__name__}' in this Pipeline.")
 
-            if res is not None and not (validation.isiterable(res) and validation.isinstanceiter(res,
-                                                                                                 str)):  # TODO: make uniform with Pipeline output dict?
+            if res is not None and not (
+                validation.isiterable(res) and validation.isinstanceiter(res, str)
+            ):  # TODO: make uniform with Pipeline output dict?
                 if isinstance(res, (list, tuple)):
                     return_values.extend(res)
                 else:
@@ -243,9 +251,13 @@ def _generate_picard_basecall(command: str, picard_installation_folder: Union[st
 def _run_picard_calls(calls: List[List[str]], script_name: str, output_folder: Path):
     with tqdm(total=len(calls), desc=f'Applying "{script_name}"', unit='files') as pbar:
         for picard_call in calls:
-            print(f"Running command: \n{' '.join(picard_call)}")
-            log_filename = Path(output_folder).joinpath(
-                f'picard_{script_name}_{Path(picard_call[-1]).stem}.log').absolute().as_posix()
+            print(f'Running command: \n{" ".join(picard_call)}')
+            log_filename = (
+                Path(output_folder)
+                .joinpath(f'picard_{script_name}_{Path(picard_call[-1]).stem}.log')
+                .absolute()
+                .as_posix()
+            )
             return_code, stderr = io.run_subprocess(picard_call, shell=True, log_filename=log_filename)
 
             if return_code:
@@ -255,36 +267,43 @@ def _run_picard_calls(calls: List[List[str]], script_name: str, output_folder: P
                     if s.startswith('Error'):
                         short_err = s.rstrip() + stderr[i + 1].rstrip()
                         break
-                raise ChildProcessError(f"Picard call failed to execute: '{short_err}'. See full error report below.") \
-                    from RuntimeError(full_err)
+                raise ChildProcessError(
+                    f"Picard call failed to execute: '{short_err}'. See full error report below."
+                ) from RuntimeError(full_err)
 
-            print(f"File saved successfully at {picard_call[-1]}")
+            print(f'File saved successfully at {picard_call[-1]}')
             pbar.update(1)
 
 
-def _parse_sam2fastq_misc_args(picard_installation_folder: Union[str, Path, Literal['auto']] = 'auto',
-                               re_reverse_reads: bool = True, include_non_primary_alignments: bool = False,
-                               quality_trim: Union[PositiveInt, None] = None):
+def _parse_sam2fastq_misc_args(
+    picard_installation_folder: Union[str, Path, Literal['auto']] = 'auto',
+    re_reverse_reads: bool = True,
+    include_non_primary_alignments: bool = False,
+    quality_trim: Union[PositiveInt, None] = None,
+):
     script_name = 'SamToFastq'
     base_call = _generate_picard_basecall(script_name, picard_installation_folder)
-    base_call.append(f"RE_REVERSE={'true' if re_reverse_reads else 'false'}")
-    base_call.append(f"INCLUDE_NON_PRIMARY_ALIGNMENTS={'true' if include_non_primary_alignments else 'false'}")
+    base_call.append(f'RE_REVERSE={"true" if re_reverse_reads else "false"}')
+    base_call.append(f'INCLUDE_NON_PRIMARY_ALIGNMENTS={"true" if include_non_primary_alignments else "false"}')
     if quality_trim is not None:
-        base_call.append(f"QUALITY={quality_trim}")
+        base_call.append(f'QUALITY={quality_trim}')
     return base_call, script_name
 
 
 @_func_type('both')
 @readable_name('Create BAM index files (.bai)')
-def create_bam_index(input_folder: Union[str, Path], output_folder: Union[str, Path],
-                     picard_installation_folder: Union[str, Path, Literal['auto']] = 'auto'):
+def create_bam_index(
+    input_folder: Union[str, Path],
+    output_folder: Union[str, Path],
+    picard_installation_folder: Union[str, Path, Literal['auto']] = 'auto',
+):
     script_name = 'BuildBamIndex'
     input_folder = Path(input_folder)
     output_folder = Path(output_folder)
     if not (input_folder.exists() and input_folder.is_dir()):
-        raise InvalidValueError("input_folder does not exist!")
+        raise InvalidValueError('input_folder does not exist!')
     if not (output_folder.exists() and output_folder.is_dir()):
-        raise InvalidValueError("output_folder does not exist!")
+        raise InvalidValueError('output_folder does not exist!')
 
     base_call = _generate_picard_basecall(script_name, picard_installation_folder)
     legal_samples = _get_legal_samples(input_folder, 'alignment')
@@ -293,8 +312,8 @@ def create_bam_index(input_folder: Union[str, Path], output_folder: Union[str, P
     for i, bam_file in enumerate(sorted(legal_samples)):
         this_call = base_call.copy()
 
-        this_call.append(f"INPUT={bam_file.as_posix()}")
-        this_call.append(f"OUTPUT={output_folder.joinpath(f'{bam_file.stem}.bai').as_posix()}")
+        this_call.append(f'INPUT={bam_file.as_posix()}')
+        this_call.append(f'OUTPUT={output_folder.joinpath(f"{bam_file.stem}.bai").as_posix()}')
         calls.append(this_call)
 
     _run_picard_calls(calls, script_name, output_folder)
@@ -302,11 +321,15 @@ def create_bam_index(input_folder: Union[str, Path], output_folder: Union[str, P
 
 @_func_type('single')
 @readable_name('Convert SAM/BAM files to FASTQ files (single-end)')
-def sam_to_fastq_single(input_folder: Union[str, Path], output_folder: Union[str, Path],
-                        picard_installation_folder: Union[str, Path, Literal['auto']] = 'auto',
-                        new_sample_names: Union[List[str], Literal['auto']] = 'auto',
-                        re_reverse_reads: bool = True, include_non_primary_alignments: bool = False,
-                        quality_trim: Union[PositiveInt, None] = None):
+def sam_to_fastq_single(
+    input_folder: Union[str, Path],
+    output_folder: Union[str, Path],
+    picard_installation_folder: Union[str, Path, Literal['auto']] = 'auto',
+    new_sample_names: Union[List[str], Literal['auto']] = 'auto',
+    re_reverse_reads: bool = True,
+    include_non_primary_alignments: bool = False,
+    quality_trim: Union[PositiveInt, None] = None,
+):
     """
     Convert SAM/BAM files to FASTQ files using \
     `Picard SamToFastq <https://broadinstitute.github.io/picard/command-line-overview.html#SamToFastq>`_.
@@ -338,18 +361,20 @@ def sam_to_fastq_single(input_folder: Union[str, Path], output_folder: Union[str
     input_folder = Path(input_folder)
     output_folder = Path(output_folder)
     if not (input_folder.exists() and input_folder.is_dir()):
-        raise InvalidValueError("input_folder does not exist!")
+        raise InvalidValueError('input_folder does not exist!')
     if not (output_folder.exists() and output_folder.is_dir()):
-        raise InvalidValueError("output_folder does not exist!")
+        raise InvalidValueError('output_folder does not exist!')
 
-    base_call, script_name = _parse_sam2fastq_misc_args(picard_installation_folder, re_reverse_reads,
-                                                        include_non_primary_alignments, quality_trim)
+    base_call, script_name = _parse_sam2fastq_misc_args(
+        picard_installation_folder, re_reverse_reads, include_non_primary_alignments, quality_trim
+    )
     calls = []
 
     legal_samples = _get_legal_samples(input_folder, 'alignment')
     if not ((new_sample_names == 'auto') or (len(new_sample_names) == len(legal_samples))):
-        raise InvalidValueError(f'Number of samples ({len(legal_samples)}) does not match number of '
-                                f'sample names ({len(new_sample_names)})!')
+        raise InvalidValueError(
+            f'Number of samples ({len(legal_samples)}) does not match number of sample names ({len(new_sample_names)})!'
+        )
 
     for i, sam_file in enumerate(sorted(legal_samples)):
         this_call = base_call.copy()
@@ -357,8 +382,8 @@ def sam_to_fastq_single(input_folder: Union[str, Path], output_folder: Union[str
             this_name = parsing.remove_suffixes(sam_file).stem + '_sam2fastq'
         else:
             this_name = new_sample_names[i]
-        this_call.append(f"INPUT={sam_file.as_posix()}")
-        this_call.append(f"FASTQ={output_folder.joinpath(f'{this_name}.fastq').as_posix()}")
+        this_call.append(f'INPUT={sam_file.as_posix()}')
+        this_call.append(f'FASTQ={output_folder.joinpath(f"{this_name}.fastq").as_posix()}')
         calls.append(this_call)
 
     _run_picard_calls(calls, script_name, output_folder)
@@ -366,11 +391,16 @@ def sam_to_fastq_single(input_folder: Union[str, Path], output_folder: Union[str
 
 @_func_type('paired')
 @readable_name('Convert SAM/BAM files to FASTQ files (paired-end)')
-def sam_to_fastq_paired(input_folder: Union[str, Path], output_folder: Union[str, Path],
-                        picard_installation_folder: Union[str, Path, Literal['auto']] = 'auto',
-                        new_sample_names: Union[List[str], Literal['auto']] = 'auto',
-                        re_reverse_reads: bool = True, include_non_primary_alignments: bool = False,
-                        quality_trim: Union[PositiveInt, None] = None, return_new_filenames: bool = False):
+def sam_to_fastq_paired(
+    input_folder: Union[str, Path],
+    output_folder: Union[str, Path],
+    picard_installation_folder: Union[str, Path, Literal['auto']] = 'auto',
+    new_sample_names: Union[List[str], Literal['auto']] = 'auto',
+    re_reverse_reads: bool = True,
+    include_non_primary_alignments: bool = False,
+    quality_trim: Union[PositiveInt, None] = None,
+    return_new_filenames: bool = False,
+):
     """
     Convert SAM/BAM files to FASTQ files using \
     `Picard SamToFastq <https://broadinstitute.github.io/picard/command-line-overview.html#SamToFastq>`_.
@@ -402,19 +432,21 @@ def sam_to_fastq_paired(input_folder: Union[str, Path], output_folder: Union[str
     input_folder = Path(input_folder)
     output_folder = Path(output_folder)
     if not (input_folder.exists() and input_folder.is_dir()):
-        raise InvalidValueError("input_folder does not exist!")
+        raise InvalidValueError('input_folder does not exist!')
     if not (output_folder.exists() and output_folder.is_dir()):
-        raise InvalidValueError("output_folder does not exist!")
+        raise InvalidValueError('output_folder does not exist!')
 
-    base_call, script_name = _parse_sam2fastq_misc_args(picard_installation_folder, re_reverse_reads,
-                                                        include_non_primary_alignments, quality_trim)
+    base_call, script_name = _parse_sam2fastq_misc_args(
+        picard_installation_folder, re_reverse_reads, include_non_primary_alignments, quality_trim
+    )
 
     calls = []
 
     legal_samples = _get_legal_samples(input_folder, 'alignment')
     if not ((new_sample_names == 'auto') or (len(new_sample_names) == len(legal_samples))):
-        raise InvalidValueError(f'Number of samples ({len(legal_samples)}) does not match number of '
-                                f'sample names ({len(new_sample_names)})!')
+        raise InvalidValueError(
+            f'Number of samples ({len(legal_samples)}) does not match number of sample names ({len(new_sample_names)})!'
+        )
 
     r1_out = []
     r2_out = []
@@ -424,14 +456,14 @@ def sam_to_fastq_paired(input_folder: Union[str, Path], output_folder: Union[str
             this_name = parsing.remove_suffixes(sam_file).stem + '_sam2fastq'
         else:
             this_name = new_sample_names[i]
-        this_call.append(f"INPUT={sam_file.as_posix()}")
+        this_call.append(f'INPUT={sam_file.as_posix()}')
         this_r1 = output_folder.joinpath(f'{this_name}_R1.fastq').as_posix()
         r1_out.append(this_r1)
-        this_call.append(f"FASTQ={this_r1}")
+        this_call.append(f'FASTQ={this_r1}')
 
         this_r2 = output_folder.joinpath(f'{this_name}_R2.fastq').as_posix()
         r2_out.append(this_r2)
-        this_call.append(f"SECOND_END_FASTQ={this_r2}")
+        this_call.append(f'SECOND_END_FASTQ={this_r2}')
 
         calls.append(this_call)
 
@@ -441,31 +473,35 @@ def sam_to_fastq_paired(input_folder: Union[str, Path], output_folder: Union[str
         return r1_out, r2_out
 
 
-def _parse_fastq2sam_misc_args(picard_installation_folder: Union[str, Path, Literal['auto']] = 'auto',
-                               quality_score_type: Union[Literal['auto'], Literal[LEGAL_QUAL_SCORE_TYPES]] = 'auto'):
+def _parse_fastq2sam_misc_args(
+    picard_installation_folder: Union[str, Path, Literal['auto']] = 'auto',
+    quality_score_type: Union[Literal['auto'], Literal[LEGAL_QUAL_SCORE_TYPES]] = 'auto',
+):
     script_name = 'FastqToSam'
     base_call = _generate_picard_basecall(script_name, picard_installation_folder)
     if quality_score_type == 'auto':
         pass
     elif quality_score_type == 'solexa-quals':
-        base_call.append("QUALITY_FORMAT=Solexa")
+        base_call.append('QUALITY_FORMAT=Solexa')
     elif quality_score_type == 'phred64':
-        base_call.append("QUALITY_FORMAT=Illumina")
+        base_call.append('QUALITY_FORMAT=Illumina')
     elif quality_score_type == 'phred33':
-        base_call.append("QUALITY_FORMAT=Standard")
+        base_call.append('QUALITY_FORMAT=Standard')
     else:
-        warnings.warn(f"Quality format {quality_score_type} is not supported by Picard. "
-                      f"Using default quality format.")
+        warnings.warn(f'Quality format {quality_score_type} is not supported by Picard. Using default quality format.')
     return base_call, script_name
 
 
 @_func_type('single')
 @readable_name('Convert FASTQ files to SAM/BAM files (single-end reads)')
-def fastq_to_sam_single(input_folder: Union[str, Path], output_folder: Union[str, Path],
-                        picard_installation_folder: Union[str, Path, Literal['auto']] = 'auto',
-                        new_sample_names: Union[List[str], Literal['auto']] = 'auto',
-                        output_format: Literal['sam', 'bam'] = 'bam',
-                        quality_score_type: Union[Literal['auto'], Literal[LEGAL_QUAL_SCORE_TYPES]] = 'auto'):
+def fastq_to_sam_single(
+    input_folder: Union[str, Path],
+    output_folder: Union[str, Path],
+    picard_installation_folder: Union[str, Path, Literal['auto']] = 'auto',
+    new_sample_names: Union[List[str], Literal['auto']] = 'auto',
+    output_format: Literal['sam', 'bam'] = 'bam',
+    quality_score_type: Union[Literal['auto'], Literal[LEGAL_QUAL_SCORE_TYPES]] = 'auto',
+):
     """
     Convert SAM/BAM files to FASTQ files using \
     `Picard SamToFastq <https://broadinstitute.github.io/picard/command-line-overview.html#SamToFastq>`_.
@@ -488,17 +524,18 @@ def fastq_to_sam_single(input_folder: Union[str, Path], output_folder: Union[str
     input_folder = Path(input_folder)
     output_folder = Path(output_folder)
     if not (input_folder.exists() and input_folder.is_dir()):
-        raise InvalidValueError("input_folder does not exist!")
+        raise InvalidValueError('input_folder does not exist!')
     if not (output_folder.exists() and output_folder.is_dir()):
-        raise InvalidValueError("output_folder does not exist!")
+        raise InvalidValueError('output_folder does not exist!')
 
     base_call, script_name = _parse_fastq2sam_misc_args(picard_installation_folder, quality_score_type)
     calls = []
 
     legal_samples = _get_legal_samples(input_folder)
     if not ((new_sample_names == 'auto') or (len(new_sample_names) == len(legal_samples))):
-        raise InvalidValueError(f'Number of samples ({len(legal_samples)}) does not match number of '
-                                f'sample names ({len(new_sample_names)})!')
+        raise InvalidValueError(
+            f'Number of samples ({len(legal_samples)}) does not match number of sample names ({len(new_sample_names)})!'
+        )
 
     for i, fastq_file in enumerate(sorted(legal_samples)):
         this_call = base_call.copy()
@@ -506,8 +543,8 @@ def fastq_to_sam_single(input_folder: Union[str, Path], output_folder: Union[str
             this_name = parsing.remove_suffixes(fastq_file).stem + '_fastq2sam'
         else:
             this_name = new_sample_names[i]
-        this_call.append(f"FASTQ={fastq_file.as_posix()}")
-        this_call.append(f"OUTPUT={output_folder.joinpath(f'{this_name}.{output_format}').as_posix()}")
+        this_call.append(f'FASTQ={fastq_file.as_posix()}')
+        this_call.append(f'OUTPUT={output_folder.joinpath(f"{this_name}.{output_format}").as_posix()}')
         calls.append(this_call)
 
     _run_picard_calls(calls, script_name, output_folder)
@@ -515,11 +552,15 @@ def fastq_to_sam_single(input_folder: Union[str, Path], output_folder: Union[str
 
 @_func_type('paired')
 @readable_name('Convert FASTQ files to SAM/BAM files (paired-end reads)')
-def fastq_to_sam_paired(r1_files: List[str], r2_files: List[str], output_folder: Union[str, Path],
-                        picard_installation_folder: Union[str, Path, Literal['auto']] = 'auto',
-                        new_sample_names: Union[List[str], Literal['auto']] = 'auto',
-                        output_format: Literal['sam', 'bam'] = 'bam',
-                        quality_score_type: Union[Literal['auto'], Literal[LEGAL_QUAL_SCORE_TYPES]] = 'auto'):
+def fastq_to_sam_paired(
+    r1_files: List[str],
+    r2_files: List[str],
+    output_folder: Union[str, Path],
+    picard_installation_folder: Union[str, Path, Literal['auto']] = 'auto',
+    new_sample_names: Union[List[str], Literal['auto']] = 'auto',
+    output_format: Literal['sam', 'bam'] = 'bam',
+    quality_score_type: Union[Literal['auto'], Literal[LEGAL_QUAL_SCORE_TYPES]] = 'auto',
+):
     """
     Convert SAM/BAM files to FASTQ files using \
     `Picard SamToFastq <https://broadinstitute.github.io/picard/command-line-overview.html#SamToFastq>`_.
@@ -541,7 +582,7 @@ def fastq_to_sam_paired(r1_files: List[str], r2_files: List[str], output_folder:
     """
     output_folder = Path(output_folder)
     if not (output_folder.exists() and output_folder.is_dir()):
-        raise InvalidValueError("output_folder does not exist!")
+        raise InvalidValueError('output_folder does not exist!')
 
     base_call, script_name = _parse_fastq2sam_misc_args(picard_installation_folder, quality_score_type)
 
@@ -552,12 +593,12 @@ def fastq_to_sam_paired(r1_files: List[str], r2_files: List[str], output_folder:
         file1 = Path(file1)
         file2 = Path(file2)
         if new_sample_names == 'auto':
-            this_name = f"{parsing.remove_suffixes(file1).stem}_{parsing.remove_suffixes(file2).stem}_fastq2sam"
+            this_name = f'{parsing.remove_suffixes(file1).stem}_{parsing.remove_suffixes(file2).stem}_fastq2sam'
         else:
             this_name = new_sample_names[i]
-        this_call.append(f"FASTQ={file1.as_posix()}")
-        this_call.append(f"FASTQ2={file2.as_posix()}")
-        this_call.append(f"OUTPUT={output_folder.joinpath(f'{this_name}.{output_format}').as_posix()}")
+        this_call.append(f'FASTQ={file1.as_posix()}')
+        this_call.append(f'FASTQ2={file2.as_posix()}')
+        this_call.append(f'OUTPUT={output_folder.joinpath(f"{this_name}.{output_format}").as_posix()}')
         calls.append(this_call)
 
     _run_picard_calls(calls, script_name, output_folder)
@@ -565,9 +606,13 @@ def fastq_to_sam_paired(r1_files: List[str], r2_files: List[str], output_folder:
 
 @_func_type('both')
 @readable_name('Validate SAM/BAM files')
-def validate_sam(input_folder: Union[str, Path], output_folder: Union[str, Path],
-                 picard_installation_folder: Union[str, Path, Literal['auto']] = 'auto',
-                 verbose: bool = True, is_bisulfite_sequenced: bool = False):
+def validate_sam(
+    input_folder: Union[str, Path],
+    output_folder: Union[str, Path],
+    picard_installation_folder: Union[str, Path, Literal['auto']] = 'auto',
+    verbose: bool = True,
+    is_bisulfite_sequenced: bool = False,
+):
     """
     Validate SAM/BAM files using \
     `Picard ValidateSamFile <https://broadinstitute.github.io/picard/command-line-overview.html#ValidateSamFile>`_.
@@ -596,13 +641,13 @@ def validate_sam(input_folder: Union[str, Path], output_folder: Union[str, Path]
     input_folder = Path(input_folder)
     output_folder = Path(output_folder)
     if not (input_folder.exists() and input_folder.is_dir()):
-        raise InvalidValueError("input_folder does not exist!")
+        raise InvalidValueError('input_folder does not exist!')
     if not (output_folder.exists() and output_folder.is_dir()):
-        raise InvalidValueError("output_folder does not exist!")
+        raise InvalidValueError('output_folder does not exist!')
 
     base_call = _generate_picard_basecall(script_name, picard_installation_folder)
-    base_call.append(f"MODE={'VERBOSE' if verbose else 'SUMMARY'}")
-    base_call.append(f"IS_BISULFITE_SEQUENCED={'true' if is_bisulfite_sequenced else 'false'}")
+    base_call.append(f'MODE={"VERBOSE" if verbose else "SUMMARY"}')
+    base_call.append(f'IS_BISULFITE_SEQUENCED={"true" if is_bisulfite_sequenced else "false"}')
 
     legal_samples = _get_legal_samples(input_folder, 'alignment')
 
@@ -610,8 +655,8 @@ def validate_sam(input_folder: Union[str, Path], output_folder: Union[str, Path]
     for i, sam_file in enumerate(sorted(legal_samples)):
         this_call = base_call.copy()
 
-        this_call.append(f"INPUT={sam_file.as_posix()}")
-        this_call.append(f"OUTPUT={output_folder.joinpath(f'{sam_file.stem}_report.txt').as_posix()}")
+        this_call.append(f'INPUT={sam_file.as_posix()}')
+        this_call.append(f'OUTPUT={output_folder.joinpath(f"{sam_file.stem}_report.txt").as_posix()}')
         calls.append(this_call)
 
     _run_picard_calls(calls, script_name, output_folder)
@@ -619,10 +664,13 @@ def validate_sam(input_folder: Union[str, Path], output_folder: Union[str, Path]
 
 @_func_type('both')
 @readable_name('Sort SAM/BAM files')
-def sort_sam(input_folder: Union[str, Path], output_folder: Union[str, Path],
-             picard_installation_folder: Union[str, Path, Literal['auto']] = 'auto',
-             new_sample_names: Union[List[str], Literal['auto']] = 'auto',
-             sort_order: Literal['coordinate', 'queryname', 'duplicate'] = 'coordinate'):
+def sort_sam(
+    input_folder: Union[str, Path],
+    output_folder: Union[str, Path],
+    picard_installation_folder: Union[str, Path, Literal['auto']] = 'auto',
+    new_sample_names: Union[List[str], Literal['auto']] = 'auto',
+    sort_order: Literal['coordinate', 'queryname', 'duplicate'] = 'coordinate',
+):
     """
     Sort SAM/BAM files using \
     `Picard SortSam <https://broadinstitute.github.io/picard/command-line-overview.html#SortSam>`_.
@@ -646,24 +694,25 @@ def sort_sam(input_folder: Union[str, Path], output_folder: Union[str, Path],
     input_folder = Path(input_folder)
     output_folder = Path(output_folder)
     if not (input_folder.exists() and input_folder.is_dir()):
-        raise InvalidValueError("input_folder does not exist!")
+        raise InvalidValueError('input_folder does not exist!')
     if not (output_folder.exists() and output_folder.is_dir()):
-        raise InvalidValueError("output_folder does not exist!")
+        raise InvalidValueError('output_folder does not exist!')
 
     base_call = _generate_picard_basecall(script_name, picard_installation_folder)
 
     if sort_order == 'coordinate':
-        base_call.append("SORT_ORDER=coordinate")
+        base_call.append('SORT_ORDER=coordinate')
     elif sort_order == 'queryname':
-        base_call.append("SORT_ORDER=queryname")
+        base_call.append('SORT_ORDER=queryname')
     elif sort_order == 'duplicate':
-        base_call.append("SORT_ORDER=duplicate")
+        base_call.append('SORT_ORDER=duplicate')
     else:
         raise ValueError(f"Sort order '{sort_order}' is not supported by Picard.")
     legal_samples = _get_legal_samples(input_folder, 'alignment')
     if not ((new_sample_names == 'auto') or (len(new_sample_names) == len(legal_samples))):
-        raise InvalidValueError(f'Number of samples ({len(legal_samples)}) does not match number of '
-                                f'sample names ({len(new_sample_names)})!')
+        raise InvalidValueError(
+            f'Number of samples ({len(legal_samples)}) does not match number of sample names ({len(new_sample_names)})!'
+        )
 
     calls = []
     for i, sam_file in enumerate(sorted(legal_samples)):
@@ -672,8 +721,8 @@ def sort_sam(input_folder: Union[str, Path], output_folder: Union[str, Path],
             this_name = parsing.remove_suffixes(sam_file).stem + '_sorted'
         else:
             this_name = new_sample_names[i]
-        this_call.append(f"INPUT={sam_file.as_posix()}")
-        this_call.append(f"OUTPUT={output_folder.joinpath(f'{this_name}{sam_file.suffix}').as_posix()}")
+        this_call.append(f'INPUT={sam_file.as_posix()}')
+        this_call.append(f'OUTPUT={output_folder.joinpath(f"{this_name}{sam_file.suffix}").as_posix()}')
         calls.append(this_call)
 
     _run_picard_calls(calls, script_name, output_folder)
@@ -681,14 +730,18 @@ def sort_sam(input_folder: Union[str, Path], output_folder: Union[str, Path],
 
 @_func_type('both')
 @readable_name('Find PCR/optical duplicates in SAM/BAM files')
-def find_duplicates(input_folder: Union[str, Path], output_folder: Union[str, Path],
-                    picard_installation_folder: Union[str, Path, Literal['auto']] = 'auto',
-                    new_sample_names: Union[List[str], Literal['auto']] = 'auto',
-                    output_format: Literal['sam', 'bam'] = 'bam',
-                    duplicate_handling: Literal['mark', 'remove_optical', 'remove_all'] = 'remove_all',
-                    duplicate_scoring_strategy: Literal[
-                        'reference_length', 'sum_of_base_qualities', 'random'] = 'sum_of_base_qualities',
-                    optical_duplicate_pixel_distance: int = 100):
+def find_duplicates(
+    input_folder: Union[str, Path],
+    output_folder: Union[str, Path],
+    picard_installation_folder: Union[str, Path, Literal['auto']] = 'auto',
+    new_sample_names: Union[List[str], Literal['auto']] = 'auto',
+    output_format: Literal['sam', 'bam'] = 'bam',
+    duplicate_handling: Literal['mark', 'remove_optical', 'remove_all'] = 'remove_all',
+    duplicate_scoring_strategy: Literal[
+        'reference_length', 'sum_of_base_qualities', 'random'
+    ] = 'sum_of_base_qualities',
+    optical_duplicate_pixel_distance: int = 100,
+):
     """
     Find duplicate reads in SAM/BAM files using \
     `Picard MarkDuplicates <https://broadinstitute.github.io/picard/command-line-overview.html#MarkDuplicates>`_.
@@ -727,39 +780,40 @@ def find_duplicates(input_folder: Union[str, Path], output_folder: Union[str, Pa
     input_folder = Path(input_folder)
     output_folder = Path(output_folder)
     if not (input_folder.exists() and input_folder.is_dir()):
-        raise InvalidValueError("input_folder does not exist!")
+        raise InvalidValueError('input_folder does not exist!')
     if not (output_folder.exists() and output_folder.is_dir()):
-        raise InvalidValueError("output_folder does not exist!")
+        raise InvalidValueError('output_folder does not exist!')
 
     base_call = _generate_picard_basecall(script_name, picard_installation_folder)
 
-    base_call.append(f"OPTICAL_DUPLICATE_PIXEL_DISTANCE={optical_duplicate_pixel_distance}")
+    base_call.append(f'OPTICAL_DUPLICATE_PIXEL_DISTANCE={optical_duplicate_pixel_distance}')
 
     if duplicate_handling == 'mark':
-        base_call.append("REMOVE_DUPLICATES=false")
-        base_call.append("REMOVE_SEQUENCING_DUPLICATES=false")
+        base_call.append('REMOVE_DUPLICATES=false')
+        base_call.append('REMOVE_SEQUENCING_DUPLICATES=false')
     elif duplicate_handling == 'remove_optical':
-        base_call.append("REMOVE_SEQUENCING_DUPLICATES=true")
-        base_call.append("REMOVE_DUPLICATES=false")
+        base_call.append('REMOVE_SEQUENCING_DUPLICATES=true')
+        base_call.append('REMOVE_DUPLICATES=false')
     elif duplicate_handling == 'remove_all':
-        base_call.append("REMOVE_DUPLICATES=true")
+        base_call.append('REMOVE_DUPLICATES=true')
     else:
         raise ValueError(f"Duplicate handling method '{duplicate_handling}' is not supported by Picard.")
 
     if duplicate_scoring_strategy == 'sum_of_base_qualities':
-        base_call.append("DUPLICATE_SCORING_STRATEGY=SUM_OF_BASE_QUALITIES")
+        base_call.append('DUPLICATE_SCORING_STRATEGY=SUM_OF_BASE_QUALITIES')
     elif duplicate_scoring_strategy == 'reference_length':
-        base_call.append("DUPLICATE_SCORING_STRATEGY=TOTAL_MAPPED_REFERENCE_LENGTH")
+        base_call.append('DUPLICATE_SCORING_STRATEGY=TOTAL_MAPPED_REFERENCE_LENGTH')
     elif duplicate_scoring_strategy == 'random':
-        base_call.append("DUPLICATE_SCORING_STRATEGY=RANDOM")
+        base_call.append('DUPLICATE_SCORING_STRATEGY=RANDOM')
     else:
         raise ValueError(f"Duplicate scoring strategy '{duplicate_scoring_strategy}' is not supported by Picard.")
 
     calls = []
     legal_samples = _get_legal_samples(input_folder, 'alignment')
     if not ((new_sample_names == 'auto') or (len(new_sample_names) == len(legal_samples))):
-        raise InvalidValueError(f'Number of samples ({len(legal_samples)}) does not match number of '
-                                f'sample names ({len(new_sample_names)})!')
+        raise InvalidValueError(
+            f'Number of samples ({len(legal_samples)}) does not match number of sample names ({len(new_sample_names)})!'
+        )
 
     for i, sam_file in enumerate(sorted(legal_samples)):
         this_call = base_call.copy()
@@ -767,9 +821,9 @@ def find_duplicates(input_folder: Union[str, Path], output_folder: Union[str, Pa
             this_name = parsing.remove_suffixes(sam_file).stem + '_find_duplicates'
         else:
             this_name = new_sample_names[i]
-        this_call.append(f"INPUT={sam_file.as_posix()}")
-        this_call.append(f"OUTPUT={output_folder.joinpath(f'{this_name}.{output_format}').as_posix()}")
-        this_call.append(f"METRICS_FILE={output_folder.joinpath(f'{this_name}_metrics.txt').as_posix()}")
+        this_call.append(f'INPUT={sam_file.as_posix()}')
+        this_call.append(f'OUTPUT={output_folder.joinpath(f"{this_name}.{output_format}").as_posix()}')
+        this_call.append(f'METRICS_FILE={output_folder.joinpath(f"{this_name}_metrics.txt").as_posix()}')
         calls.append(this_call)
 
     _run_picard_calls(calls, script_name, output_folder)
@@ -777,10 +831,13 @@ def find_duplicates(input_folder: Union[str, Path], output_folder: Union[str, Pa
 
 @_func_type('both')
 @readable_name('Convert SAM/BAM files to BAM/SAM files')
-def convert_sam_format(input_folder: Union[str, Path], output_folder: Union[str, Path],
-                       picard_installation_folder: Union[str, Path, Literal['auto']] = 'auto',
-                       new_sample_names: Union[List[str], Literal['auto']] = 'auto',
-                       output_format: Literal['sam', 'bam'] = 'bam'):
+def convert_sam_format(
+    input_folder: Union[str, Path],
+    output_folder: Union[str, Path],
+    picard_installation_folder: Union[str, Path, Literal['auto']] = 'auto',
+    new_sample_names: Union[List[str], Literal['auto']] = 'auto',
+    output_format: Literal['sam', 'bam'] = 'bam',
+):
     """
     Convert SAM files to BAM files or vice versa using \
     `Picard SamFormatConverter <https://broadinstitute.github.io/picard/command-line-overview.html#SamFormatConverter>`_.
@@ -805,16 +862,17 @@ def convert_sam_format(input_folder: Union[str, Path], output_folder: Union[str,
     input_folder = Path(input_folder)
     output_folder = Path(output_folder)
     if not (input_folder.exists() and input_folder.is_dir()):
-        raise InvalidValueError("input_folder does not exist!")
+        raise InvalidValueError('input_folder does not exist!')
     if not (output_folder.exists() and output_folder.is_dir()):
-        raise InvalidValueError("output_folder does not exist!")
+        raise InvalidValueError('output_folder does not exist!')
 
     base_call = _generate_picard_basecall(script_name, picard_installation_folder)
 
     legal_samples = _get_legal_samples(input_folder, 'alignment')
     if not ((new_sample_names == 'auto') or (len(new_sample_names) == len(legal_samples))):
-        raise InvalidValueError(f'Number of samples ({len(legal_samples)}) does not match number of '
-                                f'sample names ({len(new_sample_names)})!')
+        raise InvalidValueError(
+            f'Number of samples ({len(legal_samples)}) does not match number of sample names ({len(new_sample_names)})!'
+        )
 
     calls = []
     for i, sam_file in enumerate(sorted(legal_samples)):
@@ -823,8 +881,8 @@ def convert_sam_format(input_folder: Union[str, Path], output_folder: Union[str,
             this_name = parsing.remove_suffixes(sam_file).stem
         else:
             this_name = new_sample_names[i]
-        this_call.append(f"INPUT={sam_file.as_posix()}")
-        this_call.append(f"OUTPUT={output_folder.joinpath(f'{this_name}.{output_format}').as_posix()}")
+        this_call.append(f'INPUT={sam_file.as_posix()}')
+        this_call.append(f'OUTPUT={output_folder.joinpath(f"{this_name}.{output_format}").as_posix()}')
         calls.append(this_call)
 
     _run_picard_calls(calls, script_name, output_folder)
@@ -832,19 +890,28 @@ def convert_sam_format(input_folder: Union[str, Path], output_folder: Union[str,
 
 @_func_type('single')
 @readable_name('featureCounts count (single-end reads)')
-def featurecounts_single_end(input_folder: Union[str, Path], output_folder: Union[str, Path],
-                             gtf_file: Union[str, Path],
-                             gtf_feature_type: str = 'exon', gtf_attr_name: str = 'gene_id',
-                             r_installation_folder: Union[str, Path, Literal['auto']] = 'auto',
-                             new_sample_names: Union[List[str], Literal['auto']] = 'auto',
-                             stranded: Literal['no', 'forward', 'reverse'] = 'no', min_mapping_quality: int = 0,
-                             count_multi_mapping_reads: bool = False, count_multi_overlapping_reads: bool = False,
-                             ignore_secondary: bool = True,
-                             count_fractionally: bool = False, is_long_read: bool = False,
-                             report_read_assignment: Union[Literal['bam', 'sam', 'core'], None] = None,
-                             threads: PositiveInt = 1, return_log: bool = False) -> Union[
+def featurecounts_single_end(
+    input_folder: Union[str, Path],
+    output_folder: Union[str, Path],
+    gtf_file: Union[str, Path],
+    gtf_feature_type: str = 'exon',
+    gtf_attr_name: str = 'gene_id',
+    r_installation_folder: Union[str, Path, Literal['auto']] = 'auto',
+    new_sample_names: Union[List[str], Literal['auto']] = 'auto',
+    stranded: Literal['no', 'forward', 'reverse'] = 'no',
+    min_mapping_quality: int = 0,
+    count_multi_mapping_reads: bool = False,
+    count_multi_overlapping_reads: bool = False,
+    ignore_secondary: bool = True,
+    count_fractionally: bool = False,
+    is_long_read: bool = False,
+    report_read_assignment: Union[Literal['bam', 'sam', 'core'], None] = None,
+    threads: PositiveInt = 1,
+    return_log: bool = False,
+) -> Union[
     Tuple[filtering.CountFilter, pl.DataFrame, pl.DataFrame],
-    Tuple[filtering.CountFilter, pl.DataFrame, pl.DataFrame, Path]]:
+    Tuple[filtering.CountFilter, pl.DataFrame, pl.DataFrame, Path],
+]:
     """
     Assign mapped single-end sequencing reads to specified genomic features using \
     `RSubread featureCounts <https://doi.org/10.1093/bioinformatics/btt656>`_.
@@ -910,10 +977,22 @@ def featurecounts_single_end(input_folder: Union[str, Path], output_folder: Unio
     output_folder = Path(output_folder)
     if not output_folder.exists():
         raise InvalidValueError('Output folder does not exist!')
-    kwargs = _parse_featurecounts_misc_args(input_folder, output_folder, gtf_file, gtf_feature_type, gtf_attr_name,
-                                            stranded, min_mapping_quality, count_multi_mapping_reads,
-                                            count_multi_overlapping_reads, ignore_secondary, count_fractionally,
-                                            is_long_read, report_read_assignment, threads)
+    kwargs = _parse_featurecounts_misc_args(
+        input_folder,
+        output_folder,
+        gtf_file,
+        gtf_feature_type,
+        gtf_attr_name,
+        stranded,
+        min_mapping_quality,
+        count_multi_mapping_reads,
+        count_multi_overlapping_reads,
+        ignore_secondary,
+        count_fractionally,
+        is_long_read,
+        report_read_assignment,
+        threads,
+    )
 
     new_sample_names = _featurecounts_get_sample_names(kwargs['files'], new_sample_names)
 
@@ -924,20 +1003,32 @@ def featurecounts_single_end(input_folder: Union[str, Path], output_folder: Unio
 
 @_func_type('paired')
 @readable_name('featureCounts count (paired-end reads)')
-def featurecounts_paired_end(input_folder: Union[str, Path], output_folder: Union[str, Path],
-                             gtf_file: Union[str, Path], gtf_feature_type: str = 'exon', gtf_attr_name: str = 'gene_id',
-                             r_installation_folder: Union[str, Path, Literal['auto']] = 'auto',
-                             new_sample_names: Union[List[str], Literal['auto']] = 'auto',
-                             stranded: Literal['no', 'forward', 'reverse'] = 'no', min_mapping_quality: int = 0,
-                             count_multi_mapping_reads: bool = False, count_multi_overlapping_reads: bool = False,
-                             ignore_secondary: bool = True, count_fractionally: bool = False,
-                             is_long_read: bool = False, require_both_mapped: bool = True,
-                             count_chimeric_fragments: bool = False, min_fragment_length: NonNegativeInt = 50,
-                             max_fragment_length: Union[PositiveInt, None] = 600,
-                             report_read_assignment: Union[Literal['bam', 'sam', 'core'], None] = None,
-                             threads: PositiveInt = 1, return_log: bool = False) -> Union[
+def featurecounts_paired_end(
+    input_folder: Union[str, Path],
+    output_folder: Union[str, Path],
+    gtf_file: Union[str, Path],
+    gtf_feature_type: str = 'exon',
+    gtf_attr_name: str = 'gene_id',
+    r_installation_folder: Union[str, Path, Literal['auto']] = 'auto',
+    new_sample_names: Union[List[str], Literal['auto']] = 'auto',
+    stranded: Literal['no', 'forward', 'reverse'] = 'no',
+    min_mapping_quality: int = 0,
+    count_multi_mapping_reads: bool = False,
+    count_multi_overlapping_reads: bool = False,
+    ignore_secondary: bool = True,
+    count_fractionally: bool = False,
+    is_long_read: bool = False,
+    require_both_mapped: bool = True,
+    count_chimeric_fragments: bool = False,
+    min_fragment_length: NonNegativeInt = 50,
+    max_fragment_length: Union[PositiveInt, None] = 600,
+    report_read_assignment: Union[Literal['bam', 'sam', 'core'], None] = None,
+    threads: PositiveInt = 1,
+    return_log: bool = False,
+) -> Union[
     Tuple[filtering.CountFilter, pl.DataFrame, pl.DataFrame],
-    Tuple[filtering.CountFilter, pl.DataFrame, pl.DataFrame, Path]]:
+    Tuple[filtering.CountFilter, pl.DataFrame, pl.DataFrame, Path],
+]:
     """
     Assign mapped paired-end sequencing reads to specified genomic features using \
     `RSubread featureCounts <https://doi.org/10.1093/bioinformatics/btt656>`_. \
@@ -1018,13 +1109,30 @@ def featurecounts_paired_end(input_folder: Union[str, Path], output_folder: Unio
     if not output_folder.exists():
         raise InvalidValueError('Output folder does not exist!')
 
-    kwargs = _parse_featurecounts_misc_args(input_folder, output_folder, gtf_file, gtf_feature_type, gtf_attr_name,
-                                            stranded, min_mapping_quality, count_multi_mapping_reads,
-                                            count_multi_overlapping_reads, ignore_secondary, count_fractionally,
-                                            is_long_read, report_read_assignment, threads)
-    paired_kwargs = {'isPairedEnd': True, 'requireBothEndsMapped': require_both_mapped,
-                     'countChimericFragments': count_chimeric_fragments, 'minFragLength': min_fragment_length,
-                     'maxFragLength': max_fragment_length, 'countReadPairs': True}
+    kwargs = _parse_featurecounts_misc_args(
+        input_folder,
+        output_folder,
+        gtf_file,
+        gtf_feature_type,
+        gtf_attr_name,
+        stranded,
+        min_mapping_quality,
+        count_multi_mapping_reads,
+        count_multi_overlapping_reads,
+        ignore_secondary,
+        count_fractionally,
+        is_long_read,
+        report_read_assignment,
+        threads,
+    )
+    paired_kwargs = {
+        'isPairedEnd': True,
+        'requireBothEndsMapped': require_both_mapped,
+        'countChimericFragments': count_chimeric_fragments,
+        'minFragLength': min_fragment_length,
+        'maxFragLength': max_fragment_length,
+        'countReadPairs': True,
+    }
     kwargs.update(paired_kwargs)
 
     new_sample_names = _featurecounts_get_sample_names(kwargs['files'], new_sample_names)
@@ -1033,13 +1141,22 @@ def featurecounts_paired_end(input_folder: Union[str, Path], output_folder: Unio
     return (counts, annotation, stats, log_path) if return_log else (counts, annotation, stats)
 
 
-def _parse_featurecounts_misc_args(input_folder: Union[str, Path], output_folder: Path, gtf_file: Union[str, Path],
-                                   gtf_feature_type: str, gtf_attr_name: str,
-                                   stranded: Literal['no', 'forward', 'reverse'], min_mapping_quality: int,
-                                   count_multi_mapping_reads: bool, count_multi_overlapping_reads: bool,
-                                   ignore_secondary: bool, count_fractionally: bool, is_long_read: bool,
-                                   report_read_assignment: Union[Literal['bam', 'sam', 'core'], None],
-                                   threads: PositiveInt):
+def _parse_featurecounts_misc_args(
+    input_folder: Union[str, Path],
+    output_folder: Path,
+    gtf_file: Union[str, Path],
+    gtf_feature_type: str,
+    gtf_attr_name: str,
+    stranded: Literal['no', 'forward', 'reverse'],
+    min_mapping_quality: int,
+    count_multi_mapping_reads: bool,
+    count_multi_overlapping_reads: bool,
+    ignore_secondary: bool,
+    count_fractionally: bool,
+    is_long_read: bool,
+    report_read_assignment: Union[Literal['bam', 'sam', 'core'], None],
+    threads: PositiveInt,
+):
     strand_dict = {'no': 0, 'forward': 1, 'reverse': 2}
     if stranded not in strand_dict:
         raise InvalidValueError(f"Invalid value for 'stranded': '{stranded}'.")
@@ -1053,23 +1170,36 @@ def _parse_featurecounts_misc_args(input_folder: Union[str, Path], output_folder
 
     input_folder = Path(input_folder)
     if not (input_folder.exists() and input_folder.is_dir()):
-        raise InvalidValueError("input_folder does not exist!")
+        raise InvalidValueError('input_folder does not exist!')
     files = []
     for item in _get_legal_samples(input_folder, 'alignment'):
         files.append(item.as_posix())
     if not (len(files) > 0):
         raise InvalidValueError(f"No legal input files were find in input_folder '{input_folder.as_posix()}'!")
 
-    kwargs = {'files': files, 'annot.ext': gtf_file.as_posix(),
-              'isGTFAnnotationFile': gtf_file.suffix.lower() != '.saf',
-              'GTF.featureType': gtf_feature_type, 'GTF.attrType': gtf_attr_name,
-              'allowMultiOverlap': count_multi_overlapping_reads, 'countMultiMappingReads': count_multi_mapping_reads,
-              'fraction': count_fractionally, 'isLongRead': is_long_read, 'minMQS': min_mapping_quality,
-              'primaryOnly': ignore_secondary, 'strandSpecific': strand_dict[stranded], 'nthreads': threads}
+    kwargs = {
+        'files': files,
+        'annot.ext': gtf_file.as_posix(),
+        'isGTFAnnotationFile': gtf_file.suffix.lower() != '.saf',
+        'GTF.featureType': gtf_feature_type,
+        'GTF.attrType': gtf_attr_name,
+        'allowMultiOverlap': count_multi_overlapping_reads,
+        'countMultiMappingReads': count_multi_mapping_reads,
+        'fraction': count_fractionally,
+        'isLongRead': is_long_read,
+        'minMQS': min_mapping_quality,
+        'primaryOnly': ignore_secondary,
+        'strandSpecific': strand_dict[stranded],
+        'nthreads': threads,
+    }
 
     if report_read_assignment is not None:
-        kwargs.update({'reportReads': read_assignment_formats[report_read_assignment],
-                       'reportReadsPath': output_folder.as_posix()})
+        kwargs.update(
+            {
+                'reportReads': read_assignment_formats[report_read_assignment],
+                'reportReadsPath': output_folder.as_posix(),
+            }
+        )
     return kwargs
 
 
@@ -1079,8 +1209,10 @@ def _featurecounts_get_sample_names(files: list, new_sample_names):
     else:
         new_sample_names = parsing.data_to_list(new_sample_names)
         if len(new_sample_names) != len(files):
-            raise InvalidValueError(f"The number of samples {len(files)} does not match the number of "
-                                    f"new sample names ({len(new_sample_names)})!")
+            raise InvalidValueError(
+                f'The number of samples {len(files)} does not match the number of '
+                f'new sample names ({len(new_sample_names)})!'
+            )
     return new_sample_names
 
 
@@ -1092,7 +1224,8 @@ def _process_featurecounts_output(output_folder, new_sample_names):
 
     counts = filtering.CountFilter(counts_path)
     counts.df = counts.df.rename(
-        {oldname: newname for oldname, newname in zip(counts.df.columns[1:], new_sample_names)})
+        {oldname: newname for oldname, newname in zip(counts.df.columns[1:], new_sample_names)}
+    )
     io.save_table(counts.df, counts_path)  # re-save to reflect changes in column names
 
     annotation = io.load_table(annotation_path).drop(cs.first())
@@ -1106,10 +1239,14 @@ def _process_featurecounts_output(output_folder, new_sample_names):
 
 
 @readable_name('Bowtie2 build index')
-def bowtie2_create_index(genome_fastas: List[Union[str, Path]], output_folder: Union[str, Path],
-                         index_name: Union[str, Literal['auto']] = 'auto',
-                         bowtie2_installation_folder: Union[str, Path, Literal['auto']] = 'auto',
-                         random_seed: Union[NonNegativeInt, None] = None, threads: PositiveInt = 1):
+def bowtie2_create_index(
+    genome_fastas: List[Union[str, Path]],
+    output_folder: Union[str, Path],
+    index_name: Union[str, Literal['auto']] = 'auto',
+    bowtie2_installation_folder: Union[str, Path, Literal['auto']] = 'auto',
+    random_seed: Union[NonNegativeInt, None] = None,
+    threads: PositiveInt = 1,
+):
     """
     builds a bowtie index from FASTA formatted files of target sequences (genome). \
     The index files will be saved in the same folder as your first FASTA file, with the `.bt2` suffix. \
@@ -1137,7 +1274,7 @@ def bowtie2_create_index(genome_fastas: List[Union[str, Path]], output_folder: U
     :type threads: int > 0 (default=1)
     """
     # determine where to create a small or large bowtie2 index
-    small_index_max_size = 4 * 1024 ** 3 - 200
+    small_index_max_size = 4 * 1024**3 - 200
     total_size = 0
     for fasta in parsing.data_to_list(genome_fastas):
         fasta = Path(fasta)
@@ -1172,7 +1309,7 @@ def bowtie2_create_index(genome_fastas: List[Union[str, Path]], output_folder: U
 
     output_folder = Path(output_folder)
     if not output_folder.exists():
-        raise InvalidValueError("output_folder does not exist!")
+        raise InvalidValueError('output_folder does not exist!')
 
     if index_name == 'auto':
         index_name = parsing.remove_suffixes(genome_fastas[0]).stem
@@ -1181,15 +1318,16 @@ def bowtie2_create_index(genome_fastas: List[Union[str, Path]], output_folder: U
             raise InvalidTypeError(f"'index_name' must be a string, instead got {type(index_name)}.")
     call.append(parsing.quote_path(output_folder.joinpath(index_name)))
 
-    print(f"Running command: \n{' '.join(call)}")
+    print(f'Running command: \n{" ".join(call)}')
     with tqdm(total=1, desc='Building bowtie2 index', unit='index') as pbar:
         log_filename = Path(output_folder).joinpath(f'bowtie2-build_{index_name}.log').absolute().as_posix()
         io.run_subprocess(call, shell=True, log_filename=log_filename)
         pbar.update()
 
 
-def _get_legal_samples(in_dir: Union[str, Path], file_type: Literal['sequence', 'alignment'] = 'sequence') -> List[
-    Path]:
+def _get_legal_samples(
+    in_dir: Union[str, Path], file_type: Literal['sequence', 'alignment'] = 'sequence'
+) -> List[Path]:
     in_dir = Path(in_dir)
     if not in_dir.exists():
         raise InvalidValueError("'fastq_folder' does not exist!")
@@ -1214,20 +1352,28 @@ def _get_legal_samples(in_dir: Union[str, Path], file_type: Literal['sequence', 
 
 @_func_type('single')
 @readable_name('ShortStack align (small RNAs)')
-def shortstack_align_smallrna(fastq_folder: Union[str, Path], output_folder: Union[str, Path],
-                              genome_fasta: Union[str, Path],
-                              shortstack_installation_folder: Union[str, Path, Literal['auto']] = 'auto',
-                              new_sample_names: Union[List[str], Literal['auto']] = 'auto',
-                              known_rnas: Union[str, Path, None] = None,
-                              trim_adapter: Union[str, Literal['autotrim'], None] = None,
-                              autotrim_key: str = 'TCGGACCAGGCTTCATTCCCC',
-                              multimap_mode: Literal['fractional', 'unique', 'random'] = 'fractional',
-                              align_only: bool = False, show_secondary_alignments: bool = False,
-                              dicer_min_length: PositiveInt = 21, dicer_max_length: PositiveInt = 24,
-                              loci_file: Union[str, Path, None] = None, locus: Union[str, None] = None,
-                              search_microrna: Union[None, Literal['de-novo', 'known-rnas']] = 'known-rnas',
-                              strand_cutoff: Fraction = 0.8, min_coverage: float = 2, pad: PositiveInt = 75,
-                              threads: PositiveInt = 1):
+def shortstack_align_smallrna(
+    fastq_folder: Union[str, Path],
+    output_folder: Union[str, Path],
+    genome_fasta: Union[str, Path],
+    shortstack_installation_folder: Union[str, Path, Literal['auto']] = 'auto',
+    new_sample_names: Union[List[str], Literal['auto']] = 'auto',
+    known_rnas: Union[str, Path, None] = None,
+    trim_adapter: Union[str, Literal['autotrim'], None] = None,
+    autotrim_key: str = 'TCGGACCAGGCTTCATTCCCC',
+    multimap_mode: Literal['fractional', 'unique', 'random'] = 'fractional',
+    align_only: bool = False,
+    show_secondary_alignments: bool = False,
+    dicer_min_length: PositiveInt = 21,
+    dicer_max_length: PositiveInt = 24,
+    loci_file: Union[str, Path, None] = None,
+    locus: Union[str, None] = None,
+    search_microrna: Union[None, Literal['de-novo', 'known-rnas']] = 'known-rnas',
+    strand_cutoff: Fraction = 0.8,
+    min_coverage: float = 2,
+    pad: PositiveInt = 75,
+    threads: PositiveInt = 1,
+):
     """
     Align small RNA single-end reads from FASTQ files to a reference sequence using the \
     `ShortStack <https://github.com/MikeAxtell/ShortStack>`_ aligner (version 4). \
@@ -1378,8 +1524,9 @@ def shortstack_align_smallrna(fastq_folder: Union[str, Path], output_folder: Uni
             call.extend(['--known_miRNAs', known_rnas.as_posix()])
     else:
         if known_rnas is not None:
-            warnings.warn(f"'search_microrna' was set to '{search_microrna}', "
-                          f"and therefore parameter 'known_rnas' is ignored")
+            warnings.warn(
+                f"'search_microrna' was set to '{search_microrna}', and therefore parameter 'known_rnas' is ignored"
+            )
         if search_microrna == 'de-novo':
             call.append('--dn_mirna')
         elif search_microrna is None:
@@ -1427,8 +1574,9 @@ def shortstack_align_smallrna(fastq_folder: Union[str, Path], output_folder: Uni
     legal_samples = _get_legal_samples(fastq_folder)
 
     if not ((new_sample_names == 'auto') or (len(new_sample_names) == len(legal_samples))):
-        raise InvalidValueError(f'Number of samples ({len(legal_samples)}) does not match number of '
-                                f'sample names ({len(new_sample_names)})!')
+        raise InvalidValueError(
+            f'Number of samples ({len(legal_samples)}) does not match number of sample names ({len(new_sample_names)})!'
+        )
 
     calls = []
     for i, item in enumerate(sorted(legal_samples)):
@@ -1444,25 +1592,30 @@ def shortstack_align_smallrna(fastq_folder: Union[str, Path], output_folder: Uni
 
     with tqdm(total=len(calls), desc='Aligning reads', unit='files') as pbar:
         for shortstack_call in calls:
-            print(f"Running command: \n{' '.join(shortstack_call)}")
-            log_filename = Path(output_folder).joinpath(
-                f'ShortStack_{Path(shortstack_call[-1]).stem}.log').absolute().as_posix()
+            print(f'Running command: \n{" ".join(shortstack_call)}')
+            log_filename = (
+                Path(output_folder).joinpath(f'ShortStack_{Path(shortstack_call[-1]).stem}.log').absolute().as_posix()
+            )
             io.run_subprocess(shortstack_call, shell=True, log_filename=log_filename)
-            print(f"Files saved successfully at {shortstack_call[-1]}")
+            print(f'Files saved successfully at {shortstack_call[-1]}')
             pbar.update(1)
 
 
 @_func_type('single')
 @readable_name('Bowtie2 align (single-end reads)')
-def bowtie2_align_single_end(fastq_folder: Union[str, Path], output_folder: Union[str, Path],
-                             index_file: Union[str, Path],
-                             bowtie2_installation_folder: Union[str, Path, Literal['auto']] = 'auto',
-                             new_sample_names: Union[List[str], Literal['auto']] = 'auto',
-                             mode: Literal[LEGAL_BOWTIE2_MODES] = 'end-to-end',
-                             settings_preset: Literal[LEGAL_BOWTIE2_PRESETS] = 'very-sensitive',
-                             ignore_qualities: bool = False,
-                             quality_score_type: Literal[LEGAL_QUAL_SCORE_TYPES] = 'phred33',
-                             random_seed: NonNegativeInt = 0, threads: PositiveInt = 1):
+def bowtie2_align_single_end(
+    fastq_folder: Union[str, Path],
+    output_folder: Union[str, Path],
+    index_file: Union[str, Path],
+    bowtie2_installation_folder: Union[str, Path, Literal['auto']] = 'auto',
+    new_sample_names: Union[List[str], Literal['auto']] = 'auto',
+    mode: Literal[LEGAL_BOWTIE2_MODES] = 'end-to-end',
+    settings_preset: Literal[LEGAL_BOWTIE2_PRESETS] = 'very-sensitive',
+    ignore_qualities: bool = False,
+    quality_score_type: Literal[LEGAL_QUAL_SCORE_TYPES] = 'phred33',
+    random_seed: NonNegativeInt = 0,
+    threads: PositiveInt = 1,
+):
     """
     Align single-end reads from FASTQ files to a reference sequence using the \
     `bowtie2 <https://bowtie-bio.sourceforge.net/bowtie2>`_ aligner. \
@@ -1510,14 +1663,24 @@ def bowtie2_align_single_end(fastq_folder: Union[str, Path], output_folder: Unio
     :type threads: int > 0 (default=1)
     """
     output_folder = Path(output_folder)
-    call = _parse_bowtie2_misc_args(output_folder, index_file, bowtie2_installation_folder, mode, settings_preset,
-                                    ignore_qualities, quality_score_type, random_seed, threads)
+    call = _parse_bowtie2_misc_args(
+        output_folder,
+        index_file,
+        bowtie2_installation_folder,
+        mode,
+        settings_preset,
+        ignore_qualities,
+        quality_score_type,
+        random_seed,
+        threads,
+    )
 
     legal_samples = _get_legal_samples(fastq_folder)
 
     if not ((new_sample_names == 'auto') or (len(new_sample_names) == len(legal_samples))):
-        raise InvalidValueError(f'Number of samples ({len(legal_samples)}) does not match number of '
-                                f'sample names ({len(new_sample_names)})!')
+        raise InvalidValueError(
+            f'Number of samples ({len(legal_samples)}) does not match number of sample names ({len(new_sample_names)})!'
+        )
 
     calls = []
     for i, item in enumerate(sorted(legal_samples)):
@@ -1533,30 +1696,36 @@ def bowtie2_align_single_end(fastq_folder: Union[str, Path], output_folder: Unio
 
     with tqdm(total=len(calls), desc='Aligning reads', unit='files') as pbar:
         for bt2_call in calls:
-            print(f"Running command: \n{' '.join(bt2_call)}")
-            log_filename = Path(output_folder).joinpath(
-                f'bowtie2-align_{Path(bt2_call[-1]).stem}.log').absolute().as_posix()
+            print(f'Running command: \n{" ".join(bt2_call)}')
+            log_filename = (
+                Path(output_folder).joinpath(f'bowtie2-align_{Path(bt2_call[-1]).stem}.log').absolute().as_posix()
+            )
             io.run_subprocess(bt2_call, shell=True, log_filename=log_filename)
-            print(f"File saved successfully at {bt2_call[-1]}")
+            print(f'File saved successfully at {bt2_call[-1]}')
             pbar.update(1)
 
 
 @_func_type('paired')
 @readable_name('Bowtie2 align (paired-end reads)')
-def bowtie2_align_paired_end(r1_files: List[str], r2_files: List[str], output_folder: Union[str, Path],
-                             index_file: Union[str, Path],
-                             bowtie2_installation_folder: Union[str, Path, Literal['auto']] = 'auto',
-                             new_sample_names: Union[List[str], Literal['auto', 'smart']] = 'smart',
-                             mode: Literal[LEGAL_BOWTIE2_MODES] = 'end-to-end',
-                             settings_preset: Literal[LEGAL_BOWTIE2_PRESETS] = 'very-sensitive',
-                             ignore_qualities: bool = False,
-                             quality_score_type: Literal[LEGAL_QUAL_SCORE_TYPES] = 'phred33',
-                             mate_orientations: Literal['fwd-rev', 'rev-fwd', 'fwd-fwd'] = 'fwd-rev',
-                             min_fragment_length: NonNegativeInt = 0,
-                             max_fragment_length: PositiveInt = 500,
-                             allow_individual_alignment: bool = True,
-                             allow_disconcordant_alignment: bool = True,
-                             random_seed: NonNegativeInt = 0, threads: PositiveInt = 1):
+def bowtie2_align_paired_end(
+    r1_files: List[str],
+    r2_files: List[str],
+    output_folder: Union[str, Path],
+    index_file: Union[str, Path],
+    bowtie2_installation_folder: Union[str, Path, Literal['auto']] = 'auto',
+    new_sample_names: Union[List[str], Literal['auto', 'smart']] = 'smart',
+    mode: Literal[LEGAL_BOWTIE2_MODES] = 'end-to-end',
+    settings_preset: Literal[LEGAL_BOWTIE2_PRESETS] = 'very-sensitive',
+    ignore_qualities: bool = False,
+    quality_score_type: Literal[LEGAL_QUAL_SCORE_TYPES] = 'phred33',
+    mate_orientations: Literal['fwd-rev', 'rev-fwd', 'fwd-fwd'] = 'fwd-rev',
+    min_fragment_length: NonNegativeInt = 0,
+    max_fragment_length: PositiveInt = 500,
+    allow_individual_alignment: bool = True,
+    allow_disconcordant_alignment: bool = True,
+    random_seed: NonNegativeInt = 0,
+    threads: PositiveInt = 1,
+):
     """
     Align paired-end reads from FASTQ files to a reference sequence using the \
     `bowtie2 <https://bowtie-bio.sourceforge.net/bowtie2>`_ aligner. \
@@ -1618,15 +1787,26 @@ def bowtie2_align_paired_end(r1_files: List[str], r2_files: List[str], output_fo
     :type threads: int > 0 (default=1)
     """
     output_folder = Path(output_folder)
-    call = _parse_bowtie2_misc_args(output_folder, index_file, bowtie2_installation_folder, mode, settings_preset,
-                                    ignore_qualities, quality_score_type, random_seed, threads)
+    call = _parse_bowtie2_misc_args(
+        output_folder,
+        index_file,
+        bowtie2_installation_folder,
+        mode,
+        settings_preset,
+        ignore_qualities,
+        quality_score_type,
+        random_seed,
+        threads,
+    )
 
     if len(r1_files) != len(r2_files):
-        raise InvalidValueError(f"Got an uneven number of R1 and R2 files: "
-                                f"{len(r1_files)} and {len(r2_files)} respectively")
+        raise InvalidValueError(
+            f'Got an uneven number of R1 and R2 files: {len(r1_files)} and {len(r2_files)} respectively'
+        )
     if not ((new_sample_names in ['auto', 'smart']) or (len(new_sample_names) == len(r1_files))):
         raise InvalidValueError(
-            f'Number of samples ({len(r1_files)}) does not match number of sample names ({len(new_sample_names)})!')
+            f'Number of samples ({len(r1_files)}) does not match number of sample names ({len(new_sample_names)})!'
+        )
 
     if not isinstance(min_fragment_length, int):
         raise InvalidTypeError("'min_fragment_len' must be a non-negative int!")
@@ -1654,13 +1834,16 @@ def bowtie2_align_paired_end(r1_files: List[str], r2_files: List[str], output_fo
         raise ValueError(f"Invalid value for 'mate_orientations': '{mate_orientations}'.")
 
     if new_sample_names == 'smart':
-        prefix_pairs = [(parsing.remove_suffixes(Path(r1)).stem, parsing.remove_suffixes(Path(r2)).stem) for r1, r2 in
-                        zip(r1_files, r2_files)]
+        prefix_pairs = [
+            (parsing.remove_suffixes(Path(r1)).stem, parsing.remove_suffixes(Path(r2)).stem)
+            for r1, r2 in zip(r1_files, r2_files)
+        ]
         new_sample_names = parsing.generate_common_name(prefix_pairs)
     elif new_sample_names == 'auto':
-        new_sample_names = [f"{parsing.remove_suffixes(Path(file1)).stem}_{parsing.remove_suffixes(Path(file2)).stem}"
-                            for
-                            file1, file2 in zip(r1_files, r2_files)]
+        new_sample_names = [
+            f'{parsing.remove_suffixes(Path(file1)).stem}_{parsing.remove_suffixes(Path(file2)).stem}'
+            for file1, file2 in zip(r1_files, r2_files)
+        ]
     calls = []
     for i, (file1, file2) in enumerate(zip(r1_files, r2_files)):
         file1 = Path(file1)
@@ -1674,18 +1857,26 @@ def bowtie2_align_paired_end(r1_files: List[str], r2_files: List[str], output_fo
 
     with tqdm(total=len(calls), desc='Aligning reads', unit='file pairs') as pbar:
         for bt2_call in calls:
-            print(f"Running command: \n{' '.join(bt2_call)}")
-            log_filename = Path(output_folder).joinpath(
-                f'bowtie2-align_{Path(bt2_call[-1]).stem}.log').absolute().as_posix()
+            print(f'Running command: \n{" ".join(bt2_call)}')
+            log_filename = (
+                Path(output_folder).joinpath(f'bowtie2-align_{Path(bt2_call[-1]).stem}.log').absolute().as_posix()
+            )
             io.run_subprocess(bt2_call, shell=True, log_filename=log_filename)
-            print(f"File saved successfully at {bt2_call[-1]}")
+            print(f'File saved successfully at {bt2_call[-1]}')
             pbar.update(1)
 
 
-def _parse_bowtie2_misc_args(output_folder, index_file: str, bowtie2_installation_folder: Union[str, Path],
-                             mode: Literal[LEGAL_BOWTIE2_MODES], settings_preset: Literal[LEGAL_BOWTIE2_PRESETS],
-                             ignore_qualities: bool, quality_score_type: Literal[LEGAL_QUAL_SCORE_TYPES],
-                             random_seed: NonNegativeInt, threads: PositiveInt):
+def _parse_bowtie2_misc_args(
+    output_folder,
+    index_file: str,
+    bowtie2_installation_folder: Union[str, Path],
+    mode: Literal[LEGAL_BOWTIE2_MODES],
+    settings_preset: Literal[LEGAL_BOWTIE2_PRESETS],
+    ignore_qualities: bool,
+    quality_score_type: Literal[LEGAL_QUAL_SCORE_TYPES],
+    random_seed: NonNegativeInt,
+    threads: PositiveInt,
+):
     output_folder = Path(output_folder)
     index_file = parsing.remove_suffixes(Path(index_file))
     if not output_folder.exists():
@@ -1723,9 +1914,12 @@ def _parse_bowtie2_misc_args(output_folder, index_file: str, bowtie2_installatio
 
 
 @readable_name('Kallisto build index')
-def kallisto_create_index(transcriptome_fasta: Union[str, Path],
-                          kallisto_installation_folder: Union[str, Path, Literal['auto']] = 'auto',
-                          kmer_length: PositiveInt = 31, make_unique: bool = False):
+def kallisto_create_index(
+    transcriptome_fasta: Union[str, Path],
+    kallisto_installation_folder: Union[str, Path, Literal['auto']] = 'auto',
+    kmer_length: PositiveInt = 31,
+    make_unique: bool = False,
+):
     """
     builds a kallisto index from a FASTA formatted file of target sequences (transcriptome). \
     The index file will be saved in the same folder as your FASTA file, with the `.idx` suffix. \
@@ -1766,25 +1960,31 @@ def kallisto_create_index(transcriptome_fasta: Union[str, Path],
 
     call.append(transcriptome_fasta.as_posix())
 
-    print(f"Running command: \n{' '.join(call)}")
+    print(f'Running command: \n{" ".join(call)}')
     with tqdm(total=1, desc='Building kallisto index', unit='index') as pbar:
-        log_filename = transcriptome_fasta.parent.joinpath(
-            f'kallisto-index_{transcriptome_fasta.stem}.log').absolute().as_posix()
+        log_filename = (
+            transcriptome_fasta.parent.joinpath(f'kallisto-index_{transcriptome_fasta.stem}.log').absolute().as_posix()
+        )
         io.run_subprocess(call, log_filename=log_filename)
         pbar.update()
 
 
 @_func_type('single')
 @readable_name('Kallisto quantify (single-end reads)')
-def kallisto_quantify_single_end(fastq_folder: Union[str, Path], output_folder: Union[str, Path],
-                                 index_file: Union[str, Path], gtf_file: Union[str, Path],
-                                 average_fragment_length: float, stdev_fragment_length: float,
-                                 kallisto_installation_folder: Union[str, Path, Literal['auto']] = 'auto',
-                                 new_sample_names: Union[List[str], Literal['auto']] = 'auto',
-                                 stranded: Literal['no', 'forward', 'reverse'] = 'no',
-                                 summation_method: Literal[SUMMATION_METHODS] = 'scaled_tpm',
-                                 bootstrap_samples: Union[PositiveInt, None] = None,
-                                 **legacy_args) -> filtering.CountFilter:
+def kallisto_quantify_single_end(
+    fastq_folder: Union[str, Path],
+    output_folder: Union[str, Path],
+    index_file: Union[str, Path],
+    gtf_file: Union[str, Path],
+    average_fragment_length: float,
+    stdev_fragment_length: float,
+    kallisto_installation_folder: Union[str, Path, Literal['auto']] = 'auto',
+    new_sample_names: Union[List[str], Literal['auto']] = 'auto',
+    stranded: Literal['no', 'forward', 'reverse'] = 'no',
+    summation_method: Literal[SUMMATION_METHODS] = 'scaled_tpm',
+    bootstrap_samples: Union[PositiveInt, None] = None,
+    **legacy_args,
+) -> filtering.CountFilter:
     """
     Quantify transcript abundance in single-end mRNA sequencing data using \
     `kallisto <https://pachterlab.github.io/kallisto/>`_. \
@@ -1864,18 +2064,26 @@ def kallisto_quantify_single_end(fastq_folder: Union[str, Path], output_folder: 
         new_sample_names = parsing.data_to_list(new_sample_names)
     output_folder = Path(output_folder)
 
-    call = _parse_kallisto_misc_args(output_folder, index_file, kallisto_installation_folder, stranded, learn_bias,
-                                     seek_fusion_genes, bootstrap_samples)
+    call = _parse_kallisto_misc_args(
+        output_folder,
+        index_file,
+        kallisto_installation_folder,
+        stranded,
+        learn_bias,
+        seek_fusion_genes,
+        bootstrap_samples,
+    )
 
-    call.append("--single")
-    call.extend(["-s", str(stdev_fragment_length)])
-    call.extend(["-l", str(average_fragment_length)])
+    call.append('--single')
+    call.extend(['-s', str(stdev_fragment_length)])
+    call.extend(['-l', str(average_fragment_length)])
 
     legal_samples = _get_legal_samples(fastq_folder)
 
     if not ((new_sample_names == 'auto') or (len(new_sample_names) == len(legal_samples))):
-        raise InvalidValueError(f'Number of samples ({len(legal_samples)}) does not match number of '
-                                f'sample names ({len(new_sample_names)})!')
+        raise InvalidValueError(
+            f'Number of samples ({len(legal_samples)}) does not match number of sample names ({len(new_sample_names)})!'
+        )
 
     if new_sample_names == 'auto':
         new_sample_names = [parsing.remove_suffixes(item).stem for item in legal_samples]
@@ -1892,7 +2100,7 @@ def kallisto_quantify_single_end(fastq_folder: Union[str, Path], output_folder: 
     with tqdm(total=len(calls), desc='Quantifying transcript abundance', unit='files') as pbar:
         for kallisto_call in calls:
             io.run_subprocess(kallisto_call)
-            print(f"File saved successfully at {kallisto_call[-7]}")
+            print(f'File saved successfully at {kallisto_call[-7]}')
             pbar.update(1)
 
     return _process_kallisto_outputs(output_folder, gtf_file, summation_method, new_sample_names)
@@ -1900,14 +2108,19 @@ def kallisto_quantify_single_end(fastq_folder: Union[str, Path], output_folder: 
 
 @_func_type('paired')
 @readable_name('Kallisto quantify (paired-end reads)')
-def kallisto_quantify_paired_end(r1_files: List[str], r2_files: List[str], output_folder: Union[str, Path],
-                                 index_file: Union[str, Path], gtf_file: Union[str, Path],
-                                 kallisto_installation_folder: Union[str, Path, Literal['auto']] = 'auto',
-                                 new_sample_names: Union[List[str], Literal['auto', 'smart']] = 'smart',
-                                 stranded: Literal['no', 'forward', 'reverse'] = 'no',
-                                 summation_method: Literal[SUMMATION_METHODS] = 'scaled_tpm',
-                                 bootstrap_samples: Union[PositiveInt, None] = None,
-                                 **legacy_args) -> filtering.CountFilter:
+def kallisto_quantify_paired_end(
+    r1_files: List[str],
+    r2_files: List[str],
+    output_folder: Union[str, Path],
+    index_file: Union[str, Path],
+    gtf_file: Union[str, Path],
+    kallisto_installation_folder: Union[str, Path, Literal['auto']] = 'auto',
+    new_sample_names: Union[List[str], Literal['auto', 'smart']] = 'smart',
+    stranded: Literal['no', 'forward', 'reverse'] = 'no',
+    summation_method: Literal[SUMMATION_METHODS] = 'scaled_tpm',
+    bootstrap_samples: Union[PositiveInt, None] = None,
+    **legacy_args,
+) -> filtering.CountFilter:
     """
     Quantify transcript abundance in paired-end mRNA sequencing data using \
     `kallisto <https://pachterlab.github.io/kallisto/>`_. \
@@ -1978,29 +2191,42 @@ def kallisto_quantify_paired_end(r1_files: List[str], r2_files: List[str], outpu
     if new_sample_names not in ['auto', 'smart']:
         new_sample_names = parsing.data_to_list(new_sample_names)
     if len(r1_files) != len(r2_files):
-        raise InvalidValueError(f"Got an uneven number of R1 and R2 files: "
-                                f"{len(r1_files)} and {len(r2_files)} respectively")
+        raise InvalidValueError(
+            f'Got an uneven number of R1 and R2 files: {len(r1_files)} and {len(r2_files)} respectively'
+        )
     if not ((new_sample_names in ['auto', 'smart']) or (len(new_sample_names) == len(r1_files))):
         raise InvalidValueError(
-            f'Number of samples ({len(r1_files)}) does not match number of sample names ({len(new_sample_names)})!')
+            f'Number of samples ({len(r1_files)}) does not match number of sample names ({len(new_sample_names)})!'
+        )
 
     # handle legacy arguments
     learn_bias = legacy_args.get('learn_bias', False)
     seek_fusion_genes = legacy_args.get('seek_fusion_genes', False)
 
     output_folder = Path(output_folder)
-    call = _parse_kallisto_misc_args(output_folder, index_file, kallisto_installation_folder, stranded, learn_bias,
-                                     seek_fusion_genes, bootstrap_samples)
+    call = _parse_kallisto_misc_args(
+        output_folder,
+        index_file,
+        kallisto_installation_folder,
+        stranded,
+        learn_bias,
+        seek_fusion_genes,
+        bootstrap_samples,
+    )
 
     calls = []
 
     if new_sample_names == 'smart':
-        prefix_pairs = [(parsing.remove_suffixes(Path(r1)).stem, parsing.remove_suffixes(Path(r2)).stem) for r1, r2 in
-                        zip(r1_files, r2_files)]
+        prefix_pairs = [
+            (parsing.remove_suffixes(Path(r1)).stem, parsing.remove_suffixes(Path(r2)).stem)
+            for r1, r2 in zip(r1_files, r2_files)
+        ]
         new_sample_names = parsing.generate_common_name(prefix_pairs)
     elif new_sample_names == 'auto':
-        new_sample_names = [f"{parsing.remove_suffixes(Path(file1)).stem}_{parsing.remove_suffixes(Path(file2)).stem}"
-                            for file1, file2 in zip(r1_files, r2_files)]
+        new_sample_names = [
+            f'{parsing.remove_suffixes(Path(file1)).stem}_{parsing.remove_suffixes(Path(file2)).stem}'
+            for file1, file2 in zip(r1_files, r2_files)
+        ]
 
     for i, (file1, file2) in enumerate(zip(r1_files, r2_files)):
         file1 = Path(file1)
@@ -2015,28 +2241,37 @@ def kallisto_quantify_paired_end(r1_files: List[str], r2_files: List[str], outpu
     with tqdm(total=len(calls), desc='Quantifying transcript abundance', unit='file pairs') as pbar:
         for kallisto_call in calls:
             io.run_subprocess(kallisto_call)
-            print(f"Files saved successfully at {kallisto_call[-3]}")
+            print(f'Files saved successfully at {kallisto_call[-3]}')
             pbar.update(1)
 
     return _process_kallisto_outputs(output_folder, gtf_file, summation_method, new_sample_names)
 
 
-def _process_kallisto_outputs(output_folder, gtf_file, summation_method: Literal[SUMMATION_METHODS],
-                              new_sample_names: List[str]):
+def _process_kallisto_outputs(
+    output_folder, gtf_file, summation_method: Literal[SUMMATION_METHODS], new_sample_names: List[str]
+):
     counts, tpm = _merge_kallisto_outputs(output_folder, new_sample_names)
     counts_per_gene = _sum_transcripts_to_genes(tpm, counts, gtf_file, summation_method)
 
     io.save_table(counts, output_folder.joinpath('transcript_counts.csv'))
     io.save_table(tpm, output_folder.joinpath('transcript_tpm.csv'))
-    countfile_name = 'kallisto_output_scaled_per_gene' if summation_method == 'scaled_tpm' else 'kallisto_output_count_per_gene'
+    countfile_name = (
+        'kallisto_output_scaled_per_gene' if summation_method == 'scaled_tpm' else 'kallisto_output_count_per_gene'
+    )
     io.save_table(counts_per_gene, output_folder.joinpath(f'{countfile_name}.csv'))
 
     return filtering.CountFilter.from_dataframe(counts_per_gene, countfile_name, is_normalized=False)
 
 
-def _parse_kallisto_misc_args(output_folder, index_file: str, kallisto_installation_folder: Union[str, Path],
-                              stranded: Literal['no', 'forward', 'reverse'] = 'no', learn_bias: bool = False,
-                              seek_fusion_genes: bool = False, bootstrap_samples: Union[int, None] = None):
+def _parse_kallisto_misc_args(
+    output_folder,
+    index_file: str,
+    kallisto_installation_folder: Union[str, Path],
+    stranded: Literal['no', 'forward', 'reverse'] = 'no',
+    learn_bias: bool = False,
+    seek_fusion_genes: bool = False,
+    bootstrap_samples: Union[int, None] = None,
+):
     # handle legacy arguments
     if learn_bias:
         warnings.warn("The 'learn_bias' argument is no longer supported by kallisto versions beyond 0.48.0. ")
@@ -2051,24 +2286,24 @@ def _parse_kallisto_misc_args(output_folder, index_file: str, kallisto_installat
         raise InvalidValueError("supplied 'index_file' does not exist!")
     if not isinstance(stranded, str):
         raise InvalidTypeError(f"invalid value for parameter 'stranded': {stranded}")
-    if stranded.lower() not in ["no", "forward", "reverse"]:
+    if stranded.lower() not in ['no', 'forward', 'reverse']:
         raise InvalidValueError(f"invalid value for parameter 'stranded': {stranded}")
 
     call = io.generate_base_call('kallisto', kallisto_installation_folder, 'version')
     call.append('quant')
-    call.extend(["-i", index_file.as_posix()])
+    call.extend(['-i', index_file.as_posix()])
 
     if learn_bias:
-        call.append("--bias")
+        call.append('--bias')
 
     if seek_fusion_genes:
-        call.append("--fusion")
+        call.append('--fusion')
 
     stranded = stranded.lower()
-    if stranded == "forward":
-        call.append("--fr-stranded")
-    elif stranded == "reverse":
-        call.append("--rf-stranded")
+    if stranded == 'forward':
+        call.append('--fr-stranded')
+    elif stranded == 'reverse':
+        call.append('--rf-stranded')
 
     if bootstrap_samples is not None:
         if not isinstance(bootstrap_samples, int):
@@ -2077,7 +2312,7 @@ def _parse_kallisto_misc_args(output_folder, index_file: str, kallisto_installat
             raise InvalidValueError("'bootstrap_samples' must be a non-negative integer!")
         call.extend(['-b', str(bootstrap_samples)])
 
-    call.extend(["-o", output_folder.as_posix()])
+    call.extend(['-o', output_folder.as_posix()])
     return call
 
 
@@ -2103,32 +2338,39 @@ def _merge_kallisto_outputs(output_folder: Union[str, Path], new_sample_names: L
     return counts.collect(), tpm.collect()
 
 
-def _sum_transcripts_to_genes(tpm: pl.DataFrame, counts: pl.DataFrame, gtf_path: Union[str, Path],
-                              summation_method: Literal[SUMMATION_METHODS]):
+def _sum_transcripts_to_genes(
+    tpm: pl.DataFrame, counts: pl.DataFrame, gtf_path: Union[str, Path], summation_method: Literal[SUMMATION_METHODS]
+):
     with tqdm(desc='Parsing GTF file', total=8) as pbar:
         for use_name in [False, True]:
             for use_version in [True, False]:
                 for split_ids in [True, False]:
-                    transcript_to_gene_dict = genome_annotation.map_transcripts_to_genes(gtf_path, use_name,
-                                                                                         use_version, split_ids)
+                    transcript_to_gene_dict = genome_annotation.map_transcripts_to_genes(
+                        gtf_path, use_name, use_version, split_ids
+                    )
                     pbar.update(1)
                     if len(transcript_to_gene_dict) == 0:
                         continue
 
-                    transcript2gene = pl.DataFrame({'Transcript ID': transcript_to_gene_dict.keys(),
-                                                    'Gene ID': transcript_to_gene_dict.values()}).lazy()
+                    transcript2gene = pl.DataFrame(
+                        {'Transcript ID': transcript_to_gene_dict.keys(), 'Gene ID': transcript_to_gene_dict.values()}
+                    ).lazy()
 
                     if summation_method == 'scaled_tpm':
-                        library_sizes = counts.lazy().select(
-                            pl.exclude(counts.columns[0]).sum().truediv(10 ** 6)).collect()
-                        tpm_cpy = tpm.lazy().join(transcript2gene, left_on=tpm.columns[0], right_on='Transcript ID',
-                                                  how='left')
+                        library_sizes = (
+                            counts.lazy().select(pl.exclude(counts.columns[0]).sum().truediv(10**6)).collect()
+                        )
+                        tpm_cpy = tpm.lazy().join(
+                            transcript2gene, left_on=tpm.columns[0], right_on='Transcript ID', how='left'
+                        )
                         tpm_by_gene = tpm_cpy.drop(cs.first()).drop_nulls().group_by('Gene ID').sum()
                         count_per_gene = tpm_by_gene.with_columns(
-                            [(pl.col(col) * library_sizes[col][0]).alias(col) for col in tpm.columns[1:]]).collect()
+                            [(pl.col(col) * library_sizes[col][0]).alias(col) for col in tpm.columns[1:]]
+                        ).collect()
                     elif summation_method == 'raw':
-                        count_cpy = counts.lazy().join(transcript2gene, left_on=tpm.columns[0],
-                                                       right_on='Transcript ID', how='left')
+                        count_cpy = counts.lazy().join(
+                            transcript2gene, left_on=tpm.columns[0], right_on='Transcript ID', how='left'
+                        )
                         count_per_gene = count_cpy.drop(cs.first()).drop_nulls().group_by('Gene ID').sum().collect()
                     else:
                         raise ValueError(f"Invalid value for 'summation_method': '{summation_method}'.")
@@ -2137,22 +2379,30 @@ def _sum_transcripts_to_genes(tpm: pl.DataFrame, counts: pl.DataFrame, gtf_path:
                     pbar.update(8)
                     return count_per_gene.sort(pl.first())
 
-    raise ValueError("Failed to map transcripts to genes with the given GTF file!")
+    raise ValueError('Failed to map transcripts to genes with the given GTF file!')
 
 
 @_func_type('single')
 @readable_name('CutAdapt (single-end reads)')
 @param_readable_names({'trim_n': 'Trim ambiguous (N) bases'})
-def trim_adapters_single_end(fastq_folder: Union[str, Path], output_folder: Union[str, Path],
-                             three_prime_adapters: Union[None, str, List[str]],
-                             five_prime_adapters: Union[None, str, List[str]] = None,
-                             any_position_adapters: Union[None, str, List[str]] = None,
-                             new_sample_names: Union[List[str], Literal['auto']] = 'auto',
-                             quality_trimming: Union[NonNegativeInt, None] = 20, trim_n: bool = True,
-                             minimum_read_length: NonNegativeInt = 10,
-                             maximum_read_length: Union[PositiveInt, None] = None, discard_untrimmed_reads: bool = True,
-                             error_tolerance: Fraction = 0.1, minimum_overlap: NonNegativeInt = 3,
-                             allow_indels: bool = True, parallel: bool = True, gzip_output: bool = False):
+def trim_adapters_single_end(
+    fastq_folder: Union[str, Path],
+    output_folder: Union[str, Path],
+    three_prime_adapters: Union[None, str, List[str]],
+    five_prime_adapters: Union[None, str, List[str]] = None,
+    any_position_adapters: Union[None, str, List[str]] = None,
+    new_sample_names: Union[List[str], Literal['auto']] = 'auto',
+    quality_trimming: Union[NonNegativeInt, None] = 20,
+    trim_n: bool = True,
+    minimum_read_length: NonNegativeInt = 10,
+    maximum_read_length: Union[PositiveInt, None] = None,
+    discard_untrimmed_reads: bool = True,
+    error_tolerance: Fraction = 0.1,
+    minimum_overlap: NonNegativeInt = 3,
+    allow_indels: bool = True,
+    parallel: bool = True,
+    gzip_output: bool = False,
+):
     """
     Trim adapters from single-end reads using `CutAdapt <https://cutadapt.readthedocs.io/>`_.
 
@@ -2201,9 +2451,11 @@ def trim_adapters_single_end(fastq_folder: Union[str, Path], output_folder: Unio
     :type new_sample_names: list of str or 'auto' (default='auto')
     """
     if not HAS_CUTADAPT:
-        warnings.warn("Python package 'cutadapt' is not installed. \n"
-                      "If you want to use the adapter trimming feature, "
-                      "please install python package 'cutadapt' and try again. ")
+        warnings.warn(
+            "Python package 'cutadapt' is not installed. \n"
+            'If you want to use the adapter trimming feature, '
+            "please install python package 'cutadapt' and try again. "
+        )
         return
 
     try:
@@ -2213,22 +2465,34 @@ def trim_adapters_single_end(fastq_folder: Union[str, Path], output_folder: Unio
         call = []
         found_cli = False
 
-    for adapter_group, prefix in zip([three_prime_adapters, five_prime_adapters, any_position_adapters],
-                                     ['--adapter', '--front', '--anywhere']):
+    for adapter_group, prefix in zip(
+        [three_prime_adapters, five_prime_adapters, any_position_adapters], ['--adapter', '--front', '--anywhere']
+    ):
         if adapter_group is not None:
             for adapter in parsing.data_to_list(adapter_group):
                 if not isinstance(adapter, str):
-                    raise InvalidTypeError(f"The following adapter is invalid: {adapter}")
+                    raise InvalidTypeError(f'The following adapter is invalid: {adapter}')
                 call.extend([prefix, adapter])
 
-    call.extend(_parse_cutadapt_misc_args(quality_trimming, trim_n, minimum_read_length, maximum_read_length,
-                                          discard_untrimmed_reads, error_tolerance, minimum_overlap, allow_indels,
-                                          parallel))
+    call.extend(
+        _parse_cutadapt_misc_args(
+            quality_trimming,
+            trim_n,
+            minimum_read_length,
+            maximum_read_length,
+            discard_untrimmed_reads,
+            error_tolerance,
+            minimum_overlap,
+            allow_indels,
+            parallel,
+        )
+    )
 
     legal_samples = _get_legal_samples(fastq_folder)
     if not ((new_sample_names == 'auto') or (len(new_sample_names) == len(legal_samples))):
-        raise InvalidValueError(f'Number of samples ({len(legal_samples)}) does not match number of '
-                                f'sample names ({len(new_sample_names)})!')
+        raise InvalidValueError(
+            f'Number of samples ({len(legal_samples)}) does not match number of sample names ({len(new_sample_names)})!'
+        )
 
     calls = []
     for i, item in enumerate(legal_samples):
@@ -2256,30 +2520,37 @@ def trim_adapters_single_end(fastq_folder: Union[str, Path], output_folder: Unio
                 io.run_subprocess(cutadapt_call, log_filename=log_filename)
             else:
                 cutadapt_main(cutadapt_call)
-            print(f"File saved successfully at {cutadapt_call[-2]}")
+            print(f'File saved successfully at {cutadapt_call[-2]}')
             pbar.update(1)
 
 
 @_func_type('paired')
 @readable_name('CutAdapt (paired-end reads)')
 @param_readable_names({'trim_n': 'Trim ambiguous (N) bases'})
-def trim_adapters_paired_end(r1_files: List[Union[str, Path]], r2_files: List[Union[str, Path]],
-                             output_folder: Union[str, Path],
-                             three_prime_adapters_r1: Union[None, str, List[str]],
-                             three_prime_adapters_r2: Union[None, str, List[str]],
-                             five_prime_adapters_r1: Union[None, str, List[str]] = None,
-                             five_prime_adapters_r2: Union[None, str, List[str]] = None,
-                             any_position_adapters_r1: Union[None, str, List[str]] = None,
-                             any_position_adapters_r2: Union[None, str, List[str]] = None,
-                             new_sample_names: Union[List[str], Literal['auto']] = 'auto',
-                             quality_trimming: Union[NonNegativeInt, None] = 20, trim_n: bool = True,
-                             minimum_read_length: NonNegativeInt = 10,
-                             maximum_read_length: Union[PositiveInt, None] = None,
-                             discard_untrimmed_reads: bool = True,
-                             pair_filter_if: Literal['both', 'any', 'first'] = 'both',
-                             error_tolerance: Fraction = 0.1, minimum_overlap: NonNegativeInt = 3,
-                             allow_indels: bool = True, parallel: bool = True, gzip_output: bool = False,
-                             return_new_filenames: bool = False):
+def trim_adapters_paired_end(
+    r1_files: List[Union[str, Path]],
+    r2_files: List[Union[str, Path]],
+    output_folder: Union[str, Path],
+    three_prime_adapters_r1: Union[None, str, List[str]],
+    three_prime_adapters_r2: Union[None, str, List[str]],
+    five_prime_adapters_r1: Union[None, str, List[str]] = None,
+    five_prime_adapters_r2: Union[None, str, List[str]] = None,
+    any_position_adapters_r1: Union[None, str, List[str]] = None,
+    any_position_adapters_r2: Union[None, str, List[str]] = None,
+    new_sample_names: Union[List[str], Literal['auto']] = 'auto',
+    quality_trimming: Union[NonNegativeInt, None] = 20,
+    trim_n: bool = True,
+    minimum_read_length: NonNegativeInt = 10,
+    maximum_read_length: Union[PositiveInt, None] = None,
+    discard_untrimmed_reads: bool = True,
+    pair_filter_if: Literal['both', 'any', 'first'] = 'both',
+    error_tolerance: Fraction = 0.1,
+    minimum_overlap: NonNegativeInt = 3,
+    allow_indels: bool = True,
+    parallel: bool = True,
+    gzip_output: bool = False,
+    return_new_filenames: bool = False,
+):
     """
     Trim adapters from paired-end reads using `CutAdapt <https://cutadapt.readthedocs.io/>`_.
 
@@ -2350,16 +2621,20 @@ def trim_adapters_paired_end(r1_files: List[Union[str, Path]], r2_files: List[Un
     :type new_sample_names: list of str or 'auto' (default='auto')
     """
     if not HAS_CUTADAPT:
-        warnings.warn("Python package 'cutadapt' is not installed. \n"
-                      "If you want to use the adapter trimming feature, "
-                      "please install python package 'cutadapt' and try again. ")
+        warnings.warn(
+            "Python package 'cutadapt' is not installed. \n"
+            'If you want to use the adapter trimming feature, '
+            "please install python package 'cutadapt' and try again. "
+        )
         return
     if len(r1_files) != len(r2_files):
-        raise InvalidValueError(f"Got an uneven number of R1 and R2 files: "
-                                f"{len(r1_files)} and {len(r2_files)} respectively")
+        raise InvalidValueError(
+            f'Got an uneven number of R1 and R2 files: {len(r1_files)} and {len(r2_files)} respectively'
+        )
     if not ((new_sample_names == 'auto') or (len(new_sample_names) == len(r1_files))):
         raise InvalidValueError(
-            f'Number of samples ({len(r1_files)}) does not match number of sample names ({len(new_sample_names)})!')
+            f'Number of samples ({len(r1_files)}) does not match number of sample names ({len(new_sample_names)})!'
+        )
 
     try:
         call = io.generate_base_call('cutadapt', 'auto')
@@ -2371,23 +2646,33 @@ def trim_adapters_paired_end(r1_files: List[Union[str, Path]], r2_files: List[Un
     for r1_group, r2_group, prefix in zip(
         [three_prime_adapters_r1, five_prime_adapters_r1, any_position_adapters_r1],
         [three_prime_adapters_r2, five_prime_adapters_r2, any_position_adapters_r2],
-        ['-a', '-g', '-b']):
-
+        ['-a', '-g', '-b'],
+    ):
         if r1_group is not None:
             for adapter in parsing.data_to_list(r1_group):
                 if not isinstance(adapter, str):
-                    raise InvalidTypeError(f"The following R1 adapter is invalid: {adapter}")
+                    raise InvalidTypeError(f'The following R1 adapter is invalid: {adapter}')
                 call.extend([prefix, adapter])
 
         if r2_group is not None:
             for adapter in parsing.data_to_list(r2_group):
                 if not isinstance(adapter, str):
-                    raise InvalidTypeError(f"The following R2 adapter is invalid: {adapter}")
+                    raise InvalidTypeError(f'The following R2 adapter is invalid: {adapter}')
                 call.extend([prefix.upper(), adapter])
 
-    call.extend(_parse_cutadapt_misc_args(quality_trimming, trim_n, minimum_read_length, maximum_read_length,
-                                          discard_untrimmed_reads, error_tolerance, minimum_overlap, allow_indels,
-                                          parallel))
+    call.extend(
+        _parse_cutadapt_misc_args(
+            quality_trimming,
+            trim_n,
+            minimum_read_length,
+            maximum_read_length,
+            discard_untrimmed_reads,
+            error_tolerance,
+            minimum_overlap,
+            allow_indels,
+            parallel,
+        )
+    )
     call.append(f'--pair-filter={pair_filter_if}')
     calls = []
     r1_out = []
@@ -2397,12 +2682,12 @@ def trim_adapters_paired_end(r1_files: List[Union[str, Path]], r2_files: List[Un
         file2 = Path(file2)
         if new_sample_names == 'auto':
             suffix = '_trimmed.fastq.gz' if gzip_output else '_trimmed.fastq'
-            base_name_r1 = f"{parsing.remove_suffixes(file1).stem}{suffix}"
-            base_name_r2 = f"{parsing.remove_suffixes(file2).stem}{suffix}"
+            base_name_r1 = f'{parsing.remove_suffixes(file1).stem}{suffix}'
+            base_name_r2 = f'{parsing.remove_suffixes(file2).stem}{suffix}'
         else:
             suffix = '.fastq.gz' if gzip_output else '.fastq'
-            base_name_r1 = f"{new_sample_names[i]}_R1{suffix}"
-            base_name_r2 = f"{new_sample_names[i]}_R2{suffix}"
+            base_name_r1 = f'{new_sample_names[i]}_R1{suffix}'
+            base_name_r2 = f'{new_sample_names[i]}_R2{suffix}'
 
         output_path_r1 = Path(output_folder).joinpath(base_name_r1)
         output_path_r2 = Path(output_folder).joinpath(base_name_r2)
@@ -2419,42 +2704,50 @@ def trim_adapters_paired_end(r1_files: List[Union[str, Path]], r2_files: List[Un
         for cutadapt_call in calls:
             infile1_stem = parsing.remove_suffixes(Path(cutadapt_call[-2])).stem
             infile2_stem = parsing.remove_suffixes(Path(cutadapt_call[-1])).stem
-            log_filename = Path(output_folder).joinpath(
-                f'cutadapt_log_{infile1_stem}_{infile2_stem}.log').absolute().as_posix()
+            log_filename = (
+                Path(output_folder).joinpath(f'cutadapt_log_{infile1_stem}_{infile2_stem}.log').absolute().as_posix()
+            )
 
             if found_cli:
                 io.run_subprocess(cutadapt_call, log_filename=log_filename)
             else:
                 cutadapt_main(cutadapt_call)
-            print(f"Files saved successfully at {cutadapt_call[-2]} and  {cutadapt_call[-1]}")
+            print(f'Files saved successfully at {cutadapt_call[-2]} and  {cutadapt_call[-1]}')
             pbar.update(1)
 
     if return_new_filenames:
         return r1_out, r2_out
 
 
-def _parse_cutadapt_misc_args(quality_trimming: Union[int, None], trim_n: bool,
-                              minimum_read_length: Union[int, None],
-                              maximum_read_length: Union[int, None],
-                              discard_untrimmed_reads: bool, error_tolerance: float, minimum_overlap: int,
-                              allow_indels: bool, parallel: bool) -> List[str]:
+def _parse_cutadapt_misc_args(
+    quality_trimming: Union[int, None],
+    trim_n: bool,
+    minimum_read_length: Union[int, None],
+    maximum_read_length: Union[int, None],
+    discard_untrimmed_reads: bool,
+    error_tolerance: float,
+    minimum_overlap: int,
+    allow_indels: bool,
+    parallel: bool,
+) -> List[str]:
     call = []
     if quality_trimming is not None:
         if not isinstance(quality_trimming, int):
-            raise InvalidTypeError(f"'quality_trimming' must be an integer. "
-                                   f"Instead, got type {type(quality_trimming)}")
+            raise InvalidTypeError(f"'quality_trimming' must be an integer. Instead, got type {type(quality_trimming)}")
         call.extend(['--quality-cutoff', str(quality_trimming)])
 
     if minimum_read_length is not None:
         if not isinstance(minimum_read_length, int):
-            raise InvalidTypeError(f"'minimum_read_length' must be an integer. "
-                                   f"Instead, got type {type(minimum_read_length)}")
+            raise InvalidTypeError(
+                f"'minimum_read_length' must be an integer. Instead, got type {type(minimum_read_length)}"
+            )
         call.extend(['--minimum-length', str(minimum_read_length)])
 
     if maximum_read_length is not None:
         if not isinstance(maximum_read_length, int):
-            raise InvalidTypeError(f"'maximum_read_length' must be an integer. "
-                                   f"Instead, got type {type(maximum_read_length)}")
+            raise InvalidTypeError(
+                f"'maximum_read_length' must be an integer. Instead, got type {type(maximum_read_length)}"
+            )
         call.extend(['--maximum-length', str(maximum_read_length)])
     if trim_n:
         call.append('--trim-n')

@@ -12,6 +12,7 @@ try:
 except Exception as e:  # if running into related to cache, delete the cache and try again
     try:
         from rnalysis.utils.io import clear_cache
+
         clear_cache()
     except PermissionError as perm_e:
         raise perm_e from e

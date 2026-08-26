@@ -39,6 +39,7 @@ Notes
   failure is reported on stderr, and the exit code is the number of failed services. Decide
   consciously whether to ship a stale entry or wait for the service to come back.
 """
+
 import argparse
 import dataclasses
 import json
@@ -73,6 +74,7 @@ GENERATED_COMMENT = (
 @dataclasses.dataclass(frozen=True)
 class VocabularySpec:
     """How to fetch one vocabulary: a human-readable source, and the (live, networked) fetcher."""
+
     source: str
     fetch: Callable[[], Sequence[str]]
 
@@ -80,6 +82,7 @@ class VocabularySpec:
 @dataclasses.dataclass(frozen=True)
 class VocabularyEntry:
     """One fetched (or carried-over) vocabulary, as it will be written to the snapshot."""
+
     source: str
     values: Tuple[str, ...]
     generated_at: str
@@ -89,6 +92,7 @@ class VocabularyEntry:
 @dataclasses.dataclass(frozen=True)
 class VocabularyFailure:
     """A vocabulary whose service stayed down for every attempt."""
+
     key: str
     reason: str
 
@@ -119,16 +123,19 @@ def default_specs() -> Dict[str, VocabularySpec]:
     return {
         'gene_id_types': VocabularySpec(
             source='UniProtKB ID-mapping fields (https://rest.uniprot.org/configure/idmapping/fields)',
-            fetch=fetch_gene_id_types),
+            fetch=fetch_gene_id_types,
+        ),
         'panther_taxons': VocabularySpec(
             source='PantherDB supported genomes (https://www.pantherdb.org/services/oai/pantherdb/supportedgenomes)',
-            fetch=fetch_panther_taxons),
+            fetch=fetch_panther_taxons,
+        ),
         'phylomedb_taxons': VocabularySpec(
             source='PhylomeDB MetaPhOrs species list (ftp://phylomedb.org/metaphors/latest/species.txt.gz)',
-            fetch=fetch_phylomedb_taxons),
+            fetch=fetch_phylomedb_taxons,
+        ),
         'ensembl_taxons': VocabularySpec(
-            source='Ensembl REST info/species (https://rest.ensembl.org/info/species)',
-            fetch=fetch_ensembl_taxons),
+            source='Ensembl REST info/species (https://rest.ensembl.org/info/species)', fetch=fetch_ensembl_taxons
+        ),
     }
 
 
@@ -136,9 +143,12 @@ def utcnow_iso() -> str:
     return datetime.now(timezone.utc).isoformat(timespec='seconds')
 
 
-def collect_vocabularies(specs: Dict[str, VocabularySpec], retries: int = DEFAULT_RETRIES,
-                         retry_delay: float = DEFAULT_RETRY_DELAY, generated_at: str = None
-                         ) -> Tuple[Dict[str, VocabularyEntry], List[VocabularyFailure]]:
+def collect_vocabularies(
+    specs: Dict[str, VocabularySpec],
+    retries: int = DEFAULT_RETRIES,
+    retry_delay: float = DEFAULT_RETRY_DELAY,
+    generated_at: str = None,
+) -> Tuple[Dict[str, VocabularyEntry], List[VocabularyFailure]]:
     """Fetch every vocabulary, retrying each one, and keep going when one service stays down.
 
     Returns the successfully-fetched entries and one ``VocabularyFailure`` per service that failed
@@ -164,9 +174,12 @@ def collect_vocabularies(specs: Dict[str, VocabularySpec], retries: int = DEFAUL
             if not values:
                 # Not an error (the service answered), but it would ship an empty dropdown -- either
                 # the service has changed shape, or the io.get_legal_* parser no longer matches it.
-                print(f'[warn] {key}: the fetch succeeded but returned 0 values - its GUI dropdown '
-                      f'will be empty. Check io.get_legal_* against the current response format '
-                      f'before shipping this snapshot.', file=sys.stderr)
+                print(
+                    f'[warn] {key}: the fetch succeeded but returned 0 values - its GUI dropdown '
+                    f'will be empty. Check io.get_legal_* against the current response format '
+                    f'before shipping this snapshot.',
+                    file=sys.stderr,
+                )
             break
         else:
             failures.append(VocabularyFailure(key=key, reason=repr(last_error)))
@@ -184,8 +197,9 @@ def read_previous_snapshot(path: Path) -> dict:
     return payload if isinstance(payload, dict) else {}
 
 
-def carry_over_previous(entries: Dict[str, VocabularyEntry], previous: dict, failed_keys: Sequence[str]
-                        ) -> Tuple[Dict[str, VocabularyEntry], List[str]]:
+def carry_over_previous(
+    entries: Dict[str, VocabularyEntry], previous: dict, failed_keys: Sequence[str]
+) -> Tuple[Dict[str, VocabularyEntry], List[str]]:
     """Fill failed vocabularies in from the previous snapshot, marked ``stale``.
 
     A service being down for an hour must not ship a release whose taxon dropdown is empty; keeping
@@ -199,10 +213,12 @@ def carry_over_previous(entries: Dict[str, VocabularyEntry], previous: dict, fai
         previous_entry = previous_vocabularies.get(key)
         if not isinstance(previous_entry, dict) or not previous_entry.get('values'):
             continue
-        merged[key] = VocabularyEntry(source=previous_entry.get('source', ''),
-                                      values=parsing.data_to_tuple(previous_entry['values']),
-                                      generated_at=previous_entry.get('generated_at', ''),
-                                      stale=True)
+        merged[key] = VocabularyEntry(
+            source=previous_entry.get('source', ''),
+            values=parsing.data_to_tuple(previous_entry['values']),
+            generated_at=previous_entry.get('generated_at', ''),
+            stale=True,
+        )
         carried.append(key)
 
     return merged, carried
@@ -217,9 +233,7 @@ def build_snapshot(entries: Dict[str, VocabularyEntry], version: str = None, gen
         'vocabularies': {},
     }
     for key, entry in entries.items():
-        vocabulary = {'source': entry.source,
-                      'generated_at': entry.generated_at,
-                      'values': list(entry.values)}
+        vocabulary = {'source': entry.source, 'generated_at': entry.generated_at, 'values': list(entry.values)}
         if entry.stale:
             vocabulary['stale'] = True
         payload['vocabularies'][key] = vocabulary
@@ -237,14 +251,27 @@ def write_snapshot(payload: dict, path: Path) -> None:
 def build_arg_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         description='Regenerate rnalysis/data_files/api_vocabularies.json from the live services '
-                    '(UniProtKB, PantherDB, Ensembl, PhylomeDB). Run at release time, then commit the result.',
-        formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument('--out', default=str(DEFAULT_OUTPUT_PATH), metavar='PATH',
-                        help=f'output file path (default: {DEFAULT_OUTPUT_PATH})')
-    parser.add_argument('--retries', type=int, default=DEFAULT_RETRIES,
-                        help=f'attempts per service before giving up on it (default: {DEFAULT_RETRIES})')
-    parser.add_argument('--retry-delay', type=float, default=DEFAULT_RETRY_DELAY,
-                        help=f'seconds to wait between attempts (default: {DEFAULT_RETRY_DELAY})')
+        '(UniProtKB, PantherDB, Ensembl, PhylomeDB). Run at release time, then commit the result.',
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+    )
+    parser.add_argument(
+        '--out',
+        default=str(DEFAULT_OUTPUT_PATH),
+        metavar='PATH',
+        help=f'output file path (default: {DEFAULT_OUTPUT_PATH})',
+    )
+    parser.add_argument(
+        '--retries',
+        type=int,
+        default=DEFAULT_RETRIES,
+        help=f'attempts per service before giving up on it (default: {DEFAULT_RETRIES})',
+    )
+    parser.add_argument(
+        '--retry-delay',
+        type=float,
+        default=DEFAULT_RETRY_DELAY,
+        help=f'seconds to wait between attempts (default: {DEFAULT_RETRY_DELAY})',
+    )
     return parser
 
 
@@ -253,14 +280,19 @@ def main(argv=None) -> int:
     out_path = Path(args.out)
 
     generated_at = utcnow_iso()
-    entries, failures = collect_vocabularies(default_specs(), retries=args.retries,
-                                             retry_delay=args.retry_delay, generated_at=generated_at)
+    entries, failures = collect_vocabularies(
+        default_specs(), retries=args.retries, retry_delay=args.retry_delay, generated_at=generated_at
+    )
     if failures:
-        entries, carried = carry_over_previous(entries, read_previous_snapshot(out_path),
-                                               [failure.key for failure in failures])
+        entries, carried = carry_over_previous(
+            entries, read_previous_snapshot(out_path), [failure.key for failure in failures]
+        )
         for failure in failures:
-            carried_note = ' (kept the previous snapshot\'s values, marked stale)' if failure.key in carried \
+            carried_note = (
+                " (kept the previous snapshot's values, marked stale)"
+                if failure.key in carried
                 else ' (NOT in the snapshot - its dropdown will be empty)'
+            )
             print(f'[FAIL] {failure.key}: service stayed down: {failure.reason}{carried_note}', file=sys.stderr)
 
     write_snapshot(build_snapshot(entries, generated_at=generated_at), out_path)

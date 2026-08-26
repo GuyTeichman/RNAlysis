@@ -253,6 +253,8 @@ Contributors
 * `pollychen-lab <https://github.com/pollychen-lab>`_
 * `abhi-0203 <https://github.com/abhi-0203>`_
 * `shardool-patil <https://github.com/shardool-patil>`_
+* `shin4141 <https://github.com/shin4141>`_
+* `alertxsto <https://github.com/alertxsto>`_
 
 .. contributors-list-end
 

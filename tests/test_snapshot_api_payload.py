@@ -9,6 +9,7 @@ Every test here mocks the HTTP layer (``requests_mock``, the convention already 
 network call, so it runs in the fast ``unit`` tier (auto-assigned by tests/conftest.py, since this
 module is not one of the modules bound to a network/CLI/GUI tier).
 """
+
 import importlib.util
 from pathlib import Path
 
@@ -25,6 +26,7 @@ _spec.loader.exec_module(snap)
 # ---------------------------------------------------------------------------
 # parse_key_value_pairs (--param)
 # ---------------------------------------------------------------------------
+
 
 def test_parse_key_value_pairs_basic():
     assert snap.parse_key_value_pairs(['a=1', 'b=2'], '--param') == {'a': '1', 'b': '2'}
@@ -51,6 +53,7 @@ def test_parse_key_value_pairs_rejects_empty_key():
 # ---------------------------------------------------------------------------
 # parse_headers (--header)
 # ---------------------------------------------------------------------------
+
 
 def test_parse_headers_basic():
     assert snap.parse_headers(['Accept: application/json']) == {'Accept': 'application/json'}
@@ -80,17 +83,21 @@ def test_parse_headers_rejects_empty_key():
 # guess_extension / derive_filename
 # ---------------------------------------------------------------------------
 
-@pytest.mark.parametrize('content_type,expected', [
-    ('application/json', '.json'),
-    ('application/json; charset=utf-8', '.json'),
-    ('text/xml', '.xml'),
-    ('application/xml', '.xml'),
-    ('text/csv', '.csv'),
-    ('text/html; charset=utf-8', '.html'),
-    ('text/plain', '.txt'),
-    (None, '.txt'),
-    ('application/octet-stream', '.txt'),
-])
+
+@pytest.mark.parametrize(
+    'content_type,expected',
+    [
+        ('application/json', '.json'),
+        ('application/json; charset=utf-8', '.json'),
+        ('text/xml', '.xml'),
+        ('application/xml', '.xml'),
+        ('text/csv', '.csv'),
+        ('text/html; charset=utf-8', '.html'),
+        ('text/plain', '.txt'),
+        (None, '.txt'),
+        ('application/octet-stream', '.txt'),
+    ],
+)
 def test_guess_extension(content_type, expected):
     assert snap.guess_extension(content_type) == expected
 
@@ -122,10 +129,10 @@ def test_derive_filename_never_empty_stem():
 # resolve_output_path
 # ---------------------------------------------------------------------------
 
+
 def test_resolve_output_path_defaults_to_derived_name_under_default_dir(tmp_path):
     default_dir = tmp_path / 'test_files'
-    path = snap.resolve_output_path('https://rest.uniprot.org/idmapping/status/123', None,
-                                     default_dir=default_dir)
+    path = snap.resolve_output_path('https://rest.uniprot.org/idmapping/status/123', None, default_dir=default_dir)
     assert path == default_dir / 'rest_uniprot_org_idmapping_status_123.txt'
 
 
@@ -146,6 +153,7 @@ def test_resolve_output_path_with_directory_is_used_as_is(tmp_path):
 # write_payload
 # ---------------------------------------------------------------------------
 
+
 def test_write_payload_creates_parent_dirs_and_writes_bytes(tmp_path):
     out = tmp_path / 'nested' / 'dir' / 'payload.json'
     snap.write_payload(out, b'{"hello": "world"}')
@@ -163,11 +171,15 @@ def test_write_payload_overwrites_existing_file(tmp_path):
 # main() -- HTTP mocked via requests_mock, never a live call
 # ---------------------------------------------------------------------------
 
+
 def test_main_writes_fetched_payload_to_derived_path(tmp_path, monkeypatch):
     monkeypatch.setattr(snap, 'DEFAULT_OUTPUT_DIR', tmp_path)
     with requests_mock.Mocker() as m:
-        m.get('https://rest.uniprot.org/idmapping/status/abc123', content=b'{"jobStatus": "FINISHED"}',
-              headers={'Content-Type': 'application/json'})
+        m.get(
+            'https://rest.uniprot.org/idmapping/status/abc123',
+            content=b'{"jobStatus": "FINISHED"}',
+            headers={'Content-Type': 'application/json'},
+        )
         exit_code = snap.main(['https://rest.uniprot.org/idmapping/status/abc123'])
 
     assert exit_code == 0
@@ -182,12 +194,17 @@ def test_main_respects_explicit_out_param_and_header(tmp_path, monkeypatch):
 
     with requests_mock.Mocker() as m:
         m.get('https://api.example.org/search', content=b'payload-bytes')
-        exit_code = snap.main([
-            'https://api.example.org/search',
-            '--param', 'query=BRCA1',
-            '--header', 'Accept: application/json',
-            '--out', str(out_path),
-        ])
+        exit_code = snap.main(
+            [
+                'https://api.example.org/search',
+                '--param',
+                'query=BRCA1',
+                '--header',
+                'Accept: application/json',
+                '--out',
+                str(out_path),
+            ]
+        )
         captured['qs'] = m.last_request.qs
         captured['headers'] = m.last_request.headers
 
@@ -221,8 +238,7 @@ def test_build_arg_parser_requires_url():
 
 def test_build_arg_parser_parses_repeated_flags():
     parser = snap.build_arg_parser()
-    args = parser.parse_args(['https://x.test/y', '--param', 'a=1', '--param', 'b=2',
-                              '--header', 'Accept: */*'])
+    args = parser.parse_args(['https://x.test/y', '--param', 'a=1', '--param', 'b=2', '--header', 'Accept: */*'])
     assert args.url == 'https://x.test/y'
     assert args.param == ['a=1', 'b=2']
     assert args.header == ['Accept: */*']
