@@ -109,6 +109,20 @@ font-size: $FONTSIZEPLACEHOLDER*1.5;
     assert stylesheet == truth
 
 
+def test_primary_button_uses_material_blue():
+    # The single main "go" action of each screen is a filled primary button; its fill is
+    # Material Design Blue 700 with white text (AA-safe), replacing the previous warm gold.
+    # Reads the real parametric_style.qss (open is not mocked here).
+    stylesheet = gui_style.get_parametric_stylesheet(12, 'Arial').lower()
+    assert 'qpushbutton[class="primary"]' in stylesheet
+    assert '#1976d2' in stylesheet  # Blue 700 base fill
+    assert '#1565c0' in stylesheet  # Blue 800 hover fill
+    assert '#0d47a1' in stylesheet  # Blue 900 pressed fill
+    assert 'color: #ffffff' in stylesheet  # white label text on the blue fill
+    # the old gold accent must be gone from the primary-button styling
+    assert '#f2b134' not in stylesheet
+
+
 def test_get_stylesheet(monkeypatch):
     param_stylesheet = '1\n2\n3\n\n'
     monkeypatch.setattr(gui_style, 'get_parametric_stylesheet', lambda size, name: param_stylesheet)

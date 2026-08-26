@@ -883,6 +883,23 @@ def test_ToggleSwitchCore(qtbot):
     # on/True state should still paint without error (accent color, not pixel-testable)
     widget.paintEvent(QtGui.QPaintEvent(QtCore.QRect(0, 0, 1, 1)))
 
+
+def test_ToggleSwitchCore_knob_color(qtbot):
+    # the "on" state shares the app-wide Material Design Blue 700 accent with the primary button;
+    # the "off" state is a neutral inactive gray. Hover darkens each by one Material step.
+    qtbot, widget = widget_setup(qtbot, ToggleSwitchCore)
+    widget.setChecked(False)
+    widget._hover = False
+    assert widget._knob_color().name().lower() == '#a8adb3'  # off: neutral gray
+    widget._hover = True
+    assert widget._knob_color().name().lower() == '#8b9096'  # off, hover: darker gray
+
+    widget.setChecked(True)
+    widget._hover = False
+    assert widget._knob_color().name().lower() == '#1976d2'  # on: Blue 700
+    widget._hover = True
+    assert widget._knob_color().name().lower() == '#1565c0'  # on, hover: Blue 800
+
     with qtbot.waitSignal(widget.stateChanged, timeout=1000) as blocker:
         qtbot.mouseClick(widget, LEFT_CLICK)
     assert not widget.isChecked()
