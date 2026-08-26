@@ -595,19 +595,21 @@ class ToggleSwitchCore(QtWidgets.QPushButton):
         super(ToggleSwitchCore, self).setChecked(is_checked)
         self.state_changed()
 
+    def _knob_color(self) -> QtGui.QColor:
+        # The "on" state is filled with Material Design Blue 700 - the same accent used by the
+        # primary action button (see parametric_style.qss), so the accent is consistent app-wide.
+        # The "off" state is a neutral inactive gray that reads as "off", not "error". Hover
+        # darkens each by one Material step (Blue 800 / a darker gray). Paired this way the on/off
+        # colors stay off the red-green confusion axis (safe for red-green colorblindness); knob
+        # position and the "True"/"False" text remain the primary, redundant cues, so state is
+        # legible without relying on color at all.
+        if self.isChecked():
+            return QtGui.QColor('#1976d2') if not self._hover else QtGui.QColor('#1565c0')
+        return QtGui.QColor('#a8adb3') if not self._hover else QtGui.QColor('#8b9096')
+
     def paintEvent(self, event):
         label = ' True' if self.isChecked() else 'False'
-        if self.isChecked():
-            # warm gold for the "on" state - a highlight/active accent that harmonizes with the
-            # RNAlysis red/black logo without reading as an error or a warning. Paired with the
-            # neutral gray "off" state it stays off the red-green confusion axis (safe for
-            # red-green colorblindness); knob position and the "True"/"False" text remain the
-            # primary, redundant cues. Dark label text keeps WCAG AA contrast on the fill
-            # (~8.4:1 normal, ~6.3:1 hover).
-            bg_color = QtGui.QColor('#f2b134') if not self._hover else QtGui.QColor('#d6971f')
-        else:
-            # neutral inactive gray for the "off" state - reads as "off", not "error"
-            bg_color = QtGui.QColor('#a8adb3') if not self._hover else QtGui.QColor('#8b9096')
+        bg_color = self._knob_color()
 
         radius = int(self.RADIUS * (self.font().pointSize() / 10))
         width = int(self.WIDTH * (self.font().pointSize() / 10))
@@ -631,6 +633,12 @@ class ToggleSwitchCore(QtWidgets.QPushButton):
         if not self.isChecked():
             sw_rect.moveLeft(-width)
         painter.drawRoundedRect(sw_rect, radius, radius)
+
+        # White label text keeps WCAG AA contrast on the dark blue "on" fill (~4.6:1); the light
+        # gray "off" fill instead needs the near-black text (~6.7:1). The knob/track borders stay
+        # near-black in both states.
+        text_pen = QtGui.QPen(QtGui.QColor('#ffffff') if self.isChecked() else QtGui.QColor('#222228'))
+        painter.setPen(text_pen)
         painter.drawText(sw_rect, QtCore.Qt.AlignmentFlag.AlignCenter, label)
 
 

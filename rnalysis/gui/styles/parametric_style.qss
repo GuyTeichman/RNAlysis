@@ -158,43 +158,42 @@ font-size: $FONTSIZEPLACEHOLDER*1;
 /* Primary action buttons: the single main "go" action of a window/screen
    (e.g. "Load", "Apply", "Create Pipeline", "Run", "Start <function>").
    Marked in Python with btn.setProperty('class', 'primary') and re-polished.
-   Filled with a warm gold - a highlight/active accent that harmonizes with the
-   RNAlysis red/black logo without reading as an error or a warning, the same
-   accent used for ToggleSwitch's "on" state, so the accent is consistent
-   app-wide. The primary/secondary distinction is carried by *both* color and
-   fill (solid accent vs. the default flat/bordered look of ordinary buttons) so
-   it still reads under grayscale or color-blind viewing, not by hue alone. Gold
-   is light, so the label text is near-black rather than white: text-on-#f2b134
-   is ~8.4:1 (>= AA), staying ~6.3:1 / ~4.6:1 on the hover/pressed fills below.
-   The fill colors are constant across the "base"/"light"/"dark" app themes (this
-   stylesheet is prepended to the qdarkstyle sheet, and the attribute selector
-   out-specifies qdarkstyle's plain QPushButton rules), so primary buttons look
-   the same regardless of theme while still sitting correctly against each theme's
-   background. */
+   Filled with Material Design Blue 700 (#1976d2) - a calm, unambiguous "go"
+   accent, and the same accent used for ToggleSwitch's "on" state, so the accent
+   is consistent app-wide. The primary/secondary distinction is carried by *both*
+   color and fill (solid accent vs. the default flat/bordered look of ordinary
+   buttons) so it still reads under grayscale or color-blind viewing, not by hue
+   alone. Blue 700 is dark, so the label text is white rather than near-black:
+   white-on-#1976d2 is ~4.6:1 (>= AA), rising to ~5.8:1 / ~8.6:1 on the
+   hover/pressed fills (Blue 800 / Blue 900) below. The fill colors are constant
+   across the "base"/"light"/"dark" app themes (this stylesheet is prepended to
+   the qdarkstyle sheet, and the attribute selector out-specifies qdarkstyle's
+   plain QPushButton rules), so primary buttons look the same regardless of theme
+   while still sitting correctly against each theme's background. */
 QPushButton[class="primary"] {
-background-color: #f2b134;
-color: #222228;
-border: 2px solid #d6971f;
+background-color: #1976d2;
+color: #ffffff;
+border: 2px solid #1565c0;
 border-radius: 4px;
 padding: 4px 14px;
 }
 
 QPushButton[class="primary"]:hover {
-background-color: #d6971f;
-color: #222228;
-border: 2px solid #b87f14;
+background-color: #1565c0;
+color: #ffffff;
+border: 2px solid #0d47a1;
 }
 
 QPushButton[class="primary"]:pressed {
-background-color: #b87f14;
-color: #222228;
-border: 2px solid #9c6b0f;
+background-color: #0d47a1;
+color: #ffffff;
+border: 2px solid #08306b;
 }
 
 QPushButton[class="primary"]:disabled {
-background-color: #ecd9a6;
-color: #9a8a5f;
-border: 2px solid #ecd9a6;
+background-color: #bbdefb;
+color: #7691b0;
+border: 2px solid #bbdefb;
 }
 
 QToolButton {
