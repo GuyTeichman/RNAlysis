@@ -144,7 +144,7 @@ jobs:
                 if: runner.os == 'Linux'
                 # Pinned to a commit SHA (tag 2026.07.10.1): the moving `@master` ref is deprecated
                 # and warned on every run ("the master branch sync will stop"). Dependabot bumps this.
-                uses: Homebrew/actions/setup-homebrew@c8707045ccae42888fe98e86f2ee8938bc7cc193
+                uses: Homebrew/actions/setup-homebrew@8f3d1ec8a696b3b9d9a6c3696b6c73033cab69e4
             -   name: Install cURL on Linux
                 if: runner.os == 'Linux'
                 run: sudo apt-get install libcurl4-openssl-dev
@@ -247,7 +247,7 @@ jobs:
                 # built wheels itself (enable-cache), so setup-python's pip cache is no longer needed.
                 # Pinned to a full version on purpose: setup-uv no longer publishes a moving `@v9` major
                 # tag, so `@v9.0.0` (not `@v9`) is the correct current pin.
-                uses: astral-sh/setup-uv@v9.0.0
+                uses: astral-sh/setup-uv@v10.0.1
                 with:
                     enable-cache: true
                     cache-dependency-glob: |
