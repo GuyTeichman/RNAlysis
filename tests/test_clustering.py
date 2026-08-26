@@ -344,6 +344,95 @@ def test_clustering_transform_cache_separates_power_transform(monkeypatch, basic
     assert counter['n'] == 1
 
 
+@pytest.mark.parametrize(
+    'power_transform,truth_transform',
+    [
+        # the transforms that shipped before 4.3.0 keep drawing their cluster-expression plot from plainly-
+        # standardized data: the condition at the CLICOM plot site has always evaluated to False (it tests a
+        # callable against True), and rule 5 protects that output. See the NOTE in CLICOMRunner._run.
+        ('box-cox', generic.standardize),
+        (True, generic.standardize),
+        ('none', generic.standardize),
+        (False, generic.standardize),
+        ([True, False], generic.standardize),
+        (['box-cox', 'none'], generic.standardize),
+        # 'log' is new in 4.3.0, has no legacy plot output to preserve, and is the transform the Box-Cox
+        # instability error tells blocked users to switch to -- so its plot must show log-transformed values.
+        ('log', generic.standard_log),
+        (['log'], generic.standard_log),
+        # CLICOM runs one clustering setup per transform, so a mixed run has no single transform to plot with:
+        # it keeps the neutral standardized view, and does so regardless of the order the transforms are listed in
+        (['log', 'box-cox'], generic.standardize),
+        (['box-cox', 'log'], generic.standardize),
+    ],
+)
+def test_clicom_data_for_plot_matches_the_chosen_transform(power_transform, truth_transform):
+    np.random.seed(42)
+    df = pl.DataFrame(np.random.random((40, 6)), schema=[f'sample{i}' for i in range(6)])
+    runner = CLICOMRunner(
+        df,
+        [list(df.columns)],
+        power_transform,
+        1 / 3,
+        False,
+        1,
+        dict(method='kmeans', n_clusters=[2, 3], n_init=1),
+        plot_style='none',
+        parallel_backend='sequential',
+    )
+    runner._run(plot=False)
+    assert runner.data_for_plot is not None
+    assert runner.data_for_plot.equals(truth_transform(df))
+
+
+def test_clicom_unparseable_transform_does_not_lose_the_run():
+    # find_valid_clustering_setups silently *skips* a setup it cannot build, so an unparseable transform in the
+    # list never stops a CLICOM run -- and must not stop it when the plot data is derived at the end of it either.
+    np.random.seed(42)
+    df = pl.DataFrame(np.random.random((40, 6)), schema=[f'sample{i}' for i in range(6)])
+    runner = CLICOMRunner(
+        df,
+        [list(df.columns)],
+        ['box-cox', 'not a transform'],
+        1 / 3,
+        False,
+        1,
+        dict(method='kmeans', n_clusters=[2, 3], n_init=1),
+        plot_style='none',
+        parallel_backend='sequential',
+    )
+    clusterers = runner._run(plot=False)
+
+    assert len(clusterers) == 1
+    assert runner.data_for_plot.equals(generic.standardize(df))
+
+
+def test_clicom_plot_transform_failure_does_not_lose_the_run():
+    # the plot transform sees the *whole* table, while the clustering setups only ever see the columns named in
+    # `replicate_grouping` -- so it can fail on a column no setup ever touched, at the very end of an expensive
+    # ensemble run. The legacy standardize path could never raise; the new one must not lose the run either.
+    np.random.seed(42)
+    values = np.random.random((40, 6))
+    values[:, 5] -= 5  # a column no clustering setup below ever sees, on which log2(x+1) is undefined
+    df = pl.DataFrame(values, schema=[f'sample{i}' for i in range(6)])
+    runner = CLICOMRunner(
+        df,
+        [[f'sample{i}' for i in range(4)]],
+        'log',
+        1 / 3,
+        False,
+        1,
+        dict(method='kmeans', n_clusters=[2, 3], n_init=1),
+        plot_style='none',
+        parallel_backend='sequential',
+    )
+    with pytest.warns(UserWarning, match='standardized'):
+        clusterers = runner._run(plot=False)
+
+    assert len(clusterers) == 1  # the ensemble result survived
+    assert runner.data_for_plot.equals(generic.standardize(df))
+
+
 def test_clicom_run_memoizes_transform_across_setups(monkeypatch):
     np.random.seed(42)
     df = pl.DataFrame(np.random.random((40, 6)), schema=[f'sample{i}' for i in range(6)])
@@ -361,9 +450,10 @@ def test_clicom_run_memoizes_transform_across_setups(monkeypatch):
     )
     runner._run(plot=False)
     # 3 kmeans setups share (columns, power_transform=True); without memoization each is transformed twice
-    # (once to validate the setup, once to run it) -> ~6 calls. With memoization: once, plus at most the
-    # single final CLICOM plot-data transform.
-    assert counter['n'] <= 2
+    # (once to validate the setup, once to run it) -> ~6 calls. With memoization: exactly once. The final
+    # CLICOM plot-data transform adds none, since that plot is drawn from standardized data (see the NOTE in
+    # CLICOMRunner._run).
+    assert counter['n'] == 1
 
 
 def test_find_cliques(monkeypatch):
