@@ -1,11 +1,11 @@
 {
   "_comment": "AUTO-GENERATED at release time by packaging/generate_api_vocabularies.py - do not edit by hand. This is a snapshot of the remote vocabularies (UniProtKB gene-ID types, PantherDB/Ensembl/PhylomeDB taxons) that RNAlysis bakes into Literal[...] type annotations, so that importing rnalysis performs no network I/O and the GUI dropdowns are populated offline. Regenerate it with that script, as part of cutting a release.",
-  "generated_at": "2026-08-14T19:53:39+00:00",
+  "generated_at": "2026-08-26T18:48:53+00:00",
   "rnalysis_version": "4.3.0",
   "vocabularies": {
     "gene_id_types": {
       "source": "UniProtKB ID-mapping fields (https://rest.uniprot.org/configure/idmapping/fields)",
-      "generated_at": "2026-08-14T19:53:39+00:00",
+      "generated_at": "2026-08-26T18:48:53+00:00",
       "values": [
         "UniProtKB AC/ID",
         "UniParc",
@@ -84,7 +84,7 @@
     },
     "panther_taxons": {
       "source": "PantherDB supported genomes (https://www.pantherdb.org/services/oai/pantherdb/supportedgenomes)",
-      "generated_at": "2026-08-14T19:53:39+00:00",
+      "generated_at": "2026-08-26T18:48:53+00:00",
       "values": [
         "Amborella trichopoda",
         "Anolis carolinensis",
@@ -234,7 +234,7 @@
     },
     "phylomedb_taxons": {
       "source": "PhylomeDB MetaPhOrs species list (ftp://phylomedb.org/metaphors/latest/species.txt.gz)",
-      "generated_at": "2026-08-14T19:53:39+00:00",
+      "generated_at": "2026-08-26T18:48:53+00:00",
       "values": [
         "Abiotrophia defectiva ATCC 49176",
         "Absidia idahoensis var. thermophila",
@@ -6524,7 +6524,7 @@
     },
     "ensembl_taxons": {
       "source": "Ensembl REST info/species (https://rest.ensembl.org/info/species)",
-      "generated_at": "2026-08-14T19:53:39+00:00",
+      "generated_at": "2026-08-26T18:48:53+00:00",
       "values": [
         "Acanthochromis polyacanthus",
         "Accipiter nisus",
