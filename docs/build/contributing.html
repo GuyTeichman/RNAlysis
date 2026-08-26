@@ -258,6 +258,10 @@ feature to the list in README.rst.</p></li>
 on Windows, macOS, and Linux. GitHub Actions runs this matrix automatically on every pull
 request; make sure all jobs pass. Coverage is reported at
 <a class="reference external" href="https://coveralls.io/github/GuyTeichman/RNAlysis">https://coveralls.io/github/GuyTeichman/RNAlysis</a>.</p></li>
+<li><p>The files your pull request touches must pass the pre-commit hooks (Ruff formatting/import
+sorting, end-of-file/whitespace fixups, YAML/TOML validity). GitHub Actions checks this
+automatically, scoped to just the files the PR changed. Installing the git hook with
+<code class="docutils literal notranslate"><span class="pre">pre-commit</span> <span class="pre">install</span></code> (see “Get Started!” above) catches this before you push.</p></li>
 </ol>
 </section>
 <section id="tips">
