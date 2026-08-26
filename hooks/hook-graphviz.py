@@ -37,29 +37,47 @@ def _collect_graphviz_files():
     # Graphviz layout/format programs that may be invoked at runtime. On macOS/Linux several of
     # these are symlinks to a single executable.
     progs = (
-        "neato", "dot", "twopi", "circo", "fdp", "nop", "osage", "patchwork", "gc",
-        "acyclic", "gvpr", "gvcolor", "ccomps", "sccmap", "tred", "sfdp", "unflatten",
+        'neato',
+        'dot',
+        'twopi',
+        'circo',
+        'fdp',
+        'nop',
+        'osage',
+        'patchwork',
+        'gc',
+        'acyclic',
+        'gvpr',
+        'gvcolor',
+        'ccomps',
+        'sccmap',
+        'tred',
+        'sfdp',
+        'unflatten',
     )
 
-    logger.debug("hook-graphviz: collecting graphviz program executables...")
+    logger.debug('hook-graphviz: collecting graphviz program executables...')
     for program_name in progs:
         program_binary = shutil.which(program_name)
         if not program_binary:
-            logger.debug("hook-graphviz: graphviz program %r not found!", program_name)
+            logger.debug('hook-graphviz: graphviz program %r not found!', program_name)
             continue
         # Only collect programs from the same directory as ``dot`` so we don't pull in an unrelated
         # graphviz install that happens to be on PATH.
         if pathlib.Path(program_binary).parent != bin_dir:
             logger.debug(
-                "hook-graphviz: found program %r (%r) outside of directory %r - ignoring!",
-                program_name, program_binary, str(bin_dir))
+                'hook-graphviz: found program %r (%r) outside of directory %r - ignoring!',
+                program_name,
+                program_binary,
+                str(bin_dir),
+            )
             continue
-        logger.debug("hook-graphviz: collecting graphviz program %r: %r", program_name, program_binary)
+        logger.debug('hook-graphviz: collecting graphviz program %r: %r', program_name, program_binary)
         binaries += [(program_binary, '.')]
 
     # The graphviz shared libraries are picked up automatically by PyInstaller's binary-dependency
     # analysis of the collected executables; we still have to collect the plugins + their config file.
-    logger.debug("hook-graphviz: looking for graphviz plugin directory...")
+    logger.debug('hook-graphviz: looking for graphviz plugin directory...')
     if compat.is_win:
         # On Windows every install variant keeps the plugins and config next to the executables.
         plugin_dir = bin_dir
@@ -77,15 +95,16 @@ def _collect_graphviz_files():
             dot_imports = bindepend.getImports(dot_binary)
 
         graphviz_lib_paths = [
-            path for path in dot_imports
+            path
+            for path in dot_imports
             if any(candidate in os.path.basename(path) for candidate in graphviz_lib_candidates)
         ]
         if not graphviz_lib_paths:
-            logger.warning("hook-graphviz: could not determine location of graphviz shared libraries!")
+            logger.warning('hook-graphviz: could not determine location of graphviz shared libraries!')
             return binaries, datas
 
         graphviz_lib_dir = pathlib.Path(graphviz_lib_paths[0]).parent
-        logger.debug("hook-graphviz: location of graphviz shared libraries: %r", str(graphviz_lib_dir))
+        logger.debug('hook-graphviz: location of graphviz shared libraries: %r', str(graphviz_lib_dir))
 
         plugin_dir = graphviz_lib_dir / 'graphviz'
         plugin_dest_dir = 'graphviz'  # Collect into a graphviz sub-directory.
@@ -96,12 +115,12 @@ def _collect_graphviz_files():
             plugin_pattern = '*gvplugin*.so.*'
 
     if not plugin_dir.is_dir():
-        logger.warning("hook-graphviz: could not determine location of graphviz plugins!")
+        logger.warning('hook-graphviz: could not determine location of graphviz plugins!')
         return binaries, datas
 
-    logger.info("hook-graphviz: collecting graphviz plugins from directory: %r", str(plugin_dir))
+    logger.info('hook-graphviz: collecting graphviz plugins from directory: %r', str(plugin_dir))
     binaries += [(str(file), plugin_dest_dir) for file in plugin_dir.glob(plugin_pattern)]
-    datas += [(str(file), plugin_dest_dir) for file in plugin_dir.glob("config*")]  # e.g. ``config6``
+    datas += [(str(file), plugin_dest_dir) for file in plugin_dir.glob('config*')]  # e.g. ``config6``
 
     return binaries, datas
 
