@@ -1,9 +1,6 @@
 # -*- mode: python ; coding: utf-8 -*-
-from pathlib import Path
-
 from PyInstaller.compat import is_darwin
 from PyInstaller.utils.hooks import collect_submodules, collect_data_files
-from _pyinstaller_hooks_contrib import get_hook_dirs
 
 datas = []
 binaries = []
@@ -83,11 +80,11 @@ WINDOWS_MANIFEST = """<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 </assembly>
 """
 
-with open(Path(get_hook_dirs()[0]).joinpath('hook-pygraphviz.py')) as infile:
-    hook_path = Path('hooks')
-    hook_path.mkdir(exist_ok=True)
-    with open(hook_path.joinpath('hook-graphviz.py'), 'w') as outfile:
-        outfile.write(infile.read())
+# Use RNAlysis's own committed hook for the `graphviz` package (see hooks/hook-graphviz.py),
+# resolved relative to the build CWD (the repo root, where `pyinstaller RNAlysis.spec` is run).
+# Previously we copied pyinstaller-hooks-contrib's `hook-pygraphviz.py` here, but 2026.7 made that
+# hook `import pygraphviz` (which RNAlysis does not install), breaking the frozen build.
+hook_path = 'hooks'
 
 a = Analysis(
     ['rnalysis_app.py'],
