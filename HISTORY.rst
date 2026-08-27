@@ -2,6 +2,13 @@
 History
 =======
 
+4.3.1 (unreleased)
+-------------------
+
+Added
+******
+* The paired-end FASTQ functions (adapter trimming, bowtie2 and kallisto alignment/quantification, and FASTQ-to-SAM conversion) now emit a warning when the R1 and R2 file lists appear to be mispaired by list order — that is, when a pair's filenames carry mismatched sample names after stripping the standard read-number tokens (``_R1_``/``_R2_``, ``_R1.``/``_R2.``, ``_1.``/``_2.``). Because mates are paired strictly by list position, two file lists selected in different orders would otherwise silently cross-pair samples and produce a garbage count matrix that nothing downstream can detect. The warning names the suspect pair(s); it is advisory only and never blocks the run, so datasets that legitimately use non-conventional filenames are unaffected.
+
 4.3.0 (2026-08-26)
 -------------------
 
