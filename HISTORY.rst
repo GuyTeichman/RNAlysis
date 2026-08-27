@@ -2,6 +2,13 @@
 History
 =======
 
+4.3.1 (unreleased)
+-------------------
+
+Fixed
+******
+* Fixed a bug that could corrupt the results of the set-based enrichment tests (hypergeometric, Fisher's exact, and randomization) on certain gene-set sizes. The observed overlap count (the ``obs`` column these tests report) was re-derived from a fraction and could come out one short of the true value on specific (gene-set size, overlap) pairs — for example, a gene set of 49 genes overlapping an annotation in exactly 1 gene was reported as ``0`` — because a floating-point round-trip (``int(en_size * (en_attr_size / en_size))``) truncated the count. The count is now taken directly as the exact size of the overlap. More seriously, this also **corrected the randomization enrichment test's p-value on affected inputs**: because that test used the truncated ``obs`` as its success threshold, an affected term could report a p-value of roughly 1.0 regardless of its true enrichment — a silent false negative that the user could not predict. **Results may change:** the randomization test's p-values (and the ``obs`` column reported by these set-based tests) for affected gene-set sizes now reflect the corrected count; unaffected sizes are unchanged.
+
 4.3.0 (2026-08-26)
 -------------------
 
