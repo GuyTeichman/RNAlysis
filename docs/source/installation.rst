@@ -137,13 +137,13 @@ Once you have a copy of the source, you can install the basic version of *RNAlys
 
 .. code-block:: console
 
-    $ python -m pip setup.py install
+    $ pip install .
 
 Or you can install the full version of *RNAlysis* with:
 
 .. code-block:: console
 
-    $ python -m pip setup.py install .[all]
+    $ pip install .[all]
 
 
 .. _Github repository: https://github.com/GuyTeichman/RNAlysis
