@@ -2,6 +2,13 @@
 History
 =======
 
+4.3.1 (unreleased)
+------------------
+
+Fixed
+******
+* Fixed non-deterministic taxon inference: when inferring an organism from a set of gene IDs (``infer_taxon_from_gene_ids``, used by enrichment analysis in automatic-organism mode) and the gene IDs match more than one species by an *equal* number of genes, the winning species is now chosen deterministically — the highest gene count, and among ties the first scientific name in alphabetical order. Previously the tie was broken by the iteration order of a Python ``set``, which varies per process under hash randomization (``PYTHONHASHSEED``), so the same gene-ID set could infer a different taxon from one run to the next and fork the entire downstream analysis. Cases where a single species is an outright majority are unaffected, and their results are unchanged.
+
 4.3.0 (2026-08-26)
 -------------------
 
