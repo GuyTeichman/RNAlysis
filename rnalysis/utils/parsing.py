@@ -475,13 +475,16 @@ def common_suffix(strings):
     """Find the common suffix among a list of strings."""
     if not strings:
         return ''
-    s1 = min(strings)
-    s2 = max(strings)
-    max_overlap = min(len(s1), len(s2))
+    # The suffix must be shared by *every* string, so compare all of them character-by-character from
+    # the end. (Comparing only min/max -- valid for a common prefix -- is wrong for a suffix, because
+    # lexicographic order says nothing about how strings end; see issue #195.)
+    shortest = min(strings, key=len)
+    max_overlap = len(shortest)
     for i in range(max_overlap):
-        if s1[-(i + 1)] != s2[-(i + 1)]:
-            return s1[len(s1) - i :]
-    return s1[len(s1) - max_overlap :]
+        char = shortest[-(i + 1)]
+        if any(s[-(i + 1)] != char for s in strings):
+            return shortest[len(shortest) - i :]
+    return shortest[len(shortest) - max_overlap :]
 
 
 def remove_suffix(s: str, suffix: Union[str, List[str]]):
@@ -505,16 +508,18 @@ def generate_common_name(file_pairs):
 
     # Prepare output based on comparison
     initial_results = []
-    pair_lengths = []
+    is_genuine_lcs = []
     for s1, s2, lcs in lcs_list:
-        pair_lengths.append(len(s1) + len(s2))
         if len(lcs) > len(overall_lcs):
             initial_results.append(lcs)
+            is_genuine_lcs.append(True)
         else:
             initial_results.append(s1 + s2)
-    # Find and trim common suffix from LCSs (compare each result against its OWN pair's combined
-    # length, not the loop variables left over from the last iteration of the loop above)
-    lcs_only = [result for result, pair_length in zip(initial_results, pair_lengths) if len(result) <= pair_length]
+            is_genuine_lcs.append(False)
+    # Find and trim the common suffix, computed over the genuine LCS results only. The `s1 + s2`
+    # concatenated fallbacks are excluded: their trailing characters are not part of a real shared
+    # sample name and would otherwise mask (or spuriously alter) the suffix shared by the true LCSs.
+    lcs_only = [result for result, genuine in zip(initial_results, is_genuine_lcs) if genuine]
     suffix = common_suffix(lcs_only)
     if suffix and len(lcs_only) > 1:
         trimmed_results = [
