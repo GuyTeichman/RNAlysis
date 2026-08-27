@@ -1364,16 +1364,15 @@ def infer_taxon_from_gene_ids(gene_ids: Iterable[str], gene_id_type: str = None)
             species[output[gene_id]['species']] = species.setdefault(output[gene_id]['species'], 0) + 1
     if len(species) == 0:
         raise ValueError('No taxon ID could be matched to any of the given gene IDs.')
-    chosen_species = list(species.keys())[0]
-    chosen_species_n = species[chosen_species]
     if len(species) > 1:
         warnings.warn(
-            'The given gene IDs match more than one species. Picking the species that fits the majority of gene IDs.'
+            'The given gene IDs match more than one species. Picking the species that fits the majority of gene IDs '
+            '(ties are broken deterministically by choosing the first species name in alphabetical order).'
         )
-        for s in species:
-            if species[s] > chosen_species_n:
-                chosen_species = s
-                chosen_species_n = species[s]
+    # Break majority-vote ties deterministically: pick the highest count, then the alphabetically-first
+    # species name. `species` keys derive from a set of gene IDs, so their iteration order varies per
+    # process under hash randomization (PYTHONHASHSEED); sorting first makes the winner reproducible.
+    chosen_species = max(sorted(species.keys()), key=lambda s: species[s])
     return map_taxon_id(chosen_species.replace('_', ' ')), map_from
 
 
