@@ -2,6 +2,13 @@
 History
 =======
 
+4.3.1 (unreleased)
+-------------------
+
+Fixed
+******
+* The *FASTQ* external-tool wrappers now consistently raise a clear error when the underlying command-line tool fails, instead of silently reporting success. The kallisto quantification and index-building, bowtie2 alignment and index-building, ShortStack alignment, and CutAdapt adapter-trimming wrappers previously discarded the tool's exit code, so a failed run (for example a bad index, a corrupt input file, or a full disk) would print a "saved successfully" message and carry on. For kallisto this went beyond a delayed crash: stale output left in the target folder from a previous run of the same sample could be merged silently into the count matrix, producing wrong results without any warning. Every external-tool wrapper (including the Picard-based SAM/BAM tools, which already checked their exit code) now routes it through a shared check that, on failure, raises a ``ChildProcessError`` reporting the tool's own error message and the path to its log file.
+
 4.3.0 (2026-08-26)
 -------------------
 

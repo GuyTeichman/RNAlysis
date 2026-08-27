@@ -796,6 +796,7 @@ def test_kallisto_create_index_command(
         assert print_stdout
         assert print_stderr
         index_created.append(True)
+        return 0, []
 
     monkeypatch.setattr(io, 'run_subprocess', mock_run_subprocess)
 
@@ -2519,6 +2520,157 @@ def test_generate_picard_basecall(command):
     expected = [installs.get_jdk_path().joinpath('java').as_posix(), '-jar', installs.PICARD_JAR.as_posix(), command]
     out = fastq._generate_picard_basecall(command, 'auto')
     assert out == expected
+
+
+# --- external-tool failure propagation (issue #278) ------------------------------------------------
+# Every fastq wrapper that shells out to an external tool must raise when that tool exits with a
+# non-zero return code, instead of discarding it and reporting success. For kallisto this is not just
+# a crash-vs-error question: silently ignoring a failed run could merge stale output from a previous
+# run of the same sample into the count matrix. These tests mock io.run_subprocess to report a
+# failure and assert each public wrapper raises ChildProcessError (the type the Picard wrapper
+# already raised) and prints no "saved successfully" message on failure.
+
+_FAILING_TOOL_STDERR = ['Error: the external tool failed catastrophically', 'stack trace line 2']
+
+
+def _failing_run_subprocess_factory(recorded_calls):
+    def mock_run_subprocess(args, print_stdout=True, print_stderr=True, log_filename: str = None, shell: bool = False):
+        # let the version probe inside io.generate_base_call succeed, so the wrapper reaches the
+        # actual tool call - which we then fail.
+        if len(args) > 0 and args[-1] in ('--version', 'version'):
+            return 0, []
+        recorded_calls.append(list(args))
+        return 1, list(_FAILING_TOOL_STDERR)
+
+    return mock_run_subprocess
+
+
+def _run_bowtie2_create_index():
+    bowtie2_create_index(
+        ['tests/test_files/bowtie2_tests/transcripts.fasta'],
+        'tests/test_files/bowtie2_tests/index',
+        'transcripts',
+    )
+
+
+def _run_shortstack_align_smallrna():
+    shortstack_align_smallrna(
+        'tests/test_files/kallisto_tests',
+        'tests/test_files/shortstack_tests/outdir',
+        'tests/test_files/shortstack_tests/transcripts.fasta',
+    )
+
+
+def _run_bowtie2_align_single_end():
+    bowtie2_align_single_end(
+        'tests/test_files/kallisto_tests',
+        'tests/test_files/bowtie2_tests/outdir',
+        'tests/test_files/bowtie2_tests/index/transcripts',
+    )
+
+
+def _run_bowtie2_align_paired_end():
+    bowtie2_align_paired_end(
+        ['tests/test_files/kallisto_tests/reads_1.fastq'],
+        ['tests/test_files/kallisto_tests/reads_2.fastq'],
+        'tests/test_files/bowtie2_tests/outdir',
+        'tests/test_files/bowtie2_tests/index/transcripts',
+    )
+
+
+def _run_kallisto_create_index():
+    kallisto_create_index('tests/test_files/kallisto_tests/transcripts.fasta')
+
+
+def _run_kallisto_quantify_single_end():
+    kallisto_quantify_single_end(
+        'tests/test_files/kallisto_tests',
+        'tests/test_files/kallisto_tests/outdir',
+        'tests/test_files/kallisto_tests/transcripts_truth.idx',
+        'tests/test_files/kallisto_tests/transcripts.gtf',
+        125,
+        14,
+    )
+
+
+def _run_kallisto_quantify_paired_end():
+    kallisto_quantify_paired_end(
+        ['tests/test_files/kallisto_tests/reads_1.fastq'],
+        ['tests/test_files/kallisto_tests/reads_2.fastq'],
+        'tests/test_files/kallisto_tests/outdir',
+        'tests/test_files/kallisto_tests/transcripts_truth.idx',
+        'tests/test_files/kallisto_tests/transcripts.gtf',
+    )
+
+
+@pytest.mark.parametrize(
+    'runner',
+    [
+        _run_bowtie2_create_index,
+        _run_shortstack_align_smallrna,
+        _run_bowtie2_align_single_end,
+        _run_bowtie2_align_paired_end,
+        _run_kallisto_create_index,
+        _run_kallisto_quantify_single_end,
+        _run_kallisto_quantify_paired_end,
+    ],
+    ids=lambda runner: runner.__name__,
+)
+def test_fastq_wrapper_raises_on_tool_failure(monkeypatch, runner):
+    recorded_calls = []
+    printed_messages = []
+    monkeypatch.setattr(io, 'run_subprocess', _failing_run_subprocess_factory(recorded_calls))
+    monkeypatch.setattr(
+        'builtins.print', lambda *args, **kwargs: printed_messages.append(' '.join(str(a) for a in args))
+    )
+
+    with pytest.raises(ChildProcessError):
+        runner()
+
+    # the tool was actually invoked (i.e. we exercised the real failure path, not an earlier validation error)
+    assert len(recorded_calls) >= 1
+    # no "saved successfully" message was printed after the failure
+    assert not any('saved successfully' in msg for msg in printed_messages)
+
+
+def _run_trim_adapters_single_end():
+    trim_adapters_single_end(
+        'tests/test_files/test_fastqs/dir1',
+        'tests/test_files/test_fastqs/outdir',
+        'ATGGAC',
+    )
+
+
+def _run_trim_adapters_paired_end():
+    trim_adapters_paired_end(
+        ['tests/test_files/test_fastqs/dir1/fq1.fastq'],
+        ['tests/test_files/test_fastqs/dir2/fq4.fq.gz'],
+        'tests/test_files/test_fastqs/outdir',
+        'ATGGAC',
+        'AAATTTT',
+    )
+
+
+@pytest.mark.parametrize(
+    'runner',
+    [_run_trim_adapters_single_end, _run_trim_adapters_paired_end],
+    ids=lambda runner: runner.__name__,
+)
+def test_cutadapt_wrapper_raises_on_tool_failure(monkeypatch, runner):
+    recorded_calls = []
+    printed_messages = []
+    # patch generate_base_call so the CutAdapt CLI is treated as found (found_cli=True path)
+    monkeypatch.setattr(io, 'generate_base_call', lambda *args, **kwargs: ['cutadapt'])
+    monkeypatch.setattr(io, 'run_subprocess', _failing_run_subprocess_factory(recorded_calls))
+    monkeypatch.setattr(
+        'builtins.print', lambda *args, **kwargs: printed_messages.append(' '.join(str(a) for a in args))
+    )
+
+    with pytest.raises(ChildProcessError):
+        runner()
+
+    assert len(recorded_calls) >= 1
+    assert not any('saved successfully' in msg for msg in printed_messages)
 
 
 class TestRunPicardCalls:
