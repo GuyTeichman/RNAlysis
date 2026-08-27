@@ -623,6 +623,34 @@ def test_get_hypergeometric_parameters(attr, truth):
     assert res == truth
 
 
+def _make_hypergeometric_sets(en_size: int, en_attr_size: int):
+    # gene_set of `en_size` genes; annotation_set is a subset of `en_attr_size` of them, so the
+    # observed overlap (gene_set & annotation_set) is exactly `en_attr_size` by construction.
+    gene_set = {f'gene{i}' for i in range(en_size)}
+    annotation_set = {f'gene{i}' for i in range(en_attr_size)}
+    background_set = set(gene_set)
+    return annotation_set, gene_set, background_set
+
+
+@pytest.mark.parametrize('en_size,en_attr_size', [(49, 1), (98, 1), (98, 2), (103, 1), (103, 2), (22, 15), (47, 3)])
+def test_get_hypergeometric_params_obs_no_float_truncation(en_size, en_attr_size):
+    # regression for issue #274: obs was re-derived as int(en_size * (en_attr_size / en_size)),
+    # which truncates below en_attr_size on float-imprecise pairs (e.g. 49*(1/49) == 0.999...).
+    annotation_set, gene_set, background_set = _make_hypergeometric_sets(en_size, en_attr_size)
+    obs = HypergeometricTest().get_hypergeometric_params(annotation_set, gene_set, background_set)[4]
+    assert obs == en_attr_size
+
+
+def test_get_hypergeometric_params_obs_equals_intersection_size_sweep():
+    # obs must equal the true intersection size for every (set-size, overlap) pair.
+    pval_func = HypergeometricTest()
+    for en_size in range(1, 201):
+        for en_attr_size in range(0, en_size + 1):
+            annotation_set, gene_set, background_set = _make_hypergeometric_sets(en_size, en_attr_size)
+            obs = pval_func.get_hypergeometric_params(annotation_set, gene_set, background_set)[4]
+            assert obs == en_attr_size, (en_size, en_attr_size, obs)
+
+
 @pytest.mark.parametrize(
     'params,truth',
     [
