@@ -7,6 +7,7 @@ the *bowtie2* alignment tool, and the *featureCounts* feature counting tool.
 import abc
 import itertools
 import os
+import re
 import shutil
 import sys
 import types
@@ -53,6 +54,56 @@ def _func_type(func_type: Literal['single', 'paired', 'both']):
         return item
 
     return decorator
+
+
+# Read-number token used by the standard paired-end FASTQ naming conventions: '_R1_'/'_R2_'
+# (Illumina, e.g. 'sample_R1_001.fastq.gz'), '_R1.'/'_R2.' before the extension, and '_1.'/'_2.'.
+# The read number (1 or 2) is captured, and the token must be followed by '.', '_', or the end of
+# the name so that a digit inside the sample name (e.g. 'control_2reps') is not mistaken for it.
+# The optional 'R' is matched case-insensitively ('_r1_' is recognized too).
+_PAIRED_READ_TOKEN = re.compile(r'_R?([12])(?=[._]|$)', re.IGNORECASE)
+
+
+def _paired_mate_sample_key(filename: Union[str, Path]) -> Union[str, None]:
+    """
+    Reduce a paired-end FASTQ filename to the sample-name portion that precedes its read-number
+    token (e.g. 'sampleA_R1_001.fastq.gz' -> 'sampleA'), so two files can be checked for being
+    mates regardless of file extension or the text following the read token. The *last* read-number
+    token in the name is used, so a replicate number earlier in the name (e.g. 'control_1_R1') does
+    not shadow the real read token. Returns ``None`` when no recognized read-number token is found
+    (unconventional naming), in which case the pairing cannot be sanity-checked.
+    """
+    name = Path(filename).name
+    matches = list(_PAIRED_READ_TOKEN.finditer(name))
+    if not matches:
+        return None
+    return name[: matches[-1].start()]
+
+
+def _check_paired_mate_names(r1_files, r2_files):
+    """
+    Warn (without raising) when R1/R2 files paired by list order do not appear to be mates.
+
+    Paired-end wrappers match mates strictly by list position (``zip(r1_files, r2_files)``); if the
+    two file lists were selected in different orders — trivial to do in a GUI multi-file picker —
+    samples are silently cross-paired and nothing downstream can detect the resulting garbage. This
+    compares the sample-name prefix of each R1 file with its R2 partner (after stripping the
+    standard read-number tokens '_R1_'/'_R2_', '_R1.'/'_R2.', '_1.'/'_2.') and emits a loud warning
+    naming any suspect pair. Files with unconventional names (no recognizable read token) are
+    skipped rather than flagged, so intentionally non-conventional datasets still run. This is a
+    sanity check only: it never changes behavior and never raises.
+    """
+    for i, (r1, r2) in enumerate(zip(r1_files, r2_files)):
+        key1 = _paired_mate_sample_key(r1)
+        key2 = _paired_mate_sample_key(r2)
+        if key1 is None or key2 is None:
+            continue
+        if key1 != key2:
+            warnings.warn(
+                f"r1_files[{i}] '{Path(r1).name}' is paired with '{Path(r2).name}' — these "
+                f'filenames do not appear to be mates; pairs are matched by list order. Verify '
+                f'that r1_files and r2_files are listed in the same sample order.'
+            )
 
 
 class _FASTQPipeline(generic.GenericPipeline, abc.ABC):
@@ -585,6 +636,8 @@ def fastq_to_sam_paired(
         raise InvalidValueError('output_folder does not exist!')
 
     base_call, script_name = _parse_fastq2sam_misc_args(picard_installation_folder, quality_score_type)
+
+    _check_paired_mate_names(r1_files, r2_files)
 
     calls = []
 
@@ -1808,6 +1861,8 @@ def bowtie2_align_paired_end(
             f'Number of samples ({len(r1_files)}) does not match number of sample names ({len(new_sample_names)})!'
         )
 
+    _check_paired_mate_names(r1_files, r2_files)
+
     if not isinstance(min_fragment_length, int):
         raise InvalidTypeError("'min_fragment_len' must be a non-negative int!")
     if not (min_fragment_length >= 0):
@@ -2198,6 +2253,8 @@ def kallisto_quantify_paired_end(
         raise InvalidValueError(
             f'Number of samples ({len(r1_files)}) does not match number of sample names ({len(new_sample_names)})!'
         )
+
+    _check_paired_mate_names(r1_files, r2_files)
 
     # handle legacy arguments
     learn_bias = legacy_args.get('learn_bias', False)
@@ -2635,6 +2692,8 @@ def trim_adapters_paired_end(
         raise InvalidValueError(
             f'Number of samples ({len(r1_files)}) does not match number of sample names ({len(new_sample_names)})!'
         )
+
+    _check_paired_mate_names(r1_files, r2_files)
 
     try:
         call = io.generate_base_call('cutadapt', 'auto')
