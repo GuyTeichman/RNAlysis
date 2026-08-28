@@ -2,6 +2,13 @@
 History
 =======
 
+4.3.1
+-----
+
+Fixed
+*****
+* Fixed a bug where reloading a saved session duplicated the ``(#id)`` suffix on every data node's label in the analysis report: a table loaded as ``... (#3)`` became ``... (#3) (#3)`` when the session was reloaded, and grew by another ``(#3)`` on each further save-and-reload. Node labels in reports built from reloaded sessions are now stable.
+
 4.3.0 (2026-08-26)
 -------------------
 
