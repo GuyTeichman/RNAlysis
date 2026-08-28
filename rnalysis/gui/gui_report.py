@@ -29,7 +29,14 @@ class Node:
     }
 
     def __init__(
-        self, node_id: int, node_name: str, predecessors: list, popup_element: str, node_type: str, filename: str = None
+        self,
+        node_id: int,
+        node_name: str,
+        predecessors: list,
+        popup_element: str,
+        node_type: str,
+        filename: str = None,
+        _add_id_suffix: bool = True,
     ):
         self._node_id = node_id
         self._node_name = node_name
@@ -38,7 +45,10 @@ class Node:
         self._node_type = node_type
         self._is_active = True
         self._filename = None if filename is None else Path(filename)
-        if node_type in self.DATA_TYPES:
+        # data-type nodes are labeled with their id (e.g. "... (#3)"). When a node is rebuilt from a
+        # serialized session (from_json), node_name already carries this suffix, so it must not be
+        # re-appended - otherwise every save/reload round-trip would duplicate it.
+        if _add_id_suffix and node_type in self.DATA_TYPES:
             self._node_name += f' (#{node_id})'
 
     def to_json(self):
@@ -65,6 +75,7 @@ class Node:
             popup_element=data['popup_element'],
             node_type=data['node_type'],
             filename=Path(data['filename']) if data['filename'] else None,
+            _add_id_suffix=False,
         )
 
     @property
