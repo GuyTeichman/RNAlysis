@@ -929,6 +929,34 @@ def test_infer_taxon_from_gene_ids_no_species(monkeypatch):
         infer_taxon_from_gene_ids([])
 
 
+def test_infer_taxon_from_gene_ids_breaks_ties_deterministically(monkeypatch):
+    # A genuine majority-vote tie: two species with equal gene counts. The winner must be chosen
+    # deterministically (alphabetically-first scientific name), regardless of the order in which the
+    # species happen to be encountered - that order traces back to a set of gene IDs and therefore
+    # varies per process under hash randomization (PYTHONHASHSEED).
+    monkeypatch.setattr(io, 'map_taxon_id', lambda x: x)
+    monkeypatch.setattr(
+        io, 'find_best_gene_mapping', lambda *args, **kwargs: (Mock(mapping_dict={}), 'WormBase', 'Ensembl')
+    )
+    # 'apis_mellifera' sorts before 'zea_mays', so it must win the tie no matter the encounter order.
+    tie_zea_first = {
+        'id1': {'species': 'zea_mays'},
+        'id2': {'species': 'zea_mays'},
+        'id3': {'species': 'apis_mellifera'},
+        'id4': {'species': 'apis_mellifera'},
+    }
+    tie_apis_first = {
+        'id1': {'species': 'apis_mellifera'},
+        'id2': {'species': 'apis_mellifera'},
+        'id3': {'species': 'zea_mays'},
+        'id4': {'species': 'zea_mays'},
+    }
+    for gene_id_info in (tie_zea_first, tie_apis_first):
+        monkeypatch.setattr(io, '_ensembl_lookup_post_request', lambda x: gene_id_info)
+        with pytest.warns(Warning):
+            assert infer_taxon_from_gene_ids([])[0] == 'apis mellifera'
+
+
 ids_uniprot = ['P34544', 'Q27395', 'P12844']
 ids_wormbase = ['WBGene00019883', 'WBGene00023497', 'WBGene00003515']
 entrez_to_wb_truth = {'176183': 'WBGene00019883', '173203': 'WBGene00012343'}

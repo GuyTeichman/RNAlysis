@@ -2,11 +2,13 @@
 History
 =======
 
-4.3.1
------
+4.3.1 (unreleased)
+-------------------
 
 Fixed
-*****
+******
+* The *FASTQ* external-tool wrappers now consistently raise a clear error when the underlying command-line tool fails, instead of silently reporting success. The kallisto quantification and index-building, bowtie2 alignment and index-building, ShortStack alignment, and CutAdapt adapter-trimming wrappers previously discarded the tool's exit code, so a failed run (for example a bad index, a corrupt input file, or a full disk) would print a "saved successfully" message and carry on. For kallisto this went beyond a delayed crash: stale output left in the target folder from a previous run of the same sample could be merged silently into the count matrix, producing wrong results without any warning. Every external-tool wrapper (including the Picard-based SAM/BAM tools, which already checked their exit code) now routes it through a shared check that, on failure, raises a ``ChildProcessError`` reporting the tool's own error message and the path to its log file.
+* Fixed non-deterministic taxon inference: when inferring an organism from a set of gene IDs (``infer_taxon_from_gene_ids``, used by enrichment analysis in automatic-organism mode) and the gene IDs match more than one species by an *equal* number of genes, the winning species is now chosen deterministically — the highest gene count, and among ties the first scientific name in alphabetical order. Previously the tie was broken by the iteration order of a Python ``set``, which varies per process under hash randomization (``PYTHONHASHSEED``), so the same gene-ID set could infer a different taxon from one run to the next and fork the entire downstream analysis. Cases where a single species is an outright majority are unaffected, and their results are unchanged.
 * Fixed a bug where reloading a saved session duplicated the ``(#id)`` suffix on every data node's label in the analysis report: a table loaded as ``... (#3)`` became ``... (#3) (#3)`` when the session was reloaded, and grew by another ``(#3)`` on each further save-and-reload. Node labels in reports built from reloaded sessions are now stable.
 
 4.3.0 (2026-08-26)
