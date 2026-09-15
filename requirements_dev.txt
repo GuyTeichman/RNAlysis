@@ -23,5 +23,5 @@ pyinstaller>=6,<7
 pyinstaller-hooks-contrib>=2024
 rst-to-myst>=0.4,<0.5
 requests-mock>=1.12,<2
-pytest-randomly>=3.15,<5
+pytest-randomly>=3.15,<6
 pytest-mock>=3.14,<4
