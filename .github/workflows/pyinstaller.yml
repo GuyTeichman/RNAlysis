@@ -40,7 +40,10 @@ jobs:
               run: python packaging/checksum_videos.py
 
             - name: Generate Changelog
-              run: python packaging/generate_changelog.py
+              run: |
+                  python -m venv .changelog-venv
+                  .changelog-venv/bin/python -m pip install --upgrade -r packaging/requirements_release.txt
+                  .changelog-venv/bin/python packaging/generate_changelog.py
 
             - uses: stefanzweifel/git-auto-commit-action@v7
               with:
