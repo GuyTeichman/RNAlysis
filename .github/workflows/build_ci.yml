@@ -144,7 +144,7 @@ jobs:
                 if: runner.os == 'Linux'
                 # Pinned to a commit SHA (tag 2026.07.10.1): the moving `@master` ref is deprecated
                 # and warned on every run ("the master branch sync will stop"). Dependabot bumps this.
-                uses: Homebrew/actions/setup-homebrew@f8d4222eb633e65c2a0157383cf80861fc7fae7f
+                uses: Homebrew/actions/setup-homebrew@848c272c7bfe984a197bd4d16383f4c106ec61e6
             -   name: Install cURL on Linux
                 if: runner.os == 'Linux'
                 run: sudo apt-get install libcurl4-openssl-dev
