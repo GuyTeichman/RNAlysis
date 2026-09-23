@@ -78,6 +78,9 @@ jobs:
         if: ${{ always() && needs.createrelease.result != 'failure' && needs.createrelease.result != 'cancelled' }}
         runs-on: ${{ matrix.os }}
         strategy:
+            # Don't let a Windows SignPath failure cancel the in-progress macOS leg (which would
+            # drop BOTH release assets) -- each platform's asset is independent.
+            fail-fast: false
             matrix:
                 include:
                     - os: macos-latest
@@ -164,9 +167,14 @@ jobs:
               with:
                   name: RNAlysis-windows-unsigned-${{ github.run_id }}
                   path: ./dist/${{ matrix.OUT_FILE_NAME }}
+                  # Transient hand-off to SignPath only -- don't leave an unsigned build downloadable.
+                  retention-days: 1
 
             - name: Submit signing request to SignPath
               if: runner.os == 'Windows'
+              # Blocking on a real release (a failed sign fails the Windows leg), but best-effort on a
+              # beta freeze smoke-test: a manual run must still produce a build if SignPath is down.
+              continue-on-error: ${{ github.event_name == 'workflow_dispatch' }}
               uses: signpath/github-action-submit-signing-request@v2
               with:
                   api-token: ${{ secrets.SIGNPATH_API_TOKEN }}
@@ -181,9 +189,22 @@ jobs:
                   wait-for-completion-timeout-in-seconds: 1800
 
             - name: Replace unsigned zip with the signed one
+              # Implicit success() means this is skipped when a release sign step failed (macOS still
+              # ships thanks to fail-fast: false). On a beta the sign step is tolerated, so we reach
+              # here and fall back to the unsigned build; on a release a missing signed zip is fatal.
               if: runner.os == 'Windows'
               shell: bash
-              run: cp "./dist-signed/${{ matrix.OUT_FILE_NAME }}" "./dist/${{ matrix.OUT_FILE_NAME }}"
+              run: |
+                  signed="./dist-signed/${{ matrix.OUT_FILE_NAME }}"
+                  if [ -f "$signed" ]; then
+                      cp "$signed" "./dist/${{ matrix.OUT_FILE_NAME }}"
+                      echo "Shipping the SignPath-signed build."
+                  elif [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+                      echo "::warning::No signed artifact at $signed; shipping the unsigned beta build (SignPath unavailable)."
+                  else
+                      echo "::error::No signed artifact at $signed on a release build; aborting rather than ship an unsigned zip."
+                      exit 1
+                  fi
 
             - name: Upload beta artifact (freeze smoke-test)
               # Manual runs only: the standalone app as a downloadable run artifact, no Release.
