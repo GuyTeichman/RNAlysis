@@ -89,7 +89,7 @@ if __name__ == '__main__':
         packages=find_packages(exclude=['tests', 'packaging']),
         extras_require=extras_require,
         url='https://github.com/GuyTeichman/RNAlysis',
-        version='4.3.0',
+        version='4.3.1',
         zip_safe=False,
         entry_points={
             'console_scripts': [

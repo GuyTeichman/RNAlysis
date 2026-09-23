@@ -78,6 +78,9 @@ jobs:
         if: ${{ always() && needs.createrelease.result != 'failure' && needs.createrelease.result != 'cancelled' }}
         runs-on: ${{ matrix.os }}
         strategy:
+            # Don't let a Windows SignPath failure cancel the in-progress macOS leg (which would
+            # drop BOTH release assets) -- each platform's asset is independent.
+            fail-fast: false
             matrix:
                 include:
                     - os: macos-latest
@@ -85,9 +88,9 @@ jobs:
                       CMD_BUILD: >
                           pyinstaller RNAlysis.spec &&
                           cd dist/ &&
-                          zip -r RNAlysis-4.3.0_macos_M1.zip ./RNAlysis* &&
+                          zip -r RNAlysis-4.3.1_macos_M1.zip ./RNAlysis* &&
                           ls -ltr
-                      OUT_FILE_NAME: RNAlysis-4.3.0_macos_M1.zip
+                      OUT_FILE_NAME: RNAlysis-4.3.1_macos_M1.zip
                       ASSET_MIME: application/zip
 
                     - os: windows-latest
@@ -95,8 +98,8 @@ jobs:
                       CMD_BUILD: >
                           pyinstaller RNAlysis.spec &&
                           cd dist/ &&
-                          7z a RNAlysis-4.3.0_windows.zip -r "RNAlysis-4.3.0/"
-                      OUT_FILE_NAME: RNAlysis-4.3.0_windows.zip
+                          7z a RNAlysis-4.3.1_windows.zip -r "RNAlysis-4.3.1/"
+                      OUT_FILE_NAME: RNAlysis-4.3.1_windows.zip
                       ASSET_MIME: application/zip
 
         steps:
@@ -149,6 +152,59 @@ jobs:
 
             - name: Build with pyinstaller for ${{ matrix.TARGET }}
               run: ${{ matrix.CMD_BUILD }}
+
+            # --- Windows code signing via SignPath (Authenticode) -------------------------------
+            # Signs the launcher RNAlysis.exe inside the Windows zip. macOS is intentionally NOT
+            # signed here: the SignPath OSS certificate is Windows-only (Gatekeeper/notarization is
+            # a separate Apple flow). GitHub always repackages an uploaded artifact into ITS OWN zip,
+            # so SignPath sees our RNAlysis-*_windows.zip nested one level down -- the artifact
+            # configuration 'initial' is a zip-in-zip that matches that. Signing happens in place:
+            # the signed zip is copied back over ./dist so the existing upload steps below ship it.
+            - name: Upload unsigned Windows build for signing
+              if: runner.os == 'Windows'
+              id: upload-unsigned
+              uses: actions/upload-artifact@v7
+              with:
+                  name: RNAlysis-windows-unsigned-${{ github.run_id }}
+                  path: ./dist/${{ matrix.OUT_FILE_NAME }}
+                  # Transient hand-off to SignPath only -- don't leave an unsigned build downloadable.
+                  retention-days: 1
+
+            - name: Submit signing request to SignPath
+              if: runner.os == 'Windows'
+              # Blocking on a real release (a failed sign fails the Windows leg), but best-effort on a
+              # beta freeze smoke-test: a manual run must still produce a build if SignPath is down.
+              continue-on-error: ${{ github.event_name == 'workflow_dispatch' }}
+              uses: signpath/github-action-submit-signing-request@v2
+              with:
+                  api-token: ${{ secrets.SIGNPATH_API_TOKEN }}
+                  organization-id: ${{ secrets.SIGNPATH_ORGANIZATION_ID }}
+                  project-slug: RNAlysis
+                  # Tag push (real release) -> real certificate; manual beta run -> test certificate.
+                  signing-policy-slug: ${{ github.event_name == 'push' && 'release-signing' || 'test-signing' }}
+                  artifact-configuration-slug: initial
+                  github-artifact-id: ${{ steps.upload-unsigned.outputs.artifact-id }}
+                  output-artifact-directory: ./dist-signed
+                  wait-for-completion: true
+                  wait-for-completion-timeout-in-seconds: 1800
+
+            - name: Replace unsigned zip with the signed one
+              # Implicit success() means this is skipped when a release sign step failed (macOS still
+              # ships thanks to fail-fast: false). On a beta the sign step is tolerated, so we reach
+              # here and fall back to the unsigned build; on a release a missing signed zip is fatal.
+              if: runner.os == 'Windows'
+              shell: bash
+              run: |
+                  signed="./dist-signed/${{ matrix.OUT_FILE_NAME }}"
+                  if [ -f "$signed" ]; then
+                      cp "$signed" "./dist/${{ matrix.OUT_FILE_NAME }}"
+                      echo "Shipping the SignPath-signed build."
+                  elif [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+                      echo "::warning::No signed artifact at $signed; shipping the unsigned beta build (SignPath unavailable)."
+                  else
+                      echo "::error::No signed artifact at $signed on a release build; aborting rather than ship an unsigned zip."
+                      exit 1
+                  fi
 
             - name: Upload beta artifact (freeze smoke-test)
               # Manual runs only: the standalone app as a downloadable run artifact, no Release.
