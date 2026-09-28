@@ -175,7 +175,7 @@ jobs:
               # Blocking on a real release (a failed sign fails the Windows leg), but best-effort on a
               # beta freeze smoke-test: a manual run must still produce a build if SignPath is down.
               continue-on-error: ${{ github.event_name == 'workflow_dispatch' }}
-              uses: signpath/github-action-submit-signing-request@v2
+              uses: signpath/github-action-submit-signing-request@v3
               with:
                   api-token: ${{ secrets.SIGNPATH_API_TOKEN }}
                   organization-id: ${{ secrets.SIGNPATH_ORGANIZATION_ID }}
