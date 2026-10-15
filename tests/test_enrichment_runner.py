@@ -513,6 +513,21 @@ def test_go_enrichment_runner_validate_statistical_test_allm_rejects_non_fisher(
         assert runner.validate_statistical_test() is False
 
 
+@pytest.mark.parametrize('propagate_annotations', ['no', 'classic', 'elim'])
+def test_go_enrichment_runner_validate_statistical_test_respects_base_checks(monkeypatch, propagate_annotations):
+    # the base-class checks (a valid StatsTest; xlmhglite installed for XL-mHG) must not be overridden
+    runner = GOEnrichmentRunner.__new__(GOEnrichmentRunner)
+    runner.propagate_annotations = propagate_annotations
+    runner.stats_test = 'not a stats test'
+    with pytest.warns(UserWarning, match='Invalid statistical test'):
+        assert runner.validate_statistical_test() is False
+
+    monkeypatch.setattr(enrichment_runner, 'HAS_XLMHG', False)
+    runner.stats_test = XlmhgTest()
+    with pytest.warns(UserWarning, match='xlmhglite'):
+        assert runner.validate_statistical_test() is False
+
+
 def test_go_enrichment_runner_validate_statistical_test_allm_accepts_fisher():
     runner = GOEnrichmentRunner.__new__(GOEnrichmentRunner)
     runner.propagate_annotations = 'all.m'
