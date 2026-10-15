@@ -1,3 +1,4 @@
+import threading
 import time
 from typing import Set
 
@@ -1694,6 +1695,28 @@ def test_AltParallel_init():
         joblib.delayed(_power)(a, b) for a, b in zip(range(5), [2, 2, 2, 2, 2])
     )
     assert res == [0, 1, 4, 9, 16]
+
+
+def test_AltParallel_does_not_leak_thread_default_backend():
+    # a bare joblib.parallel_backend(...) call (no 'with') permanently changes the calling thread's default backend
+    from joblib.parallel import get_active_backend
+
+    def active_backend_name():
+        return type(get_active_backend()[0]).__name__
+
+    # run in a fresh thread: joblib's backend config is thread-local, so this is independent of other tests' leaks
+    results = {}
+
+    def run():
+        results['before'] = active_backend_name()
+        results['res'] = AltParallel(n_jobs=1, desc='description')(joblib.delayed(_power)(a, 2) for a in range(3))
+        results['after'] = active_backend_name()
+
+    thread = threading.Thread(target=run)
+    thread.start()
+    thread.join()
+    assert results['res'] == [0, 1, 4]
+    assert results['after'] == results['before']
 
 
 def test_AltParallel_signals(qtbot):
