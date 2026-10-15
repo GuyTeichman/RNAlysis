@@ -2905,6 +2905,33 @@ def test_differential_expression_limma(
         unlink_tree(outdir)
 
 
+@pytest.mark.parametrize('method', ['differential_expression_deseq2', 'differential_expression_limma_voom'])
+@pytest.mark.parametrize(
+    'kwargs,expected_in_msg',
+    [
+        (dict(comparisons=[('conditoin', 'cond2', 'cond1')]), ["'conditoin'", "'condition'"]),
+        (dict(comparisons=[('condition', 'Cond2', 'cond1')]), ["'Cond2'", "'cond2'"]),
+        (dict(comparisons=[('condition', 'cond2', 'cond1 ')]), ["'cond1 '", "'cond1'"]),
+        (dict(comparisons=[('condition', 'cond2', 'cond1')], covariates=['age']), ["'age'"]),
+        (dict(comparisons=[('condition', 'cond2', 'cond1')], covariates=['replicate']), ["'replicate'", 'numeric']),
+        (dict(comparisons=[('condition', 'cond2', 'cond1')], lrt_factors=['replicat']), ["'replicat'"]),
+        (dict(comparisons=[('condition', 'cond2', 'cond1')], lrt_factors=['condition:replicat']), ["'replicat'"]),
+    ],
+)
+def test_differential_expression_preflight_validation(big_countfilter, monkeypatch, method, kwargs, expected_in_msg):
+    # issue #280: bad comparisons/covariates/LRT factors must fail in Python before R is ever invoked
+    def fail(*args, **kwargs):
+        raise AssertionError('R was invoked before the inputs were validated')
+
+    monkeypatch.setattr(differential_expression.installs, 'install_deseq2', fail)
+    monkeypatch.setattr(differential_expression.installs, 'install_limma', fail)
+    monkeypatch.setattr(differential_expression.io, 'run_r_script', fail)
+    with pytest.raises(InvalidValueError) as e:
+        getattr(big_countfilter, method)('tests/test_files/test_design_matrix.csv', **kwargs)
+    for expected in expected_in_msg:
+        assert expected in str(e.value)
+
+
 @pytest.mark.parametrize(
     'keep,exp_path',
     [
