@@ -952,6 +952,31 @@ def test_generate_xlmhg_index_vectors(attribute, truth, truth_rev):
     assert np.all(rev_vec == truth_rev)
 
 
+def test_generate_xlmhg_index_vectors_largest_supported_list():
+    # 65,536 genes is the largest ranked list whose positions (0..65,535) fit xlmhglite's uint16 index vectors
+    n = 65536
+    ranked_genes = np.array([f'gene{i}' for i in range(n)], dtype='str')
+    vec, rev_vec = XlmhgTest()._generate_xlmhg_index_vectors(ranked_genes, {'gene0', f'gene{n - 1}'})
+    assert vec.dtype == np.uint16 and rev_vec.dtype == np.uint16
+    assert np.all(vec == [0, n - 1])
+    assert np.all(rev_vec == [0, n - 1])
+
+
+@pytest.mark.parametrize('n', [65537, 70000])
+def test_generate_xlmhg_index_vectors_list_too_long(n):
+    # longer lists used to crash with a bare OverflowError (NumPy >= 2) or silently wrap indices (NumPy 1.x)
+    ranked_genes = np.array([f'gene{i}' for i in range(n)], dtype='str')
+    with pytest.raises(InvalidValueError, match='65,536'):
+        XlmhgTest()._generate_xlmhg_index_vectors(ranked_genes, {'gene0', f'gene{n - 1}'})
+
+
+def test_xlmhg_run_list_too_long():
+    n = 65537
+    ranked_genes = np.array([f'gene{i}' for i in range(n)], dtype='str')
+    with pytest.raises(InvalidValueError, match='65,536'):
+        XlmhgTest().run('attr', {'gene0', 'gene5'}, ranked_genes)
+
+
 def test_enrichment_runner_fetch_annotations(monkeypatch):
     monkeypatch.setattr(validation, 'validate_attr_table', lambda x: None)
     truth = _df_to_dict(io.load_table('tests/test_files/attr_ref_table_for_tests.csv'))

@@ -17,7 +17,7 @@ The fastq module contains functions that interface with the different external t
 Most of these tools require different sets of parameters for single-end vs paired-end reads, and therefore all of the functions in this module are split into single-end functions and paired-end functions.
 
 We will start by importing the fastq module::
-    >>> from *RNAlysis* import fastq
+    >>> from rnalysis import fastq
 
 You can now access the different functions of the fastq module, as explained in the sections below.
 
@@ -240,7 +240,7 @@ Initialize a Filter object
 
 We will start by importing the filtering module::
 
-    >>> from *RNAlysis* import filtering
+    >>> from rnalysis import filtering
 
 We can now, for example, create a :term:`DESeqFilter` object from a DESeq2 `csv` output file (see more details about :term:`DESeqFilter` in sections below).
 ::
@@ -1059,34 +1059,34 @@ Creating a new Pipeline
 -------------------------
 To create a new empty :term:`Pipeline`, simply create a new Pipeline object::
 
-    >>> from *RNAlysis* import filtering
+    >>> from rnalysis import filtering
     >>> pipe = filtering.Pipeline()
 
 Because every :term:`Filter object` has its own unique functions, a particular Pipeline can only contain functions of a specific Filter object type, and can only be applied to objects of that type.
 By default, a new Pipeline's `filter_type` is :term:`Filter`, and can only contain general functions from the *filtering* module that can apply to any Filter object.
 If we wanted, for example, to create a Pipeline for DESeqFilter objects, we would have to specify the parameter `filter_type`::
 
-    >>> from *RNAlysis* import filtering
+    >>> from rnalysis import filtering
     >>> deseq_pipe = filtering.Pipeline('deseqfilter')
 
 One we have an empty :term:`Pipeline`, we can start adding functions to it.
 We can do that either via the function's name::
 
-    >>> from *RNAlysis* import filtering
+    >>> from rnalysis import filtering
     >>> pipe = filtering.Pipeline('DESeqFilter')
     >>> pipe.add_function('filter_significant')
     Added function 'DESeqFilter.filter_significant()' to the pipeline.
 
 or via the function itself::
 
-    >>> from *RNAlysis* import filtering
+    >>> from rnalysis import filtering
     >>> pipe = filtering.Pipeline('DESeqFilter')
     >>> pipe.add_function(filtering.DESeqFilter.filter_significant)
     Added function 'DESeqFilter.filter_significant()' to the pipeline.
 
 We can also specify the function's arguments. We can specify both non-keyworded and keyworded arguments, just as we would if we called the function normally::
 
-    >>> from *RNAlysis* import filtering
+    >>> from rnalysis import filtering
     >>> pipe = filtering.Pipeline()
     >>> pipe.add_function(filtering.Filter.filter_biotype_from_ref_table, biotype='protein_coding')
     Added function 'Filter.filter_biotype_from_ref_table(biotype='protein_coding')' to the pipeline.
@@ -1115,7 +1115,7 @@ Applying Pipelines to Filter objects
 Just like with other functions in the *filtering* module, the functions in a :term:`Pipeline` can be applied either inplace or returned as a new object.
 You can determine that via the `inplace` argument of the function `Pipeline.apply_to()`::
 
-    >>> from *RNAlysis* import filtering
+    >>> from rnalysis import filtering
     >>> # create the pipeline
     >>> pipe = filtering.Pipeline('DESeqFilter')
     >>> pipe.add_function(filtering.DESeqFilter.filter_missing_values)
@@ -1142,7 +1142,7 @@ If our pipeline contained other types of functions, they will not be applied inp
 
 If we apply a Pipeline with functions that return additional outputs (such as Figures, DataFrames, etc), they will be returned in a dictionary alongside the Filter object::
 
-    >>> from *RNAlysis* import filtering
+    >>> from rnalysis import filtering
     >>> # create the pipeline
     >>> pipe = filtering.Pipeline('DESeqFilter')
     >>> pipe.add_function('biotypes_from_ref_table', ref='tests/test_files/biotype_ref_table_for_tests.csv')
@@ -1212,7 +1212,7 @@ Initialize a FeatureSet object
 ------------------------------------------
 We will start by importing the enrichment module::
 
-    >>> from *RNAlysis* import enrichment
+    >>> from rnalysis import enrichment
 
 A :term:`FeatureSet` object can now be initialized by one of three methods.
 The first method is to specify an existing Filter object::
@@ -1810,7 +1810,7 @@ Initialize a RankedSet object
 ------------------------------------------
 We will start by importing the enrichment module::
 
-    >>> from *RNAlysis* import enrichment
+    >>> from rnalysis import enrichment
 
 :term:`RankedSet` objects can be initialized by one of two methods.
 The first method is to specify an existing Filter object::
@@ -1838,7 +1838,7 @@ Second, you cannot specify which statistical test to use, since the *XL-mHG* tes
 
 An example for running single-set GO Enrichment would look like so::
 
-    >>> from *RNAlysis* import enrichment
+    >>> from rnalysis import enrichment
     >>> ranked_set = enrichment.RankedSet(['WBGene00000019', 'WBGene00000106', 'WBGene00000041', 'WBGene00000105'])
     >>> go_en_result = ranked_set.single_set_go_enrichment(gene_id_type='WormBase')
 
@@ -1852,7 +1852,7 @@ Second, you cannot specify which statistical test to use, since the *XL-mHG* tes
 
 An example for running single-set KEGG Enrichment would look like so::
 
-    >>> from *RNAlysis* import enrichment
+    >>> from rnalysis import enrichment
     >>> ranked_set = enrichment.RankedSet(['WBGene00000019', 'WBGene00000106', 'WBGene00000041', 'WBGene00000105'])
     >>> go_en_result = ranked_set.single_set_kegg_enrichment(gene_id_type='WormBase')
 
@@ -1865,7 +1865,7 @@ Second, you cannot specify which statistical test to use, since the *XL-mHG* tes
 
 An example for running single-set enrichment analysis would look like so::
 
-    >>> from *RNAlysis* import enrichment
+    >>> from rnalysis import enrichment
     >>> ranked_set = enrichment.RankedSet(['WBGene00000019', 'WBGene00000106', 'WBGene00000041', 'WBGene00000105'])
     >>> en_result = ranked_set.single_set_enrichment(['attribute1', 'attribute3'], attr_ref_path='tests/test_files/attr_ref_table_for_examples.csv')
 
@@ -1892,7 +1892,7 @@ There are three ways of specifying a set's content:
 
 For example::
 
-    >>> from *RNAlysis* import enrichment
+    >>> from rnalysis import enrichment
     >>> sets_to_visualize = {'First set':{'gene1', 'gene2', 'gene3'}, 'Second set':enrichment.FeatureSet({'gene2','gene3','gene4'}), 'Third set':'attribute1'}
 
 After defining the dictionary of sets, we can use it to plot set intersection via the `enrichment.venn_diagram()` or `enrichment.upset_plot()` functions.
@@ -1966,7 +1966,7 @@ Set a Reference Table as default
 ----------------------------------
 Once we have an Attribute and/or Biotype Reference Table, we can set it to be the default reference table for all future uses of *RNAlysis*::
 
-    >>> from *RNAlysis* import general
+    >>> from rnalysis import general
     >>> path="the_new_attribute_reference_table_path"
     >>> general.set_attr_ref_table_path(path)
     Attribute Reference Table path set as: the_new_attribute_reference_table_path
@@ -1988,7 +1988,7 @@ Parse *C. elegans* gene names, WBGene indices and sequence names using regular e
 The general module includes functions which can parse *C. elegans* gene names (like *daf-2* or *lin-15B*), WBGene indices (like WBGene00023495) and sequence names (like Y55D5A.5 or T23G5.6).
 For example, we could extract all WBGene indices from the following string::
 
-    >>> from *RNAlysis* import general
+    >>> from rnalysis import general
     >>> my_string='''WBGene00000001 and WBGene00000002WBGene00000003
 
             WBGene00000004g
