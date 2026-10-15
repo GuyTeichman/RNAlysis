@@ -563,6 +563,16 @@ class TestRMakeNames:
         expected_output = ['duplicate', 'duplicate.1', 'anotherduplicate', 'anotherduplicate.1', 'unique']
         assert r_make_names(names) == expected_output
 
+    def test_duplicate_names_with_invalid_characters(self):
+        names = ['duplicate!', 'duplicate@', 'another#duplicate', 'another$duplicate', 'unique%']
+        expected_output = ['duplicate.', 'duplicate..1', 'another.duplicate', 'another.duplicate.1', 'unique.']
+        assert r_make_names(names) == expected_output
+
+    def test_empty_list(self):
+        names = []
+        expected_output = []
+        assert r_make_names(names) == expected_output
+
 
 class TestSanitizeFilenameComponent:
     """issue #281: user values are spliced into output file names, so they must be made filename-safe."""
@@ -579,6 +589,12 @@ class TestSanitizeFilenameComponent:
             'a+b=c,d[e]{f}@g#h%i&j!k~l$m;n^o`p',
             'Wildtyp-\u00fc',
             '\u05d0\u05d1',
+            # non-ASCII symbols and punctuation are legal file name characters on every OS, so they are kept
+            '37\u00b0C',
+            'WT\u2013KO',
+            'KO\u2019s',
+            '\u00b1 2\u00d7',
+            'non\u00a0breaking',
             '',
         ],
     )
@@ -595,7 +611,7 @@ class TestSanitizeFilenameComponent:
             ('q"uote', 'q_uote'),
             ('a<b>c|d?e*f', 'a_b_c_d_e_f'),
             ('tab\there\nnewline', 'tab_here_newline'),
-            ('37\u00b0C', '37_C'),
+            ('line\u2028separator\x7fdel', 'line_separator_del'),
         ],
     )
     def test_unsafe_characters_replaced(self, text, expected):
@@ -639,16 +655,6 @@ class TestRQuote:
 
     def test_r_quote_non_string(self):
         assert r_quote(5) == '"5"'
-
-    def test_duplicate_names_with_invalid_characters(self):
-        names = ['duplicate!', 'duplicate@', 'another#duplicate', 'another$duplicate', 'unique%']
-        expected_output = ['duplicate.', 'duplicate..1', 'another.duplicate', 'another.duplicate.1', 'unique.']
-        assert r_make_names(names) == expected_output
-
-    def test_empty_list(self):
-        names = []
-        expected_output = []
-        assert r_make_names(names) == expected_output
 
 
 @pytest.mark.parametrize(

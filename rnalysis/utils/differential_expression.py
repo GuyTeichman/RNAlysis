@@ -234,7 +234,11 @@ class DiffExpRunner(abc.ABC):
         seen = {}
         for key, filename in filenames.items():
             # file names are not case-sensitive on Windows and macOS
-            normalized = filename.casefold()
+            # (and macOS treats composed/decomposed accents alike); simple one-to-one case mapping only,
+            # since e.g. 'ß' and 'ss' are different file names
+            normalized = ''.join(
+                upper if len(upper := char.upper()) == 1 else char for char in unicodedata.normalize('NFC', filename)
+            )
             if normalized in seen:
                 other = seen[normalized]
                 raise InvalidValueError(
@@ -437,13 +441,17 @@ class LimmaVoomRunner(DiffExpRunner):
         for a coefficient name: letters and digits of any script, '.', and '_' are kept; \
         any other character becomes '.'.
         """
-        name = ''.join(char if (char in '._' or unicodedata.category(char)[0] in {'L', 'N'}) else '.' for char in name)
+        name = ''.join(
+            char if (char in '._' or unicodedata.category(char) in {'Lu', 'Ll', 'Lt', 'Lm', 'Lo', 'Nd', 'Nl'}) else '.'
+            for char in name
+        )
         if not re.match(r'([^\W\d_]|\.(?!\d))', name):
             name = 'X' + name
         return name
 
     def _comparison_coef_name(self, factor: str, value) -> str:
-        return self._r_syntactic_name(f'{self._comparison_factor_name(factor)}{value}')
+        # model.matrix() names the coefficients after the factor as it is written in the formula
+        return self._r_syntactic_name(f'{factor}{value}')
 
     def validate_design_inputs(self):
         super().validate_design_inputs()

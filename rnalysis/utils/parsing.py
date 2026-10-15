@@ -40,19 +40,21 @@ _FILENAME_SAFE_PUNCTUATION = frozenset(" !#$%&'()+,-.;=@[]^_`{}~")
 
 
 def _is_filename_safe_char(char: str) -> bool:
-    if char in _FILENAME_SAFE_PUNCTUATION:
-        return True
-    # letters, digits, and combining marks of any script (e.g. 'ü', 'א') - but not control characters or symbols
-    return unicodedata.category(char)[0] in {'L', 'N', 'M'}
+    if char.isascii():
+        return char.isalnum() or char in _FILENAME_SAFE_PUNCTUATION
+    # non-ASCII letters, digits, symbols and punctuation (e.g. 'ü', 'א', '°', '–') are legal in file names
+    # on every OS; only control/format/unassigned characters and line/paragraph separators are not
+    return unicodedata.category(char) not in {'Cc', 'Cf', 'Cs', 'Co', 'Cn', 'Zl', 'Zp'}
 
 
 def sanitize_filename_component(text: str, replacements: Union[Dict[str, str], None] = None) -> str:
     """
     Make a string safe to use as part of a file name on Windows, macOS, and Linux. \
-    Characters are checked against an allowlist (letters and digits of any script, spaces, \
-    and the ASCII punctuation characters that are legal in file names on all three systems); \
-    every other character (e.g. ':', '/', '\\\\', '"', '*', '?', control characters, and other symbols) \
-    is replaced with '_'. Strings that are already filename-safe are returned unchanged.
+    Characters are checked against an allowlist: ASCII letters, digits, spaces, \
+    and the ASCII punctuation characters that are legal in file names on all three systems, \
+    plus any printable non-ASCII character (letters, digits, symbols and punctuation of any script). \
+    Every other character (':', '/', '\\\\', '"', '*', '?', '<', '>', '|', control characters, \
+    and line/paragraph separators) is replaced with '_'. Strings that are already filename-safe are returned unchanged.
 
     :param text: the string to sanitize
     :type text: str

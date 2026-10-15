@@ -769,6 +769,46 @@ class TestHostileDesignValues:
         runner.validate_design_inputs()
         runner.create_script()
 
+    def test_distinct_names_that_casefold_alike_are_not_a_collision(self, tmp_path):
+        # 'ß' and 'ss' are different file names even on case-insensitive file systems
+        pth = tmp_path.joinpath('design.csv')
+        pl.DataFrame({'sample': ['s0', 's1', 's2'], 'condition': ['Straße', 'Strasse', 'WT']}).write_csv(pth)
+        runner = DESeqRunner('counts.csv', pth, [('condition', 'Straße', 'WT'), ('condition', 'Strasse', 'WT')])
+        runner.validate_design_inputs()
+
+    @pytest.mark.parametrize(
+        'name,expected',
+        [
+            ('conditionKO-1', 'conditionKO.1'),
+            ('conditionwild type', 'conditionwild.type'),
+            ('cell.typecond2', 'cell.typecond2'),
+            ('conditionü', 'conditionü'),
+            ('condition²', 'condition.'),
+            ('_x', 'X_x'),
+            ('.1x', 'X.1x'),
+        ],
+    )
+    def test_r_syntactic_name(self, name, expected):
+        # mirrors R's make.names() (checked against R 4.4.2)
+        assert LimmaVoomRunner._r_syntactic_name(name) == expected
+
+    def test_limma_contrast_with_dotted_factor_name(self, tmp_path):
+        # model.matrix() names coefficients after the factor as written in the formula ('cell.type'),
+        # so the contrast must too (the output file name keeps its established sanitized spelling)
+        pth = tmp_path.joinpath('design.csv')
+        pl.DataFrame({'sample': ['s0', 's1', 's2'], 'cell.type': ['cond1', 'cond2', 'cond3']}).write_csv(pth)
+        comparisons = [('cell.type', 'cond2', 'cond1'), ('cell.type', 'cond1', 'cond3')]
+        runner = LimmaVoomRunner('counts.csv', pth, comparisons)
+        runner.validate_design_inputs()
+        script = _read_script(runner.create_script())
+        literals = _r_string_literals(script)
+        contrasts = [lits for line, lits in zip(script.splitlines(), literals) if 'makeContrasts(' in line]
+        assert contrasts == [['cell.typecond2'], [' - cell.typecond3']]
+        assert [pth.name for pth in _written_files(script)] == [
+            'LimmaVoom_cell_type_cond2_vs_cond1.csv',
+            'LimmaVoom_cell_type_cond1_vs_cond3.csv',
+        ]
+
     def test_limma_coefficient_collision_fails_before_r(self, tmp_path, no_r):
         # 'KO.1' and 'KO-1' are distinct file names, but R's make.names() maps both limma coefficients
         # to 'conditionKO.1', so the contrast would be ambiguous
