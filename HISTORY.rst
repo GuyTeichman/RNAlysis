@@ -5,6 +5,9 @@ History
 4.3.1 (unreleased)
 -------------------
 
+Added
+******
+* The paired-end FASTQ functions (adapter trimming, bowtie2 and kallisto alignment/quantification, and FASTQ-to-SAM conversion) now emit a warning when the R1 and R2 file lists appear to be mispaired by list order — that is, when a pair's filenames carry mismatched sample names after stripping the standard read-number tokens (``_R1_``/``_R2_``, ``_R1.``/``_R2.``, ``_1.``/``_2.``). Because mates are paired strictly by list position, two file lists selected in different orders would otherwise silently cross-pair samples and produce a garbage count matrix that nothing downstream can detect. The warning names the suspect pair(s); it is advisory only and never blocks the run, so datasets that legitimately use non-conventional filenames are unaffected.
 Fixed
 ******
 * Fixed a bug in the automatic sample-name generation used when RNAlysis derives a shared name for paired-end FASTQ files (the "smart" paired-end naming path). With three or more samples, two flaws in the underlying common-substring/common-suffix logic could yield a wrong sample name: the shared trailing part was computed from only two of the file names (so a differing third name was ignored), and a fallback entry for a sample with no distinctive shared substring was wrongly allowed to influence that computation. Both are now corrected, so the shared suffix is trimmed consistently from every sample. As a result, the automatically generated common/sample names may differ (for the better) in some three-or-more-sample edge cases — for example three paired-end samples ``ctrl1``, ``ctrl2`` and ``treat1`` now yield the names ``ctrl1``/``ctrl2``/``treat1`` instead of the previous inconsistent ``ctrl``/``ctrl2_R``/``treat``. Two-sample cases, and any case whose name was already correct, are unaffected. You can always rename samples manually regardless.
