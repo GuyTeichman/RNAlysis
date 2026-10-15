@@ -1,0 +1,12 @@
+filter_type: countfilter
+functions:
+- split_kmeans
+metadata:
+  export_time: 2025/03/11, 14:02:57
+  rnalysis_version: 4.3.0
+params:
+- - []
+  - n_clusters: 2
+    random_seed: 42
+    power_transform: none
+    parallel_backend: loky

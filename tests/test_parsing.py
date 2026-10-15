@@ -375,6 +375,10 @@ def test_longest_common_substring(s1, s2, expected):
         (['日本語abc', '中国語abc'], '語abc'),  # unicode suffix
         (['ab', 'aab'], 'ab'),  # lexicographically-smaller string is longer than the larger one (issue #180)
         (['aac', 'ab'], ''),  # same as above, but with no shared suffix at all
+        # issue #195: a string that is neither the lexicographic min nor max must still be able to break
+        # the suffix. 'ax' and 'zx' (min/max) both end in 'x', but 'cy' does not -> no common suffix.
+        (['zx', 'ax', 'cy'], ''),
+        (['abc', 'xbc', 'ybc'], 'bc'),  # issue #195: a genuine shared suffix across 3+ strings
     ],
 )
 def test_common_suffix(strings, expected):
@@ -407,8 +411,10 @@ def test_remove_suffix(s, suffix, expected):
         ([('sample1_R1', 'sample1_R2'), ('sample2_R1', 'sample2_R2')], ['sample1', 'sample2']),  # two pairs
         (
             [('ctrl1_R1', 'ctrl1_R2'), ('ctrl2_R1', 'ctrl2_R2'), ('treat1_R1', 'treat1_R2')],
-            ['ctrl', 'ctrl2_R', 'treat'],
-        ),  # three pairs, uneven trimming across pairs
+            ['ctrl1', 'ctrl2', 'treat1'],
+        ),  # issue #195: the genuinely shared "_R" suffix is now trimmed evenly from every pair. Before
+        # the common_suffix fix this ignored the non-min/max 'ctrl2_R' and mis-trimmed "1_R", yielding
+        # the inconsistent ['ctrl', 'ctrl2_R', 'treat'].
         ([('abc', 'xyz')], ['abcxyz']),  # no common substring: names are concatenated
         ([('same', 'same')], ['same']),  # all-identical inputs
         ([('sample1_R1_trimmed', 'sample1_R2_trimmed')], ['sample1_R']),  # known suffixes are stripped first
@@ -422,6 +428,15 @@ def test_remove_suffix(s, suffix, expected):
         # pair here is much shorter, the earlier (longer) pair's valid LCS result was wrongly
         # excluded from the common-suffix computation, so the shared trailing "_R" was never trimmed.
         ([('sampleA_long_name_R1', 'sampleA_long_name_R2'), ('sB_R1', 'sB_R2')], ['sampleA_long_name', 'sB']),
+        # regression test for issue #195: the third pair shares nothing beyond the global "common" LCS, so
+        # it falls back to concatenation ('commonPPcommonQQ'). The old tautological `lcs_only` filter kept
+        # that fallback in the common-suffix computation, so its trailing 'QQ' masked the real "_S" suffix
+        # shared by the genuine LCS results and it was never trimmed. Now the suffix is computed over the
+        # genuine LCS results only, so "_S" is correctly stripped from the first two names.
+        (
+            [('commonAB_S1', 'commonAB_S2'), ('commonCD_S1', 'commonCD_S2'), ('commonPP', 'commonQQ')],
+            ['commonAB', 'commonCD', 'commonPPcommonQQ'],
+        ),
     ],
 )
 def test_generate_common_name(file_pairs, expected):
