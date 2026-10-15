@@ -361,11 +361,12 @@ class XlmhgTest(StatsTest):
     def _generate_xlmhg_index_vectors(ranked_genes, annotation_set) -> Tuple[np.ndarray, np.ndarray]:
         n = len(ranked_genes)
         # xlmhglite only accepts uint16 index vectors, so ranked positions must fit in 0..65,535.
-        # Fail loudly rather than overflow (NumPy >= 2) or silently wrap the indices (NumPy 1.x) - see issue #276.
+        # Fail with a clear message instead of an uninformative OverflowError/ValueError - see issue #276.
         if n > XlmhgTest.MAX_RANKED_LIST_LENGTH:
             raise InvalidValueError(
                 f'Single-set enrichment supports ranked lists of up to '
-                f'{XlmhgTest.MAX_RANKED_LIST_LENGTH:,} annotated genes, but your ranked list contains {n:,}. '
+                f'{XlmhgTest.MAX_RANKED_LIST_LENGTH:,} annotated genes, but your ranked list contains {n:,} genes '
+                f'after removing genes without annotations. '
                 f'Please shorten your ranked list (for example, by filtering out lowly-expressed genes or '
                 f'by summarizing transcripts to the gene level) and try again.'
             )
