@@ -1561,6 +1561,22 @@ def test_text_filters_invalid_input(basic_countfilter, args):
 
 
 class TestCountFilterFromFolder:
+    def test_count_filter_from_folder_generic(self):
+        # pins the current output of the generic (non-HTSeq) loader: the last column of every file, side by side.
+        # The table is assembled column-by-column from an empty frame, which polars>=2 refuses to broadcast into.
+        folder = Path('tests/test_files/test_count_from_folder')
+        truth = pl.concat(
+            [
+                pl.read_csv(item, separator='\t').select(pl.last().alias(item.stem))
+                for item in sorted(folder.iterdir())
+                if item.suffix == '.txt'
+            ],
+            how='horizontal',
+        )
+        counts = CountFilter.from_folder(folder.as_posix())
+        assert counts.df.equals(truth)
+        assert counts.df.columns == ['file1', 'file2']
+
     def test_count_filter_from_folder(self):
         counted_fname = '__allexpr_temporary_testfile.csv'
         uncounted_fname = '__allfeature_temporary_testfile.csv'

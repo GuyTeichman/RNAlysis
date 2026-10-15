@@ -5,6 +5,10 @@ History
 4.3.1 (unreleased)
 -------------------
 
+Changed
+*******
+* RNAlysis now requires Polars 2.0 or newer (previously 1.43.2 or newer). Polars 2 evaluates lazy tables with a new default engine, which can change the floating-point rounding of a few values. On very small tables, normalization that divides each sample by a single scaling factor (reads-per-million, reads-per-million from HTSeq-count output, upper quantile, TMM, RLE, Median of Ratios, and normalization with user-supplied scaling factors) may differ from earlier versions in the last binary digit of a handful of values (a relative difference on the order of 10\ :sup:`-16`, far below any biologically meaningful precision). Tables of realistic size, from roughly a hundred genes upward, give identical results. Summing kallisto transcript-level estimates into gene-level counts is deliberately kept on Polars' previous engine, because the new engine adds up floating-point numbers in a different order on every run. Without that, the same analysis could give slightly different gene counts each time it ran.
+
 Fixed
 ******
 * The *FASTQ* external-tool wrappers now consistently raise a clear error when the underlying command-line tool fails, instead of silently reporting success. The kallisto quantification and index-building, bowtie2 alignment and index-building, ShortStack alignment, and CutAdapt adapter-trimming wrappers previously discarded the tool's exit code, so a failed run (for example a bad index, a corrupt input file, or a full disk) would print a "saved successfully" message and carry on. For kallisto this went beyond a delayed crash: stale output left in the target folder from a previous run of the same sample could be merged silently into the count matrix, producing wrong results without any warning. Every external-tool wrapper (including the Picard-based SAM/BAM tools, which already checked their exit code) now routes it through a shared check that, on failure, raises a ``ChildProcessError`` reporting the tool's own error message and the path to its log file.

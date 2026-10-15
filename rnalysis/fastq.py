@@ -2392,9 +2392,13 @@ def _sum_transcripts_to_genes(
                         {'Transcript ID': transcript_to_gene_dict.keys(), 'Gene ID': transcript_to_gene_dict.values()}
                     ).lazy()
 
+                    # float sums are collected on the in-memory engine: polars>=2 defaults to the streaming
+                    # engine, which sums floats in a non-deterministic order (results would vary run-to-run)
                     if summation_method == 'scaled_tpm':
                         library_sizes = (
-                            counts.lazy().select(pl.exclude(counts.columns[0]).sum().truediv(10**6)).collect()
+                            counts.lazy()
+                            .select(pl.exclude(counts.columns[0]).sum().truediv(10**6))
+                            .collect(engine='in-memory')
                         )
                         tpm_cpy = tpm.lazy().join(
                             transcript2gene, left_on=tpm.columns[0], right_on='Transcript ID', how='left'
@@ -2402,12 +2406,18 @@ def _sum_transcripts_to_genes(
                         tpm_by_gene = tpm_cpy.drop(cs.first()).drop_nulls().group_by('Gene ID').sum()
                         count_per_gene = tpm_by_gene.with_columns(
                             [(pl.col(col) * library_sizes[col][0]).alias(col) for col in tpm.columns[1:]]
-                        ).collect()
+                        ).collect(engine='in-memory')
                     elif summation_method == 'raw':
                         count_cpy = counts.lazy().join(
                             transcript2gene, left_on=tpm.columns[0], right_on='Transcript ID', how='left'
                         )
-                        count_per_gene = count_cpy.drop(cs.first()).drop_nulls().group_by('Gene ID').sum().collect()
+                        count_per_gene = (
+                            count_cpy.drop(cs.first())
+                            .drop_nulls()
+                            .group_by('Gene ID')
+                            .sum()
+                            .collect(engine='in-memory')
+                        )
                     else:
                         raise ValueError(f"Invalid value for 'summation_method': '{summation_method}'.")
                     if len(count_per_gene) == 0:
