@@ -80,21 +80,9 @@ class DiffExpRunner(abc.ABC):
         The check is deliberately lenient wherever Python's and R's reading of the design matrix could differ, \
         so that it never rejects an input that R would accept.
         """
-        observed = column.drop_nulls().unique().to_list()
         if column.dtype == pl.String:
             # the value is written verbatim into the R script, so it must match exactly (case and whitespace included)
-            if str(value) in observed:
-                return True
-            # Polars reads 'nan'/'NaN' as missing values, while R's read.table() keeps them as literal strings
-            return column.null_count() > 0 and str(value) in {'nan', 'NaN'}
-        if column.dtype.is_numeric():
-            if str(value) in {str(item) for item in observed}:
-                return True
-            try:
-                num_value = float(value)
-            except (TypeError, ValueError):
-                return False
-            return any(num_value == float(item) for item in observed)
+            return str(value) in column.drop_nulls().unique().to_list()
         # other column types (e.g. boolean): leave the judgement to R
         return True
 
@@ -140,6 +128,16 @@ class DiffExpRunner(abc.ABC):
                     f'The available factors are: {factors_str}.'
                 )
             column = self.design_mat[factor]
+            if column.dtype.is_numeric():
+                # R reads an all-numeric column as a continuous variable, which has no levels to compare
+                # (DESeq2's results() and limma's contrasts both fail on it)
+                raise InvalidValueError(
+                    f"The factor '{factor}' in the comparison {comparison} contains only numeric values, "
+                    f'so R treats it as a continuous (numeric) variable rather than as groups that can be compared. '
+                    f"To compare groups of '{factor}', give its values text labels in the design matrix "
+                    f"(for example '{factor}1' and '{factor}2' instead of 1 and 2). "
+                    f'To test a continuous variable, add it as a covariate instead.'
+                )
             for value in (numerator, denominator):
                 if not self._is_observed_value(value, column):
                     raise InvalidValueError(

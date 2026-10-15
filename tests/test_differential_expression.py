@@ -502,8 +502,9 @@ class TestDiffExpPreflightValidation:
             ([('condition', 'KO', 'rep1')], [], [], ["'rep1'"]),
             # numerator == denominator
             ([('condition', 'KO', 'KO')], [], [], ["'KO'"]),
-            # numeric factor, value not observed
-            ([('batch', '3', '1')], [], [], ["'3'"]),
+            # comparisons on a numeric column (R treats it as continuous, so it has no levels to compare)
+            ([('batch', '2', '1')], [], [], ["'batch'", 'numeric']),
+            ([('batch', 2, 1)], [], [], ["'batch'", 'numeric']),
             # malformed comparison
             ([('condition', 'KO')], [], [], ['three']),
             # covariate is not a column
@@ -537,9 +538,6 @@ class TestDiffExpPreflightValidation:
             ([('condition', 'KO', 'WT')], ['age', 'batch'], ['genotype']),
             ([('condition', 'KO', 'WT')], [], ['condition:genotype']),
             ([('condition', 'KO', 'WT')], [], ['poly(age, degree = 2)']),
-            # numeric-coded factor levels, given either as strings or as numbers
-            ([('batch', '2', '1')], [], []),
-            ([('batch', 2, 1)], [], []),
             ([], [], []),
         ],
     )
