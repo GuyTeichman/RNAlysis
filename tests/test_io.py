@@ -1748,6 +1748,64 @@ def test_is_rnalysis_outdated(monkeypatch, this_version, response, expected):
     assert is_rnalysis_outdated() == expected
 
 
+def test_is_rnalysis_outdated_passes_timeout(monkeypatch):
+    calls = []
+
+    def mock_get(*args, **kwargs):
+        calls.append(kwargs)
+        return MockResponse(text='{"info":{"version":"3.1.0"}}')
+
+    monkeypatch.setattr(requests, 'get', mock_get)
+    monkeypatch.setattr(io, '__version__', '3.0.0')
+    assert is_rnalysis_outdated() is True
+    assert len(calls) == 1
+    assert calls[0].get('timeout') is not None
+
+
+@pytest.mark.parametrize(
+    'exc',
+    [
+        requests.exceptions.Timeout,
+        requests.exceptions.ConnectTimeout,
+        requests.exceptions.ReadTimeout,
+        requests.exceptions.ConnectionError,
+        requests.exceptions.HTTPError,
+        requests.exceptions.TooManyRedirects,
+        requests.exceptions.SSLError,
+        ConnectionError,
+    ],
+)
+def test_is_rnalysis_outdated_network_error(monkeypatch, exc):
+    def mock_get(*args, **kwargs):
+        raise exc('simulated network failure')
+
+    monkeypatch.setattr(requests, 'get', mock_get)
+    monkeypatch.setattr(io, '__version__', '3.0.0')
+    assert is_rnalysis_outdated() is False
+
+
+@pytest.mark.parametrize(
+    'text',
+    [
+        '<html><body>Please log in to the hotel Wi-Fi</body></html>',  # captive portal
+        '',
+        '{"info":{"author":"Guy Teichman"}}',  # missing version key
+        '{"releases":{}}',  # missing info key
+        '[]',  # wrong JSON type
+        'null',
+        '{"info":null}',
+        '{"info":{"version":null}}',
+        '{"info":{"version":42}}',
+        '{"info":{"version":"4.0.0rc1"}}',  # non-numeric version string
+        '{"info":{"version":"not a version"}}',
+    ],
+)
+def test_is_rnalysis_outdated_malformed_response(monkeypatch, text):
+    monkeypatch.setattr(requests, 'get', lambda *args, **kwargs: MockResponse(text=text))
+    monkeypatch.setattr(io, '__version__', '3.0.0')
+    assert is_rnalysis_outdated() is False
+
+
 @pytest.mark.parametrize(
     'path,expected',
     [
