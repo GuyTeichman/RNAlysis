@@ -1364,16 +1364,15 @@ def infer_taxon_from_gene_ids(gene_ids: Iterable[str], gene_id_type: str = None)
             species[output[gene_id]['species']] = species.setdefault(output[gene_id]['species'], 0) + 1
     if len(species) == 0:
         raise ValueError('No taxon ID could be matched to any of the given gene IDs.')
-    chosen_species = list(species.keys())[0]
-    chosen_species_n = species[chosen_species]
     if len(species) > 1:
         warnings.warn(
-            'The given gene IDs match more than one species. Picking the species that fits the majority of gene IDs.'
+            'The given gene IDs match more than one species. Picking the species that fits the majority of gene IDs '
+            '(ties are broken deterministically by choosing the first species name in alphabetical order).'
         )
-        for s in species:
-            if species[s] > chosen_species_n:
-                chosen_species = s
-                chosen_species_n = species[s]
+    # Break majority-vote ties deterministically: pick the highest count, then the alphabetically-first
+    # species name. `species` keys derive from a set of gene IDs, so their iteration order varies per
+    # process under hash randomization (PYTHONHASHSEED); sorting first makes the winner reproducible.
+    chosen_species = max(sorted(species.keys()), key=lambda s: species[s])
     return map_taxon_id(chosen_species.replace('_', ' ')), map_from
 
 
@@ -2279,7 +2278,20 @@ class EnsemblOrthologMapper:
         mapping_one2one, mapping_one2many = translate_mappings(ids, translated_ids, mapping_one2one, mapping_one2many)
 
         n_mapped = len(mapping_one2many)
-        if n_mapped < len(translated_ids):
+        if n_mapped == 0 and len(translated_ids) > 0:
+            # Ensembl REST does not serve orthologs across Ensembl divisions (e.g. Ensembl Metazoa -> Ensembl
+            # vertebrates), and returns an empty result rather than an error for such queries (issue #82).
+            warnings.warn(
+                f'Ensembl found no orthologs for any of the {len(translated_ids)} gene IDs. '
+                f'A common cause is that the source and target organisms belong to different Ensembl '
+                f'divisions (for example, C. elegans is in Ensembl Metazoa while human is in the main Ensembl '
+                f'vertebrate database): Ensembl does not provide orthologs across Ensembl divisions. '
+                f'Please try mapping orthologs with a different database instead - '
+                f'"Map genes to nearest orthologs (using PantherDB)", '
+                f'"Map genes to nearest orthologs (using PhylomeDB)", or '
+                f'"Map genes to nearest orthologs (using OrthoInspector)".'
+            )
+        elif n_mapped < len(translated_ids):
             warnings.warn(f'Ortholog mapping found for only {n_mapped} out of {len(translated_ids)} gene IDs.')
 
         return OrthologDict(mapping_one2one), OrthologDict(
@@ -3365,19 +3377,30 @@ def run_subprocess(
     return process.returncode, stderr_record
 
 
-def is_rnalysis_outdated():
-    installed_version = parsing.parse_version(__version__)
-    pypi_link = 'https://pypi.python.org/pypi/RNAlysis/json'
+UPDATE_CHECK_TIMEOUT = (3, 5)  # (connect, read) seconds for the PyPI update check
+
+
+def is_rnalysis_outdated() -> bool:
+    """
+    Check PyPI for a newer release of RNAlysis.
+
+    Any failure (network error, timeout, a non-JSON response such as a captive-portal login page,
+    unexpected JSON structure, or an unparseable version string) is treated as 'not outdated',
+    so the update check can never hang indefinitely or crash the caller.
+    """
+    pypi_link = 'https://pypi.org/pypi/RNAlysis/json'  # canonical host; avoids a redirect hop
     try:
-        req = requests.get(pypi_link)
-    except (ConnectionError, requests.exceptions.ConnectionError, requests.exceptions.HTTPError):
+        req = requests.get(pypi_link, timeout=UPDATE_CHECK_TIMEOUT)
+    except (ConnectionError, requests.exceptions.RequestException):
         return False
     if req.status_code != 200:
         return False
-    newest_version = parsing.parse_version(json.loads(req.text)['info']['version'])
-    if installed_version < newest_version:
-        return True
-    return False
+    try:
+        installed_version = parsing.parse_version(__version__)
+        newest_version = parsing.parse_version(json.loads(req.text)['info']['version'])
+        return installed_version < newest_version
+    except (ValueError, KeyError, TypeError, AttributeError):  # json.JSONDecodeError is a ValueError
+        return False
 
 
 def update_rnalysis():

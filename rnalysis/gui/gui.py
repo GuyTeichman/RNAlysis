@@ -1206,8 +1206,9 @@ class SetOperationWindow(gui_widgets.MinMaxDialog):
     def update_paremeter_ui(self):
         # delete previous widgets
         try:
-            self.parameter_widgets['help_link'].deleteLater()
             self.operations_grid.removeWidget(self.parameter_widgets['help_link'])
+            self.parameter_widgets['help_link'].setParent(None)
+            self.parameter_widgets['help_link'].deleteLater()
         except KeyError:
             pass
         self.parameter_widgets = {}
@@ -1464,8 +1465,9 @@ class SetVisualizationWindow(gui_widgets.MinMaxDialog):
     def update_parameter_ui(self):
         # delete previous widgets
         try:
-            self.parameter_widgets['help_link'].deleteLater()
             self.visualization_grid.removeWidget(self.parameter_widgets['help_link'])
+            self.parameter_widgets['help_link'].setParent(None)
+            self.parameter_widgets['help_link'].deleteLater()
         except KeyError:
             pass
         self.parameter_widgets = {}

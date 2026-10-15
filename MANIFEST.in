@@ -1,5 +1,8 @@
-recursive-include . *.rst *.ico *.png
-recursive-include . requirements*.txt
+# Top-level metadata files only (non-recursive). `recursive-include .` walks the ENTIRE working
+# tree and sweeps in whatever happens to be sitting in it (build/, dist/, .claude/ worktrees, ...),
+# bloating source builds. Package/tests/docs content is included by the explicit rules below.
+include *.rst *.ico *.png
+include requirements*.txt
 
 recursive-include rnalysis *.png *.svg *.json *.qss *.R *.ico *.css *.js *.html *.md
 recursive-include rnalysis/data_files/ *

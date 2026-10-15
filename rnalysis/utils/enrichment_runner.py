@@ -291,6 +291,8 @@ class HypergeometricTest(StatsTest):
 
 
 class XlmhgTest(StatsTest):
+    MAX_RANKED_LIST_LENGTH = int(np.iinfo(np.uint16).max) + 1
+
     def __init__(self, min_positive_genes: int = 10, lowest_cutoff: float = 0.25):
         self.min_positive_genes = min_positive_genes
         self.lowest_cutoff = lowest_cutoff
@@ -358,6 +360,16 @@ class XlmhgTest(StatsTest):
     @staticmethod
     def _generate_xlmhg_index_vectors(ranked_genes, annotation_set) -> Tuple[np.ndarray, np.ndarray]:
         n = len(ranked_genes)
+        # xlmhglite only accepts uint16 index vectors, so ranked positions must fit in 0..65,535.
+        # Fail with a clear message instead of an uninformative OverflowError/ValueError - see issue #276.
+        if n > XlmhgTest.MAX_RANKED_LIST_LENGTH:
+            raise InvalidValueError(
+                f'Single-set enrichment supports ranked lists of up to '
+                f'{XlmhgTest.MAX_RANKED_LIST_LENGTH:,} annotated genes, but your ranked list contains {n:,} genes '
+                f'after removing genes without annotations. '
+                f'Please shorten your ranked list (for example, by filtering out lowly-expressed genes or '
+                f'by summarizing transcripts to the gene level) and try again.'
+            )
         index_vec = np.uint16([i for i in range(n) if ranked_genes[i] in annotation_set])
         rev_index_vec = np.uint16([n - 1 - index_vec[i - 1] for i in range(len(index_vec), 0, -1)])
         return index_vec, rev_index_vec

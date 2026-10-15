@@ -248,6 +248,45 @@ def _generate_picard_basecall(command: str, picard_installation_folder: Union[st
     return base_call
 
 
+def _check_returncode(
+    return_code: int, stderr: List[str], tool_name: str, log_file: Union[str, Path, None] = None
+) -> None:
+    """
+    Raise a ``ChildProcessError`` if an external tool's subprocess exited with a non-zero return code.
+
+    The external-tool wrappers in this module shell out via :func:`io.run_subprocess`, which returns the
+    subprocess' ``(return_code, stderr)``. Passing that pair through this helper ensures a failing tool
+    surfaces its own error instead of being silently reported as a success (and, in the kallisto case,
+    stale output from a previous run being merged into the count matrix). Mirrors the digest-and-raise
+    behavior originally written inline for the Picard wrapper: it condenses the tool's stderr into a
+    short error line, and attaches the full stderr log - plus the log-file path, when one was written -
+    as the exception cause.
+
+    :param return_code: the return code reported by :func:`io.run_subprocess`.
+    :param stderr: the captured stderr lines reported by :func:`io.run_subprocess`.
+    :param tool_name: human-readable name of the external tool, used in the error message.
+    :param log_file: path to the log file the run wrote to, if any; included in the full error report.
+    :raises ChildProcessError: if ``return_code`` is non-zero.
+    """
+    if not return_code:
+        return
+
+    stderr = [line.rstrip() for line in stderr]
+    full_err = f'See {tool_name} log below. \n' + '\n'.join(stderr)
+    if log_file is not None:
+        full_err = f'Full log saved at: {Path(log_file).as_posix()}\n' + full_err
+
+    short_err = stderr[-1] if stderr else ''
+    for i, line in enumerate(stderr):
+        if line.startswith('Error'):
+            short_err = line + (stderr[i + 1] if i + 1 < len(stderr) else '')
+            break
+
+    raise ChildProcessError(
+        f"{tool_name} call failed to execute: '{short_err}'. See full error report below."
+    ) from RuntimeError(full_err)
+
+
 def _run_picard_calls(calls: List[List[str]], script_name: str, output_folder: Path):
     with tqdm(total=len(calls), desc=f'Applying "{script_name}"', unit='files') as pbar:
         for picard_call in calls:
@@ -259,17 +298,7 @@ def _run_picard_calls(calls: List[List[str]], script_name: str, output_folder: P
                 .as_posix()
             )
             return_code, stderr = io.run_subprocess(picard_call, shell=True, log_filename=log_filename)
-
-            if return_code:
-                full_err = 'See Picard log below. \n' + '\n'.join([s.rstrip() for s in stderr])
-                short_err = stderr[-1].rstrip()
-                for i, s in enumerate(stderr):
-                    if s.startswith('Error'):
-                        short_err = s.rstrip() + stderr[i + 1].rstrip()
-                        break
-                raise ChildProcessError(
-                    f"Picard call failed to execute: '{short_err}'. See full error report below."
-                ) from RuntimeError(full_err)
+            _check_returncode(return_code, stderr, 'Picard', log_file=log_filename)
 
             print(f'File saved successfully at {picard_call[-1]}')
             pbar.update(1)
@@ -1321,7 +1350,8 @@ def bowtie2_create_index(
     print(f'Running command: \n{" ".join(call)}')
     with tqdm(total=1, desc='Building bowtie2 index', unit='index') as pbar:
         log_filename = Path(output_folder).joinpath(f'bowtie2-build_{index_name}.log').absolute().as_posix()
-        io.run_subprocess(call, shell=True, log_filename=log_filename)
+        return_code, stderr = io.run_subprocess(call, shell=True, log_filename=log_filename)
+        _check_returncode(return_code, stderr, 'bowtie2-build', log_file=log_filename)
         pbar.update()
 
 
@@ -1596,7 +1626,8 @@ def shortstack_align_smallrna(
             log_filename = (
                 Path(output_folder).joinpath(f'ShortStack_{Path(shortstack_call[-1]).stem}.log').absolute().as_posix()
             )
-            io.run_subprocess(shortstack_call, shell=True, log_filename=log_filename)
+            return_code, stderr = io.run_subprocess(shortstack_call, shell=True, log_filename=log_filename)
+            _check_returncode(return_code, stderr, 'ShortStack', log_file=log_filename)
             print(f'Files saved successfully at {shortstack_call[-1]}')
             pbar.update(1)
 
@@ -1700,7 +1731,8 @@ def bowtie2_align_single_end(
             log_filename = (
                 Path(output_folder).joinpath(f'bowtie2-align_{Path(bt2_call[-1]).stem}.log').absolute().as_posix()
             )
-            io.run_subprocess(bt2_call, shell=True, log_filename=log_filename)
+            return_code, stderr = io.run_subprocess(bt2_call, shell=True, log_filename=log_filename)
+            _check_returncode(return_code, stderr, 'bowtie2', log_file=log_filename)
             print(f'File saved successfully at {bt2_call[-1]}')
             pbar.update(1)
 
@@ -1861,7 +1893,8 @@ def bowtie2_align_paired_end(
             log_filename = (
                 Path(output_folder).joinpath(f'bowtie2-align_{Path(bt2_call[-1]).stem}.log').absolute().as_posix()
             )
-            io.run_subprocess(bt2_call, shell=True, log_filename=log_filename)
+            return_code, stderr = io.run_subprocess(bt2_call, shell=True, log_filename=log_filename)
+            _check_returncode(return_code, stderr, 'bowtie2', log_file=log_filename)
             print(f'File saved successfully at {bt2_call[-1]}')
             pbar.update(1)
 
@@ -1965,7 +1998,8 @@ def kallisto_create_index(
         log_filename = (
             transcriptome_fasta.parent.joinpath(f'kallisto-index_{transcriptome_fasta.stem}.log').absolute().as_posix()
         )
-        io.run_subprocess(call, log_filename=log_filename)
+        return_code, stderr = io.run_subprocess(call, log_filename=log_filename)
+        _check_returncode(return_code, stderr, 'kallisto index', log_file=log_filename)
         pbar.update()
 
 
@@ -2099,7 +2133,8 @@ def kallisto_quantify_single_end(
 
     with tqdm(total=len(calls), desc='Quantifying transcript abundance', unit='files') as pbar:
         for kallisto_call in calls:
-            io.run_subprocess(kallisto_call)
+            return_code, stderr = io.run_subprocess(kallisto_call)
+            _check_returncode(return_code, stderr, 'kallisto')
             print(f'File saved successfully at {kallisto_call[-7]}')
             pbar.update(1)
 
@@ -2240,7 +2275,8 @@ def kallisto_quantify_paired_end(
 
     with tqdm(total=len(calls), desc='Quantifying transcript abundance', unit='file pairs') as pbar:
         for kallisto_call in calls:
-            io.run_subprocess(kallisto_call)
+            return_code, stderr = io.run_subprocess(kallisto_call)
+            _check_returncode(return_code, stderr, 'kallisto')
             print(f'Files saved successfully at {kallisto_call[-3]}')
             pbar.update(1)
 
@@ -2517,7 +2553,8 @@ def trim_adapters_single_end(
             log_filename = Path(output_folder).joinpath(f'cutadapt_log_{infile_stem}.log').absolute().as_posix()
 
             if found_cli:
-                io.run_subprocess(cutadapt_call, log_filename=log_filename)
+                return_code, stderr = io.run_subprocess(cutadapt_call, log_filename=log_filename)
+                _check_returncode(return_code, stderr, 'CutAdapt', log_file=log_filename)
             else:
                 cutadapt_main(cutadapt_call)
             print(f'File saved successfully at {cutadapt_call[-2]}')
@@ -2709,7 +2746,8 @@ def trim_adapters_paired_end(
             )
 
             if found_cli:
-                io.run_subprocess(cutadapt_call, log_filename=log_filename)
+                return_code, stderr = io.run_subprocess(cutadapt_call, log_filename=log_filename)
+                _check_returncode(return_code, stderr, 'CutAdapt', log_file=log_filename)
             else:
                 cutadapt_main(cutadapt_call)
             print(f'Files saved successfully at {cutadapt_call[-2]} and  {cutadapt_call[-1]}')

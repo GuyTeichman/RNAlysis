@@ -2420,8 +2420,10 @@ def get_val_from_widget(widget):
 def clear_layout(layout, exceptions: set = frozenset()):
     while layout.count() > len(exceptions):
         child = layout.takeAt(0)
-        if child.widget() and child.widget() not in exceptions:
-            child.widget().deleteLater()
+        widget = child.widget()
+        if widget and widget not in exceptions:
+            widget.setParent(None)
+            widget.deleteLater()
 
 
 def mark_primary(button: QtWidgets.QAbstractButton):

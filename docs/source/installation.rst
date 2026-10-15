@@ -73,9 +73,9 @@ you should first install `GraphViz <https://graphviz.org/download/>`_, `R`_, and
 
 **On Windows:** you may also need to install `Microsoft Visual C++ 14.0 <https://visualstudio.microsoft.com/visual-cpp-build-tools/>`_ or greater, and `Perl <https://strawberryperl.com/>`_.
 
-**On Linux:** you may also need to install **Qt 5 Image Formats** to view tutorial videos from within *RNAlysis*.
-To do so on Debian/ubuntu systems, use the command `sudo apt install qt5-image-formats-plugins`.
-To do so on Red Hat-based distros such as Fedora, use the command `dnf install qt5-qtimageformats`.
+**On Linux:** you may also need to install **Qt 6 Image Formats** to view tutorial videos from within *RNAlysis*.
+To do so on Debian/ubuntu systems, use the command `sudo apt install qt6-image-formats-plugins`.
+To do so on Red Hat-based distros such as Fedora, use the command `dnf install qt6-qtimageformats`.
 
 After installing these external dependencies, you can install *RNAlysis* by typing the following command in your terminal window::
 
@@ -137,13 +137,13 @@ Once you have a copy of the source, you can install the basic version of *RNAlys
 
 .. code-block:: console
 
-    $ python -m pip setup.py install
+    $ pip install .
 
 Or you can install the full version of *RNAlysis* with:
 
 .. code-block:: console
 
-    $ python -m pip setup.py install .[all]
+    $ pip install .[all]
 
 
 .. _Github repository: https://github.com/GuyTeichman/RNAlysis

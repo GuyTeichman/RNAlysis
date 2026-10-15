@@ -105,3 +105,22 @@ def test_generate_report(report_generator, tmp_path):
     report_file = tmp_path / 'report.html'
     assert report_file.exists()
     assert len(report_generator.graph.nodes) == 9
+
+
+def test_serialize_deserialize_preserves_data_node_names(report_generator):
+    # data-type nodes carry an auto '(#id)' suffix; saving and reloading a session must NOT
+    # duplicate it. Regression test for the suffix doubling on every serialize/deserialize round-trip.
+    report_generator.add_node('Loaded Count matrix', 1, [0], 'popup', 'Count matrix', 'a.parquet')
+    report_generator.add_node('Normalize', 2, [1], 'normalize_to_rpm(inplace=False)', 'Function', None)
+    report_generator.add_node('Count matrix (normalized)', 3, [2], 'popup', 'Count matrix', 'b.parquet')
+    original_names = {nid: node.node_name for nid, node in report_generator.nodes.items()}
+    assert original_names[1] == 'Loaded Count matrix (#1)'
+
+    data, _ = report_generator.serialize()
+    restored = ReportGenerator.deserialize(data)
+    assert {nid: node.node_name for nid, node in restored.nodes.items()} == original_names
+
+    # idempotent across repeated round-trips (a session saved and reloaded several times)
+    data2, _ = restored.serialize()
+    restored2 = ReportGenerator.deserialize(data2)
+    assert {nid: node.node_name for nid, node in restored2.nodes.items()} == original_names
