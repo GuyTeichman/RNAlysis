@@ -196,7 +196,11 @@ class TemporaryMatplotlibBackend:
 def normalize_parallel_backend(backend):
     """Return the joblib backend that is actually safe to use in the current environment.
 
-    The ``loky`` backend does not work in PyInstaller-frozen builds of RNAlysis, so when frozen it is mapped to     ``multiprocessing`` (see ``rnalysis.utils.param_typing.PARALLEL_BACKENDS``). Every other value -- and every     value when running from source -- is returned unchanged. This is applied at every point where RNAlysis hands     a backend to joblib, so that a ``'loky'`` from any source (the API default, a script, or a Pipeline recorded     on a source install and replayed in the frozen app) can never reach joblib in a frozen build.
+    The ``loky`` backend does not work in PyInstaller-frozen builds of RNAlysis, so when frozen it is mapped to
+    ``multiprocessing`` (see ``rnalysis.utils.param_typing.PARALLEL_BACKENDS``). Every other value -- and every
+    value when running from source -- is returned unchanged. This is applied at every point where RNAlysis hands
+    a backend to joblib, so that a ``'loky'`` from any source (the API default, a script, or a Pipeline recorded
+    on a source install and replayed in the frozen app) can never reach joblib in a frozen build.
 
     ``FROZEN_ENV`` is read at call time, so tests can monkeypatch it.
     """

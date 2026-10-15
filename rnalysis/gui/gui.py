@@ -2508,7 +2508,8 @@ class FilterTabPage(TabPage):
         # gui_mode=True makes the clustering function skip plotting in that worker thread and return its runner,
         # so the figures are drawn back on the main (Qt) thread -- this routing is about threading/plotting and must
         # stay. (Keeping 'loky' out of PyInstaller-frozen builds is no longer this code's job: every joblib entry
-        # point clamps it via generic.normalize_parallel_backend, and AltParallel forces 'multiprocessing' anyway.)
+        # point clamps it via generic.normalize_parallel_backend; AltParallel additionally forces 'multiprocessing'
+        # for ProgressParallel-based calls.)
         if func_name in self.CLUSTERING_FUNCS:
             kwargs['gui_mode'] = True
             partial = functools.partial(getattr(self.filter_obj, func_name), *args, **kwargs)

@@ -2601,6 +2601,8 @@ def test_enrichment_runner_parallel_backend_reaching_joblib(monkeypatch, frozen,
 
     import joblib as _joblib
 
+    from rnalysis.utils import generic, validation
+
     monkeypatch.setattr(generic, 'FROZEN_ENV', frozen)
     seen = []
     orig_init = _joblib.Parallel.__init__
