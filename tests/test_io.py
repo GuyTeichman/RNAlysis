@@ -283,7 +283,48 @@ class TestBatchLRUCache:
         decorated_func = cache_decorator(api)
 
         decorated_func(('pos1', 'neg1', 'pos2', 'neg2', 'pos3'))
-        assert len(cache_decorator.cache) == 3
+        # positives are written first, then the omitted (negative) IDs
+        assert list(cache_decorator.cache) == ['pos3', 'neg1', 'neg2']
+        assert set(cache_decorator._negative_expiry) == {'neg1', 'neg2'}
+
+    def test_explicit_none_values_expire(self):
+        """Ensembl reports unknown IDs as explicit nulls rather than omitting them; those must expire too."""
+        cache_decorator = BatchLRUCache(max_size=10, negative_ttl=60)
+        now = self._fake_clock(cache_decorator)
+        api = Mock(return_value={'bad': None})
+        decorated_func = cache_decorator(api)
+
+        assert decorated_func(('bad',)) == {'bad': None}
+        now[0] += 59
+        assert decorated_func(('bad',)) == {'bad': None}
+        assert api.call_count == 1
+        now[0] += 2
+        assert decorated_func(('bad',)) == {'bad': None}
+        assert api.call_count == 2
+
+    def test_concurrent_access_smoke(self):
+        import threading as _threading
+        cache_decorator = BatchLRUCache(max_size=50, negative_ttl=0)
+        decorated_func = cache_decorator(lambda ids: {i: i for i in ids if int(i) % 2})
+        errors = []
+
+        def worker(offset):
+            try:
+                for rep in range(200):
+                    ids = tuple(str((offset + rep + j) % 120) for j in range(10))
+                    res = decorated_func(ids)
+                    assert set(res) == set(ids)
+                    assert all(res[i] == (i if int(i) % 2 else None) for i in ids)
+            except Exception as e:  # noqa: BLE001
+                errors.append(e)
+
+        threads = [_threading.Thread(target=worker, args=(k * 7,)) for k in range(8)]
+        for t in threads:
+            t.start()
+        for t in threads:
+            t.join()
+        assert errors == []
+        assert len(cache_decorator.cache) <= 50
         assert set(cache_decorator._negative_expiry) <= set(cache_decorator.cache)
 
     def test_batch_larger_than_max_size_returns_all_results(self, mock_network_func):

@@ -98,7 +98,7 @@ class BatchLRUCache:
         self._negative_expiry: Dict[str, float] = {}
         self._clock: Callable[[], float] = time.monotonic
         # guards the cache bookkeeping (not the wrapped function call), since the GUI may look up from threads
-        self._lock = threading.RLock()
+        self._lock = threading.Lock()
 
     def __call__(self, func: Callable[[Iterable[str], Any], Dict[str, Any]]):
         @wraps(func)
