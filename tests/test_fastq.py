@@ -1,5 +1,6 @@
 import gzip
 import platform
+import warnings
 from unittest.mock import Mock
 
 import polars as pl
@@ -127,6 +128,96 @@ def test_validation_survives_python_optimize():
     )
     result = subprocess.run([sys.executable, '-O', '-c', code], capture_output=True, text=True)
     assert 'RAISED' in result.stdout, result.stderr
+
+
+# --- paired-end mate-name sanity check ----------------------------------------------------------
+# Paired-end wrappers pair mates strictly by list position (zip(r1_files, r2_files)); if the two
+# file lists were selected in different orders, samples are silently cross-paired. The pure-string
+# helper _check_paired_mate_names warns (never raises) when a pair's filenames don't look like
+# mates, using the standard read-number tokens '_R1_'/'_R2_', '_R1.'/'_R2.', and '_1.'/'_2.'.
+
+
+@pytest.mark.unit
+@pytest.mark.parametrize(
+    'r1_files,r2_files',
+    [
+        # conventional Illumina _R1_/_R2_ pairs, correct order
+        (
+            ['sampleA_R1_001.fastq.gz', 'sampleB_R1_001.fastq.gz'],
+            ['sampleA_R2_001.fastq.gz', 'sampleB_R2_001.fastq.gz'],
+        ),
+        # _R1./_R2. right before the extension
+        (['sampleA_R1.fastq.gz'], ['sampleA_R2.fastq.gz']),
+        # _1./_2. convention, mixed extensions
+        (['sampleA_1.fastq.gz', 'ctrl_1.fastq'], ['sampleA_2.fastq.gz', 'ctrl_2.fastq']),
+        # a replicate number in the sample name must not be mistaken for the read token
+        (
+            ['control_1_R1.fastq.gz', 'control_2_R1.fastq.gz'],
+            ['control_1_R2.fastq.gz', 'control_2_R2.fastq.gz'],
+        ),
+        # unconventional naming with no recognizable read token -> skipped, no warning
+        (['weird_left.fq', 'other_left.fq'], ['weird_right.fq', 'other_right.fq']),
+        # nothing to check
+        ([], []),
+        # Path objects, not just strings
+        ([Path('reads/sampleA_R1.fastq.gz')], [Path('reads/sampleA_R2.fastq.gz')]),
+    ],
+)
+def test_check_paired_mate_names_accepts_well_formed_pairs(r1_files, r2_files):
+    # simplefilter('error') makes any emitted warning raise, so a clean run proves no warning
+    # (and that unconventional-but-intentional naming still runs rather than raising).
+    with warnings.catch_warnings():
+        warnings.simplefilter('error')
+        assert fastq._check_paired_mate_names(r1_files, r2_files) is None
+
+
+@pytest.mark.unit
+@pytest.mark.parametrize(
+    'r1_files,r2_files,bad_index,bad_r1,bad_r2',
+    [
+        # R2 list selected in a different order -> both pairs cross-paired; index 0 is reported
+        (
+            ['sampleA_R1.fastq.gz', 'sampleB_R1.fastq.gz'],
+            ['sampleB_R2.fastq.gz', 'sampleA_R2.fastq.gz'],
+            0,
+            'sampleA_R1.fastq.gz',
+            'sampleB_R2.fastq.gz',
+        ),
+        # single mispaired pair, _1./_2. convention
+        (['ctrl_1.fastq.gz'], ['treat_2.fastq.gz'], 0, 'ctrl_1.fastq.gz', 'treat_2.fastq.gz'),
+        # Illumina _R1_/_R2_ mispaired
+        (['s1_R1_001.fastq.gz'], ['s2_R2_001.fastq.gz'], 0, 's1_R1_001.fastq.gz', 's2_R2_001.fastq.gz'),
+        # correct first pair, mispaired second pair -> the offending index is 1, not 0
+        (
+            ['sampleA_R1.fastq.gz', 'sampleB_R1.fastq.gz'],
+            ['sampleA_R2.fastq.gz', 'sampleC_R2.fastq.gz'],
+            1,
+            'sampleB_R1.fastq.gz',
+            'sampleC_R2.fastq.gz',
+        ),
+    ],
+)
+def test_check_paired_mate_names_warns_on_mispaired(r1_files, r2_files, bad_index, bad_r1, bad_r2):
+    with pytest.warns(UserWarning) as record:
+        fastq._check_paired_mate_names(r1_files, r2_files)
+    messages = ' '.join(str(w.message) for w in record)
+    assert f'r1_files[{bad_index}]' in messages
+    assert bad_r1 in messages
+    assert bad_r2 in messages
+    assert 'do not appear to be mates' in messages
+
+
+@pytest.mark.unit
+def test_bowtie2_align_paired_end_warns_on_mispaired_files(monkeypatch, tmp_path):
+    monkeypatch.setattr(io, 'generate_base_call', lambda *args, **kwargs: ['bowtie2'])
+    monkeypatch.setattr(io, 'run_subprocess', lambda *args, **kwargs: (0, []))
+    with pytest.warns(UserWarning, match='do not appear to be mates'):
+        bowtie2_align_paired_end(
+            ['sampleA_R1.fastq.gz', 'sampleB_R1.fastq.gz'],
+            ['sampleB_R2.fastq.gz', 'sampleA_R2.fastq.gz'],
+            tmp_path,
+            'index',
+        )
 
 
 @pytest.mark.parametrize(
