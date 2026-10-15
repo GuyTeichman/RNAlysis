@@ -3,6 +3,7 @@ import hashlib
 import itertools
 import re
 import time
+import unicodedata
 from pathlib import Path
 from typing import Dict, Iterable, List, Literal, Set, Tuple, Union
 
@@ -12,9 +13,23 @@ from rnalysis.exceptions import InvalidTypeError, InvalidValueError
 from rnalysis.utils import generic, installs, io, parsing, validation
 
 
+def _fill_template(template: str, values: Dict[str, str]) -> str:
+    """
+    Replace the given placeholders in an R template in a single pass, \
+    so that text inserted for one placeholder (e.g. a design-matrix value that happens to contain \
+    '$OUTFILE_NAME') is never itself treated as a placeholder.
+    """
+    pattern = '|'.join(re.escape(key) for key in sorted(values, key=len, reverse=True))
+    return re.sub(pattern, lambda match: values[match.group(0)], template)
+
+
 class DiffExpRunner(abc.ABC):
     POLY_PATTERN = r'poly\s*\(\s*(\w+)\s*,\s*degree\s*=\s*(\d+)\s*\)'
     TEMPLATES_DIR = Path(__file__).parent.parent.joinpath('data_files/r_templates')
+    # prefix of the output file names
+    FILENAME_PREFIX: str = NotImplemented
+    # how the ':' of an LRT interaction term (e.g. 'factor1:factor2') is spelled in output file names
+    LRT_INTERACTION_FILENAME_SEP: str = NotImplemented
 
     def __init__(
         self,
@@ -180,6 +195,63 @@ class DiffExpRunner(abc.ABC):
                         f'is not a column of the design matrix. The available factors are: {factors_str}.'
                     )
 
+        # make sure that no two analyses would be saved to the same output file
+        self._get_export_filenames()
+
+    def _comparison_factor_name(self, factor: str) -> str:
+        return factor
+
+    def _get_export_filenames(self) -> Dict[tuple, str]:
+        """
+        Return the (filename-safe) output file name of every comparison, covariate, and LRT factor, \
+        keyed by ('comparison', comparison), ('covariate', covariate), or ('lrt', lrt_factor).
+
+        :raises InvalidValueError: if two different analyses would be saved to the same file \
+        (e.g. the values 'KO/1' and 'KO:1', which are both saved as 'KO_1', or values that differ only by case, \
+        which share a file on Windows and macOS).
+        """
+        sanitize = parsing.sanitize_filename_component
+        filenames = {}
+        descriptions = {}
+        for comparison in self.comparisons:
+            factor, numerator, denominator = comparison
+            key = ('comparison', tuple(comparison))
+            filenames[key] = (
+                f'{self.FILENAME_PREFIX}_{sanitize(self._comparison_factor_name(factor))}_'
+                f'{sanitize(numerator)}_vs_{sanitize(denominator)}.csv'
+            )
+            descriptions[key] = f'the comparison {comparison}'
+        for covariate in self.covariates:
+            key = ('covariate', covariate)
+            filenames[key] = f'{self.FILENAME_PREFIX}_{sanitize(covariate)}_covariate.csv'
+            descriptions[key] = f"the covariate '{covariate}'"
+        for lrt_factor in self.lrt_factors:
+            key = ('lrt', lrt_factor)
+            lrt_name = sanitize(lrt_factor, {':': self.LRT_INTERACTION_FILENAME_SEP})
+            filenames[key] = f'{self.FILENAME_PREFIX}_{lrt_name}_LRT.csv'
+            descriptions[key] = f"the likelihood ratio test term '{lrt_factor}'"
+
+        seen = {}
+        for key, filename in filenames.items():
+            # file names are not case-sensitive on Windows and macOS
+            # (and macOS treats composed/decomposed accents alike); simple one-to-one case mapping only,
+            # since e.g. 'ß' and 'ss' are different file names
+            normalized = ''.join(
+                upper if len(upper := char.upper()) == 1 else char for char in unicodedata.normalize('NFC', filename)
+            )
+            if normalized in seen:
+                other = seen[normalized]
+                raise InvalidValueError(
+                    f'{descriptions[other]} and {descriptions[key]} would both be saved to the same output file '
+                    f"('{filenames[other]}' and '{filename}'). "
+                    f'This happens when names differ only in characters that cannot be used in file names '
+                    f"(< > : \" / \\ | ? * and control characters, which are replaced with '_'), "
+                    f'or only in upper/lower case (which Windows and macOS do not distinguish in file names). '
+                    f'Please rename these values in your design matrix so that they can be told apart.'
+                )
+            seen[normalized] = key
+        return filenames
+
     @staticmethod
     def _get_cache_dir():
         cache_dir = io.get_todays_cache_dir().joinpath(hashlib.sha1(str(time.time_ns()).encode('utf-8')).hexdigest())
@@ -204,13 +276,17 @@ class DiffExpRunner(abc.ABC):
 
     def get_logging_templates(self, log_path: Path) -> Tuple[str, str]:
         with open(self.TEMPLATES_DIR.joinpath('logging.R')) as f:
-            logging_template = f.read().replace('$LOGFILE', log_path.as_posix())
+            # logging.R is shared with featureCounts, so its placeholder keeps its own quotes
+            logging_template = f.read().replace('"$LOGFILE"', parsing.r_quote(log_path.as_posix()))
         with open(self.TEMPLATES_DIR.joinpath('sessioninfo_run.R')) as f:
             sessioninfo_template = f.read()
         return logging_template, sessioninfo_template
 
 
 class DESeqRunner(DiffExpRunner):
+    FILENAME_PREFIX = 'DESeq2'
+    LRT_INTERACTION_FILENAME_SEP = '_x_'
+
     def __init__(
         self,
         data_path: Union[str, Path],
@@ -249,61 +325,80 @@ class DESeqRunner(DiffExpRunner):
         return run_template, comparison_template, covariate_template, lrt_template
 
     def create_script(self):
+        filenames = self._get_export_filenames()
         cache_dir = self._get_cache_dir()
         save_path = cache_dir.joinpath('deseq2_run.R')
         log_path = cache_dir.joinpath('logfile.log')
         run_template, comparison_template, covariate_template, lrt_template = self._get_templates()
         logging_template, sessioninfo_template = self.get_logging_templates(log_path)
 
-        with open(save_path, 'w') as outfile:
+        with open(save_path, 'w', encoding='utf-8') as outfile:
             outfile.write(logging_template)
 
-            formula = self.create_formula()
-
-            run_template = run_template.replace('$COUNT_MATRIX', Path(self.data_path).as_posix())
-            run_template = run_template.replace('$DESIGN_MATRIX', (Path(self.design_mat_path).as_posix()))
-            run_template = run_template.replace('$FORMULA', formula)
-
             if self.scale_factor_path is None:
-                run_template = run_template.replace('$NORMFACTORS\n', '')
+                normfactors_key, normfactors_code = '$NORMFACTORS\n', ''
             else:
+                normfactors_key = '$NORMFACTORS'
+                scale_factor_path = parsing.r_quote(Path(self.scale_factor_path).as_posix())
                 if self.scaling_factors_ndims == 1:
-                    run_template = run_template.replace(
-                        '$NORMFACTORS',
-                        f"sizeFactors <- read.csv('{Path(self.scale_factor_path).as_posix()}', "
-                        'row.names=1, header=TRUE)\n'
-                        'sizeFactors(dds) <- as.numeric(unlist(sizeFactors))\n',
+                    normfactors_code = (
+                        f'sizeFactors <- read.csv({scale_factor_path}, row.names=1, header=TRUE)\n'
+                        'sizeFactors(dds) <- as.numeric(unlist(sizeFactors))\n'
                     )
-                elif self.scaling_factors_ndims == 2:
-                    run_template = run_template.replace(
-                        '$NORMFACTORS',
-                        f"normFactors <- read.csv('{Path(self.scale_factor_path).as_posix()}', "
-                        'row.names=1, header=TRUE)\n'
+                else:
+                    normfactors_code = (
+                        f'normFactors <- read.csv({scale_factor_path}, row.names=1, header=TRUE)\n'
                         'normFactors <- normFactors / exp(rowMeans(log(normFactors)))\n'
-                        'normalizationFactors(dds) <- data.matrix(normFactors)\n',
+                        'normalizationFactors(dds) <- data.matrix(normFactors)\n'
                     )
 
+            run_template = _fill_template(
+                run_template,
+                {
+                    '$COUNT_MATRIX': parsing.r_quote(Path(self.data_path).as_posix()),
+                    '$DESIGN_MATRIX': parsing.r_quote(Path(self.design_mat_path).as_posix()),
+                    '$FORMULA': self.create_formula(),
+                    normfactors_key: normfactors_code,
+                },
+            )
             outfile.write(run_template)
 
             cooks = 'TRUE' if self.cooks_cutoff else 'FALSE'
             # pairwise comparisons
             for contrast in self.comparisons:
-                export_path = cache_dir.joinpath(f'DESeq2_{contrast[0]}_{contrast[1]}_vs_{contrast[2]}.csv').as_posix()
-                this_comparison = comparison_template.replace('$CONTRAST', str(contrast))
-                this_comparison = this_comparison.replace('$OUTFILE_NAME', export_path).replace('$COOKS', cooks)
+                export_path = cache_dir.joinpath(filenames[('comparison', tuple(contrast))]).as_posix()
+                this_comparison = _fill_template(
+                    comparison_template,
+                    {
+                        '$CONTRAST': ', '.join(parsing.r_quote(item) for item in contrast),
+                        '$OUTFILE_NAME': parsing.r_quote(export_path),
+                        '$COOKS': cooks,
+                    },
+                )
                 outfile.write(this_comparison)
             # covariates
             for covariate in self.covariates:
-                export_path = cache_dir.joinpath(f'DESeq2_{covariate}_covariate.csv').as_posix()
-                this_covar = covariate_template.replace('$COVARIATE', covariate)
-                this_covar = this_covar.replace('$OUTFILE_NAME', export_path).replace('$COOKS', cooks)
+                export_path = cache_dir.joinpath(filenames[('covariate', covariate)]).as_posix()
+                this_covar = _fill_template(
+                    covariate_template,
+                    {
+                        '$COVARIATE': parsing.r_quote(covariate),
+                        '$OUTFILE_NAME': parsing.r_quote(export_path),
+                        '$COOKS': cooks,
+                    },
+                )
                 outfile.write(this_covar)
             # likelihood ratio tests
             for lrt_factor in self.lrt_factors:
-                export_path = cache_dir.joinpath(f'DESeq2_{lrt_factor.replace(":", "_x_")}_LRT.csv').as_posix()
-                reduced_model = self.create_formula([lrt_factor])
-                this_lrt = lrt_template.replace('$REDUCED', reduced_model)
-                this_lrt = this_lrt.replace('$OUTFILE_NAME', export_path).replace('$COOKS', cooks)
+                export_path = cache_dir.joinpath(filenames[('lrt', lrt_factor)]).as_posix()
+                this_lrt = _fill_template(
+                    lrt_template,
+                    {
+                        '$REDUCED': self.create_formula([lrt_factor]),
+                        '$OUTFILE_NAME': parsing.r_quote(export_path),
+                        '$COOKS': cooks,
+                    },
+                )
                 outfile.write(this_lrt)
 
             outfile.write(sessioninfo_template)
@@ -311,6 +406,9 @@ class DESeqRunner(DiffExpRunner):
 
 
 class LimmaVoomRunner(DiffExpRunner):
+    FILENAME_PREFIX = 'LimmaVoom'
+    LRT_INTERACTION_FILENAME_SEP = 'X'
+
     def __init__(
         self,
         data_path: Union[str, Path],
@@ -332,6 +430,46 @@ class LimmaVoomRunner(DiffExpRunner):
     def install_required_packages(self):
         super().install_required_packages()
         installs.install_limma(self.r_installation_folder)
+
+    def _comparison_factor_name(self, factor: str) -> str:
+        return generic.sanitize_variable_name(factor)
+
+    @staticmethod
+    def _r_syntactic_name(name: str) -> str:
+        """
+        Mirror R's make.names() (as applied to the design-matrix column names in limma_run_parametric.R) \
+        for a coefficient name: letters and digits of any script, '.', and '_' are kept; \
+        any other character becomes '.'.
+        """
+        name = ''.join(
+            char if (char in '._' or unicodedata.category(char) in {'Lu', 'Ll', 'Lt', 'Lm', 'Lo', 'Nd', 'Nl'}) else '.'
+            for char in name
+        )
+        if not re.match(r'([^\W\d_]|\.(?!\d))', name):
+            name = 'X' + name
+        return name
+
+    def _comparison_coef_name(self, factor: str, value) -> str:
+        # model.matrix() names the coefficients after the factor as it is written in the formula
+        return self._r_syntactic_name(f'{factor}{value}')
+
+    def validate_design_inputs(self):
+        super().validate_design_inputs()
+        # R's make.names() can map two different values of a factor to the same limma coefficient name
+        # (e.g. 'KO-1' and 'KO.1' both become 'conditionKO.1'), which would make the contrast ambiguous
+        for factor, numerator, denominator in self.comparisons:
+            values = [str(val) for val in self.design_mat[factor].drop_nulls().unique().to_list()]
+            for value in (numerator, denominator):
+                coef = self._comparison_coef_name(factor, value)
+                clashes = [
+                    val for val in values if val != str(value) and self._comparison_coef_name(factor, val) == coef
+                ]
+                if clashes:
+                    raise InvalidValueError(
+                        f"The values '{value}' and '{clashes[0]}' of the factor '{factor}' cannot be told apart "
+                        f"by limma, since R converts both of them to the same coefficient name ('{coef}'). "
+                        f'Please rename one of these values in your design matrix.'
+                    )
 
     def _generate_interaction_terms(self, interaction):
         # Split the interaction string into individual variables
@@ -414,6 +552,7 @@ class LimmaVoomRunner(DiffExpRunner):
         return run_template, comparison_template, covariate_template, lrt_template
 
     def create_script(self):
+        filenames = self._get_export_filenames()
         cache_dir = self._get_cache_dir()
         save_path = cache_dir.joinpath('limma_run.R')
         log_path = cache_dir.joinpath('logfile.log')
@@ -421,7 +560,7 @@ class LimmaVoomRunner(DiffExpRunner):
         logging_template, sessioninfo_template = self.get_logging_templates(log_path)
         coef_names = self._get_coef_names()
 
-        with open(save_path, 'w') as outfile:
+        with open(save_path, 'w', encoding='utf-8') as outfile:
             outfile.write(logging_template)
 
             baselines = {}
@@ -443,7 +582,7 @@ class LimmaVoomRunner(DiffExpRunner):
                 else:
                     values = sorted(self.design_mat[factor].unique())
                     baselines[factor] = values[0]
-                    values_str = ', '.join([f'"{val}"' for val in values])
+                    values_str = ', '.join([parsing.r_quote(val) for val in values])
                     factors_str += (
                         f'design_matrix${factor_name} <- factor(design_matrix${factor}, levels=c({values_str}))\n'
                     )
@@ -451,39 +590,55 @@ class LimmaVoomRunner(DiffExpRunner):
             formula = self.create_formula(without=tuple() if random_effect is None else [random_effect])
             random_effect_fit_code = self._get_random_effect_code(random_effect)
 
-            run_template = run_template.replace('$COUNT_MATRIX', Path(self.data_path).as_posix())
-            run_template = run_template.replace('$DESIGN_MATRIX', (Path(self.design_mat_path).as_posix()))
-            run_template = run_template.replace('$DEFINE_FACTORS', factors_str)
-            run_template = run_template.replace('$FORMULA', formula)
-            run_template = run_template.replace(
-                '$VOOMFUNC', 'voomWithQualityWeights' if self.quality_weights else 'voom'
+            run_template = _fill_template(
+                run_template,
+                {
+                    '$COUNT_MATRIX': parsing.r_quote(Path(self.data_path).as_posix()),
+                    '$DESIGN_MATRIX': parsing.r_quote(Path(self.design_mat_path).as_posix()),
+                    '$DEFINE_FACTORS': factors_str,
+                    '$FORMULA': formula,
+                    '$VOOMFUNC': 'voomWithQualityWeights' if self.quality_weights else 'voom',
+                    '$RANDOM_EFFECT_FIT': random_effect_fit_code,
+                },
             )
-            run_template = run_template.replace('$RANDOM_EFFECT_FIT', random_effect_fit_code)
 
             outfile.write(run_template)
             # pairwise comparisons
-            for factor, num, denom in self.comparisons:
-                factor_name = factor_names[factor]
-                export_path = cache_dir.joinpath(f'LimmaVoom_{factor_name}_{num}_vs_{denom}.csv').as_posix()
+            for comparison in self.comparisons:
+                factor, num, denom = comparison
+                if factor not in factor_names:
+                    raise InvalidValueError(
+                        f"Cannot run the comparison {comparison}: '{factor}' is the random effect of the model, "
+                        f'so its values cannot be compared to each other.'
+                    )
+                export_path = cache_dir.joinpath(filenames[('comparison', tuple(comparison))]).as_posix()
                 num_not_baseline = num != baselines[factor]
                 denom_not_baseline = denom != baselines[factor]
-                contrast = f'"{(factor_name + num) * num_not_baseline}{(" - " + factor + denom) * denom_not_baseline}"'
-                this_comparison = comparison_template.replace('$CONTRAST', contrast)
-                this_comparison = this_comparison.replace('$OUTFILE_NAME', export_path)
+                # the coefficient names, as R's make.names() spells them in the design matrix
+                num_coef = self._comparison_coef_name(factor, num)
+                denom_coef = self._comparison_coef_name(factor, denom)
+                contrast = f'{num_coef * num_not_baseline}{(" - " + denom_coef) * denom_not_baseline}'
+                this_comparison = _fill_template(
+                    comparison_template,
+                    {'$CONTRAST': parsing.r_quote(contrast), '$OUTFILE_NAME': parsing.r_quote(export_path)},
+                )
                 outfile.write(this_comparison)
             # covariates
             for covariate in self.covariates:
-                export_path = cache_dir.joinpath(f'LimmaVoom_{covariate}_covariate.csv').as_posix()
+                export_path = cache_dir.joinpath(filenames[('covariate', covariate)]).as_posix()
                 coef = covariate if covariate in self.model_factors else f'poly({covariate}, degree = 1)1'
-                this_covar = covariate_template.replace('$COEF', coef)
-                this_covar = this_covar.replace('$OUTFILE_NAME', export_path)
+                this_covar = _fill_template(
+                    covariate_template,
+                    {'$COEF': parsing.r_quote(coef), '$OUTFILE_NAME': parsing.r_quote(export_path)},
+                )
                 outfile.write(this_covar)
             # likelihood ratio tests
             for lrt_factor in self.lrt_factors:
-                export_path = cache_dir.joinpath(f'LimmaVoom_{lrt_factor.replace(":", "X")}_LRT.csv').as_posix()
-                coefs = 'c(' + ', '.join(sorted([f'"{coef}"' for coef in coef_names[lrt_factor]])) + ')'
-                this_lrt = lrt_template.replace('$COEFS', coefs)
-                this_lrt = this_lrt.replace('$OUTFILE_NAME', export_path)
+                export_path = cache_dir.joinpath(filenames[('lrt', lrt_factor)]).as_posix()
+                coefs = 'c(' + ', '.join(parsing.r_quote(coef) for coef in sorted(coef_names[lrt_factor])) + ')'
+                this_lrt = _fill_template(
+                    lrt_template, {'$COEFS': coefs, '$OUTFILE_NAME': parsing.r_quote(export_path)}
+                )
                 outfile.write(this_lrt)
 
             outfile.write(sessioninfo_template)

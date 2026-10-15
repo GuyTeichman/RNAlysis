@@ -34,6 +34,58 @@ def quote_path(pth: Union[Path, str]) -> str:
         return shlex.quote(pth)
 
 
+# ASCII punctuation that is legal in file names on Windows, macOS, and Linux alike
+# (Windows forbids < > : " / \ | ? *, and '/' is the directory separator everywhere)
+_FILENAME_SAFE_PUNCTUATION = frozenset(" !#$%&'()+,-.;=@[]^_`{}~")
+
+
+def _is_filename_safe_char(char: str) -> bool:
+    if char.isascii():
+        return char.isalnum() or char in _FILENAME_SAFE_PUNCTUATION
+    # non-ASCII letters, digits, symbols and punctuation (e.g. 'ü', 'א', '°', '–') are legal in file names
+    # on every OS; only control/format/unassigned characters and line/paragraph separators are not
+    return unicodedata.category(char) not in {'Cc', 'Cf', 'Cs', 'Co', 'Cn', 'Zl', 'Zp'}
+
+
+def sanitize_filename_component(text: str, replacements: Union[Dict[str, str], None] = None) -> str:
+    """
+    Make a string safe to use as part of a file name on Windows, macOS, and Linux. \
+    Characters are checked against an allowlist: ASCII letters, digits, spaces, \
+    and the ASCII punctuation characters that are legal in file names on all three systems, \
+    plus any printable non-ASCII character (letters, digits, symbols and punctuation of any script). \
+    Every other character (':', '/', '\\\\', '"', '*', '?', '<', '>', '|', control characters, \
+    and line/paragraph separators) is replaced with '_'. Strings that are already filename-safe are returned unchanged.
+
+    :param text: the string to sanitize
+    :type text: str
+    :param replacements: optional mapping of specific characters to their replacement strings, \
+    applied before the allowlist (e.g. {':': '_x_'}). The replacement strings must themselves be filename-safe.
+    :type replacements: dict or None
+    :return: the filename-safe string
+    :rtype: str
+    """
+    text = str(text)
+    if replacements:
+        for old, new in replacements.items():
+            if not all(_is_filename_safe_char(char) for char in new):
+                raise ValueError(f"The replacement string '{new}' is not filename-safe")
+            text = text.replace(old, new)
+    return ''.join(char if _is_filename_safe_char(char) else '_' for char in text)
+
+
+def r_quote(text) -> str:
+    """
+    Turn a Python value into an R string literal (in double quotes), escaping backslashes and double quotes, \
+    so that the string can be safely spliced into R source code.
+
+    :param text: the value to quote (non-string values are converted with str())
+    :return: an R string literal whose value is str(text)
+    :rtype: str
+    """
+    escaped = str(text).replace('\\', '\\\\').replace('"', '\\"')
+    return f'"{escaped}"'
+
+
 def r_make_names(names: List[str]):
     # Replace invalid characters with a dot
     valid_names = [re.sub(r'[^a-zA-Z0-9_]', '.', name) for name in names]
