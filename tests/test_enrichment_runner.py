@@ -2649,3 +2649,41 @@ def test_kegg_enrichment_runner_pathway_plot(single_set, graph_format, monkeypat
     runner.plot_pathway_graphs = True
     runner.pathway_names_dict = {pathway_id_truth: 'name'}
     runner.plot_results().run()
+
+
+@pytest.mark.parametrize('frozen,expected', [(True, 'multiprocessing'), (False, 'loky')])
+@pytest.mark.parametrize('runner_cls,method', [(EnrichmentRunner, 'calc'), (GOEnrichmentRunner, 'grouping')])
+def test_enrichment_runner_parallel_backend_reaching_joblib(monkeypatch, frozen, expected, runner_cls, method):
+    # issue #249: a 'loky' backend (e.g. replayed from a Pipeline recorded on a source install) must never reach
+    # joblib in a PyInstaller-frozen build. joblib is stubbed so nothing heavy runs.
+    import types
+
+    import joblib as _joblib
+
+    from rnalysis.utils import generic, validation
+
+    monkeypatch.setattr(generic, 'FROZEN_ENV', frozen)
+    seen = []
+    orig_init = _joblib.Parallel.__init__
+
+    def spy_init(self, *args, **kwargs):
+        seen.append(kwargs.get('backend'))
+        orig_init(self, *args, **kwargs)
+
+    monkeypatch.setattr(_joblib.Parallel, '__init__', spy_init)
+    monkeypatch.setattr(_joblib.Parallel, '__call__', lambda self, it: [{} for _ in it])
+    monkeypatch.setattr(validation, 'is_method_of_class', lambda func, obj_type: True)
+
+    runner = runner_cls.__new__(runner_cls)
+    runner.parallel_backend = 'loky'
+    if method == 'calc':
+        runner.single_set = False
+        runner.gene_set = {'a'}
+        runner.background_set = {'a', 'b'}
+        runner.attributes = ['attr1', 'attr2']
+        runner.annotations = {'attr1': set(), 'attr2': set()}
+        runner.stats_test = types.SimpleNamespace(run=lambda *args: None)
+        runner._calculate_enrichment_parallel()
+    else:
+        runner._parallel_over_grouping(lambda group, ind: {}, [['a'], ['b']], [0, 1])
+    assert seen == [expected]

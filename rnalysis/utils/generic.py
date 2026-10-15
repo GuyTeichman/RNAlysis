@@ -193,6 +193,22 @@ class TemporaryMatplotlibBackend:
         matplotlib.use(self.original_backend, force=True)
 
 
+def normalize_parallel_backend(backend):
+    """Return the joblib backend that is actually safe to use in the current environment.
+
+    The ``loky`` backend does not work in PyInstaller-frozen builds of RNAlysis, so when frozen it is mapped to
+    ``multiprocessing`` (see ``rnalysis.utils.param_typing.PARALLEL_BACKENDS``). Every other value -- and every
+    value when running from source -- is returned unchanged. This is applied at every point where RNAlysis hands
+    a backend to joblib, so that a ``'loky'`` from any source (the API default, a script, or a Pipeline recorded
+    on a source install and replayed in the frozen app) can never reach joblib in a frozen build.
+
+    ``FROZEN_ENV`` is read at call time, so tests can monkeypatch it.
+    """
+    if FROZEN_ENV and backend == 'loky':
+        return 'multiprocessing'
+    return backend
+
+
 class ProgressParallel(joblib.Parallel):
     # tqdm progress bar for parallel tasks based on:
     # https://stackoverflow.com/questions/37804279/how-can-we-use-tqdm-in-a-parallel-execution-with-joblib/50925708
@@ -203,7 +219,7 @@ class ProgressParallel(joblib.Parallel):
         self._desc = desc
         self._unit = unit
         kwargs['n_jobs'] = -2
-        super().__init__(*args, backend=backend, **kwargs, verbose=100)
+        super().__init__(*args, backend=normalize_parallel_backend(backend), **kwargs, verbose=100)
 
     def __call__(self, *args, **kwargs):
         fmt = '{desc}: {percentage:3.0f}%|{bar}| [{elapsed}<{remaining}, {rate_fmt}{postfix}]'
@@ -253,7 +269,7 @@ def _parallel_box_cox(array: np.ndarray, backend: str, n_jobs: int) -> np.ndarra
     # result exactly.
     n_columns = array.shape[1]
     column_chunks = np.array_split(np.arange(n_columns), min(n_jobs, n_columns))
-    transformed_chunks = joblib.Parallel(n_jobs=len(column_chunks), backend=backend)(
+    transformed_chunks = joblib.Parallel(n_jobs=len(column_chunks), backend=normalize_parallel_backend(backend))(
         joblib.delayed(_box_cox_fit_transform)(array[:, chunk]) for chunk in column_chunks
     )
     return np.concatenate(transformed_chunks, axis=1)
@@ -438,7 +454,7 @@ def box_cox_parallel_backend() -> str:
     (see ``rnalysis.utils.param_typing.PARALLEL_BACKENDS``). This is only ever used from top-level, non-nested
     call sites (the PCA methods), so ``multiprocessing``'s no-nested-children limitation does not apply.
     """
-    return 'multiprocessing' if FROZEN_ENV else 'loky'
+    return normalize_parallel_backend('loky')
 
 
 def shift_to_baseline(data: Union[np.ndarray, pl.DataFrame], baseline: float = 0) -> Union[np.ndarray, pl.DataFrame]:
