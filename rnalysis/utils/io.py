@@ -3377,19 +3377,30 @@ def run_subprocess(
     return process.returncode, stderr_record
 
 
-def is_rnalysis_outdated():
-    installed_version = parsing.parse_version(__version__)
-    pypi_link = 'https://pypi.python.org/pypi/RNAlysis/json'
+UPDATE_CHECK_TIMEOUT = (3, 5)  # (connect, read) seconds for the PyPI update check
+
+
+def is_rnalysis_outdated() -> bool:
+    """
+    Check PyPI for a newer release of RNAlysis.
+
+    Any failure (network error, timeout, a non-JSON response such as a captive-portal login page,
+    unexpected JSON structure, or an unparseable version string) is treated as 'not outdated',
+    so the update check can never hang indefinitely or crash the caller.
+    """
+    pypi_link = 'https://pypi.org/pypi/RNAlysis/json'  # canonical host; avoids a redirect hop
     try:
-        req = requests.get(pypi_link)
-    except (ConnectionError, requests.exceptions.ConnectionError, requests.exceptions.HTTPError):
+        req = requests.get(pypi_link, timeout=UPDATE_CHECK_TIMEOUT)
+    except (ConnectionError, requests.exceptions.RequestException):
         return False
     if req.status_code != 200:
         return False
-    newest_version = parsing.parse_version(json.loads(req.text)['info']['version'])
-    if installed_version < newest_version:
-        return True
-    return False
+    try:
+        installed_version = parsing.parse_version(__version__)
+        newest_version = parsing.parse_version(json.loads(req.text)['info']['version'])
+        return installed_version < newest_version
+    except (ValueError, KeyError, TypeError, AttributeError):  # json.JSONDecodeError is a ValueError
+        return False
 
 
 def update_rnalysis():
