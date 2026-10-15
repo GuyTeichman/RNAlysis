@@ -3285,6 +3285,36 @@ def test_split_by_principal_components_legacy_boolean_matches_box_cox(basic_coun
         assert legacy_obj.df.equals(named_obj.df)
 
 
+@pytest.mark.parametrize('frozen,expected', [(True, 'multiprocessing'), (False, 'loky')])
+def test_pipeline_with_loky_backend_loads_and_never_sends_loky_to_joblib_when_frozen(
+    basic_countfilter, monkeypatch, frozen, expected
+):
+    # rule 4 + issue #249: a Pipeline recorded on a source install carries parallel_backend='loky'. It must keep
+    # loading, and when replayed in a PyInstaller-frozen build the backend that reaches joblib must be clamped.
+    import contextlib
+
+    from rnalysis.utils import clustering as clustering_module
+    from rnalysis.utils import generic as generic_module
+
+    monkeypatch.setattr(generic_module, 'FROZEN_ENV', frozen)
+    monkeypatch.setattr(plt, 'show', lambda: None)
+    seen = []
+
+    def spy_parallel_backend(backend, *args, **kwargs):
+        seen.append(backend)
+        return contextlib.nullcontext()
+
+    monkeypatch.setattr(clustering_module.joblib, 'parallel_backend', spy_parallel_backend)
+
+    pipeline = Pipeline.import_pipeline('tests/test_files/test_pipeline_loky_backend.yaml')
+    assert pipeline.params[0][1]['parallel_backend'] == 'loky'
+
+    basic_countfilter.filter_low_reads(1)
+    pipeline.apply_to(basic_countfilter, inplace=False)
+    plt.close('all')
+    assert seen == [expected]
+
+
 def test_pipeline_with_legacy_power_transform_still_loads_and_runs(basic_countfilter):
     # rule 4: a Pipeline exported before 'power_transform' became a menu passes power_transform=True, and must
     # keep behaving exactly as it did -- identically to the 'box-cox' it now stands for

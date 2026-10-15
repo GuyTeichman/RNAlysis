@@ -459,6 +459,11 @@ class AltParallel(QtCore.QObject):
     def __init__(
         self, n_jobs: int = -1, total=None, desc: str = '', unit: str = 'it', bar_format: str = '', *args, **kwargs
     ):
+        # Deliberately kept (not replaced by generic.normalize_parallel_backend): the GUI swaps this class in for
+        # generic.ProgressParallel while a job runs in a worker QThread, and it forces 'multiprocessing' for EVERY
+        # requested backend, frozen or not -- not just a frozen-'loky' clamp. Narrowing it to the shared helper
+        # would change which backend the from-source GUI uses (e.g. 'loky'/'threading' would start reaching joblib
+        # from inside the Qt worker thread), so it stays as a GUI-specific override on top of the shared clamp.
         kwargs['backend'] = 'multiprocessing'
         self.parallel = Parallel(*args, n_jobs=n_jobs, **kwargs)
         self.desc = desc

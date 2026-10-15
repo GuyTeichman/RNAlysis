@@ -1,5 +1,6 @@
 from types import ModuleType
 
+import joblib
 import pytest
 from matplotlib.backend_bases import PickEvent
 
@@ -79,6 +80,65 @@ def test_standard_box_cox():
 # real count-matrix fixture; far below anything that affects PCA loadings, cluster assignments, or sort order).
 # The end-to-end loky path is covered against a committed truth file by test_split_by_principal_components.
 _BOX_COX_PARALLEL_TOL = 1e-10
+
+
+def _record_joblib_parallel_backends(monkeypatch) -> list:
+    """Spy on every backend handed to joblib.Parallel (including ProgressParallel, which subclasses it)."""
+    seen = []
+    orig_init = joblib.Parallel.__init__
+
+    def spy_init(self, *args, **kwargs):
+        seen.append(kwargs.get('backend'))
+        orig_init(self, *args, **kwargs)
+
+    monkeypatch.setattr(joblib.Parallel, '__init__', spy_init)
+    return seen
+
+
+@pytest.mark.parametrize(
+    'frozen,backend,expected',
+    [
+        (True, 'loky', 'multiprocessing'),
+        (True, 'multiprocessing', 'multiprocessing'),
+        (True, 'sequential', 'sequential'),
+        (True, 'threading', 'threading'),
+        (True, None, None),
+        (False, 'loky', 'loky'),
+        (False, 'multiprocessing', 'multiprocessing'),
+        (False, 'threading', 'threading'),
+        (False, 'sequential', 'sequential'),
+        (False, None, None),
+    ],
+)
+def test_normalize_parallel_backend(monkeypatch, frozen, backend, expected):
+    monkeypatch.setattr(generic, 'FROZEN_ENV', frozen)
+    assert generic.normalize_parallel_backend(backend) == expected
+
+
+@pytest.mark.parametrize('frozen,expected', [(True, 'multiprocessing'), (False, 'loky')])
+def test_progress_parallel_clamps_loky_only_when_frozen(monkeypatch, frozen, expected):
+    monkeypatch.setattr(generic, 'FROZEN_ENV', frozen)
+    seen = _record_joblib_parallel_backends(monkeypatch)
+    generic.ProgressParallel(desc='test', backend='loky')
+    generic.ProgressParallel(desc='test')  # the default backend is 'loky' too
+    assert seen == [expected, expected]
+
+
+@pytest.mark.parametrize('frozen,expected', [(True, 'multiprocessing'), (False, 'loky')])
+def test_parallel_box_cox_clamps_loky_only_when_frozen(monkeypatch, frozen, expected):
+    monkeypatch.setattr(generic, 'FROZEN_ENV', frozen)
+    seen = _record_joblib_parallel_backends(monkeypatch)
+    # stub the dispatch itself so no worker pool is started: run the delayed calls in-process
+    monkeypatch.setattr(joblib.Parallel, '__call__', lambda self, it: [f(*a, **k) for f, a, k in it])
+    array = np.random.default_rng(0).integers(1, 5000, (6, 8)).astype(float)
+    generic._parallel_box_cox(array, backend='loky', n_jobs=2)
+    assert seen == [expected]
+
+
+@pytest.mark.parametrize('frozen,expected', [(True, 'multiprocessing'), (False, 'loky')])
+def test_box_cox_parallel_backend_matches_frozen_state(monkeypatch, frozen, expected):
+    monkeypatch.setattr(generic, 'FROZEN_ENV', frozen)
+    assert generic.box_cox_parallel_backend() == expected
 
 
 @pytest.mark.parametrize('backend', ['threading'])
