@@ -3375,7 +3375,7 @@ def is_rnalysis_outdated() -> bool:
     unexpected JSON structure, or an unparseable version string) is treated as 'not outdated',
     so the update check can never hang indefinitely or crash the caller.
     """
-    pypi_link = 'https://pypi.python.org/pypi/RNAlysis/json'
+    pypi_link = 'https://pypi.org/pypi/RNAlysis/json'  # canonical host; avoids a redirect hop
     try:
         req = requests.get(pypi_link, timeout=UPDATE_CHECK_TIMEOUT)
     except (ConnectionError, requests.exceptions.RequestException):
