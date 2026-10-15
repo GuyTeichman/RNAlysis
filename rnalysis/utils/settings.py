@@ -1,4 +1,5 @@
 import os
+import warnings
 from pathlib import Path
 from typing import Any, Union
 
@@ -52,11 +53,37 @@ def load_settings_file():
     settings_pth = get_settings_file_path()
     if not settings_pth.exists():
         return dict()
-    with settings_pth.open() as f:
-        settings = yaml.safe_load(f)
-        if settings is None:
-            settings = dict()
-        return settings
+    try:
+        with settings_pth.open() as f:
+            settings = yaml.safe_load(f)
+    except (yaml.YAMLError, UnicodeDecodeError):
+        return _handle_corrupt_settings_file(settings_pth)
+    if settings is None:  # an empty file (or one with only comments) is a valid, empty settings file
+        return dict()
+    if not isinstance(settings, dict):
+        return _handle_corrupt_settings_file(settings_pth)
+    return settings
+
+
+def _handle_corrupt_settings_file(settings_pth: Path) -> dict:
+    """
+    Move an unreadable settings file aside to 'settings.yaml.bad' (overwriting any previous backup), \
+    warn the user, and return empty settings so that the default values are used instead.
+    A corrupt preferences file should never prevent RNAlysis from starting.
+    """
+    backup_pth = settings_pth.with_name(settings_pth.name + '.bad')
+    try:
+        os.replace(settings_pth, backup_pth)
+        backup_msg = f'A copy of the unreadable file was saved to: {backup_pth}'
+    except OSError:
+        backup_msg = f'RNAlysis could not back up the unreadable file, which remains at: {settings_pth}'
+    warnings.warn(
+        f'Your RNAlysis settings file could not be read (it may be damaged or incomplete), '
+        f'so RNAlysis is using its default settings instead. '
+        f'Any settings you changed earlier (such as font or Reference Table paths) need to be set again. '
+        f'{backup_msg}'
+    )
+    return dict()
 
 
 def update_settings_file(value: Any, key: str):
@@ -71,8 +98,21 @@ def update_settings_file(value: Any, key: str):
     settings_pth = get_settings_file_path()
     out = load_settings_file()
     out[key] = value
-    with settings_pth.open('w') as f:
-        yaml.safe_dump(out, f)
+    # write to a temporary file in the same directory and then atomically replace the settings file,
+    # so that a crash or kill mid-write can never leave a truncated (corrupt) settings file behind.
+    tmp_pth = settings_pth.with_name(settings_pth.name + '.tmp')
+    try:
+        with tmp_pth.open('w') as f:
+            yaml.safe_dump(out, f)
+            f.flush()
+            os.fsync(f.fileno())
+        os.replace(tmp_pth, settings_pth)
+    except BaseException:
+        try:
+            tmp_pth.unlink()
+        except OSError:
+            pass
+        raise
 
 
 def is_setting_in_file(key) -> bool:
