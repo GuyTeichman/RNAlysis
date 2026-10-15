@@ -1,4 +1,8 @@
 import os
+import shutil
+import time
+import uuid
+import warnings
 from pathlib import Path
 from typing import Any, Union
 
@@ -52,11 +56,79 @@ def load_settings_file():
     settings_pth = get_settings_file_path()
     if not settings_pth.exists():
         return dict()
-    with settings_pth.open() as f:
-        settings = yaml.safe_load(f)
-        if settings is None:
-            settings = dict()
-        return settings
+    try:
+        with settings_pth.open() as f:
+            settings = yaml.safe_load(f)
+    except (yaml.YAMLError, UnicodeDecodeError):
+        return _handle_corrupt_settings_file(settings_pth)
+    if settings is None:  # an empty file (or one with only comments) is a valid, empty settings file
+        return dict()
+    if not isinstance(settings, dict):
+        return _handle_corrupt_settings_file(settings_pth)
+    return settings
+
+
+_REPLACE_RETRIES = 5
+_REPLACE_RETRY_DELAY = 0.05  # seconds; doubled after every failed attempt
+_corrupt_settings_notice = None
+
+
+def pop_corrupt_settings_notice() -> Union[str, None]:
+    """
+    Return the message describing a corrupt settings file that was found and reset since the last call, if any. \
+    The message is cleared after it is returned, so that the user is notified only once. \
+    The GUI uses this to show the message once its window is up \
+    (the corrupt file is usually detected before the GUI's log console exists).
+    """
+    global _corrupt_settings_notice
+    notice, _corrupt_settings_notice = _corrupt_settings_notice, None
+    return notice
+
+
+def _handle_corrupt_settings_file(settings_pth: Path) -> dict:
+    """
+    Move an unreadable settings file aside to 'settings.yaml.bad' (overwriting any previous backup), \
+    warn the user, and return empty settings so that the default values are used instead.
+    A corrupt preferences file should never prevent RNAlysis from starting.
+    """
+    global _corrupt_settings_notice
+    backup_pth = settings_pth.with_name(settings_pth.name + '.bad')
+    try:
+        os.replace(settings_pth, backup_pth)
+        backup_msg = f'A copy of the unreadable file was saved to: {backup_pth}'
+    except OSError:
+        try:  # e.g. the file is locked by another program on Windows: keep a copy instead of moving it
+            shutil.copyfile(settings_pth, backup_pth)
+            backup_msg = f'A copy of the unreadable file was saved to: {backup_pth}'
+        except OSError:
+            backup_msg = f'RNAlysis could not save a copy of the unreadable file ({settings_pth}).'
+    message = (
+        'Your RNAlysis settings file could not be read (it may be damaged or incomplete), '
+        'so RNAlysis is using its default settings instead. '
+        'Any settings you changed earlier (such as font or Reference Table paths) need to be set again. '
+        f'{backup_msg}'
+    )
+    _corrupt_settings_notice = message
+    warnings.warn(message)
+    return dict()
+
+
+def _replace_with_retries(src: Path, dst: Path):
+    """
+    os.replace() src over dst. On Windows, replacing a file fails with PermissionError while another program \
+    (e.g. an antivirus scanner, or another RNAlysis process reading the settings) briefly holds it open, \
+    so retry a few times with a short backoff before giving up.
+    """
+    delay = _REPLACE_RETRY_DELAY
+    for attempt in range(_REPLACE_RETRIES):
+        try:
+            os.replace(src, dst)
+            return
+        except PermissionError:
+            if attempt == _REPLACE_RETRIES - 1:
+                raise
+            time.sleep(delay)
+            delay *= 2
 
 
 def update_settings_file(value: Any, key: str):
@@ -71,8 +143,30 @@ def update_settings_file(value: Any, key: str):
     settings_pth = get_settings_file_path()
     out = load_settings_file()
     out[key] = value
-    with settings_pth.open('w') as f:
-        yaml.safe_dump(out, f)
+    # write to a temporary file in the same directory and then atomically replace the settings file,
+    # so that a crash or kill mid-write can never leave a truncated (corrupt) settings file behind.
+    # the temporary file's name is unique, so that concurrent writers never write into each other's temporary file.
+    # (the file is opened with plain text-mode 'x', so its encoding, newlines and permissions match a plain open('w'))
+    tmp_pth = settings_pth.with_name(f'{settings_pth.name}.{os.getpid()}.{uuid.uuid4().hex[:8]}.tmp')
+    try:
+        with tmp_pth.open('x') as f:
+            yaml.safe_dump(out, f)
+            f.flush()
+            os.fsync(f.fileno())
+        try:
+            _replace_with_retries(tmp_pth, settings_pth)
+        except PermissionError:
+            # the settings file stays locked by another program; fall back to writing it in place
+            # (the pre-4.3.1 behavior), which Windows allows even while another program has the file open
+            with settings_pth.open('w') as f:
+                yaml.safe_dump(out, f)
+    finally:
+        # after a successful os.replace() the temporary file no longer exists; otherwise (a failed dump,
+        # or the in-place fallback above) remove it so that no stray temporary files are left behind
+        try:
+            tmp_pth.unlink(missing_ok=True)
+        except OSError:
+            pass
 
 
 def is_setting_in_file(key) -> bool:
