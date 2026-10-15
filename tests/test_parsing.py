@@ -563,6 +563,83 @@ class TestRMakeNames:
         expected_output = ['duplicate', 'duplicate.1', 'anotherduplicate', 'anotherduplicate.1', 'unique']
         assert r_make_names(names) == expected_output
 
+
+class TestSanitizeFilenameComponent:
+    """issue #281: user values are spliced into output file names, so they must be made filename-safe."""
+
+    @pytest.mark.parametrize(
+        'text',
+        [
+            'cond1',
+            'rep_2',
+            'KO-1.5',
+            'wild type',
+            "KO'1",
+            'poly(age, degree = 2)',
+            'a+b=c,d[e]{f}@g#h%i&j!k~l$m;n^o`p',
+            'Wildtyp-\u00fc',
+            '\u05d0\u05d1',
+            '',
+        ],
+    )
+    def test_filename_safe_values_unchanged(self, text):
+        # values that are already safe must keep producing byte-identical file names (no arbitrary changes)
+        assert sanitize_filename_component(text) == text
+
+    @pytest.mark.parametrize(
+        'text,expected',
+        [
+            ('KO/1', 'KO_1'),
+            ('KO:1', 'KO_1'),
+            ('back\\slash', 'back_slash'),
+            ('q"uote', 'q_uote'),
+            ('a<b>c|d?e*f', 'a_b_c_d_e_f'),
+            ('tab\there\nnewline', 'tab_here_newline'),
+            ('37\u00b0C', '37_C'),
+        ],
+    )
+    def test_unsafe_characters_replaced(self, text, expected):
+        assert sanitize_filename_component(text) == expected
+
+    @pytest.mark.parametrize(
+        'text,replacements,expected',
+        [
+            # the established LRT interaction-term mappings must not change
+            ('factor1:factor2', {':': '_x_'}, 'factor1_x_factor2'),
+            ('factor1:factor2', {':': 'X'}, 'factor1Xfactor2'),
+            ('a:b/c', {':': '_x_'}, 'a_x_b_c'),
+        ],
+    )
+    def test_replacements(self, text, replacements, expected):
+        assert sanitize_filename_component(text, replacements) == expected
+
+    def test_unsafe_replacement_is_rejected(self):
+        with pytest.raises(ValueError):
+            sanitize_filename_component('a:b', {':': '/'})
+
+
+class TestRQuote:
+    """issue #281: Python strings entering R source must be escaped deliberately, not by coincidence."""
+
+    @pytest.mark.parametrize(
+        'text,expected',
+        [
+            ('cond1', '"cond1"'),
+            ('', '""'),
+            ("KO'1", '"KO\'1"'),
+            ('q"uote', '"q\\"uote"'),
+            ('back\\slash', '"back\\\\slash"'),
+            ('C:/path/to/file.csv', '"C:/path/to/file.csv"'),
+            ('\\"', '"\\\\\\""'),
+            ('Wildtyp-\u00fc', '"Wildtyp-\u00fc"'),
+        ],
+    )
+    def test_r_quote(self, text, expected):
+        assert r_quote(text) == expected
+
+    def test_r_quote_non_string(self):
+        assert r_quote(5) == '"5"'
+
     def test_duplicate_names_with_invalid_characters(self):
         names = ['duplicate!', 'duplicate@', 'another#duplicate', 'another$duplicate', 'unique%']
         expected_output = ['duplicate.', 'duplicate..1', 'another.duplicate', 'another.duplicate.1', 'unique.']

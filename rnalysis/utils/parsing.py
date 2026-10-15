@@ -34,6 +34,56 @@ def quote_path(pth: Union[Path, str]) -> str:
         return shlex.quote(pth)
 
 
+# ASCII punctuation that is legal in file names on Windows, macOS, and Linux alike
+# (Windows forbids < > : " / \ | ? *, and '/' is the directory separator everywhere)
+_FILENAME_SAFE_PUNCTUATION = frozenset(" !#$%&'()+,-.;=@[]^_`{}~")
+
+
+def _is_filename_safe_char(char: str) -> bool:
+    if char in _FILENAME_SAFE_PUNCTUATION:
+        return True
+    # letters, digits, and combining marks of any script (e.g. 'ü', 'א') - but not control characters or symbols
+    return unicodedata.category(char)[0] in {'L', 'N', 'M'}
+
+
+def sanitize_filename_component(text: str, replacements: Union[Dict[str, str], None] = None) -> str:
+    """
+    Make a string safe to use as part of a file name on Windows, macOS, and Linux. \
+    Characters are checked against an allowlist (letters and digits of any script, spaces, \
+    and the ASCII punctuation characters that are legal in file names on all three systems); \
+    every other character (e.g. ':', '/', '\\\\', '"', '*', '?', control characters, and other symbols) \
+    is replaced with '_'. Strings that are already filename-safe are returned unchanged.
+
+    :param text: the string to sanitize
+    :type text: str
+    :param replacements: optional mapping of specific characters to their replacement strings, \
+    applied before the allowlist (e.g. {':': '_x_'}). The replacement strings must themselves be filename-safe.
+    :type replacements: dict or None
+    :return: the filename-safe string
+    :rtype: str
+    """
+    text = str(text)
+    if replacements:
+        for old, new in replacements.items():
+            if not all(_is_filename_safe_char(char) for char in new):
+                raise ValueError(f"The replacement string '{new}' is not filename-safe")
+            text = text.replace(old, new)
+    return ''.join(char if _is_filename_safe_char(char) else '_' for char in text)
+
+
+def r_quote(text) -> str:
+    """
+    Turn a Python value into an R string literal (in double quotes), escaping backslashes and double quotes, \
+    so that the string can be safely spliced into R source code.
+
+    :param text: the value to quote (non-string values are converted with str())
+    :return: an R string literal whose value is str(text)
+    :rtype: str
+    """
+    escaped = str(text).replace('\\', '\\\\').replace('"', '\\"')
+    return f'"{escaped}"'
+
+
 def r_make_names(names: List[str]):
     # Replace invalid characters with a dot
     valid_names = [re.sub(r'[^a-zA-Z0-9_]', '.', name) for name in names]
