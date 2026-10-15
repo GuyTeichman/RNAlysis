@@ -1748,6 +1748,64 @@ def test_is_rnalysis_outdated(monkeypatch, this_version, response, expected):
     assert is_rnalysis_outdated() == expected
 
 
+def test_is_rnalysis_outdated_passes_timeout(monkeypatch):
+    calls = []
+
+    def mock_get(*args, **kwargs):
+        calls.append(kwargs)
+        return MockResponse(text='{"info":{"version":"3.1.0"}}')
+
+    monkeypatch.setattr(requests, 'get', mock_get)
+    monkeypatch.setattr(io, '__version__', '3.0.0')
+    assert is_rnalysis_outdated() is True
+    assert len(calls) == 1
+    assert calls[0].get('timeout') is not None
+
+
+@pytest.mark.parametrize(
+    'exc',
+    [
+        requests.exceptions.Timeout,
+        requests.exceptions.ConnectTimeout,
+        requests.exceptions.ReadTimeout,
+        requests.exceptions.ConnectionError,
+        requests.exceptions.HTTPError,
+        requests.exceptions.TooManyRedirects,
+        requests.exceptions.SSLError,
+        ConnectionError,
+    ],
+)
+def test_is_rnalysis_outdated_network_error(monkeypatch, exc):
+    def mock_get(*args, **kwargs):
+        raise exc('simulated network failure')
+
+    monkeypatch.setattr(requests, 'get', mock_get)
+    monkeypatch.setattr(io, '__version__', '3.0.0')
+    assert is_rnalysis_outdated() is False
+
+
+@pytest.mark.parametrize(
+    'text',
+    [
+        '<html><body>Please log in to the hotel Wi-Fi</body></html>',  # captive portal
+        '',
+        '{"info":{"author":"Guy Teichman"}}',  # missing version key
+        '{"releases":{}}',  # missing info key
+        '[]',  # wrong JSON type
+        'null',
+        '{"info":null}',
+        '{"info":{"version":null}}',
+        '{"info":{"version":42}}',
+        '{"info":{"version":"4.0.0rc1"}}',  # non-numeric version string
+        '{"info":{"version":"not a version"}}',
+    ],
+)
+def test_is_rnalysis_outdated_malformed_response(monkeypatch, text):
+    monkeypatch.setattr(requests, 'get', lambda *args, **kwargs: MockResponse(text=text))
+    monkeypatch.setattr(io, '__version__', '3.0.0')
+    assert is_rnalysis_outdated() is False
+
+
 @pytest.mark.parametrize(
     'path,expected',
     [
@@ -3842,6 +3900,61 @@ class TestEnsemblOrthologMapper:
         # the cached re-run reproduces the first run exactly and does not re-hit the network
         assert second_one2one.mapping_dict == first_one2one.mapping_dict
         assert len(run_calls) == 1
+
+    @staticmethod
+    def _offline_mapper(monkeypatch, fake_response):
+        # Fully offline: no cache, identity ID translation, stubbed species name and Ensembl responses.
+        monkeypatch.setattr(io, 'load_cached_file', lambda fname: None)
+        monkeypatch.setattr(io, 'cache_file', lambda content, fname: None)
+
+        class MockGeneIDTranslator:
+            def __init__(self, *args, **kwargs):
+                pass
+
+            def run(self, ids):
+                return GeneIDDict({this_id: this_id for this_id in ids})
+
+        monkeypatch.setattr(io, 'GeneIDTranslator', MockGeneIDTranslator)
+        monkeypatch.setattr(io.EnsemblOrthologMapper, 'get_species_name', lambda self: 'caenorhabditis_elegans')
+        monkeypatch.setattr(io.EnsemblRestClient, 'run', lambda self: fake_response)
+        return EnsemblOrthologMapper(map_to_organism=9606, map_from_organism=6239, gene_id_type='UniProtKB AC/ID')
+
+    def test_get_orthologs_warns_about_cross_division_when_nothing_maps(self, monkeypatch):
+        # Issue #82: Ensembl REST does not serve orthologs across Ensembl divisions (e.g. C. elegans in
+        # Ensembl Metazoa -> human in Ensembl vertebrates), so such a query silently returns zero
+        # homologies for every gene. The user must get an actionable explanation, not just "0 out of N".
+        fake_response = [{'data': [{'id': 'gene1', 'homologies': []}]}, {'data': [{'id': 'gene2', 'homologies': []}]}]
+        mapper = self._offline_mapper(monkeypatch, fake_response)
+
+        with pytest.warns(UserWarning) as record:
+            one2one, one2many = mapper.get_orthologs(('gene1', 'gene2'), 'first')
+
+        assert len(one2one) == 0
+        assert len(one2many) == 0
+        messages = [str(w.message) for w in record]
+        division_msgs = [msg for msg in messages if 'Ensembl division' in msg]
+        assert len(division_msgs) == 1
+        msg = division_msgs[0]
+        assert 'PantherDB' in msg
+        assert 'PhylomeDB' in msg
+        assert 'OrthoInspector' in msg
+
+    def test_get_orthologs_no_cross_division_warning_when_some_genes_map(self, monkeypatch):
+        fake_response = [
+            {'data': [{'id': 'gene1', 'homologies': [{'target': {'id': 'ORTH1'}, 'source': {'perc_id': 90.0}}]}]},
+            {'data': [{'id': 'gene2', 'homologies': []}]},
+        ]
+        mapper = self._offline_mapper(monkeypatch, fake_response)
+
+        with warnings.catch_warnings(record=True) as record:
+            warnings.simplefilter('always')
+            one2one, _ = mapper.get_orthologs(('gene1', 'gene2'), 'first')
+
+        assert one2one.mapping_dict == {'gene1': 'ORTH1'}
+        messages = [str(w.message) for w in record]
+        assert not any('Ensembl division' in msg for msg in messages)
+        # the generic partial-mapping warning is still emitted
+        assert any('1 out of 2' in msg for msg in messages)
 
 
 class TestRunRScript:
