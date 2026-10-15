@@ -58,10 +58,127 @@ class DiffExpRunner(abc.ABC):
                     raise InvalidValueError(f'factor {factor} not found in design matrix columns')
 
     def run(self) -> Path:
+        # validate before anything touches R, so a typo fails instantly instead of after a full model fit
+        self.validate_design_inputs()
         self.install_required_packages()
         script_path = self.create_script()
         io.run_r_script(script_path, self.r_installation_folder)
         return script_path.parent
+
+    @staticmethod
+    def _format_choices(choices: Iterable) -> str:
+        return ', '.join(f"'{choice}'" for choice in choices)
+
+    @staticmethod
+    def _observed_values(column: pl.Series) -> List:
+        return sorted(column.drop_nulls().unique().to_list(), key=str)
+
+    @staticmethod
+    def _is_observed_value(value, column: pl.Series) -> bool:
+        """
+        Check whether a comparison's numerator/denominator is a value of the given design-matrix column. \
+        The check is deliberately lenient wherever Python's and R's reading of the design matrix could differ, \
+        so that it never rejects an input that R would accept.
+        """
+        if column.dtype == pl.String:
+            # the value is written verbatim into the R script, so it must match exactly (case and whitespace included)
+            return str(value) in column.drop_nulls().unique().to_list()
+        # other column types (e.g. boolean): leave the judgement to R
+        return True
+
+    @staticmethod
+    def _find_non_numeric_value(column: pl.Series):
+        """
+        Return a value of the given design-matrix column that R would not read as a number, \
+        or None if R would read the whole column as numeric.
+        """
+        if column.dtype.is_numeric():
+            return None
+        if column.dtype != pl.String:
+            # e.g. a boolean column, which R reads as logical rather than numeric
+            non_null = column.drop_nulls()
+            return non_null[0] if len(non_null) > 0 else None
+        # R's read.table() reads blank fields of a numeric column as missing values
+        values = column.drop_nulls().str.strip_chars()
+        values = values.filter(values != '')
+        as_numbers = values.cast(pl.Float64, strict=False)
+        non_numeric = values.filter(as_numbers.is_null())
+        return non_numeric[0] if len(non_numeric) > 0 else None
+
+    def validate_design_inputs(self):
+        """
+        Validate the comparisons, covariates, and LRT factors against the design matrix, \
+        so that a typo fails instantly with a clear message, instead of after a full R model fit.
+
+        :raises InvalidValueError: if a comparison, covariate, or LRT factor does not match the design matrix.
+        """
+        factors = self.design_mat.columns[1:]
+        factors_str = self._format_choices(factors)
+
+        for comparison in self.comparisons:
+            if len(comparison) != 3:
+                raise InvalidValueError(
+                    f'Each comparison must contain exactly three items: '
+                    f'(factor, numerator value, denominator value). Instead got: {comparison}'
+                )
+            factor, numerator, denominator = comparison
+            if factor not in factors:
+                raise InvalidValueError(
+                    f"The factor '{factor}' in the comparison {comparison} is not a column of the design matrix. "
+                    f'The available factors are: {factors_str}.'
+                )
+            column = self.design_mat[factor]
+            if column.dtype.is_numeric():
+                # R reads an all-numeric column as a continuous variable, which has no levels to compare
+                # (DESeq2's results() and limma's contrasts both fail on it)
+                raise InvalidValueError(
+                    f"The factor '{factor}' in the comparison {comparison} contains only numeric values, "
+                    f'so R treats it as a continuous (numeric) variable rather than as groups that can be compared. '
+                    f"To compare groups of '{factor}', give its values text labels in the design matrix "
+                    f"(for example '{factor}1' and '{factor}2' instead of 1 and 2). "
+                    f'To test a continuous variable, add it as a covariate instead.'
+                )
+            for value in (numerator, denominator):
+                if not self._is_observed_value(value, column):
+                    raise InvalidValueError(
+                        f"'{value}' (in the comparison {comparison}) is not a value of the factor '{factor}' "
+                        f"in the design matrix. The values of '{factor}' are: "
+                        f'{self._format_choices(self._observed_values(column))}. '
+                        f'Note that values must match exactly, including upper/lower case and spaces.'
+                    )
+            if str(numerator) == str(denominator):
+                raise InvalidValueError(
+                    f"The numerator and denominator of the comparison {comparison} are both '{numerator}'. "
+                    f"Please choose two different values of the factor '{factor}'."
+                )
+
+        for covariate in self.covariates:
+            if covariate not in factors:
+                raise InvalidValueError(
+                    f"The covariate '{covariate}' is not a column of the design matrix. "
+                    f'The available columns are: {factors_str}.'
+                )
+            non_numeric = self._find_non_numeric_value(self.design_mat[covariate])
+            if non_numeric is not None:
+                raise InvalidValueError(
+                    f"The covariate '{covariate}' must contain only numeric values "
+                    f"(for example age or dose), but it contains the non-numeric value '{non_numeric}'. "
+                    f"To compare groups of samples by '{covariate}', use it in a comparison instead of as a covariate."
+                )
+
+        for lrt_factor in self.lrt_factors:
+            for part in str(lrt_factor).split(':'):
+                part = part.strip()
+                poly_match = re.fullmatch(self.POLY_PATTERN, part)
+                name = poly_match.group(1) if poly_match else part
+                if not re.fullmatch(r'[\w.]+', name):
+                    # not a plain factor name (some other R expression) - leave the judgement to R
+                    continue
+                if name not in factors:
+                    raise InvalidValueError(
+                        f"The factor '{name}' in the likelihood ratio test term '{lrt_factor}' "
+                        f'is not a column of the design matrix. The available factors are: {factors_str}.'
+                    )
 
     @staticmethod
     def _get_cache_dir():
