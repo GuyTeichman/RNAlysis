@@ -5324,6 +5324,10 @@ async def run():  # pragma: no cover
 
     if show_app:
         window.show()
+        # a corrupt settings file is detected while the window is being built, before its log console exists
+        corrupt_settings_notice = settings.pop_corrupt_settings_notice()
+        if corrupt_settings_notice is not None:
+            QtWidgets.QMessageBox.warning(window, 'Settings were reset', corrupt_settings_notice)
         window.check_for_updates(False)
         window.show_tutorial()
         if io.check_changed_version():

@@ -243,6 +243,81 @@ def test_update_settings_file_failed_dump_keeps_original(isolated_settings_dir, 
     assert sorted(p.name for p in isolated_settings_dir.iterdir()) == ['settings.yaml']
 
 
+def test_corrupt_settings_notice_is_kept_for_the_gui(isolated_settings_dir):
+    pop_corrupt_settings_notice()  # clear any leftover notice
+    assert pop_corrupt_settings_notice() is None
+    get_settings_file_path().write_text('font: [\n')
+    with pytest.warns(UserWarning):
+        load_settings_file()
+    notice = pop_corrupt_settings_notice()
+    assert 'settings.yaml.bad' in notice
+    assert pop_corrupt_settings_notice() is None  # the notice is shown only once
+
+
+def test_corrupt_settings_backup_falls_back_to_copy(isolated_settings_dir, monkeypatch):
+    pth = get_settings_file_path()
+    pth.write_text('font: [\n')
+    real_replace = os.replace
+
+    def replace_fails_for_backup(src, dst):
+        if str(dst).endswith('.bad'):
+            raise PermissionError('file is locked')
+        return real_replace(src, dst)
+
+    monkeypatch.setattr(os, 'replace', replace_fails_for_backup)
+    with pytest.warns(UserWarning, match=r'settings\.yaml\.bad'):
+        assert load_settings_file() == {}
+    assert isolated_settings_dir.joinpath('settings.yaml.bad').read_text() == 'font: [\n'
+
+
+def test_update_settings_file_retries_when_target_locked(isolated_settings_dir, monkeypatch):
+    update_settings_file('Arial', __font_key__)
+    real_replace = os.replace
+    calls = []
+
+    def flaky_replace(src, dst):
+        calls.append(src)
+        if len(calls) < 3:
+            raise PermissionError('[WinError 5] Access is denied')
+        return real_replace(src, dst)
+
+    monkeypatch.setattr(os, 'replace', flaky_replace)
+    monkeypatch.setattr('rnalysis.utils.settings.time.sleep', lambda s: None)
+    update_settings_file('Comic Sans', __font_key__)
+    assert len(calls) == 3
+    assert load_settings_file()[__font_key__] == 'Comic Sans'
+    assert sorted(p.name for p in isolated_settings_dir.iterdir()) == ['settings.yaml']
+
+
+def test_update_settings_file_falls_back_to_direct_write_when_target_stays_locked(isolated_settings_dir, monkeypatch):
+    update_settings_file('Arial', __font_key__)
+
+    def always_locked(src, dst):
+        raise PermissionError('[WinError 5] Access is denied')
+
+    monkeypatch.setattr(os, 'replace', always_locked)
+    monkeypatch.setattr('rnalysis.utils.settings.time.sleep', lambda s: None)
+    update_settings_file('Comic Sans', __font_key__)
+    assert load_settings_file()[__font_key__] == 'Comic Sans'
+    assert sorted(p.name for p in isolated_settings_dir.iterdir()) == ['settings.yaml']
+
+
+def test_update_settings_file_uses_unique_temp_files(isolated_settings_dir, monkeypatch):
+    real_replace = os.replace
+    temp_names = []
+
+    def recording_replace(src, dst):
+        temp_names.append(Path(src).name)
+        return real_replace(src, dst)
+
+    monkeypatch.setattr(os, 'replace', recording_replace)
+    update_settings_file('Arial', __font_key__)
+    update_settings_file('Comic Sans', __font_key__)
+    assert len(temp_names) == 2
+    assert temp_names[0] != temp_names[1]
+    assert all(name.startswith('settings.yaml.') and name.endswith('.tmp') for name in temp_names)
+
+
 def test_update_settings_file_leaves_no_temp_file(isolated_settings_dir):
     update_settings_file('Arial', __font_key__)
     update_settings_file(12, __font_size_key__)
