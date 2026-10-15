@@ -2278,7 +2278,20 @@ class EnsemblOrthologMapper:
         mapping_one2one, mapping_one2many = translate_mappings(ids, translated_ids, mapping_one2one, mapping_one2many)
 
         n_mapped = len(mapping_one2many)
-        if n_mapped < len(translated_ids):
+        if n_mapped == 0 and len(translated_ids) > 0:
+            # Ensembl REST does not serve orthologs across Ensembl divisions (e.g. Ensembl Metazoa -> Ensembl
+            # vertebrates), and returns an empty result rather than an error for such queries (issue #82).
+            warnings.warn(
+                f'Ensembl found no orthologs for any of the {len(translated_ids)} gene IDs. '
+                f'This usually happens when the source and target organisms belong to different Ensembl '
+                f'divisions (for example, C. elegans is in Ensembl Metazoa while human is in the main Ensembl '
+                f'vertebrate database): Ensembl does not provide orthologs across Ensembl divisions. '
+                f'Please try mapping orthologs with a different database instead - '
+                f'"Map genes to nearest orthologs (using PantherDB)", '
+                f'"Map genes to nearest orthologs (using PhylomeDB)", or '
+                f'"Map genes to nearest orthologs (using OrthoInspector)".'
+            )
+        elif n_mapped < len(translated_ids):
             warnings.warn(f'Ortholog mapping found for only {n_mapped} out of {len(translated_ids)} gene IDs.')
 
         return OrthologDict(mapping_one2one), OrthologDict(
