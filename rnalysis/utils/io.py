@@ -69,9 +69,36 @@ class RandomExpRetry(Retry):
 
 
 class BatchLRUCache:
-    def __init__(self, max_size: int = 50000):
+    """
+    A per-ID LRU cache decorator for batch lookup functions of the form ``func(ids, *args, **kwargs) -> dict``. \
+    Only the IDs that are not already cached are passed on to the wrapped function, \
+    and the result for every requested ID is returned (``None`` for IDs the wrapped function did not report).
+
+    **Contract for the wrapped function** (not enforced; every wrapped function must uphold it): \
+    it must *raise* on any failure (network error, bad status, unparsable response), \
+    and must never return a partial result because of degradation (a timeout, a failed chunk, etc). \
+    Any requested ID it omits from its returned dictionary is treated as *confirmed absent* \
+    and is cached as ``None``. A function that catches its own errors and returns whatever it got \
+    would make the cache report those genes as non-existent.
+
+    Positive entries never expire (they are only evicted by the LRU policy). \
+    Negative entries (``None``) expire ``negative_ttl`` seconds after they were cached and are then re-queried, \
+    so that an ID that was absent once is rechecked in a long-running session. \
+    Note that any extra ``*args``/``**kwargs`` are **not** part of the cache key.
+
+    :param max_size: the maximal number of entries (positive and negative) to keep in the cache.
+    :param negative_ttl: the number of seconds a negative (``None``) entry remains valid.
+    """
+
+    def __init__(self, max_size: int = 50000, negative_ttl: float = 3600):
         self.cache: OrderedDict = OrderedDict()
         self.max_size = max_size
+        self.negative_ttl = negative_ttl
+        # expiry time (in self._clock() units) for every negative entry currently in the cache
+        self._negative_expiry: Dict[str, float] = {}
+        self._clock: Callable[[], float] = time.monotonic
+        # guards the cache bookkeeping (not the wrapped function call), since the GUI may look up from threads
+        self._lock = threading.RLock()
 
     def __call__(self, func: Callable[[Iterable[str], Any], Dict[str, Any]]):
         @wraps(func)
@@ -79,39 +106,53 @@ class BatchLRUCache:
             final_results = {}
             uncached_ids = []
 
-            # 1. Separate hits from misses
-            for item_id in ids:
-                if item_id in self.cache:
-                    final_results[item_id] = self.cache[item_id]
-                    self.cache.move_to_end(item_id)  # Mark as Most Recently Used
-                else:
-                    uncached_ids.append(item_id)
+            # 1. Separate hits from misses (expired negative entries count as misses)
+            with self._lock:
+                now = self._clock()
+                for item_id in ids:
+                    if item_id in self.cache and not self._is_expired(item_id, now):
+                        final_results[item_id] = self.cache[item_id]
+                        self.cache.move_to_end(item_id)  # Mark as Most Recently Used
+                    else:
+                        uncached_ids.append(item_id)
 
             # 2. Only invoke the network function if there are cache misses
             if uncached_ids:
                 # The wrapped function only deals with actual misses
                 new_results = func(uncached_ids, *args, **kwargs)
+                if not new_results:
+                    new_results = {}
 
-                # 3. Write new results into the LRU cache
-                if new_results:
+                with self._lock:
+                    # 3. Write new results into the LRU cache
                     for item_id, data in new_results.items():
                         self._set_cache(item_id, data)
                         final_results[item_id] = data
 
-                # 4. Guard against dead/invalid IDs omitted by the API response
-                for item_id in uncached_ids:
-                    if item_id not in self.cache:
-                        self._set_cache(item_id, None)
-                        final_results[item_id] = None
+                    # 4. IDs omitted by the wrapped function are confirmed-absent (see the class docstring)
+                    for item_id in uncached_ids:
+                        if item_id not in new_results:
+                            self._set_cache(item_id, None)
+                            final_results[item_id] = None
 
             return final_results
 
         return wrapper
 
+    def _is_expired(self, key: str, now: float) -> bool:
+        expiry = self._negative_expiry.get(key)
+        return expiry is not None and now >= expiry
+
     def _set_cache(self, key: str, value: Any):
         self.cache[key] = value
-        if len(self.cache) > self.max_size:
-            self.cache.popitem(last=False)  # Evict the Least Recently Used item
+        self.cache.move_to_end(key)
+        if value is None:
+            self._negative_expiry[key] = self._clock() + self.negative_ttl
+        else:
+            self._negative_expiry.pop(key, None)
+        while len(self.cache) > self.max_size:
+            evicted_key, _ = self.cache.popitem(last=False)  # Evict the Least Recently Used item
+            self._negative_expiry.pop(evicted_key, None)
 
 
 def get_datafile_dir() -> Path:

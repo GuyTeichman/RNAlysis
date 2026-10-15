@@ -182,6 +182,120 @@ class TestBatchLRUCache:
         assert second_result == {'bad_gene': None}
         mock_selective_api.assert_not_called()
 
+    @staticmethod
+    def _fake_clock(cache_decorator, start: float = 1000.0):
+        now = [start]
+        cache_decorator._clock = lambda: now[0]
+        return now
+
+    def test_negative_ttl_default(self):
+        assert BatchLRUCache().negative_ttl == 3600
+        assert BatchLRUCache(negative_ttl=5).negative_ttl == 5
+
+    def test_negative_entry_served_from_cache_before_ttl(self):
+        cache_decorator = BatchLRUCache(max_size=10, negative_ttl=60)
+        now = self._fake_clock(cache_decorator)
+        api = Mock(return_value={})
+        decorated_func = cache_decorator(api)
+
+        assert decorated_func(('bad_gene',)) == {'bad_gene': None}
+        api.reset_mock()
+        now[0] += 59
+        assert decorated_func(('bad_gene',)) == {'bad_gene': None}
+        api.assert_not_called()
+
+    def test_negative_entry_refetched_after_ttl(self):
+        cache_decorator = BatchLRUCache(max_size=10, negative_ttl=60)
+        now = self._fake_clock(cache_decorator)
+        api = Mock(return_value={})
+        decorated_func = cache_decorator(api)
+
+        assert decorated_func(('gene1',)) == {'gene1': None}
+        now[0] += 61
+        api.reset_mock()
+        api.return_value = {'gene1': 'gene1_data'}
+        assert decorated_func(('gene1',)) == {'gene1': 'gene1_data'}
+        api.assert_called_once_with(['gene1'])
+        # the refreshed positive entry is cached and never expires
+        api.reset_mock()
+        now[0] += 10**9
+        assert decorated_func(('gene1',)) == {'gene1': 'gene1_data'}
+        api.assert_not_called()
+        assert 'gene1' not in cache_decorator._negative_expiry
+
+    def test_expired_negative_still_absent_is_recached(self):
+        cache_decorator = BatchLRUCache(max_size=10, negative_ttl=60)
+        now = self._fake_clock(cache_decorator)
+        api = Mock(return_value={})
+        decorated_func = cache_decorator(api)
+
+        decorated_func(('gene1',))
+        now[0] += 61
+        assert decorated_func(('gene1',)) == {'gene1': None}
+        assert api.call_count == 2
+        # the new negative entry gets a fresh TTL
+        now[0] += 59
+        assert decorated_func(('gene1',)) == {'gene1': None}
+        assert api.call_count == 2
+
+    def test_positive_entries_never_expire(self, mock_network_func):
+        cache_decorator = BatchLRUCache(max_size=10, negative_ttl=60)
+        now = self._fake_clock(cache_decorator)
+        decorated_func = cache_decorator(mock_network_func)
+
+        decorated_func(('gene1',))
+        mock_network_func.reset_mock()
+        now[0] += 10**9
+        assert decorated_func(('gene1',)) == {'gene1': 'gene1_data'}
+        mock_network_func.assert_not_called()
+
+    def test_mixed_batch_only_requeries_expired_and_uncached(self):
+        cache_decorator = BatchLRUCache(max_size=10, negative_ttl=60)
+        now = self._fake_clock(cache_decorator)
+        api = Mock(side_effect=lambda ids: {i: f'{i}_data' for i in ids if i.startswith('pos')})
+        decorated_func = cache_decorator(api)
+
+        decorated_func(('pos1', 'neg_old'))  # t=1000
+        now[0] += 30
+        decorated_func(('neg_fresh',))  # t=1030
+        now[0] += 40  # t=1070: neg_old is 70s old (expired), neg_fresh is 40s old (fresh)
+        api.reset_mock()
+
+        result = decorated_func(('pos1', 'neg_old', 'neg_fresh', 'pos_new'))
+        assert result == {'pos1': 'pos1_data', 'neg_old': None, 'neg_fresh': None, 'pos_new': 'pos_new_data'}
+        api.assert_called_once_with(['neg_old', 'pos_new'])
+
+    def test_negative_entries_respect_max_size(self):
+        cache_decorator = BatchLRUCache(max_size=2, negative_ttl=60)
+        self._fake_clock(cache_decorator)
+        api = Mock(return_value={})
+        decorated_func = cache_decorator(api)
+
+        assert decorated_func(('a', 'b', 'c', 'd')) == {'a': None, 'b': None, 'c': None, 'd': None}
+        assert list(cache_decorator.cache) == ['c', 'd']
+        # expiry bookkeeping is evicted together with the cache entries
+        assert set(cache_decorator._negative_expiry) == {'c', 'd'}
+
+    def test_mixed_entries_respect_max_size(self):
+        cache_decorator = BatchLRUCache(max_size=3, negative_ttl=60)
+        self._fake_clock(cache_decorator)
+        api = Mock(side_effect=lambda ids: {i: 'data' for i in ids if i.startswith('pos')})
+        decorated_func = cache_decorator(api)
+
+        decorated_func(('pos1', 'neg1', 'pos2', 'neg2', 'pos3'))
+        assert len(cache_decorator.cache) == 3
+        assert set(cache_decorator._negative_expiry) <= set(cache_decorator.cache)
+
+    def test_batch_larger_than_max_size_returns_all_results(self, mock_network_func):
+        """Positive results evicted mid-batch must still be returned, not overwritten with None."""
+        cache_decorator = BatchLRUCache(max_size=2)
+        decorated_func = cache_decorator(mock_network_func)
+
+        result = decorated_func(('g1', 'g2', 'g3', 'g4'))
+        assert result == {f'g{i}': f'g{i}_data' for i in range(1, 5)}
+        assert list(cache_decorator.cache) == ['g3', 'g4']
+        assert cache_decorator._negative_expiry == {}
+
 
 @pytest.mark.parametrize(
     'pth',
