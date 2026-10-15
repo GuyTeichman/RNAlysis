@@ -304,6 +304,7 @@ class TestBatchLRUCache:
 
     def test_concurrent_access_smoke(self):
         import threading as _threading
+
         cache_decorator = BatchLRUCache(max_size=50, negative_ttl=0)
         decorated_func = cache_decorator(lambda ids: {i: i for i in ids if int(i) % 2})
         errors = []
