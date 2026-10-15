@@ -501,6 +501,40 @@ def test_go_elim_parallel_uses_independent_annotation_copies(monkeypatch):
                 return
 
 
+@pytest.mark.parametrize('stats_test', [HypergeometricTest(), XlmhgTest(), PermutationTest(100)])
+def test_go_enrichment_runner_validate_statistical_test_allm_rejects_non_fisher(monkeypatch, stats_test):
+    # 'all.m' runs the 'weight' algorithm internally, which only supports Fisher's exact test.
+    # Pretend xlmhglite is installed, so the XL-mHG case is rejected by the 'all.m' guard itself.
+    monkeypatch.setattr(enrichment_runner, 'HAS_XLMHG', True)
+    runner = GOEnrichmentRunner.__new__(GOEnrichmentRunner)
+    runner.propagate_annotations = 'all.m'
+    runner.stats_test = stats_test
+    with pytest.warns(UserWarning, match=r"'all\.m'"):
+        assert runner.validate_statistical_test() is False
+
+
+@pytest.mark.parametrize('propagate_annotations', ['no', 'classic', 'elim'])
+def test_go_enrichment_runner_validate_statistical_test_respects_base_checks(monkeypatch, propagate_annotations):
+    # the base-class checks (a valid StatsTest; xlmhglite installed for XL-mHG) must not be overridden
+    runner = GOEnrichmentRunner.__new__(GOEnrichmentRunner)
+    runner.propagate_annotations = propagate_annotations
+    runner.stats_test = 'not a stats test'
+    with pytest.warns(UserWarning, match='Invalid statistical test'):
+        assert runner.validate_statistical_test() is False
+
+    monkeypatch.setattr(enrichment_runner, 'HAS_XLMHG', False)
+    runner.stats_test = XlmhgTest()
+    with pytest.warns(UserWarning, match='xlmhglite'):
+        assert runner.validate_statistical_test() is False
+
+
+def test_go_enrichment_runner_validate_statistical_test_allm_accepts_fisher():
+    runner = GOEnrichmentRunner.__new__(GOEnrichmentRunner)
+    runner.propagate_annotations = 'all.m'
+    runner.stats_test = FishersExactTest()
+    assert runner.validate_statistical_test() is True
+
+
 def test_weight_pvals(monkeypatch):
     goa_df = io.load_table('tests/test_files/goa_table.csv')
     gene_set = {'gene1', 'gene2', 'gene5', 'gene12', 'gene13', 'gene17', 'gene19', 'gene25', 'gene27', 'gene28'}

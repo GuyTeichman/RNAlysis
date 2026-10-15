@@ -1694,12 +1694,13 @@ class GOEnrichmentRunner(EnrichmentRunner):
         )
 
     def validate_statistical_test(self):
-        super().validate_statistical_test()
+        if not super().validate_statistical_test():
+            return False
         if self.propagate_annotations in {'weight'} and not isinstance(self.stats_test, FishersExactTest):
             warnings.warn("The 'weight' propagation algorithm is only compatible with Fisher's Exact test.")
             return False
-        if self.propagate_annotations in {'allm'} and not isinstance(self.stats_test, FishersExactTest):
-            warnings.warn("The 'weight' propagation algorithm is only compatible with Fisher's Exact test. ")
+        if self.propagate_annotations in {'all.m'} and not isinstance(self.stats_test, FishersExactTest):
+            warnings.warn("The 'all.m' propagation method is only compatible with Fisher's Exact test.")
             return False
         return True
 
