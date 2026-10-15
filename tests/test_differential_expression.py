@@ -450,3 +450,103 @@ class TestDESeqRunner:
         assert '$NORMFACTORS' not in out
         expected = expected.replace('*PLACEHOLDERPATH*', out_path.parent.as_posix())
         assert out == expected
+
+
+class _RCalled(Exception):
+    pass
+
+
+class TestDiffExpPreflightValidation:
+    """
+    comparisons/covariates/lrt_factors must be validated against the design matrix before any R process
+    starts (issue #280), so a typo fails instantly with a plain-language error instead of after a full R fit.
+    """
+
+    DESIGN_MAT = (
+        'sample,condition,replicate,age,batch,genotype\n'
+        's1,KO,rep1,10,1,mutA\n'
+        's2,KO,rep2,15,2,mutB\n'
+        's3,KO,rep3,12.5,1,mutA\n'
+        's4,WT,rep1,8,2,mutB\n'
+        's5,WT,rep2,11,1,mutA\n'
+        's6,WT,rep3,9,2,mutB\n'
+    )
+
+    @pytest.fixture
+    def design_mat_path(self, tmp_path):
+        pth = tmp_path.joinpath('design_mat.csv')
+        pth.write_text(self.DESIGN_MAT)
+        return pth
+
+    @pytest.fixture
+    def no_r(self, monkeypatch):
+        # any attempt to touch R (installing packages or running a script) means validation came too late
+        def fail(*args, **kwargs):
+            raise _RCalled('R was invoked')
+
+        monkeypatch.setattr(installs, 'install_deseq2', fail)
+        monkeypatch.setattr(installs, 'install_limma', fail)
+        monkeypatch.setattr(io, 'run_r_script', fail)
+
+    @pytest.mark.parametrize('runner_cls', [DESeqRunner, LimmaVoomRunner])
+    @pytest.mark.parametrize(
+        'comparisons,covariates,lrt_factors,expected_in_msg',
+        [
+            # comparison factor is not a design-matrix column
+            ([('conditon', 'KO', 'WT')], [], [], ["'conditon'", "'condition'"]),
+            # numerator is not an observed value of the factor (case typo)
+            ([('condition', 'Ko', 'WT')], [], [], ["'Ko'", "'KO'", "'WT'"]),
+            # denominator has a trailing space
+            ([('condition', 'KO', 'WT ')], [], [], ["'WT '", "'KO'", "'WT'"]),
+            # denominator belongs to a different factor
+            ([('condition', 'KO', 'rep1')], [], [], ["'rep1'"]),
+            # numerator == denominator
+            ([('condition', 'KO', 'KO')], [], [], ["'KO'"]),
+            # numeric factor, value not observed
+            ([('batch', '3', '1')], [], [], ["'3'"]),
+            # malformed comparison
+            ([('condition', 'KO')], [], [], ['three']),
+            # covariate is not a column
+            ([('condition', 'KO', 'WT')], ['agee'], [], ["'agee'", "'age'"]),
+            # covariate is not numeric
+            ([('condition', 'KO', 'WT')], ['genotype'], [], ["'genotype'", 'numeric']),
+            # LRT factor is not a column
+            ([('condition', 'KO', 'WT')], [], ['genotyp'], ["'genotyp'", "'genotype'"]),
+            # one part of an interaction term is not a column
+            ([('condition', 'KO', 'WT')], [], ['condition:genotyp'], ["'genotyp'", "'condition:genotyp'"]),
+            # polynomial LRT term on a factor that is not a column
+            ([('condition', 'KO', 'WT')], [], ['poly(agee, degree = 2)'], ["'agee'"]),
+        ],
+    )
+    def test_invalid_inputs_fail_before_r(
+        self, design_mat_path, no_r, runner_cls, comparisons, covariates, lrt_factors, expected_in_msg
+    ):
+        runner = runner_cls('counts.csv', design_mat_path, comparisons, covariates=covariates, lrt_factors=lrt_factors)
+        with pytest.raises(InvalidValueError) as e:
+            runner.run()
+        for expected in expected_in_msg:
+            assert expected in str(e.value)
+
+    @pytest.mark.parametrize('runner_cls', [DESeqRunner, LimmaVoomRunner])
+    @pytest.mark.parametrize(
+        'comparisons,covariates,lrt_factors',
+        [
+            ([('condition', 'KO', 'WT')], [], []),
+            ([('condition', 'WT', 'KO'), ('replicate', 'rep2', 'rep1')], [], []),
+            ([('genotype', 'mutB', 'mutA')], ['age'], []),
+            ([('condition', 'KO', 'WT')], ['age', 'batch'], ['genotype']),
+            ([('condition', 'KO', 'WT')], [], ['condition:genotype']),
+            ([('condition', 'KO', 'WT')], [], ['poly(age, degree = 2)']),
+            # numeric-coded factor levels, given either as strings or as numbers
+            ([('batch', '2', '1')], [], []),
+            ([('batch', 2, 1)], [], []),
+            ([], [], []),
+        ],
+    )
+    def test_valid_inputs_pass_validation(
+        self, design_mat_path, no_r, runner_cls, comparisons, covariates, lrt_factors
+    ):
+        runner = runner_cls('counts.csv', design_mat_path, comparisons, covariates=covariates, lrt_factors=lrt_factors)
+        # validation passes, so the run proceeds to the (mocked) R step
+        with pytest.raises(_RCalled):
+            runner.run()
