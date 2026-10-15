@@ -2283,7 +2283,7 @@ class EnsemblOrthologMapper:
             # vertebrates), and returns an empty result rather than an error for such queries (issue #82).
             warnings.warn(
                 f'Ensembl found no orthologs for any of the {len(translated_ids)} gene IDs. '
-                f'This usually happens when the source and target organisms belong to different Ensembl '
+                f'A common cause is that the source and target organisms belong to different Ensembl '
                 f'divisions (for example, C. elegans is in Ensembl Metazoa while human is in the main Ensembl '
                 f'vertebrate database): Ensembl does not provide orthologs across Ensembl divisions. '
                 f'Please try mapping orthologs with a different database instead - '
