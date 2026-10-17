@@ -746,6 +746,10 @@ def _gui_exposed_functions():
             if not getattr(func, '__module__', None) or not func.__module__.startswith('rnalysis'):
                 continue
             funcs[f'{cls.__name__}.{name}'] = func
+    # the GUI also reads parameter help from the table constructors and from Pipeline.apply_to
+    for cls in (filtering.Filter, filtering.CountFilter, filtering.DESeqFilter, filtering.FoldChangeFilter):
+        funcs[f'{cls.__name__}.__init__'] = cls.__init__
+    funcs['Pipeline.apply_to'] = filtering.Pipeline.apply_to
     for module in (fastq, enrichment):
         for name, func in inspect.getmembers(module, inspect.isfunction):
             if not name.startswith('_') and func.__module__ == module.__name__:
