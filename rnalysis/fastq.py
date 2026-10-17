@@ -1856,16 +1856,28 @@ def bowtie2_align_paired_end(
     :param quality_score_type: determines the encoding type of the read quality scores. \
     Most modern sequencing setups use phred+33.
     :type quality_score_type: 'phred33', 'phred64', 'solexa-quals', or 'int-quals' (default='phred33')
-    :param mate_orientations:
+    :param mate_orientations: the expected relative orientation of the two mates of a valid paired-end alignment. \
+    'fwd-rev' means that if Read#1 appears upstream of Read#2, Read#1 aligns to the forward strand \
+    and Read#2 aligns to the reverse-complement strand (and vice versa if Read#2 appears upstream). \
+    This is the orientation of standard Illumina paired-end libraries. \
+    'rev-fwd' means that if Read#1 appears upstream, Read#1 aligns to the reverse-complement strand \
+    and Read#2 aligns to the forward strand. 'fwd-fwd' means both mates align to the same strand. \
+    'rev-fwd' and 'fwd-fwd' are used for other library types (for example, some mate-pair libraries).
     :type mate_orientations: 'fwd-rev', 'rev-fwd', or 'fwd-fwd' (default='fwd-rev')
     :param min_fragment_length: The minimum fragment length for valid paired-end alignments.
     :type min_fragment_length: int >= 0 (default=0)
     :param max_fragment_length: The maximum fragment length for valid paired-end alignments.
     :type max_fragment_length: int > 0 (default=500)
-    :param allow_individual_alignment:
-    :type allow_individual_alignment: bool (default=
-    :param allow_disconcordant_alignment:
-    :type allow_disconcordant_alignment: bool (default=
+    :param allow_individual_alignment: if True, when bowtie2 cannot find a valid paired-end alignment \
+    for a pair of mates, it will try to find alignments for each of the mates individually. \
+    If False, only paired-end alignments will be reported.
+    :type allow_individual_alignment: bool (default=True)
+    :param allow_disconcordant_alignment: if True, when bowtie2 cannot find a concordant alignment for a pair of mates \
+    (an alignment that matches the expected mate orientation and fragment length constraints), \
+    it will look for discordant alignments (where both mates align uniquely, but not concordantly). \
+    If False, discordant paired-end alignments will not be reported \
+    (individual alignments of each mate may still be reported, depending on 'allow_individual_alignment').
+    :type allow_disconcordant_alignment: bool (default=True)
     :param random_seed:  determines the seed for pseudo-random number generator.
     :type random_seed: int >=0 (default=0)
     :param threads: number of threads to run bowtie2-build on. More threads will generally make index building faster.
@@ -1907,7 +1919,7 @@ def bowtie2_align_paired_end(
     call.extend(['-X', str(max_fragment_length)])
 
     if not allow_disconcordant_alignment:
-        call.append('--no-discorcordant')
+        call.append('--no-discordant')
     if not allow_individual_alignment:
         call.append('--no-mixed')
 
