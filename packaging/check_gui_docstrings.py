@@ -22,12 +22,17 @@ by file path. Being static, the check approximates what the GUI does at runtime:
   ``FeatureSet`` and their subclasses (``gui.TabPage.get_all_actions``), and public module-level functions of
   ``fastq`` and ``enrichment``. ``EXCLUDED_FUNCS`` are still checked (a stricter superset; they are public API whose
   docstrings also feed the API docs). Properties are skipped (``get_all_actions`` only keeps callables).
-- Parameters in ``GUI_HIDDEN_PARAMS`` are skipped: the GUI never renders them (``gui.FuncTypeStack.EXCLUDED_PARAMS``
-  and the per-window ``EXCLUDED_PARAMS``). Other per-window exclusions are not mirrored; a parameter they hide but
-  that lacks help text is listed in ``KNOWN_ISSUES`` instead.
+- For methods, parameters in ``GUI_HIDDEN_METHOD_PARAMS`` are skipped: the tab pages never render them
+  (``gui.FuncTypeStack.EXCLUDED_PARAMS``). Module-level functions are rendered by ``FuncExternalWindow`` subclasses,
+  most of which render every parameter, so only ``GUI_HIDDEN_FUNCTION_PARAMS`` is skipped for them. Other
+  per-window exclusions are not mirrored; a parameter they hide but that lacks help text is listed in
+  ``KNOWN_ISSUES`` instead.
 - Inherited docstrings (``inspect.getdoc``) are resolved through base classes defined in the same file. A method
-  with no docstring whose class derives from a class defined elsewhere is skipped, since its docstring may be
-  inherited from there.
+  with no docstring whose class derives from a class defined elsewhere (other than a builtin such as ``set``, which
+  is checked directly) is skipped when that base may define the method, since its docstring may be inherited from
+  there.
+- ``no-docstring`` is only reported for ``@readable_name``-decorated functions. The GUI also shows undecorated
+  public methods under their function name; an undocumented one is not reported.
 - ``KNOWN_ISSUES`` is a baseline of problems that predate this hook. They are tolerated, but an entry that no longer
   occurs is reported, so the baseline can only shrink.
 
@@ -36,6 +41,7 @@ or the shared parser is among them, all checked modules are checked.
 """
 
 import ast
+import builtins
 import importlib.util
 import re
 import sys
@@ -54,8 +60,10 @@ CHECKED_MODULES: Dict[str, Tuple[bool, Tuple[str, ...]]] = {
     'rnalysis/fastq.py': (True, ()),
 }
 
-# parameters the GUI never renders, whatever the function (see gui.FuncTypeStack.EXCLUDED_PARAMS)
-GUI_HIDDEN_PARAMS = frozenset({'self', 'cls', 'backend', 'gui_mode', 'legacy_args', 'function_kwargs'})
+# parameters the GUI never renders for Filter/FeatureSet methods (see gui.FuncTypeStack.EXCLUDED_PARAMS)
+GUI_HIDDEN_METHOD_PARAMS = frozenset({'self', 'cls', 'backend', 'gui_mode', 'legacy_args', 'function_kwargs'})
+# ... and for module-level fastq/enrichment functions (excluded by every FuncExternalWindow that could show it)
+GUI_HIDDEN_FUNCTION_PARAMS = frozenset({'legacy_args'})
 
 MISSING = 'missing-help'
 UNKNOWN = 'unknown-param'
@@ -114,6 +122,7 @@ KNOWN_ISSUES: Set[Tuple[str, str, Optional[str], str]] = {
 _STRICT_PARAM = re.compile(r'^[ \t]*:param ([a-zA-Z_0-9]+):', re.MULTILINE)
 _PARAM_LIKE = re.compile(r'^[ \t]*(?::param\b|param\s+\w+\s*:)')
 _PARAM_LIKE_NAME = re.compile(r'param\s+(\w+)')
+_FIELD_HEAD = re.compile(r'^[ \t]*:param\s+([^:]*?)\s*:')
 
 
 def _load_parser():
@@ -165,7 +174,8 @@ def _signature_params(func: ast.FunctionDef, is_method: bool) -> Tuple[List[str]
     if is_method and 'staticmethod' not in _decorator_names(func) and named:
         named = named[1:]  # self / cls
     all_names = set(named) | {arg.arg for arg in (args.vararg, args.kwarg) if arg is not None}
-    return [name for name in named if name not in GUI_HIDDEN_PARAMS], all_names
+    hidden = GUI_HIDDEN_METHOD_PARAMS if is_method else GUI_HIDDEN_FUNCTION_PARAMS
+    return [name for name in named if name not in hidden], all_names
 
 
 def _find_line(lines: Sequence[str], func: ast.FunctionDef, pattern: str) -> int:
@@ -187,9 +197,9 @@ class _ClassIndex:
     def local_base(self, base: ast.expr) -> Optional[ast.ClassDef]:
         return self.classes.get(base.id) if isinstance(base, ast.Name) else None
 
-    def mro(self, cls: ast.ClassDef) -> Tuple[List[ast.ClassDef], bool]:
-        """Same-file ancestors (depth-first, including cls), and whether any ancestor is defined elsewhere."""
-        order, has_external, stack = [], False, [cls]
+    def mro(self, cls: ast.ClassDef) -> Tuple[List[ast.ClassDef], List[ast.expr]]:
+        """Same-file ancestors (depth-first, including cls), and the bases defined elsewhere."""
+        order, external, stack = [], [], [cls]
         while stack:
             current = stack.pop(0)
             if current in order:
@@ -198,24 +208,33 @@ class _ClassIndex:
             for base in self._bases(current):
                 local = self.local_base(base)
                 if local is None:
-                    has_external = True
+                    external.append(base)
                 else:
                     stack.append(local)
-        return order, has_external
+        return order, external
 
     def is_gui_class(self, cls: ast.ClassDef, roots: Iterable[str]) -> bool:
         return any(ancestor.name in roots for ancestor in self.mro(cls)[0])
 
     def inherited_docstring(self, cls: ast.ClassDef, name: str) -> Tuple[Optional[str], bool]:
-        """Mimic inspect.getdoc(): the first docstring of method `name` along the same-file MRO."""
-        order, has_external = self.mro(cls)
+        """
+        Mimic inspect.getdoc(): the first docstring of method `name` along the same-file MRO. Also return whether a
+        base defined elsewhere may define `name` (and so supply a docstring this static check cannot see):
+        builtin bases (e.g. `set`) are checked directly, any other external base is assumed to.
+        """
+        order, external = self.mro(cls)
         for ancestor in order:
             for node in ancestor.body:
                 if _is_function(node) and node.name == name:
                     doc = ast.get_docstring(node)
                     if doc is not None:
-                        return doc, has_external
-        return None, has_external
+                        return doc, False
+        may_inherit = False
+        for base in external:
+            builtin = getattr(builtins, base.id, None) if isinstance(base, ast.Name) else None
+            if not isinstance(builtin, type) or hasattr(builtin, name):
+                may_inherit = True
+        return None, may_inherit
 
 
 def _check_function(
@@ -235,8 +254,15 @@ def _check_function(
     for line in doc.splitlines():
         collapsed = re.sub(' +', ' ', line)
         if _PARAM_LIKE.match(collapsed) and not _STRICT_PARAM.match(collapsed):
-            match = _PARAM_LIKE_NAME.search(collapsed)
-            name = match.group(1) if match else None
+            head = _FIELD_HEAD.match(collapsed)
+            if head:  # ':param int x: ...' / ':param x : ...' -> the name is the last word before the colon
+                words = re.findall(r'\w+', head.group(1))
+                name = words[-1] if words else None
+            else:
+                match = _PARAM_LIKE_NAME.search(collapsed)
+                name = match.group(1) if match else None
+                if not collapsed.lstrip().startswith(':') and name not in all_names:
+                    continue  # a prose line such as 'param values: ...', not a broken field
             problems.append(Problem(path, _find_line(lines, func, re.escape(line.strip())), qualname, name, MALFORMED))
     malformed = {problem.param for problem in problems}
 
@@ -270,8 +296,8 @@ def check_source(source: str, path: str, module_functions: bool, root_classes: S
                     continue
                 doc = ast.get_docstring(method)
                 if doc is None:
-                    doc, has_external_base = index.inherited_docstring(node, method.name)
-                    if doc is None and has_external_base:
+                    doc, may_inherit = index.inherited_docstring(node, method.name)
+                    if doc is None and may_inherit:
                         continue  # the docstring may be inherited from a class the static check cannot see
                 qualname = f'{node.name}.{method.name}'
                 problems.extend(_check_function(method, qualname, doc, True, path, lines))

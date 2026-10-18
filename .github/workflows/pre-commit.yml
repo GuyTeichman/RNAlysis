@@ -60,8 +60,8 @@ jobs:
                         if [ -n "$from_ref" ] && [ "$from_ref" != "0000000000000000000000000000000000000000" ] \
                             && ! git cat-file -e "${from_ref}^{commit}" 2>/dev/null; then
                             # force-push: the old tip is not in the fetched history; try fetching it by SHA
-                            # (no --depth: a shallow boundary there would leave from_ref...to_ref, which
-                            # pre-commit diffs with three dots, without a merge base)
+                            # (no --depth, so the fetched commit keeps its real ancestry for
+                            # pre-commit's three-dot from_ref...to_ref diff)
                             git fetch --no-tags origin "$from_ref" || true
                         fi
                         if [ -z "$from_ref" ] || [ "$from_ref" = "0000000000000000000000000000000000000000" ] \
@@ -71,7 +71,7 @@ jobs:
                             from_ref="$(git rev-parse --verify --quiet "${to_ref}^" || echo "$to_ref")"
                         fi
                     fi
-                    echo "Checking files changed in ${from_ref}..${to_ref}"
+                    echo "Checking files changed in ${from_ref}...${to_ref}"
                     echo "from_ref=${from_ref}" >> "$GITHUB_OUTPUT"
                     echo "to_ref=${to_ref}" >> "$GITHUB_OUTPUT"
             -   name: Set up Python

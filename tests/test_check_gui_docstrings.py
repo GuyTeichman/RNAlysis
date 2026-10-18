@@ -300,6 +300,60 @@ def test_docstring_possibly_inherited_from_another_module_is_skipped(hook):
     assert _check(hook, src) == []
 
 
+def test_builtin_base_does_not_hide_undocumented_gui_method(hook):
+    src = """
+    class FeatureSet(set):
+        @readable_name('Do something')
+        def new_method(self, a: int = 1):
+            pass
+
+        def update(self, other):
+            pass
+    """
+    # `set` has no `new_method`, so nothing can be inherited; `set.update` may supply a docstring
+    assert _kinds(_check(hook, src, root_classes=('FeatureSet',))) == [
+        ('FeatureSet.new_method', None, hook.NO_DOCSTRING)
+    ]
+
+
+def test_module_functions_only_hide_legacy_args(hook):
+    src = '''
+    def func(gui_mode: bool = False, legacy_args: bool = False):
+        """
+        Description.
+
+        :return: nothing
+        """
+    '''
+    # FuncExternalWindow renders gui_mode for a module-level function; only tab-page methods hide it
+    assert _kinds(_check(hook, src)) == [('func', 'gui_mode', hook.MISSING)]
+
+
+def test_prose_line_starting_with_param_is_not_malformed(hook):
+    src = '''
+    def func(a: int):
+        """
+        Description.
+
+        :param a: the first parameter. Its
+        param values: are listed elsewhere
+        """
+    '''
+    assert _check(hook, src) == []
+
+
+def test_typed_param_field_names_the_right_param(hook):
+    src = '''
+    def func(x: int):
+        """
+        Description.
+
+        :param int x: help
+        """
+    '''
+    assert _kinds(_check(hook, src)) == [('func', 'x', hook.MALFORMED)]
+
+
 def test_problem_message_is_informative(hook):
     src = '''
     def first():

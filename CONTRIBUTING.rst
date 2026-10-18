@@ -145,7 +145,7 @@ Before you submit a pull request, check that it meets these guidelines:
    sorting, end-of-file/whitespace fixups, YAML/TOML validity, GUI help text in docstrings).
    GitHub Actions checks this automatically, scoped to just the files the PR changed. Installing
    the git hooks with ``pre-commit install`` (see "Get Started!" above) catches this on commit,
-   and again before you push.
+   and again (on your working-tree copies of the changed files) before you push.
 
 Tips
 ----

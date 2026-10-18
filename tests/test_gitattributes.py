@@ -30,16 +30,13 @@ def _attrs(path: str) -> dict:
 
 
 @pytest.mark.parametrize(
-    'path', ['rnalysis/filtering.py', 'README.rst', '.pre-commit-config.yaml', 'docs/source/a.rst']
+    'path', ['rnalysis/filtering.py', 'README.rst', '.pre-commit-config.yaml', 'docs/source/a.rst', 'make.bat']
 )
 def test_text_files_are_lf(path):
+    # make.bat included: a CRLF rule would fight the `mixed-line-ending --fix=lf` pre-commit hook
     attrs = _attrs(path)
     assert attrs['text'] == 'auto'
     assert attrs['eol'] == 'lf'
-
-
-def test_batch_files_are_crlf():
-    assert _attrs('make.bat')['eol'] == 'crlf'
 
 
 @pytest.mark.parametrize(

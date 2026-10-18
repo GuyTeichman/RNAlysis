@@ -201,9 +201,9 @@ CI (`.github/workflows/build_ci.yml`) runs on every PR across
 - **Formatting/imports:** Ruff is configured (`ruff.toml`) and wired into pre-commit
   (`.pre-commit-config.yaml`) — `ruff format` (line-length 120, single quotes) plus import
   sorting. Enable it once with `pre-commit install` (installs both the pre-commit and the pre-push
-  git hook; CI runs the same hooks on PRs and on pushes to `development`/`master`). The tree is **not fully reformatted yet**
-  (a single sweep is planned for the next `development`→`master` merge), so until then match the
-  style of the file you're editing and don't mass-reformat unrelated lines.
+  git hook; CI runs the same hooks on PRs and on pushes to `development`/`master`). The one-time
+  repo-wide sweep has been applied (PR #299); the hooks keep the files you touch formatted, so
+  don't mass-reformat unrelated lines.
 - Prefer **Polars** for tabular work (the codebase migrated off Pandas in 4.0). Lazy evaluation
   is currently underused and welcome where it helps (see roadmap in context.md).
 - Give public API parameters **precise `param_typing` annotations** — that's how you design the
