@@ -501,6 +501,40 @@ def test_go_elim_parallel_uses_independent_annotation_copies(monkeypatch):
                 return
 
 
+@pytest.mark.parametrize('stats_test', [HypergeometricTest(), XlmhgTest(), PermutationTest(100)])
+def test_go_enrichment_runner_validate_statistical_test_allm_rejects_non_fisher(monkeypatch, stats_test):
+    # 'all.m' runs the 'weight' algorithm internally, which only supports Fisher's exact test.
+    # Pretend xlmhglite is installed, so the XL-mHG case is rejected by the 'all.m' guard itself.
+    monkeypatch.setattr(enrichment_runner, 'HAS_XLMHG', True)
+    runner = GOEnrichmentRunner.__new__(GOEnrichmentRunner)
+    runner.propagate_annotations = 'all.m'
+    runner.stats_test = stats_test
+    with pytest.warns(UserWarning, match=r"'all\.m'"):
+        assert runner.validate_statistical_test() is False
+
+
+@pytest.mark.parametrize('propagate_annotations', ['no', 'classic', 'elim'])
+def test_go_enrichment_runner_validate_statistical_test_respects_base_checks(monkeypatch, propagate_annotations):
+    # the base-class checks (a valid StatsTest; xlmhglite installed for XL-mHG) must not be overridden
+    runner = GOEnrichmentRunner.__new__(GOEnrichmentRunner)
+    runner.propagate_annotations = propagate_annotations
+    runner.stats_test = 'not a stats test'
+    with pytest.warns(UserWarning, match='Invalid statistical test'):
+        assert runner.validate_statistical_test() is False
+
+    monkeypatch.setattr(enrichment_runner, 'HAS_XLMHG', False)
+    runner.stats_test = XlmhgTest()
+    with pytest.warns(UserWarning, match='xlmhglite'):
+        assert runner.validate_statistical_test() is False
+
+
+def test_go_enrichment_runner_validate_statistical_test_allm_accepts_fisher():
+    runner = GOEnrichmentRunner.__new__(GOEnrichmentRunner)
+    runner.propagate_annotations = 'all.m'
+    runner.stats_test = FishersExactTest()
+    assert runner.validate_statistical_test() is True
+
+
 def test_weight_pvals(monkeypatch):
     goa_df = io.load_table('tests/test_files/goa_table.csv')
     gene_set = {'gene1', 'gene2', 'gene5', 'gene12', 'gene13', 'gene17', 'gene19', 'gene25', 'gene27', 'gene28'}
@@ -950,6 +984,31 @@ def test_generate_xlmhg_index_vectors(attribute, truth, truth_rev):
     vec, rev_vec = XlmhgTest()._generate_xlmhg_index_vectors(ranked_genes, annotations[attribute])
     assert np.all(vec == truth)
     assert np.all(rev_vec == truth_rev)
+
+
+def test_generate_xlmhg_index_vectors_largest_supported_list():
+    # 65,536 genes is the largest ranked list whose positions (0..65,535) fit xlmhglite's uint16 index vectors
+    n = 65536
+    ranked_genes = np.array([f'gene{i}' for i in range(n)], dtype='str')
+    vec, rev_vec = XlmhgTest()._generate_xlmhg_index_vectors(ranked_genes, {'gene0', f'gene{n - 1}'})
+    assert vec.dtype == np.uint16 and rev_vec.dtype == np.uint16
+    assert np.all(vec == [0, n - 1])
+    assert np.all(rev_vec == [0, n - 1])
+
+
+@pytest.mark.parametrize('n', [65537, 70000])
+def test_generate_xlmhg_index_vectors_list_too_long(n):
+    # longer lists used to crash with a bare OverflowError (NumPy >= 2) or silently wrap indices (NumPy 1.x)
+    ranked_genes = np.array([f'gene{i}' for i in range(n)], dtype='str')
+    with pytest.raises(InvalidValueError, match='65,536'):
+        XlmhgTest()._generate_xlmhg_index_vectors(ranked_genes, {'gene0', f'gene{n - 1}'})
+
+
+def test_xlmhg_run_list_too_long():
+    n = 65537
+    ranked_genes = np.array([f'gene{i}' for i in range(n)], dtype='str')
+    with pytest.raises(InvalidValueError, match='65,536'):
+        XlmhgTest().run('attr', {'gene0', 'gene5'}, ranked_genes)
 
 
 def test_enrichment_runner_fetch_annotations(monkeypatch):
@@ -2590,3 +2649,41 @@ def test_kegg_enrichment_runner_pathway_plot(single_set, graph_format, monkeypat
     runner.plot_pathway_graphs = True
     runner.pathway_names_dict = {pathway_id_truth: 'name'}
     runner.plot_results().run()
+
+
+@pytest.mark.parametrize('frozen,expected', [(True, 'multiprocessing'), (False, 'loky')])
+@pytest.mark.parametrize('runner_cls,method', [(EnrichmentRunner, 'calc'), (GOEnrichmentRunner, 'grouping')])
+def test_enrichment_runner_parallel_backend_reaching_joblib(monkeypatch, frozen, expected, runner_cls, method):
+    # issue #249: a 'loky' backend (e.g. replayed from a Pipeline recorded on a source install) must never reach
+    # joblib in a PyInstaller-frozen build. joblib is stubbed so nothing heavy runs.
+    import types
+
+    import joblib as _joblib
+
+    from rnalysis.utils import generic, validation
+
+    monkeypatch.setattr(generic, 'FROZEN_ENV', frozen)
+    seen = []
+    orig_init = _joblib.Parallel.__init__
+
+    def spy_init(self, *args, **kwargs):
+        seen.append(kwargs.get('backend'))
+        orig_init(self, *args, **kwargs)
+
+    monkeypatch.setattr(_joblib.Parallel, '__init__', spy_init)
+    monkeypatch.setattr(_joblib.Parallel, '__call__', lambda self, it: [{} for _ in it])
+    monkeypatch.setattr(validation, 'is_method_of_class', lambda func, obj_type: True)
+
+    runner = runner_cls.__new__(runner_cls)
+    runner.parallel_backend = 'loky'
+    if method == 'calc':
+        runner.single_set = False
+        runner.gene_set = {'a'}
+        runner.background_set = {'a', 'b'}
+        runner.attributes = ['attr1', 'attr2']
+        runner.annotations = {'attr1': set(), 'attr2': set()}
+        runner.stats_test = types.SimpleNamespace(run=lambda *args: None)
+        runner._calculate_enrichment_parallel()
+    else:
+        runner._parallel_over_grouping(lambda group, ind: {}, [['a'], ['b']], [0, 1])
+    assert seen == [expected]

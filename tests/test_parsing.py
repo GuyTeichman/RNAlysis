@@ -375,6 +375,10 @@ def test_longest_common_substring(s1, s2, expected):
         (['日本語abc', '中国語abc'], '語abc'),  # unicode suffix
         (['ab', 'aab'], 'ab'),  # lexicographically-smaller string is longer than the larger one (issue #180)
         (['aac', 'ab'], ''),  # same as above, but with no shared suffix at all
+        # issue #195: a string that is neither the lexicographic min nor max must still be able to break
+        # the suffix. 'ax' and 'zx' (min/max) both end in 'x', but 'cy' does not -> no common suffix.
+        (['zx', 'ax', 'cy'], ''),
+        (['abc', 'xbc', 'ybc'], 'bc'),  # issue #195: a genuine shared suffix across 3+ strings
     ],
 )
 def test_common_suffix(strings, expected):
@@ -407,8 +411,10 @@ def test_remove_suffix(s, suffix, expected):
         ([('sample1_R1', 'sample1_R2'), ('sample2_R1', 'sample2_R2')], ['sample1', 'sample2']),  # two pairs
         (
             [('ctrl1_R1', 'ctrl1_R2'), ('ctrl2_R1', 'ctrl2_R2'), ('treat1_R1', 'treat1_R2')],
-            ['ctrl', 'ctrl2_R', 'treat'],
-        ),  # three pairs, uneven trimming across pairs
+            ['ctrl1', 'ctrl2', 'treat1'],
+        ),  # issue #195: the genuinely shared "_R" suffix is now trimmed evenly from every pair. Before
+        # the common_suffix fix this ignored the non-min/max 'ctrl2_R' and mis-trimmed "1_R", yielding
+        # the inconsistent ['ctrl', 'ctrl2_R', 'treat'].
         ([('abc', 'xyz')], ['abcxyz']),  # no common substring: names are concatenated
         ([('same', 'same')], ['same']),  # all-identical inputs
         ([('sample1_R1_trimmed', 'sample1_R2_trimmed')], ['sample1_R']),  # known suffixes are stripped first
@@ -422,6 +428,15 @@ def test_remove_suffix(s, suffix, expected):
         # pair here is much shorter, the earlier (longer) pair's valid LCS result was wrongly
         # excluded from the common-suffix computation, so the shared trailing "_R" was never trimmed.
         ([('sampleA_long_name_R1', 'sampleA_long_name_R2'), ('sB_R1', 'sB_R2')], ['sampleA_long_name', 'sB']),
+        # regression test for issue #195: the third pair shares nothing beyond the global "common" LCS, so
+        # it falls back to concatenation ('commonPPcommonQQ'). The old tautological `lcs_only` filter kept
+        # that fallback in the common-suffix computation, so its trailing 'QQ' masked the real "_S" suffix
+        # shared by the genuine LCS results and it was never trimmed. Now the suffix is computed over the
+        # genuine LCS results only, so "_S" is correctly stripped from the first two names.
+        (
+            [('commonAB_S1', 'commonAB_S2'), ('commonCD_S1', 'commonCD_S2'), ('commonPP', 'commonQQ')],
+            ['commonAB', 'commonCD', 'commonPPcommonQQ'],
+        ),
     ],
 )
 def test_generate_common_name(file_pairs, expected):
@@ -572,6 +587,89 @@ class TestRMakeNames:
         names = []
         expected_output = []
         assert r_make_names(names) == expected_output
+
+
+class TestSanitizeFilenameComponent:
+    """issue #281: user values are spliced into output file names, so they must be made filename-safe."""
+
+    @pytest.mark.parametrize(
+        'text',
+        [
+            'cond1',
+            'rep_2',
+            'KO-1.5',
+            'wild type',
+            "KO'1",
+            'poly(age, degree = 2)',
+            'a+b=c,d[e]{f}@g#h%i&j!k~l$m;n^o`p',
+            'Wildtyp-\u00fc',
+            '\u05d0\u05d1',
+            # non-ASCII symbols and punctuation are legal file name characters on every OS, so they are kept
+            '37\u00b0C',
+            'WT\u2013KO',
+            'KO\u2019s',
+            '\u00b1 2\u00d7',
+            'non\u00a0breaking',
+            '',
+        ],
+    )
+    def test_filename_safe_values_unchanged(self, text):
+        # values that are already safe must keep producing byte-identical file names (no arbitrary changes)
+        assert sanitize_filename_component(text) == text
+
+    @pytest.mark.parametrize(
+        'text,expected',
+        [
+            ('KO/1', 'KO_1'),
+            ('KO:1', 'KO_1'),
+            ('back\\slash', 'back_slash'),
+            ('q"uote', 'q_uote'),
+            ('a<b>c|d?e*f', 'a_b_c_d_e_f'),
+            ('tab\there\nnewline', 'tab_here_newline'),
+            ('line\u2028separator\x7fdel', 'line_separator_del'),
+        ],
+    )
+    def test_unsafe_characters_replaced(self, text, expected):
+        assert sanitize_filename_component(text) == expected
+
+    @pytest.mark.parametrize(
+        'text,replacements,expected',
+        [
+            # the established LRT interaction-term mappings must not change
+            ('factor1:factor2', {':': '_x_'}, 'factor1_x_factor2'),
+            ('factor1:factor2', {':': 'X'}, 'factor1Xfactor2'),
+            ('a:b/c', {':': '_x_'}, 'a_x_b_c'),
+        ],
+    )
+    def test_replacements(self, text, replacements, expected):
+        assert sanitize_filename_component(text, replacements) == expected
+
+    def test_unsafe_replacement_is_rejected(self):
+        with pytest.raises(ValueError):
+            sanitize_filename_component('a:b', {':': '/'})
+
+
+class TestRQuote:
+    """issue #281: Python strings entering R source must be escaped deliberately, not by coincidence."""
+
+    @pytest.mark.parametrize(
+        'text,expected',
+        [
+            ('cond1', '"cond1"'),
+            ('', '""'),
+            ("KO'1", '"KO\'1"'),
+            ('q"uote', '"q\\"uote"'),
+            ('back\\slash', '"back\\\\slash"'),
+            ('C:/path/to/file.csv', '"C:/path/to/file.csv"'),
+            ('\\"', '"\\\\\\""'),
+            ('Wildtyp-\u00fc', '"Wildtyp-\u00fc"'),
+        ],
+    )
+    def test_r_quote(self, text, expected):
+        assert r_quote(text) == expected
+
+    def test_r_quote_non_string(self):
+        assert r_quote(5) == '"5"'
 
 
 @pytest.mark.parametrize(

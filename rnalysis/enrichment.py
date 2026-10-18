@@ -282,8 +282,8 @@ class FeatureSet(set):
         :param propagate_annotations: determines the propagation method of GO annotations. \
         'no' does not propagate annotations at all; 'classic' propagates all annotations up to the DAG tree's root; \
         'elim' terminates propagation at nodes which show significant enrichment; 'weight' performs propagation in a \
-        weighted manner based on the significance of children nodes relatively to their parents; and 'allm' uses a \
-        combination of all proopagation methods. To read more about the propagation methods, \
+        weighted manner based on the significance of children nodes relatively to their parents; and 'all.m' uses a \
+        combination of all propagation methods. To read more about the propagation methods, \
         see Alexa et al: https://pubmed.ncbi.nlm.nih.gov/16606683/
         :type propagate_annotations: 'classic', 'elim', 'weight', 'all.m', or 'no' (default='elim')
         :param evidence_types: only annotations with the specified evidence types will be included in the analysis. \
@@ -939,8 +939,8 @@ class FeatureSet(set):
         :param propagate_annotations: determines the propagation method of GO annotations. \
         'no' does not propagate annotations at all; 'classic' propagates all annotations up to the DAG tree's root; \
         'elim' terminates propagation at nodes which show significant enrichment; 'weight' performs propagation in a \
-        weighted manner based on the significance of children nodes relatively to their parents; and 'allm' uses a \
-        combination of all proopagation methods. To read more about the propagation methods, \
+        weighted manner based on the significance of children nodes relatively to their parents; and 'all.m' uses a \
+        combination of all propagation methods. To read more about the propagation methods, \
         see Alexa et al: https://pubmed.ncbi.nlm.nih.gov/16606683/
         :type propagate_annotations: 'classic', 'elim', 'weight', 'all.m', or 'no' (default='elim')
         :param aspects: only annotations from the specified GO aspects will be included in the analysis. \
@@ -1682,8 +1682,8 @@ class RankedSet(FeatureSet):
         :param propagate_annotations: determines the propagation method of GO annotations. \
         'no' does not propagate annotations at all; 'classic' propagates all annotations up to the DAG tree's root; \
         'elim' terminates propagation at nodes which show significant enrichment; 'weight' performs propagation in a \
-        weighted manner based on the significance of children nodes relatively to their parents; and 'allm' uses a \
-        combination of all proopagation methods. To read more about the propagation methods, \
+        weighted manner based on the significance of children nodes relatively to their parents; and 'all.m' uses a \
+        combination of all propagation methods. To read more about the propagation methods, \
         see Alexa et al: https://pubmed.ncbi.nlm.nih.gov/16606683/
         :type propagate_annotations: 'classic', 'elim', 'weight', 'all.m', or 'no' (default='elim')
         :param aspects: only annotations from the specified GO aspects will be included in the analysis. \
