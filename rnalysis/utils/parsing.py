@@ -341,12 +341,12 @@ def parse_docstring(docstring: str) -> Tuple[str, Dict[str, str]]:
     :return: a string matching the description, and a dictionary containing the parameter descriptions
     """
     docstring = re.sub(' +', ' ', docstring)
-    split = docstring.split('\n\n')
-    desc = split[0]
-    params_str = split[1]
-    free_text_match = r'["#\w\s\.\(\)\-\:%\*=@!\?\+\_,/`><\[\]' + "'" + ']'
-    params_matches = list(
-        re.finditer(r'^:param ([a-zA-Z_0-9]+):(' + free_text_match + r'+?)(?=^:.*:)', params_str, re.MULTILINE)
+    desc, _, params_str = docstring.partition('\n\n')
+    # a parameter's description is any text (non-greedy) up to the next reST field line (':type x:', ':return:', \
+    # ':Examples:', etc.), the end of its paragraph, or the end of the docstring.
+    # Field lines may be indented by stray whitespace (a common docstring typo), so that is tolerated too.
+    params_matches = re.finditer(
+        r'^[ \t]*:param ([a-zA-Z_0-9]+):([\s\S]*?)(?=^[ \t]*:.*:|\n\n|\Z)', params_str, re.MULTILINE
     )
     params = {match.group(1): match.group(2).replace('. ', '. \n') for match in params_matches}
     return desc, params
