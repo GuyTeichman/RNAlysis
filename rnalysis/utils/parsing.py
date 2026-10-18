@@ -16,7 +16,7 @@ import numpy as np
 import polars as pl
 
 from rnalysis.exceptions import InternalError
-from rnalysis.utils import validation
+from rnalysis.utils import docstring_parsing, validation
 
 # pandas is only needed by the single upsetplot helper below, but costs ~0.3s to import, so it is
 # loaded lazily (SPEC 1 / https://scientific-python.org/specs/spec-0001/). Nothing may touch an
@@ -340,16 +340,9 @@ def parse_docstring(docstring: str) -> Tuple[str, Dict[str, str]]:
     :type docstring: str
     :return: a string matching the description, and a dictionary containing the parameter descriptions
     """
-    docstring = re.sub(' +', ' ', docstring)
-    desc, _, params_str = docstring.partition('\n\n')
-    # a parameter's description is any text (non-greedy) up to the next reST field line (':type x:', ':return:', \
-    # ':Examples:', etc.), the end of its paragraph, or the end of the docstring.
-    # Field lines may be indented by stray whitespace (a common docstring typo), so that is tolerated too.
-    params_matches = re.finditer(
-        r'^[ \t]*:param ([a-zA-Z_0-9]+):([\s\S]*?)(?=^[ \t]*:.*:|\n\n|\Z)', params_str, re.MULTILINE
-    )
-    params = {match.group(1): match.group(2).replace('. ', '. \n') for match in params_matches}
-    return desc, params
+    # the implementation lives in the dependency-free docstring_parsing module, so the check-gui-docstrings
+    # pre-commit hook (which cannot import rnalysis) shares the exact parser the GUI uses.
+    return docstring_parsing.parse_docstring(docstring)
 
 
 def generate_upset_series(objs: dict):

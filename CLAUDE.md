@@ -186,7 +186,11 @@ CI (`.github/workflows/build_ci.yml`) runs on every PR across
   (DESeq2, limma, Rsubread) often fails on write permissions to the R library. Error paths in
   `installs.py` already surface this — preserve those messages.
 - **Docstrings are load-bearing** (they become GUI help). Keep the `:param name: ...` /
-  `:type name: ...` reST format when editing public functions.
+  `:type name: ...` reST format when editing public functions. The `check-gui-docstrings`
+  pre-commit hook (`packaging/check_gui_docstrings.py`) fails a commit to `filtering.py`/
+  `enrichment.py`/`fastq.py` that leaves a GUI parameter without parseable help text (missing or
+  typo'd `:param`, a `param x:` without its colon, no blank line before the `:param` block). Its
+  `KNOWN_ISSUES` baseline lists older gaps: fix one, then delete its entry.
 - **`docs/source/rnalysis.*.rst` are generated** by `sphinx-apidoc`. Don't hand-edit them.
 
 ---
@@ -196,7 +200,8 @@ CI (`.github/workflows/build_ci.yml`) runs on every PR across
 - 4-space indent, LF, UTF-8, trailing whitespace trimmed, final newline (`.editorconfig`).
 - **Formatting/imports:** Ruff is configured (`ruff.toml`) and wired into pre-commit
   (`.pre-commit-config.yaml`) — `ruff format` (line-length 120, single quotes) plus import
-  sorting. Enable it once with `pre-commit install`. The tree is **not fully reformatted yet**
+  sorting. Enable it once with `pre-commit install` (installs both the pre-commit and the pre-push
+  git hook; CI runs the same hooks on PRs and on pushes to `development`/`master`). The tree is **not fully reformatted yet**
   (a single sweep is planned for the next `development`→`master` merge), so until then match the
   style of the file you're editing and don't mass-reformat unrelated lines.
 - Prefer **Polars** for tabular work (the codebase migrated off Pandas in 4.0). Lazy evaluation

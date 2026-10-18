@@ -1,0 +1,45 @@
+# Line endings: the repository stores text files with LF, and they are checked out with LF on
+# every platform, regardless of the clone's `core.autocrlf` setting (Git for Windows defaults it to
+# `true` system-wide, which used to give CRLF working copies that the `mixed-line-ending --fix=lf`
+# pre-commit hook then kept "fixing" even though the committed content was already LF).
+# `text=auto` lets Git leave files it detects as binary alone; the explicit entries below don't
+# rely on that detection.
+* text=auto eol=lf
+
+# Windows batch files need CRLF to run reliably under cmd.exe.
+*.bat text eol=crlf
+
+# Byte-exact content: never convert line endings (see the matching `exclude` in .pre-commit-config.yaml).
+#   - test fixtures and "truth" files that tests compare verbatim;
+#   - R script templates echoed verbatim into generated scripts, compared against truth files;
+#   - vendored third-party report assets.
+tests/test_files/** -text
+rnalysis/data_files/r_templates/** -text
+rnalysis/data_files/report_templates/** -text
+
+# Binaries
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.webp binary
+*.ico binary
+*.icns binary
+*.pdf binary
+*.zip binary
+*.gz binary
+*.bam binary
+*.bai binary
+*.bt2 binary
+*.idx binary
+*.rnal binary
+*.parquet binary
+*.xlsx binary
+*.doctree binary
+*.inv binary
+*.pickle binary
+*.woff binary
+*.woff2 binary
+*.ttf binary
+*.eot binary
+*.mp4 binary

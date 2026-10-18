@@ -915,3 +915,12 @@ def test_parse_docstring_covers_every_gui_param():
             if not params.get(name, '').strip():
                 missing.append(f'{qualname}: {name}')
     assert not missing, f'{len(missing)} parameters have no help text:\n' + '\n'.join(missing)
+
+
+def test_parse_docstring_shares_the_dependency_free_parser():
+    # the check-gui-docstrings pre-commit hook uses docstring_parsing directly, so it must agree with the GUI's parser
+    from rnalysis.utils import docstring_parsing
+
+    for qualname, func in _gui_exposed_functions().items():
+        raw = _raw_docstring(func)
+        assert parse_docstring(raw) == docstring_parsing.parse_docstring(raw), qualname

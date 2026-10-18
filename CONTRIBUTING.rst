@@ -100,7 +100,7 @@ Ready to contribute? Here's how to set up `rnalysis` for local development.
     $ source venv/bin/activate    # on Windows: venv\Scripts\activate
     $ pip install -e .[all]
     $ pip install -r requirements_dev.txt
-    $ pre-commit install    # enable the auto-formatting git hooks (Ruff); recommended
+    $ pre-commit install    # enable the git hooks (Ruff formatting, GUI help-text checks) on commit and push; recommended
 
 4. Create a branch for local development, based on the ``development`` branch
    (``development`` is the integration branch; ``master`` only receives ``development``
@@ -142,9 +142,10 @@ Before you submit a pull request, check that it meets these guidelines:
    request; make sure all jobs pass. Coverage is reported at
    https://coveralls.io/github/GuyTeichman/RNAlysis.
 5. The files your pull request touches must pass the pre-commit hooks (Ruff formatting/import
-   sorting, end-of-file/whitespace fixups, YAML/TOML validity). GitHub Actions checks this
-   automatically, scoped to just the files the PR changed. Installing the git hook with
-   ``pre-commit install`` (see "Get Started!" above) catches this before you push.
+   sorting, end-of-file/whitespace fixups, YAML/TOML validity, GUI help text in docstrings).
+   GitHub Actions checks this automatically, scoped to just the files the PR changed. Installing
+   the git hooks with ``pre-commit install`` (see "Get Started!" above) catches this on commit,
+   and again before you push.
 
 Tips
 ----

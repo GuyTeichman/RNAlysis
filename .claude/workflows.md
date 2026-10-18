@@ -24,7 +24,8 @@ GUI dialog for free. Do it TDD.
      (see the reflection table in `CLAUDE.md`). `Fraction`, `PositiveInt`, `Color`, `ColorMap`,
      `ColumnName(s)`, `Literal[...]`, `Optional[...]`, etc.
    - A reST docstring: one-line summary, `:param x:` / `:type x:` for **every** parameter
-     (these become GUI help), and a runnable `:Examples:` block.
+     (these become GUI help), and a runnable `:Examples:` block. The `check-gui-docstrings`
+     pre-commit hook rejects a GUI parameter whose help text the parser can't find.
    - **Reasonable defaults** for every parameter — a non-expert should get a sensible result.
    - Follow the tab heuristic if you want a specific GUI tab: name it `*normalize*` / `*filter*`
      / `*split*`, or add it to the relevant `SUMMARY_FUNCS`/`CLUSTERING_FUNCS`/`GENERAL_FUNCS`
