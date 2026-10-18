@@ -79,6 +79,25 @@ class CorruptSettingsWarning(UserWarning):
     """
 
 
+def split_corrupt_settings_warnings(records: list) -> tuple:
+    """
+    Split warnings recorded with warnings.catch_warnings(record=True) into the CorruptSettingsWarnings \
+    (with duplicate messages removed, since a corrupt file that could not be moved aside warns on every read) \
+    and all other warnings, keeping their original order.
+    """
+    corrupt = []
+    seen_messages = set()
+    others = []
+    for record in records:
+        if issubclass(record.category, CorruptSettingsWarning):
+            if str(record.message) not in seen_messages:
+                seen_messages.add(str(record.message))
+                corrupt.append(record)
+        else:
+            others.append(record)
+    return corrupt, others
+
+
 def _handle_corrupt_settings_file(settings_pth: Path) -> dict:
     """
     Move an unreadable settings file aside to 'settings.yaml.bad' (overwriting any previous backup), \

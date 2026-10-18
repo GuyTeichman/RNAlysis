@@ -343,3 +343,26 @@ def test_update_settings_file_format_unchanged(isolated_settings_dir):
         yaml.safe_dump(values, f)
     assert get_settings_file_path().read_bytes() == expected.read_bytes()
     assert load_settings_file() == values
+
+
+def test_split_corrupt_settings_warnings_deduplicates(isolated_settings_dir, monkeypatch):
+    # if the corrupt file cannot be moved aside, every settings read in the same startup warns again
+    real_replace = os.replace
+    settings_pth = get_settings_file_path()
+
+    def locked_replace(src, dst):
+        if Path(src) == settings_pth:
+            raise PermissionError('locked')
+        return real_replace(src, dst)
+
+    monkeypatch.setattr(os, 'replace', locked_replace)
+    settings_pth.write_text('font: [\n')
+    with warnings.catch_warnings(record=True) as caught:
+        warnings.simplefilter('always')
+        get_gui_settings()
+        warnings.warn('unrelated', DeprecationWarning)
+    corrupt, others = split_corrupt_settings_warnings(caught)
+    assert len([w for w in caught if issubclass(w.category, CorruptSettingsWarning)]) >= 2
+    assert len(corrupt) == 1
+    assert issubclass(corrupt[0].category, CorruptSettingsWarning)
+    assert [str(w.message) for w in others] == ['unrelated']
