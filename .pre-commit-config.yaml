@@ -3,13 +3,22 @@
 #
 #     pre-commit install
 #
-# After that the hooks run automatically on `git commit`, but ONLY on the files that commit
-# touches. A repo-wide `ruff format` / `ruff check --fix` sweep has already been applied once
+# Thanks to `default_install_hook_types` below, that installs BOTH git hooks:
+#   - pre-commit: on `git commit`, runs every hook on ONLY the files that commit touches;
+#   - pre-push:   on `git push`, runs every hook again on the files changed between the remote
+#     branch and what you are pushing (the working-tree copies of those files) -- a safety net for
+#     commits made before the hook was installed, or from another tool/worktree. A fixer hook
+#     (whitespace, EOF, line endings, Ruff) that changes a file there aborts the push: commit its
+#     fixes and push again.
+# Clones set up before pre-push was added: run `pre-commit install` once more to add it.
+#
+# A repo-wide `ruff format` / `ruff check --fix` sweep has already been applied once
 # (see the "Repo-wide Ruff format + import-sort sweep" commit); going forward these hooks keep
 # the tree in that state incrementally. To run everything by hand: `pre-commit run -a`.
 #
-# CI (.github/workflows/pre-commit.yml) runs these same hooks on every pull request, scoped to
-# just the files the PR changed (`pre-commit run --from-ref <base> --to-ref <head>`), not
+# CI (.github/workflows/pre-commit.yml) runs these same hooks on every pull request and on every
+# push to `development`/`master`, scoped to just the files the PR (or the pushed range of commits)
+# changed (`pre-commit run --from-ref <base> --to-ref <head>`), not
 # `--all-files` — a full-repo run is for a deliberate, one-off sweep only (see above), not routine
 # PR checks.
 #
@@ -28,6 +37,8 @@
 #   - rnalysis/data_files/report_templates/ : vendored third-party libraries (Bootstrap, vis-network
 #     minified JS/CSS) — not ours to reformat.
 exclude: '^(docs/build/|docs/source/rnalysis\..*\.rst$|tests/test_files/|rnalysis/data_files/r_templates/|rnalysis/data_files/report_templates/)'
+
+default_install_hook_types: [pre-commit, pre-push]
 
 default_language_version:
   python: python3
@@ -53,3 +64,16 @@ repos:
         args: [--fix]
       # Formatter — Black-compatible, configured in ruff.toml (line-length 120, single quotes).
       - id: ruff-format
+
+  - repo: local
+    hooks:
+      # Every parameter the GUI renders for a public filtering/enrichment/fastq function must have
+      # ":param name: ..." help text that the GUI's own docstring parser can read (see CLAUDE.md,
+      # "the API<->GUI reflection contract"; what is checked, and the known approximations of a
+      # static check, are documented atop packaging/check_gui_docstrings.py). Stdlib-only: the
+      # script never imports rnalysis, so the hook needs none of RNAlysis's dependencies.
+      - id: check-gui-docstrings
+        name: check GUI help text in public API docstrings
+        entry: python packaging/check_gui_docstrings.py
+        language: python
+        files: ^(rnalysis/(filtering|enrichment|fastq)\.py|rnalysis/utils/docstring_parsing\.py|packaging/check_gui_docstrings\.py)$

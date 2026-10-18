@@ -2,14 +2,26 @@ name: Pre-commit
 
 # Runs the hooks defined in .pre-commit-config.yaml (Ruff format + import sort, end-of-file
 # fixer, trailing whitespace, LF line-ending enforcement, YAML/TOML checks, merge-conflict
-# markers, large-file check -- see that file for the authoritative, up-to-date hook list) against
-# only the files a PR actually touches -- NOT the whole repository. The tree has not had its
-# one-time reformat sweep yet (see the comments atop .pre-commit-config.yaml / ruff.toml), so a
-# `--all-files` gate would fail on every PR until that sweep lands. `--from-ref`/`--to-ref` scopes
-# the run to the PR's diff, matching what `pre-commit install` already does locally on
-# `git commit` (hooks run only on the files that commit touches).
+# markers, large-file check, GUI docstring help text -- see that file for the authoritative,
+# up-to-date hook list) against only the files that changed -- NOT the whole repository. A
+# `--all-files` run is reserved for a deliberate, one-off sweep (see the comments atop
+# .pre-commit-config.yaml). `--from-ref`/`--to-ref` scope the run, matching what
+# `pre-commit install` already does locally (hooks run only on the files a commit touches, and on
+# `git push` only on the files changed since the remote branch).
+#
+# Triggers:
+#   - pull_request: the files the PR changed (PR base..PR head).
+#   - push to development/master: the files the pushed commits changed (event.before..sha). This
+#     catches content that reached those branches without going through a PR check (a direct
+#     maintainer push, e.g. a release commit, or a PR merged before its check finished). A brand-new
+#     branch push (all-zeros `before`) or a force-push whose previous tip is no longer fetchable
+#     falls back to checking just the pushed tip commit (its diff against its first parent).
 on:
     pull_request:
+    push:
+        branches:
+            - development
+            - master
 
 permissions:
     contents: read
@@ -21,8 +33,8 @@ jobs:
             -   name: Get repository
                 uses: actions/checkout@v7
                 with:
-                    # Full history is needed so both the PR's base and head commits are present
-                    # locally for the --from-ref/--to-ref diff below.
+                    # Full history is needed so both ends of the --from-ref/--to-ref diff below are
+                    # present locally.
                     fetch-depth: 0
                     # docs/build/ is ~600 MB of committed, generated Sphinx output that no hook
                     # needs to see; excluding it from the sparse checkout speeds this up.
@@ -30,11 +42,43 @@ jobs:
                         /*
                         !/docs/build
                     sparse-checkout-cone-mode: false
+            -   name: Determine the range of changes to check
+                id: range
+                env:
+                    EVENT_NAME: ${{ github.event_name }}
+                    PR_BASE: ${{ github.event.pull_request.base.sha }}
+                    PR_HEAD: ${{ github.event.pull_request.head.sha }}
+                    PUSH_BEFORE: ${{ github.event.before }}
+                    PUSH_AFTER: ${{ github.sha }}
+                run: |
+                    if [ "$EVENT_NAME" = "pull_request" ]; then
+                        from_ref="$PR_BASE"
+                        to_ref="$PR_HEAD"
+                    else
+                        to_ref="$PUSH_AFTER"
+                        from_ref="$PUSH_BEFORE"
+                        if [ -n "$from_ref" ] && [ "$from_ref" != "0000000000000000000000000000000000000000" ] \
+                            && ! git cat-file -e "${from_ref}^{commit}" 2>/dev/null; then
+                            # force-push: the old tip is not in the fetched history; try fetching it by SHA
+                            # (no --depth, so the fetched commit keeps its real ancestry for
+                            # pre-commit's three-dot from_ref...to_ref diff)
+                            git fetch --no-tags origin "$from_ref" || true
+                        fi
+                        if [ -z "$from_ref" ] || [ "$from_ref" = "0000000000000000000000000000000000000000" ] \
+                            || ! git cat-file -e "${from_ref}^{commit}" 2>/dev/null; then
+                            # new branch / unreachable old tip: check just the pushed tip commit
+                            # (pre-commit needs a commit here, so a parentless root commit checks nothing)
+                            from_ref="$(git rev-parse --verify --quiet "${to_ref}^" || echo "$to_ref")"
+                        fi
+                    fi
+                    echo "Checking files changed in ${from_ref}...${to_ref}"
+                    echo "from_ref=${from_ref}" >> "$GITHUB_OUTPUT"
+                    echo "to_ref=${to_ref}" >> "$GITHUB_OUTPUT"
             -   name: Set up Python
                 uses: actions/setup-python@v7
                 with:
                     python-version: '3.13'
-            -   name: Run pre-commit on the PR's changed files
+            -   name: Run pre-commit on the changed files
                 uses: pre-commit/action@v3.0.1
                 with:
-                    extra_args: --from-ref ${{ github.event.pull_request.base.sha }} --to-ref ${{ github.event.pull_request.head.sha }}
+                    extra_args: --from-ref ${{ steps.range.outputs.from_ref }} --to-ref ${{ steps.range.outputs.to_ref }}
