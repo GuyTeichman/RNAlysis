@@ -243,15 +243,16 @@ def test_update_settings_file_failed_dump_keeps_original(isolated_settings_dir, 
     assert sorted(p.name for p in isolated_settings_dir.iterdir()) == ['settings.yaml']
 
 
-def test_corrupt_settings_notice_is_kept_for_the_gui(isolated_settings_dir):
-    pop_corrupt_settings_notice()  # clear any leftover notice
-    assert pop_corrupt_settings_notice() is None
+def test_corrupt_settings_warning_can_be_caught_by_the_gui(isolated_settings_dir):
+    # the GUI records this warning category while building its window, and shows it in a message box
     get_settings_file_path().write_text('font: [\n')
-    with pytest.warns(UserWarning):
+    with warnings.catch_warnings(record=True) as caught:
+        warnings.simplefilter('always', CorruptSettingsWarning)
         load_settings_file()
-    notice = pop_corrupt_settings_notice()
-    assert 'settings.yaml.bad' in notice
-    assert pop_corrupt_settings_notice() is None  # the notice is shown only once
+    corrupt = [w for w in caught if issubclass(w.category, CorruptSettingsWarning)]
+    assert len(corrupt) == 1
+    assert issubclass(CorruptSettingsWarning, UserWarning)
+    assert 'settings.yaml.bad' in str(corrupt[0].message)
 
 
 def test_corrupt_settings_backup_falls_back_to_copy(isolated_settings_dir, monkeypatch):

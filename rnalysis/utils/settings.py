@@ -70,19 +70,13 @@ def load_settings_file():
 
 _REPLACE_RETRIES = 5
 _REPLACE_RETRY_DELAY = 0.05  # seconds; doubled after every failed attempt
-_corrupt_settings_notice = None
 
 
-def pop_corrupt_settings_notice() -> Union[str, None]:
+class CorruptSettingsWarning(UserWarning):
     """
-    Return the message describing a corrupt settings file that was found and reset since the last call, if any. \
-    The message is cleared after it is returned, so that the user is notified only once. \
-    The GUI uses this to show the message once its window is up \
-    (the corrupt file is usually detected before the GUI's log console exists).
+    Warns that the settings file could not be read and was reset to the default settings. \
+    The GUI catches this warning while building its window (before its log console exists) and shows it in a message box.
     """
-    global _corrupt_settings_notice
-    notice, _corrupt_settings_notice = _corrupt_settings_notice, None
-    return notice
 
 
 def _handle_corrupt_settings_file(settings_pth: Path) -> dict:
@@ -91,7 +85,6 @@ def _handle_corrupt_settings_file(settings_pth: Path) -> dict:
     warn the user, and return empty settings so that the default values are used instead.
     A corrupt preferences file should never prevent RNAlysis from starting.
     """
-    global _corrupt_settings_notice
     backup_pth = settings_pth.with_name(settings_pth.name + '.bad')
     try:
         os.replace(settings_pth, backup_pth)
@@ -108,8 +101,7 @@ def _handle_corrupt_settings_file(settings_pth: Path) -> dict:
         'Any settings you changed earlier (such as font or Reference Table paths) need to be set again. '
         f'{backup_msg}'
     )
-    _corrupt_settings_notice = message
-    warnings.warn(message)
+    warnings.warn(message, CorruptSettingsWarning)
     return dict()
 
 

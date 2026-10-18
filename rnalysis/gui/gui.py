@@ -5321,16 +5321,24 @@ async def run():  # pragma: no cover
         myappid = 'RNAlysis.{version}'.format(version=__version__)  # arbitrary string
         ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(myappid)
 
-    window = MainWindow()
+    # a corrupt settings file is detected while the window is being built, before its log console exists,
+    # so catch that warning here and show it in a message box once the window is up
+    with warnings.catch_warnings(record=True) as startup_warnings:
+        warnings.simplefilter('always', settings.CorruptSettingsWarning)
+        window = MainWindow()
+    corrupt_settings_warnings = []
+    for w in startup_warnings:
+        if issubclass(w.category, settings.CorruptSettingsWarning):
+            corrupt_settings_warnings.append(str(w.message))
+        else:  # re-emit any other warning, as if it was never caught
+            warnings.showwarning(w.message, w.category, w.filename, w.lineno, w.file, w.line)
     sys.excepthook = window.excepthook
     builtins.input = window.input
 
     if show_app:
         window.show()
-        # a corrupt settings file is detected while the window is being built, before its log console exists
-        corrupt_settings_notice = settings.pop_corrupt_settings_notice()
-        if corrupt_settings_notice is not None:
-            QtWidgets.QMessageBox.warning(window, 'Settings were reset', corrupt_settings_notice)
+        for message in corrupt_settings_warnings:
+            QtWidgets.QMessageBox.warning(window, 'Settings were reset', message)
         window.check_for_updates(False)
         window.show_tutorial()
         if io.check_changed_version():
