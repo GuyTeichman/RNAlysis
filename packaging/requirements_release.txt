@@ -1,0 +1,5 @@
+# Dependencies used only by the release workflow's changelog generation.
+# Keep these isolated from requirements_dev.txt: rst-to-myst is unmaintained and
+# requires docutils<0.20, which prevents modern Sphinx from being resolved.
+rst-to-myst>=0.4,<0.5
+docutils<0.20
