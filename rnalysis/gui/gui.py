@@ -2505,8 +2505,11 @@ class FilterTabPage(TabPage):
         self, func_name, args: list, kwargs: dict, finish_slot=None, job_id: int = None, predecessors: list = None
     ):
         # since clustering functions can be computationally intensive, start them in another thread.
-        # furthermode, make sure they use the 'multiprocessing' backend instead of the 'loky' backend -
-        # otherwise this could cause issues in Pyinstaller-frozen versions of RNAlysis
+        # gui_mode=True makes the clustering function skip plotting in that worker thread and return its runner,
+        # so the figures are drawn back on the main (Qt) thread -- this routing is about threading/plotting and must
+        # stay. (Keeping 'loky' out of PyInstaller-frozen builds is no longer this code's job: every joblib entry
+        # point clamps it via generic.normalize_parallel_backend; AltParallel additionally forces 'multiprocessing'
+        # for ProgressParallel-based calls.)
         if func_name in self.CLUSTERING_FUNCS:
             kwargs['gui_mode'] = True
             partial = functools.partial(getattr(self.filter_obj, func_name), *args, **kwargs)
@@ -5318,12 +5321,29 @@ async def run():  # pragma: no cover
         myappid = 'RNAlysis.{version}'.format(version=__version__)  # arbitrary string
         ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(myappid)
 
-    window = MainWindow()
+    # a corrupt settings file is detected while the window is being built, before its log console exists,
+    # so record that warning here and show it in a message box once the window is up
+    startup_warnings = []
+    window_built = False
+    try:
+        with warnings.catch_warnings(record=True) as startup_warnings:
+            warnings.simplefilter('always', settings.CorruptSettingsWarning)
+            window = MainWindow()
+        window_built = True
+    finally:
+        corrupt_settings_warnings, other_warnings = settings.split_corrupt_settings_warnings(startup_warnings)
+        if not (show_app and window_built):  # there will be no window to show the message box in
+            other_warnings = corrupt_settings_warnings + other_warnings
+            corrupt_settings_warnings = []
+        for w in other_warnings:  # re-emit, as if they were never recorded
+            warnings.showwarning(w.message, w.category, w.filename, w.lineno, w.file, w.line)
     sys.excepthook = window.excepthook
     builtins.input = window.input
 
     if show_app:
         window.show()
+        for w in corrupt_settings_warnings:
+            QtWidgets.QMessageBox.warning(window, 'Settings were reset', str(w.message))
         window.check_for_updates(False)
         window.show_tutorial()
         if io.check_changed_version():

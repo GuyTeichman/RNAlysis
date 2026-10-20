@@ -1,3 +1,6 @@
+import inspect
+import re
+
 import pytest
 
 from rnalysis.exceptions import InternalError
@@ -375,6 +378,10 @@ def test_longest_common_substring(s1, s2, expected):
         (['日本語abc', '中国語abc'], '語abc'),  # unicode suffix
         (['ab', 'aab'], 'ab'),  # lexicographically-smaller string is longer than the larger one (issue #180)
         (['aac', 'ab'], ''),  # same as above, but with no shared suffix at all
+        # issue #195: a string that is neither the lexicographic min nor max must still be able to break
+        # the suffix. 'ax' and 'zx' (min/max) both end in 'x', but 'cy' does not -> no common suffix.
+        (['zx', 'ax', 'cy'], ''),
+        (['abc', 'xbc', 'ybc'], 'bc'),  # issue #195: a genuine shared suffix across 3+ strings
     ],
 )
 def test_common_suffix(strings, expected):
@@ -407,8 +414,10 @@ def test_remove_suffix(s, suffix, expected):
         ([('sample1_R1', 'sample1_R2'), ('sample2_R1', 'sample2_R2')], ['sample1', 'sample2']),  # two pairs
         (
             [('ctrl1_R1', 'ctrl1_R2'), ('ctrl2_R1', 'ctrl2_R2'), ('treat1_R1', 'treat1_R2')],
-            ['ctrl', 'ctrl2_R', 'treat'],
-        ),  # three pairs, uneven trimming across pairs
+            ['ctrl1', 'ctrl2', 'treat1'],
+        ),  # issue #195: the genuinely shared "_R" suffix is now trimmed evenly from every pair. Before
+        # the common_suffix fix this ignored the non-min/max 'ctrl2_R' and mis-trimmed "1_R", yielding
+        # the inconsistent ['ctrl', 'ctrl2_R', 'treat'].
         ([('abc', 'xyz')], ['abcxyz']),  # no common substring: names are concatenated
         ([('same', 'same')], ['same']),  # all-identical inputs
         ([('sample1_R1_trimmed', 'sample1_R2_trimmed')], ['sample1_R']),  # known suffixes are stripped first
@@ -422,6 +431,15 @@ def test_remove_suffix(s, suffix, expected):
         # pair here is much shorter, the earlier (longer) pair's valid LCS result was wrongly
         # excluded from the common-suffix computation, so the shared trailing "_R" was never trimmed.
         ([('sampleA_long_name_R1', 'sampleA_long_name_R2'), ('sB_R1', 'sB_R2')], ['sampleA_long_name', 'sB']),
+        # regression test for issue #195: the third pair shares nothing beyond the global "common" LCS, so
+        # it falls back to concatenation ('commonPPcommonQQ'). The old tautological `lcs_only` filter kept
+        # that fallback in the common-suffix computation, so its trailing 'QQ' masked the real "_S" suffix
+        # shared by the genuine LCS results and it was never trimmed. Now the suffix is computed over the
+        # genuine LCS results only, so "_S" is correctly stripped from the first two names.
+        (
+            [('commonAB_S1', 'commonAB_S2'), ('commonCD_S1', 'commonCD_S2'), ('commonPP', 'commonQQ')],
+            ['commonAB', 'commonCD', 'commonPPcommonQQ'],
+        ),
     ],
 )
 def test_generate_common_name(file_pairs, expected):
@@ -574,6 +592,89 @@ class TestRMakeNames:
         assert r_make_names(names) == expected_output
 
 
+class TestSanitizeFilenameComponent:
+    """issue #281: user values are spliced into output file names, so they must be made filename-safe."""
+
+    @pytest.mark.parametrize(
+        'text',
+        [
+            'cond1',
+            'rep_2',
+            'KO-1.5',
+            'wild type',
+            "KO'1",
+            'poly(age, degree = 2)',
+            'a+b=c,d[e]{f}@g#h%i&j!k~l$m;n^o`p',
+            'Wildtyp-\u00fc',
+            '\u05d0\u05d1',
+            # non-ASCII symbols and punctuation are legal file name characters on every OS, so they are kept
+            '37\u00b0C',
+            'WT\u2013KO',
+            'KO\u2019s',
+            '\u00b1 2\u00d7',
+            'non\u00a0breaking',
+            '',
+        ],
+    )
+    def test_filename_safe_values_unchanged(self, text):
+        # values that are already safe must keep producing byte-identical file names (no arbitrary changes)
+        assert sanitize_filename_component(text) == text
+
+    @pytest.mark.parametrize(
+        'text,expected',
+        [
+            ('KO/1', 'KO_1'),
+            ('KO:1', 'KO_1'),
+            ('back\\slash', 'back_slash'),
+            ('q"uote', 'q_uote'),
+            ('a<b>c|d?e*f', 'a_b_c_d_e_f'),
+            ('tab\there\nnewline', 'tab_here_newline'),
+            ('line\u2028separator\x7fdel', 'line_separator_del'),
+        ],
+    )
+    def test_unsafe_characters_replaced(self, text, expected):
+        assert sanitize_filename_component(text) == expected
+
+    @pytest.mark.parametrize(
+        'text,replacements,expected',
+        [
+            # the established LRT interaction-term mappings must not change
+            ('factor1:factor2', {':': '_x_'}, 'factor1_x_factor2'),
+            ('factor1:factor2', {':': 'X'}, 'factor1Xfactor2'),
+            ('a:b/c', {':': '_x_'}, 'a_x_b_c'),
+        ],
+    )
+    def test_replacements(self, text, replacements, expected):
+        assert sanitize_filename_component(text, replacements) == expected
+
+    def test_unsafe_replacement_is_rejected(self):
+        with pytest.raises(ValueError):
+            sanitize_filename_component('a:b', {':': '/'})
+
+
+class TestRQuote:
+    """issue #281: Python strings entering R source must be escaped deliberately, not by coincidence."""
+
+    @pytest.mark.parametrize(
+        'text,expected',
+        [
+            ('cond1', '"cond1"'),
+            ('', '""'),
+            ("KO'1", '"KO\'1"'),
+            ('q"uote', '"q\\"uote"'),
+            ('back\\slash', '"back\\\\slash"'),
+            ('C:/path/to/file.csv', '"C:/path/to/file.csv"'),
+            ('\\"', '"\\\\\\""'),
+            ('Wildtyp-\u00fc', '"Wildtyp-\u00fc"'),
+        ],
+    )
+    def test_r_quote(self, text, expected):
+        assert r_quote(text) == expected
+
+    def test_r_quote_non_string(self):
+        assert r_quote(5) == '"5"'
+
+
 @pytest.mark.parametrize(
     'sample_grouping, mode, expected_output',
     [
@@ -607,3 +708,219 @@ class TestRMakeNames:
 )
 def test_make_group_names(sample_grouping, mode, expected_output):
     assert make_group_names(sample_grouping, mode) == expected_output
+
+
+def _legacy_parse_docstring(docstring: str):
+    # verbatim copy of parse_docstring() before the fix for issue #339, kept as a back-compat reference
+    docstring = re.sub(' +', ' ', docstring)
+    split = docstring.split('\n\n')
+    desc = split[0]
+    params_str = split[1]
+    free_text_match = r'["#\w\s\.\(\)\-\:%\*=@!\?\+\_,/`><\[\]' + "'" + ']'
+    params_matches = list(
+        re.finditer(r'^:param ([a-zA-Z_0-9]+):(' + free_text_match + r'+?)(?=^:.*:)', params_str, re.MULTILINE)
+    )
+    params = {match.group(1): match.group(2).replace('. ', '. \n') for match in params_matches}
+    return desc, params
+
+
+def _gui_exposed_functions():
+    from rnalysis import enrichment, fastq, filtering
+
+    funcs = {}
+    for cls in (
+        filtering.Filter,
+        filtering.CountFilter,
+        filtering.DESeqFilter,
+        filtering.FoldChangeFilter,
+        enrichment.FeatureSet,
+        enrichment.RankedSet,
+    ):
+        # mirror gui.TabPage.get_all_actions(): every public callable attribute of the class.
+        # EXCLUDED_FUNCS are deliberately kept (a stricter superset, and avoids importing Qt here).
+        # Methods inherited from builtins (e.g. set.update) are not RNAlysis functions and have no reST params.
+        for name in dir(cls):
+            if name.startswith('_') or not callable(getattr(cls, name)):
+                continue
+            func = getattr(cls, name)
+            if not getattr(func, '__module__', None) or not func.__module__.startswith('rnalysis'):
+                continue
+            funcs[f'{cls.__name__}.{name}'] = func
+    # the GUI also reads parameter help from the table constructors and from Pipeline.apply_to
+    for cls in (filtering.Filter, filtering.CountFilter, filtering.DESeqFilter, filtering.FoldChangeFilter):
+        funcs[f'{cls.__name__}.__init__'] = cls.__init__
+    funcs['Pipeline.apply_to'] = filtering.Pipeline.apply_to
+    for module in (fastq, enrichment):
+        for name, func in inspect.getmembers(module, inspect.isfunction):
+            if not name.startswith('_') and func.__module__ == module.__name__:
+                funcs[f'{module.__name__}.{name}'] = func
+    return funcs
+
+
+def _raw_docstring(func):
+    # the same preprocessing io.get_method_docstring() applies before calling parse_docstring()
+    return inspect.cleandoc(inspect.getdoc(func) or '')
+
+
+def test_parse_docstring_basic():
+    docstring = (
+        'Short description of the function.\n\n'
+        ':param a: first param. It has two sentences.\n'
+        ':type a: int\n'
+        ':param b: second param\n'
+        ':type b: str\n'
+        ':return: something\n'
+        ':rtype: int'
+    )
+    desc, params = parse_docstring(docstring)
+    assert desc == 'Short description of the function.'
+    assert params == {'a': ' first param. \nIt has two sentences.\n', 'b': ' second param\n'}
+
+
+@pytest.mark.parametrize(
+    'text',
+    [
+        "If 'first', puts NaNs at the beginning; if 'last', puts NaNs at the end",
+        "for example {'method':'k-medoids', 'n_clusters':[3,5]}",
+        'either a | b',
+        'approximately ~5 reads',
+        'x^2 + y^2',
+        'costs $5',
+        'concentration in µM — roughly',
+        'a & b',
+        'path\\to\\file',
+        'semicolon; at the end;',
+        'p < 0.05 and q > 0.1',
+    ],
+)
+def test_parse_docstring_special_characters(text):
+    docstring = f'Description.\n\n:param a: {text}\n:type a: str\n:param b: plain text\n:type b: int'
+    _, params = parse_docstring(docstring)
+    assert params == {'a': f' {text}\n', 'b': ' plain text\n'}
+
+
+def test_parse_docstring_multiline_param():
+    docstring = (
+        'Description.\n\n'
+        ':param a: first line; \n'
+        'second line, continued. Third sentence.\n'
+        'a real new line\n'
+        ':type a: str\n'
+        ':return: nothing'
+    )
+    _, params = parse_docstring(docstring)
+    assert params == {'a': ' first line; \nsecond line, continued. \nThird sentence.\na real new line\n'}
+
+
+class _BackslashContinuationDocstring:
+    def method(self, a):
+        """
+        Description.
+
+        :param a: first line; \
+        second line
+        :type a: str
+        :return: nothing
+        """
+
+
+def test_parse_docstring_backslash_continuation():
+    # the way real RNAlysis docstrings continue a line: Python consumes the trailing backslash and newline
+    _, params = parse_docstring(_raw_docstring(_BackslashContinuationDocstring.method))
+    assert params == {'a': ' first line; second line\n'}
+
+
+@pytest.mark.parametrize(
+    'tail,expected',
+    [
+        ('\n:return: a value', ' last; param\n'),
+        ('\n:rtype: int', ' last; param\n'),
+        ('\n:Examples:\n>>> f()', ' last; param\n'),
+        ('', ' last; param'),
+        ('\n\n:Examples:\n>>> f(a=1)\n1', ' last; param'),
+        ('\n\n.. figure:: /figures/fig.png\n :align: center', ' last; param'),
+    ],
+)
+def test_parse_docstring_last_param(tail, expected):
+    docstring = 'Description.\n\n:type a: str\n:param a: last; param' + tail
+    _, params = parse_docstring(docstring)
+    assert params == {'a': expected}
+
+
+def test_parse_docstring_params_in_later_paragraph():
+    docstring = (
+        'Description.\n\n'
+        ':param a: first\n'
+        ':type a: int\n\n'
+        ':param b: second; after a blank line\n'
+        ':type b: int\n'
+        ':return: nothing'
+    )
+    desc, params = parse_docstring(docstring)
+    assert desc == 'Description.'
+    assert params == {'a': ' first\n', 'b': ' second; after a blank line\n'}
+
+
+@pytest.mark.parametrize('docstring', ['Only a description.', 'Return self|value.', ''])
+def test_parse_docstring_no_params_section(docstring):
+    assert parse_docstring(docstring) == (docstring, {})
+
+
+@pytest.mark.parametrize(
+    'func_name,param_name,expected',
+    [
+        (
+            'CountFilter.filter_low_reads',
+            'threshold',
+            ' The minimal number of reads (counts, rpm, rpkm, tpm, etc) a feature should have in at least '
+            '`n_samples` samples in order not to be filtered out.\n',
+        ),
+        ('CountFilter.split_kmeans', 'n_clusters', ' The number of clusters the algorithm will seek.\n'),
+        (
+            'FeatureSet.go_enrichment',
+            'organism',
+            ' organism name or NCBI taxon ID for which the function will fetch GO annotations.\n',
+        ),
+    ],
+)
+def test_parse_docstring_real_snapshot(func_name, param_name, expected):
+    _, params = parse_docstring(_raw_docstring(_gui_exposed_functions()[func_name]))
+    assert params[param_name] == expected
+
+
+def test_parse_docstring_backwards_compatible():
+    # every parameter description that parsed before the fix for issue #339 must stay byte-identical
+    n_compared = 0
+    for qualname, func in _gui_exposed_functions().items():
+        raw = _raw_docstring(func)
+        if '\n\n' not in raw:
+            continue
+        legacy_desc, legacy_params = _legacy_parse_docstring(raw)
+        desc, params = parse_docstring(raw)
+        assert desc == legacy_desc, qualname
+        for name, text in legacy_params.items():
+            assert params.get(name) == text, f'{qualname}: {name}'
+            n_compared += 1
+    assert n_compared > 1000
+
+
+def test_parse_docstring_covers_every_gui_param():
+    # contract test (issue #339): every ':param name:' in a GUI-exposed function's docstring
+    # must reach the GUI with non-empty help text
+    missing = []
+    for qualname, func in _gui_exposed_functions().items():
+        raw = _raw_docstring(func)
+        _, params = parse_docstring(raw)
+        for name in re.findall(r'^[ \t]*:param ([a-zA-Z_0-9]+):', raw, re.MULTILINE):
+            if not params.get(name, '').strip():
+                missing.append(f'{qualname}: {name}')
+    assert not missing, f'{len(missing)} parameters have no help text:\n' + '\n'.join(missing)
+
+
+def test_parse_docstring_shares_the_dependency_free_parser():
+    # the check-gui-docstrings pre-commit hook uses docstring_parsing directly, so it must agree with the GUI's parser
+    from rnalysis.utils import docstring_parsing
+
+    for qualname, func in _gui_exposed_functions().items():
+        raw = _raw_docstring(func)
+        assert parse_docstring(raw) == docstring_parsing.parse_docstring(raw), qualname

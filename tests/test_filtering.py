@@ -2921,6 +2921,33 @@ def test_differential_expression_limma(
         unlink_tree(outdir)
 
 
+@pytest.mark.parametrize('method', ['differential_expression_deseq2', 'differential_expression_limma_voom'])
+@pytest.mark.parametrize(
+    'kwargs,expected_in_msg',
+    [
+        (dict(comparisons=[('conditoin', 'cond2', 'cond1')]), ["'conditoin'", "'condition'"]),
+        (dict(comparisons=[('condition', 'Cond2', 'cond1')]), ["'Cond2'", "'cond2'"]),
+        (dict(comparisons=[('condition', 'cond2', 'cond1 ')]), ["'cond1 '", "'cond1'"]),
+        (dict(comparisons=[('condition', 'cond2', 'cond1')], covariates=['age']), ["'age'"]),
+        (dict(comparisons=[('condition', 'cond2', 'cond1')], covariates=['replicate']), ["'replicate'", 'numeric']),
+        (dict(comparisons=[('condition', 'cond2', 'cond1')], lrt_factors=['replicat']), ["'replicat'"]),
+        (dict(comparisons=[('condition', 'cond2', 'cond1')], lrt_factors=['condition:replicat']), ["'replicat'"]),
+    ],
+)
+def test_differential_expression_preflight_validation(big_countfilter, monkeypatch, method, kwargs, expected_in_msg):
+    # issue #280: bad comparisons/covariates/LRT factors must fail in Python before R is ever invoked
+    def fail(*args, **kwargs):
+        raise AssertionError('R was invoked before the inputs were validated')
+
+    monkeypatch.setattr(differential_expression.installs, 'install_deseq2', fail)
+    monkeypatch.setattr(differential_expression.installs, 'install_limma', fail)
+    monkeypatch.setattr(differential_expression.io, 'run_r_script', fail)
+    with pytest.raises(InvalidValueError) as e:
+        getattr(big_countfilter, method)('tests/test_files/test_design_matrix.csv', **kwargs)
+    for expected in expected_in_msg:
+        assert expected in str(e.value)
+
+
 @pytest.mark.parametrize(
     'keep,exp_path',
     [
@@ -3299,6 +3326,36 @@ def test_split_by_principal_components_legacy_boolean_matches_box_cox(basic_coun
     named = basic_countfilter.split_by_principal_components(1, 0.32, power_transform='box-cox')
     for legacy_obj, named_obj in zip(legacy, named):
         assert legacy_obj.df.equals(named_obj.df)
+
+
+@pytest.mark.parametrize('frozen,expected', [(True, 'multiprocessing'), (False, 'loky')])
+def test_pipeline_with_loky_backend_loads_and_never_sends_loky_to_joblib_when_frozen(
+    basic_countfilter, monkeypatch, frozen, expected
+):
+    # rule 4 + issue #249: a Pipeline recorded on a source install carries parallel_backend='loky'. It must keep
+    # loading, and when replayed in a PyInstaller-frozen build the backend that reaches joblib must be clamped.
+    import contextlib
+
+    from rnalysis.utils import clustering as clustering_module
+    from rnalysis.utils import generic as generic_module
+
+    monkeypatch.setattr(generic_module, 'FROZEN_ENV', frozen)
+    monkeypatch.setattr(plt, 'show', lambda: None)
+    seen = []
+
+    def spy_parallel_backend(backend, *args, **kwargs):
+        seen.append(backend)
+        return contextlib.nullcontext()
+
+    monkeypatch.setattr(clustering_module.joblib, 'parallel_backend', spy_parallel_backend)
+
+    pipeline = Pipeline.import_pipeline('tests/test_files/test_pipeline_loky_backend.yaml')
+    assert pipeline.params[0][1]['parallel_backend'] == 'loky'
+
+    basic_countfilter.filter_low_reads(1)
+    pipeline.apply_to(basic_countfilter, inplace=False)
+    plt.close('all')
+    assert seen == [expected]
 
 
 def test_pipeline_with_legacy_power_transform_still_loads_and_runs(basic_countfilter):

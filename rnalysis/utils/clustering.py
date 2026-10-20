@@ -608,7 +608,7 @@ class ClusteringRunner(abc.ABC):
         self.n_clusters_determine_plot = None
 
     def run(self, plot: bool = True):
-        with joblib.parallel_backend(self.parallel_backend):
+        with joblib.parallel_backend(generic.normalize_parallel_backend(self.parallel_backend)):
             return self._run(plot)
 
     def _transform_cache_key(self):

@@ -16,7 +16,7 @@ import numpy as np
 import polars as pl
 
 from rnalysis.exceptions import InternalError
-from rnalysis.utils import validation
+from rnalysis.utils import docstring_parsing, validation
 
 # pandas is only needed by the single upsetplot helper below, but costs ~0.3s to import, so it is
 # loaded lazily (SPEC 1 / https://scientific-python.org/specs/spec-0001/). Nothing may touch an
@@ -32,6 +32,58 @@ def quote_path(pth: Union[Path, str]) -> str:
         return mslex.quote(pth)
     else:
         return shlex.quote(pth)
+
+
+# ASCII punctuation that is legal in file names on Windows, macOS, and Linux alike
+# (Windows forbids < > : " / \ | ? *, and '/' is the directory separator everywhere)
+_FILENAME_SAFE_PUNCTUATION = frozenset(" !#$%&'()+,-.;=@[]^_`{}~")
+
+
+def _is_filename_safe_char(char: str) -> bool:
+    if char.isascii():
+        return char.isalnum() or char in _FILENAME_SAFE_PUNCTUATION
+    # non-ASCII letters, digits, symbols and punctuation (e.g. 'ü', 'א', '°', '–') are legal in file names
+    # on every OS; only control/format/unassigned characters and line/paragraph separators are not
+    return unicodedata.category(char) not in {'Cc', 'Cf', 'Cs', 'Co', 'Cn', 'Zl', 'Zp'}
+
+
+def sanitize_filename_component(text: str, replacements: Union[Dict[str, str], None] = None) -> str:
+    """
+    Make a string safe to use as part of a file name on Windows, macOS, and Linux. \
+    Characters are checked against an allowlist: ASCII letters, digits, spaces, \
+    and the ASCII punctuation characters that are legal in file names on all three systems, \
+    plus any printable non-ASCII character (letters, digits, symbols and punctuation of any script). \
+    Every other character (':', '/', '\\\\', '"', '*', '?', '<', '>', '|', control characters, \
+    and line/paragraph separators) is replaced with '_'. Strings that are already filename-safe are returned unchanged.
+
+    :param text: the string to sanitize
+    :type text: str
+    :param replacements: optional mapping of specific characters to their replacement strings, \
+    applied before the allowlist (e.g. {':': '_x_'}). The replacement strings must themselves be filename-safe.
+    :type replacements: dict or None
+    :return: the filename-safe string
+    :rtype: str
+    """
+    text = str(text)
+    if replacements:
+        for old, new in replacements.items():
+            if not all(_is_filename_safe_char(char) for char in new):
+                raise ValueError(f"The replacement string '{new}' is not filename-safe")
+            text = text.replace(old, new)
+    return ''.join(char if _is_filename_safe_char(char) else '_' for char in text)
+
+
+def r_quote(text) -> str:
+    """
+    Turn a Python value into an R string literal (in double quotes), escaping backslashes and double quotes, \
+    so that the string can be safely spliced into R source code.
+
+    :param text: the value to quote (non-string values are converted with str())
+    :return: an R string literal whose value is str(text)
+    :rtype: str
+    """
+    escaped = str(text).replace('\\', '\\\\').replace('"', '\\"')
+    return f'"{escaped}"'
 
 
 def r_make_names(names: List[str]):
@@ -288,16 +340,9 @@ def parse_docstring(docstring: str) -> Tuple[str, Dict[str, str]]:
     :type docstring: str
     :return: a string matching the description, and a dictionary containing the parameter descriptions
     """
-    docstring = re.sub(' +', ' ', docstring)
-    split = docstring.split('\n\n')
-    desc = split[0]
-    params_str = split[1]
-    free_text_match = r'["#\w\s\.\(\)\-\:%\*=@!\?\+\_,/`><\[\]' + "'" + ']'
-    params_matches = list(
-        re.finditer(r'^:param ([a-zA-Z_0-9]+):(' + free_text_match + r'+?)(?=^:.*:)', params_str, re.MULTILINE)
-    )
-    params = {match.group(1): match.group(2).replace('. ', '. \n') for match in params_matches}
-    return desc, params
+    # the implementation lives in the dependency-free docstring_parsing module, so the check-gui-docstrings
+    # pre-commit hook (which cannot import rnalysis) shares the exact parser the GUI uses.
+    return docstring_parsing.parse_docstring(docstring)
 
 
 def generate_upset_series(objs: dict):
@@ -475,13 +520,16 @@ def common_suffix(strings):
     """Find the common suffix among a list of strings."""
     if not strings:
         return ''
-    s1 = min(strings)
-    s2 = max(strings)
-    max_overlap = min(len(s1), len(s2))
+    # The suffix must be shared by *every* string, so compare all of them character-by-character from
+    # the end. (Comparing only min/max -- valid for a common prefix -- is wrong for a suffix, because
+    # lexicographic order says nothing about how strings end; see issue #195.)
+    shortest = min(strings, key=len)
+    max_overlap = len(shortest)
     for i in range(max_overlap):
-        if s1[-(i + 1)] != s2[-(i + 1)]:
-            return s1[len(s1) - i :]
-    return s1[len(s1) - max_overlap :]
+        char = shortest[-(i + 1)]
+        if any(s[-(i + 1)] != char for s in strings):
+            return shortest[len(shortest) - i :]
+    return shortest[len(shortest) - max_overlap :]
 
 
 def remove_suffix(s: str, suffix: Union[str, List[str]]):
@@ -505,16 +553,18 @@ def generate_common_name(file_pairs):
 
     # Prepare output based on comparison
     initial_results = []
-    pair_lengths = []
+    is_genuine_lcs = []
     for s1, s2, lcs in lcs_list:
-        pair_lengths.append(len(s1) + len(s2))
         if len(lcs) > len(overall_lcs):
             initial_results.append(lcs)
+            is_genuine_lcs.append(True)
         else:
             initial_results.append(s1 + s2)
-    # Find and trim common suffix from LCSs (compare each result against its OWN pair's combined
-    # length, not the loop variables left over from the last iteration of the loop above)
-    lcs_only = [result for result, pair_length in zip(initial_results, pair_lengths) if len(result) <= pair_length]
+            is_genuine_lcs.append(False)
+    # Find and trim the common suffix, computed over the genuine LCS results only. The `s1 + s2`
+    # concatenated fallbacks are excluded: their trailing characters are not part of a real shared
+    # sample name and would otherwise mask (or spuriously alter) the suffix shared by the true LCSs.
+    lcs_only = [result for result, genuine in zip(initial_results, is_genuine_lcs) if genuine]
     suffix = common_suffix(lcs_only)
     if suffix and len(lcs_only) > 1:
         trimmed_results = [

@@ -15,7 +15,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import polars as pl
 import polars.selectors as cs
-from joblib import Parallel, parallel_backend
+from joblib import Parallel
 from PyQt6 import QtCore, QtGui, QtWidgets
 from tqdm.auto import tqdm
 from typing_extensions import get_args, get_origin
@@ -459,6 +459,11 @@ class AltParallel(QtCore.QObject):
     def __init__(
         self, n_jobs: int = -1, total=None, desc: str = '', unit: str = 'it', bar_format: str = '', *args, **kwargs
     ):
+        # Deliberately kept (not replaced by generic.normalize_parallel_backend): the GUI swaps this class in for
+        # generic.ProgressParallel while a job runs in a worker QThread, and it forces 'multiprocessing' for EVERY
+        # requested backend, frozen or not -- not just a frozen-'loky' clamp. Narrowing it to the shared helper
+        # would change which backend the from-source GUI uses (e.g. 'loky'/'threading' would start reaching joblib
+        # from inside the Qt worker thread), so it stays as a GUI-specific override on top of the shared clamp.
         kwargs['backend'] = 'multiprocessing'
         self.parallel = Parallel(*args, n_jobs=n_jobs, **kwargs)
         self.desc = desc
@@ -469,7 +474,6 @@ class AltParallel(QtCore.QObject):
         self.barUpdate.emit(0)
 
     def __call__(self, *args, **kwargs):
-        parallel_backend('multiprocessing')
         self.parallel.print_progress = functools.partial(self.print_progress)
         return self.parallel.__call__(*args, **kwargs)
 

@@ -182,6 +182,162 @@ class TestBatchLRUCache:
         assert second_result == {'bad_gene': None}
         mock_selective_api.assert_not_called()
 
+    @staticmethod
+    def _fake_clock(cache_decorator, start: float = 1000.0):
+        now = [start]
+        cache_decorator._clock = lambda: now[0]
+        return now
+
+    def test_negative_ttl_default(self):
+        assert BatchLRUCache().negative_ttl == 3600
+        assert BatchLRUCache(negative_ttl=5).negative_ttl == 5
+
+    def test_negative_entry_served_from_cache_before_ttl(self):
+        cache_decorator = BatchLRUCache(max_size=10, negative_ttl=60)
+        now = self._fake_clock(cache_decorator)
+        api = Mock(return_value={})
+        decorated_func = cache_decorator(api)
+
+        assert decorated_func(('bad_gene',)) == {'bad_gene': None}
+        api.reset_mock()
+        now[0] += 59
+        assert decorated_func(('bad_gene',)) == {'bad_gene': None}
+        api.assert_not_called()
+
+    def test_negative_entry_refetched_after_ttl(self):
+        cache_decorator = BatchLRUCache(max_size=10, negative_ttl=60)
+        now = self._fake_clock(cache_decorator)
+        api = Mock(return_value={})
+        decorated_func = cache_decorator(api)
+
+        assert decorated_func(('gene1',)) == {'gene1': None}
+        now[0] += 61
+        api.reset_mock()
+        api.return_value = {'gene1': 'gene1_data'}
+        assert decorated_func(('gene1',)) == {'gene1': 'gene1_data'}
+        api.assert_called_once_with(['gene1'])
+        # the refreshed positive entry is cached and never expires
+        api.reset_mock()
+        now[0] += 10**9
+        assert decorated_func(('gene1',)) == {'gene1': 'gene1_data'}
+        api.assert_not_called()
+        assert 'gene1' not in cache_decorator._negative_expiry
+
+    def test_expired_negative_still_absent_is_recached(self):
+        cache_decorator = BatchLRUCache(max_size=10, negative_ttl=60)
+        now = self._fake_clock(cache_decorator)
+        api = Mock(return_value={})
+        decorated_func = cache_decorator(api)
+
+        decorated_func(('gene1',))
+        now[0] += 61
+        assert decorated_func(('gene1',)) == {'gene1': None}
+        assert api.call_count == 2
+        # the new negative entry gets a fresh TTL
+        now[0] += 59
+        assert decorated_func(('gene1',)) == {'gene1': None}
+        assert api.call_count == 2
+
+    def test_positive_entries_never_expire(self, mock_network_func):
+        cache_decorator = BatchLRUCache(max_size=10, negative_ttl=60)
+        now = self._fake_clock(cache_decorator)
+        decorated_func = cache_decorator(mock_network_func)
+
+        decorated_func(('gene1',))
+        mock_network_func.reset_mock()
+        now[0] += 10**9
+        assert decorated_func(('gene1',)) == {'gene1': 'gene1_data'}
+        mock_network_func.assert_not_called()
+
+    def test_mixed_batch_only_requeries_expired_and_uncached(self):
+        cache_decorator = BatchLRUCache(max_size=10, negative_ttl=60)
+        now = self._fake_clock(cache_decorator)
+        api = Mock(side_effect=lambda ids: {i: f'{i}_data' for i in ids if i.startswith('pos')})
+        decorated_func = cache_decorator(api)
+
+        decorated_func(('pos1', 'neg_old'))  # t=1000
+        now[0] += 30
+        decorated_func(('neg_fresh',))  # t=1030
+        now[0] += 40  # t=1070: neg_old is 70s old (expired), neg_fresh is 40s old (fresh)
+        api.reset_mock()
+
+        result = decorated_func(('pos1', 'neg_old', 'neg_fresh', 'pos_new'))
+        assert result == {'pos1': 'pos1_data', 'neg_old': None, 'neg_fresh': None, 'pos_new': 'pos_new_data'}
+        api.assert_called_once_with(['neg_old', 'pos_new'])
+
+    def test_negative_entries_respect_max_size(self):
+        cache_decorator = BatchLRUCache(max_size=2, negative_ttl=60)
+        self._fake_clock(cache_decorator)
+        api = Mock(return_value={})
+        decorated_func = cache_decorator(api)
+
+        assert decorated_func(('a', 'b', 'c', 'd')) == {'a': None, 'b': None, 'c': None, 'd': None}
+        assert list(cache_decorator.cache) == ['c', 'd']
+        # expiry bookkeeping is evicted together with the cache entries
+        assert set(cache_decorator._negative_expiry) == {'c', 'd'}
+
+    def test_mixed_entries_respect_max_size(self):
+        cache_decorator = BatchLRUCache(max_size=3, negative_ttl=60)
+        self._fake_clock(cache_decorator)
+        api = Mock(side_effect=lambda ids: {i: 'data' for i in ids if i.startswith('pos')})
+        decorated_func = cache_decorator(api)
+
+        decorated_func(('pos1', 'neg1', 'pos2', 'neg2', 'pos3'))
+        # positives are written first, then the omitted (negative) IDs
+        assert list(cache_decorator.cache) == ['pos3', 'neg1', 'neg2']
+        assert set(cache_decorator._negative_expiry) == {'neg1', 'neg2'}
+
+    def test_explicit_none_values_expire(self):
+        """Ensembl reports unknown IDs as explicit nulls rather than omitting them; those must expire too."""
+        cache_decorator = BatchLRUCache(max_size=10, negative_ttl=60)
+        now = self._fake_clock(cache_decorator)
+        api = Mock(return_value={'bad': None})
+        decorated_func = cache_decorator(api)
+
+        assert decorated_func(('bad',)) == {'bad': None}
+        now[0] += 59
+        assert decorated_func(('bad',)) == {'bad': None}
+        assert api.call_count == 1
+        now[0] += 2
+        assert decorated_func(('bad',)) == {'bad': None}
+        assert api.call_count == 2
+
+    def test_concurrent_access_smoke(self):
+        import threading as _threading
+
+        cache_decorator = BatchLRUCache(max_size=50, negative_ttl=0)
+        decorated_func = cache_decorator(lambda ids: {i: i for i in ids if int(i) % 2})
+        errors = []
+
+        def worker(offset):
+            try:
+                for rep in range(200):
+                    ids = tuple(str((offset + rep + j) % 120) for j in range(10))
+                    res = decorated_func(ids)
+                    assert set(res) == set(ids)
+                    assert all(res[i] == (i if int(i) % 2 else None) for i in ids)
+            except Exception as e:  # noqa: BLE001
+                errors.append(e)
+
+        threads = [_threading.Thread(target=worker, args=(k * 7,)) for k in range(8)]
+        for t in threads:
+            t.start()
+        for t in threads:
+            t.join()
+        assert errors == []
+        assert len(cache_decorator.cache) <= 50
+        assert set(cache_decorator._negative_expiry) <= set(cache_decorator.cache)
+
+    def test_batch_larger_than_max_size_returns_all_results(self, mock_network_func):
+        """Positive results evicted mid-batch must still be returned, not overwritten with None."""
+        cache_decorator = BatchLRUCache(max_size=2)
+        decorated_func = cache_decorator(mock_network_func)
+
+        result = decorated_func(('g1', 'g2', 'g3', 'g4'))
+        assert result == {f'g{i}': f'g{i}_data' for i in range(1, 5)}
+        assert list(cache_decorator.cache) == ['g3', 'g4']
+        assert cache_decorator._negative_expiry == {}
+
 
 @pytest.mark.parametrize(
     'pth',
@@ -1746,6 +1902,64 @@ def test_is_rnalysis_outdated(monkeypatch, this_version, response, expected):
     monkeypatch.setattr(requests, 'get', lambda *args, **kwargs: response)
     monkeypatch.setattr(io, '__version__', this_version)
     assert is_rnalysis_outdated() == expected
+
+
+def test_is_rnalysis_outdated_passes_timeout(monkeypatch):
+    calls = []
+
+    def mock_get(*args, **kwargs):
+        calls.append(kwargs)
+        return MockResponse(text='{"info":{"version":"3.1.0"}}')
+
+    monkeypatch.setattr(requests, 'get', mock_get)
+    monkeypatch.setattr(io, '__version__', '3.0.0')
+    assert is_rnalysis_outdated() is True
+    assert len(calls) == 1
+    assert calls[0].get('timeout') is not None
+
+
+@pytest.mark.parametrize(
+    'exc',
+    [
+        requests.exceptions.Timeout,
+        requests.exceptions.ConnectTimeout,
+        requests.exceptions.ReadTimeout,
+        requests.exceptions.ConnectionError,
+        requests.exceptions.HTTPError,
+        requests.exceptions.TooManyRedirects,
+        requests.exceptions.SSLError,
+        ConnectionError,
+    ],
+)
+def test_is_rnalysis_outdated_network_error(monkeypatch, exc):
+    def mock_get(*args, **kwargs):
+        raise exc('simulated network failure')
+
+    monkeypatch.setattr(requests, 'get', mock_get)
+    monkeypatch.setattr(io, '__version__', '3.0.0')
+    assert is_rnalysis_outdated() is False
+
+
+@pytest.mark.parametrize(
+    'text',
+    [
+        '<html><body>Please log in to the hotel Wi-Fi</body></html>',  # captive portal
+        '',
+        '{"info":{"author":"Guy Teichman"}}',  # missing version key
+        '{"releases":{}}',  # missing info key
+        '[]',  # wrong JSON type
+        'null',
+        '{"info":null}',
+        '{"info":{"version":null}}',
+        '{"info":{"version":42}}',
+        '{"info":{"version":"4.0.0rc1"}}',  # non-numeric version string
+        '{"info":{"version":"not a version"}}',
+    ],
+)
+def test_is_rnalysis_outdated_malformed_response(monkeypatch, text):
+    monkeypatch.setattr(requests, 'get', lambda *args, **kwargs: MockResponse(text=text))
+    monkeypatch.setattr(io, '__version__', '3.0.0')
+    assert is_rnalysis_outdated() is False
 
 
 @pytest.mark.parametrize(
@@ -3842,6 +4056,61 @@ class TestEnsemblOrthologMapper:
         # the cached re-run reproduces the first run exactly and does not re-hit the network
         assert second_one2one.mapping_dict == first_one2one.mapping_dict
         assert len(run_calls) == 1
+
+    @staticmethod
+    def _offline_mapper(monkeypatch, fake_response):
+        # Fully offline: no cache, identity ID translation, stubbed species name and Ensembl responses.
+        monkeypatch.setattr(io, 'load_cached_file', lambda fname: None)
+        monkeypatch.setattr(io, 'cache_file', lambda content, fname: None)
+
+        class MockGeneIDTranslator:
+            def __init__(self, *args, **kwargs):
+                pass
+
+            def run(self, ids):
+                return GeneIDDict({this_id: this_id for this_id in ids})
+
+        monkeypatch.setattr(io, 'GeneIDTranslator', MockGeneIDTranslator)
+        monkeypatch.setattr(io.EnsemblOrthologMapper, 'get_species_name', lambda self: 'caenorhabditis_elegans')
+        monkeypatch.setattr(io.EnsemblRestClient, 'run', lambda self: fake_response)
+        return EnsemblOrthologMapper(map_to_organism=9606, map_from_organism=6239, gene_id_type='UniProtKB AC/ID')
+
+    def test_get_orthologs_warns_about_cross_division_when_nothing_maps(self, monkeypatch):
+        # Issue #82: Ensembl REST does not serve orthologs across Ensembl divisions (e.g. C. elegans in
+        # Ensembl Metazoa -> human in Ensembl vertebrates), so such a query silently returns zero
+        # homologies for every gene. The user must get an actionable explanation, not just "0 out of N".
+        fake_response = [{'data': [{'id': 'gene1', 'homologies': []}]}, {'data': [{'id': 'gene2', 'homologies': []}]}]
+        mapper = self._offline_mapper(monkeypatch, fake_response)
+
+        with pytest.warns(UserWarning) as record:
+            one2one, one2many = mapper.get_orthologs(('gene1', 'gene2'), 'first')
+
+        assert len(one2one) == 0
+        assert len(one2many) == 0
+        messages = [str(w.message) for w in record]
+        division_msgs = [msg for msg in messages if 'Ensembl division' in msg]
+        assert len(division_msgs) == 1
+        msg = division_msgs[0]
+        assert 'PantherDB' in msg
+        assert 'PhylomeDB' in msg
+        assert 'OrthoInspector' in msg
+
+    def test_get_orthologs_no_cross_division_warning_when_some_genes_map(self, monkeypatch):
+        fake_response = [
+            {'data': [{'id': 'gene1', 'homologies': [{'target': {'id': 'ORTH1'}, 'source': {'perc_id': 90.0}}]}]},
+            {'data': [{'id': 'gene2', 'homologies': []}]},
+        ]
+        mapper = self._offline_mapper(monkeypatch, fake_response)
+
+        with warnings.catch_warnings(record=True) as record:
+            warnings.simplefilter('always')
+            one2one, _ = mapper.get_orthologs(('gene1', 'gene2'), 'first')
+
+        assert one2one.mapping_dict == {'gene1': 'ORTH1'}
+        messages = [str(w.message) for w in record]
+        assert not any('Ensembl division' in msg for msg in messages)
+        # the generic partial-mapping warning is still emitted
+        assert any('1 out of 2' in msg for msg in messages)
 
 
 class TestRunRScript:

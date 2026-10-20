@@ -41,7 +41,9 @@ Qt code for it. What drives that rendering:
   types live in `rnalysis/utils/param_typing.py`. **Choosing the right annotation is how you
   design the GUI.**
 - **Docstrings are load-bearing help text.** The reST `:param x: ...` lines become the
-  per-parameter tooltips; keep that format.
+  per-parameter tooltips; keep that format. The `check-gui-docstrings` pre-commit hook fails a
+  commit that leaves a GUI parameter without parseable help text (run `pre-commit install` once:
+  it installs both the pre-commit and pre-push hooks).
 - **`@readable_name('…')`** sets the human-readable button/window label.
 
 **Consequence:** renaming a public method, changing its signature, or loosening a type

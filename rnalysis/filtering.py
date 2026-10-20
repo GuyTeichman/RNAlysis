@@ -1367,13 +1367,14 @@ class Filter:
         (where genes that belong to at least one GO term are not filtered out), or in 'intersection' mode \
         (where only genes that belong to ALL GO terms are not filtered out).
 
-        :param go_ids:
+        :param go_ids: the GO term IDs according to which the table will be filtered. \
+        An example for a legal GO term ID would be 'GO:0006396' for the 'RNA processing' GO term.
         :type go_ids: str or list of str
         :type mode: 'union' or 'intersection'.
         :param mode: If 'union', filters out every genomic feature that does not belong to one or more \
         of the indicated attributes. If 'intersection', \
         filters out every genomic feature that does not belong to ALL of the indicated attributes.
-        param organism: organism name or NCBI taxon ID for which the function will fetch GO annotations.
+        :param organism: organism name or NCBI taxon ID for which the function will fetch GO annotations.
         :type organism: str or int
         :param gene_id_type: the identifier type of the genes/features in the FeatureSet object \
         (for example: 'UniProtKB', 'WormBase', 'RNACentral', 'Entrez Gene ID'). \
@@ -1385,8 +1386,8 @@ class Filter:
         :param propagate_annotations: determines the propagation method of GO annotations. \
         'no' does not propagate annotations at all; 'classic' propagates all annotations up to the DAG tree's root; \
         'elim' terminates propagation at nodes which show significant enrichment; 'weight' performs propagation in a \
-        weighted manner based on the significance of children nodes relatively to their parents; and 'allm' uses a \
-        combination of all proopagation methods. To read more about the propagation methods, \
+        weighted manner based on the significance of children nodes relatively to their parents; and 'all.m' uses a \
+        combination of all propagation methods. To read more about the propagation methods, \
         see Alexa et al: https://pubmed.ncbi.nlm.nih.gov/16606683/
         :type propagate_annotations: 'classic', 'elim', 'weight', 'all.m', or 'no' (default='elim')
         :param evidence_types: only annotations with the specified evidence types will be included in the analysis. \
@@ -1552,7 +1553,7 @@ class Filter:
         :param mode: If 'union', filters out every genomic feature that does not belong to one or more \
         of the indicated attributes. If 'intersection', \
         filters out every genomic feature that does not belong to ALL of the indicated attributes.
-        param organism: organism name or NCBI taxon ID for which the function will fetch GO annotations.
+        :param organism: organism name or NCBI taxon ID for which the function will fetch GO annotations.
         :type organism: str or int
         :param gene_id_type: the identifier type of the genes/features in the FeatureSet object \
         (for example: 'UniProtKB', 'WormBase', 'RNACentral', 'Entrez Gene ID'). \
@@ -6067,6 +6068,7 @@ class CountFilter(Filter):
     ) -> plt.Figure:
         """
         Plot the average expression and spread of the specified features under the specified conditions.
+
         :type features: str or list of strings
         :param features: the feature/features to plot expression for.
         :param samples: A list of the sample names and/or grouped sample names to be plotted. \

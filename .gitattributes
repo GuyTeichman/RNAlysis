@@ -1,0 +1,48 @@
+# Line endings: the repository stores text files with LF, and they are checked out with LF on
+# every platform, regardless of the clone's `core.autocrlf` setting (Git for Windows defaults it to
+# `true` system-wide, which used to give CRLF working copies that the `mixed-line-ending --fix=lf`
+# pre-commit hook then kept "fixing" even though the committed content was already LF).
+# `text=auto` lets Git leave files it detects as binary alone; the explicit entries below don't
+# rely on that detection. (`.bat` files stay LF too: CRLF here would fight the
+# `mixed-line-ending --fix=lf` hook, and cmd.exe runs the repo's simple Sphinx make.bat files fine.)
+#
+# Existing clones keep their old (CRLF) working copies until files are re-checked out. On a clean
+# tree (commit or set aside your work first) refresh them with:
+#     git rm -r --cached -q . && git reset --hard
+# or simply re-clone. (`git add --renormalize .` is a no-op: the committed content is already LF.)
+* text=auto eol=lf
+
+# Byte-exact content: never convert line endings (see the matching `exclude` in .pre-commit-config.yaml).
+#   - test fixtures and "truth" files that tests compare verbatim;
+#   - R script templates echoed verbatim into generated scripts, compared against truth files;
+#   - vendored third-party report assets.
+tests/test_files/** -text
+rnalysis/data_files/r_templates/** -text
+rnalysis/data_files/report_templates/** -text
+
+# Binaries
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.webp binary
+*.ico binary
+*.icns binary
+*.pdf binary
+*.zip binary
+*.gz binary
+*.bam binary
+*.bai binary
+*.bt2 binary
+*.idx binary
+*.rnal binary
+*.parquet binary
+*.xlsx binary
+*.doctree binary
+*.inv binary
+*.pickle binary
+*.woff binary
+*.woff2 binary
+*.ttf binary
+*.eot binary
+*.mp4 binary
