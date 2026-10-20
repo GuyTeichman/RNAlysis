@@ -3,6 +3,7 @@ import platform
 import warnings
 from unittest.mock import Mock
 
+import numpy as np
 import polars as pl
 import pytest
 import yaml
@@ -1359,6 +1360,28 @@ def test_sum_transcripts_to_genes_raw():
         }
     )
     assert_frame_equal(result, truth)
+
+
+@pytest.mark.parametrize('summation_method', ['scaled_tpm', 'raw'])
+def test_sum_transcripts_to_genes_is_deterministic(monkeypatch, summation_method):
+    # transcript-level float values summed per gene must come out bit-identical on every run. polars>=2 collects
+    # lazy queries on its streaming engine by default, which sums floats in a non-deterministic order -- at
+    # kallisto scale (~200k transcripts, ~60k genes) thousands of cells then differ between identical runs.
+    rng = np.random.default_rng(0)
+    n_transcripts, n_genes = 200_000, 60_000
+    transcript_ids = [f'T{i}' for i in range(n_transcripts)]
+    gene_of = rng.integers(0, n_genes, n_transcripts)
+    monkeypatch.setattr(
+        fastq.genome_annotation,
+        'map_transcripts_to_genes',
+        lambda *args, **kwargs: {t: f'G{g}' for t, g in zip(transcript_ids, gene_of)},
+    )
+    tpm = pl.DataFrame({'': transcript_ids, 'sample_A': rng.random(n_transcripts) * 1000})
+    counts = pl.DataFrame({'': transcript_ids, 'sample_A': rng.random(n_transcripts) * 500})
+
+    first = fastq._sum_transcripts_to_genes(tpm, counts, 'unused.gtf', summation_method)
+    for _ in range(4):
+        assert fastq._sum_transcripts_to_genes(tpm, counts, 'unused.gtf', summation_method).equals(first)
 
 
 def test_sum_transcripts_to_genes_invalid_method_raises():

@@ -257,6 +257,18 @@ BOX_COX_MAX_ABS_VALUE = 1e6
 _MAX_NAMES_IN_ERROR = 10
 
 
+def _with_transformed_numeric_columns(
+    data: pl.DataFrame, res_array: np.ndarray, numeric_columns: typing.Sequence[str]
+) -> pl.DataFrame:
+    # rebuild the table as its non-numeric columns followed by the transformed numeric ones. When the table has no
+    # non-numeric columns, the non-numeric selection is a 0x0 frame, which polars>=2 refuses to broadcast into.
+    transformed = pl.DataFrame(res_array, schema=list(numeric_columns))
+    non_numeric = data.select(~cs.numeric())
+    if non_numeric.width == 0:
+        return transformed
+    return non_numeric.with_columns(transformed)
+
+
 def _box_cox_fit_transform(array: np.ndarray) -> np.ndarray:
     # sklearn's PowerTransformer(box-cox) fits + applies a separate lambda to each column independently
     # (and, with the default standardize=True, standardizes each column afterwards).
@@ -345,7 +357,7 @@ def standard_box_cox(
     _validate_box_cox_stability(box_cox_array, feature_names)
     res_array = _sklearn.preprocessing.StandardScaler().fit_transform(box_cox_array)
     if isinstance(data, pl.DataFrame):
-        return data.select(~cs.numeric()).with_columns(pl.DataFrame(res_array, schema=numeric_columns))
+        return _with_transformed_numeric_columns(data, res_array, numeric_columns)
     return res_array
 
 
@@ -374,9 +386,7 @@ def standard_log(data: Union[np.ndarray, pl.DataFrame]) -> Union[np.ndarray, pl.
     log_array = np.log2(array + 1)
     res_array = _sklearn.preprocessing.StandardScaler().fit_transform(log_array)
     if isinstance(data, pl.DataFrame):
-        return data.select(~cs.numeric()).with_columns(
-            pl.DataFrame(res_array, schema=data.select(cs.numeric()).columns)
-        )
+        return _with_transformed_numeric_columns(data, res_array, data.select(cs.numeric()).columns)
     return res_array
 
 
@@ -498,7 +508,7 @@ def standardize(data: Union[np.ndarray, pl.DataFrame]) -> Union[np.ndarray, pl.D
     if isinstance(data, pl.DataFrame):
         # only the numeric columns were transformed, so only their names may label the result -- passing every
         # column name (the gene-ID one included) raised a shape mismatch on any real RNAlysis table
-        return data.select(~cs.numeric()).with_columns(pl.DataFrame(res_array, schema=numeric_columns))
+        return _with_transformed_numeric_columns(data, res_array, numeric_columns)
     return res_array
 
 

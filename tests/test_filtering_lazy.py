@@ -93,15 +93,20 @@ def test_filter_by_row_sum_lazy_matches_eager():
 
 def _eager_norm_apply(cf: CountFilter, scaling_factors: pl.DataFrame) -> pl.DataFrame:
     """Old N-pass ``_norm_scaling_factors`` (single-row scaling-factors case): divides each numeric
-    column by its scalar factor via one eager ``self.df.select`` per column -- the pre-fusion logic."""
+    column by its scalar factor in one separate pass per column -- the pre-fusion logic.
+
+    Each pass is collected lazily, like the production code, so both sides divide under the same engine: since
+    polars 2, `collect()` defaults to the streaming engine, whose float division can differ from an eager
+    `DataFrame.select` by 1 ULP."""
     numeric = cf._numeric_columns
-    out = pl.DataFrame().lazy()
+    # accumulated as a list of columns: polars>=2 won't broadcast columns into an empty 0x0 starting frame
+    out = []
     for column in cf.df.columns:
         if column in numeric:
-            out = out.with_columns(cf.df.select(pl.col(column).truediv(scaling_factors[column])))
+            out.append(cf.df.lazy().select(pl.col(column).truediv(scaling_factors[column])).collect().to_series())
         else:
-            out = out.with_columns(cf.df[column].alias(column))
-    return out.collect()
+            out.append(cf.df[column].alias(column))
+    return pl.select(out)
 
 
 def _eager_normalize_to_rpm(cf: CountFilter) -> pl.DataFrame:
@@ -176,7 +181,7 @@ def _per_gene_scaling_factors(cf: CountFilter) -> pl.DataFrame:
 def _eager_norm_per_gene(cf: CountFilter, scaling_factors: pl.DataFrame) -> pl.DataFrame:
     """Old per-gene ``_norm_scaling_factors`` (one left-join per numeric column) -- the pre-fusion logic."""
     numeric = cf._numeric_columns
-    out = pl.DataFrame().lazy()
+    out = []
     for column in cf.df.columns:
         if column in numeric:
             merged = cf.df.select(cs.first() | cs.by_name(column)).join(
@@ -186,10 +191,10 @@ def _eager_norm_per_gene(cf: CountFilter, scaling_factors: pl.DataFrame) -> pl.D
                 how='left',
             )
             merged_div = merged.with_columns((pl.nth(-2).truediv(pl.nth(-1))).alias('div'))
-            out = out.with_columns((merged_div.select(pl.col('div').alias(column))))
+            out.append(merged_div.select(pl.col('div').alias(column)).to_series())
         else:
-            out = out.with_columns(cf.df[column].alias(column))
-    return out.collect()
+            out.append(cf.df[column].alias(column))
+    return pl.select(out)
 
 
 def test_norm_scaling_factors_per_gene_lazy_matches_eager():

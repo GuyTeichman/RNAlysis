@@ -1989,7 +1989,11 @@ class Filter:
             return res
         else:
             # return just the number of genes/indices belonging to each biotype
-            return ref_df.filter(pl.first().is_in(self.df.select(pl.first()).to_series())).group_by(pl.last()).count()
+            return (
+                ref_df.filter(pl.first().is_in(self.df.select(pl.first()).to_series()))
+                .group_by(pl.last())
+                .len(name='count')
+            )
 
     @readable_name('Summarize feature biotypes (based on a reference table)')
     def biotypes_from_ref_table(
@@ -3594,7 +3598,7 @@ class CountFilter(Filter):
         """
         Returns a list of the numeric (int/float) columns in the DataFrame.
         """
-        return [self.df.columns[i] for i, dtype in enumerate(self.df.dtypes) if dtype in pl.NUMERIC_DTYPES]
+        return [self.df.columns[i] for i, dtype in enumerate(self.df.dtypes) if dtype.is_numeric()]
 
     @property
     def triplicates(self):
@@ -6964,10 +6968,13 @@ class CountFilter(Filter):
             counted_fname = os.path.join(folder_path, fname)
 
         folder = Path(folder_path)
-        counts = pl.DataFrame()
-        for item in sorted(folder.iterdir()):
-            if item.is_file() and item.suffix == input_format:
-                counts = counts.with_columns(pl.read_csv(item, separator='\t').select(pl.last().alias(item.stem)))
+        # gather the columns first and build the table once: polars>=2 won't broadcast them into an empty 0x0 frame
+        columns = [
+            pl.read_csv(item, separator='\t').select(pl.last().alias(item.stem)).to_series()
+            for item in sorted(folder.iterdir())
+            if item.is_file() and item.suffix == input_format
+        ]
+        counts = pl.select(columns)
         if not (len(counts) > 0):
             raise InvalidValueError(f"No valid files with the suffix '{input_format}' were found in '{folder_path}'.")
 
