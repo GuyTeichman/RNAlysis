@@ -116,7 +116,9 @@ class StatsTest(abc.ABC):
         expected_fraction = attr_size / bg_size
         observed_fraction = en_attr_size / en_size
         log2_fold_enrichment = np.log2(observed_fraction / expected_fraction) if observed_fraction > 0 else -np.inf
-        obs, exp = int(en_size * observed_fraction), en_size * expected_fraction
+        # obs is the observed overlap count; it equals en_attr_size exactly by definition. Re-deriving it as
+        # int(en_size * observed_fraction) truncated below en_attr_size on float-imprecise pairs (issue #274).
+        obs, exp = en_attr_size, en_size * expected_fraction
 
         return bg_size, en_size, attr_size, en_attr_size, obs, exp, log2_fold_enrichment
 
